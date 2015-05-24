@@ -1,0 +1,146 @@
+﻿using System;
+using Microsoft.Xna.Framework;
+
+namespace Subsurface
+{
+    class SteeringManager
+    {
+        private const float CircleDistance = 2.5f;
+        private const float CircleRadius = 0.3f;
+
+        private const float RayCastInterval = 0.5f;
+
+        private ISteerable host;
+
+        private Vector2 steering;
+
+        //the steering amount when avoiding obstacles
+        //(needs a separate variable because it's only updated when a raycast is done to detect any nearby obstacles)
+        private Vector2 avoidSteering;
+        private float rayCastTimer;
+
+        private float wanderAngle;        
+        
+        public float WanderAngle
+        {
+            get { return wanderAngle; }
+            set { wanderAngle = value; }
+        }
+
+        public SteeringManager(ISteerable host)
+        {
+            this.host = host;
+
+            wanderAngle = ToolBox.RandomFloat(0.0f, MathHelper.TwoPi);
+        }
+
+        public void SteeringSeek(Vector2 target, float speed = 1.0f)
+        {
+            steering += DoSteeringSeek(target, speed);
+        }
+
+        public void SteeringWander(float speed = 1.0f)
+        {
+            steering += DoSteeringWander(speed);
+        }
+
+        public void SteeringAvoid(float deltaTime, float speed)
+        {
+            steering += DoSteeringAvoid(deltaTime, speed);
+        }
+
+        public void Update(float speed = 1.0f)
+        {
+            float steeringSpeed = steering.Length();
+            if (steeringSpeed>speed)
+            {
+               steering = Vector2.Normalize(steering) * Math.Abs(speed);
+            }
+
+            host.Steering = steering;
+        }
+
+        private Vector2 DoSteeringSeek(Vector2 target, float speed = 1.0f)
+        {
+            Vector2 targetVel = target - host.Position;
+            targetVel = Vector2.Normalize(targetVel) * speed;
+            Vector2 newSteering = targetVel - host.Steering;
+
+            if (newSteering==Vector2.Zero) return Vector2.Zero;
+
+            float steeringSpeed = (newSteering + host.Steering).Length();
+            if (steeringSpeed > Math.Abs(speed))
+            {
+                newSteering = Vector2.Normalize(newSteering)*Math.Abs(speed);
+            }
+
+            return newSteering;
+        }
+
+        private Vector2 DoSteeringWander(float speed = 1.0f)
+        {
+            Vector2 circleCenter = (host.Velocity == Vector2.Zero) ? new Vector2(speed, 0.0f) : host.Velocity;
+            circleCenter = Vector2.Normalize(circleCenter) * CircleDistance;
+
+            Vector2 displacement = new Vector2(
+                (float)Math.Cos(wanderAngle),
+                (float)Math.Sin(wanderAngle));
+            displacement = displacement * CircleRadius;
+
+            float angleChange = 1.5f;
+            
+            wanderAngle += ToolBox.RandomFloat(0.0f, 1.0f) * angleChange - angleChange * 0.5f;
+
+            Vector2 newSteering = circleCenter + displacement;
+            float steeringSpeed = (newSteering + host.Steering).Length();
+            if (steeringSpeed > speed)
+            {
+                newSteering = Vector2.Normalize(newSteering) * speed;
+            }
+
+            return newSteering;
+        }
+
+        private Vector2 DoSteeringAvoid(float deltaTime, float speed = 1.0f)
+        {
+            if (steering == Vector2.Zero || host.Steering == Vector2.Zero) return Vector2.Zero;
+
+            float MaxDistance = 2.0f;
+
+            Vector2 ahead = host.Position + Vector2.Normalize(host.Steering)*MaxDistance;
+
+            if (rayCastTimer <= 0.0f)
+            {
+                rayCastTimer = RayCastInterval;
+                Structure closestStructure = Map.CheckVisibility(host.Position, ahead);
+                if (closestStructure == null)
+                {
+                    avoidSteering = Vector2.Zero;
+                    return Vector2.Zero;                    
+                }
+                else
+                {
+                    Vector2 obstaclePosition = Map.LastPickedPosition;
+                    if (closestStructure.IsHorizontal)
+                    {
+                        obstaclePosition.Y = closestStructure.SimPosition.Y;
+                    }
+                    else
+                    {
+                        obstaclePosition.X = closestStructure.SimPosition.X;
+                    }
+
+                    avoidSteering = Vector2.Normalize(Map.LastPickedPosition - obstaclePosition);
+                }
+                
+            }
+            else
+            {
+                rayCastTimer -= deltaTime;
+            }
+
+            return avoidSteering * speed;
+
+        }
+    }
+}

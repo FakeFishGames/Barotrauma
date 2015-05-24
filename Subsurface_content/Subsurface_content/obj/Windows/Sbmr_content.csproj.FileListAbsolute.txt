@@ -1,0 +1,10 @@
+C:\Users\Joonas\Desktop\SMBR_1311\Sbmr_Solution\Sbmr_content\Sbmr_content\bin\Windows\Content\SpriteFont1.xnb
+C:\Users\Joonas\Desktop\SMBR_1311\Sbmr_Solution\Sbmr_content\Sbmr_content\bin\Windows\IgnoreMe.dll
+C:\Users\Joonas\Desktop\SMBR_1311\Sbmr_Solution\Sbmr_content\Sbmr_content\obj\Windows\Sbmr_content.csprojResolveAssemblyReference.cache
+C:\Users\Joonas\Desktop\SMBR_1311\Sbmr_Solution\Sbmr_content\Sbmr_content\obj\Windows\Microsoft.Xna.Framework.RuntimeProfile.txt
+C:\Users\Joonas\Desktop\SMBR_1311\Sbmr_Solution\Sbmr_content\Sbmr_content\obj\Windows\IgnoreMe.dll
+C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\bin\Windows\Content\SpriteFont1.xnb
+C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\bin\Windows\IgnoreMe.dll
+C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\obj\Windows\Sbmr_content.csprojResolveAssemblyReference.cache
+C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\obj\Windows\Microsoft.Xna.Framework.RuntimeProfile.txt
+C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\obj\Windows\IgnoreMe.dll
