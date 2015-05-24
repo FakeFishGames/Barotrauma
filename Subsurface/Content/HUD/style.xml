@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<style 
+  smallpadding="20.0, 20.0, 20.0, 20.0"
+  largepadding="40.0, 40.0, 40.0, 40.0"
+  backgroundcolor="0.2, 0.2, 0.2, 0.8"
+  foregroundcolor="1.0, 1.0, 1.0, 1.0"
+  
+  textcolor="0.0, 0.0, 0.0, 1.0"
+  
+  hovercolor="0.8, 0.8, 0.8, 1.0"
+  selectedcolor="1.0, 0.82, 0.05, 1.0"/>

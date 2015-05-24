@@ -1,0 +1,14 @@
+﻿<Items>
+  <Item
+    name="Steel Cabinet"
+    linkable="true"
+    pickdistance ="150">
+    
+    <Sprite texture ="locker.png" depth="0.85"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item>
+</Items>
+

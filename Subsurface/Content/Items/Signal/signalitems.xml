@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<Items>
+
+  <Item
+    name="Wire"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true"
+    canbepicked="true">
+
+    <Sprite texture ="wire.png" depth="0.55"/>
+
+    <Body radius="15"/>
+  
+    <Holdable handle1="0,0"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+    <Wire/>
+  </Item>
+
+  <Item
+    name="And Component"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true">
+
+    <Sprite texture ="and.png"  depth="0.8"/>
+
+    <AndComponent canbeselected = "true"/>
+
+    <Body width="16" height="16"/>
+
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
+
+    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Pickable>
+    
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <input name="set_output"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Or Component"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true">
+
+    <Sprite texture ="or.png" depth="0.8"/>
+
+    <OrComponent canbeselected = "true"/>
+
+    <Body width="16" height="16"/>
+
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
+
+    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Pickable>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <input name="set_output"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+  
+  <Item
+    name="Not Component"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true">
+
+    <Sprite texture ="not.png" depth="0.8"/>
+
+    <NotComponent canbeselected = "true"/>
+
+    <Body width="16" height="16"/>
+
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
+
+    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Pickable>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+
+  </Item>
+  
+  <Item
+    name="Light Component"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true">
+
+    <Sprite texture ="light.png" depth="0.8"/>
+
+    <LightComponent canbeselected = "true" color="1.0,0.0,0.0,1.0">
+      <sprite texture="Content/Items/Signal/lightsprite.png" origin="0.5,0.5"/>
+    </LightComponent>
+
+    <Body width="16" height="16"/>
+
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
+
+    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Pickable>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
+    </ConnectionPanel>
+
+  </Item>
+
+  <Item
+    name="Oxygen Detector"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true">
+
+    <Sprite texture ="light.png" depth="0.8"/>
+
+    <OxygenDetector canbeselected = "true"/>
+
+    <Body width="16" height="16"/>
+
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
+
+    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Pickable>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="RegEx Find Component"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true">
+
+    <Sprite texture ="light.png" depth="0.8"/>
+
+    <RegExFindComponent canbeselected = "true"/>
+
+    <Body width="16" height="16"/>
+
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
+
+    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Pickable>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+</Items>
+

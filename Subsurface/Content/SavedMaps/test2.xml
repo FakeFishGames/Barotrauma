@@ -1,0 +1,1036 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<test2.xml>
+  <Item name="Ladder" ID="9" rect="1817,138,11,523">
+    <Ladder />
+  </Item>
+  <Item name="Nuclear Reactor" ID="14" rect="1332,-101,227,171" linked="61">
+    <Reactor>
+      <requireditem name="Fuel Rod" type="None" />
+    </Reactor>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="power_out">
+        <link w="218" />
+      </output>
+    </ConnectionPanel>
+    <Container contained="284,-1,-1,-1,-1" />
+  </Item>
+  <Structure name="largeplatform" ID="19" rect="1760,-32,144,64" />
+  <WayPoint ID="68" x="1056" y="-128" spawn="Human" />
+  <WayPoint ID="69" x="-2704" y="-144" spawn="Human" />
+  <WayPoint ID="70" x="-3504" y="1744" spawn="Enemy" />
+  <WayPoint ID="71" x="-960" y="-1088" spawn="Enemy" />
+  <Item name="Junction Box" ID="61" rect="1100,-128,70,84">
+    <PowerTransfer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="power_out">
+        <link w="218" />
+        <link w="216" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Junction Box" ID="79" rect="-1196,-109,70,84">
+    <PowerTransfer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="power_out">
+        <link w="232" />
+        <link w="217" />
+        <link w="216" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Battery" ID="80" rect="-3183,-192,60,80">
+    <PowerContainer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="power_in">
+        <link w="222" />
+      </input>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Battery" ID="81" rect="-3110,-194,60,80">
+    <PowerContainer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="power_in">
+        <link w="229" />
+      </input>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Battery" ID="82" rect="-3038,-193,60,80">
+    <PowerContainer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="power_in">
+        <link w="230" />
+      </input>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Junction Box" ID="83" rect="-2875,-127,70,84">
+    <PowerTransfer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="power_out">
+        <link w="230" />
+        <link w="229" />
+        <link w="222" />
+        <link w="228" />
+        <link w="217" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Helmet" ID="84" rect="-1038,-473,37,38" tags="smallitem">
+    <Wearable />
+    <Container contained="-1" />
+  </Item>
+  <Item name="Helmet" ID="85" rect="-930,-473,37,38" tags="smallitem">
+    <Wearable />
+    <Container contained="-1" />
+  </Item>
+  <Item name="Oxygen Tank" ID="86" rect="-994,-477,12,34" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Oxygen Tank" ID="87" rect="-886,-477,12,34" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Fuel Rod" ID="88" rect="1681,-233,8,39" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Heat Absorber" ID="89" rect="1610,-235,25,38" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Structure name="stairsright" ID="1" rect="-1072,-192,256,320" />
+  <Structure name="stairsright" ID="6" rect="656,48,256,320" />
+  <Structure name="largeplatform" ID="7" rect="624,-32,272,64" />
+  <Structure name="largehorizontalback" ID="8" rect="896,-32,864,64" />
+  <Structure name="largehorizontalback" ID="10" rect="-1808,-512,1584,64" />
+  <Structure name="stairsleft" ID="17" rect="-2640,48,256,320" />
+  <Structure name="largehorizontalback" ID="3" rect="-3280,224,992,64" />
+  <Structure name="largeverticalback" ID="5" rect="-3280,192,64,464" />
+  <Structure name="largeplatform" ID="18" rect="-2624,-32,272,64" />
+  <Structure name="largehorizontalback" ID="20" rect="-3216,-32,592,64" />
+  <Structure name="stairsright" ID="23" rect="-1072,48,256,320" />
+  <Structure name="largeplatform" ID="24" rect="-1088,-272,256,64" />
+  <Structure name="largeplatform" ID="25" rect="-1088,-32,256,64" />
+  <Structure name="largehorizontalback" ID="26" rect="-2352,-32,1264,64" />
+  <Structure name="largeverticalback2" ID="27" rect="-288,-336,64,176" />
+  <Structure name="leftwall" ID="29" rect="-3280,240,32,544" />
+  <Structure name="topwall" ID="30" rect="-3248,-272,2160,32" />
+  <Structure name="topwall" ID="31" rect="-3248,-32,624,32" />
+  <Structure name="topwall" ID="33" rect="-2352,-32,1264,32" />
+  <Structure name="topwall" ID="39" rect="896,-32,864,32" />
+  <Structure name="smallverticalback" ID="40" rect="-1808,-336,32,176" />
+  <Structure name="smallverticalback" ID="41" rect="-1344,-336,32,176" />
+  <Structure name="topwall" ID="42" rect="-1808,-512,1584,32" />
+  <Structure name="rightwall" ID="43" rect="-256,-304,32,208" />
+  <Hull ID="46" x="608" y="-32" width="1296" height="240" water="0" />
+  <Hull ID="48" x="-1792" y="-304" width="464" height="208" water="0" />
+  <Hull ID="49" x="-1328" y="-272" width="1072" height="240" water="0" />
+  <Hull ID="45" x="-3248" y="-32" width="944" height="240" water="0" />
+  <Structure name="smallverticalback" ID="47" rect="-2320,-96,32,176" />
+  <Structure name="largeverticalback" ID="13" rect="592,160,64,208" />
+  <Structure name="largehorizontalback" ID="15" rect="592,224,1376,64" />
+  <Structure name="largeverticalback2" ID="11" rect="1872,160,64,496" />
+  <Structure name="cleanbgwall" ID="21" rect="608,-48,1328,224" />
+  <Structure name="cleanbgwall" ID="35" rect="-3248,-48,944,224" />
+  <Structure name="cleanbgwall" ID="16" rect="-3248,192,960,224" />
+  <Structure name="largeverticalback2" ID="28" rect="-2352,160,64,192" />
+  <Structure name="topwall" ID="32" rect="-3264,240,976,32" />
+  <Structure name="rightwall" ID="36" rect="-2320,208,32,240" />
+  <Hull ID="44" x="-3248" y="208" width="928" height="240" water="0" />
+  <Structure name="largehorizontalback" ID="22" rect="-3280,-272,2192,64" />
+  <Structure name="roughbgwall" ID="62" rect="-1808,-288,480,224" />
+  <Structure name="bgpanels" ID="63" rect="-1328,-288,1104,224" />
+  <Structure name="topwall" ID="64" rect="592,224,1376,32" />
+  <Structure name="rightwall" ID="65" rect="1904,192,32,528" />
+  <Structure name="leftwall" ID="2" rect="592,192,32,224" />
+  <Structure name="cleanbgwall" ID="66" rect="624,192,1280,224" />
+  <Hull ID="67" x="624" y="192" width="1280" height="224" water="0" />
+  <Gap ID="72" x="656" y="-16" width="240" height="32" />
+  <Gap ID="73" x="1760" y="-16" width="144" height="32" />
+  <Gap ID="75" x="-2624" y="-16" width="272" height="32" />
+  <Structure name="stairsright" ID="37" rect="-1072,288,256,320" />
+  <Structure name="largeplatform" ID="76" rect="-1088,208,256,64" />
+  <Structure name="stairsright" ID="77" rect="-1072,528,256,320" />
+  <Structure name="largeplatform" ID="78" rect="-1088,448,256,64" />
+  <Structure name="largehorizontalback" ID="91" rect="-832,208,144,64" />
+  <Structure name="largehorizontalback" ID="93" rect="-1216,208,128,64" />
+  <Structure name="largeverticalback2" ID="95" rect="-688,448,64,480" />
+  <Structure name="largeverticalback" ID="96" rect="-1280,448,64,480" />
+  <Structure name="topwall" ID="98" rect="-832,208,176,32" />
+  <Structure name="topwall" ID="101" rect="-1264,208,176,32" />
+  <Structure name="stairsleft" ID="97" rect="-1824,768,256,320" />
+  <Structure name="largehorizontalback" ID="103" rect="-3024,688,1216,64" />
+  <Structure name="smallverticalback" ID="106" rect="-3024,880,32,192" />
+  <Structure name="smallverticalback" ID="107" rect="-2560,880,32,192" />
+  <Structure name="stairsleft" ID="109" rect="-2160,1008,256,320" />
+  <Structure name="largeplatform" ID="111" rect="-2144,928,272,64" />
+  <Structure name="largehorizontalback" ID="105" rect="-3024,928,880,64" />
+  <Structure name="largeverticalback" ID="94" rect="-1872,624,64,176" />
+  <Structure name="largehorizontalback" ID="100" rect="-1872,448,784,64" />
+  <Structure name="stairsright" ID="112" rect="-672,768,256,320" />
+  <Structure name="largehorizontalback" ID="92" rect="-832,448,480,64" />
+  <Structure name="largeverticalback2" ID="113" rect="-432,688,64,240" />
+  <Item name="Railgun" ID="116" rect="-3027,1280,236,118" linked="118,104,110">
+    <Turret />
+  </Item>
+  <Item name="Railgun Loader" ID="104" rect="-2950,1054,267,127" linked="116">
+    <Container contained="-1,-1,-1,-1,-1" />
+  </Item>
+  <Item name="Railgun Controller" ID="110" rect="-2478,1144,133,147" linked="116">
+    <Controller />
+  </Item>
+  <Structure name="largehorizontalback" ID="108" rect="-3024,1168,1152,64" />
+  <Structure name="largeverticalback" ID="115" rect="-3024,1104,64,176" />
+  <Structure name="largeverticalback2" ID="117" rect="-1872,1168,64,304" />
+  <Item name="Battery" ID="118" rect="-2657,1003,60,80">
+    <PowerContainer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="power_in">
+        <link w="289" />
+      </input>
+    </ConnectionPanel>
+  </Item>
+  <Structure name="topwall" ID="119" rect="-3024,1168,1216,32" />
+  <Structure name="topwall" ID="121" rect="-2992,928,848,32" />
+  <Structure name="topwall" ID="122" rect="-3024,688,1216,32" />
+  <Structure name="leftwall" ID="123" rect="-1872,656,32,208" />
+  <Structure name="topwall" ID="124" rect="-1872,448,784,32" />
+  <Structure name="topwall" ID="99" rect="-832,448,464,32" />
+  <Structure name="rightwall" ID="125" rect="-1840,1136,32,208" />
+  <Item name="Junction Box" ID="127" rect="-1205,590,70,84">
+    <PowerTransfer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="power_out">
+        <link w="288" />
+        <link w="232" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Junction Box" ID="128" rect="-2266,1059,70,84">
+    <PowerTransfer />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="power_out">
+        <link w="289" />
+        <link w="288" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Hull ID="129" x="-2992" y="1136" width="1152" height="208" water="0" />
+  <Hull ID="130" x="-3008" y="896" width="464" height="208" water="0" />
+  <Hull ID="131" x="-2544" y="928" width="704" height="240" water="0" />
+  <Hull ID="132" x="-1840" y="912" width="1456" height="464" water="0" />
+  <Hull ID="133" x="-1248" y="448" width="592" height="480" water="0" />
+  <Structure name="leftwall" ID="134" rect="-1280,416,32,448" />
+  <Structure name="rightwall" ID="135" rect="-656,416,32,448" />
+  <Structure name="leftwall" ID="120" rect="-3024,1136,32,256" />
+  <Gap ID="143" x="-1088" y="464" width="256" height="32" />
+  <Item name="Oxygen Generator" ID="90" rect="-2677,-129,60,80" linked="83,144,102,145">
+    <OxygenGenerator />
+    <Container contained="-1,-1,-1,-1,-1" />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="power_in">
+        <link w="228" />
+      </input>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Vent" ID="102" rect="-1754,-191,32,32" linked="90">
+    <Vent />
+  </Item>
+  <Item name="Vent" ID="144" rect="-1397,567,32,32" linked="90">
+    <Vent />
+  </Item>
+  <Item name="Vent" ID="145" rect="929,-202,32,32" linked="90">
+    <Vent />
+  </Item>
+  <Item name="Railgun Shell" ID="146" rect="-2360,778,27,90">
+    <Holdable />
+    <Pickable />
+    <Projectile />
+  </Item>
+  <Item name="Railgun Shell" ID="147" rect="-2277,778,27,90">
+    <Holdable />
+    <Pickable />
+    <Projectile />
+  </Item>
+  <Item name="Railgun Shell" ID="148" rect="-2207,778,27,90">
+    <Holdable />
+    <Pickable />
+    <Projectile />
+  </Item>
+  <Item name="Railgun Shell" ID="149" rect="-2197,748,27,90">
+    <Holdable />
+    <Pickable />
+    <Projectile />
+  </Item>
+  <Item name="Railgun Shell" ID="150" rect="-2310,778,27,90">
+    <Holdable />
+    <Pickable />
+    <Projectile />
+  </Item>
+  <Item name="Oxygen Tank" ID="151" rect="-2445,722,12,34" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Helmet" ID="152" rect="-2466,725,37,38" tags="smallitem">
+    <Wearable />
+    <Container contained="-1" />
+  </Item>
+  <Item name="Harpoon" ID="153" rect="-809,-503,81,10">
+    <Pickable />
+    <Projectile />
+  </Item>
+  <Item name="Harpoon Gun" ID="154" rect="-812,-483,96,23">
+    <Holdable />
+    <Pickable />
+    <RangedWeapon />
+    <Rope />
+    <Container contained="-1,-1,-1,-1,-1" />
+  </Item>
+  <Item name="Welding Tool" ID="155" rect="-642,-463,50,50" tags="smallitem">
+    <Holdable />
+    <RepairTool />
+    <Pickable />
+  </Item>
+  <Item name="Welding Tool" ID="156" rect="-2424,736,50,50" tags="smallitem">
+    <Holdable />
+    <RepairTool />
+    <Pickable />
+  </Item>
+  <Structure name="largehorizontalback" ID="4" rect="-832,-272,2704,64" />
+  <Structure name="topwall" ID="38" rect="-832,-272,2736,32" />
+  <Structure name="largehorizontalback" ID="12" rect="-832,-32,1456,64" />
+  <Structure name="topwall" ID="34" rect="-832,-32,1456,32" />
+  <Hull ID="50" x="-2304" y="-32" width="2912" height="240" water="0" />
+  <Structure name="smallverticalback" ID="51" rect="592,-96,32,176" />
+  <Structure name="bgpanels" ID="60" rect="-2304,-48,2912,224" />
+  <Gap ID="74" x="-1088" y="-16" width="256" height="32" />
+  <Gap ID="142" x="-1088" y="-256" width="256" height="32" />
+  <Gap ID="157" x="-2144" y="944" width="272" height="32" />
+  <Structure name="stairsright" ID="166" rect="896,1008,256,320" />
+  <Structure name="largehorizontalback" ID="167" rect="1136,928,1008,64" />
+  <Structure name="largeverticalback2" ID="168" rect="1136,864,64,176" />
+  <Structure name="largeverticalback2" ID="171" rect="2080,1152,64,224" />
+  <Structure name="largehorizontalback" ID="114" rect="464,1216,1680,64" />
+  <Structure name="largeverticalback" ID="126" rect="464,1152,64,288" />
+  <Structure name="leftwall" ID="173" rect="464,1216,32,288" />
+  <Structure name="topwall" ID="174" rect="480,1216,1664,32" />
+  <Structure name="rightwall" ID="175" rect="2112,1216,32,352" />
+  <Structure name="topwall" ID="176" rect="1136,928,976,32" />
+  <Structure name="leftwall" ID="178" rect="-432,656,32,208" />
+  <Structure name="leftwall" ID="179" rect="1136,896,32,208" />
+  <Item name="MiniMap" ID="169" rect="1583,1096,227,171">
+    <MiniMap />
+  </Item>
+  <Hull ID="181" x="1136" y="1184" width="976" height="256" water="0" />
+  <Structure name="bgpanels" ID="185" rect="-1248,192,592,224" />
+  <Structure name="bgpanels" ID="186" rect="-1248,432,592,224" />
+  <Structure name="cleanbgwall" ID="187" rect="-1840,912,1456,464" />
+  <Structure name="roughbgwall" ID="188" rect="-2992,1136,1152,208" />
+  <Structure name="roughbgwall" ID="189" rect="-3008,912,1168,224" />
+  <Structure name="cleanbgwall" ID="190" rect="496,1152,640,464" />
+  <Structure name="cleanbgwall" ID="191" rect="1136,1152,976,224" />
+  <Item name="Button" ID="194" rect="391,-160,32,32">
+    <Controller>
+      <requireditem name="eng,com" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="221" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="195" rect="816,-161,32,32">
+    <Controller>
+      <requireditem name="eng,com" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="225" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="ID Card" ID="196" rect="1184,-14,16,16" tags="smallitem, eng">
+    <Pickable />
+  </Item>
+  <Item name="Button" ID="192" rect="-2183,-152,32,32">
+    <Controller>
+      <requireditem name="eng,com" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="220" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="193" rect="-2399,-151,32,32">
+    <Controller>
+      <requireditem name="eng,com" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="227" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Structure name="largehorizontalback" ID="183" rect="-368,688,1568,64" />
+  <Structure name="largehorizontalback" ID="165" rect="-1808,928,2272,64" />
+  <Structure name="topwall" ID="170" rect="-1872,928,2368,32" />
+  <Structure name="topwall" ID="172" rect="-432,688,1600,32" />
+  <Structure name="cleanbgwall" ID="177" rect="-384,928,880,240" />
+  <Structure name="smallverticalback" ID="180" rect="464,864,32,176" />
+  <Hull ID="182" x="-384" y="912" width="864" height="224" water="0" />
+  <Hull ID="184" x="480" y="1184" width="656" height="496" water="0" />
+  <Gap ID="197" x="1120" y="1184" width="32" height="256" />
+  <Item name="Button" ID="200" rect="327,817,32,32">
+    <Controller>
+      <requireditem name="com" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="290" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="201" rect="610,815,32,32">
+    <Controller>
+      <requireditem name="com" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="292" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="202" x="-400" y="896" width="32" height="208" />
+  <Item name="ID Card" ID="203" rect="702,705,16,16" tags="smallitem, com">
+    <Pickable />
+  </Item>
+  <WayPoint ID="204" x="800" y="832" spawn="Human" />
+  <Item name="Button" ID="207" rect="-1236,-411,32,32">
+    <Controller>
+      <requireditem name="ID Card" type="Picked" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="231" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="208" rect="-1461,-400,32,32">
+    <Controller>
+      <requireditem name="ID Card" type="Picked" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="233" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="209" rect="-1696,-392,32,32">
+    <Controller>
+      <requireditem name="ID Card" type="Picked" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="234" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="210" rect="-1765,816,32,32">
+    <Controller>
+      <requireditem name="ID Card" type="Picked" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="237" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="211" rect="-1940,814,32,32">
+    <Controller>
+      <requireditem name="ID Card" type="Picked" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="236" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="212" rect="-2929,806,32,32">
+    <Controller>
+      <requireditem name="ID Card" type="Picked" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="241" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="213" rect="-2633,807,32,32">
+    <Controller>
+      <requireditem name="ID Card" type="Picked" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="235" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" ID="214" rect="-2485,806,32,32">
+    <Controller>
+      <requireditem name="ID Card" type="Picked" />
+    </Controller>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <output name="signal_out">
+        <link w="238" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="ID Card" ID="205" rect="1247,-254,16,16" tags="smallitem, eng">
+    <Pickable />
+  </Item>
+  <Item name="ID Card" ID="206" rect="-2658,-254,16,16" tags="smallitem, eng">
+    <Pickable />
+  </Item>
+  <Item name="ID Card" ID="215" rect="754,705,16,16" tags="smallitem, com, eng">
+    <Pickable />
+  </Item>
+  <Item name="Door" ID="52" rect="-3020,885,25,200" linked="53">
+    <Door />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="toggle">
+        <link w="247" />
+      </input>
+      <input name="open" />
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="53" x="-3020" y="885" width="25" height="200" />
+  <Item name="Door" ID="54" rect="-2555,883,25,200" linked="55">
+    <Door />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="toggle">
+        <link w="238" />
+        <link w="235" />
+      </input>
+      <input name="open" />
+      <output name="state_out">
+        <link w="242" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="55" x="-2555" y="883" width="25" height="200" />
+  <Item name="Door" ID="56" rect="-1851,885,25,200" linked="57">
+    <Door />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="toggle">
+        <link w="237" />
+        <link w="236" />
+      </input>
+      <input name="open" />
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="57" x="-1851" y="885" width="25" height="200" />
+  <Item name="Door" ID="58" rect="466,886,25,200" linked="59">
+    <Door />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="toggle">
+        <link w="290" />
+        <link w="292" />
+      </input>
+      <input name="open" />
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="59" x="466" y="886" width="25" height="200" />
+  <Item name="Door" ID="136" rect="596,-72,25,200" linked="137">
+    <Door />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="toggle">
+        <link w="225" />
+        <link w="221" />
+      </input>
+      <input name="open" />
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="137" x="596" y="-72" width="25" height="200" />
+  <Item name="Door" ID="138" rect="-1339,-316,25,200" linked="139">
+    <Door />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="toggle">
+        <link w="231" />
+        <link w="233" />
+      </input>
+      <input name="open" />
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="139" x="-1339" y="-316" width="25" height="200" />
+  <Item name="Door" ID="140" rect="-1804,-313,25,200" linked="141">
+    <Door />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="toggle">
+        <link w="234" />
+      </input>
+      <input name="open" />
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="141" x="-1804" y="-313" width="25" height="200" />
+  <Item name="Door" ID="198" rect="-2316,-72,25,200" linked="199">
+    <Door />
+    <ConnectionPanel>
+      <requireditem name="Screwdriver" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="toggle">
+        <link w="220" />
+        <link w="227" />
+      </input>
+      <input name="open" />
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="199" x="-2316" y="-72" width="25" height="200" />
+  <Item name="Wire" ID="216" rect="1154,-209,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-1161;151;-1024;151;-896;151;-768;151;-640;151;-512;151;-384;151;-256;151;-128;151;0;151;128;151;256;151;384;151;512;151;640;151;768;151;896;151;1024;151;1152;151;1135;170" />
+  </Item>
+  <Item name="Wire" ID="217" rect="-2791,-214,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-1161;151;-1296;151;-1440;151;-1584;151;-1728;151;-1872;151;-2016;151;-2160;151;-2304;151;-2448;151;-2592;151;-2736;151;-2840;169" />
+  </Item>
+  <Item name="Wire" ID="218" rect="1408,-210,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="1135;170;1264;170;1392;170;1445.5;186.5" />
+  </Item>
+  <Item name="Screwdriver" ID="219" rect="-2730,701,16,16" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Wire" ID="220" rect="-2292,-212,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2167;168;-2303.5;172" />
+  </Item>
+  <Item name="Wire" ID="221" rect="550,-212,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="407;176;528;176;608.5;172" />
+  </Item>
+  <Item name="Wire" ID="225" rect="813,-229,0,0" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="608.5;172;736;172;832;177" />
+  </Item>
+  <Item name="Screwdriver" ID="226" rect="-2816,9,0,0" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Wire" ID="227" rect="-2341,-229,0,0" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2383;167;-2303.5;172" />
+  </Item>
+  <Item name="Wire" ID="222" rect="-2947,-214,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-3153;232;-3024;232;-2840;169" />
+  </Item>
+  <Item name="Wire" ID="228" rect="-2775,-214,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2647;169;-2840;169" />
+  </Item>
+  <Item name="Wire" ID="229" rect="-2914,-213,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-3080;234;-2960;234;-2840;169" />
+  </Item>
+  <Item name="Wire" ID="230" rect="-2869,-209,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-3008;233;-2880;233;-2840;169" />
+  </Item>
+  <Item name="Wire" ID="231" rect="-1293,-450,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-1220;427;-1326.5;416" />
+  </Item>
+  <Item name="Wire" ID="232" rect="-1168,-213,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-1170;-548;-1056;-548;-1056;-416;-1056;-288;-1056;-160;-1056;-32;-1056;96;-1056;224;-1161;151" />
+  </Item>
+  <Item name="Wire" ID="233" rect="-1402,-455,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-1445;416;-1326.5;416" />
+  </Item>
+  <Item name="Wire" ID="234" rect="-1776,-453,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-1680;408;-1791.5;413" />
+  </Item>
+  <Item name="Wire" ID="235" rect="-2588,749,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2617;-791;-2542.5;-783" />
+  </Item>
+  <Item name="Wire" ID="236" rect="-1867,745,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-1924;-798;-1838.5;-785" />
+  </Item>
+  <Item name="Wire" ID="237" rect="-1826,745,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-1749;-800;-1838.5;-785" />
+  </Item>
+  <Item name="Wire" ID="238" rect="-2530,746,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2469;-790;-2542.5;-783" />
+  </Item>
+  <Item name="And Component" ID="239" rect="-2830,793,16,16" tags="smallitem">
+    <AndComponent />
+    <Holdable attached="true" />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in1">
+        <link w="241" />
+      </input>
+      <input name="signal_in2">
+        <link w="243" />
+      </input>
+      <input name="set_output" />
+      <output name="signal_out">
+        <link w="247" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Not Component" ID="240" rect="-2797,791,16,16" tags="smallitem">
+    <NotComponent />
+    <Holdable attached="true" />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in">
+        <link w="242" />
+      </input>
+      <output name="signal_out">
+        <link w="243" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Wire" ID="241" rect="-2850,744,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2913;-790;-2822;-785" />
+  </Item>
+  <Item name="Wire" ID="242" rect="-2764,749,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2542.5;-783;-2672;-783;-2789;-783" />
+  </Item>
+  <Item name="Wire" ID="243" rect="-2849,749,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2789;-783;-2822;-785" />
+  </Item>
+  <Item name="Wrench" ID="244" rect="-2896,709,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Wire" ID="245" rect="-2740,719,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Wire" ID="247" rect="-2995,746,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2822;-785;-2960;-785;-3007.5;-785" />
+  </Item>
+  <Item name="Steel Cabinet" ID="223" rect="-3184,92,128,128">
+    <Container contained="-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1" />
+  </Item>
+  <Item name="Steel Cabinet" ID="246" rect="-3039,89,128,128">
+    <Container contained="-1,-1,-1,-1,-1,265,273,269,-1,-1,267,266,271,-1,-1,272,264,268,-1,262" />
+  </Item>
+  <Item name="Steel Cabinet" ID="249" rect="-2885,88,128,128">
+    <Container contained="-1,-1,-1,-1,-1,255,254,270,-1,263,252,253,251,-1,226,-1,-1,206,-1,-1" />
+  </Item>
+  <Item name="Wire" ID="251" rect="-3029,45,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Wire" ID="252" rect="-2712,0,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Wire" ID="253" rect="-2717,0,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Wire" ID="254" rect="-2719,0,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Wire" ID="255" rect="-2715,0,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Steel Cabinet" ID="258" rect="-419,-385,128,128">
+    <Container contained="274,278,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,276,275,277,-1,-1" />
+  </Item>
+  <Item name="Steel Cabinet" ID="260" rect="-572,-382,128,128">
+    <Container contained="85,87,-1,155,-1,84,86,-1,-1,-1,-1,279,-1,-1,-1,-1,-1,-1,-1,-1" />
+  </Item>
+  <Item name="Wrench" ID="262" rect="-2988,27,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Screwdriver" ID="263" rect="-2721,-10,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Or Component" ID="264" rect="-2708,-14,16,16" tags="smallitem">
+    <OrComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <input name="set_output" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Not Component" ID="265" rect="-2717,-14,16,16" tags="smallitem">
+    <NotComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="And Component" ID="266" rect="-2711,-14,16,16" tags="smallitem">
+    <AndComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <input name="set_output" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="And Component" ID="267" rect="-2722,-14,16,16" tags="smallitem">
+    <AndComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <input name="set_output" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Or Component" ID="268" rect="-2705,-14,16,16" tags="smallitem">
+    <OrComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <input name="set_output" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Not Component" ID="269" rect="-2725,-14,16,16" tags="smallitem">
+    <NotComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Wire" ID="270" rect="-2725,0,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="And Component" ID="271" rect="-2711,-14,16,16" tags="smallitem">
+    <AndComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <input name="set_output" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Or Component" ID="272" rect="-2709,-14,16,16" tags="smallitem">
+    <OrComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in1" />
+      <input name="signal_in2" />
+      <input name="set_output" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Not Component" ID="273" rect="-2720,-14,16,16" tags="smallitem">
+    <NotComponent />
+    <Holdable />
+    <Pickable>
+      <requireditem name="Wrench" type="Equipped" msg="Wrench required to detach the item" />
+    </Pickable>
+    <ConnectionPanel>
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="Screwdriver required for rewiring" />
+      <input name="signal_in" />
+      <output name="signal_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Screwdriver" ID="274" rect="-635,-490,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Wire" ID="275" rect="-645,-480,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Wire" ID="276" rect="-551,-436,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Wire" ID="277" rect="-640,-480,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire />
+  </Item>
+  <Item name="Wrench" ID="278" rect="-639,-490,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Oxygen Tank" ID="279" rect="-618,-477,12,34" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Steel Cabinet" ID="280" rect="1349,94,128,128">
+    <Container contained="196,205,203,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1" />
+  </Item>
+  <Item name="Steel Cabinet" ID="282" rect="1567,91,128,128">
+    <Container contained="-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,88,-1,-1,-1,-1,89,285,-1,-1,-1" />
+  </Item>
+  <Item name="Fuel Rod" ID="284" rect="1248,4,8,39" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Heat Absorber" ID="285" rect="1273,4,25,38" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Steel Cabinet" ID="286" rect="-2418,815,128,128">
+    <Container contained="152,151,-1,-1,-1,-1,-1,-1,-1,-1,245,-1,-1,-1,156,-1,-1,-1,-1,-1" />
+  </Item>
+  <Item name="Wire" ID="288" rect="-1195,507,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2231;-1017;-2096;-1017;-2096;-896;-1968;-896;-1968;-768;-1840;-768;-1712;-768;-1712;-640;-1584;-640;-1584;-512;-1456;-512;-1328;-512;-1200;-512;-1170;-548" />
+  </Item>
+  <Item name="Wire" ID="289" rect="-2597,992,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="-2231;-1017;-2368;-1017;-2512;-1017;-2627;-963" />
+  </Item>
+  <Item name="Wire" ID="290" rect="431,744,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="343;-801;478.5;-786" />
+  </Item>
+  <Item name="Screwdriver" ID="291" rect="745,748,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+  </Item>
+  <Item name="Wire" ID="292" rect="493,745,32,32" tags="smallitem">
+    <Holdable />
+    <Pickable />
+    <Wire nodes="626;-799;478.5;-786" />
+  </Item>
+</test2.xml>

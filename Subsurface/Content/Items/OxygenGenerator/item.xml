@@ -1,0 +1,23 @@
+﻿<Item
+  name="Oxygen Generator"
+  linkable="true">
+
+
+  <Sprite texture ="battery.png" depth="0.8"/>
+
+  <OxygenGenerator powerconsumption="2000.0" minvoltage="0.5" canbeselected = "true">
+    <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="1.0"/>
+  </OxygenGenerator>
+  
+  <trigger/>
+
+  <ItemContainer capacity="5" canbeselected = "true">
+    <Containable name="Oxygen Tank"/>
+  </ItemContainer>
+
+  <ConnectionPanel canbeselected = "true">
+    <requireditem name="Screwdriver" type="Equipped"/>
+    <input name="power_in"/>
+  </ConnectionPanel>
+
+</Item>

@@ -1,0 +1,56 @@
+﻿<Items>
+  <Item
+    name="Nuclear Reactor"
+    type ="Reactor"
+    linkable="true">
+    <trigger/>
+
+
+    <Sprite texture ="reactor.png"  depth="0.8"/>
+
+    <Reactor canbeselected = "true">
+      <requireditem name="Fuel Rod" type="Contained"/>
+      <StatusEffect type="OnActive" target="Contained" targetnames="Fuel Rod, Heat Absorber, Temperature Control Circuit" Condition="-0.1" />
+      <StatusEffect type="OnContaining=Heat Absorber" target="This" ExtraCooling="500.0" />
+    </Reactor>
+
+    <ConnectionPanel canbeselected = "true">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <output name="power_out"/>
+    </ConnectionPanel>
+
+    <ItemContainer capacity="5">
+      <Containable name="Fuel Rod"/>
+      <Containable name="Heat Absorber"/>
+      <Containable name="Temperature Control Circuit"/>  
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Fuel Rod"
+    Tags="smallitem"
+    pickdistance="150">
+
+    <Sprite texture ="fuelrod.png"/>
+
+    <Body radius="6" height="22" density="5"/>
+
+    <Holdable handle1="0,0"/>
+    <Pickable slots="RightHand,Any"/>
+  </Item>
+
+  <Item
+    name="Heat Absorber"
+    Tags="smallitem"
+    pickdistance="150">
+
+    <Sprite texture ="heatabsorber.png"/>
+
+    <Body radius="6" height="22" density="5"/>
+
+    <Holdable handle1="0,0"/>
+    <Pickable slots="Any"/>
+  </Item>
+
+</Items>
+

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<Item
+	name="ID Card"
+	Tags="smallitem"
+	pickdistance="150">
+
+	<Sprite texture ="idcard.png"/>
+
+	<Body width="16" height="16" density="10"/>
+
+	<Pickable/>
+</Item>
+	
+
+

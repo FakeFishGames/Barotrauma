@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Randomevents>
+  <MonsterEvent name="Under attack" description=""  
+    characterfile="Content/Characters/Scorpion/scorpion.xml" 
+    commonness="10" 
+    difficulty="10"
+    starttimemin="5" starttimemax="10"/>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/TigerThresher/tigerthresher.xml"
+    commonness="10"
+    difficulty="10"
+    starttimemin="5" starttimemax="10"/>
+</Randomevents>

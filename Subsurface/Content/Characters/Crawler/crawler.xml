@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<character name ="crawler" humanoid="false">
+
+  <ragdoll headposition="50" headangle="-70" 
+           waveamplitude="50.0" wavelength="2500" 
+           swimspeed="2.0" walkspeed="2.0"
+           stepsize ="15.0,20.0" 
+           stepoffset="20.0,0.0"
+           legtorque="10"
+           flip="true">
+
+    <!-- head -->
+    <limb id = "0" radius="22" height="45"  mass = "6" type="Head" flip="true" steerforce="1.0">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
+    </limb>
+
+    <!-- middle part -->
+    <limb id = "1" width="36" height="40"  mass = "6" flip="true">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="57,7,59,57" depth="0.021" origin="0.3,0.65"/>
+    </limb>
+
+    <!-- tail -->
+    <limb id = "2" width="41" height="63"  mass = "6" type="Tail" flip="true">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="6,141,60,95" depth="0.022" origin="0.37,0.43"/>
+    </limb>
+      
+    <limb id = "3" width="13" height="45" mass = "6" ignorecollisions="true" flip="true">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="65,131,36,50" depth="0.15" origin="0.4,0.5"/>
+      <attack type="PinchCW" range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="20" structuredamage="80" damagetype="slash"/>
+    </limb>
+
+    <limb id = "4" width="11" height="34" mass = "4" type="RightLeg" flip="true">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "5" width="5" height="40" mass = "4" type="RightFoot" flip="true" pullpos="0.0,15.0" refjoint="3">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
+      <sound file ="Content/Sounds/stepMetal.ogg"/>
+    </limb>
+
+    <limb id = "6" width="13" height="35" mass = "4"  type="LeftLeg" flip="true">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "7" width="5" height="40" mass = "4" type="LeftFoot" flip="true" pullpos="0.0,15.0" refjoint="5">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
+      <sound file ="Content/Sounds/stepMetal.ogg"/>
+    </limb>
+
+    <limb id = "8" width="13" height="35" mass = "4" type="RightLeg" flip="true">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "9" width="5" height="40" mass = "4" type="RightFoot" flip="true" pullpos="0.0,15.0"  refjoint="7">
+      <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
+      <sound file ="Content/Sounds/stepMetal.ogg"/>
+    </limb>
+
+    <joint limb1="0" limb1anchor="-5,-38" limb2="1" limb2anchor="-2,25" lowerlimit="-20" upperlimit="40"/>
+
+    <joint limb1="1" limb1anchor="0,-15" limb2="2" limb2anchor="-10,31" lowerlimit="-20" upperlimit="40"/>
+
+    <joint limb1="0" limb1anchor="7,30" limb2="3" limb2anchor="-2,-17" lowerlimit="-180" upperlimit="-90"/>
+
+
+    <joint limb1="0" limb1anchor="13,6" limb2="4" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180"/>
+    <joint limb1="4" limb1anchor="0,-17" limb2="5" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190"/>
+
+    <joint limb1="0" limb1anchor="13,-15" limb2="6" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180"/>
+    <joint limb1="6" limb1anchor="0,-17" limb2="7" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190"/>
+
+    <joint limb1="0" limb1anchor="13,-35" limb2="8" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180"/>
+    <joint limb1="8" limb1anchor="0,-17" limb2="9" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190"/>
+  </ragdoll>
+
+  <ai attackhumans="100" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
+      sight="0.5" hearing="1.0"
+      attackcooldown="5.0"/>
+</character>
+

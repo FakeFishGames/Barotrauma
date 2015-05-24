@@ -1,0 +1,11 @@
+﻿<Item
+  name="Ladder"
+  resizevertical="true">
+
+
+  <Sprite texture ="ladder.png" depth="0.05"/>
+
+  <Ladder canbeselected = "true"/>
+
+  <trigger x="-40" width="90"/>
+</Item>

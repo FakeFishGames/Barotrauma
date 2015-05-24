@@ -1,0 +1,135 @@
+﻿using System.Collections.Generic;
+using System.Xml.Linq;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+
+namespace Subsurface.Items.Components
+{
+    class PowerTransfer : Powered
+    {
+        static float fullPower;
+        static float fullLoad;
+
+        //affects how fast changes in power/load are carried over the grid
+        static float inertia = 5.0f;
+
+        static List<Powered> connectedList = new List<Powered>();
+
+        private float powerLoad;
+
+        public float PowerLoad
+        {
+            get { return powerLoad; }
+        }
+
+        public PowerTransfer(Item item, XElement element)
+            : base(item, element)
+        {
+            isActive = true;
+        }
+
+        public override void Update(float deltaTime, Camera cam) 
+        {
+            //reset and recalculate the power generated/consumed
+            //by the constructions connected to the grid
+            fullPower = 0.0f;
+            fullLoad = 0.0f;
+            connectedList.Clear();
+
+            if (updated) return;
+            
+            CheckJunctions(deltaTime);
+
+            foreach (Powered p in connectedList)
+            {
+                PowerTransfer pt = p as PowerTransfer;
+                if (pt!=null)
+                {
+                    pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
+                    pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
+                    pt.Item.SendSignal((fullPower / Math.Max(fullLoad,1.0f)).ToString(), "power_out");
+                }
+                else
+                {
+                    //p.Power = fullPower;
+                }
+            }
+
+            
+        }
+
+        public override bool Pick(Character picker)
+        {
+            if (picker == null) return false;
+
+            //picker.SelectedConstruction = (picker.SelectedConstruction == item) ? null : item;
+            
+            return true;
+        }
+
+        //a recursive function that goes through all the junctions and adds up
+        //all the generated/consumed power of the constructions connected to the grid
+        private void CheckJunctions(float deltaTime)
+        {
+            updated = true;
+            connectedList.Add(this);
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+
+            List<Connection> connections = item.Connections;
+            if (connections == null) return;
+
+            foreach (Connection c in connections)
+            {
+                foreach (Connection recipient in c.Recipients)
+                {
+                    if (recipient == null) continue;
+
+                    Item it = recipient.Item;
+                    if (it == null) continue;
+
+                    //if (it.Updated) continue;
+
+                    Powered powered = it.GetComponent<Powered>();
+                    if (powered == null || powered.Updated) continue;
+
+                    PowerTransfer powerTransfer = powered as PowerTransfer;
+                    if (powerTransfer != null)
+                    {
+                        powerTransfer.CheckJunctions(deltaTime);
+                    }
+                    else
+                    {
+                        connectedList.Add(powered);
+                        //positive power consumption = the construction requires power -> increase load
+                        if (powered.PowerConsumption > 0.0f)
+                        {
+                            fullLoad += powered.PowerConsumption;
+                        }
+                        else if (powered.PowerConsumption < 0.0f)
+                        //negative power consumption = the construction is a 
+                        //generator/battery or another junction box
+                        {
+                            fullPower -= powered.PowerConsumption;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        {
+            int width = 300, height = 200;
+            int x = Game1.GraphicsWidth / 2 - width / 2;
+            int y = Game1.GraphicsHeight / 2 - height / 2;
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
+
+            spriteBatch.DrawString(GUI.font, "Power: " + (int)(-currPowerConsumption), new Vector2(x + 30, y + 30), Color.White);
+            spriteBatch.DrawString(GUI.font, "Load: " + (int)powerLoad, new Vector2(x + 30, y + 100), Color.White);
+        }
+
+    }
+}

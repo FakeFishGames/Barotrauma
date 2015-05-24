@@ -1,0 +1,61 @@
+﻿<Items>
+  <Item
+    name="Railgun"
+    focusonselected="true"
+    offsetonselected="500"
+    linkable="true">
+
+    <Sprite texture ="railgunbase.png"/>
+
+    <Turret barrelsprite="railgunbarrel.png" canbeselected = "true" linkable="true" origin="0.5, 0.85" barrelpos="117, 57" 
+            rotationlimits="180,360"
+            powerconsumption="500.0">
+      <Sound path="Content/Items/railgun.ogg" type="OnUse"/>
+    </Turret>
+  </Item>
+
+  <Item
+    name="Railgun Controller"
+    type="Controller"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture ="railguncontroller.png" depth="0.8"/>
+    
+    <Controller userpos="-1" direction ="Right" canbeselected = "true">
+      <limbposition limb="Head" position="0,-124"/>
+      <limbposition limb="LeftHand" position="38,-125"/>
+      <limbposition limb="RightHand" position="38,-125"/>
+    </Controller>
+
+    <trigger x="-50" y="-87" width="200" height ="153"/>  
+  </Item>
+
+  <Item
+    name="Railgun Loader"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture ="railgunloader.png" depth =" 0.8"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="5" itempos="54,-61" iteminterval="40,0" canbeselected = "true">
+      <Containable name="Railgun Shell"/>
+    </ItemContainer>
+      
+  </Item>
+  
+  <Item
+    name="Railgun Shell"
+    pickdistance="200">
+
+    <Sprite texture ="railgunshell.png"/>
+
+    <Body radius="14" height="63" density="15"/>
+
+    <Holdable holdpos="30,-15" handle1="0,20" handle2="0,-20"/>
+    <Pickable slots="RightHand"/>
+    <Projectile launchimpulse="80.0"/>
+    
+  </Item>
+</Items>
+

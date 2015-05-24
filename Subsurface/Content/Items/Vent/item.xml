@@ -1,0 +1,10 @@
+﻿<Item
+  name="Vent"
+  linkable="true">
+
+
+  <Sprite texture ="vent.png" depth="0.8"/>
+  
+  <Vent/>
+
+</Item>

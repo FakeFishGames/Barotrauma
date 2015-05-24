@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<Items>
+  <Item
+    name="Harpoon"
+    pickdistance="200">
+
+    <Sprite texture ="harpoon.png" depth="0.55"/>
+
+    <Body width="80" height="5" density="10"/>
+
+    <Pickable slots="Any"/>
+    <Projectile launchimpulse="20.0" damage="20.0" bleedingdamage="20.0" doesstick="true">
+      <Attack damage="20" bleeding="20" structuredamage="50" damagetype="Blunt"/>
+    </Projectile>
+  </Item>
+  
+  <Item
+    name="Harpoon Gun"
+    pickdistance="200" >
+  
+    <Sprite texture ="harpoongun.png" depth="0.04"/>
+
+    <Body width="90" height="30" density="5"/>
+
+    <Holdable holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>
+    
+    <Pickable slots="Any,BothHands"/>
+
+    <RangedWeapon barrelpos="49,10">
+      <Sound path="Content/Items/Weapons/harpoon1.ogg" type="OnUse"/>
+      <Sound path="Content/Items/Weapons/harpoon2.ogg" type="OnUse"/>
+      <RequiredItems name="Harpoon" type="Contained"/>
+    </RangedWeapon>
+
+    <Rope sprite="Content/Items/Weapons/rope.png" projectileanchorx="-40.0"/>
+
+    <ItemContainer hideitems="true">
+      <Containable name="Harpoon"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Stun Grenade"
+    pickdistance="200" >
+
+    <Sprite texture ="stungrenade.png" depth="0.04"/>
+
+    <Body width="11" height="24" density="15" friction="0.8f"/>
+
+    <Throwable holdpos="0,0" handle1="0,0" throwforce="5.0">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stunGrenade.ogg">
+        <Explosion range="5" damage="5" stun="10" force="0.1"/>
+      </StatusEffect>
+    </Throwable>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+  </Item>
+</Items>
+
+

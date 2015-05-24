@@ -1,0 +1,57 @@
+<prefabs>
+  <largehorizontalback sprite="Content/Map/testroom.png" sourcerect="0,0,896,64" depth ="0.4"
+  width = "128" height ="64" resizehorizontal="true"/>
+
+  <smallhorizontalback sprite="Content/Map/testroom.png" sourcerect="0,64,896,32" depth ="0.4" 
+  width = "128" height ="32" resizehorizontal="true"/>
+
+  <leftwall sprite="Content/Map/testroom.png" sourcerect="688,352,32,496" depth ="0.05" castshadow="true"
+  width = "32" height ="64" resizevertical="true" body="true" health="500"/>
+
+  <rightwall sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="688,352,32,496" depth ="0.05" castshadow="true"
+  width = "32" height ="64" resizevertical="true" body="true" health="500"/>
+
+  <topwall sprite="Content/Map/testroom.png" sourcerect="144,464,496,32" depth ="0.05" castshadow="true"
+  width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
+
+  <bottomwall sprite="Content/Map/testroom.png" flipvertical ="true" sourcerect="144,496,640,32" depth ="0.05" castshadow="true"
+  width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
+
+  <topwindow sprite="Content/Map/testroom.png" sourcerect="208,352,128,80" depth ="0.05"
+  width = "128" height ="80" body="true" health="100"/>
+
+  <smallhorizontalback sprite="Content/Map/testroom.png" sourcerect="0,65,896,32" depth ="0.4"
+  width = "128" height ="32" resizehorizontal="true"/>
+
+  <largeplatform sprite="Content/Map/testroom.png" sourcerect="896,0,128,64" depth ="0.9"
+  width = "64" height ="64" resizehorizontal="true" body="true" platform="true"/>
+
+  <platform sprite="Content/Map/testroom.png" sourcerect="896,64,128,32" depth ="0.9"
+  width = "64" height ="32" resizehorizontal="true" body="true" platform="true"/>
+
+  <largeverticalback sprite="Content/Map/testroom.png" sourcerect="0,96,64,448" depth ="0.4" 
+  width = "64" height ="128" resizevertical="true"/>
+  <largeverticalback2 sprite="Content/Map/testroom.png" sourcerect="64,96,64,448" depth ="0.4" 
+  width = "64" height ="128" resizevertical="true"/>
+
+  <smallverticalback sprite="Content/Map/testroom.png" sourcerect="128,96,32,352" depth ="0.85" 
+  width = "32" height ="128" resizevertical="true"/>
+  <smallverticalback2 sprite="Content/Map/testroom.png" sourcerect="160,96,32,352" depth ="0.85" 
+  width = "32" height ="128" resizevertical="true"/>
+
+  <roughbgwall sprite="Content/Map/testroom.png" sourcerect="200,104,240,240" depth = "1.0"
+  width="64" height="64" resizehorizontal="true" resizevertical="true"/>
+
+  <cleanbgwall sprite="Content/Map/testroom.png" sourcerect="448,96,448,224" depth = "1.0"
+  width="64" height="64" resizehorizontal="true" resizevertical="true"/>
+
+  <bgpanels sprite="Content/Map/testroom.png" sourcerect="768,320,224,224" depth = "1.0"
+  width="64" height="64" resizehorizontal="true" resizevertical="true"/>
+
+  <stairsright sprite="Content/Map/testroom.png" sourcerect="0,704,256,320" 
+  width="256" height="320" depth = "0.1" stairdirection="Right"/>
+
+  <stairsleft sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="0,704,256,320" 
+  width="256" height="320" depth = "0.1" stairdirection="Left"/>
+
+</prefabs>

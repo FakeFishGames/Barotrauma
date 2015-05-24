@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+	<Item
+		name="Junction Box"
+		type="JunctionBox"
+		linkable="true"
+		pickdistance="150">
+		
+		<Sprite texture ="junctionbox.png" depth="0.8"/>
+
+		<PowerTransfer canbeselected = "true"/>
+
+		<ConnectionPanel canbeselected = "true">
+			<requireditem name="Screwdriver" type="Equipped"/>
+			<output name="power_out"/>
+		</ConnectionPanel>
+
+	</Item>
+
+	<Item
+		name="Battery"
+		linkable="true"
+		pickdistance="150">
+
+
+		<Sprite texture ="battery.png" depth="0.8"/>
+		
+		<PowerContainer capacity="2000.0" maxinput="500.0" maxoutput="1000.0" canbeselected = "true"/>
+
+		<ConnectionPanel canbeselected = "true">
+			<requireditem name="Screwdriver" type="Equipped"/>
+			<input name="power_in"/>
+		</ConnectionPanel>
+		
+	</Item>
+</Items>

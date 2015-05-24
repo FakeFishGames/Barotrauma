@@ -1,0 +1,41 @@
+﻿<Items>
+  <Item
+    name="Door"
+    linkable="true"
+    pickdistance="150.0">
+
+    <Sprite texture ="doorframe.png" depth="0.8" origin="0.5,0.5"/>
+
+    <Door>
+      <Sprite texture ="door.png" depth="0.4" origin="0.5,0.0"/>
+    </Door>
+  
+    <ConnectionPanel canbeselected = "true">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
+      <output name="state_out"/>
+    </ConnectionPanel>
+
+  </Item>
+
+  <Item
+    name="Windowed Door"
+    linkable="true"
+    pickdistance="150.0">
+
+    <Sprite texture ="doorframe.png" depth="0.8" origin="0.5,0.5"/>
+
+    <Door window="0,-18,10,89">
+      <Sprite texture ="windowedDoor.png" depth="0.4" origin="0.5,0.0"/>
+    </Door>
+
+    <ConnectionPanel canbeselected = "true">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
+      <output name="state_out"/>
+    </ConnectionPanel>
+
+  </Item>
+</Items>

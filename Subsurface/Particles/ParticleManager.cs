@@ -1,0 +1,108 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Xml.Linq;
+using FarseerPhysics;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Subsurface.Particles
+{
+    class ParticleManager
+    {
+        public static int particleCount;
+        
+        private const int MaxParticles = 1500;
+        private Particle[] particles;
+
+        private Dictionary<string, ParticlePrefab> prefabs;
+
+        Camera cam;
+        
+        public ParticleManager(string configFile, Camera cam)
+        {
+            this.cam = cam;
+
+            particles = new Particle[MaxParticles];
+
+            XDocument doc = ToolBox.TryLoadXml(configFile);
+            if (doc == null) return;
+
+            prefabs = new Dictionary<string, ParticlePrefab>();
+
+            foreach (XElement element in doc.Root.Elements())
+            {
+                if (prefabs.ContainsKey(element.Name.ToString()))
+                {
+                    DebugConsole.ThrowError("Error in " + configFile + "! Each particle prefab must have a unique name.");
+                    continue;
+                }
+                prefabs.Add(element.Name.ToString(), new ParticlePrefab(element));
+            }
+        }
+
+        public Particle CreateParticle(Vector2 position, float angle, float speed, string prefabName)
+        {
+            return CreateParticle(position, angle, new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * speed, prefabName);
+        }
+
+        public Particle CreateParticle(Vector2 position, float rotation, Vector2 speed, string prefabName)
+        {         
+            ParticlePrefab prefab;
+            prefabs.TryGetValue(prefabName, out prefab);
+
+            if (prefab==null)
+            {
+                DebugConsole.ThrowError("Particle prefab "+prefabName+" not found!");
+                return null;
+            }
+
+            return CreateParticle(position, rotation, speed, prefab);
+        }
+
+        public Particle CreateParticle(Vector2 position, float rotation, Vector2 speed, ParticlePrefab prefab)
+        {
+            if (!Map.RectContains(cam.WorldView, ConvertUnits.ToDisplayUnits(position))) return null;
+            if (particleCount >= MaxParticles) return null;
+
+            if (particles[particleCount] == null) particles[particleCount] = new Particle();
+
+            particles[particleCount].Init(position, rotation, speed, prefab);
+
+            particleCount++;
+
+            return particles[particleCount-1];
+
+        }
+
+        private void RemoveParticle(int index)
+        {
+            particleCount--;
+
+            Particle swap = particles[index];
+            particles[index] = particles[particleCount];
+            particles[particleCount] = swap;
+        }
+
+
+
+        public void Update(float deltaTime)
+        {
+            for (int i = 0; i < particleCount; i++)
+            {
+                if (!particles[i].Update(deltaTime)) RemoveParticle(i);
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool inWater)
+        {
+            for (int i = 0; i < particleCount; i++)
+            {
+                if (particles[i].InWater != inWater) continue;
+                
+                particles[i].Draw(spriteBatch);
+            }
+        }
+
+
+    }
+}

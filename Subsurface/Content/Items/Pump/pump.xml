@@ -1,0 +1,16 @@
+﻿<Item
+  name="Pump"
+  linkable="true"
+  pickdistance="200">
+
+  <Sprite texture ="pump.png" depth="0.08"/>
+  
+  <Pump maxflow="500" PowerConsumption="300.0" MinVoltage="0.3"/>
+
+  <ConnectionPanel canbeselected = "true">
+    <requireditem name="Screwdriver" type="Equipped"/>
+    <input name="power_in"/>
+    <input name="toggle"/>
+    <input name="set_state"/>    
+  </ConnectionPanel>
+</Item>

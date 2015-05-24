@@ -1,0 +1,11 @@
+﻿<Item
+  name="MiniMap"
+  linkable="true">
+
+  <Sprite texture ="reactor.png" depth="0.8"/>
+
+  <trigger/>
+
+  <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true"/>
+
+</Item>

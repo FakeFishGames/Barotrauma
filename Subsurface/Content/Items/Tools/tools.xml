@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Welding Tool"
+    Tags="smallitem"
+    pickdistance="200">
+
+    <Sprite texture ="weldingtool.png"  depth="0.04"/>
+
+    <Body width="50" height="44" density="5"/>
+
+    <Holdable holdpos="-9,-20" holdangle="-30"/>
+
+    <RepairTool range="80">
+      <Fixable name="structure"/>
+    </RepairTool>
+
+    <Pickable slots="Any,RightHand"/>
+
+  </Item>
+
+  <Item
+    name="Screwdriver"
+    Tags="smallitem"
+    pickdistance="200">
+
+    <Sprite texture ="screwdriver.png"/>
+
+    <Body width="30" height="8" density="20"/>
+
+    <Holdable holdangle="30" handle1="0,0"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="Wrench"
+    Tags="smallitem"
+    pickdistance="200">
+
+
+    <Sprite texture ="wrench.png"/>
+
+    <Body width="30" height="8" density="20"/>
+
+    <Holdable holdangle="30" handle1="0,0"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+</Items>

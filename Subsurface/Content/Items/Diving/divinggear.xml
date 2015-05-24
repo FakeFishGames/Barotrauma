@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Diving Mask"
+    Tags="smallitem"
+    pickdistance="200">
+
+    <Sprite texture ="DivingMask.png" depth="0.4"/>
+  
+    <Body radius="18" density="5"/>
+
+    <Wearable limbtype="Head" slots="Any,Head">
+      <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
+      <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Oxygen Tank" Condition="-0.1" Oxygen="20.0"/>
+    </Wearable>
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Oxygen Tank"/>
+    </ItemContainer>  
+
+  </Item>
+
+  <Item
+    name="Diving Suit"
+    pickdistance="200">
+
+    <Sprite texture ="DivingSuit.png" sourcerect="82,15,46,113" depth="0.4"/>
+
+    <Body width="37" height="113" density="5"/>
+
+    <Wearable slots="Head,Torso">
+      <sprite texture="DivingSuit.png" limb="Head" sourcerect="1,94,32,33" origin="0.5,0.5" depth="0.02"/>
+      <sprite texture="DivingSuit.png" limb="Torso" sourcerect="40,0,38,65" origin="0.5,0.33" depth="0.01"/>
+
+      <sprite texture="DivingSuit.png" limb="RightHand" sourcerect="21,0,18,50" origin="0.45,0.4"/>
+      <sprite texture="DivingSuit.png" limb="LeftHand" sourcerect="21,0,18,50" origin="0.45,0.4"/>
+
+      <sprite texture="DivingSuit.png" limb="RightArm" sourcerect="0,0,18,40" origin="0.5,0.4" depth="0.005"/>
+      <sprite texture="DivingSuit.png" limb="LeftArm" sourcerect="0,0,18,40" origin="0.5,0.4" depth="0.005"/>
+
+      <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Oxygen Tank" Condition="-0.1" Oxygen="20.0"/>
+      <StatusEffect type="OnWearing" target="Character" PressureProtection="100.0"/>
+    </Wearable>
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Oxygen Tank"/>
+    </ItemContainer>
+
+  </Item>
+</Items>

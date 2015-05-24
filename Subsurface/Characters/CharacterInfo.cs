@@ -1,0 +1,76 @@
+﻿using System.Xml.Linq;
+
+namespace Subsurface
+{
+    public enum Gender { None, Male, Female };        
+
+    class CharacterInfo
+    {
+        //the name of the character (e.q. Urist McEngineer)
+        public string name;
+
+        public readonly string file;
+
+        public int ID;
+
+        public Gender gender;
+
+        public int salary;
+
+        public string GenderString()
+        {
+            return gender.ToString();
+        }
+
+        public CharacterInfo(string file, string name = "", Gender gender = Gender.None)
+        {
+            this.file = file;
+
+            ID = -1;
+
+            XDocument doc = ToolBox.TryLoadXml(file);
+            if (doc == null) return;
+
+            salary = 500;
+
+            if (ToolBox.GetAttributeBool(doc.Root, "genders", false))
+            {
+                if (gender==Gender.None)
+                {
+                    float femaleRatio = ToolBox.GetAttributeFloat(doc.Root, "femaleratio", 0.5f);
+                    this.gender = (Game1.random.NextDouble() < femaleRatio) ? Gender.Female : Gender.Male;
+                }
+                else
+                {
+                    this.gender = gender;
+                }
+            }
+            
+            if (!string.IsNullOrEmpty(name))
+            {
+                this.name = name;
+                return;
+            }
+
+            if (doc.Root.Element("name") != null)
+            {
+                string firstNamePath = (ToolBox.GetAttributeString(doc.Root.Element("name"), "firstname", ""));
+                if (firstNamePath != "")
+                {
+                    firstNamePath = firstNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
+                    this.name = ToolBox.GetRandomLine(firstNamePath);
+                }
+
+                string lastNamePath = (ToolBox.GetAttributeString(doc.Root.Element("name"), "lastname", ""));
+                if (lastNamePath != "")
+                {
+                    lastNamePath = lastNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
+                    if (this.name != "") this.name += " ";
+                    this.name += ToolBox.GetRandomLine(lastNamePath);
+                }
+            }
+            
+
+        }
+    }
+}

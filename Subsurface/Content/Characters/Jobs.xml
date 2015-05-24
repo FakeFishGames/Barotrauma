@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Jobs>
+  <Captain description="The Commanding Officer with authority over the entire crew.">
+    <Item name="ID Card"/>
+  </Captain>
+
+  <Engineer>
+    <Item name="ID Card"/>
+    <Item name="Wrench"/>
+    <Item name="Screwdriver"/>
+  </Engineer>
+
+  <Mechanic>
+    <Item name="ID Card"/>
+    <Item name="Wrench"/>
+    <Item name="Screwdriver"/>
+  </Mechanic>
+</Jobs>
