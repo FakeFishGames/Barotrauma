@@ -60,9 +60,8 @@ namespace Subsurface
 
         public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
         {
-            Vector2 position = new Vector2(PlayerInput.GetMouseState.X, PlayerInput.GetMouseState.Y);
-            position = cam.ScreenToWorld(position);
-
+            Vector2 position = Map.MouseToWorldGrid(cam); 
+            
             if (!resizeHorizontal && !resizeVertical)
             {
                 if (PlayerInput.LeftButtonClicked())

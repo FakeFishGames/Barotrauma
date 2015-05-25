@@ -150,8 +150,8 @@ namespace Subsurface
 
         public override bool Contains(Vector2 position)
         {
-            return (Map.RectContains(rect, position) && 
-                !Map.RectContains(new Rectangle(rect.X + 8, rect.Y - 8, rect.Width -16, rect.Height -16), position));
+            return (Map.RectContains(rect, position) &&
+                !Map.RectContains(new Rectangle(rect.X + 8, rect.Y - 8, rect.Width - 16, rect.Height - 16), position));
         }
 
         public int GetWaveIndex(Vector2 position)
@@ -213,7 +213,7 @@ namespace Subsurface
                 if (maxDelta > ToolBox.RandomFloat(0.2f,10.0f))
                 {
                     Game1.particleManager.CreateParticle(ConvertUnits.ToSimUnits(new Vector2(rect.X + WaveWidth * i,surface + waveY[i])),
-                        0.0f, new Vector2(0.0f, waveVel[i]/10.0f-1.0f), "mist");
+                        ToolBox.RandomFloat(0.0f,6.2f), new Vector2(0.0f, -0.5f), "mist");
                 }
 
                 waveY[i] = waveY[i] + waveVel[i];

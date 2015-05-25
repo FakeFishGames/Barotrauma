@@ -88,6 +88,12 @@ namespace Subsurface
             }
         }
 
+        public override bool Contains(Vector2 position)
+        {
+            return (Map.RectContains(rect, position) &&
+                !Map.RectContains(new Rectangle(rect.X + 4, rect.Y - 4, rect.Width - 8, rect.Height - 8), position));
+        }
+
         private void FindHulls()
         {
             Hull hull1 = null, hull2 = null;

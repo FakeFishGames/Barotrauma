@@ -258,7 +258,7 @@ namespace Subsurface
             {
                 if (dummyCharacter != null && dummyCharacter.SelectedConstruction != null)
                 {
-                    if (Character.Controlled.SelectedConstruction == dummyCharacter.ClosestItem)
+                    if (dummyCharacter.SelectedConstruction == dummyCharacter.ClosestItem)
                     {
                         dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, dummyCharacter);
                     }

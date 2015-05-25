@@ -18,20 +18,13 @@ namespace Subsurface.Lights
 
         bool[] backFacing;
         VertexPositionColor[] shadowVertices;
-
+        
         public bool Enabled
         {
             get;
             set;
         }
         
-        //private Vector2 position = Vector2.Zero;
-        //public Vector2 Position
-        //{
-        //    get { return position; }
-        //    set { position = value; }
-        //}
-
         public ConvexHull(Vector2[] points, Color color)
         {
             int vertexCount = points.Length;
@@ -56,8 +49,7 @@ namespace Subsurface.Lights
                 indices[3 * i + 2] = (short)vertexCount;
             }
             backFacing = new bool[vertexCount];
-
-
+            
             Enabled = true;
 
             list.Add(this);
