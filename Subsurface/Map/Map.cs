@@ -19,6 +19,8 @@ namespace Subsurface
 
     static class Map
     {
+        static string MapFolder = "Content/SavedMaps";
+
         public static Vector2 gridSize = new Vector2(16.0f, 16.0f);
 
         private static Vector2 lastPickedPosition;
@@ -244,9 +246,24 @@ namespace Subsurface
         public static string[] GetMapFilePaths()
         {
             string[] mapFilePaths;
+
+            if (!Directory.Exists(MapFolder))
+            {
+                try
+                {
+                    Directory.CreateDirectory(MapFolder);
+                }
+                catch
+                {
+
+                    DebugConsole.ThrowError("Directory ''Content/SavedMaps'' not found and creating the directory failed.");
+                    return null;
+                }
+            }
+
             try
             {
-                mapFilePaths = Directory.GetFiles("Content/SavedMaps");
+                mapFilePaths = Directory.GetFiles(MapFolder);
             }
             catch (Exception e)
             {

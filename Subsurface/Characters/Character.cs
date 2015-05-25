@@ -105,9 +105,7 @@ namespace Subsurface
             get { return pressureProtection; }
             set
             {
-                //if (!value && pressureProtection) Debug.WriteLine("pp set: " + value);
                 pressureProtection = MathHelper.Clamp(value, 0.0f, 100.0f);
-
             }
         }
 
@@ -490,7 +488,6 @@ namespace Subsurface
         {
             if (isDead) return;
 
-            Debug.WriteLine("pp: " + PressureProtection);
             if (PressureProtection==0.0f && 
                 (animController.CurrentHull == null || animController.CurrentHull.LethalPressure >= 100.0f))
             {

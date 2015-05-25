@@ -63,6 +63,9 @@ namespace Subsurface.Items.Components
                 openState = (isOpen) ? 1.0f : 0.0f;
             }
         }
+
+        private Rectangle doorRect;
+
         
         public float OpenState
         {
@@ -84,24 +87,46 @@ namespace Subsurface.Items.Components
                 {
                     //Rectangle rect = item.Rect;
                     //rect.Height = (int)(rect.Height * (1.0f - openState));
-
-                    Rectangle rect1 = item.Rect;
+                    
+                    Rectangle rect1 = doorRect;
                     rect1.Height = -window.Y;
 
-                    rect1.Y += (int)(item.Rect.Height * openState);
-                    rect1.Height = Math.Max(rect1.Height - (rect1.Y - item.Rect.Y), 0);
-                    rect1.Y = Math.Min(item.Rect.Y, rect1.Y);
+                    rect1.Y += (int)(doorRect.Height * openState);
+                    rect1.Height = Math.Max(rect1.Height - (rect1.Y - doorRect.Y), 0);
+                    rect1.Y = Math.Min(doorRect.Y, rect1.Y);
 
-                    Rectangle rect2 = item.Rect;
-                    rect2.Y = rect2.Y + window.Y - window.Height;
+                    if (rect1.Height == 0)
+                    {
+                        convexHull.Enabled = false;
+                    }
+                    else
+                    {
+                        convexHull.SetVertices(GetConvexHullCorners(rect1));
+                    }
+
+                    if (convexHull2 != null)
+                    {
+                        Rectangle rect2 = doorRect;
+                        rect2.Y = rect2.Y + window.Y - window.Height;
+
+                        rect2.Y += (int)(doorRect.Height * openState);
+                        rect2.Y = Math.Min(doorRect.Y, rect2.Y);
+                        rect2.Height = rect2.Y - (doorRect.Y - (int)(doorRect.Height * (1.0f - openState)));
+                        convexHull2.SetVertices(GetConvexHullCorners(rect2));
+
+                        if (rect2.Height == 0)
+                        {
+                            convexHull2.Enabled = false;
+                        }
+                        else
+                        {
+                            convexHull2.SetVertices(GetConvexHullCorners(rect2));
+                        }
+                    }
+
                     
-                    rect2.Y += (int)(item.Rect.Height * openState);
-                    //rect2.Height = Math.Max(rect2.Height - (rect2.Y - item.Rect.Y), 0);
-                    rect2.Y = Math.Min(item.Rect.Y, rect2.Y);
-                    rect2.Height = rect2.Y - (item.Rect.Y - (int)(item.Rect.Height * (1.0f - openState)));
                     
-                    convexHull.SetVertices(GetConvexHullCorners(rect1));
-                    if (convexHull2!=null) convexHull2.SetVertices(GetConvexHullCorners(rect2));
+          
                 }
 
             }
@@ -117,31 +142,40 @@ namespace Subsurface.Items.Components
             //Vector2 position = new Vector2(newRect.X, newRect.Y);
             
            // isOpen = false;
-            
-            body = new PhysicsBody(BodyFactory.CreateRectangle(Game1.world,
-                ConvertUnits.ToSimUnits(Math.Max(item.Rect.Width, 1)),
-                ConvertUnits.ToSimUnits(Math.Max(item.Rect.Height, 1)),
-                1.5f));
-            
-            body.BodyType = BodyType.Static;
-            body.SetTransform(
-                ConvertUnits.ToSimUnits(new Vector2(item.Rect.X + item.Rect.Width / 2, item.Rect.Y - item.Rect.Height / 2)),
-                0.0f);
-            body.Friction = 0.5f;
-
-
-            //string spritePath = Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\"+ ToolBox.GetAttributeString(element, "sprite", "");
-
-                        foreach (XElement subElement in element.Elements())
+            foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLower() != "sprite") continue;
                 doorSprite = new Sprite(subElement, Path.GetDirectoryName(item.Prefab.ConfigFile));
                 break;
             }
 
-            isActive = true;
+            doorRect = new Rectangle(
+                item.Rect.Center.X - (int)(doorSprite.size.X / 2),
+                item.Rect.Y,
+                (int)doorSprite.size.X,
+                (int)doorSprite.size.Y);
 
-            Vector2[] corners = GetConvexHullCorners(item.Rect);
+
+            body = new PhysicsBody(BodyFactory.CreateRectangle(Game1.world,
+                ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
+                ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),
+                1.5f));
+            
+            body.BodyType = BodyType.Static;
+            body.SetTransform(
+                ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
+                0.0f);
+            body.Friction = 0.5f;
+
+
+            //string spritePath = Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\"+ ToolBox.GetAttributeString(element, "sprite", "");
+
+
+
+            isActive = true;
+          
+
+            Vector2[] corners = GetConvexHullCorners(doorRect);
 
             convexHull = new ConvexHull(corners, Color.Black);            
             if (window!=null) convexHull2 = new ConvexHull(corners, Color.Black);
@@ -167,9 +201,12 @@ namespace Subsurface.Items.Components
         {
             base.Move(amount);
 
+            linkedGap.Move(amount);
+
             body.SetTransform(body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
 
             convexHull.Move(amount);
+            if (convexHull2 != null) convexHull2.Move(amount);
         }
 
 
@@ -205,7 +242,7 @@ namespace Subsurface.Items.Components
             else
             {
                 spriteBatch.Draw(doorSprite.Texture, new Vector2(item.Rect.Center.X, -item.Rect.Y),
-                    new Rectangle(0, (int)(doorSprite.size.Y * openState),
+                    new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
                     (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
                     color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
 
@@ -217,8 +254,6 @@ namespace Subsurface.Items.Components
                 }
                 else
                 {
-
-
                     //push characters out of the doorway when the door is closing/opening
                     Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
                     Vector2 simSize = ConvertUnits.ToSimUnits(new Vector2(item.Rect.Width,
@@ -244,6 +279,8 @@ namespace Subsurface.Items.Components
             base.Remove();
 
             Game1.world.RemoveBody(body.FarseerBody);
+
+            linkedGap.Remove();
 
             doorSprite.Remove();
 
