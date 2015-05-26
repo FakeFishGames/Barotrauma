@@ -72,15 +72,16 @@ namespace Subsurface
             float damageAmount = 0.0f;
             DamageSoundType damageSoundType = DamageSoundType.None;
 
-            if (target as Structure == null)
-            {
-                damageAmount = damage;
-                damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
-            }
-            else
+            if (target as Character == null)
             {
                 damageAmount = structureDamage;
                 damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt: DamageSoundType.StructureSlash;
+
+            }
+            else
+            {
+                damageAmount = damage;
+                damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
             }
 
             if (playSound) AmbientSoundManager.PlayDamageSound(damageSoundType, damageAmount, position);

@@ -40,12 +40,12 @@ namespace Subsurface.Particles
             }
         }
 
-        public Particle CreateParticle(Vector2 position, float angle, float speed, string prefabName)
+        public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed)
         {
-            return CreateParticle(position, angle, new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * speed, prefabName);
+            return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * speed, angle);
         }
 
-        public Particle CreateParticle(Vector2 position, float rotation, Vector2 speed, string prefabName)
+        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 speed, float rotation=0.0f)
         {         
             ParticlePrefab prefab;
             prefabs.TryGetValue(prefabName, out prefab);
@@ -56,17 +56,17 @@ namespace Subsurface.Particles
                 return null;
             }
 
-            return CreateParticle(position, rotation, speed, prefab);
+            return CreateParticle(prefab, position, speed, rotation);
         }
 
-        public Particle CreateParticle(Vector2 position, float rotation, Vector2 speed, ParticlePrefab prefab)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation=0.0f)
         {
             if (!Map.RectContains(cam.WorldView, ConvertUnits.ToDisplayUnits(position))) return null;
             if (particleCount >= MaxParticles) return null;
 
             if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
-            particles[particleCount].Init(position, rotation, speed, prefab);
+            particles[particleCount].Init(prefab, position, speed, rotation);
 
             particleCount++;
 

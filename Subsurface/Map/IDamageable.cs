@@ -4,13 +4,12 @@ namespace Subsurface
 {
     interface IDamageable
     {
-        //float Damage
-        //{
-        //    get;
-        //    set;
-        //}
-
         Vector2 SimPosition
+        {
+            get;
+        }
+
+        float Health
         {
             get;
         }

@@ -116,10 +116,19 @@ namespace Subsurface
                 && pos.Y < rect.Y && pos.Y > rect.Y - rect.Height);
         }
 
-        public static bool RectsOverlap(Rectangle rect1, Rectangle rect2)
+        public static bool RectsOverlap(Rectangle rect1, Rectangle rect2, bool inclusive=true)
         {
-            return !(rect1.X > rect2.X + rect2.Width || rect1.X + rect1.Width < rect2.X ||
-                rect1.Y < rect2.Y - rect2.Height || rect1.Y - rect1.Height > rect2.Y);
+            if (inclusive)
+            {
+                return !(rect1.X > rect2.X + rect2.Width || rect1.X + rect1.Width < rect2.X ||
+                    rect1.Y < rect2.Y - rect2.Height || rect1.Y - rect1.Height > rect2.Y);
+            }
+            else
+            {
+                return !(rect1.X >= rect2.X + rect2.Width || rect1.X + rect1.Width <= rect2.X ||
+                    rect1.Y <= rect2.Y - rect2.Height || rect1.Y - rect1.Height >= rect2.Y);
+            }
+
         }
         
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null)
@@ -149,9 +158,9 @@ namespace Subsurface
         }
 
 
-        public static Structure CheckVisibility(Vector2 rayStart, Vector2 rayEnd)
+        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd)
         {
-            Structure closestStructure = null;
+            Body closestBody = null;
             float closestFraction = 1.0f;
 
             if (Vector2.Distance(rayStart,rayEnd)<0.01f)
@@ -174,7 +183,7 @@ namespace Subsurface
 
                 if (fraction < closestFraction)
                 {
-                    if (structure != null) closestStructure = structure;
+                    closestBody = fixture.Body;
                     closestFraction = fraction;
                 }
                 return closestFraction;
@@ -184,7 +193,7 @@ namespace Subsurface
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
-            return closestStructure;
+            return closestBody;
         }
 
         public static Body PickBody(Vector2 point)
@@ -284,8 +293,17 @@ namespace Subsurface
             Clear();
             filePath = file;
             XDocument doc = null;
+            string extension = "";
 
-            string extension = Path.GetExtension(file);
+            try
+            {
+                extension = Path.GetExtension(file);
+            }
+            catch
+            {
+                DebugConsole.ThrowError("Couldn't load map ''" + file + "! (Unrecognized file extension)");
+                return;
+            }
 
             if (extension==".gz")
             {

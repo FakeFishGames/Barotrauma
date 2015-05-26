@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using FarseerPhysics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using FarseerPhysics.Dynamics;
 
 namespace Subsurface
 {
@@ -41,7 +42,7 @@ namespace Subsurface
         //a point in a wall which the character is currently targeting
         private Vector2 wallAttackPos;
         //the entity (a wall) which the character is targeting
-        private MapEntity targetEntity;
+        private IDamageable targetEntity;
 
         //the limb selected for the current attack
         private Limb attackingLimb;
@@ -157,23 +158,7 @@ namespace Subsurface
 
             if (coolDownTimer>0.0f)
             {
-                coolDownTimer -= deltaTime;
-
-                //System.Diagnostics.Debug.WriteLine("cooldown");
-
-                if (selectedTarget.entity is Hull ||
-                    Vector2.Distance(attackPosition, character.animController.limbs[0].SimPosition)<ConvertUnits.ToSimUnits(500.0f))
-                {
-                    steeringManager.SteeringSeek(attackPosition, -0.8f);
-                    steeringManager.SteeringAvoid(deltaTime, 1.0f);
-                }
-                else
-                {
-                    steeringManager.SteeringSeek(attackPosition, -0.5f);
-                    steeringManager.SteeringAvoid(deltaTime, 1.0f);
-
-                }
-
+                UpdateCoolDown(attackPosition, deltaTime);
                 return;
             }
 
@@ -183,45 +168,7 @@ namespace Subsurface
             }
             else
             {
-                targetEntity = null;
-                //check if there's a wall between the target and the character   
-                Vector2 rayStart = character.animController.limbs[0].SimPosition;
-                Vector2 rayEnd = selectedTarget.Position;
-                Structure closestStructure = Map.CheckVisibility(rayStart, rayEnd);
-                if (Map.LastPickedFraction == 1.0f || closestStructure == null)
-                {
-                    wallAttackPos = Vector2.Zero;
-                }
-                else
-                {
-                   
-
-                    Structure wall = closestStructure as Structure;
-                    if (wall==null)
-                    {
-                        wallAttackPos = Map.LastPickedPosition;
-                    }
-                    else
-                    {
-                        int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Map.LastPickedPosition));
-
-                        float sectionDamage = wall.SectionDamage(sectionIndex);
-                        for (int i = sectionIndex-2; i<=sectionIndex+2; i++)
-                        {
-                            if (wall.SectionHasHole(i))
-                            {
-                                sectionIndex = i;
-                                break;
-                            }
-                            if (wall.SectionDamage(i) > sectionDamage) sectionIndex = i;
-                        }
-                        wallAttackPos = wall.SectionPosition(sectionIndex);
-                        wallAttackPos = ConvertUnits.ToSimUnits(wallAttackPos);
-                    }
-
-
-                    targetEntity = closestStructure;
-                }
+                GetTargetEntity();
 
                 raycastTimer = RaycastInterval;
             }
@@ -246,13 +193,68 @@ namespace Subsurface
                   
         }
 
+        private void UpdateCoolDown(Vector2 attackPosition, float deltaTime)
+        {
+            coolDownTimer -= deltaTime;
+            attackingLimb = null;
+
+            //System.Diagnostics.Debug.WriteLine("cooldown");
+
+            if (selectedTarget.entity is Hull ||
+                Vector2.Distance(attackPosition, character.animController.limbs[0].SimPosition) < ConvertUnits.ToSimUnits(500.0f))
+            {
+                steeringManager.SteeringSeek(attackPosition, -0.8f);
+                steeringManager.SteeringAvoid(deltaTime, 1.0f);
+            }
+            else
+            {
+                steeringManager.SteeringSeek(attackPosition, -0.5f);
+                steeringManager.SteeringAvoid(deltaTime, 1.0f);
+            }
+        }
+
+        private void GetTargetEntity()
+        {
+            targetEntity = null;
+            //check if there's a wall between the target and the character   
+            Vector2 rayStart = character.animController.limbs[0].SimPosition;
+            Vector2 rayEnd = selectedTarget.Position;
+            Body closestBody = Map.CheckVisibility(rayStart, rayEnd);
+
+            if (Map.LastPickedFraction == 1.0f || closestBody == null)
+            {
+                wallAttackPos = Vector2.Zero;
+                return;
+            }
+            
+            Structure wall = closestBody.UserData as Structure;
+            if (wall == null)
+            {
+                wallAttackPos = Map.LastPickedPosition;
+            }
+            else
+            {
+                int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Map.LastPickedPosition));
+
+                float sectionDamage = wall.SectionDamage(sectionIndex);
+                for (int i = sectionIndex - 2; i <= sectionIndex + 2; i++)
+                {
+                    if (wall.SectionHasHole(i))
+                    {
+                        sectionIndex = i;
+                        break;
+                    }
+                    if (wall.SectionDamage(i) > sectionDamage) sectionIndex = i;
+                }
+                wallAttackPos = wall.SectionPosition(sectionIndex);
+                wallAttackPos = ConvertUnits.ToSimUnits(wallAttackPos);
+            }
+            
+            targetEntity = closestBody.UserData as IDamageable;            
+        }
+
         private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition)
         {
-            //DamageType damageType = DamageType.None;
-           // float damage = 0.0f;
-
-            //bool hasAttacked = false;
-            
             IDamageable damageTarget = null;
 
             switch (limb.attack.type)
@@ -310,21 +312,14 @@ namespace Subsurface
                 attackTimer = 0.0f;
                 if (Vector2.Distance(limb.SimPosition, attackPosition)<5.0) coolDownTimer = attackCoolDown;
                 
-                System.Diagnostics.Debug.WriteLine("cooldown: " + coolDownTimer);
             }
         }
-
-        //private float GetAttackDamage(Limb limb, float deltaTime)
-        //{
-        //    return (limb.attack.duration == 0.0f) ? limb.attack.damage : limb.attack.damage * deltaTime;
-        //}
-
+        
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
         public void UpdateTargets(Character character)
         {
-
             if (distanceAccumulator<5.0f && Game1.random.Next(1,3)==1)
             {
                 selectedTarget = null;
@@ -344,6 +339,9 @@ namespace Subsurface
             {
                 float valueModifier = 0.0f;
                 float dist = 0.0f;
+                
+                IDamageable targetDamageable = target.entity as IDamageable;
+                if (targetDamageable!=null && targetDamageable.Health <= 0.0f) continue;
 
                 Character targetCharacter = target.entity as Character;
 
@@ -371,30 +369,49 @@ namespace Subsurface
 
                 AITargetMemory targetMemory = FindTargetMemory(target);
 
-                valueModifier *= targetMemory.Priority;
+                valueModifier = valueModifier * targetMemory.Priority / dist;
                 //dist -= targetMemory.Priority;
 
-                if (valueModifier != 0.0f && (dist < target.SightRange * sight || dist < target.SoundRange * hearing))
-                {
-                    //if the target is a character, check if it is visible
+                if (Math.Abs(valueModifier) > Math.Abs(this.targetValue) && (dist < target.SightRange * sight || dist < target.SoundRange * hearing))
+                {                  
+                    Vector2 rayStart = character.animController.limbs[0].SimPosition;
+                    Vector2 rayEnd = target.Position;
+
+                    Body closestBody = Map.CheckVisibility(rayStart, rayEnd);
+                    Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
+                    
                     if (targetCharacter != null)
                     {
-                        Vector2 rayStart = character.animController.limbs[0].SimPosition;
-                        Vector2 rayEnd = target.Position;
-
-                        Structure closestStructure = Map.CheckVisibility(rayStart, rayEnd);
-                        //System.Diagnostics.Debug.WriteLine("closestfraction: " + closestFraction);
-                        //if not visible, ignore this AItarget
+                        //if target is a character that isn't visible, ignore
                         if (closestStructure != null) continue;
-                    }
 
-                    float newTargetValue = valueModifier/dist;
-                    if (selectedTarget == null || Math.Abs(newTargetValue) > Math.Abs(this.targetValue))
+                        //prefer targets with low health
+                        valueModifier = valueModifier / targetCharacter.Health;
+                    }
+                    else
+                    {
+                        if (targetDamageable != null)
+                        {
+                            valueModifier = valueModifier / targetDamageable.Health;
+                            
+                        }
+                        else if (closestStructure!=null)
+                        {
+                            valueModifier = valueModifier / (closestStructure as IDamageable).Health;
+                        }
+
+                    }
+                    
+
+
+                    //float newTargetValue = valueModifier/dist;
+                    if (selectedTarget == null || Math.Abs(valueModifier) > Math.Abs(this.targetValue))
                     {
                         selectedTarget = target;
                         selectedTargetMemory = targetMemory;
-                        targetValue = newTargetValue;
-                        Debug.WriteLine(selectedTarget);
+
+                        this.targetValue = valueModifier;
+                        Debug.WriteLine(selectedTarget.entity+": "+targetValue);
                     }
                 }
             }
@@ -449,7 +466,7 @@ namespace Subsurface
             message.Write(raycastTimer);
             message.Write(coolDownTimer);
 
-            message.Write(targetEntity==null ? -1 : targetEntity.ID);
+            message.Write(targetEntity==null ? -1 : (targetEntity as Entity).ID);
         }
 
         public override void ReadNetworkData(NetIncomingMessage message)
@@ -472,7 +489,7 @@ namespace Subsurface
             this.coolDownTimer = coolDownTimer;
 
             if (targetID>-1)            
-                targetEntity = Entity.FindEntityByID(targetID) as MapEntity;            
+                targetEntity = Entity.FindEntityByID(targetID) as IDamageable;            
             
         }
     }

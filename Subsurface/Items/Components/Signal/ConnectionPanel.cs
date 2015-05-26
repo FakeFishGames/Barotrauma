@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,7 +34,12 @@ namespace Subsurface.Items.Components
             }
         }
 
-        public override void DrawHUD(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, Character character)
+        public override void Move(Vector2 amount)
+        {
+            base.Move(amount);
+        }
+
+        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (user!=character) return;
             Connection.DrawConnections(spriteBatch, this, character);
@@ -44,8 +51,6 @@ namespace Subsurface.Items.Components
 
             foreach (Connection c in connections)
             {
-                //XElement newElement = new XElement(c.isOutput ? "output" : "input", new XAttribute("name", c.name));
-
                 c.Save(componentElement);
             }
 

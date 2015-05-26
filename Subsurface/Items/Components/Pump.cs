@@ -18,8 +18,9 @@ namespace Subsurface.Items.Components
         Hull hull1, hull2;
 
         [HasDefaultValue(100.0f, false)]
-        private float MaxFlow
-        { 
+        public float MaxFlow
+        {
+            get { return maxFlow; }
             set { maxFlow = value; } 
         }
 
@@ -41,13 +42,13 @@ namespace Subsurface.Items.Components
             if (voltage < minVoltage) return;
 
             if (hull2 == null && hull1 == null) return;
+            
+            float powerFactor = (currPowerConsumption==0.0f) ? 1.0f : voltage;
+            flow = maxFlow * powerFactor;
 
             float deltaVolume = flow * ((flowIn) ? 1.0f : -1.0f);
             hull1.Volume += deltaVolume;
             if (hull2 != null) hull2.Volume -= deltaVolume; 
-
-            float powerFactor = (currPowerConsumption==0.0f) ? 1.0f : voltage;
-            flow = maxFlow * powerFactor;
 
             voltage = 0.0f;
         }

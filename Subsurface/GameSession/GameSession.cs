@@ -97,6 +97,8 @@ namespace Subsurface
 
         public void StartShift(int scriptedEventCount = 1)
         {
+            if (crewManager.characterInfos.Count == 0) return;
+
             crewManager.StartShift();
             taskManager.StartShift(scriptedEventCount);
         }

@@ -96,68 +96,84 @@ namespace Subsurface
 
         private void FindHulls()
         {
-            Hull hull1 = null, hull2 = null;
+            Hull[] hulls = new Hull[2];
 
             linkedTo.Clear();
 
             foreach (Hull h in Hull.hullList)
             {
-                if (!Map.RectsOverlap(h.Rect, rect)) continue;
+                if (!Map.RectsOverlap(h.Rect, rect, false)) continue;
                 
                 //if the gap is inside the hull completely, ignore it
                 if (rect.X > h.Rect.X && rect.X + rect.Width < h.Rect.X+h.Rect.Width && 
                     rect.Y < h.Rect.Y && rect.Y - rect.Height > h.Rect.Y - h.Rect.Height) continue;
-                    
-                if (hull1 == null)
+
+                for (int i = 0; i < 2; i++ )
                 {
-                    hull1 = h;
-                }
-                else
-                {
-                    hull2 = h;
+                    if (hulls[i] != null) continue;
+                    hulls[i] = h;
                     break;
                 }
+
+                if (hulls[1] != null) break;
             }
 
-            if (hull1 == null && hull2 == null) return;
+            if (hulls[0] == null && hulls[1] == null) return;
 
-            if (hull1 != null && hull2 != null)
+            if (hulls[0]!=null && hulls[1]!=null)
             {
-                if (isHorizontal)
+                if ((isHorizontal && hulls[0].Rect.X > hulls[1].Rect.X) || (!isHorizontal && hulls[0].Rect.Y < hulls[1].Rect.Y))
                 {
-                    //make sure that water1 is the lefthand room
-                    //or that water2 is null if the gap doesn't lead to another room
-                    if (hull1.Rect.X < hull2.Rect.X)
-                    {
-                        linkedTo.Add(hull1);
-                        linkedTo.Add(hull2);
-                    }
-                    else
-                    {
-                        linkedTo.Add(hull2);
-                        linkedTo.Add(hull1);
-                    }
-                }
-                else
-                {
-                    //make sure that water1 is the room on the top
-                    //or that water2 is null if the gap doesn't lead to another room
-                    if (hull1.Rect.Y > hull2.Rect.Y)
-                    {
-                        linkedTo.Add(hull1);
-                        linkedTo.Add(hull2);
-                    }
-                    else
-                    {
-                        linkedTo.Add(hull2);
-                        linkedTo.Add(hull1);
-                    }
+                    //make sure that hull1 is the lefthand room if the gap is horizontal,
+                    //or that hull1 is the upper hull if the gap is vertical
+                    
+                    Hull temp = hulls[0];
+                    hulls[0] = hulls[1];
+                    hulls[1] = temp;
+           
                 }
             }
-            else
-            {
-                linkedTo.Add(hull1);
-            }
+
+            linkedTo.Add(hulls[0]);
+            if (hulls[1] != null) linkedTo.Add(hulls[1]);
+
+            //if (hull1 != null && hull2 != null)
+            //{
+            //    if (isHorizontal)
+            //    {
+            //        //make sure that water1 is the lefthand room
+            //        //or that water2 is null if the gap doesn't lead to another room
+            //        if (hull1.Rect.X < hull2.Rect.X)
+            //        {
+            //            linkedTo.Add(hull1);
+            //            linkedTo.Add(hull2);
+            //        }
+            //        else
+            //        {
+            //            linkedTo.Add(hull2);
+            //            linkedTo.Add(hull1);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        //make sure that water1 is the room on the top
+            //        //or that water2 is null if the gap doesn't lead to another room
+            //        if (hull1.Rect.Y > hull2.Rect.Y)
+            //        {
+            //            linkedTo.Add(hull1);
+            //            linkedTo.Add(hull2);
+            //        }
+            //        else
+            //        {
+            //            linkedTo.Add(hull2);
+            //            linkedTo.Add(hull1);
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    linkedTo.Add(hull1);
+            //}
         }
 
         public override void Draw(SpriteBatch sb, bool editing)
@@ -244,22 +260,25 @@ namespace Subsurface
                 {
                     pos.Y = ConvertUnits.ToSimUnits(MathHelper.Clamp(lowerSurface, rect.Y-rect.Height, rect.Y));
 
-                    Game1.particleManager.CreateParticle(new Vector2(pos.X, pos.Y - ToolBox.RandomFloat(0.0f, 0.1f)),
-                        0.0f, new Vector2(flowForce.X * ToolBox.RandomFloat(0.005f, 0.007f), flowForce.Y * ToolBox.RandomFloat(0.005f, 0.007f)), "watersplash");
+                    Game1.particleManager.CreateParticle("watersplash",
+                        new Vector2(pos.X, pos.Y - ToolBox.RandomFloat(0.0f, 0.1f)),
+                        new Vector2(flowForce.X * ToolBox.RandomFloat(0.005f, 0.007f), flowForce.Y * ToolBox.RandomFloat(0.005f, 0.007f)));
 
                     pos.Y = ConvertUnits.ToSimUnits(ToolBox.RandomFloat(lowerSurface, rect.Y - rect.Height));
-                        Game1.particleManager.CreateParticle(pos, 0.0f, flowForce / 200.0f, "bubbles");
+                        Game1.particleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
                 }
                 else
                 {
                     pos.Y += Math.Sign(flowForce.Y) * ConvertUnits.ToSimUnits(rect.Height / 2.0f);
-                    for (int i = 0; i < rect.Width; i += (int)ToolBox.RandomFloat(20, 50))
+                    for (int i = 0; i < rect.Width; i += (int)ToolBox.RandomFloat(80, 100))
                     {
                         pos.X = ConvertUnits.ToSimUnits(ToolBox.RandomFloat(rect.X, rect.X+rect.Width));
-                        Game1.particleManager.CreateParticle(pos,
-                            0.0f, new Vector2(flowForce.X * ToolBox.RandomFloat(0.005f, 0.008f), flowForce.Y * ToolBox.RandomFloat(0.005f, 0.008f)), "watersplash");
+                        Subsurface.Particles.Particle splash = Game1.particleManager.CreateParticle("watersplash", pos,
+                            new Vector2(flowForce.X * ToolBox.RandomFloat(0.005f, 0.008f), flowForce.Y * ToolBox.RandomFloat(0.005f, 0.008f)));
 
-                        Game1.particleManager.CreateParticle(pos, ToolBox.VectorToAngle(flowForce), flowForce / 200.0f, "bubbles");
+                        if (splash!=null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
+
+                        Game1.particleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
                     }
                 }
 

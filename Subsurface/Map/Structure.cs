@@ -88,6 +88,11 @@ namespace Subsurface
             get { return sections.Length; }
         }
 
+        public float Health
+        {
+            get { return prefab.MaxHealth; }
+        }
+
         
         public override void Move(Vector2 amount)
         {
@@ -380,7 +385,7 @@ namespace Subsurface
             int i = FindSectionIndex(ConvertUnits.ToDisplayUnits(position));
             if (i == -1) return;
             
-            Game1.particleManager.CreateParticle(ConvertUnits.ToSimUnits(SectionPosition(i)), 0.0f, 0.0f, "dustcloud");
+            Game1.particleManager.CreateParticle("dustcloud", ConvertUnits.ToSimUnits(SectionPosition(i)), 0.0f, 0.0f);
 
 
             AddDamage(i, amount);

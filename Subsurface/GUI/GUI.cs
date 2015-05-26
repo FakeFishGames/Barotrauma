@@ -266,9 +266,13 @@ namespace Subsurface
         {
             spriteBatch.DrawString(font,
                 "FPS: " + (int)Game1.frameCounter.AverageFramesPerSecond
-                + " - physics: " + Game1.world.UpdateTime
-                + " - bodies: " + Game1.world.BodyList.Count,
+                + " - render: "+Game1.renderTimeElapsed,
                 new Vector2(10, 10), Color.White);
+
+            spriteBatch.DrawString(font,
+                "Physics: " + Game1.world.UpdateTime
+                + " - bodies: " + Game1.world.BodyList.Count,
+                new Vector2(10, 30), Color.White);
 
             if (Character.Controlled != null)
             {
@@ -335,8 +339,6 @@ namespace Subsurface
 
                 i++;
             }
-
-
             
             if (messages[0].LifeTime <= 0.0f) messages.Remove(messages[0]);
         }

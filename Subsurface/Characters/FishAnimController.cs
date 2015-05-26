@@ -103,7 +103,7 @@ namespace Subsurface
 
             if (!inWater) movement.Y = Math.Min(0.0f, movement.Y);
 
-            float movementAngle = ToolBox.VectorToAngle(movement)+MathHelper.PiOver2;
+            float movementAngle = ToolBox.VectorToAngle(movement) - MathHelper.PiOver2;
 
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null && waveAmplitude>0.0f)

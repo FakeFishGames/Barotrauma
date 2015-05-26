@@ -119,6 +119,20 @@ namespace Subsurface
             }
         }
 
+        public float Health
+        {
+            get 
+            {
+                float totalHealth = 0.0f;
+                foreach (Limb l in animController.limbs)
+                {
+                    totalHealth += (l.MaxHealth - l.Damage);
+
+                }
+                return totalHealth/animController.limbs.Count();
+            }
+        }
+
         public float Blood
         {
             get { return blood; }
@@ -637,29 +651,25 @@ namespace Subsurface
                 Vector2 particleVel = closestLimb.SimPosition-position;
                 if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
 
-                Game1.particleManager.CreateParticle(
+                Game1.particleManager.CreateParticle("blood",
                     closestLimb.SimPosition, 
-                    ToolBox.RandomFloat(0.0f, 3.1f),
-                    particleVel * ToolBox.RandomFloat(1.0f,3.0f),
-                     "blood");
+                    particleVel * ToolBox.RandomFloat(1.0f,3.0f));
             }
 
             for (int i = 0; i < bloodAmount / 2; i++)
             {
-                Game1.particleManager.CreateParticle(closestLimb.SimPosition,
-                    0.0f,
-                    Vector2.Zero, "waterblood");
+                Game1.particleManager.CreateParticle("waterblood",closestLimb.SimPosition,Vector2.Zero);
             }
         }
 
         public void Stun()
         {
-            for (int i = 0; i < selectedItems.Length; i++ )
-            {
-                if (selectedItems[i] == null) continue;
-                selectedItems[i].Drop();
-                selectedItems[i] = null;
-            }
+            //for (int i = 0; i < selectedItems.Length; i++ )
+            //{
+            //    if (selectedItems[i] == null) continue;
+            //    selectedItems[i].Drop();
+            //    selectedItems[i] = null;
+            //}
                 
             selectedConstruction = null;
         }
@@ -691,17 +701,14 @@ namespace Subsurface
             
             for (int i = 0; i < 10; i++)
             {
-                Particle p = Game1.particleManager.CreateParticle(
+                Particle p = Game1.particleManager.CreateParticle("waterblood",
                     torso.SimPosition + new Vector2(ToolBox.RandomFloat(-0.5f, 0.5f), ToolBox.RandomFloat(-0.5f, 0.5f)),
-                    0.0f,
-                    Vector2.Zero, "waterblood");
+                    Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
-                Game1.particleManager.CreateParticle(
+                Game1.particleManager.CreateParticle("bubbles",
                     torso.SimPosition,
-                    0.0f,
-                    new Vector2(ToolBox.RandomFloat(-0.5f, 0.5f), ToolBox.RandomFloat(-1.0f,0.5f)),
-                    "bubbles");
+                    new Vector2(ToolBox.RandomFloat(-0.5f, 0.5f), ToolBox.RandomFloat(-1.0f,0.5f)));
             }
 
             foreach (var joint in animController.limbJoints)

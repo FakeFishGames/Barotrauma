@@ -7,7 +7,7 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_content\bin\PSM\Content\SpriteFont1.xnb</Output>
+      <Output>E:\Subsurface\Subsurface_content\Subsurface_content\bin\PSM\Content\SpriteFont1.xnb</Output>
       <Time>2015-04-14T20:09:38.363195+03:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
@@ -17,10 +17,10 @@
       <TargetProfile>HiDef</TargetProfile>
       <BuildConfiguration>PSM</BuildConfiguration>
       <CompressContent>false</CompressContent>
-      <RootDirectory>C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_contentContent\</RootDirectory>
-      <LoggerRootDirectory>C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_content\</LoggerRootDirectory>
-      <IntermediateDirectory>C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_content\obj\PSM\</IntermediateDirectory>
-      <OutputDirectory>C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_content\bin\PSM\Content\</OutputDirectory>
+      <RootDirectory>E:\Subsurface\Subsurface_content\Subsurface_contentContent\</RootDirectory>
+      <LoggerRootDirectory>E:\Subsurface\Subsurface_content\Subsurface_content\</LoggerRootDirectory>
+      <IntermediateDirectory>E:\Subsurface\Subsurface_content\Subsurface_content\obj\PSM\</IntermediateDirectory>
+      <OutputDirectory>E:\Subsurface\Subsurface_content\Subsurface_content\bin\PSM\Content\</OutputDirectory>
     </Settings>
     <Assemblies>
       <Assembly>

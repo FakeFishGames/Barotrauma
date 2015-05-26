@@ -49,10 +49,9 @@ namespace Subsurface
         {
             for (int i = 0; i<range*10; i++)
             {
-                Game1.particleManager.CreateParticle(position, 
-                    ToolBox.RandomFloat(0.0f,3.14f),
-                    Vector2.Normalize(new Vector2(ToolBox.RandomFloat(-1.0f, 1.0f), ToolBox.RandomFloat(-1.0f, 1.0f))) * ToolBox.RandomFloat(3.0f,4.0f),
-                    "explosionfire");
+                Game1.particleManager.CreateParticle("explosionfire", position,
+                    Vector2.Normalize(new Vector2(ToolBox.RandomFloat(-1.0f, 1.0f), ToolBox.RandomFloat(-1.0f, 1.0f))) * ToolBox.RandomFloat(3.0f, 4.0f),
+                    0.0f);
             }
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(position);

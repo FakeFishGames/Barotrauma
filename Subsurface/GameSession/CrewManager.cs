@@ -32,7 +32,7 @@ namespace Subsurface
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
 
-            listBox = new GUIListBox(new Rectangle(0, 0, 150, 400), Color.Transparent, guiFrame);
+            listBox = new GUIListBox(new Rectangle(0, 0, 150, 0), Color.Transparent, guiFrame);
             listBox.ScrollBarEnabled = false;
             listBox.OnSelected = SelectCharacter;
 

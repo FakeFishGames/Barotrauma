@@ -20,7 +20,6 @@ namespace Subsurface
             for (int i = 0 ; i<amount ; i++)
             {
                 availableCharacters.Add(new CharacterInfo(file));
-                Debug.Write(availableCharacters.Last().name);
             }
         }
     }
