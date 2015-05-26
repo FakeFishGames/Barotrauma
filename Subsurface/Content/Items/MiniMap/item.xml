@@ -8,4 +8,9 @@
 
   <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true"/>
 
+  <ConnectionPanel canbeselected = "true">
+    <requireditem name="Screwdriver" type="Equipped"/>
+    <input name="power_in"/>
+  </ConnectionPanel>
+
 </Item>

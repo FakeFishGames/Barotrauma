@@ -64,6 +64,11 @@ namespace Subsurface
             set { condition = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
+        public float Health
+        {
+            get { return condition; }
+        }
+
         [Editable, HasDefaultValue("", true)]
         public string Tags
         {
@@ -205,6 +210,11 @@ namespace Subsurface
                     case "trigger":
                     case "sprite":
                         break;
+                    case "aitarget":
+                        aiTarget = new AITarget(this);
+                        aiTarget.SightRange = ToolBox.GetAttributeFloat(subElement, "sightrange", 1000.0f);
+                        aiTarget.SoundRange = ToolBox.GetAttributeFloat(subElement, "soundrange", 0.0f);
+                        break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, prefab.ConfigFile);
                         if (ic == null) break;
@@ -285,7 +295,7 @@ namespace Subsurface
             foreach (Item item in itemList) item.FindHull();
         }
         
-        protected virtual Hull FindHull()
+        public virtual Hull FindHull()
         {
             currentHull = Hull.FindHull((body == null) ? Position : ConvertUnits.ToDisplayUnits(body.Position), currentHull);
             return currentHull;

@@ -140,7 +140,7 @@ namespace Subsurface.Items.Components
                     }
                     else
                     {
-                        gunJoint.Length = Math.Max(gunJoint.Length-0.003f,0.01f);
+                        gunJoint.Length = Math.Max(gunJoint.Length-0.01f,0.01f);
                         gunJoint.Frequency = 30;
                         gunJoint.DampingRatio = 0.05f;
                         //gunJoint.MotorEnabled = true;

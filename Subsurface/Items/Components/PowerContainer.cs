@@ -30,6 +30,7 @@ namespace Subsurface.Items.Components
         [Editable, HasDefaultValue(10.0f, true)]
         public float MaxOutPut
         {
+            set { maxOutput = value; }
             get { return maxOutput; }
         }
 
@@ -42,21 +43,24 @@ namespace Subsurface.Items.Components
 
 
         [HasDefaultValue(10.0f, false)]
-        private float Capacity
+        public float Capacity
         {
+            get { return capacity; }
             set { capacity = Math.Max(value,1.0f); }
         }
 
-        [HasDefaultValue(10.0f, false)]
-        private float MaxInput
-        {
-            set { MaxInput = value; }
-        }
+        //[HasDefaultValue(10.0f, false)]
+        //public float MaxInput
+        //{
+        //    get { return maxInput; }
+        //    set { maxInput = value; }
+        //}
 
         [HasDefaultValue(10.0f, false)]
-        private float MaxOutput
+        public float MaxRechargeSpeed
         {
-            set { maxOutput = value; }
+            get { return maxRechargeSpeed; }
+            set { maxRechargeSpeed = Math.Max(value, 1.0f); }
         }
 
         public PowerContainer(Item item, XElement element)
@@ -65,9 +69,7 @@ namespace Subsurface.Items.Components
             //capacity = ToolBox.GetAttributeFloat(element, "capacity", 10.0f);
             //maxRechargeSpeed = ToolBox.GetAttributeFloat(element, "maxinput", 10.0f);
             //maxOutput = ToolBox.GetAttributeFloat(element, "maxoutput", 10.0f);
-
-            rechargeSpeed = maxRechargeSpeed;
-
+            
             isActive = true;
         }
 
@@ -129,7 +131,7 @@ namespace Subsurface.Items.Components
                     return;
                 }
 
-                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
+                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, maxRechargeSpeed*rechargeSpeed, 0.05f);
                 charge += currPowerConsumption*voltage / 3600.0f;
             }
             //provide power to the grid
@@ -142,10 +144,10 @@ namespace Subsurface.Items.Components
                     return;
                 }
 
-                currPowerConsumption = MathHelper.Lerp(
-                   currPowerConsumption,
-                   -maxOutput * chargeRate,
-                   0.1f);
+                //currPowerConsumption = MathHelper.Lerp(
+                //   currPowerConsumption,
+                //   -maxOutput * chargeRate,
+                //   0.1f);
 
                 currPowerConsumption = MathHelper.Lerp(
                    currPowerConsumption,

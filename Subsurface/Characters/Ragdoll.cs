@@ -296,7 +296,7 @@ namespace Subsurface
             
             Limb l = (Limb)f1.Body.UserData;
 
-            if (impact > 1.0f && l.HitSound != null && l.soundTimer<=0.0f) l.HitSound.Play(Math.Min(impact / 5.0f, 1.0f));
+            if (impact > 1.0f && l.HitSound != null && l.soundTimer<=0.0f) l.HitSound.Play(Math.Min(impact / 5.0f, 1.0f), impact*100.0f, l.body.FarseerBody);
 
             if (impact > l.impactTolerance)
             {
@@ -308,9 +308,7 @@ namespace Subsurface
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-
-
-
+            
             foreach (Limb limb in limbs)
             {
                 limb.Draw(spriteBatch, DebugDraw);
@@ -340,11 +338,9 @@ namespace Subsurface
             foreach (RevoluteJoint joint in limbJoints)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(joint.WorldAnchorA);
-                pos.Y = -pos.Y;
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);
 
                 pos = ConvertUnits.ToDisplayUnits(joint.WorldAnchorB);
-                pos.Y = -pos.Y;
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);
             }            
 
@@ -494,16 +490,20 @@ namespace Subsurface
                     {
 
                         //create a splash particle
-                        Game1.particleManager.CreateParticle(
+                        Subsurface.Particles.Particle splash = Game1.particleManager.CreateParticle("watersplash",
                             new Vector2(limb.SimPosition.X, ConvertUnits.ToSimUnits(limbHull.Surface)),
-                            0.0f,
-                            new Vector2(0.0f, Math.Abs(limb.LinearVelocity.Y*0.1f)),
-                            "watersplash");
-                        Game1.particleManager.CreateParticle(
-                            new Vector2(limb.SimPosition.X, ConvertUnits.ToSimUnits(limbHull.Surface)),
-                            0.0f,
+                            new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 0.1f)),
+                            0.0f);
+
+                        if (splash != null) splash.yLimits = ConvertUnits.ToSimUnits(
+                            new Vector2(
+                                limbHull.Rect.Y,
+                                limbHull.Rect.Y - limbHull.Rect.Height));
+
+                        Game1.particleManager.CreateParticle("bubbles",
+                            new Vector2(limb.SimPosition.X, ConvertUnits.ToSimUnits(limbHull.Surface)),                            
                             limb.LinearVelocity*0.001f,
-                            "bubbles");
+                            0.0f);
 
 
 

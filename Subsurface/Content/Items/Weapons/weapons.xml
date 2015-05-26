@@ -11,7 +11,7 @@
 
     <Pickable slots="Any"/>
     <Projectile launchimpulse="20.0" damage="20.0" bleedingdamage="20.0" doesstick="true">
-      <Attack damage="20" bleeding="20" structuredamage="50" damagetype="Blunt"/>
+      <Attack damage="20" bleeding="30" structuredamage="50" damagetype="Blunt"/>
     </Projectile>
   </Item>
   
@@ -33,9 +33,7 @@
       <RequiredItems name="Harpoon" type="Contained"/>
     </RangedWeapon>
 
-    <Rope sprite="Content/Items/Weapons/rope.png" projectileanchorx="-40.0"/>
-
-    <ItemContainer hideitems="true">
+    <ItemContainer itempos="27,11" iteminterval="0,-4" hideitems="false">
       <Containable name="Harpoon"/>
     </ItemContainer>
   </Item>

@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Randomevents>
   <MonsterEvent name="Under attack" description=""  
-    characterfile="Content/Characters/Scorpion/scorpion.xml" 
+    characterfile="Content/Characters/Crawler/Crawler.xml" 
     commonness="10" 
     difficulty="10"
+    minamount="2" maxamount="4"
     starttimemin="5" starttimemax="10"/>
 
   <MonsterEvent name="Under attack" description=""

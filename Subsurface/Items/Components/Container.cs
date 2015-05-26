@@ -54,17 +54,19 @@ namespace Subsurface.Items.Components
             set { itemRotation = value; }
         }
 
-        //[Initable(Vector2.Zero)]
-        //private Vector2 ItemPos
-        //{
-        //    set { itemPos = ConvertUnits.ToSimUnits(value); }
-        //}
+        [HasDefaultValue("0.0,0.0", false)]
+        public string ItemPos
+        {
+            get { return ToolBox.Vector2ToString(itemPos); }
+            set { itemPos = ToolBox.ParseToVector2(value); }
+        }
 
-        //[Initable(Vector2.Zero)]
-        //private Vector2 ItemInterval
-        //{
-        //    set { itemInterval = ConvertUnits.ToSimUnits(value); }
-        //}
+        [HasDefaultValue("0.0,0.0", false)]
+        public string ItemInterval
+        {
+            get { return ToolBox.Vector2ToString(itemInterval); }
+            set { itemInterval = ToolBox.ParseToVector2(value); }
+        }
         
         public ItemContainer(Item item, XElement element)
             : base (item, element)
@@ -72,11 +74,11 @@ namespace Subsurface.Items.Components
             inventory = new ItemInventory(this, capacity);            
             containableItems = new List<RelatedItem>();
 
-            itemPos = ToolBox.GetAttributeVector2(element, "ItemPos", Vector2.Zero);
-            itemPos = ConvertUnits.ToSimUnits(itemPos);
+            //itemPos = ToolBox.GetAttributeVector2(element, "ItemPos", Vector2.Zero);
+            //itemPos = ConvertUnits.ToSimUnits(itemPos);
 
-            itemInterval = ToolBox.GetAttributeVector2(element, "ItemInterval", Vector2.Zero);
-            itemInterval = ConvertUnits.ToSimUnits(itemInterval);
+            //itemInterval = ToolBox.GetAttributeVector2(element, "ItemInterval", Vector2.Zero);
+            //itemInterval = ConvertUnits.ToSimUnits(itemInterval);
             
             foreach (XElement subElement in element.Elements())
             {
@@ -106,7 +108,7 @@ namespace Subsurface.Items.Components
             {
                 if (contained == null) continue;
 
-                if (contained.body!=null) contained.body.Enabled = !hideItems;
+                if (contained.body!=null) contained.body.Enabled = false;
 
                 RelatedItem ri = containableItems.Find(x => x.MatchesItem(item));
                 if (ri == null) continue;
@@ -120,40 +122,74 @@ namespace Subsurface.Items.Components
                 contained.ApplyStatusEffects(ActionType.OnContained, deltaTime);
             }
 
-            if (hideItems) return;
+            //if (hideItems) return;
             
+            //Vector2 transformedItemPos;
+            //Vector2 transformedItemInterval = itemInterval;
+            ////float transformedItemRotation = itemRotation;
+            //if (item.body==null)
+            //{
+            //    transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
+            //    transformedItemPos = ConvertUnits.ToSimUnits(transformedItemPos) + itemPos;
+            //}
+            //else
+            //{
+            //    Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
+
+            //    transformedItemPos = item.body.Position + Vector2.Transform(itemPos, transform);
+            //    transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);                    
+            //    //transformedItemRotation += item.body.Rotation;
+            //}
+
+            //foreach (Item containedItem in inventory.items)
+            //{
+            //    if (containedItem == null) continue;
+
+            //    Vector2 itemDist = (transformedItemPos - containedItem.body.Position);
+            //    Vector2 force = (itemDist - containedItem.body.LinearVelocity * 0.1f) * containedItem.body.Mass * 60.0f;
+
+            //    containedItem.body.ApplyForce(force);
+
+            //    containedItem.body.SmoothRotate(itemRotation);
+
+            //    transformedItemPos += transformedItemInterval;
+            //}
+            
+
+        }
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            base.Draw(spriteBatch);
+
+            if (hideItems) return;
+
             Vector2 transformedItemPos;
             Vector2 transformedItemInterval = itemInterval;
+            float currentRotation = itemRotation;
             //float transformedItemRotation = itemRotation;
-            if (item.body==null)
+            if (item.body == null)
             {
                 transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
-                transformedItemPos = ConvertUnits.ToSimUnits(transformedItemPos) + itemPos;
+                transformedItemPos = transformedItemPos + itemPos;
             }
             else
             {
                 Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
 
-                transformedItemPos = Vector2.Transform(item.body.Position + itemPos, transform);
-                transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);                    
-                //transformedItemRotation += item.body.Rotation;
+                transformedItemPos = ConvertUnits.ToDisplayUnits(item.body.Position) + Vector2.Transform(itemPos, transform);
+                transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
+                currentRotation += item.body.Rotation;
             }
 
             foreach (Item containedItem in inventory.items)
             {
                 if (containedItem == null) continue;
 
-                Vector2 itemDist = (transformedItemPos - containedItem.body.Position);
-                Vector2 force = (itemDist - containedItem.body.LinearVelocity * 0.1f) * containedItem.body.Mass * 60.0f;
-
-                containedItem.body.ApplyForce(force);
-
-                containedItem.body.SmoothRotate(itemRotation);
+                containedItem.sprite.Draw(spriteBatch, new Vector2(transformedItemPos.X, -transformedItemPos.Y), -currentRotation, 1.0f);
 
                 transformedItemPos += transformedItemInterval;
             }
-            
-
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)

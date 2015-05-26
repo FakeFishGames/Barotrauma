@@ -45,6 +45,9 @@ namespace Subsurface
         public static Random localRandom;
         public static Random random;
 
+        private Stopwatch renderTimer;
+        public static int renderTimeElapsed;
+
         
         public Camera Cam
         {
@@ -77,6 +80,8 @@ namespace Subsurface
             //graphics.ApplyChanges();
 
             frameCounter = new FrameCounter();
+
+            renderTimer = new Stopwatch();
 
             IsMouseVisible = true;
 
@@ -197,16 +202,18 @@ namespace Subsurface
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
-        /// <param name="deltaTime">elapsed time in seconds</param>
         protected override void Draw(GameTime gameTime)
         {
-            //System.Diagnostics.Debug.WriteLine(deltaTime);
-            //System.Diagnostics.Debug.WriteLine(gameTime.ElapsedGameTime.TotalSeconds);
+            renderTimer.Restart();
+
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
             frameCounter.Update(deltaTime);
 
-            Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);            
+            Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
+
+            renderTimeElapsed = (int)renderTimer.Elapsed.Ticks;
+            renderTimer.Stop();
         }
 
         protected override void OnExiting(object sender, EventArgs args)

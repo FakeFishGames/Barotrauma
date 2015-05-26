@@ -176,54 +176,26 @@ namespace Subsurface
             }        
         }
 
-        //public List<ObjectProperty> GetProperties<T>()
-        //{
-        //    List<ObjectProperty> editableProperties = new List<ObjectProperty>();
-
-        //    foreach (var property in properties.Values)
-        //    {
-        //        if (property.Attributes.OfType<T>().Count() > 0) editableProperties.Add(property);
-        //    }
-
-        //    return editableProperties;
-        //}
-
-
-
         private int loopingSoundIndex;
-        
-
         public void PlaySound(ActionType type, float volume, Vector2 position, bool loop=false)
         {
-
-            if (!loop)
-            {
-                List<ItemSound> matchingSounds = sounds.FindAll(x=> x.type == type);
-
-                if (matchingSounds.Count == 0 || item.Prefab.sounds.Count == 0) return;
-
-                int index = Game1.localRandom.Next(Math.Min(matchingSounds.Count,item.Prefab.sounds.Count));
+            if (loop && Sounds.SoundManager.IsPlaying(loopingSoundIndex)) return;
             
-                Sound sound = item.Prefab.sounds[matchingSounds[index].index];
+            List<ItemSound> matchingSounds = sounds.FindAll(x => x.type == type);
+            if (matchingSounds.Count == 0 || item.Prefab.sounds.Count == 0) return;
 
-                sound.Play(volume, matchingSounds[index].range, position);  
+            int index = Game1.localRandom.Next(Math.Min(matchingSounds.Count, item.Prefab.sounds.Count));
+
+            Sound sound = item.Prefab.sounds[matchingSounds[index].index];
+
+            if (loop)
+            {
+                loopingSoundIndex = sound.Loop(loopingSoundIndex, volume, position, matchingSounds[index].range);
             }
             else
             {
-                //todo: get rid of copypaste
-                if (!Sounds.SoundManager.IsPlaying(loopingSoundIndex))
-                {
-                    List<ItemSound> matchingSounds = sounds.FindAll(x => x.type == type);
-
-                    if (matchingSounds.Count == 0 || item.Prefab.sounds.Count == 0) return;
-
-                    int index = Game1.localRandom.Next(Math.Min(matchingSounds.Count, item.Prefab.sounds.Count));
-
-                    Sound sound = item.Prefab.sounds[matchingSounds[index].index];
-
-                    loopingSoundIndex = sound.Loop(loopingSoundIndex, volume, position, matchingSounds[index].range);  
-                }
-            }          
+                sound.Play(volume, matchingSounds[index].range, position);  
+            } 
         }
 
         public virtual void Move(Vector2 amount) { }

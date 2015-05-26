@@ -60,82 +60,30 @@ namespace Subsurface.Items.Components
             set 
             {
                 isOpen = value;
-                openState = (isOpen) ? 1.0f : 0.0f;
+                OpenState = (isOpen) ? 1.0f : 0.0f;
             }
         }
 
         private Rectangle doorRect;
-
-        
+                
         public float OpenState
         {
             get { return openState; }
             set 
             {
-                if (openState == value) return;
+                
+                float prevValue = openState;
                 openState = MathHelper.Clamp(value, 0.0f, 1.0f);
+                if (openState == prevValue) return;
 
-
-
-                if (window==null)
-                {
-                    Rectangle rect = item.Rect;
-                    rect.Height = (int)(rect.Height * (1.0f - openState));
-
-                }
-                else
-                {
-                    //Rectangle rect = item.Rect;
-                    //rect.Height = (int)(rect.Height * (1.0f - openState));
-                    
-                    Rectangle rect1 = doorRect;
-                    rect1.Height = -window.Y;
-
-                    rect1.Y += (int)(doorRect.Height * openState);
-                    rect1.Height = Math.Max(rect1.Height - (rect1.Y - doorRect.Y), 0);
-                    rect1.Y = Math.Min(doorRect.Y, rect1.Y);
-
-                    if (rect1.Height == 0)
-                    {
-                        convexHull.Enabled = false;
-                    }
-                    else
-                    {
-                        convexHull.SetVertices(GetConvexHullCorners(rect1));
-                    }
-
-                    if (convexHull2 != null)
-                    {
-                        Rectangle rect2 = doorRect;
-                        rect2.Y = rect2.Y + window.Y - window.Height;
-
-                        rect2.Y += (int)(doorRect.Height * openState);
-                        rect2.Y = Math.Min(doorRect.Y, rect2.Y);
-                        rect2.Height = rect2.Y - (doorRect.Y - (int)(doorRect.Height * (1.0f - openState)));
-                        convexHull2.SetVertices(GetConvexHullCorners(rect2));
-
-                        if (rect2.Height == 0)
-                        {
-                            convexHull2.Enabled = false;
-                        }
-                        else
-                        {
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2));
-                        }
-                    }
-
-                    
-                    
-          
-                }
-
+                UpdateConvexHulls();
             }
         }
 
         PhysicsBody body;
 
         Sprite doorSprite;
-
+        
         public Door(Item item, XElement element)
             : base(item, element)
         {
@@ -160,7 +108,9 @@ namespace Subsurface.Items.Components
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),
                 1.5f));
-            
+
+            body.CollisionCategories = Physics.CollisionWall;
+            body.UserData = item;
             body.BodyType = BodyType.Static;
             body.SetTransform(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
@@ -169,21 +119,69 @@ namespace Subsurface.Items.Components
 
 
             //string spritePath = Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\"+ ToolBox.GetAttributeString(element, "sprite", "");
-
-
-
-            isActive = true;
-          
-
+            
             Vector2[] corners = GetConvexHullCorners(doorRect);
 
             convexHull = new ConvexHull(corners, Color.Black);            
-            if (window!=null) convexHull2 = new ConvexHull(corners, Color.Black);
+            if (window!=null && window!=Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black);
 
-            OpenState = openState;
-            //powerConsumption = -100.0f;
+            UpdateConvexHulls();
 
-            //LinkedGap.Open = openState;
+            isActive = true;
+        }
+
+        private void UpdateConvexHulls()
+        {
+            Rectangle rect = doorRect;
+
+            rect.Height = (int)(rect.Height * (1.0f - openState));
+            if (window.Height == 0 || window.Width == 0)
+            {
+
+            }
+            else
+            {
+                //Rectangle rect = item.Rect;
+                //rect.Height = (int)(rect.Height * (1.0f - openState));
+
+                rect.Height = -window.Y;
+
+                rect.Y += (int)(doorRect.Height * openState);
+                rect.Height = Math.Max(rect.Height - (rect.Y - doorRect.Y), 0);
+                rect.Y = Math.Min(doorRect.Y, rect.Y);
+
+
+                if (convexHull2 != null)
+                {
+                    Rectangle rect2 = doorRect;
+                    rect2.Y = rect2.Y + window.Y - window.Height;
+
+                    rect2.Y += (int)(doorRect.Height * openState);
+                    rect2.Y = Math.Min(doorRect.Y, rect2.Y);
+                    rect2.Height = rect2.Y - (doorRect.Y - (int)(doorRect.Height * (1.0f - openState)));
+                    //convexHull2.SetVertices(GetConvexHullCorners(rect2));
+
+                    if (rect2.Height == 0)
+                    {
+                        convexHull2.Enabled = false;
+                    }
+                    else
+                    {
+                        convexHull2.Enabled = true;
+                        convexHull2.SetVertices(GetConvexHullCorners(rect2));
+                    }
+                }
+            }
+
+            if (rect.Height == 0)
+            {
+                convexHull.Enabled = false;
+            }
+            else
+            {
+                convexHull.Enabled = true;
+                convexHull.SetVertices(GetConvexHullCorners(rect));
+            }
         }
 
         private Vector2[] GetConvexHullCorners(Rectangle rect)
@@ -212,7 +210,6 @@ namespace Subsurface.Items.Components
 
         public override bool Pick(Character picker)
         {
-            isActive = true;
             isOpen = !isOpen;
 
             return true;
@@ -222,22 +219,30 @@ namespace Subsurface.Items.Components
         {
             OpenState += deltaTime * ((isOpen) ? 3.0f : -3.0f);
 
+            LinkedGap.Open = openState;
+            
             item.SendSignal((isOpen) ? "1" : "0", "state_out");
+        }
+
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            body.Enabled = false;
+            convexHull.Enabled = false;
+            linkedGap.Open = 1.0f;
+            if (convexHull2 != null) convexHull2.Enabled = false;
         }
         
         public override void Draw(SpriteBatch spriteBatch)
         {           
-
-            LinkedGap.Open = openState;
-
             Color color = (item.IsSelected) ? Color.Green : Color.White;
+            color = color * (item.Condition / 100.0f);
+            color.A = 255;
 
             //prefab.sprite.Draw(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
 
             if (openState == 1.0f)
             {
                 body.Enabled = false;
-                convexHull.Enabled = false;
             }
             else
             {
@@ -245,8 +250,6 @@ namespace Subsurface.Items.Components
                     new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
                     (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
                     color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
-
-                convexHull.Enabled = true;
 
                 if (openState == 0.0f)
                 {
@@ -290,7 +293,6 @@ namespace Subsurface.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender)
         {
-            isActive = true;
             if (connection.name=="toggle")
             {
                 isOpen = !isOpen;

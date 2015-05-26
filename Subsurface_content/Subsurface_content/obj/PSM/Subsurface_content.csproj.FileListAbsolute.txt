@@ -196,3 +196,9 @@ C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_content\bi
 C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_content\obj\PSM\Subsurface_content.csprojResolveAssemblyReference.cache
 C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_content\obj\PSM\Microsoft.Xna.Framework.RuntimeProfile.txt
 C:\Users\Joonas\Desktop\Subsurface_1005\Subsurface_content\Subsurface_content\obj\PSM\IgnoreMe.dll
+E:\Subsurface\Subsurface_content\Subsurface_content\bin\PSM\Content\SpriteFont1.xnb
+E:\Subsurface\Subsurface_content\Subsurface_content\bin\PSM\Content\SpriteFont1.spritefont
+E:\Subsurface\Subsurface_content\Subsurface_content\bin\PSM\IgnoreMe.dll
+E:\Subsurface\Subsurface_content\Subsurface_content\obj\PSM\Subsurface_content.csprojResolveAssemblyReference.cache
+E:\Subsurface\Subsurface_content\Subsurface_content\obj\PSM\Microsoft.Xna.Framework.RuntimeProfile.txt
+E:\Subsurface\Subsurface_content\Subsurface_content\obj\PSM\IgnoreMe.dll

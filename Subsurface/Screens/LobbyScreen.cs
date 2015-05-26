@@ -80,14 +80,14 @@ namespace Subsurface
 
             new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, rightPanel[0]);
 
-            characterList = new GUIListBox(new Rectangle(0, 30, 300, 400), Color.White, rightPanel[0]);
+            characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, rightPanel[0]);
 
             //---------------------------------------
 
             rightPanel[1] = new GUIFrame(panelRect, GUI.style.backGroundColor);
             rightPanel[1].Padding = GUI.style.smallPadding;
 
-            hireList = new GUIListBox(new Rectangle(0, 30, 300, 400), Color.White, Alignment.Left, rightPanel[1]);
+            hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, Alignment.Left, rightPanel[1]);
             
             hireList.OnSelected = HireCharacter;
         }

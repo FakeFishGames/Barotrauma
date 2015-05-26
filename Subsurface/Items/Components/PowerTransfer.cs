@@ -49,9 +49,11 @@ namespace Subsurface.Items.Components
                     pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                     pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
                     pt.Item.SendSignal((fullPower / Math.Max(fullLoad,1.0f)).ToString(), "power_out");
+                    
                 }
                 else
                 {
+                    
                     //p.Power = fullPower;
                 }
             }
@@ -103,15 +105,15 @@ namespace Subsurface.Items.Components
                     {
                         connectedList.Add(powered);
                         //positive power consumption = the construction requires power -> increase load
-                        if (powered.PowerConsumption > 0.0f)
+                        if (powered.CurrPowerConsumption > 0.0f)
                         {
-                            fullLoad += powered.PowerConsumption;
+                            fullLoad += powered.CurrPowerConsumption;
                         }
-                        else if (powered.PowerConsumption < 0.0f)
+                        else if (powered.CurrPowerConsumption < 0.0f)
                         //negative power consumption = the construction is a 
                         //generator/battery or another junction box
                         {
-                            fullPower -= powered.PowerConsumption;
+                            fullPower -= powered.CurrPowerConsumption;
                         }
                     }
                 }

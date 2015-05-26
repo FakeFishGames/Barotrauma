@@ -25,7 +25,7 @@ namespace Subsurface.Items.Components
         {
             if (picker == null) return false;
 
-            picker.SelectedConstruction = item;
+            //picker.SelectedConstruction = item;
 
             return true;
         }

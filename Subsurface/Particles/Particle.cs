@@ -31,10 +31,16 @@ namespace Subsurface.Particles
         private Vector2 drawPosition;
 
         private float checkCollisionTimer;
-
+        
         public bool InWater
         {
             get { return prefab.inWater; }        
+        }
+
+        public Vector2 yLimits
+        {
+            get;
+            set;
         }
 
         public Vector2 Size
@@ -49,7 +55,7 @@ namespace Subsurface.Particles
             set { velocityChange = value; }
         }
         
-        public void Init(Vector2 position, float rotation, Vector2 speed, ParticlePrefab prefab)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation)
         {
             this.prefab = prefab;
 
@@ -73,13 +79,13 @@ namespace Subsurface.Particles
 
             rand = (float)Game1.localRandom.NextDouble();
             sizeChange = prefab.sizeChangeMin + (prefab.sizeChangeMax - prefab.sizeChangeMin) * rand;
-                               
+
+            yLimits = Vector2.Zero;
 
             color = prefab.startColor;
             alpha = prefab.startAlpha;
             
-            velocityChange = prefab.velocityChange;
-            
+            velocityChange = prefab.velocityChange;            
         }
 
         public bool Update(float deltaTime)
@@ -109,6 +115,14 @@ namespace Subsurface.Particles
                 color.R / 255.0f + prefab.colorChange.X * deltaTime,
                 color.G / 255.0f + prefab.colorChange.Y * deltaTime,
                 color.B / 255.0f + prefab.colorChange.Z * deltaTime);
+
+            if (yLimits!=Vector2.Zero)
+            {
+                if (position.Y>yLimits.X || position.Y<yLimits.Y)
+                {
+                    return false;
+                }
+            }
 
             if (prefab.deleteOnHit)
             {

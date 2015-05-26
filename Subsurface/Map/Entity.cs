@@ -14,7 +14,7 @@ namespace Subsurface
         protected AITarget aiTarget;
         //protected float soundRange;
         //protected float sightRange;
-
+        
         public int ID
         {
             get { return id; }

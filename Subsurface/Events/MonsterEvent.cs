@@ -1,5 +1,6 @@
 ﻿using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace Subsurface
 {
@@ -17,7 +18,7 @@ namespace Subsurface
             characterFile = ToolBox.GetAttributeString(element, "characterfile", "");
 
             minAmount = ToolBox.GetAttributeInt(element, "minamount", 1);
-            maxAmount = ToolBox.GetAttributeInt(element, "maxamount", 1);
+            maxAmount = Math.Max(ToolBox.GetAttributeInt(element, "maxamount", 1),minAmount);
         }
 
         protected override void Start()
@@ -30,10 +31,11 @@ namespace Subsurface
 
             for (int i = 0; i < amount; i++)
             {
-                monsters[i] = new Character(characterFile,
-                    (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition);
+                Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
+                position.X += ToolBox.RandomFloat(-0.5f,0.5f);
+                position.Y += ToolBox.RandomFloat(-0.5f,0.5f);
+                monsters[i] = new Character(characterFile, position);
             }
-
         }
 
         public override void Update(float deltaTime)

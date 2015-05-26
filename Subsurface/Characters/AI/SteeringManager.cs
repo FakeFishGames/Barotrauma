@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
+using FarseerPhysics.Dynamics;
 
 namespace Subsurface
 {
@@ -112,25 +113,29 @@ namespace Subsurface
             if (rayCastTimer <= 0.0f)
             {
                 rayCastTimer = RayCastInterval;
-                Structure closestStructure = Map.CheckVisibility(host.Position, ahead);
-                if (closestStructure == null)
+                Body closestBody = Map.CheckVisibility(host.Position, ahead);
+                if (closestBody == null)
                 {
                     avoidSteering = Vector2.Zero;
                     return Vector2.Zero;                    
                 }
                 else
                 {
-                    Vector2 obstaclePosition = Map.LastPickedPosition;
-                    if (closestStructure.IsHorizontal)
+                    Structure closestStructure = closestBody.UserData as Structure;
+                    if (closestStructure!=null)
                     {
-                        obstaclePosition.Y = closestStructure.SimPosition.Y;
-                    }
-                    else
-                    {
-                        obstaclePosition.X = closestStructure.SimPosition.X;
-                    }
+                        Vector2 obstaclePosition = Map.LastPickedPosition;
+                        if (closestStructure.IsHorizontal)
+                        {
+                            obstaclePosition.Y = closestStructure.SimPosition.Y;
+                        }
+                        else
+                        {
+                            obstaclePosition.X = closestStructure.SimPosition.X;
+                        }
 
-                    avoidSteering = Vector2.Normalize(Map.LastPickedPosition - obstaclePosition);
+                        avoidSteering = Vector2.Normalize(Map.LastPickedPosition - obstaclePosition);
+                    }
                 }
                 
             }

@@ -129,6 +129,11 @@ namespace Subsurface
             }
         }
 
+        public float MaxHealth
+        {
+            get { return maxHealth; }
+        }
+
         public float Bleeding
         {
             get { return bleeding; }
@@ -290,9 +295,9 @@ namespace Subsurface
 
             if (ToolBox.RandomFloat(0.0f, 1000.0f) < Bleeding)
             {
-                Game1.particleManager.CreateParticle(SimPosition,
-                    MathHelper.Pi,
-                    ToolBox.RandomFloat(0.0f, 0.0f), !inWater ? "blood" : "waterblood");
+                Game1.particleManager.CreateParticle(
+                    !inWater ? "blood" : "waterblood",
+                    SimPosition, Vector2.Zero);
             }
         }
 
