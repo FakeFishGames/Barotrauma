@@ -214,7 +214,7 @@ namespace Subsurface
             }
 
             
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw((float)deltaTime, spriteBatch, cam);
 
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
 

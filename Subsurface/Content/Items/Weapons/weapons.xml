@@ -2,12 +2,12 @@
 
 <Items>
   <Item
-    name="Harpoon"
+    name="Spear"
     pickdistance="200">
 
-    <Sprite texture ="harpoon.png" depth="0.55"/>
+    <Sprite texture ="spear.png" depth="0.55"/>
 
-    <Body width="80" height="5" density="10"/>
+    <Body width="64" height="5" density="20"/>
 
     <Pickable slots="Any"/>
     <Projectile launchimpulse="20.0" damage="20.0" bleedingdamage="20.0" doesstick="true">
@@ -21,7 +21,7 @@
   
     <Sprite texture ="harpoongun.png" depth="0.04"/>
 
-    <Body width="90" height="30" density="5"/>
+    <Body width="90" height="30" density="10"/>
 
     <Holdable holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>
     
@@ -30,11 +30,11 @@
     <RangedWeapon barrelpos="49,10">
       <Sound path="Content/Items/Weapons/harpoon1.ogg" type="OnUse"/>
       <Sound path="Content/Items/Weapons/harpoon2.ogg" type="OnUse"/>
-      <RequiredItems name="Harpoon" type="Contained"/>
+      <RequiredItems name="Spear" type="Contained"/>
     </RangedWeapon>
 
-    <ItemContainer itempos="27,11" iteminterval="0,-4" hideitems="false">
-      <Containable name="Harpoon"/>
+    <ItemContainer itempos="27,10" iteminterval="0,-8" hideitems="false">
+      <Containable name="Spear"/>
     </ItemContainer>
   </Item>
 

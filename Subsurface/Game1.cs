@@ -69,7 +69,7 @@ namespace Subsurface
             graphics = new GraphicsDeviceManager(this);
 
             graphicsWidth = 1280;
-            graphicsHeight = 700;
+            graphicsHeight = 720;
 
             //graphics.IsFullScreen = true;
             graphics.PreferredBackBufferWidth = graphicsWidth;

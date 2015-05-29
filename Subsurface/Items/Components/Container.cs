@@ -164,7 +164,7 @@ namespace Subsurface.Items.Components
 
             if (hideItems) return;
 
-            Vector2 transformedItemPos;
+            Vector2 transformedItemPos = itemPos;
             Vector2 transformedItemInterval = itemInterval;
             float currentRotation = itemRotation;
             //float transformedItemRotation = itemRotation;
@@ -177,8 +177,18 @@ namespace Subsurface.Items.Components
             {
                 Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
 
-                transformedItemPos = ConvertUnits.ToDisplayUnits(item.body.Position) + Vector2.Transform(itemPos, transform);
+                if (item.body.Dir==-1.0f)
+                {
+                    transformedItemPos.X = -transformedItemPos.X;
+                    transformedItemInterval.X = -transformedItemInterval.X;
+                }
+                transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
+
+
+
+                transformedItemPos += ConvertUnits.ToDisplayUnits(item.body.Position);
+
                 currentRotation += item.body.Rotation;
             }
 
@@ -186,8 +196,13 @@ namespace Subsurface.Items.Components
             {
                 if (containedItem == null) continue;
 
-                containedItem.sprite.Draw(spriteBatch, new Vector2(transformedItemPos.X, -transformedItemPos.Y), -currentRotation, 1.0f);
-
+                containedItem.sprite.Draw(
+                    spriteBatch, 
+                    new Vector2(transformedItemPos.X, -transformedItemPos.Y), 
+                    -currentRotation, 
+                    1.0f, 
+                    (item.body != null && item.body.Dir == -1) ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                
                 transformedItemPos += transformedItemInterval;
             }
         }

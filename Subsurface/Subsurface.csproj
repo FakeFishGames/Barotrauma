@@ -73,6 +73,7 @@
     <Compile Include="Characters\HumanoidAnimController.cs" />
     <Compile Include="GameSession\TraitorMode.cs" />
     <Compile Include="GUI\GUIImage.cs" />
+    <Compile Include="GUI\GUIMessageBox.cs" />
     <Compile Include="GUI\GUITickBox.cs" />
     <Compile Include="Interface1.cs" />
     <Compile Include="Items\CharacterInventory.cs" />
@@ -356,6 +357,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Weapons\harpoon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Weapons\spear.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Weapons\weapons.xml">

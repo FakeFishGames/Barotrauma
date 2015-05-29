@@ -26,6 +26,9 @@ namespace Subsurface
 
         float camAngle;
 
+        Body previewPlatform;
+        Hull previewHull;
+
         public bool isServer;
 
         public string SelectedMap
@@ -103,6 +106,18 @@ namespace Subsurface
         public override void Deselect()
         {
             textBox.Deselect();
+
+            if (previewPlatform!=null)
+            {
+                Game1.world.RemoveBody(previewPlatform);
+                previewPlatform = null;
+            }
+
+            if (previewHull!=null)
+            {
+                previewHull.Remove();
+                previewHull = null;
+            }
         }
 
         public override void Select()
@@ -203,9 +218,9 @@ namespace Subsurface
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-                new GUITextBlock(new Rectangle(0, 200, 200,30), "Job preferences:", Color.Transparent, Color.Black, Alignment.Left, playerFrame);
+                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", Color.Transparent, Color.Black, Alignment.Left, playerFrame);
 
-                GUIListBox jobList = new GUIListBox(new Rectangle(0,230,200,250), Color.White, playerFrame);
+                GUIListBox jobList = new GUIListBox(new Rectangle(0,180,200,0), Color.White, playerFrame);
 
                 foreach (Job job in Job.jobList)
                 {
@@ -275,12 +290,7 @@ namespace Subsurface
             Game1.gameScreen.Cam.TargetPos = pos;
 
             menu.Update((float)deltaTime);
-
-            if (Game1.client != null && Game1.client.Character != null)
-            {
-
-            }
-            
+                        
             durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
 
@@ -294,7 +304,7 @@ namespace Subsurface
 
             menu.Draw(spriteBatch);
 
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw((float)deltaTime, spriteBatch, null);
 
             spriteBatch.End();
 
@@ -303,11 +313,15 @@ namespace Subsurface
             {
                 if (Game1.client.Character != null)
                 {
-                    Vector2 position = new Vector2(playerFrame.Rect.X + playerFrame.Rect.Width * 0.25f, playerFrame.Rect.Y + 100.0f);
-                    Matrix transform = Matrix.CreateTranslation(new Vector3(ConvertUnits.ToDisplayUnits(-Game1.client.Character.SimPosition)+position, 0.0f));
-            spriteBatch.Begin(SpriteSortMode.BackToFront, null,null,null,null,null,transform);
+                    Vector2 position = new Vector2(playerFrame.Rect.X + playerFrame.Rect.Width * 0.25f, playerFrame.Rect.Y + 25.0f);
+
+                    Vector2 pos = Game1.client.Character.Position;
+                    pos.Y = -pos.Y;
+                    Matrix transform = Matrix.CreateTranslation(new Vector3(-pos+position, 0.0f));
+                    
+                    spriteBatch.Begin(SpriteSortMode.BackToFront, null,null,null,null,null,transform);
                     Game1.client.Character.Draw(spriteBatch);
-            spriteBatch.End();
+                    spriteBatch.End();
                 }
                 else
                 {
@@ -363,15 +377,18 @@ namespace Subsurface
 
             character.animController.isStanding = true;
             
-            //TODO: only create if hasn't been created yet
-            //{
-            Body platform = BodyFactory.CreateRectangle(Game1.world, 3.0f, 1.0f, 5.0f);
-            platform.SetTransform(new Vector2(pos.X, pos.Y + 1.5f), 0.0f);
-            platform.IsStatic = true;
+            if (previewPlatform==null)
+            {
+                Body platform = BodyFactory.CreateRectangle(Game1.world, 3.0f, 1.0f, 5.0f);
+                platform.SetTransform(new Vector2(pos.X, pos.Y - 2.5f), 0.0f);
+                platform.IsStatic = true;
+            }
 
-            pos = ConvertUnits.ToDisplayUnits(pos);
-            new Hull(new Rectangle((int)pos.X - 100, (int)-pos.Y + 100, 200, 200));
-            //}
+            if (previewPlatform==null)
+            {
+                pos = ConvertUnits.ToDisplayUnits(pos);
+                new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 200));
+            }
             
             Physics.Alpha = 1.0f;
 

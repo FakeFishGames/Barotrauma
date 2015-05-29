@@ -168,7 +168,7 @@ namespace Subsurface
 
             rightPanel[selectedRightPanel].Draw(spriteBatch);
 
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw((float)deltaTime, spriteBatch, null);
 
             spriteBatch.End();
         }

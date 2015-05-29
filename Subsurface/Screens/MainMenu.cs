@@ -139,7 +139,7 @@ namespace Subsurface
 
             menuTabs[selectedTab].Draw(spriteBatch);
 
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw((float)deltaTime, spriteBatch, null);
 
             spriteBatch.End();
         }

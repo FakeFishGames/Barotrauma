@@ -183,7 +183,7 @@ namespace Subsurface
                 switch (subElement.Name.ToString().ToLower())
                 {
                     case "sprite":
-                        sprite = new Sprite(subElement, Path.GetDirectoryName(filePath) + "/");
+                        sprite = new Sprite(subElement, Path.GetDirectoryName(filePath));
                         size = sprite.size;
                         break;
                     case "trigger":
