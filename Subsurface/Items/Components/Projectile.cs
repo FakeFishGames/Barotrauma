@@ -137,7 +137,7 @@ namespace Subsurface.Items.Components
         private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)
         {
             //doesn't collide with items
-            if (f2.Body.UserData is Item) return false;
+            //if (f2.Body.UserData is Item) return false;
 
             if (ignoredBodies.Contains(f2.Body)) return false;
 
@@ -219,7 +219,7 @@ namespace Subsurface.Items.Components
 
             stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.Position, axis, true);
             stickJoint.MotorEnabled = true;
-            stickJoint.MaxMotorForce = 15.0f;
+            stickJoint.MaxMotorForce = 30.0f;
 
             stickJoint.LimitEnabled = true;
             stickJoint.UpperLimit = ConvertUnits.ToSimUnits(item.sprite.size.X*0.7f);

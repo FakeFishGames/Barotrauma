@@ -455,29 +455,8 @@ namespace Subsurface
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             Color color = (isSelected && editing) ? color = Color.Red : Color.White;
-            if (isHighlighted)
-            {
-                color = Color.Orange;
-
-                float stringWidth = GUI.font.MeasureString(prefab.Name).X;
-                Vector2 textPos = new Vector2(Position.X, -Position.Y);
-                textPos -= new Vector2(stringWidth / 2, 40);
-                spriteBatch.DrawString(GUI.font, prefab.Name, textPos, Color.Black);
-                spriteBatch.DrawString(GUI.font, prefab.Name, textPos + new Vector2(1, -1), Color.Orange);
-                
-                
-                textPos = new Vector2(Position.X, -Position.Y+50);
-                foreach (string text in highlightText)
-                {                    
-                    textPos.X = Position.X - GUI.font.MeasureString(text).X/2;
-                    
-                    spriteBatch.DrawString(GUI.font, text, textPos, Color.Black);
-                    spriteBatch.DrawString(GUI.font, text, textPos + new Vector2(1, -1), Color.Orange);
-                    
-                    textPos.Y += 25;
-                }
-            }
-
+            if (isHighlighted) color = Color.Orange;
+            
             if (body==null)
             {
                 prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);

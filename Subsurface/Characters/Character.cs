@@ -587,6 +587,51 @@ namespace Subsurface
             //    ConvertUnits.ToDisplayUnits(animController.targetMovement.X, animController.targetMovement.Y), Color.Green);
         }
 
+
+        private static GUIProgressBar drowningBar;
+        public void DrawHud(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (drowningBar==null)
+            {
+                int width = 200, height = 20;
+                drowningBar = new GUIProgressBar(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, 20, width, height), Color.Blue, 1.0f);
+            }
+
+            drowningBar.BarSize = Character.Controlled.Oxygen / 100.0f;
+            if (drowningBar.BarSize < 1.0f)
+                drowningBar.Draw(spriteBatch);
+
+            if (Character.Controlled.Inventory != null)
+                Character.Controlled.Inventory.Draw(spriteBatch);
+
+            if (closestItem!=null)
+            {
+                Color color = Color.Orange;
+
+                Vector2 startPos = Position + (closestItem.Position - Position) * 0.7f;
+                startPos = cam.WorldToScreen(startPos);
+
+                Vector2 textPos = startPos;
+
+                float stringWidth = GUI.font.MeasureString(closestItem.Prefab.Name).X;
+                textPos -= new Vector2(stringWidth / 2, 20);
+                spriteBatch.DrawString(GUI.font, closestItem.Prefab.Name, textPos, Color.Black);
+                spriteBatch.DrawString(GUI.font, closestItem.Prefab.Name, textPos + new Vector2(1, -1), Color.Orange);
+                
+                textPos.Y += 50.0f;
+                foreach (string text in closestItem.HighlightText)
+                {
+                    textPos.X = startPos.X - GUI.font.MeasureString(text).X / 2;
+
+                    spriteBatch.DrawString(GUI.font, text, textPos, Color.Black);
+                    spriteBatch.DrawString(GUI.font, text, textPos + new Vector2(1, -1), Color.Orange);
+
+                    textPos.Y += 25;
+                }                
+            }
+            
+        }
+
         public void PlaySound(AIController.AiState state)
         {
             if (sounds == null || sounds.Count()==0) return;

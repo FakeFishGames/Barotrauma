@@ -65,8 +65,6 @@ namespace Subsurface
         static Texture2D t;
         public static SpriteFont font;
 
-        private static GUIProgressBar drowningBar;
-
         private static GraphicsDevice graphicsDevice;
         
 
@@ -87,11 +85,7 @@ namespace Subsurface
             t = new Texture2D(graphicsDevice, 1, 1);
             t.SetData<Color>(
                 new Color[] { Color.White });// fill the texture with white
-
-            int width = 200, height = 20;
-            drowningBar = new GUIProgressBar(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, 20, width, height), Color.Blue, 1.0f);
-
-
+            
             style = new GUIStyle("Content/HUD/style.xml");
         }
 
@@ -262,38 +256,24 @@ namespace Subsurface
             return clicked;
         }
 
-        public static void Draw(float deltaTime, SpriteBatch spriteBatch)
+        public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
-            spriteBatch.DrawString(font,
-                "FPS: " + (int)Game1.frameCounter.AverageFramesPerSecond
-                + " - render: "+Game1.renderTimeElapsed,
-                new Vector2(10, 10), Color.White);
+            //spriteBatch.DrawString(font,
+            //    "FPS: " + (int)Game1.frameCounter.AverageFramesPerSecond
+            //    + " - render: "+Game1.renderTimeElapsed,
+            //    new Vector2(10, 10), Color.White);
 
-            spriteBatch.DrawString(font,
-                "Physics: " + Game1.world.UpdateTime
-                + " - bodies: " + Game1.world.BodyList.Count,
-                new Vector2(10, 30), Color.White);
+            //spriteBatch.DrawString(font,
+            //    "Physics: " + Game1.world.UpdateTime
+            //    + " - bodies: " + Game1.world.BodyList.Count,
+            //    new Vector2(10, 30), Color.White);
 
-            if (Character.Controlled != null)
-            {
-                drowningBar.BarSize = Character.Controlled.Oxygen/100.0f;
-                if (drowningBar.BarSize<1.0f)
-                    drowningBar.Draw(spriteBatch);
 
-                if (Character.Controlled.Inventory!=null)
-                    Character.Controlled.Inventory.Draw(spriteBatch);
-            }
+            if (Character.Controlled != null) Character.Controlled.DrawHud(spriteBatch, cam);
 
             DrawMessages(spriteBatch, (float)deltaTime);
             
             DebugConsole.Draw(spriteBatch);
-        }
-
-        public static void DrawCharacterHUD(SpriteBatch spriteBatch, Character character)
-        {
-            drowningBar.BarSize = character.Oxygen/100.0f;
-
-            drowningBar.Draw(spriteBatch);
         }
 
         public static void AddMessage(string message, Color color, float lifeTime = 3.0f)

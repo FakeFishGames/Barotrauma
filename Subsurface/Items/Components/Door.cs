@@ -283,7 +283,7 @@ namespace Subsurface.Items.Components
 
             Game1.world.RemoveBody(body.FarseerBody);
 
-            linkedGap.Remove();
+            if (linkedGap!=null) linkedGap.Remove();
 
             doorSprite.Remove();
 

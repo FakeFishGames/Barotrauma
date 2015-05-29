@@ -265,7 +265,6 @@ namespace Subsurface
                 Limb limb = f1.Body.UserData as Limb;
                 if (limb != null && (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot))
                 {
-                    Debug.WriteLine(contact.Manifold.LocalNormal.Y);
                     if (contact.Manifold.LocalNormal.Y >= 0.0f)
                     {
                         stairs = structure;

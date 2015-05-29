@@ -198,8 +198,9 @@ namespace Subsurface
 
         public Vector2 WorldToScreen(Vector2 coords)
         {
-            Vector2 screenCoords = Vector2.Transform(coords, transform);
-            return new Vector2(screenCoords.X, screenCoords.Y);
+            coords.Y = -coords.Y;
+            //Vector2 screenCoords = Vector2.Transform(coords, transform);
+            return Vector2.Transform(coords, transform);
         }
     }
 }

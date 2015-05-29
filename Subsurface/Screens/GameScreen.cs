@@ -124,7 +124,7 @@ namespace Subsurface
                 }
             }
 
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw((float)deltaTime, spriteBatch, cam);
                         
             if (PlayerInput.GetMouseState.LeftButton != ButtonState.Pressed) Inventory.draggingItem = null;
 
