@@ -9,3 +9,7 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+
+#performance reports & sessions
+*.vsp
+*.psess
