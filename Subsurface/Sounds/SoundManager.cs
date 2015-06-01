@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using OpenTK.Audio;
 using OpenTK.Audio.OpenAL;
+using System;
 
 namespace Subsurface.Sounds
 {
@@ -13,8 +14,15 @@ namespace Subsurface.Sounds
         private static List<int> alSources = new List<int>();
         private static int[] alBuffers = new int[DefaultSourceCount];
         private static int lowpassFilterId;
-              
-        
+
+        private static float overrideLowPassGain;
+
+        public static float OverrideLowPassGain
+        {
+            get { return overrideLowPassGain; }
+            set { overrideLowPassGain = MathHelper.Clamp(overrideLowPassGain, 0.0f, 1.0f); }
+        }
+
         static AudioContext AC;
 
         public static OggStreamer oggStreamer;
@@ -34,7 +42,7 @@ namespace Subsurface.Sounds
                 lowpassFilterId = ALHelper.Efx.GenFilter();
                 //alFilters.Add(alFilterId);
                 ALHelper.Efx.Filter(lowpassFilterId, EfxFilteri.FilterType, (int)EfxFilterType.Lowpass);
-                
+                                
                 //LowPassHFGain = 1;
             }
 
@@ -72,6 +80,7 @@ namespace Subsurface.Sounds
 
         public static int Play(Sound sound, float volume = 1.0f)
         {
+            return Play(sound, Vector2.Zero, volume, 0.0f);
             //for (int i = 2; i < DefaultSourceCount; i++)
             //{
             //    AL.SourceStop(alSources[i]);
@@ -79,6 +88,43 @@ namespace Subsurface.Sounds
             //    System.Diagnostics.Debug.WriteLine(i + ": " + AL.GetSourceState(alSources[i]));
             //    System.Diagnostics.Debug.WriteLine(AL.GetSourceType(alSources[i]));
             //}
+
+            //for (int i = 1; i < DefaultSourceCount; i++)
+            //{
+            //    //find a source that's free to use (not playing or paused)
+            //    if (AL.GetSourceState(alSources[i]) == ALSourceState.Playing
+            //        || AL.GetSourceState(alSources[i]) == ALSourceState.Paused) continue;
+
+            //    //if (position!=Vector2.Zero)
+            //    //    position /= 1000.0f;
+
+            //    alBuffers[i]=sound.AlBufferId;
+            //    AL.Source(alSources[i], ALSourceb.Looping, false);
+            //    AL.Source(alSources[i], ALSource3f.Position, 0.0f, 0.0f, 0.0f);
+            //    AL.Source(alSources[i], ALSourcei.Buffer, sound.AlBufferId);
+            //    AL.Source(alSources[i], ALSourcef.Gain, volume);
+            //    //AL.Source(alSources[i], ALSource3f.Position, position.X, position.Y, 0.0f);
+            //    AL.SourcePlay(alSources[i]);
+
+            //    //sound.sourceIndex = i;
+
+            //    return i;
+            //}
+
+            //return -1;
+        }
+
+        public static int Play(Sound sound, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f)
+        {
+            //for (int i = 2; i < DefaultSourceCount; i++)
+            //{
+            //    AL.SourceStop(alSources[i]);
+            //    AL.Source(alSources[i], ALSourceb.Looping, false);
+            //    System.Diagnostics.Debug.WriteLine(i + ": " + AL.GetSourceState(alSources[i]));
+            //    System.Diagnostics.Debug.WriteLine(AL.GetSourceType(alSources[i]));
+            //}
+
+
 
             for (int i = 1; i < DefaultSourceCount; i++)
             {
@@ -89,11 +135,21 @@ namespace Subsurface.Sounds
                 //if (position!=Vector2.Zero)
                 //    position /= 1000.0f;
 
-                alBuffers[i]=sound.AlBufferId;
+                alBuffers[i] = sound.AlBufferId;
                 AL.Source(alSources[i], ALSourceb.Looping, false);
-                AL.Source(alSources[i], ALSource3f.Position, 0.0f, 0.0f, 0.0f);
-                AL.Source(alSources[i], ALSourcei.Buffer, sound.AlBufferId);
+
+                position /= 1000.0f;
+
+                //System.Diagnostics.Debug.WriteLine("updatesoundpos: "+offset);
                 AL.Source(alSources[i], ALSourcef.Gain, volume);
+                AL.Source(alSources[i], ALSource3f.Position, position.X, position.Y, 0.0f);
+
+                AL.Source(alSources[i], ALSourcei.Buffer, sound.AlBufferId);
+
+                ALHelper.Efx.Filter(lowpassFilterId, EfxFilterf.LowpassGainHF, lowPassHfGain = Math.Min(lowPassGain, overrideLowPassGain));
+                ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
+                ALHelper.Check();
+
                 //AL.Source(alSources[i], ALSource3f.Position, position.X, position.Y, 0.0f);
                 AL.SourcePlay(alSources[i]);
 
@@ -105,22 +161,28 @@ namespace Subsurface.Sounds
             return -1;
         }
 
-        public static int Loop(Sound sound, int sourceIndex, float volume)
+        public static int Loop(Sound sound, int sourceIndex, float volume = 1.0f)
+        {
+            return Loop(sound,sourceIndex, Vector2.Zero, volume, 0.0f);
+        }
+        public static int Loop(Sound sound, int sourceIndex, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f)
         {
             if (sourceIndex<1)
             {
-                sourceIndex = Play(sound, volume);
+                sourceIndex = Play(sound, position, volume, lowPassGain);
                 if (sourceIndex>0)
                 {
                     AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
                     AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
                 }
+                ALHelper.Check();
                 return sourceIndex;
             }
             else
             {
                 AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
                 AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
+                ALHelper.Check();
                 return sourceIndex;
             }
         }
@@ -195,6 +257,7 @@ namespace Subsurface.Sounds
             {
                 if (ALHelper.Efx.IsInitialized)
                 {
+                    overrideLowPassGain = value;
                     for (int i = 0; i < DefaultSourceCount; i++)
                     {
                         //find a source that's free to use (not playing or paused)
@@ -221,17 +284,21 @@ namespace Subsurface.Sounds
         //    }
         //}
 
-        public static void UpdateSoundPosition(int sourceIndex, Vector2 position, float baseVolume = 1.0f)
+        public static void UpdateSoundPosition(int sourceIndex, Vector2 position, float baseVolume = 1.0f, float lowPassGain = 0.0f)
         {
             if (sourceIndex < 1) return;
 
             //Resume(sourceIndex);
 
             position/= 1000.0f;
-
+            
             //System.Diagnostics.Debug.WriteLine("updatesoundpos: "+offset);
             AL.Source(alSources[sourceIndex], ALSourcef.Gain, baseVolume);
             AL.Source(alSources[sourceIndex], ALSource3f.Position, position.X, position.Y, 0.0f);
+
+            ALHelper.Efx.Filter(lowpassFilterId, EfxFilterf.LowpassGainHF, lowPassHfGain = Math.Min(lowPassGain, overrideLowPassGain));
+            ALHelper.Efx.BindFilterToSource(alSources[sourceIndex], lowpassFilterId);
+            ALHelper.Check();
         }
 
         public static OggStream StartStream(string file, float volume = 1.0f)

@@ -26,7 +26,7 @@ namespace Subsurface
         float pickDistance;
 
 
-        public List<Sound> sounds;
+        //public List<Sound> sounds;
         
         //an area next to the construction
         //the construction can be Activated() by a character inside the area
@@ -201,16 +201,17 @@ namespace Subsurface
                 }
             }
 
-            sounds = new List<Sound>();
-            var soundElements = element.Descendants("Sound");
-            foreach (XElement soundElement in soundElements)
-            {                
-                string soundPath = ToolBox.GetAttributeString(soundElement, "path", "");
-                if (soundPath == "") continue;
+            //sounds = new List<Sound>();
+            //var soundElements = element.Descendants();
+            //foreach (XElement soundElement in soundElements)
+            //{
+            //    if (soundElement.Name.ToString().ToLower() != "sound") continue;
+            //    string soundPath = ToolBox.GetAttributeString(soundElement, "path", "");
+            //    if (soundPath == "") continue;
 
-                Sound sound = Sound.Load(soundPath);
-                if (sound != null) sounds.Add(sound);
-            }
+            //    Sound sound = Sound.Load(soundPath);
+            //    if (sound != null) sounds.Add(sound);
+            //}
             
             list.Add(this);
         }

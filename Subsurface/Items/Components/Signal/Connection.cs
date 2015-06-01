@@ -334,16 +334,8 @@ namespace Subsurface.Items.Components
                 if (!mouseIn) return;
                 end = PlayerInput.MousePosition;
             }
-            else if (draggingConnected == null)
-            {
-                if (Vector2.Distance(end, PlayerInput.MousePosition)<20.0f)
-                {
-                    item.IsHighlighted = true;
-                    //start dragging the wire
-                    if (PlayerInput.LeftButtonDown()) draggingConnected = wireItem;                    
-                }
-            }
 
+            bool mouseOn = false;
 
             int textX = (int)start.X;
             float connLength = 10.0f;
@@ -358,9 +350,12 @@ namespace Subsurface.Items.Components
             }
             else
             {
-                wireVertical.DrawTiled(spriteBatch,
-                    new Vector2(start.X, end.Y + wireCorner.size.Y) - wireVertical.size / 2,
-                    new Vector2(wireVertical.size.X, (float)Math.Abs((end.Y + wireCorner.size.Y) - start.Y)), Color.White);
+                Vector2 pos = new Vector2(start.X, end.Y + wireCorner.size.Y) - wireVertical.size / 2;
+                Vector2 size = new Vector2(wireVertical.size.X, (float)Math.Abs((end.Y + wireCorner.size.Y) - start.Y));
+                wireVertical.DrawTiled(spriteBatch, pos, size, Color.White);
+
+                Rectangle rect = new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
+                if (rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
 
                 float dir = (end.X > start.X) ? -1.0f : 1.0f;
 
@@ -371,16 +366,29 @@ namespace Subsurface.Items.Components
                 float wireStartX = start.X - wireCorner.size.X / 2 * dir;
                 float wireEndX = end.X + connLength * dir;
 
-                wireHorizontal.DrawTiled(spriteBatch, new Vector2(Math.Min(wireStartX,wireEndX), end.Y - wireVertical.size.Y / 2),
-                    new Vector2(Math.Abs(wireStartX - wireEndX), wireHorizontal.size.Y), Color.White);
-                
+                pos = new Vector2(Math.Min(wireStartX,wireEndX), end.Y - wireVertical.size.Y / 2);
+                size = new Vector2(Math.Abs(wireStartX - wireEndX), wireHorizontal.size.Y);
+
+                wireHorizontal.DrawTiled(spriteBatch, pos, size, Color.White);
+                rect = new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
+                if (rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
 
                 connector.Draw(spriteBatch, end, -MathHelper.PiOver2*dir);
+            }
+
+            if (draggingConnected == null)
+            {
+                if (mouseOn || Vector2.Distance(end, PlayerInput.MousePosition)<20.0f)
+                {
+                    item.IsHighlighted = true;
+                    //start dragging the wire
+                    if (PlayerInput.LeftButtonDown()) draggingConnected = wireItem;                    
+                }
             }
                             
             spriteBatch.DrawString(GUI.font, item.Name, 
                 new Vector2(textX, start.Y-30), 
-                Color.White, 
+                mouseOn ? Color.Gold : Color.White, 
                 MathHelper.PiOver2, 
                 GUI.font.MeasureString(item.Name)*0.5f, 
                 1.0f, SpriteEffects.None, 0.0f);

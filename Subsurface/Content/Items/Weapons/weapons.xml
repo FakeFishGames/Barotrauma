@@ -28,8 +28,8 @@
     <Pickable slots="Any,BothHands"/>
 
     <RangedWeapon barrelpos="49,10">
-      <Sound path="Content/Items/Weapons/harpoon1.ogg" type="OnUse"/>
-      <Sound path="Content/Items/Weapons/harpoon2.ogg" type="OnUse"/>
+      <Sound file="harpoon1.ogg" type="OnUse"/>
+      <Sound file="harpoon2.ogg" type="OnUse"/>
       <RequiredItems name="Spear" type="Contained"/>
     </RangedWeapon>
 

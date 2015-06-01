@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -8,6 +9,7 @@ namespace Subsurface
 {
     class StatusEffect
     {
+
 
         [Flags]
         public enum Target 
@@ -20,6 +22,8 @@ namespace Subsurface
 
         public string[] propertyNames;
         private object[] propertyEffects;
+
+        private bool disableDeltaTime;
         
         private string[] onContainingNames;
 
@@ -60,7 +64,9 @@ namespace Subsurface
         {
             IEnumerable<XAttribute> attributes = element.Attributes();            
             List<XAttribute> propertyAttributes = new List<XAttribute>();
-                        
+
+            disableDeltaTime = ToolBox.GetAttributeBool(element, "disabledeltatime", false);
+
             foreach (XAttribute attribute in attributes)
             {
                 switch (attribute.Name.ToString())
@@ -179,13 +185,14 @@ namespace Subsurface
 
         protected void ApplyToProperty(ObjectProperty property, object value, float deltaTime)
         {
+            if (disableDeltaTime) deltaTime = 1.0f;
 
             Type type = value.GetType();
             if (type == typeof(float))
             {
                 property.TrySetValue((float)property.GetValue() + (float)value * deltaTime);
             }
-            if (type == typeof(int))
+            else if (type == typeof(int))
             {
                 property.TrySetValue((int)property.GetValue() + (int)value * deltaTime);
             }

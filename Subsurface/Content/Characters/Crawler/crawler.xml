@@ -10,7 +10,7 @@
            flip="true">
 
     <!-- head -->
-    <limb id = "0" radius="22" height="45"  mass = "6" type="Head" flip="true" steerforce="1.0">
+    <limb id = "0" radius="22" height="45"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
     </limb>
 

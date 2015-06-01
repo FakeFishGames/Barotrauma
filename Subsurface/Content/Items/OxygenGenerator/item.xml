@@ -6,7 +6,7 @@
   <Sprite texture ="battery.png" depth="0.8"/>
 
   <OxygenGenerator powerconsumption="2000.0" minvoltage="0.5" canbeselected = "true">
-    <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="1.0"/>
+    <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="2.0"/>
   </OxygenGenerator>
   
   <trigger/>

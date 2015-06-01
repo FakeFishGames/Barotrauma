@@ -10,7 +10,7 @@
     <Turret barrelsprite="railgunbarrel.png" canbeselected = "true" linkable="true" origin="0.5, 0.85" barrelpos="117, 57" 
             rotationlimits="180,360"
             powerconsumption="500.0">
-      <Sound path="Content/Items/railgun.ogg" type="OnUse"/>
+      <Sound file="railgun.ogg" type="OnUse"/>
     </Turret>
   </Item>
 

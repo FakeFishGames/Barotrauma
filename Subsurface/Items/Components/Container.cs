@@ -110,7 +110,7 @@ namespace Subsurface.Items.Components
 
                 if (contained.body!=null) contained.body.Enabled = false;
 
-                RelatedItem ri = containableItems.Find(x => x.MatchesItem(item));
+                RelatedItem ri = containableItems.Find(x => x.MatchesItem(contained));
                 if (ri == null) continue;
 
                 foreach (StatusEffect effect in ri.statusEffects)

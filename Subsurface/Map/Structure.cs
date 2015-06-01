@@ -378,7 +378,7 @@ namespace Subsurface
                 sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
         }
 
-        public void AddDamage(Vector2 position, float amount, float bleedingAmount, float stun)
+        public void AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
         {
             if (!prefab.HasBody || prefab.IsPlatform) return;
 
@@ -387,6 +387,11 @@ namespace Subsurface
             
             Game1.particleManager.CreateParticle("dustcloud", ConvertUnits.ToSimUnits(SectionPosition(i)), 0.0f, 0.0f);
 
+            if (playSound)
+            {
+                DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
+                AmbientSoundManager.PlayDamageSound(damageSoundType, amount, position);
+            }
 
             AddDamage(i, amount);
         }
