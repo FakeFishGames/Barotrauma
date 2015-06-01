@@ -370,7 +370,7 @@ namespace Subsurface
         }
 
 
-        public void AddDamage(Vector2 position, float amount, float bleedingAmount, float stun)
+        public void AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = true)
         {
             Condition -= amount;
         }
@@ -384,8 +384,7 @@ namespace Subsurface
                 if (condition > 0.0f)
                 {
                     ic.Update(deltaTime, cam);
-
-
+                    
                     ic.PlaySound(ActionType.OnActive, 1.0f, Position, true);
                     ic.ApplyStatusEffects(ActionType.OnActive, 1.0f, null);
                 }

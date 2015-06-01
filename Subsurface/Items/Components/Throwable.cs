@@ -17,8 +17,9 @@ namespace Subsurface.Items.Components
         bool throwing;
 
         [HasDefaultValue(1.0f, false)]
-        private float ThrowForce
+        public float ThrowForce
         {
+            get { return throwForce; }
             set { throwForce = value; }
         }
 

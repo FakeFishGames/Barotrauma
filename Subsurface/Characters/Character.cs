@@ -654,10 +654,8 @@ namespace Subsurface
             }
         }
 
-        public void AddDamage(Vector2 position, float amount, float bleedingAmount, float stun)
+        public void AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
         {
-            int bloodAmount = 0;
-
             animController.StunTimer = Math.Max(animController.StunTimer, stun);
 
             Limb closestLimb = null;
@@ -676,35 +674,9 @@ namespace Subsurface
             if (pull != Vector2.Zero) pull = Vector2.Normalize(pull);
             closestLimb.body.ApplyForce(pull*Math.Min(amount*100.0f, 100.0f));
 
-            closestLimb.Bleeding += bleedingAmount;
-            closestLimb.Damage += amount;    
-            bloodAmount = (int)Math.Min((int)(amount*2.0f),20);
-            //if (closestLimb.Damage>=100.0f)
-            //{
-            //    bloodAmount *= 2;
-            //    foreach (var joint in animController.limbJoints)
-            //    {
-            //        if (!(joint.BodyA == closestLimb.body.FarseerBody) && !(joint.BodyB == closestLimb.body.FarseerBody)) continue;
-                    
-            //        joint.Enabled = false;
-            //        break;                    
-            //    }
-            //}
 
-            for (int i = 0; i < bloodAmount; i++)
-            {
-                Vector2 particleVel = closestLimb.SimPosition-position;
-                if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
+            closestLimb.AddDamage(position, damageType, amount, bleedingAmount, playSound);
 
-                Game1.particleManager.CreateParticle("blood",
-                    closestLimb.SimPosition, 
-                    particleVel * ToolBox.RandomFloat(1.0f,3.0f));
-            }
-
-            for (int i = 0; i < bloodAmount / 2; i++)
-            {
-                Game1.particleManager.CreateParticle("waterblood",closestLimb.SimPosition,Vector2.Zero);
-            }
         }
 
         public void Stun()

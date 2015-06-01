@@ -214,24 +214,13 @@ namespace Subsurface
             soundVolume = soundVolume + ((flowForce.Length() < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
             soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
 
-            //if (soundVolume < 0.01f)
-            //{
-            //    if (soundIndex > -1)
-            //    {
-            //        Sound.Stop(soundIndex);
-            //        soundIndex = -1;
-            //    }
+            int index = (int)Math.Floor(flowForce.Length() / 100.0f);
+            index = Math.Min(index,2);
 
-            //}
-            //else
-            {
-                int index = (int)Math.Floor(flowForce.Length() / 100.0f);
-                index = Math.Min(index,2);
-
-                soundIndex = AmbientSoundManager.flowSounds[index].Loop(soundIndex, soundVolume, Position, 2000.0f);
-                //soundVolume = Math.Max(0.0f, soundVolume-deltaTime);
-                //Sound.UpdatePosition(soundIndex, Position, 2000.0f);                
-            }
+            soundIndex = AmbientSoundManager.flowSounds[index].Loop(soundIndex, soundVolume, Position, 2000.0f);
+            //soundVolume = Math.Max(0.0f, soundVolume-deltaTime);
+            //Sound.UpdatePosition(soundIndex, Position, 2000.0f);                
+            
 
             flowForce = Vector2.Zero;
 
@@ -386,7 +375,7 @@ namespace Subsurface
                 {
                     float delta = Math.Min(hull2.Volume - hull2.FullVolume + Hull.MaxCompress / 2.0f, deltaTime * 8000.0f * sizeModifier);
 
-                    flowForce = new Vector2(0.0f, Math.Min(hull2.Pressure-hull1.Pressure,500.0f));
+                    flowForce = new Vector2(0.0f, Math.Min(hull2.Pressure - hull1.Pressure, 500.0f));
 
                     delta = Math.Max(delta, 0.0f);
                     hull1.Volume += delta;
@@ -444,6 +433,7 @@ namespace Subsurface
                     //}
                 }
             }
+
             if (open > 0.0f)
             {
                 if (hull1.Volume>hull1.FullVolume && hull2.Volume>hull2.FullVolume)
@@ -458,9 +448,6 @@ namespace Subsurface
                     hull2.LethalPressure = 0.0f;
                 }
             }
-
-
-
         }
 
         void UpdateRoomToOut(float deltaTime)
@@ -526,7 +513,7 @@ namespace Subsurface
                 }
                 else
                 {
-                    flowForce = new Vector2(0.0f,delta);
+                    flowForce = new Vector2(0.0f, delta);
                 }
             }
         }
@@ -539,9 +526,9 @@ namespace Subsurface
 
             float totalOxygen = hull1.Oxygen + hull2.Oxygen;
             float totalVolume = (hull1.FullVolume + hull2.FullVolume);
-                
-            hull1.Oxygen += Math.Sign(totalOxygen*hull1.FullVolume/(totalVolume) - hull1.Oxygen) * Hull.OxygenDistributionSpeed;
-            hull2.Oxygen += Math.Sign(totalOxygen*hull2.FullVolume/(totalVolume) - hull2.Oxygen) * Hull.OxygenDistributionSpeed;            
+
+            hull1.Oxygen += Math.Sign(totalOxygen * hull1.FullVolume / (totalVolume) - hull1.Oxygen) * Hull.OxygenDistributionSpeed;
+            hull2.Oxygen += Math.Sign(totalOxygen * hull2.FullVolume / (totalVolume) - hull2.Oxygen) * Hull.OxygenDistributionSpeed;            
         }
 
         public override void Remove()

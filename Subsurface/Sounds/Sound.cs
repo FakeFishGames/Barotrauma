@@ -72,58 +72,74 @@ namespace Subsurface
             return SoundManager.Play(this, volume);
         }
 
-        public int Play(float volume, float range, Vector2 position)
+        public int Play(float baseVolume, float range, Vector2 position)
         {          
             //position = new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y);
             
             //volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(volume * (range - position.Length())/range, 0.0f, 1.0f);
 
-            int newIndex = SoundManager.Play(this, volume);
+            Vector2 relativePos = GetRelativePosition(position);
+            float volume = GetVolume(relativePos, range, baseVolume);
 
-            if (newIndex == -1) return -1;
+            return SoundManager.Play(this, relativePos, volume, volume);
 
-            return UpdatePosition(newIndex, position, range, volume);
+            //if (newIndex == -1) return -1;
+
+            //return UpdatePosition(newIndex, position, range, volume);
         }
 
         public int Play(float volume, float range, Body body)
         {
-            Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
+            //Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
             //bodyPosition.Y = -bodyPosition.Y;
 
-            return Play(volume, range, bodyPosition);
+
+            return Play(volume, range, ConvertUnits.ToDisplayUnits(body.Position));
         }
 
-        public static int UpdatePosition(int sourceIndex, Vector2 position, float range, float baseVolume = 1.0f)
+        private float GetVolume(Vector2 relativePosition, float range, float baseVolume)
         {
-            position = new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y);
-            float volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(baseVolume * (range - position.Length())/range, 0.0f, 1.0f);
+            float volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(baseVolume * (range - relativePosition.Length()) / range, 0.0f, 1.0f);
 
-            if (volume <= 0.0f)
-            {
-                if (sourceIndex > 0)
-                {
-                    SoundManager.Stop(sourceIndex);
-                    sourceIndex = -1;
-                }
-
-                return sourceIndex;
-            }
-
-            SoundManager.UpdateSoundPosition(sourceIndex, position, volume);
-
-            return sourceIndex;
+            return volume;
         }
 
-        public int UpdatePosition(int sourceIndex, Body body, float range, float baseVolume = 1.0f)
+        private Vector2 GetRelativePosition(Vector2 position)
         {
-            Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
-            bodyPosition.Y = -bodyPosition.Y;
-            return UpdatePosition(sourceIndex, bodyPosition, range, baseVolume);
+            return new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y);
         }
+
+        //public static int UpdatePosition(int sourceIndex, Vector2 position, float range, float baseVolume = 1.0f)
+        //{
+        //    position = new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y);
+        //    float volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(baseVolume * (range - position.Length())/range, 0.0f, 1.0f);
+
+        //    if (volume <= 0.0f)
+        //    {
+        //        if (sourceIndex > 0)
+        //        {
+        //            SoundManager.Stop(sourceIndex);
+        //            sourceIndex = -1;
+        //        }
+
+        //        return sourceIndex;
+        //    }
+
+        //    SoundManager.UpdateSoundPosition(sourceIndex, position, volume, volume);
+
+        //    return sourceIndex;
+        //}
+
+        //public int UpdatePosition(int sourceIndex, Body body, float range, float baseVolume = 1.0f)
+        //{
+        //    Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
+        //    bodyPosition.Y = -bodyPosition.Y;
+        //    return UpdatePosition(sourceIndex, bodyPosition, range, baseVolume);
+        //}
 
         public int Loop(int sourceIndex, float volume)
         {
-            if (volume == 0.0f)
+            if (volume <= 0.0f)
             {
                 if (sourceIndex > 0)
                 {
@@ -139,8 +155,12 @@ namespace Subsurface
             return newIndex;
         }
 
-        public int Loop(int sourceIndex, float volume, Vector2 position, float range)
+        public int Loop(int sourceIndex, float baseVolume, Vector2 position, float range)
         {
+
+            Vector2 relativePos = GetRelativePosition(position);
+            float volume = GetVolume(relativePos, range, baseVolume);
+
             if (volume <= 0.0f)
             {
                 if (sourceIndex > 0)
@@ -152,9 +172,11 @@ namespace Subsurface
                 return sourceIndex;
             }
 
-            int newIndex = SoundManager.Loop(this, sourceIndex, volume);
             
-            return UpdatePosition(newIndex, position, range, volume);
+
+            return SoundManager.Loop(this, sourceIndex, position, volume, volume);
+            
+            //return UpdatePosition(newIndex, position, range, volume);
 
         }
 

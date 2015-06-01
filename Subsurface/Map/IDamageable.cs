@@ -14,6 +14,6 @@ namespace Subsurface
             get;
         }
 
-        void AddDamage(Vector2 position, float amount, float bleedingAmount, float stun);
+        void AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound=true);
     }
 }

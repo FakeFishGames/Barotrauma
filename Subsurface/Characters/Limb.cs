@@ -41,11 +41,14 @@ namespace Subsurface
 
         public readonly bool ignoreCollisions;
 
-        private float maxHealth;
+        private readonly float maxHealth;
         private float damage;
         private float bleeding;
 
         public readonly float impactTolerance;
+
+        private readonly Vector2 armorSector;
+        private readonly float armorValue;
 
         Sound hitSound;
         //a timer for delaying when a hitsound/attacksound can be played again
@@ -206,6 +209,12 @@ namespace Subsurface
             steerForce = ToolBox.GetAttributeFloat(element, "steerforce", 0.0f);
 
             maxHealth = Math.Max(ToolBox.GetAttributeFloat(element, "health", 100.0f),1.0f);
+
+            armorSector = ToolBox.GetAttributeVector2(element, "armorsector", Vector2.Zero);
+            armorSector.X = MathHelper.ToRadians(armorSector.X);
+            armorSector.Y = MathHelper.ToRadians(armorSector.Y);
+
+            armorValue = Math.Max(ToolBox.GetAttributeFloat(element, "armor", 1.0f), 1.0f);
             
             body.BodyType = BodyType.Dynamic;
             body.FarseerBody.AngularDamping = LimbAngularDamping;
@@ -246,6 +255,62 @@ namespace Subsurface
             Vector2 deltaPos = pos - pullPos;
             deltaPos *= amount;
             body.ApplyLinearImpulse((deltaPos - vel * 0.5f) * body.Mass, pullPos);
+        }
+
+        public void AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, bool playSound)
+        {
+            DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
+
+
+            if (armorSector != Vector2.Zero)
+            {
+                float rot = body.Rotation;
+                if (Dir == -1) rot -= MathHelper.Pi;
+
+                Vector2 armorLimits = new Vector2(rot-armorSector.X*Dir, rot-armorSector.Y*Dir);
+
+                float mid = (armorLimits.X + armorLimits.Y) / 2.0f;
+
+                float angleDiff = ToolBox.GetShortestAngle(ToolBox.VectorToAngle(position - SimPosition), mid);
+
+                if (Math.Abs(angleDiff) < (armorSector.Y-armorSector.X) / 2.0f) return;
+            }
+
+            if (playSound)
+            {
+                AmbientSoundManager.PlayDamageSound(damageSoundType, amount, position);
+            }
+
+            Bleeding += bleedingAmount;
+            Damage += amount;
+
+            float bloodAmount = (int)Math.Min((int)(amount * 2.0f), 20);
+            //if (closestLimb.Damage>=100.0f)
+            //{
+            //    bloodAmount *= 2;
+            //    foreach (var joint in animController.limbJoints)
+            //    {
+            //        if (!(joint.BodyA == closestLimb.body.FarseerBody) && !(joint.BodyB == closestLimb.body.FarseerBody)) continue;
+
+            //        joint.Enabled = false;
+            //        break;                    
+            //    }
+            //}
+
+            for (int i = 0; i < bloodAmount; i++)
+            {
+                Vector2 particleVel = SimPosition - position;
+                if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
+
+                Game1.particleManager.CreateParticle("blood",
+                    SimPosition,
+                    particleVel * ToolBox.RandomFloat(1.0f, 3.0f));
+            }
+
+            for (int i = 0; i < bloodAmount / 2; i++)
+            {
+                Game1.particleManager.CreateParticle("waterblood", SimPosition, Vector2.Zero);
+            }
         }
 
         public void Update(float deltaTime)

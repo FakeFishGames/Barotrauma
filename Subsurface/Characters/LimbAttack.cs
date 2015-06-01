@@ -8,11 +8,11 @@ using System.Xml.Linq;
 namespace Subsurface
 {
 
-
+        public enum DamageType { None, Blunt, Slash };
 
     class Attack
     {
-        public enum DamageType { None, Blunt, Slash };
+
 
         public enum Type
         {
@@ -70,26 +70,26 @@ namespace Subsurface
         public void DoDamage(IDamageable target, Vector2 position, float deltaTime, bool playSound=true)
         {
             float damageAmount = 0.0f;
-            DamageSoundType damageSoundType = DamageSoundType.None;
+            //DamageSoundType damageSoundType = DamageSoundType.None;
 
             if (target as Character == null)
             {
                 damageAmount = structureDamage;
-                damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt: DamageSoundType.StructureSlash;
+                //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt: DamageSoundType.StructureSlash;
 
             }
             else
             {
                 damageAmount = damage;
-                damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
+                //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
             }
-
-            if (playSound) AmbientSoundManager.PlayDamageSound(damageSoundType, damageAmount, position);
+            //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
+            //if (playSound) AmbientSoundManager.PlayDamageSound(damageSoundType, damageAmount, position);
 
             if (duration > 0.0f) damageAmount *= deltaTime;
             float bleedingAmount = (duration == 0.0f) ? bleedingDamage : bleedingDamage * deltaTime;
 
-            if (damageAmount>0.0f) target.AddDamage(position, damageAmount, bleedingAmount, stun);
+            if (damageAmount>0.0f) target.AddDamage(position, damageType, damageAmount, bleedingAmount, stun, playSound);
         }
     }
 }

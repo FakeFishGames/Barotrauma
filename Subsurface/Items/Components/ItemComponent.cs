@@ -9,19 +9,20 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
 using Subsurface.Items.Components;
+using System.IO;
 
 namespace Subsurface
 {
-    struct ItemSound
+    class ItemSound
     {
-        public readonly byte index;
+        public readonly Sound sound;
         public readonly ActionType type;
 
         public readonly float range;
         
-        public ItemSound(int index, ActionType type, float range)
+        public ItemSound(Sound sound, ActionType type, float range)
         {
-            this.index = (byte)index;
+            this.sound = sound;
             this.type = type;
             this.range = range;
         }
@@ -150,10 +151,12 @@ namespace Subsurface
                         statusEffects.Add(StatusEffect.Load(subElement));
                         break;
                     case "sound":
-                        string filePath = ToolBox.GetAttributeString(subElement, "path", "");
+                        string filePath = ToolBox.GetAttributeString(subElement, "file", "");
                         if (filePath=="") continue;
+                        if (!filePath.Contains("\\")) filePath = Path.GetDirectoryName(item.Prefab.ConfigFile)+"\\"+filePath;
 
-                        int index = item.Prefab.sounds.FindIndex(x => x.FilePath == filePath);
+                        //int index = item.Prefab.sounds.FindIndex(x => x.FilePath == filePath);
+
 
                         ActionType type;
 
@@ -167,34 +170,41 @@ namespace Subsurface
                             break;
                         }
 
+                        Sound sound = Sound.Load(filePath);
+
                         float range = ToolBox.GetAttributeFloat(subElement, "range", 800.0f);
 
-                        sounds.Add(new ItemSound(index, type, range));
+                        sounds.Add(new ItemSound(sound, type, range));
                         break;
                 }
                 
             }        
         }
 
+        private ItemSound loopingSound;
         private int loopingSoundIndex;
         public void PlaySound(ActionType type, float volume, Vector2 position, bool loop=false)
         {
-            if (loop && Sounds.SoundManager.IsPlaying(loopingSoundIndex)) return;
+            ItemSound itemSound = null;
+            if (!loop || !Sounds.SoundManager.IsPlaying(loopingSoundIndex))
+            {
+                List<ItemSound> matchingSounds = sounds.FindAll(x => x.type == type);
+                if (matchingSounds.Count == 0) return;
+
+                int index = Game1.localRandom.Next(matchingSounds.Count);
+                itemSound = sounds[index];
+
+                if (loop) loopingSound = itemSound;
+            }
             
-            List<ItemSound> matchingSounds = sounds.FindAll(x => x.type == type);
-            if (matchingSounds.Count == 0 || item.Prefab.sounds.Count == 0) return;
-
-            int index = Game1.localRandom.Next(Math.Min(matchingSounds.Count, item.Prefab.sounds.Count));
-
-            Sound sound = item.Prefab.sounds[matchingSounds[index].index];
 
             if (loop)
             {
-                loopingSoundIndex = sound.Loop(loopingSoundIndex, volume, position, matchingSounds[index].range);
+                loopingSoundIndex = loopingSound.sound.Loop(loopingSoundIndex, volume, position, loopingSound.range);
             }
             else
             {
-                sound.Play(volume, matchingSounds[index].range, position);  
+                itemSound.sound.Play(volume, itemSound.range, position);  
             } 
         }
 

@@ -200,8 +200,12 @@ namespace Subsurface
         public static object GetAttributeObject(XAttribute attribute)
         {
             if (attribute == null) return null;
-            string value = attribute.Value.ToString();
 
+            return ParseToObject(attribute.Value.ToString());
+        }
+
+        public static object ParseToObject(string value)
+        {
             float floatVal;
             int intVal;
             if (value.ToString().Contains(".") && float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))

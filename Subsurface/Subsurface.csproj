@@ -350,7 +350,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Content\Items\fuelrod.png">
+    <Content Include="Content\Items\Reactor\fuelrod.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\idcard.xml">
@@ -368,7 +368,7 @@
     <Content Include="Content\Items\Weapons\harpoongun.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\heatabsorber.png">
+    <Content Include="Content\Items\Reactor\heatabsorber.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Diving\divinggear.xml">
@@ -426,10 +426,10 @@
     <Content Include="Content\Items\railgunshell.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\reactor.png">
+    <Content Include="Content\Items\Reactor\reactor.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\reactor.xml">
+    <Content Include="Content\Items\Reactor\reactor.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
@@ -547,6 +547,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\effects.mgfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Reactor\reactor.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Weapons\harpoon1.ogg">

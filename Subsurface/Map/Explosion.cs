@@ -97,7 +97,7 @@ namespace Subsurface
                 {
                     distFactor = 1.0f - Vector2.Distance(limb.SimPosition, position)/range;
 
-                    c.AddDamage(limb.SimPosition, damage * distFactor, 0.0f, stun * distFactor);
+                    c.AddDamage(limb.SimPosition, DamageType.None, damage * distFactor, 0.0f, stun * distFactor);
                     
                     if (force>0.0f)
                     {
