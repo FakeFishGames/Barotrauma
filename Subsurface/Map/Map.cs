@@ -17,18 +17,36 @@ namespace Subsurface
         None = 0, Left = 1, Right = 2
     }
 
-    static class Map
+    class Map
     {
-        static string MapFolder = "Content/SavedMaps";
+        static string MapFolder;
+        MapHash mapHash;
 
-        public static Vector2 gridSize = new Vector2(16.0f, 16.0f);
+        public static List<Map> SavedMaps = new List<Map>();
+
+        private static Map loaded;
+
+        //public static Map Loaded
+        //{
+        //    get { return loaded; }
+        //    set { loaded = value; }
+        //}
+
+
+        public static readonly Vector2 gridSize = new Vector2(16.0f, 16.0f);
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
 
-        private static Rectangle borders;
+        private Rectangle borders;
 
-        private static string filePath;
+        private string filePath;
+        private string name;
+
+        public string Name
+        {
+            get { return name; }
+        }
 
         public static Vector2 LastPickedPosition
         {
@@ -40,12 +58,31 @@ namespace Subsurface
             get { return lastPickedFraction; }
         }
 
-        public static Rectangle Borders
+        public MapHash MapHash
         {
-            get { return borders; }
+            get
+            {
+                XDocument doc = OpenDoc(filePath);
+                mapHash = new MapHash(doc);
+
+                return mapHash;
+            }
         }
 
-        public static string FilePath
+        public static Map Loaded
+        {
+            get { return loaded; }
+        }
+
+        public static Rectangle Borders
+        {
+            get 
+            { 
+                return (loaded==null) ? Rectangle.Empty : loaded.borders;                
+            }
+        }
+
+        public string FilePath
         {
             get { return filePath; }
         }
@@ -223,38 +260,51 @@ namespace Subsurface
             return true;
         }
 
-        public static void Save(string filePath, string fileName)
+
+        public void Save()
         {
-            if (fileName==null)
-            {
-                DebugConsole.ThrowError("No save file selected");
-                return;
-            }
+            SaveAs(filePath);
+        }
+
+        public void SaveAs(string filePath)
+        {
+            //if (filePath=="")
+            //{
+            //    DebugConsole.ThrowError("No save file selected");
+            //    return;
+            //}
             XDocument doc = new XDocument(
-                new XElement((XName)fileName));
+                new XElement((XName)name));
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
                 e.Save(doc);
             }
 
+            mapHash = new MapHash(doc);
+            doc.Root.Add(new XAttribute("md5hash", mapHash.MD5Hash));
+
             try
             {
                 string docString = doc.ToString();
-                ToolBox.CompressStringToFile(filePath+fileName+".gz", doc.ToString());
+                ToolBox.CompressStringToFile(filePath+".gz", doc.ToString());
             }
             catch
             {
-                DebugConsole.ThrowError("Saving map ''" + filePath + fileName + "'' failed!");
+                DebugConsole.ThrowError("Saving map ''" + filePath + "'' failed!");
             }
 
 
-            //doc.Save(filePath + fileName);
+            doc.Save(filePath);
         }
 
-        public static string[] GetMapFilePaths()
+        public static void PreloadMaps(string mapFolder)
         {
-            string[] mapFilePaths;
+            MapFolder = mapFolder;
+
+            //string[] mapFilePaths;
+            Unload();
+            SavedMaps.Clear();
 
             if (!Directory.Exists(MapFolder))
             {
@@ -266,9 +316,11 @@ namespace Subsurface
                 {
 
                     DebugConsole.ThrowError("Directory ''Content/SavedMaps'' not found and creating the directory failed.");
-                    return null;
+                    return;
                 }
             }
+
+            string[] mapFilePaths;
 
             try
             {
@@ -277,21 +329,42 @@ namespace Subsurface
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Couldn't open directory ''Content/SavedMaps''!", e);
-                return null;
+                return;
             }
 
-            return mapFilePaths;
+            foreach (string mapPath in mapFilePaths)
+            {
+                //Map savedMap = new Map(mapPath);
+                SavedMaps.Add(new Map(mapPath));
+            }
         }
 
-        public static void Load(string filePath, string fileName)
+        public Map(string filePath, string mapHash="")
         {
-            Load(filePath + fileName);
+            this.filePath = filePath;
+            this.name = Path.GetFileNameWithoutExtension(filePath);
+
+            if (mapHash != "")
+            {
+                this.mapHash = new MapHash(mapHash);
+            }
+            else
+            {
+                //XDocument doc = OpenDoc(filePath);
+
+                //string md5Hash = ToolBox.GetAttributeString(doc.Root, "md5hash", "");
+                //if (md5Hash == "" || md5Hash.Length < 16)
+                //{
+                //    DebugConsole.ThrowError("Couldn't find a valid MD5 hash in the map file");
+                //}
+
+                //this.mapHash = new MapHash(md5Hash);
+            }
+
         }
 
-        public static void Load(string file)
+        private XDocument OpenDoc(string file)
         {
-            Clear();
-            filePath = file;
             XDocument doc = null;
             string extension = "";
 
@@ -302,16 +375,16 @@ namespace Subsurface
             catch
             {
                 DebugConsole.ThrowError("Couldn't load map ''" + file + "! (Unrecognized file extension)");
-                return;
+                return null;
             }
 
-            if (extension==".gz")
+            if (extension == ".gz")
             {
                 Stream stream = ToolBox.DecompressFiletoStream(file);
                 if (stream == null)
                 {
                     DebugConsole.ThrowError("Loading map ''" + file + "'' failed!");
-                    return;
+                    return null;
                 }
 
                 try
@@ -325,19 +398,37 @@ namespace Subsurface
                 catch
                 {
                     DebugConsole.ThrowError("Loading map ''" + file + "'' failed!");
-                    return;
+                    return null;
                 }
             }
-            else if (extension ==".xml")
+            else if (extension == ".xml")
             {
-                doc = XDocument.Load(file);
+                try
+                {
+                    doc = XDocument.Load(file);
+                }
+
+                catch
+                {
+                    DebugConsole.ThrowError("Loading map ''" + file + "'' failed!");
+                    return null;
+                }
             }
             else
             {
-                DebugConsole.ThrowError("Couldn't load map ''"+file+"! (Unrecognized file extension)");
-                return;
+                DebugConsole.ThrowError("Couldn't load map ''" + file + "! (Unrecognized file extension)");
+                return null;
             }
-            
+
+            return doc;
+        }
+
+        public void Load()
+        {
+            //string file = filePath;
+
+            XDocument doc = OpenDoc(filePath);
+            if (doc == null) return;
 
             foreach (XElement element in doc.Root.Elements())
             {
@@ -350,13 +441,13 @@ namespace Subsurface
                     t = Type.GetType("Subsurface." + typeName + ", Subsurface", true, true);
                     if (t == null)
                     {
-                        DebugConsole.ThrowError("Error in " + file + "! Could not find a entity of the type ''" + typeName + "''.");
+                        DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type ''" + typeName + "''.");
                         continue;
                     }
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + file + "! Could not find a entity of the type ''" + typeName + "''.", e);
+                    DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type ''" + typeName + "''.", e);
                     continue;
                 }
 
@@ -390,13 +481,29 @@ namespace Subsurface
                     ic.OnMapLoaded();
                 }
             }
+
+            loaded = this;
         }
 
-
-
-        public static void Clear()
+        public static void Load(string file)
         {
-            Map.filePath = "";
+            Unload();
+
+            Map map = new Map(file);
+            map.Load();
+            
+        }
+
+        public static void Unload()
+        {
+            if (loaded==null)return;
+            loaded.Clear();
+            loaded = null;
+        }
+
+        private void Clear()
+        {
+            filePath = "";
 
             if (Game1.gameScreen.Cam != null) Game1.gameScreen.Cam.TargetPos = Vector2.Zero;
 

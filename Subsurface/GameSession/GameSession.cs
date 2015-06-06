@@ -116,7 +116,7 @@ namespace Subsurface
             {
                 if (saveFile == null) return false;
 
-                Map.Save(Path.GetDirectoryName(saveFile) + "/", Path.GetFileName(saveFile));
+                Map.Loaded.SaveAs(Path.GetDirectoryName(saveFile) + "/"+ Path.GetFileName(saveFile));
 
                 crewManager.EndShift();
 

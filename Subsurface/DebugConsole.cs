@@ -209,11 +209,11 @@ namespace Subsurface
                     Game1.lobbyScreen.Select();
                     break;
                 case "savemap":
-                    Map.Save("Content/SavedMaps/", commands[1]);
+                    Map.Loaded.SaveAs("Content/SavedMaps/" + commands[1]);
                     NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":
-                    Map.Load("Content/SavedMaps/", commands[1]);
+                    Map.Load("Content/SavedMaps/" + commands[1]);
                     break;
                 case "debugdraw":
                     Hull.DebugDraw = !Hull.DebugDraw;
