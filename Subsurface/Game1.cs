@@ -145,12 +145,14 @@ namespace Subsurface
                         
             AmbientSoundManager.Init("Content/Sounds/Sounds.xml");
 
+            Map.PreloadMaps("Content/SavedMaps");
             gameScreen          =   new GameScreen(graphics.GraphicsDevice);
             mainMenuScreen      =   new MainMenuScreen(this); 
             lobbyScreen         =   new LobbyScreen();
             netLobbyScreen      =   new NetLobbyScreen();
             editMapScreen       =   new EditMapScreen();
             editCharacterScreen =   new EditCharacterScreen();
+
 
             mainMenuScreen.Select();            
         }

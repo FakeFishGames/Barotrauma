@@ -10,17 +10,17 @@
            flip="true">
 
     <!-- head -->
-    <limb id = "0" radius="22" height="45"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0">
+    <limb id = "0" radius="22" height="45"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="5.0f">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
     </limb>
 
     <!-- middle part -->
-    <limb id = "1" width="36" height="40"  mass = "6" flip="true">
+    <limb id = "1" width="36" height="40"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="5.0f">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="57,7,59,57" depth="0.021" origin="0.3,0.65"/>
     </limb>
 
     <!-- tail -->
-    <limb id = "2" width="41" height="63"  mass = "6" type="Tail" flip="true">
+    <limb id = "2" width="41" height="63"  mass = "6" type="Tail" flip="true" armorsector="0.0,180.0" armorvalue="5.0f">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="6,141,60,95" depth="0.022" origin="0.37,0.43"/>
     </limb>
       
@@ -70,7 +70,7 @@
     <joint limb1="8" limb1anchor="0,-17" limb2="9" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190"/>
   </ragdoll>
 
-  <ai attackhumans="100" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
+  <ai attackhumans="500" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
       sight="0.5" hearing="1.0"
       attackcooldown="5.0"/>
 </character>

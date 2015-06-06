@@ -225,8 +225,15 @@ namespace Subsurface.Networking
                         int seed = inc.ReadInt32();
                         Game1.random = new Random(seed);
 
-                        string mapFile = inc.ReadString();
-                        Map.Load(mapFile);
+                        string mapName = inc.ReadString();
+                        string mapHash = inc.ReadString();
+
+                        Game1.netLobbyScreen.TrySelectMap(mapName, mapHash);
+
+
+                        //Map.Load(mapFile);
+
+
 
                         double durationMinutes = inc.ReadDouble();
 
@@ -316,7 +323,7 @@ namespace Subsurface.Networking
 
         public void EndGame(string endMessage)
         {
-            Map.Clear();
+            Map.Unload();
 
             Game1.netLobbyScreen.Select();
 

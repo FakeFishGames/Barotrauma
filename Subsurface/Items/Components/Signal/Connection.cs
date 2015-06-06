@@ -398,6 +398,13 @@ namespace Subsurface.Items.Components
         {
             XElement newElement = new XElement(isOutput ? "output" : "input", new XAttribute("name", name));
 
+            Array.Sort(wires, delegate(Wire wire1, Wire wire2)             
+            {
+                if (wire1 == null) return 1;
+                if (wire2 == null) return -1;
+                return wire1.Item.ID.CompareTo(wire2.Item.ID); 
+            });
+
             for (int i = 0; i < MaxLinked; i++ )
             {
                 if (wires[i] == null) continue;
@@ -406,7 +413,7 @@ namespace Subsurface.Items.Components
 
                 //int connectionIndex = recipient.item.Connections.FindIndex(x => x == recipient);
                 newElement.Add(new XElement("link", 
-                    new XAttribute("w", (wires[i] == null) ? "-1" : wires[i].Item.ID.ToString())));                
+                    new XAttribute("w", wires[i].Item.ID.ToString())));                
             }
       
             parentElement.Add(newElement);                

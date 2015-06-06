@@ -380,27 +380,30 @@ namespace Subsurface
                     Body closestBody = Map.CheckVisibility(rayStart, rayEnd);
                     Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
                     
-                    if (targetCharacter != null)
-                    {
-                        //if target is a character that isn't visible, ignore
-                        if (closestStructure != null) continue;
+                    //if (targetCharacter != null)
+                    //{
+                    //    //if target is a character that isn't visible, ignore
+                    //    if (closestStructure != null) continue;
 
-                        //prefer targets with low health
-                        valueModifier = valueModifier / targetCharacter.Health;
-                    }
-                    else
-                    {
+                    //    //prefer targets with low health
+                    //    valueModifier = valueModifier / targetCharacter.Health;
+                    //}
+                    //else
+                    //{
                         if (targetDamageable != null)
                         {
-                            valueModifier = valueModifier / targetDamageable.Health;
-                            
+                            valueModifier = valueModifier / targetDamageable.Health;                            
                         }
                         else if (closestStructure!=null)
                         {
                             valueModifier = valueModifier / (closestStructure as IDamageable).Health;
                         }
+                        else
+                        {
+                            valueModifier = valueModifier / 1000.0f;
+                        }
 
-                    }
+                    //}
                     
 
 
