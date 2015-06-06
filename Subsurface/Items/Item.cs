@@ -370,9 +370,11 @@ namespace Subsurface
         }
 
 
-        public void AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = true)
+        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = true)
         {
             Condition -= amount;
+
+            return new AttackResult(amount, 0.0f, false);
         }
 
 

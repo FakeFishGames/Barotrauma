@@ -157,37 +157,18 @@ namespace Subsurface.Items.Components
 
             //float damage = f1.Body.LinearVelocity.Length();
 
+            AttackResult attackResult = new AttackResult(0.0f, 0.0f);
             if (attack!=null)
             {
                 Limb limb;
                 Structure structure;
                 if ((limb = (f2.Body.UserData as Limb)) != null)
                 {
-                    attack.DoDamage(limb.character, item.SimPosition, 0.0f);
-                    //limb.Damage += damage;
-                    //limb.Bleeding += bleedingDamage;
-
-                    //if (bleedingDamage>0.0f)
-                    //{
-                    //    for (int i = 0; i < 5; i++ )
-                    //    {
-                    //        Game1.particleManager.CreateParticle(limb.SimPosition,
-                    //            ToolBox.VectorToAngle(-f1.Body.LinearVelocity*0.5f) + ToolBox.RandomFloat(-0.5f, 0.5f), 
-                    //            ToolBox.RandomFloat(1.0f, 3.0f), "blood");
-                    //    }
-
-                    //    Game1.particleManager.CreateParticle(limb.SimPosition,
-                    //        0.0f,
-                    //        Vector2.Zero, "waterblood");
-                    //}
-
-                    //AmbientSoundManager.PlayDamageSound(DamageType.LimbBlunt, damage, limb.body.FarseerBody);
+                    attackResult = attack.DoDamage(limb.character, item.SimPosition, 1.0f);
                 }
                 else if ((structure = (f2.Body.UserData as Structure)) != null)
                 {
-                    attack.DoDamage(structure, item.SimPosition, 0.0f);
-
-                    //AmbientSoundManager.PlayDamageSound(DamageType.StructureBlunt, damage, f2.Body);
+                    attackResult = attack.DoDamage(structure, item.SimPosition, 1.0f);
                 }
             }
 
@@ -200,7 +181,11 @@ namespace Subsurface.Items.Components
 
             ignoredBodies.Clear();
 
-            if (doesStick)
+            if (attackResult.hitArmor)
+            {
+                item.body.LinearVelocity *= 0.5f;
+            }
+            else if (doesStick)
             {
                 Vector2 normal = contact.Manifold.LocalNormal;
                 Vector2 dir = new Vector2(

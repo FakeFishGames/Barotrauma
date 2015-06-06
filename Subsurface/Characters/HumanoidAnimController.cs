@@ -33,7 +33,7 @@ namespace Subsurface
                 {
                     case Physics.CollisionStairs:
                         Structure structure = fixture.Body.UserData as Structure;
-                        if (stairs == null)
+                        if (stairs == null && (!inWater || TargetMovement.Y>0.0f))
                         {
                             if (LowestLimb.SimPosition.Y<structure.SimPosition.Y)
                             {
@@ -80,7 +80,7 @@ namespace Subsurface
             if (onFloorTimer <= 0.0f)
             {
                 onGround = false;
-                
+                if (GetLimb(LimbType.Torso).inWater) inWater = true;
                 //TODO: joku järkevämpi systeemi
                 //if (!inWater && lastTimeOnFloor + 200 < gameTime.TotalGameTime.Milliseconds)
                 //    stunTimer = Math.Max(stunTimer, (float)gameTime.TotalGameTime.TotalMilliseconds + 100.0f);

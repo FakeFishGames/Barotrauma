@@ -378,12 +378,12 @@ namespace Subsurface
                 sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
         }
 
-        public void AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
+        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
         {
-            if (!prefab.HasBody || prefab.IsPlatform) return;
+            if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
             int i = FindSectionIndex(ConvertUnits.ToDisplayUnits(position));
-            if (i == -1) return;
+            if (i == -1) return new AttackResult(0.0f, 0.0f);
             
             Game1.particleManager.CreateParticle("dustcloud", ConvertUnits.ToSimUnits(SectionPosition(i)), 0.0f, 0.0f);
 
@@ -394,6 +394,8 @@ namespace Subsurface
             }
 
             AddDamage(i, amount);
+
+            return new AttackResult(amount, 0.0f);
         }
 
         private void SetDamage(int sectionIndex, float damage)

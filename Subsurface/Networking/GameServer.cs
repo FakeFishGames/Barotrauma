@@ -271,7 +271,9 @@ namespace Subsurface.Networking
             int seed = DateTime.Now.Millisecond;
             Game1.random = new Random(seed);
             
-            Map.Load(Game1.netLobbyScreen.SelectedMap);
+            Map selectedMap = Game1.netLobbyScreen.SelectedMap as Map;
+
+            selectedMap.Load();
 
             Game1.gameSession = new GameSession("", false, Game1.netLobbyScreen.GameDuration, Game1.netLobbyScreen.SelectedMode);
             Game1.gameSession.StartShift(1);
@@ -305,7 +307,9 @@ namespace Subsurface.Networking
 
                 msg.Write(seed);
 
-                msg.Write(Game1.netLobbyScreen.SelectedMap);                
+                msg.Write(Game1.netLobbyScreen.SelectedMap.Name);
+                msg.Write(Game1.netLobbyScreen.SelectedMap.MapHash.MD5Hash);
+                
                 msg.Write(Game1.netLobbyScreen.GameDuration.TotalMinutes);
 
                 WriteCharacterData(msg, client.name, client.character);
@@ -336,7 +340,7 @@ namespace Subsurface.Networking
 
         public void EndGame(string endMessage)
         {
-            Map.Clear();
+            Map.Unload();
                       
             gameStarted = false;
 
