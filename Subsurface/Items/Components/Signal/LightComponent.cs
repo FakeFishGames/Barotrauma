@@ -50,7 +50,7 @@ namespace Subsurface.Items.Components
                     isActive = !isActive;
                     break;
                 case "set_state":           
-                    isActive = (signal == "0") ? false : true;                   
+                    isActive = (signal != "0");                   
                     break;
             }
         }
