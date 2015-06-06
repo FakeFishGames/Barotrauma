@@ -654,7 +654,7 @@ namespace Subsurface
             }
         }
 
-        public void AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
+        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
         {
             animController.StunTimer = Math.Max(animController.StunTimer, stun);
 
@@ -675,7 +675,7 @@ namespace Subsurface
             closestLimb.body.ApplyForce(pull*Math.Min(amount*100.0f, 100.0f));
 
 
-            closestLimb.AddDamage(position, damageType, amount, bleedingAmount, playSound);
+            return closestLimb.AddDamage(position, damageType, amount, bleedingAmount, playSound);
 
         }
 

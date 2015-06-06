@@ -31,9 +31,9 @@ namespace Subsurface
 
         public bool isServer;
 
-        public string SelectedMap
+        public Map SelectedMap
         {
-            get { return mapList.SelectedData.ToString(); }
+            get { return mapList.SelectedData as Map; }
         }
 
 
@@ -136,20 +136,19 @@ namespace Subsurface
             mapList.OnSelected = SelectMap;
             mapList.Enabled = (Game1.server!=null);
 
-            string[] mapFilePaths = Map.GetMapFilePaths();
-            if (mapFilePaths != null)
+            if (Map.SavedMaps.Count>0)
             {
-                foreach (string s in mapFilePaths)
+                foreach (Map map in Map.SavedMaps)
                 {
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
-                        Path.GetFileNameWithoutExtension(s),
+                        map.Name,
                         GUI.style,
                         Alignment.Left,
                         Alignment.Left,
                         mapList);
                     textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                    textBlock.UserData = s;
+                    textBlock.UserData = map;
                 }
             }
             else
@@ -194,7 +193,7 @@ namespace Subsurface
                 modeList.OnSelected = Game1.server.UpdateNetLobby;
                 durationBar.OnMoved = Game1.server.UpdateNetLobby;
 
-                if (mapFilePaths.Length > 0) mapList.Select(mapFilePaths[oldMapIndex]);
+                if (mapList.CountChildren > 0) mapList.Select(Map.SavedMaps[0]);
                 if (GameMode.list.Count > 0) modeList.Select(GameMode.list[0]);                
             }
             else
@@ -245,8 +244,12 @@ namespace Subsurface
         {
             if (Game1.server != null) Game1.server.UpdateNetLobby(obj);
 
-            if ((string)obj == Map.FilePath) return true;
-            Map.Load((string)obj);
+            Map map = (Map)obj;
+
+            //map already loaded
+            if (Map.Loaded!=null && map.FilePath == Map.Loaded.FilePath) return true;
+
+            map.Load();
 
             return true;
         }
@@ -462,15 +465,60 @@ namespace Subsurface
 
         public void WriteData(NetOutgoingMessage msg)
         {
-            msg.Write(mapList.SelectedIndex);
-            msg.Write(modeList.SelectedIndex);
+            Map selectedMap = mapList.SelectedData as Map;
 
+            if (selectedMap==null)
+            {
+                msg.Write(" ");
+                msg.Write(" ");
+            }
+            else
+            {
+                msg.Write(selectedMap.Name);
+                msg.Write(selectedMap.MapHash.MD5Hash);
+            }
+
+            msg.Write(modeList.SelectedIndex);
             msg.Write(durationBar.BarScroll);
+        }
+
+        public bool TrySelectMap(string mapName, string md5Hash)
+        {
+
+            Map map = Map.SavedMaps.Find(m => m.Name == mapName);
+            if (map==null)
+            {
+                DebugConsole.ThrowError("The map ''" + mapName + "'' has been selected by the server.");
+                DebugConsole.ThrowError("Matching map not found in your map folder.");
+                return false;
+            }
+            else
+            {
+                if (map.MapHash.MD5Hash!=md5Hash)
+                {
+                    DebugConsole.ThrowError("Your version of the map file ''"+map.Name+"'' doesn't match the server's version!");
+                    DebugConsole.ThrowError("Your file: "+map.Name+"(MD5 hash : "+map.MapHash.MD5Hash+")");
+                    DebugConsole.ThrowError("Server's file: " + mapName + "(MD5 hash : " + md5Hash + ")");
+                    return false;
+                }
+                else
+                {
+                    mapList.Select(map);
+                    map.Load();
+                    return true;
+                }
+            }
         }
 
         public void ReadData(NetIncomingMessage msg)
         {
-            mapList.Select(msg.ReadInt32());
+            string mapName = msg.ReadString();
+            string md5Hash = msg.ReadString();
+
+            TrySelectMap(mapName, md5Hash);
+            
+
+            //mapList.Select(msg.ReadInt32());
             modeList.Select(msg.ReadInt32());
 
             durationBar.BarScroll = msg.ReadFloat();

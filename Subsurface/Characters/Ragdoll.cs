@@ -442,7 +442,7 @@ namespace Subsurface
                 inWater = false;
                 headInWater = false;
 
-                if (ConvertUnits.ToSimUnits(currentHull.Surface)-floorY> HeadPosition)
+                if (ConvertUnits.ToSimUnits(currentHull.Surface)-floorY> HeadPosition*0.95f)
                     inWater = true;
                 
             }

@@ -8,12 +8,26 @@ using System.Xml.Linq;
 namespace Subsurface
 {
 
-        public enum DamageType { None, Blunt, Slash };
+    public enum DamageType { None, Blunt, Slash };
+
+    struct AttackResult
+    {
+        public readonly float damage;
+        public readonly float bleeding;
+
+        public readonly bool hitArmor;
+
+        public AttackResult(float damage, float bleeding, bool hitArmor=false)
+        {
+            this.damage = damage;
+            this.bleeding = bleeding;
+
+            this.hitArmor = hitArmor;
+        }
+    }
 
     class Attack
     {
-
-
         public enum Type
         {
             None, PinchCW, PinchCCW
@@ -67,7 +81,7 @@ namespace Subsurface
             priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
         }
 
-        public void DoDamage(IDamageable target, Vector2 position, float deltaTime, bool playSound=true)
+        public AttackResult DoDamage(IDamageable target, Vector2 position, float deltaTime, bool playSound=true)
         {
             float damageAmount = 0.0f;
             //DamageSoundType damageSoundType = DamageSoundType.None;
@@ -89,7 +103,14 @@ namespace Subsurface
             if (duration > 0.0f) damageAmount *= deltaTime;
             float bleedingAmount = (duration == 0.0f) ? bleedingDamage : bleedingDamage * deltaTime;
 
-            if (damageAmount>0.0f) target.AddDamage(position, damageType, damageAmount, bleedingAmount, stun, playSound);
+            if (damageAmount > 0.0f)
+            {
+                return target.AddDamage(position, damageType, damageAmount, bleedingAmount, stun, playSound);
+            }
+            else
+            {
+                return new AttackResult(0.0f, 0.0f);
+            }
         }
     }
 }

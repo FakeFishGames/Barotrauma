@@ -9,7 +9,11 @@ using Subsurface.Sounds;
 
 namespace Subsurface
 {
-    public enum DamageSoundType { None, StructureBlunt, StructureSlash, LimbBlunt, LimbSlash, Implode }
+    public enum DamageSoundType { 
+        None, 
+        StructureBlunt, StructureSlash, 
+        LimbBlunt, LimbSlash, LimbArmor,
+        Implode }
 
     public struct DamageSound
     {

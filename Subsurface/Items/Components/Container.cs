@@ -242,6 +242,8 @@ namespace Subsurface.Items.Components
 
         public override void OnMapLoaded()
         {
+            if (itemIds == null) return;
+
             for (int i = 0; i < itemIds.Length; i++)
             {
                 Item item = MapEntity.FindEntityByID(itemIds[i]) as Item;
