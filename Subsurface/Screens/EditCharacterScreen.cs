@@ -34,13 +34,7 @@ namespace Subsurface
         {
             get { return cam; }
         }
-
-        public EditCharacterScreen()
-        {
-
-
-        }
-
+        
         public override void Select()
         {
             base.Select();

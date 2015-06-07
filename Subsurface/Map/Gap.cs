@@ -195,7 +195,7 @@ namespace Subsurface
 
             GUI.DrawRectangle(sb, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), clr);
 
-            if (isSelected && editing)
+            if (isSelected)
             {
                 GUI.DrawRectangle(sb,
                     new Vector2(rect.X - 5, -rect.Y - 5),

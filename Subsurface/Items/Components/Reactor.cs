@@ -5,7 +5,6 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
-using System.Globalization;
 
 namespace Subsurface.Items.Components
 {

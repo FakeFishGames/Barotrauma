@@ -2,8 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
-using System.Diagnostics;
 
 namespace Subsurface.Items.Components
 {

@@ -19,20 +19,23 @@ namespace Subsurface.Items.Components
         float structureFixAmount, limbFixAmount;
 
         [HasDefaultValue(100.0f, false)]
-        private float Range
+        public float Range
         {
+            get { return ConvertUnits.ToDisplayUnits(range); }
             set { range = ConvertUnits.ToSimUnits(value); }
         }
 
         [HasDefaultValue(1.0f, false)]
-        private float StructureFixAmount
+        public float StructureFixAmount
         {
+            get { return structureFixAmount; }
             set { structureFixAmount = value; }
         }
 
         [HasDefaultValue(1.0f, false)]
-        private float LimbFixAmount
+        public float LimbFixAmount
         {
+            get { return limbFixAmount; }
             set { limbFixAmount = value; }
         }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
@@ -277,10 +276,10 @@ namespace Subsurface
 
         public bool HasRequiredContainedItems(bool addMessage)
         {
-            if (requiredItems.Count() == 0) return true;
+            if (!requiredItems.Any()) return true;
 
             Item[] containedItems = item.ContainedItems;
-            if (containedItems == null || containedItems.Count() == 0) return false;
+            if (containedItems == null || !containedItems.Any()) return false;
 
             foreach (RelatedItem ri in requiredItems)
             {
@@ -298,7 +297,7 @@ namespace Subsurface
 
         public bool HasRequiredEquippedItems(Character character, bool addMessage)
         {
-            if (requiredItems.Count() == 0) return true;
+            if (!requiredItems.Any()) return true;
 
             foreach (RelatedItem ri in requiredItems)
             {
@@ -324,10 +323,6 @@ namespace Subsurface
                         //if (addMessage && !String.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
                         return false;
                     }
-                }
-                else
-                {
-                    continue;
                 }
             }
 

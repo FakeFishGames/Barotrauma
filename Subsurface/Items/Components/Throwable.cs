@@ -1,9 +1,5 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
@@ -98,8 +94,6 @@ namespace Subsurface.Items.Components
                 item.Drop();
                 item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
             }
-            
-            return;
         }    
     }
 }

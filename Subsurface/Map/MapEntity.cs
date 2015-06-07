@@ -393,7 +393,7 @@ namespace Subsurface
 
         public virtual XElement Save(XDocument doc)
         {
-            DebugConsole.ThrowError("Saving entity " + this.GetType() + " failed.");
+            DebugConsole.ThrowError("Saving entity " + GetType() + " failed.");
             return null;
         }
 

@@ -60,7 +60,7 @@ namespace Subsurface.Networking
                 if (Game1.server == null) return;
             }
 
-            this.eventType = type;
+            eventType = type;
 
             foreach (NetworkEvent e in events)
             {
@@ -68,7 +68,7 @@ namespace Subsurface.Networking
             }
 
             this.id = id;
-            this.isClientEvent = isClient;
+            isClientEvent = isClient;
 
             this.data = data;
 
