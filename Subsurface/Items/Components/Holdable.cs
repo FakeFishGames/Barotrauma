@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 
@@ -62,7 +61,7 @@ namespace Subsurface.Items.Components
         }
 
         [HasDefaultValue(0.0f, false)]
-        private float HoldAngle
+        public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle);  }
             set { holdAngle = MathHelper.ToRadians(value); }

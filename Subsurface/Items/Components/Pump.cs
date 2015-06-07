@@ -1,9 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Specialized;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
@@ -29,10 +24,8 @@ namespace Subsurface.Items.Components
         {
             //maxFlow = ToolBox.GetAttributeFloat(element, "maxflow", 100.0f);
 
-            item.linkedTo.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler(
-                delegate(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-                { GetHulls(); }
-            );
+            item.linkedTo.CollectionChanged += delegate(object sender, NotifyCollectionChangedEventArgs e)
+            { GetHulls(); };
         }
 
         public override void Update(float deltaTime, Camera cam)

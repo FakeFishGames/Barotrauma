@@ -282,7 +282,7 @@ namespace Subsurface.Items.Components
             isActive = true;
 
             this.projectile = projectile;
-            Projectile projectileComponent = projectile.GetComponent<Projectile>();
+            //Projectile projectileComponent = projectile.GetComponent<Projectile>();
 
             foreach (PhysicsBody b in ropeBodies)
             {
@@ -313,7 +313,7 @@ namespace Subsurface.Items.Components
         {
             float rotation = (item.body.Dir == -1.0f) ? item.body.Rotation - MathHelper.Pi : item.body.Rotation;
             body.SetTransform(TransformedBarrelPos, rotation);
-            Vector2 axis = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+            //Vector2 axis = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
 
             if (gunJoint != null) Game1.world.RemoveJoint(gunJoint);
             gunJoint = new DistanceJoint(item.body.FarseerBody, body, BarrelPos,

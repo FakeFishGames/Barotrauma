@@ -89,7 +89,7 @@ namespace Subsurface
                 wayPoints.Add(wayPoint);
             }
 
-            if (wayPoints.Count() == 0) return null;
+            if (!wayPoints.Any()) return null;
 
             return wayPoints[Game1.random.Next(wayPoints.Count())];
         }

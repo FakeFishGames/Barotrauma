@@ -48,13 +48,13 @@ namespace Subsurface
             set { lifeTime = value; }
         }
         
-        public GUIMessage(string text, Color color, Vector2 pos, float lifeTime)
+        public GUIMessage(string text, Color color, Vector2 position, float lifeTime)
         {
-            this.coloredText = new ColoredText(text, color);
-            this.pos = pos;
+            coloredText = new ColoredText(text, color);
+            pos = position;
             this.lifeTime = lifeTime;
 
-            this.size = GUI.font.MeasureString(text);
+            size = GUI.font.MeasureString(text);
         }
     }
 

@@ -444,7 +444,7 @@ namespace Subsurface
                 string randomLine = "";
                 StreamReader file = new StreamReader(filePath);                
 
-                var lines = File.ReadLines(filePath);
+                var lines = File.ReadLines(filePath).ToList();
                 int lineCount = lines.Count();
 
                 if (lineCount == 0)

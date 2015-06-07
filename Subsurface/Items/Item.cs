@@ -437,7 +437,7 @@ namespace Subsurface
                     body.ResetDynamics();
                     if (body.Position.Length() > 1000.0f)
                     {
-                        this.Remove();
+                        Remove();
                         return;
                     }
                 }
@@ -955,7 +955,7 @@ namespace Subsurface
         {
             int index = components.IndexOf(ic);
 
-            new NetworkEvent(NetworkEventType.UpdateComponent, this.ID, isClient, index);
+            new NetworkEvent(NetworkEventType.UpdateComponent, ID, isClient, index);
         }
 
         public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
@@ -968,8 +968,6 @@ namespace Subsurface
                 case NetworkEventType.UpdateComponent:
                     message.Write((int)data);
                     components[(int)data].FillNetworkData(type, message);
-                    break;
-                default:
                     break;
             }
         }
@@ -986,8 +984,6 @@ namespace Subsurface
                     int componentIndex = message.ReadInt32();
                     if (componentIndex < 0 || componentIndex > components.Count - 1) return;
                     components[componentIndex].ReadNetworkData(type, message);
-                    break;
-                default:
                     break;
             }
         }

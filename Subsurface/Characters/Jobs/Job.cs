@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Subsurface
@@ -47,6 +44,7 @@ namespace Subsurface
             jobList = new List<Job>();
 
             XDocument doc = ToolBox.TryLoadXml(filePath);
+            if (doc == null) return;
 
             foreach (XElement element in doc.Root.Elements())
             {

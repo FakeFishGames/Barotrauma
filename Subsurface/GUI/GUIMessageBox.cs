@@ -1,8 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Subsurface
 {
@@ -31,6 +28,7 @@ namespace Subsurface
             if (buttons == null || buttons.Length == 0)
             {
                 DebugConsole.ThrowError("Creating a message box with no buttons isn't allowed");
+                return;
             }
 
             new GUITextBlock(new Rectangle(0, 5, 0, 30), header, Color.Transparent, Color.White, textAlignment, frame, true);

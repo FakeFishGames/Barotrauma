@@ -331,7 +331,7 @@ namespace Subsurface
 
             selectedTarget = null;
             selectedTargetMemory = null;
-            this.targetValue = 0.0f;
+            targetValue = 0.0f;
 
             UpdateTargetMemories();
             
@@ -372,7 +372,7 @@ namespace Subsurface
                 valueModifier = valueModifier * targetMemory.Priority / dist;
                 //dist -= targetMemory.Priority;
 
-                if (Math.Abs(valueModifier) > Math.Abs(this.targetValue) && (dist < target.SightRange * sight || dist < target.SoundRange * hearing))
+                if (Math.Abs(valueModifier) > Math.Abs(targetValue) && (dist < target.SightRange * sight || dist < target.SoundRange * hearing))
                 {                  
                     Vector2 rayStart = character.animController.limbs[0].SimPosition;
                     Vector2 rayEnd = target.Position;
@@ -408,12 +408,12 @@ namespace Subsurface
 
 
                     //float newTargetValue = valueModifier/dist;
-                    if (selectedTarget == null || Math.Abs(valueModifier) > Math.Abs(this.targetValue))
+                    if (selectedTarget == null || Math.Abs(valueModifier) > Math.Abs(targetValue))
                     {
                         selectedTarget = target;
                         selectedTargetMemory = targetMemory;
 
-                        this.targetValue = valueModifier;
+                        targetValue = valueModifier;
                         Debug.WriteLine(selectedTarget.entity+": "+targetValue);
                     }
                 }
@@ -479,18 +479,13 @@ namespace Subsurface
             wallAttackPos.X = message.ReadFloat();
             wallAttackPos.Y = message.ReadFloat();
 
-            float wanderAngle = message.ReadFloat();
-            float updateTargetsTimer = message.ReadFloat();
-            float raycastTimer = message.ReadFloat();
-            float coolDownTimer = message.ReadFloat();
+            steeringManager.WanderAngle = message.ReadFloat();
+            updateTargetsTimer = message.ReadFloat();
+            raycastTimer = message.ReadFloat();
+            coolDownTimer = message.ReadFloat();
 
             int targetID = message.ReadInt32();
-
-            steeringManager.WanderAngle = wanderAngle;
-            this.updateTargetsTimer = updateTargetsTimer;
-            this.raycastTimer = raycastTimer;
-            this.coolDownTimer = coolDownTimer;
-
+            
             if (targetID>-1)            
                 targetEntity = Entity.FindEntityByID(targetID) as IDamageable;            
             

@@ -35,8 +35,6 @@ namespace Subsurface
 
     static class AmbientSoundManager
     {
-        private static Sound[] music = new Sound[4];
-
         public static Sound[] flowSounds = new Sound[3];
 
         private static Sound waterAmbience;
@@ -57,9 +55,9 @@ namespace Subsurface
             XDocument doc = ToolBox.TryLoadXml(filePath);
             if (doc == null) return;
             
-            var xDamageSounds = doc.Root.Elements("damagesound");
-
-            if (xDamageSounds.Count()>0)
+            var xDamageSounds = doc.Root.Elements("damagesound").ToList();
+            
+            if (!xDamageSounds.Any())
             {
                 damageSounds = new DamageSound[xDamageSounds.Count()];
                 int i = 0;
@@ -124,7 +122,7 @@ namespace Subsurface
         {
             damage = MathHelper.Clamp(damage, 0.0f, 100.0f);
             var sounds = damageSounds.Where(x => damage >= x.damageRange.X && damage <= x.damageRange.Y && x.damageType == damageType).ToList();
-            if (sounds.Count() == 0) return;
+            if (!sounds.Any()) return;
 
             int selectedSound = Game1.localRandom.Next(sounds.Count());
 

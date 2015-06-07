@@ -79,7 +79,7 @@ namespace Subsurface
 
         public virtual void Remove()
         {
-            dictionary.Remove(this.ID);
+            dictionary.Remove(ID);
         }
     }
 }

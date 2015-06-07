@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
@@ -409,7 +408,7 @@ namespace Subsurface.Items.Components
             {
                 if (wires[i] == null) continue;
                 
-                Connection recipient = wires[i].OtherConnection(this);
+                //Connection recipient = wires[i].OtherConnection(this);
 
                 //int connectionIndex = recipient.item.Connections.FindIndex(x => x == recipient);
                 newElement.Add(new XElement("link", 

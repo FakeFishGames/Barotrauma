@@ -5,7 +5,6 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Subsurface.Networking;
 using Subsurface.Particles;
 
