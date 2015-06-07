@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
@@ -307,8 +306,8 @@ namespace Subsurface
 
             soundInterval = ToolBox.GetAttributeFloat(doc.Root, "soundinterval", 10.0f);
 
-            var xSounds = doc.Root.Elements("sound");
-            if (xSounds.Count() > 0)
+            var xSounds = doc.Root.Elements("sound").ToList();
+            if (xSounds.Any())
             {
                 sounds = new Sound[xSounds.Count()];
                 soundStates = new AIController.AiState[xSounds.Count()];
@@ -332,9 +331,9 @@ namespace Subsurface
 
             animController.FindHull();
 
-            if (this.info.ID >= 0)
+            if (info.ID >= 0)
             {
-                ID = this.info.ID;
+                ID = info.ID;
             }
 
             characterList.Add(this);
@@ -597,12 +596,12 @@ namespace Subsurface
                 drowningBar = new GUIProgressBar(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, 20, width, height), Color.Blue, 1.0f);
             }
 
-            drowningBar.BarSize = Character.Controlled.Oxygen / 100.0f;
+            drowningBar.BarSize = Controlled.Oxygen / 100.0f;
             if (drowningBar.BarSize < 1.0f)
                 drowningBar.Draw(spriteBatch);
 
-            if (Character.Controlled.Inventory != null)
-                Character.Controlled.Inventory.Draw(spriteBatch);
+            if (Controlled.Inventory != null)
+                Controlled.Inventory.Draw(spriteBatch);
 
             if (closestItem!=null)
             {
@@ -634,7 +633,7 @@ namespace Subsurface
 
         public void PlaySound(AIController.AiState state)
         {
-            if (sounds == null || sounds.Count()==0) return;
+            if (sounds == null || !sounds.Any()) return;
             var matchingSoundStates = soundStates.Where(x => x == state).ToList();
 
             int selectedSound = Game1.localRandom.Next(matchingSoundStates.Count());

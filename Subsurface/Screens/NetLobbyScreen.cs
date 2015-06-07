@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -128,8 +126,8 @@ namespace Subsurface
 
             textBox.Select();
 
-            int oldMapIndex = 0;
-            if (mapList != null && mapList.SelectedData != null) oldMapIndex = mapList.SelectedIndex;
+            //int oldMapIndex = 0;
+            //if (mapList != null && mapList.SelectedData != null) oldMapIndex = mapList.SelectedIndex;
 
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, infoFrame);
             mapList = new GUIListBox(new Rectangle(0, 60, 200, 200), Color.White, infoFrame);

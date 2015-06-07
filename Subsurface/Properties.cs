@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Subsurface
@@ -93,7 +92,7 @@ namespace Subsurface
             }
             else
             {
-                DebugConsole.ThrowError("Failed to set the value of the property ''" + Name + "'' of ''" + obj.ToString() + "'' to " + value.ToString());
+                DebugConsole.ThrowError("Failed to set the value of the property ''" + Name + "'' of ''" + obj + "'' to " + value);
                 DebugConsole.ThrowError("(Type not implemented)");
 
                 return false;
@@ -146,7 +145,7 @@ namespace Subsurface
 
             foreach (var property in obj.ObjectProperties.Values)
             {
-                if (property.Attributes.OfType<T>().Count() > 0) editableProperties.Add(property);
+                if (property.Attributes.OfType<T>().Any()) editableProperties.Add(property);
             }
 
             return editableProperties;
@@ -200,7 +199,7 @@ namespace Subsurface
     
         public static void SaveProperties(IPropertyObject obj, XElement element)
         {
-            var saveProperties = ObjectProperty.GetProperties<HasDefaultValue>(obj);
+            var saveProperties = GetProperties<HasDefaultValue>(obj);
             foreach (var property in saveProperties)
             {
                 object value = property.GetValue();
@@ -220,7 +219,7 @@ namespace Subsurface
                 if (dontSave) continue;
 
                 string stringValue;
-                if (value.GetType() == typeof(float))
+                if (value is float)
                 {
                     //do this to make sure the decimal point isn't converted to a comma or anything like that
                     stringValue = ((float)value).ToString("G", CultureInfo.InvariantCulture);

@@ -95,7 +95,7 @@ namespace Subsurface
                 frame);
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-            GUIImage face = new GUIImage(new Rectangle(-10,-10,0,0), character.animController.limbs[0].sprite, Alignment.Left, frame);
+            new GUIImage(new Rectangle(-10,-10,0,0), character.animController.limbs[0].sprite, Alignment.Left, frame);
         }
 
         public void KillCharacter(Character killedCharacter)

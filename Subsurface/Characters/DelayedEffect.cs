@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Subsurface
@@ -39,7 +36,7 @@ namespace Subsurface
             this.character = character;
             this.limb = limb;
 
-            this.timer = delay;
+            timer = delay;
 
             list.Add(this);
         }

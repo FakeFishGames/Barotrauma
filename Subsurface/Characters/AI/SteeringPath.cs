@@ -30,7 +30,7 @@ namespace Subsurface
         public Vector2 GetNode(Vector2 pos)
         {
             if (nodes.Count == 0) return Vector2.Zero;
-            if (currentNode==null || currentNode==Vector2.Zero || Vector2.Distance(pos, currentNode)<minDistance) currentNode = nodes.Dequeue();
+            if (currentNode==Vector2.Zero || Vector2.Distance(pos, currentNode)<minDistance) currentNode = nodes.Dequeue();
 
             return currentNode;
         }

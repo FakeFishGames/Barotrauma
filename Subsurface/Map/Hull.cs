@@ -121,7 +121,7 @@ namespace Subsurface
             
             OxygenPercentage = (float)(Game1.random.NextDouble() * 100.0);
 
-            properties = TypeDescriptor.GetProperties(this.GetType())
+            properties = TypeDescriptor.GetProperties(GetType())
                 .Cast<PropertyDescriptor>()
                 .ToDictionary(pr => pr.Name);
 
@@ -193,7 +193,7 @@ namespace Subsurface
                 {
                     if (PlayerInput.LeftButtonDown())
                     {
-                        waveY[(int)(position.X - rect.X) / Hull.WaveWidth] = 100.0f;
+                        waveY[(int)(position.X - rect.X) / WaveWidth] = 100.0f;
                         Volume = Volume + 1500.0f;
                     }
                     else if (PlayerInput.GetMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
@@ -290,8 +290,8 @@ namespace Subsurface
 
             spriteBatch.DrawString(GUI.font, "Pressure: " + ((int)pressure - rect.Y).ToString() +
                 " - Lethality: " + lethalPressure +
-                " - Oxygen: "+((int)OxygenPercentage).ToString(), new Vector2(rect.X+10, -rect.Y+10), Color.Black);
-            spriteBatch.DrawString(GUI.font, volume.ToString() +" / "+ FullVolume.ToString(), new Vector2(rect.X+10, -rect.Y+30), Color.Black);
+                " - Oxygen: "+((int)OxygenPercentage), new Vector2(rect.X+10, -rect.Y+10), Color.Black);
+            spriteBatch.DrawString(GUI.font, volume +" / "+ FullVolume, new Vector2(rect.X+10, -rect.Y+30), Color.Black);
 
             if (isSelected && editing)
             {

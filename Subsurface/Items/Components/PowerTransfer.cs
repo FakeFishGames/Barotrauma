@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Globalization;
 
 namespace Subsurface.Items.Components
 {
@@ -48,7 +49,9 @@ namespace Subsurface.Items.Components
                 {
                     pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                     pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
-                    pt.Item.SendSignal((fullPower / Math.Max(fullLoad,1.0f)).ToString(), "power_out");
+                    pt.Item.SendSignal(
+                        (fullPower / Math.Max(fullLoad,1.0f)).ToString(CultureInfo.InvariantCulture), 
+                        "power_out");
                     
                 }
                 else

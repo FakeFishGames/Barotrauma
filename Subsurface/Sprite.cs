@@ -126,9 +126,9 @@ namespace Subsurface
         {
             this.texture = texture;
 
-            sourceRect = (sourceRectangle == null) ? new Rectangle(1, 1, texture.Width, texture.Height) : (Rectangle)sourceRectangle;
+            sourceRect = sourceRectangle ?? new Rectangle(1, 1, texture.Width, texture.Height);
 
-            offset = (newOffset == null) ? Vector2.Zero : (Vector2)newOffset;
+            offset = newOffset ?? Vector2.Zero;
 
             size = new Vector2(sourceRect.Width, sourceRect.Height);
 
@@ -145,10 +145,10 @@ namespace Subsurface
         {
             file = newFile;
             texture = LoadTexture(file);
+
+            sourceRect = sourceRectangle ?? new Rectangle(1, 1, texture.Width, texture.Height);
             
-            sourceRect = (sourceRectangle == null) ? new Rectangle(1,1,texture.Width,texture.Height) : (Rectangle)sourceRectangle;
-            
-            offset = (newOffset == null) ?  Vector2.Zero : (Vector2)newOffset; 
+            offset = newOffset ?? Vector2.Zero; 
             
             size = new Vector2(sourceRect.Width, sourceRect.Height);
 

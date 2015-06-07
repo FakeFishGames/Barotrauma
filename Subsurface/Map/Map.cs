@@ -251,7 +251,7 @@ namespace Subsurface
 
         public static bool InsideWall(Vector2 point)
         {
-            Body foundBody = Map.PickBody(point);
+            Body foundBody = PickBody(point);
             if (foundBody==null) return false;
 
             Structure wall = foundBody.UserData as Structure;
@@ -286,7 +286,7 @@ namespace Subsurface
 
             try
             {
-                string docString = doc.ToString();
+                //string docString = doc.ToString();
                 ToolBox.CompressStringToFile(filePath+".gz", doc.ToString());
             }
             catch
@@ -342,7 +342,7 @@ namespace Subsurface
         public Map(string filePath, string mapHash="")
         {
             this.filePath = filePath;
-            this.name = Path.GetFileNameWithoutExtension(filePath);
+            name = Path.GetFileNameWithoutExtension(filePath);
 
             if (mapHash != "")
             {

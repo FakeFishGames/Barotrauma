@@ -61,7 +61,7 @@ namespace Subsurface.Items.Components
             }
 
             Item[] containedItems = item.ContainedItems;
-            if (containedItems == null || containedItems.Count()==0) return false;
+            if (containedItems == null || !containedItems.Any()) return false;
 
             foreach (Item projectile in containedItems)
             {

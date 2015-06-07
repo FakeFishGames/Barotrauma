@@ -75,7 +75,7 @@ namespace Subsurface
         {
             Vector2 placeSize = Map.gridSize;
 
-            if (placePosition == null || placePosition == Vector2.Zero)
+            if (placePosition == Vector2.Zero)
             {
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
                     placePosition = Map.MouseToWorldGrid(cam);

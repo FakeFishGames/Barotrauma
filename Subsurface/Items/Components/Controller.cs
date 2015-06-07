@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Xml.Linq;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface.Items.Components
 {

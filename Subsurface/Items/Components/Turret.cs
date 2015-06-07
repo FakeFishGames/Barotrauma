@@ -4,7 +4,6 @@ using System.IO;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Globalization;
 
 namespace Subsurface.Items.Components
 {
@@ -152,7 +151,7 @@ namespace Subsurface.Items.Components
             currPowerConsumption = powerConsumption;
 
             float availablePower = 0.0f;
-            List<PowerContainer> batteries = new List<PowerContainer>();
+            //List<PowerContainer> batteries = new List<PowerContainer>();
             foreach (MapEntity e in item.linkedTo)
             {
                 Item battery = e as Item;

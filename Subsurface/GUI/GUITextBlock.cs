@@ -119,7 +119,7 @@ namespace Subsurface
             if (wrap && rect.Width>0)
             {
                 text = text.Replace("\n"," ");
-                this.text = ToolBox.WrapText(this.text, rect.Width);
+                text = ToolBox.WrapText(text, rect.Width);
 
                 Vector2 newSize = MeasureText();
 
