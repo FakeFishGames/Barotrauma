@@ -48,14 +48,7 @@ namespace Subsurface.Items.Components
                         return;
                     }
 
-                    if (success)
-                    {
-                        item.SendSignal(output, "signal_out", item);
-                    }
-                    else
-                    {
-                        item.SendSignal("0", "signal_out", item);
-                    }
+                    item.SendSignal(success ? output : "0", "signal_out", item);
 
                     break;
                 case "set_output":

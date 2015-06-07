@@ -1,8 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
@@ -50,7 +46,7 @@ namespace Subsurface.Items.Components
                     isActive = !isActive;
                     break;
                 case "set_state":           
-                    isActive = (signal == "0") ? false : true;                   
+                    isActive = (signal != "0");                   
                     break;
             }
         }

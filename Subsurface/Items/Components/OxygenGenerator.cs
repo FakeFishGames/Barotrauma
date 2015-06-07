@@ -24,10 +24,8 @@ namespace Subsurface.Items.Components
 
             ventList = new List<Vent>();
 
-            item.linkedTo.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler(
-                delegate(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-                { GetVents(); }
-            );
+            item.linkedTo.CollectionChanged += delegate(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+            { GetVents(); };
         }
 
         public override void Update(float deltaTime, Camera cam)

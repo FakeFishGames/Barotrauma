@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
@@ -33,7 +32,7 @@ namespace Subsurface
                 {
                     case Physics.CollisionStairs:
                         Structure structure = fixture.Body.UserData as Structure;
-                        if (stairs == null && (!inWater || TargetMovement.Y>0.0f))
+                        if (stairs == null && (!inWater || TargetMovement.Y>0.0f) && structure!=null)
                         {
                             if (LowestLimb.SimPosition.Y<structure.SimPosition.Y)
                             {

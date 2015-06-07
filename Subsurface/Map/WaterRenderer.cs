@@ -32,7 +32,7 @@ namespace Subsurface
 
         public void TransformTexCoord(Matrix transform)
         {
-            this.texCoord = Vector2.Transform(this.texCoord, transform);
+            texCoord = Vector2.Transform(texCoord, transform);
         }
     }
 

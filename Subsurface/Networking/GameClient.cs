@@ -40,11 +40,11 @@ namespace Subsurface.Networking
             }
         }
 
-        public GameClient(string name)
+        public GameClient(string newName)
         {
-            this.name = name;
+            name = newName;
 
-            this.characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", name);
+            characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", name);
         }
 
         public bool ConnectToServer(string hostIP)

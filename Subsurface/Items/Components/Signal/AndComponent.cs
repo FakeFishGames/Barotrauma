@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components

@@ -204,14 +204,14 @@ namespace Subsurface
         {
             loadedSounds.Remove(this);
 
-            System.Diagnostics.Debug.WriteLine(this.AlBufferId);
+            System.Diagnostics.Debug.WriteLine(AlBufferId);
 
             foreach (Sound s in loadedSounds)
             {
                 if (s.oggSound == oggSound) return;
             }
 
-            SoundManager.ClearAlSource(this.AlBufferId);
+            SoundManager.ClearAlSource(AlBufferId);
             oggSound.Dispose();
         }
 

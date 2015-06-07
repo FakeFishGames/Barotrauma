@@ -1,5 +1,4 @@
-﻿using System;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
@@ -190,7 +189,7 @@ namespace Subsurface
             else if (radius != 0.0f)
             {
                 body = BodyFactory.CreateCircle(Game1.world, radius, density);
-                bodyShape = Shape.Circle; ;
+                bodyShape = Shape.Circle;
             }
             else
             {

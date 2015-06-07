@@ -123,7 +123,7 @@ namespace Subsurface.Items.Components
             Vector2[] corners = GetConvexHullCorners(doorRect);
 
             convexHull = new ConvexHull(corners, Color.Black);            
-            if (window!=null && window!=Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black);
+            if (window!=Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black);
 
             UpdateConvexHulls();
 

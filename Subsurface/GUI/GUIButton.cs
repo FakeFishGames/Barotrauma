@@ -45,7 +45,7 @@ namespace Subsurface
             if (parent != null)
                 parent.AddChild(this);
             
-            this.textBlock = new GUITextBlock(new Rectangle(0,0,0,0), text, Color.Transparent, Color.Black, (Alignment.CenterX | Alignment.CenterY), this);
+            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), text, Color.Transparent, Color.Black, (Alignment.CenterX | Alignment.CenterY), this);
 
         }
 
