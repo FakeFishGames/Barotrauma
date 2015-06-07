@@ -62,7 +62,7 @@
     <Compile Include="Characters\Jobs\Job.cs" />
     <Compile Include="Characters\AI\SteeringManager.cs" />
     <Compile Include="Characters\AI\SteeringPath.cs" />
-    <Compile Include="Characters\LimbAttack.cs" />
+    <Compile Include="Characters\Attack.cs" />
     <Compile Include="Events\PropertyTask.cs" />
     <Compile Include="Events\RepairTask.cs" />
     <Compile Include="GameSession\CrewManager.cs" />
@@ -124,6 +124,7 @@
     <Compile Include="Map\IDamageable.cs" />
     <Compile Include="Map\Lights\ConvexHull.cs" />
     <Compile Include="Map\Lights\LightManager.cs" />
+    <Compile Include="Map\MapHash.cs" />
     <Compile Include="Physics\PhysicsBody.cs" />
     <Compile Include="Networking\NetworkEvent.cs" />
     <Compile Include="Networking\NetworkMember.cs" />
@@ -562,6 +563,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Weapons\stunGrenade.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\HitArmor1.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\HitArmor2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\HitArmor3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Damage\implode.ogg">
