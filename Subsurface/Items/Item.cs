@@ -308,18 +308,18 @@ namespace Subsurface
         }
 
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
         {
             foreach (ItemComponent ic in components)
             {
                 foreach (StatusEffect effect in ic.statusEffects)
                 {
-                    ApplyStatusEffect(effect, type, deltaTime, character, limb);
+                    ApplyStatusEffect(effect, type, deltaTime, character);
                 }
             }
         }
 
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null)
         {
             if (condition == 0.0f) return;
 
@@ -358,7 +358,7 @@ namespace Subsurface
                     //ApplyStatusEffect(effect, type, deltaTime, this);
 
                 if (effect.Targets.HasFlag(StatusEffect.Target.Character))
-                    effect.Apply(type, deltaTime, null, character, limb);
+                    effect.Apply(type, deltaTime, null, character);
                     //ApplyStatusEffect(effect, type, deltaTime, null, character, limb);
 
                 if (container != null && effect.Targets.HasFlag(StatusEffect.Target.Parent))
@@ -712,28 +712,28 @@ namespace Subsurface
         }
 
 
-        public void Use(Character character = null)
+        public void Use(float deltaTime, Character character = null)
         {
             if (condition == 0.0f) return;
 
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-                if (ic.Use(character))
+                if (ic.Use(deltaTime, character))
                 {
                     ic.PlaySound(ActionType.OnUse, 1.0f, Position);
 
-                    ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
+                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
                 }
             }
         }
 
-        public void SecondaryUse(Character character = null)
+        public void SecondaryUse(float deltaTime, Character character = null)
         {
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-                ic.SecondaryUse(character);
+                ic.SecondaryUse(deltaTime, character);
             }
         }
 

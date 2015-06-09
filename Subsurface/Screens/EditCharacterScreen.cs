@@ -74,7 +74,7 @@ namespace Subsurface
 
                 if (physicsEnabled)
                 {
-                    editingCharacter.Control(cam);
+                    editingCharacter.Control(1.0f, cam);
                 }
                 else
                 {

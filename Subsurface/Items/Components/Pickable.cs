@@ -48,7 +48,7 @@ namespace Subsurface.Items.Components
                 if (!picker.HasSelectedItem(item) && item.body!=null) item.body.Enabled = false;
                 this.picker = picker;
 
-                ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker, null);
+                ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 
                 //foreach (StatusEffect effect in item.Prefab.statusEffects)
                 //{

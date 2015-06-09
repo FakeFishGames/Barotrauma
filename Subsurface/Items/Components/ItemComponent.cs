@@ -146,6 +146,7 @@ namespace Subsurface
                 switch (subElement.Name.ToString().ToLower())
                 {
                     case "requireditem":
+                    case "requireditems":
                         RelatedItem ri = RelatedItem.Load(subElement);
                         if (ri != null) requiredItems.Add(ri);
                         break;
@@ -264,13 +265,13 @@ namespace Subsurface
 
         //called when the item is equipped and left mouse button is pressed
         //returns true if the item was used succesfully (not out of ammo, reloading, etc)
-        public virtual bool Use(Character character = null) 
+        public virtual bool Use(float deltaTime, Character character = null) 
         {
             return false;
         }
 
         //called when the item is equipped and right mouse button is pressed
-        public virtual void SecondaryUse(Character character = null) { }  
+        public virtual void SecondaryUse(float deltaTime, Character character = null) { }  
 
         //called when the item is placed in a "limbslot"
         public virtual void Equip(Character character) { }
@@ -347,12 +348,21 @@ namespace Subsurface
             return true;
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
         {
             foreach (StatusEffect effect in statusEffects)
             {
                 if (effect.type != type) continue;
-                item.ApplyStatusEffect(effect, type, deltaTime, character, limb);
+                item.ApplyStatusEffect(effect, type, deltaTime, character);
+            }
+        }
+
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Vector2 position, IPropertyObject target)
+        {
+            foreach (StatusEffect effect in statusEffects)
+            {
+                if (effect.type != type) continue;
+                effect.Apply(type, deltaTime, position, target);
             }
         }
 

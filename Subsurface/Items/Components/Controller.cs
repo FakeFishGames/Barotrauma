@@ -134,14 +134,14 @@ namespace Subsurface.Items.Components
             }
         }
 
-        public override bool Use(Character activator = null)
+        public override bool Use(float deltaTime, Character activator = null)
         {
             character = activator;
             foreach (MapEntity e in item.linkedTo)
             {
                 Item linkedItem = e as Item;
                 if (linkedItem == null) continue;
-                linkedItem.Use(activator);
+                linkedItem.Use(deltaTime, activator);
             }
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
@@ -149,7 +149,7 @@ namespace Subsurface.Items.Components
             return true;
         }
 
-        public override void SecondaryUse(Character character = null)
+        public override void SecondaryUse(float deltaTime, Character character = null)
         {
             if (character == null) return;
 
@@ -157,7 +157,7 @@ namespace Subsurface.Items.Components
             {
                 Item linkedItem = e as Item;
                 if (linkedItem == null) continue;
-                linkedItem.SecondaryUse(character);
+                linkedItem.SecondaryUse(deltaTime, character);
             }
         }
 

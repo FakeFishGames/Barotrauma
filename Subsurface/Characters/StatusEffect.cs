@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -10,7 +11,7 @@ namespace Subsurface
         [Flags]
         public enum Target 
         {
-            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16
+            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget=32
         }
 
         private Target targets;
@@ -142,14 +143,34 @@ namespace Subsurface
         }
 
 
-        public virtual void Apply(ActionType type, float deltaTime, Item item, Character character = null, Limb limb = null)
+        public virtual void Apply(ActionType type, float deltaTime, Item item, Character character = null)
         {
             if (this.type == type) Apply(deltaTime, character, item);
-
         }
 
-        
-        protected virtual void Apply(float deltaTime, Character character, Item item, Limb limb = null)
+        public virtual void Apply(ActionType type, float deltaTime, Vector2 position, IPropertyObject target)
+        {
+            if (!targetNames.Contains(target.Name)) return;
+            if (this.type == type) Apply(deltaTime, position, target);
+        }
+
+        protected virtual void Apply(float deltaTime, Vector2 position, IPropertyObject target)
+        {
+            if (explosion != null) explosion.Explode(position);
+
+            if (sound != null) sound.Play(1.0f, 1000.0f, position);
+
+            for (int i = 0; i < propertyNames.Count(); i++)
+            {
+                ObjectProperty property;
+                if (target.ObjectProperties.TryGetValue(propertyNames[i], out property))
+                {
+                    ApplyToProperty(property, propertyEffects[i], deltaTime);
+                }
+            }
+        }
+
+        protected virtual void Apply(float deltaTime, Character character, Item item)
         {
             if (explosion != null) explosion.Explode(item.SimPosition);
 

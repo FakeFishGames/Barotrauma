@@ -19,6 +19,21 @@ namespace Subsurface.Items.Components
         ConvexHull convexHull;
         ConvexHull convexHull2;
 
+        private float stuck;
+        public float Stuck
+        {
+            get { return stuck; }
+            set 
+            {
+                if (isOpen) return;
+                stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
+                if (stuck == 0.0f) isStuck = false;
+                if (stuck == 100.0f) isStuck = true;
+            }
+        }
+
+        private bool isStuck;
+
         Gap LinkedGap
         {
             get
@@ -35,8 +50,9 @@ namespace Subsurface.Items.Components
                 return linkedGap;
             }
         }
-
+        
         bool isOpen;
+        
         float openState;
 
         [HasDefaultValue("0.0,0.0,0.0,0.0", false)]
@@ -293,6 +309,8 @@ namespace Subsurface.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender)
         {
+            if (isStuck) return;
+
             if (connection.name=="toggle")
             {
                 isOpen = !isOpen;

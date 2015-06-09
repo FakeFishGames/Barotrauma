@@ -142,7 +142,7 @@ namespace Subsurface.Items.Components
             //}
         }
 
-        public override bool Use(Character character = null)
+        public override bool Use(float deltaTime, Character character = null)
         {
             if (newNodePos!= Vector2.Zero && nodes.Count>0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
@@ -155,7 +155,7 @@ namespace Subsurface.Items.Components
             return true;
         }
 
-        public override void SecondaryUse(Character character = null)
+        public override void SecondaryUse(float deltaTime, Character character = null)
         {
             if (nodes.Count > 1)
             {

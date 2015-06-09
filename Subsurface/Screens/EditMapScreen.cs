@@ -197,7 +197,7 @@ namespace Subsurface
                 }
 
                 dummyCharacter.ControlLocalPlayer(cam, false);
-                dummyCharacter.Control(cam);
+                dummyCharacter.Control((float)deltaTime, cam);
             }
             else
             {

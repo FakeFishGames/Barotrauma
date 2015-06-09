@@ -12,10 +12,12 @@
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
       <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Oxygen Tank" Condition="-0.7" Oxygen="20.0"/>
+      <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Welding Fuel Tank" Condition="-0.7" Oxygen="-20.0"/>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Oxygen Tank"/>
+      <Containable name="Welding Fuel Tank"/>
     </ItemContainer>  
 
   </Item>
