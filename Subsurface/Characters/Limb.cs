@@ -41,9 +41,9 @@ namespace Subsurface
 
         public readonly bool ignoreCollisions;
 
-        private readonly float maxHealth;
-        private float damage;
-        private float bleeding;
+        //private readonly float maxHealth;
+        //private float damage;
+        //private float bleeding;
 
         public readonly float impactTolerance;
 
@@ -122,26 +122,26 @@ namespace Subsurface
             get { return refJointIndex; }
         }
 
-        public float Damage
-        {
-            get { return damage; }
-            set 
-            { 
-                damage = Math.Max(value, 0.0f);
-                if (damage >=maxHealth) character.Kill();
-            }
-        }
+        //public float Damage
+        //{
+        //    get { return damage; }
+        //    set 
+        //    { 
+        //        damage = Math.Max(value, 0.0f);
+        //        if (damage >=maxHealth) character.Kill();
+        //    }
+        //}
 
-        public float MaxHealth
-        {
-            get { return maxHealth; }
-        }
+        //public float MaxHealth
+        //{
+        //    get { return maxHealth; }
+        //}
 
-        public float Bleeding
-        {
-            get { return bleeding; }
-            set { bleeding = MathHelper.Clamp(value, 0.0f, 100.0f); }
-        }
+        //public float Bleeding
+        //{
+        //    get { return bleeding; }
+        //    set { bleeding = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        //}
 
         public Item WearingItem
         {
@@ -208,7 +208,7 @@ namespace Subsurface
 
             steerForce = ToolBox.GetAttributeFloat(element, "steerforce", 0.0f);
 
-            maxHealth = Math.Max(ToolBox.GetAttributeFloat(element, "health", 100.0f),1.0f);
+            //maxHealth = Math.Max(ToolBox.GetAttributeFloat(element, "health", 100.0f),1.0f);
 
             armorSector = ToolBox.GetAttributeVector2(element, "armorsector", Vector2.Zero);
             armorSector.X = MathHelper.ToRadians(armorSector.X);
@@ -277,7 +277,7 @@ namespace Subsurface
                 {
                     hitArmor = true;
                     damageSoundType = DamageSoundType.LimbArmor;
-                    damage /= armorValue;
+                    amount /= armorValue;
                     bleedingAmount /= armorValue;
                 }
             }
@@ -287,8 +287,8 @@ namespace Subsurface
                 AmbientSoundManager.PlayDamageSound(damageSoundType, amount, position);
             }
 
-            Bleeding += bleedingAmount;
-            Damage += amount;
+            //Bleeding += bleedingAmount;
+            //Damage += amount;
 
             float bloodAmount = hitArmor ? 0 : (int)Math.Min((int)(amount * 2.0f), 20);
             //if (closestLimb.Damage>=100.0f)
@@ -366,18 +366,18 @@ namespace Subsurface
 
             soundTimer -= deltaTime;
 
-            if (ToolBox.RandomFloat(0.0f, 1000.0f) < Bleeding)
-            {
-                Game1.particleManager.CreateParticle(
-                    !inWater ? "blood" : "waterblood",
-                    SimPosition, Vector2.Zero);
-            }
+            //if (ToolBox.RandomFloat(0.0f, 1000.0f) < Bleeding)
+            //{
+            //    Game1.particleManager.CreateParticle(
+            //        !inWater ? "blood" : "waterblood",
+            //        SimPosition, Vector2.Zero);
+            //}
         }
 
 
         public void Draw(SpriteBatch spriteBatch, bool debugDraw)
         {
-            Color color = new Color(1.0f, 1.0f - damage / maxHealth, 1.0f - damage / maxHealth);
+            Color color = Color.White;// new Color(1.0f, 1.0f - damage / maxHealth, 1.0f - damage / maxHealth);
 
             body.Dir = Dir;
             body.Draw(spriteBatch, sprite, color);

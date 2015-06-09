@@ -272,8 +272,24 @@ namespace Subsurface
             if (Character.Controlled != null) Character.Controlled.DrawHud(spriteBatch, cam);
 
             DrawMessages(spriteBatch, (float)deltaTime);
+
+            if (GUIMessageBox.messageBoxes.Count>0)
+            {
+                var messageBox = GUIMessageBox.messageBoxes.Peek();
+                if (messageBox != null) messageBox.Draw(spriteBatch);
+            }
+
             
             DebugConsole.Draw(spriteBatch);
+        }
+
+        public static void Update(float deltaTime)
+        {
+            if (GUIMessageBox.messageBoxes.Count > 0)
+            {
+                var messageBox = GUIMessageBox.messageBoxes.Peek();
+                if (messageBox != null) messageBox.Update(deltaTime);
+            }
         }
 
         public static void AddMessage(string message, Color color, float lifeTime = 3.0f)

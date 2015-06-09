@@ -148,8 +148,8 @@ namespace Subsurface
                     {
                         WayPoint spawnPoint = WayPoint.GetRandom(WayPoint.SpawnType.Human);
                         Character.Controlled = new Character("Content/Characters/Human/human.xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
-                        if (Game1.gameSession != null) Game1.gameSession.crewManager.AddCharacter(Character.Controlled);
-                        if (Game1.gameSession != null) Game1.gameSession.crewManager.SelectCharacter(Character.Controlled);
+                        if (Game1.GameSession != null) Game1.GameSession.crewManager.AddCharacter(Character.Controlled);
+                        if (Game1.GameSession != null) Game1.GameSession.crewManager.SelectCharacter(Character.Controlled);
                     }
                     else
                     {
@@ -159,42 +159,42 @@ namespace Subsurface
 
                     break;
                 case "startserver":
-                    if (Game1.server==null)
-                        Game1.server = new GameServer();
+                    if (Game1.Server==null)
+                        Game1.Server = new GameServer();
                     break;
                 case "kick":
-                    if (Game1.server == null) break;
-                    Game1.server.KickPlayer(commands[1]);
+                    if (Game1.Server == null) break;
+                    Game1.Server.KickPlayer(commands[1]);
                     break;
                 case "startclient":
                     if (commands.Length == 1) return;
-                    if (Game1.client == null)
+                    if (Game1.Client == null)
                     {
-                        Game1.client = new GameClient("Name");
-                        Game1.client.ConnectToServer(commands[1]);
+                        Game1.Client = new GameClient("Name");
+                        Game1.Client.ConnectToServer(commands[1]);
                     }
                     break;
                 case "mainmenuscreen":
                 case "mainmenu":
                 case "menu":
-                    Game1.mainMenuScreen.Select();
+                    Game1.MainMenuScreen.Select();
                     break;
                 case "gamescreen":
                 case "game":
-                    Game1.gameScreen.Select();
+                    Game1.GameScreen.Select();
                     break;
                 case "editmapscreen":
                 case "editmap":
                 case "edit":                   
-                    Game1.editMapScreen.Select();
+                    Game1.EditMapScreen.Select();
                     break;
                 case "editcharacter":
                 case "editchar":
-                    Game1.editCharacterScreen.Select();
+                    Game1.EditCharacterScreen.Select();
                     break;
                 case "editwater":
                 case "water":
-                    if (Game1.client== null)
+                    if (Game1.Client== null)
                     {
                         Hull.EditWater = !Hull.EditWater;
                     }
@@ -206,7 +206,7 @@ namespace Subsurface
                     break;
                 case "lobbyscreen":
                 case "lobby":
-                    Game1.lobbyScreen.Select();
+                    Game1.LobbyScreen.Select();
                     break;
                 case "savemap":
                     Map.Loaded.SaveAs("Content/SavedMaps/" + commands[1]);
@@ -214,6 +214,10 @@ namespace Subsurface
                     break;
                 case "loadmap":
                     Map.Load("Content/SavedMaps/" + commands[1]);
+                    break;
+                case "messagebox":
+                    if (commands.Length < 3) break;
+                    new GUIMessageBox(commands[1], commands[2]);
                     break;
                 case "debugdraw":
                     Hull.DebugDraw = !Hull.DebugDraw;

@@ -51,7 +51,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            if (rect.Contains(PlayerInput.GetMouseState.Position) && Enabled)
+            if (rect.Contains(PlayerInput.GetMouseState.Position) && Enabled && (MouseOn == this || IsParentOf(MouseOn)))
             {
                 state = ComponentState.Hover;
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
@@ -66,8 +66,7 @@ namespace Subsurface
                     if (OnClicked != null)
                     {
                         if (OnClicked(this, UserData)) state = ComponentState.Selected;
-                    }
-                    
+                    }                    
                 }
             }
             else
@@ -87,7 +86,7 @@ namespace Subsurface
 
             DrawChildren(spriteBatch);
 
-            if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f*alpha, true);
+            if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f, true);
         }
     }
 }

@@ -298,7 +298,7 @@ namespace Subsurface
 
             if (impact > l.impactTolerance)
             {
-                l.Damage += (impact-l.impactTolerance*0.1f);
+                character.Health -= (impact-l.impactTolerance*0.1f);
                 strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
             }
         }

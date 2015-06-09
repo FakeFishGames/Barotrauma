@@ -11,7 +11,7 @@
     <Reactor canbeselected = "true">
       <requireditem name="Fuel Rod" type="Contained"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Fuel Rod, Heat Absorber, Temperature Control Circuit" Condition="-0.1" />
-      <sound file="reactor.ogg" type="OnActive" range="1000.0"/>
+      <sound file="reactor.ogg" type="OnActive" range="1000.0" volume="FissionRate"/>
     </Reactor>
 
     <ConnectionPanel canbeselected = "true">

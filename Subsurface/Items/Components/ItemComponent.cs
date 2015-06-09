@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
 using Subsurface.Items.Components;
 using System.IO;
+using System.Globalization;
 
 namespace Subsurface
 {
@@ -16,6 +17,8 @@ namespace Subsurface
     {
         public readonly Sound sound;
         public readonly ActionType type;
+
+        public string volumeProperty;
 
         public readonly float range;
         
@@ -172,8 +175,9 @@ namespace Subsurface
                         Sound sound = Sound.Load(filePath);
 
                         float range = ToolBox.GetAttributeFloat(subElement, "range", 800.0f);
-
-                        sounds.Add(new ItemSound(sound, type, range));
+                        ItemSound itemSound = new ItemSound(sound, type, range);
+                        itemSound.volumeProperty = ToolBox.GetAttributeString(subElement, "volume", "");
+                        sounds.Add(itemSound);
                         break;
                 }
                 
@@ -193,16 +197,30 @@ namespace Subsurface
                 int index = Game1.localRandom.Next(matchingSounds.Count);
                 itemSound = sounds[index];
 
+                if (itemSound.volumeProperty != "")
+                {
+                    ObjectProperty op = null;
+                    if (properties.TryGetValue(itemSound.volumeProperty.ToLower(), out op))
+                    {
+                        float newVolume = 0.0f;
+                        float.TryParse(op.GetValue().ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out newVolume);
+                        volume = MathHelper.Clamp(newVolume, 0.0f, 1.0f);
+                    }
+
+                }
+
                 if (loop) loopingSound = itemSound;
             }
-            
+                        
 
             if (loop)
             {
+                //if (loopingSound != null && loopingSound.volumeProperty != "") volume = float.Parse(properties[loopingSound.volumeProperty].GetValue().ToString());
                 loopingSoundIndex = loopingSound.sound.Loop(loopingSoundIndex, volume, position, loopingSound.range);
             }
             else
             {
+                
                 itemSound.sound.Play(volume, itemSound.range, position);  
             } 
         }

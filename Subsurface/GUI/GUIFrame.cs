@@ -27,5 +27,17 @@ namespace Subsurface
                 parent.AddChild(this);
         }
 
+        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        {
+            base.Draw(spriteBatch);
+                           
+            Color newColor = color;
+            if (state == ComponentState.Selected) newColor = selectedColor;
+            if (state == ComponentState.Hover) newColor = hoverColor;
+
+            GUI.DrawRectangle(spriteBatch, rect, newColor * alpha, true);
+            DrawChildren(spriteBatch);        
+        }
+
     }
 }

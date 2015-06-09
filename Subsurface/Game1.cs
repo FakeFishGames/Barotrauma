@@ -23,17 +23,17 @@ namespace Subsurface
 
         public static readonly Version version = Assembly.GetEntryAssembly().GetName().Version;
 
-        public static GameScreen            gameScreen;
-        public static MainMenuScreen        mainMenuScreen;
-        public static LobbyScreen           lobbyScreen;
-        public static NetLobbyScreen        netLobbyScreen;
-        public static EditMapScreen         editMapScreen;
-        public static EditCharacterScreen   editCharacterScreen;
+        public static GameScreen            GameScreen;
+        public static MainMenuScreen        MainMenuScreen;
+        public static LobbyScreen           LobbyScreen;
+        public static NetLobbyScreen        NetLobbyScreen;
+        public static EditMapScreen         EditMapScreen;
+        public static EditCharacterScreen   EditCharacterScreen;
 
-        public static GameSession gameSession;
+        public static GameSession GameSession;
                         
-        public static GameClient client;
-        public static GameServer server;
+        public static GameClient Client;
+        public static GameServer Server;
 
         public static ParticleManager particleManager;
 
@@ -50,7 +50,7 @@ namespace Subsurface
         
         public Camera Cam
         {
-            get { return gameScreen.Cam; }
+            get { return GameScreen.Cam; }
         }
 
         public static int GraphicsWidth
@@ -145,15 +145,15 @@ namespace Subsurface
             AmbientSoundManager.Init("Content/Sounds/Sounds.xml");
 
             Map.PreloadMaps("Content/SavedMaps");
-            gameScreen          =   new GameScreen(graphics.GraphicsDevice);
-            mainMenuScreen      =   new MainMenuScreen(this); 
-            lobbyScreen         =   new LobbyScreen();
-            netLobbyScreen      =   new NetLobbyScreen();
-            editMapScreen       =   new EditMapScreen();
-            editCharacterScreen =   new EditCharacterScreen();
+            GameScreen          =   new GameScreen(graphics.GraphicsDevice);
+            MainMenuScreen      =   new MainMenuScreen(this); 
+            LobbyScreen         =   new LobbyScreen();
+            NetLobbyScreen      =   new NetLobbyScreen();
+            EditMapScreen       =   new EditMapScreen();
+            EditCharacterScreen =   new EditCharacterScreen();
 
 
-            mainMenuScreen.Select();            
+            MainMenuScreen.Select();            
         }
 
         /// <summary>
@@ -179,19 +179,22 @@ namespace Subsurface
 
             PlayerInput.Update(deltaTime);
 
+
             //if (PlayerInput.KeyDown(Keys.Escape)) Quit();
 
             DebugConsole.Update(this, (float)deltaTime);
 
-            if (!DebugConsole.IsOpen || server != null || client != null) Screen.Selected.Update(deltaTime);
+            if (!DebugConsole.IsOpen || Server != null || Client != null) Screen.Selected.Update(deltaTime);
 
-            if (server != null)
+            GUI.Update((float)deltaTime);
+
+            if (Server != null)
             {
-                server.Update();
+                Server.Update();
             }
-            else if (client != null)
+            else if (Client != null)
             {
-                client.Update();
+                Client.Update();
             }
             else
             {
@@ -219,7 +222,7 @@ namespace Subsurface
 
         protected override void OnExiting(object sender, EventArgs args)
         {
-            if (client != null) client.Disconnect();
+            if (Client != null) Client.Disconnect();
 
             base.OnExiting(sender, args);
         }

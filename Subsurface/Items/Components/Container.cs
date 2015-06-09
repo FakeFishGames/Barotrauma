@@ -175,6 +175,8 @@ namespace Subsurface.Items.Components
             }
             else
             {
+                item.body.Enabled = true;
+
                 Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
 
                 if (item.body.Dir==-1.0f)
@@ -184,9 +186,7 @@ namespace Subsurface.Items.Components
                 }
                 transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
-
-
-
+                
                 transformedItemPos += ConvertUnits.ToDisplayUnits(item.body.Position);
 
                 currentRotation += item.body.Rotation;
@@ -230,7 +230,7 @@ namespace Subsurface.Items.Components
             if (inventory.TryPutItem(item))
             {            
                 isActive = true;
-                if (hideItems) item.body.Enabled = false;
+                if (hideItems || (item.body!=null && !item.body.Enabled)) item.body.Enabled = false;
 
                 item.container = this.item;
             

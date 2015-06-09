@@ -8,9 +8,11 @@
         public delegate bool IsFinishedHandler();
         private IsFinishedHandler IsFinishedChecker;
 
-        public PropertyTask(TaskManager taskManager, Item item, IsFinishedHandler isFinished, float priority, string name)
-            : base(taskManager, priority, name)
+        public PropertyTask(Item item, IsFinishedHandler isFinished, float priority, string name)
+            : base(priority, name)
         {
+            if (taskManager == null) return;
+
             this.item = item;
             IsFinishedChecker = isFinished;
 

@@ -134,11 +134,11 @@ namespace Subsurface.Networking
                             int existingClients = inc.ReadInt32();
                             for (int i = 1; i <= existingClients; i++)
                             {
-                                Game1.netLobbyScreen.AddPlayer(inc.ReadString());
+                                Game1.NetLobbyScreen.AddPlayer(inc.ReadString());
                             }
 
                             //add the name of own client to the lobby screen
-                            Game1.netLobbyScreen.AddPlayer(name);
+                            Game1.NetLobbyScreen.AddPlayer(name);
 
                             CanStart = true;                        
                         }
@@ -147,7 +147,7 @@ namespace Subsurface.Networking
                             string msg = inc.ReadString();
                             DebugConsole.ThrowError(msg);
 
-                            Game1.mainMenuScreen.Select();
+                            Game1.MainMenuScreen.Select();
                         }
                         break;
                     case NetIncomingMessageType.StatusChanged:
@@ -172,8 +172,8 @@ namespace Subsurface.Networking
                 if (myCharacter.IsDead)
                 {
                     Character.Controlled = null;
-                    Game1.gameScreen.Cam.TargetPos = Vector2.Zero;
-                    Game1.gameScreen.Cam.Zoom = 1.0f;
+                    Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    Game1.GameScreen.Cam.Zoom = 1.0f;
                 }
                 else
                 {
@@ -228,7 +228,7 @@ namespace Subsurface.Networking
                         string mapName = inc.ReadString();
                         string mapHash = inc.ReadString();
 
-                        Game1.netLobbyScreen.TrySelectMap(mapName, mapHash);
+                        Game1.NetLobbyScreen.TrySelectMap(mapName, mapHash);
 
 
                         //Map.Load(mapFile);
@@ -240,8 +240,8 @@ namespace Subsurface.Networking
                         TimeSpan duration = new TimeSpan(0,(int)durationMinutes,0);
 
                         //int gameModeIndex = inc.ReadInt32();
-                        Game1.gameSession = new GameSession("", false, duration);
-                        Game1.gameSession.StartShift(1);
+                        Game1.GameSession = new GameSession("", false, duration);
+                        Game1.GameSession.StartShift(1);
 
                         myCharacter = ReadCharacterData(inc);
                         Character.Controlled = myCharacter;                       
@@ -254,7 +254,7 @@ namespace Subsurface.Networking
 
                         gameStarted = true;
 
-                        Game1.gameScreen.Select();
+                        Game1.GameScreen.Select();
 
                         AddChatMessage("Press TAB to chat", ChatMessageType.Server);
 
@@ -268,7 +268,7 @@ namespace Subsurface.Networking
                         Client otherClient = new Client();
                         otherClient.name = inc.ReadString();
 
-                        Game1.netLobbyScreen.AddPlayer(otherClient.name);
+                        Game1.NetLobbyScreen.AddPlayer(otherClient.name);
 
                         //string newPlayerName = inc.ReadString();
                         //int newPlayerID = inc.ReadInt32();
@@ -285,7 +285,7 @@ namespace Subsurface.Networking
                         string leavingName = inc.ReadString();
 
                         AddChatMessage(inc.ReadString(), ChatMessageType.Server);
-                        Game1.netLobbyScreen.RemovePlayer(leavingName);
+                        Game1.NetLobbyScreen.RemovePlayer(leavingName);
                         break;
 
                     case (byte)PacketTypes.KickedOut:
@@ -293,7 +293,7 @@ namespace Subsurface.Networking
 
                         DebugConsole.ThrowError(msg);
 
-                        Game1.mainMenuScreen.Select();
+                        Game1.MainMenuScreen.Select();
 
                         break;
                     case (byte)PacketTypes.Chatmessage:
@@ -307,13 +307,13 @@ namespace Subsurface.Networking
                         break;
                     case (byte)PacketTypes.UpdateNetLobby:
                         if (gameStarted) continue;
-                        Game1.netLobbyScreen.ReadData(inc);
+                        Game1.NetLobbyScreen.ReadData(inc);
                         break;
                     case (byte)PacketTypes.Traitor:
                         string targetName = inc.ReadString();
 
-                        Game1.gameSession.NewChatMessage("You are an agent of Ordo Europae", messageColor[(int)ChatMessageType.Server]);
-                        Game1.gameSession.NewChatMessage("Your secret task is to assassinate " + targetName + "!", messageColor[(int)ChatMessageType.Server]);
+                        Game1.GameSession.NewChatMessage("You are an agent of Ordo Europae", messageColor[(int)ChatMessageType.Server]);
+                        Game1.GameSession.NewChatMessage("Your secret task is to assassinate " + targetName + "!", messageColor[(int)ChatMessageType.Server]);
                         break;
                 }
 
@@ -325,9 +325,9 @@ namespace Subsurface.Networking
         {
             Map.Unload();
 
-            Game1.netLobbyScreen.Select();
+            Game1.NetLobbyScreen.Select();
 
-            if (Game1.gameSession!=null) Game1.gameSession.EndShift(null, null);
+            if (Game1.GameSession!=null) Game1.GameSession.EndShift(null, null);
             
             DebugConsole.ThrowError(endMessage);
 

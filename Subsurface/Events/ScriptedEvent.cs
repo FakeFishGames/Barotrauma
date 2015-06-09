@@ -30,7 +30,7 @@ namespace Subsurface
 
         protected bool isStarted;
         protected bool isFinished;
-
+        
         public string Name
         {
             get { return name; }
@@ -44,6 +44,12 @@ namespace Subsurface
         public int Commonness
         {
             get { return commonness; }
+        }
+
+        public string MusicType
+        {
+            get;
+            set;
         }
 
         public bool IsStarted
@@ -68,6 +74,10 @@ namespace Subsurface
 
             difficulty = ToolBox.GetAttributeInt(element, "difficulty", 1);
             commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
+
+
+            MusicType = ToolBox.GetAttributeString(element, "musictype", "default");
+
 
             if (element.Attribute("starttime") != null)
             {
