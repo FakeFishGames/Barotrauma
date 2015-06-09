@@ -119,7 +119,7 @@ namespace Subsurface.Networking
                         else
                         {
 
-                            Game1.netLobbyScreen.AddPlayer(sender.name);
+                            Game1.NetLobbyScreen.AddPlayer(sender.name);
 
                             // Notify the client that they have logged in
                             outmsg = Server.CreateMessage();
@@ -271,12 +271,12 @@ namespace Subsurface.Networking
             int seed = DateTime.Now.Millisecond;
             Game1.random = new Random(seed);
             
-            Map selectedMap = Game1.netLobbyScreen.SelectedMap as Map;
+            Map selectedMap = Game1.NetLobbyScreen.SelectedMap as Map;
 
             selectedMap.Load();
 
-            Game1.gameSession = new GameSession("", false, Game1.netLobbyScreen.GameDuration, Game1.netLobbyScreen.SelectedMode);
-            Game1.gameSession.StartShift(1);
+            Game1.GameSession = new GameSession("", false, Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.SelectedMode);
+            Game1.GameSession.StartShift(1);
             //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
             
             foreach (Client client in connectedClients)
@@ -307,10 +307,10 @@ namespace Subsurface.Networking
 
                 msg.Write(seed);
 
-                msg.Write(Game1.netLobbyScreen.SelectedMap.Name);
-                msg.Write(Game1.netLobbyScreen.SelectedMap.MapHash.MD5Hash);
+                msg.Write(Game1.NetLobbyScreen.SelectedMap.Name);
+                msg.Write(Game1.NetLobbyScreen.SelectedMap.MapHash.MD5Hash);
                 
-                msg.Write(Game1.netLobbyScreen.GameDuration.TotalMinutes);
+                msg.Write(Game1.NetLobbyScreen.GameDuration.TotalMinutes);
 
                 WriteCharacterData(msg, client.name, client.character);
 
@@ -331,9 +331,9 @@ namespace Subsurface.Networking
 
             gameStarted = true;
 
-            Game1.gameScreen.Cam.TargetPos = Vector2.Zero;
+            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
-            Game1.gameScreen.Select();
+            Game1.GameScreen.Select();
 
             return true;
         }
@@ -362,7 +362,7 @@ namespace Subsurface.Networking
                 }
             }
 
-            Game1.netLobbyScreen.Select();
+            Game1.NetLobbyScreen.Select();
 
             DebugConsole.ThrowError(endMessage);
         }
@@ -394,7 +394,7 @@ namespace Subsurface.Networking
             outmsg.Write(client.name);
             outmsg.Write(msg);
 
-            Game1.netLobbyScreen.RemovePlayer(client.name);
+            Game1.NetLobbyScreen.RemovePlayer(client.name);
 
             if (Server.Connections.Count > 0)
             {
@@ -435,7 +435,7 @@ namespace Subsurface.Networking
         {
             NetOutgoingMessage msg = Server.CreateMessage();
             msg.Write((byte)PacketTypes.UpdateNetLobby);
-            Game1.netLobbyScreen.WriteData(msg);
+            Game1.NetLobbyScreen.WriteData(msg);
 
             if (Server.Connections.Count > 0)
             {

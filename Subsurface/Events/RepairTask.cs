@@ -4,9 +4,11 @@
     {
         Item item;
 
-        public RepairTask(TaskManager taskManager, Item item, float priority, string name)
-            : base(taskManager, priority, name)
+        public RepairTask(Item item, float priority, string name)
+            : base(priority, name)
         {
+            if (taskManager == null) return;
+
             this.item = item;
 
             taskManager.TaskStarted(this);

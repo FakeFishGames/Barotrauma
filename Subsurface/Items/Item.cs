@@ -388,7 +388,7 @@ namespace Subsurface
                     ic.Update(deltaTime, cam);
                     
                     ic.PlaySound(ActionType.OnActive, 1.0f, Position, true);
-                    ic.ApplyStatusEffects(ActionType.OnActive, 1.0f, null);
+                    ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
                 }
                 else
                 {

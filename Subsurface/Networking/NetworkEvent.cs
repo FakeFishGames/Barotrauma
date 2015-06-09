@@ -53,11 +53,11 @@ namespace Subsurface.Networking
         {
             if (isClient)
             {
-                if (Game1.server != null) return;
+                if (Game1.Server != null) return;
             }
             else
             {
-                if (Game1.server == null) return;
+                if (Game1.Server == null) return;
             }
 
             eventType = type;

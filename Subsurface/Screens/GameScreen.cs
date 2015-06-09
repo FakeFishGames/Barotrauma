@@ -38,7 +38,7 @@ namespace Subsurface
         {
             base.Select();
 
-            if (Game1.gameSession == null) Game1.gameSession = new GameSession("",false, TimeSpan.Zero);
+            //if (Game1.gameSession == null) Game1.gameSession = new GameSession("",false, TimeSpan.Zero);
 
             foreach (MapEntity entity in MapEntity.mapEntityList)
                 entity.IsHighlighted = false;
@@ -57,7 +57,7 @@ namespace Subsurface
 
             AmbientSoundManager.Update();
 
-            Game1.gameSession.Update((float)deltaTime);
+            if (Game1.GameSession!=null) Game1.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);
 
             Character.UpdateAll(cam, (float)deltaTime);
@@ -107,7 +107,7 @@ namespace Subsurface
             //----------------------------------------------------------------------------------------
             
             spriteBatch.Begin();
-            if (Game1.gameSession != null) Game1.gameSession.Draw(spriteBatch);
+            if (Game1.GameSession != null) Game1.GameSession.Draw(spriteBatch);
 
             //EventManager.DrawInfo(spriteBatch);
 

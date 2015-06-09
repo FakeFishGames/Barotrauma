@@ -105,7 +105,7 @@ namespace Subsurface
         private void UpdateCharacterLists()
         {
             characterList.ClearChildren();
-            foreach (CharacterInfo c in Game1.gameSession.crewManager.characterInfos)
+            foreach (CharacterInfo c in Game1.GameSession.crewManager.characterInfos)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
@@ -117,7 +117,7 @@ namespace Subsurface
             }
 
             hireList.ClearChildren();
-            foreach (CharacterInfo c in Game1.gameSession.hireManager.availableCharacters)
+            foreach (CharacterInfo c in Game1.GameSession.hireManager.availableCharacters)
             {
                 GUIFrame frame = new GUIFrame(
                     new Rectangle(0, 0, 0, 25), 
@@ -144,18 +144,27 @@ namespace Subsurface
             }
         }
 
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+
+            leftPanel.Update((float)deltaTime);
+            rightPanel[selectedRightPanel].Update((float)deltaTime);
+            shiftPanel.Update((float)deltaTime);
+        }
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
 
-            if (characterList.CountChildren != Game1.gameSession.crewManager.characterInfos.Count
-                || hireList.CountChildren != Game1.gameSession.hireManager.availableCharacters.Count)
+            if (characterList.CountChildren != Game1.GameSession.crewManager.characterInfos.Count
+                || hireList.CountChildren != Game1.GameSession.hireManager.availableCharacters.Count)
             {
                 UpdateCharacterLists();
             }
 
             graphics.Clear(Color.CornflowerBlue);
 
-            Game1.gameScreen.DrawMap(graphics, spriteBatch);
+            Game1.GameScreen.DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
 
@@ -182,20 +191,20 @@ namespace Subsurface
 
         private string GetMoney()
         {
-            return "Money: " + ((Game1.gameSession == null) ? "" : Game1.gameSession.crewManager.Money.ToString());
+            return "Money: " + ((Game1.GameSession == null) ? "" : Game1.GameSession.crewManager.Money.ToString());
         }
 
         private string GetDay()
         {
 
-            return "Day #" + ((Game1.gameSession == null) ? "" : Game1.gameSession.Day.ToString());
+            return "Day #" + ((Game1.GameSession == null) ? "" : Game1.GameSession.Day.ToString());
         }
 
         private float GetWeekProgress()
         {
-            if (Game1.gameSession == null) return 0.0f;
+            if (Game1.GameSession == null) return 0.0f;
 
-            return (float)((Game1.gameSession.Day - 1) % 7) / 7.0f;
+            return (float)((Game1.GameSession.Day - 1) % 7) / 7.0f;
         }
 
         private bool HireCharacter(object selection)
@@ -206,20 +215,20 @@ namespace Subsurface
 
             if (characterInfo == null) return false;
 
-            Game1.gameSession.TryHireCharacter(characterInfo);
+            Game1.GameSession.TryHireCharacter(characterInfo);
 
             return false;
         }
 
         private bool StartShift(GUIButton button, object selection)
         {
-            Map.Load(Game1.gameSession.SaveFile);
+            Map.Load(Game1.GameSession.SaveFile);
 
-            Game1.gameSession.StartShift();
+            Game1.GameSession.StartShift();
 
             //EventManager.StartShift();
 
-            Game1.gameScreen.Select();
+            Game1.GameScreen.Select();
             
             return true;
         }

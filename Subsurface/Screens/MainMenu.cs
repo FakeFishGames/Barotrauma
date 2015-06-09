@@ -112,8 +112,8 @@ namespace Subsurface
 
         private bool HostServerClicked(GUIButton button, object obj)
         {
-            Game1.netLobbyScreen.isServer = true;
-            Game1.netLobbyScreen.Select();
+            Game1.NetLobbyScreen.isServer = true;
+            Game1.NetLobbyScreen.Select();
             return true;
         }
 
@@ -132,7 +132,7 @@ namespace Subsurface
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            Game1.gameScreen.DrawMap(graphics, spriteBatch);
+            Game1.GameScreen.DrawMap(graphics, spriteBatch);
             
             spriteBatch.Begin();
 
@@ -150,9 +150,9 @@ namespace Subsurface
             if (selectedMap == null) return false;
 
 
-            Game1.gameSession = new GameSession(selectedMap.FilePath, true, TimeSpan.Zero);
+            Game1.GameSession = new GameSession(selectedMap.FilePath, true, TimeSpan.Zero);
 
-            Game1.lobbyScreen.Select();
+            Game1.LobbyScreen.Select();
 
             return true;
         }
@@ -162,15 +162,15 @@ namespace Subsurface
             if (string.IsNullOrEmpty(nameBox.Text)) return false;
             if (string.IsNullOrEmpty(ipBox.Text)) return false;
 
-            Game1.client = new GameClient(nameBox.Text);
-            if (Game1.client.ConnectToServer(ipBox.Text))
+            Game1.Client = new GameClient(nameBox.Text);
+            if (Game1.Client.ConnectToServer(ipBox.Text))
             {
-                Game1.netLobbyScreen.Select();
+                Game1.NetLobbyScreen.Select();
                 return true;
             }
             else
             {
-                Game1.client = null;
+                Game1.Client = null;
                 return false;
             }
         }

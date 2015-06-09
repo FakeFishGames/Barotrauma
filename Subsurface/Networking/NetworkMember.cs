@@ -37,8 +37,8 @@ namespace Subsurface.Networking
         
         public void AddChatMessage(string message, ChatMessageType messageType)
         {
-            Game1.netLobbyScreen.NewChatMessage(message, messageColor[(int)messageType]);
-            if (Game1.gameSession != null) Game1.gameSession.NewChatMessage(message, messageColor[(int)messageType]);
+            Game1.NetLobbyScreen.NewChatMessage(message, messageColor[(int)messageType]);
+            if (Game1.GameSession != null) Game1.GameSession.NewChatMessage(message, messageColor[(int)messageType]);
 
             GUI.PlayMessageSound();
         }

@@ -118,7 +118,7 @@ namespace Subsurface.Items.Components
             {
                 if (character.SecondaryKeyDown.State)
                 {
-                    targetLimb.Damage -= limbFixAmount;
+                    targetLimb.character.Health += limbFixAmount;
                     isActive = true;
                 }
             }

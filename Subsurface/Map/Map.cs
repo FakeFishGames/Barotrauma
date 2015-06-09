@@ -287,7 +287,7 @@ namespace Subsurface
             try
             {
                 //string docString = doc.ToString();
-                ToolBox.CompressStringToFile(filePath+".gz", doc.ToString());
+                ToolBox.CompressStringToFile(filePath, doc.ToString());
             }
             catch
             {
@@ -295,7 +295,7 @@ namespace Subsurface
             }
 
 
-            doc.Save(filePath);
+            //doc.Save(filePath);
         }
 
         public static void PreloadMaps(string mapFolder)
@@ -342,7 +342,15 @@ namespace Subsurface
         public Map(string filePath, string mapHash="")
         {
             this.filePath = filePath;
-            name = Path.GetFileNameWithoutExtension(filePath);
+            try
+            {
+                name = Path.GetFileNameWithoutExtension(filePath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error loading map " + filePath + "!", e);
+            }
+
 
             if (mapHash != "")
             {
@@ -505,12 +513,12 @@ namespace Subsurface
         {
             filePath = "";
 
-            if (Game1.gameScreen.Cam != null) Game1.gameScreen.Cam.TargetPos = Vector2.Zero;
+            if (Game1.GameScreen.Cam != null) Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
             
-            if (Game1.gameSession!=null)
-            Game1.gameSession.crewManager.EndShift();
+            if (Game1.GameSession!=null)
+            Game1.GameSession.crewManager.EndShift();
 
             PhysicsBody.list.Clear();
 

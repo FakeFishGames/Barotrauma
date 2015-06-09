@@ -345,7 +345,7 @@ namespace Subsurface
         {
             if (!prefab.HasBody || prefab.IsPlatform) return;
 
-            if (Game1.client==null)
+            if (Game1.Client==null)
                 SetDamage(sectionIndex, sections[sectionIndex].damage + damage);
 
 

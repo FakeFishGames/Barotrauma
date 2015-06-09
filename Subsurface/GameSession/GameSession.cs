@@ -4,6 +4,8 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Text;
+using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -65,7 +67,7 @@ namespace Subsurface
             textBox.OnEnter = EnterChatMessage;
             
             this.gameMode = gameMode;
-            if (this.gameMode != null) this.gameMode.Start(Game1.netLobbyScreen.GameDuration);
+            if (this.gameMode != null) this.gameMode.Start(Game1.NetLobbyScreen.GameDuration);
 
             startTime = DateTime.Now;
             endTime = startTime + gameDuration;            
@@ -105,22 +107,41 @@ namespace Subsurface
 
         public bool EndShift(GUIButton button, object obj)
         {
-            if (Game1.server!=null)
+            if (Game1.Server!=null)
             {
                 string endMessage = gameMode.EndMessage;
                 
-                Game1.server.EndGame(endMessage);
+                Game1.Server.EndGame(endMessage);
 
             }
-            else if (Game1.client==null)
+            else if (Game1.Client==null)
             {
+                StringBuilder sb = new StringBuilder();                
+                List<Character> casualties = crewManager.characters.FindAll(c => c.IsDead);
+
+                if (casualties.Any())
+                {
+                    sb.Append("Casualties: \n");
+                    foreach (Character c in casualties)
+                    {
+                        sb.Append("    - " + c.info.name + "\n");
+                    }
+                }
+                else
+                {
+                    sb.Append("No casualties!");
+                }              
+
+                new GUIMessageBox("Day #" + day + " is over!\n", sb.ToString());
+
+
                 if (saveFile == null) return false;
 
-                Map.Loaded.SaveAs(Path.GetDirectoryName(saveFile) + "/"+ Path.GetFileName(saveFile));
+                Map.Loaded.SaveAs(saveFile);
 
                 crewManager.EndShift();
 
-                Game1.lobbyScreen.Select();
+                Game1.LobbyScreen.Select();
 
                 day++;
             }
@@ -165,13 +186,13 @@ namespace Subsurface
         {
             if (string.IsNullOrWhiteSpace(message)) return false;
 
-            if (Game1.server!=null)
+            if (Game1.Server!=null)
             {
-                Game1.server.SendChatMessage(message);
+                Game1.Server.SendChatMessage(message);
             }
-            else if (Game1.client!=null)
+            else if (Game1.Client!=null)
             {
-                Game1.client.SendChatMessage(Game1.client.Name + ": " + message);
+                Game1.Client.SendChatMessage(Game1.Client.Name + ": " + message);
             }
 
             textBox.Deselect();
@@ -197,6 +218,9 @@ namespace Subsurface
         public void Update(float deltaTime)
         {
             taskManager.Update(deltaTime);
+            endShiftButton.Enabled = !taskManager.CriticalTasks;
+
+            endShiftButton.Update(deltaTime);
 
             textBox.Update(deltaTime);
 
@@ -230,7 +254,7 @@ namespace Subsurface
 
             timerBar.Draw(spriteBatch);
 
-            if (Game1.client == null) endShiftButton.Draw(spriteBatch);
+            if (Game1.Client == null) endShiftButton.Draw(spriteBatch);
         }
     }
 }

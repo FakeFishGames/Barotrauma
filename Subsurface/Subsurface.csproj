@@ -75,7 +75,7 @@
     <Compile Include="GUI\GUIImage.cs" />
     <Compile Include="GUI\GUIMessageBox.cs" />
     <Compile Include="GUI\GUITickBox.cs" />
-    <Compile Include="Interface1.cs" />
+    <Compile Include="IPropertyObject.cs" />
     <Compile Include="Items\CharacterInventory.cs" />
     <Compile Include="Items\Components\MiniMap.cs" />
     <Compile Include="Items\Components\Pump.cs" />
@@ -584,6 +584,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Damage\LimbSlash2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Music\Enter the Maze.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Music\Unseen Horrors.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\stepMetal.ogg">
