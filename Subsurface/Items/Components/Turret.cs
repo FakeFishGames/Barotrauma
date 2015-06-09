@@ -123,7 +123,7 @@ namespace Subsurface.Items.Components
             //cam.OffsetAmount = prefab.OffsetOnSelected;
         }
 
-        public override void SecondaryUse(Character character = null)
+        public override void SecondaryUse(float deltaTime, Character character = null)
         {
             if (character == null) return;
             Vector2 centerPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
@@ -142,7 +142,7 @@ namespace Subsurface.Items.Components
             }
         }
 
-        public override bool Use(Character character = null)
+        public override bool Use(float deltaTime, Character character = null)
         {
             if (reload > 0.0f) return false;
 
@@ -202,7 +202,7 @@ namespace Subsurface.Items.Components
 
             //if (useSounds.Count() > 0) useSounds[Game1.localRandom.Next(useSounds.Count())].Play(1.0f, 800.0f, item.body.FarseerBody);
 
-            projectileComponent.Use();
+            projectileComponent.Use(deltaTime);
             item.RemoveContained(projectile);
 
             return true;

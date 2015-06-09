@@ -357,6 +357,12 @@
     <Content Include="Content\Items\idcard.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\Tools\fueltank.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Tools\plasmacutter.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Items\Weapons\harpoon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -400,10 +406,10 @@
     <Content Include="Content\Items\OxygenGenerator\item.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\OxygenTank\item.xml">
+    <Content Include="Content\Items\Diving\item.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\OxygenTank\oxygentank.png">
+    <Content Include="Content\Items\Diving\oxygentank.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\poweritems.xml">
@@ -657,6 +663,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Content\Items\OxygenTank\" />
     <Folder Include="Content\SavedMaps\" />
     <Folder Include="Data\Saves\" />
   </ItemGroup>

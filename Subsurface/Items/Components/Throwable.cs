@@ -25,7 +25,7 @@ namespace Subsurface.Items.Components
             //throwForce = ToolBox.GetAttributeFloat(element, "throwforce", 1.0f);
         }
 
-        public override bool Use(Character character = null)
+        public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
             if (!character.SecondaryKeyDown.State || throwing) return false;
@@ -36,7 +36,7 @@ namespace Subsurface.Items.Components
             return true;
         }
 
-        public override void SecondaryUse(Character character = null)
+        public override void SecondaryUse(float deltaTime, Character character = null)
         {
             if (throwing) return;
             throwPos = 0.25f;

@@ -14,9 +14,7 @@ namespace Subsurface
         private Item item;
 
         private Character character;
-
-        private Limb limb;
-
+        
         public float Timer
         {
             get { return timer; }
@@ -28,13 +26,12 @@ namespace Subsurface
             delay = ToolBox.GetAttributeFloat(element, "delay", 1.0f);
         }
 
-        public override void Apply(ActionType type, float deltaTime, Item item, Character character = null, Limb limb = null)
+        public override void Apply(ActionType type, float deltaTime, Item item, Character character = null)
         {
             if (this.type != type) return;
 
             this.item = item;
             this.character = character;
-            this.limb = limb;
 
             timer = delay;
 
@@ -47,7 +44,7 @@ namespace Subsurface
 
             if (timer > 0.0f) return;
 
-            base.Apply(1.0f, character, item, limb);
+            base.Apply(1.0f, character, item);
             list.Remove(this);
         }
 

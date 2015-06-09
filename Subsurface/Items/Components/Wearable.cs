@@ -119,13 +119,13 @@ namespace Subsurface.Items.Components
             for (int i = 0; i < limb.Length; i++)
             {
                 if (limb[i] == null) continue;
-                ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker, limb[i]);
+                ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
                 if (containedItems == null) continue;
                 for (int j = 0; j<containedItems.Length; j++)
                 {
                     if (containedItems[j] == null) continue;
-                    containedItems[j].ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker, limb[i]);
+                    containedItems[j].ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
                 }
             }
 

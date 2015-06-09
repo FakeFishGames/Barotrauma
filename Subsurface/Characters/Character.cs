@@ -356,7 +356,7 @@ namespace Subsurface
         /// <summary>
         /// Control the characte
         /// </summary>
-        public void Control(Camera cam, bool forcePick=false)
+        public void Control(float deltaTime, Camera cam, bool forcePick=false)
         {
             if (isDead) return;
 
@@ -383,15 +383,15 @@ namespace Subsurface
                 if (selectedItems[i] == null) continue;
                 if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
                 
-                if (actionKeyDown.State) selectedItems[i].Use(this);
-                if (secondaryKeyDown.State && selectedItems[i] != null) selectedItems[i].SecondaryUse(this);
+                if (actionKeyDown.State) selectedItems[i].Use(deltaTime, this);
+                if (secondaryKeyDown.State && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
                 
             }
 
             if (selectedConstruction != null)
             {
-                if (actionKeyDown.State) selectedConstruction.Use(this);
-                if (secondaryKeyDown.State) selectedConstruction.SecondaryUse(this);
+                if (actionKeyDown.State) selectedConstruction.Use(deltaTime, this);
+                if (secondaryKeyDown.State) selectedConstruction.SecondaryUse(deltaTime, this);
             }
 
             if (IsNetworkPlayer)
@@ -522,8 +522,8 @@ namespace Subsurface
             }
 
             if (controlled == this) ControlLocalPlayer(cam);
-            
-            Control(cam);
+
+            Control(deltaTime, cam);
 
             UpdateSightRange();
             aiTarget.SoundRange = 0.0f;
@@ -781,7 +781,7 @@ namespace Subsurface
                 new NetworkEvent(NetworkEventType.KillCharacter, ID, false);
             }
 
-            if (Game1.GameSession.crewManager!=null)
+            if (Game1.GameSession!=null && Game1.GameSession.crewManager != null)
             {
                 Game1.GameSession.crewManager.KillCharacter(this);
             }

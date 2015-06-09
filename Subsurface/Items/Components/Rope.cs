@@ -40,8 +40,8 @@ namespace Subsurface.Items.Components
             {
                 Vector2 barrelPos = Vector2.Zero;
 
-                RangedWeapon weapon = item.GetComponent<RangedWeapon>();
-                if (weapon != null) barrelPos = weapon.BarrelPos;
+                //RangedWeapon weapon = item.GetComponent<RangedWeapon>();
+                //if (weapon != null) barrelPos = weapon.barrelPos;
                 
                 return barrelPos;
             }
@@ -120,7 +120,7 @@ namespace Subsurface.Items.Components
 
         }
 
-        public override void SecondaryUse(Character character = null)
+        public override void SecondaryUse(float deltaTime, Character character = null)
         {
             if (reload > 0.0f) return;
 

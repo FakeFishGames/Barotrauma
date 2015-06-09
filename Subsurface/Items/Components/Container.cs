@@ -162,7 +162,7 @@ namespace Subsurface.Items.Components
         {
             base.Draw(spriteBatch);
 
-            if (hideItems) return;
+            if (hideItems || (item.body!=null && !item.body.Enabled)) return;
 
             Vector2 transformedItemPos = itemPos;
             Vector2 transformedItemInterval = itemInterval;
@@ -175,7 +175,7 @@ namespace Subsurface.Items.Components
             }
             else
             {
-                item.body.Enabled = true;
+                //item.body.Enabled = true;
 
                 Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
 
