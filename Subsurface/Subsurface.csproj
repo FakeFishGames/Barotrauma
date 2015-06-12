@@ -133,6 +133,7 @@
     <Compile Include="Particles\ParticlePrefab.cs" />
     <Compile Include="Physics\Physics.cs" />
     <Compile Include="Properties.cs" />
+    <Compile Include="SaveUtil.cs" />
     <Compile Include="Screens\EditCharacterScreen.cs" />
     <Compile Include="EventInput\EventInput.cs" />
     <Compile Include="EventInput\KeyboardDispatcher.cs" />
@@ -187,6 +188,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\FarseerPhysics MonoGame.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>C:\Users\Joonas\Desktop\SharpZipLib_0860_Bin\net-20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="Lidgren.Network, Version=3.3.0.2069, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Lidgren.Network.dll</HintPath>
@@ -218,16 +222,28 @@
     <Content Include="Content\Characters\Human\ffirstnames.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Characters\Human\fhead.png">
+    <Content Include="Content\Characters\Human\fhead1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Human\fhead2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Human\firstnames.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Characters\Human\head.png">
+    <Content Include="Content\Characters\Human\flegs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Characters\Human\flegs.png">
+    <Content Include="Content\Characters\Human\head1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Human\head2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Human\head3.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Human\head4.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Human\lastnames.txt">
@@ -270,6 +286,12 @@
     <Content Include="Content\Characters\TigerThresher\tigerthresher.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Content\Items\Clothes\captainhat.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Clothes\clothes.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\connector.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

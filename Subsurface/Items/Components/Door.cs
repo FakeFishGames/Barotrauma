@@ -233,9 +233,12 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            OpenState += deltaTime * ((isOpen) ? 3.0f : -3.0f);
+            if (!isStuck)
+            {
+                OpenState += deltaTime * ((isOpen) ? 3.0f : -3.0f);
+                LinkedGap.Open = openState;
+            }
 
-            LinkedGap.Open = openState;
             
             item.SendSignal((isOpen) ? "1" : "0", "state_out");
         }
@@ -309,8 +312,6 @@ namespace Subsurface.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender)
         {
-            if (isStuck) return;
-
             if (connection.name=="toggle")
             {
                 isOpen = !isOpen;

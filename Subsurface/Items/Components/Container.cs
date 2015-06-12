@@ -115,46 +115,12 @@ namespace Subsurface.Items.Components
 
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
-                    if (effect.Targets.HasFlag(StatusEffect.Target.This)) effect.Apply(ActionType.OnContaining, deltaTime, item);
-                    if (effect.Targets.HasFlag(StatusEffect.Target.Contained)) effect.Apply(ActionType.OnContaining, deltaTime, contained);
+                    if (effect.Targets.HasFlag(StatusEffect.TargetType.This)) effect.Apply(ActionType.OnContaining, deltaTime, item.SimPosition, item.AllPropertyObjects);
+                    if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) effect.Apply(ActionType.OnContaining, deltaTime, item.SimPosition, contained.AllPropertyObjects);
                 }
 
                 contained.ApplyStatusEffects(ActionType.OnContained, deltaTime);
             }
-
-            //if (hideItems) return;
-            
-            //Vector2 transformedItemPos;
-            //Vector2 transformedItemInterval = itemInterval;
-            ////float transformedItemRotation = itemRotation;
-            //if (item.body==null)
-            //{
-            //    transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
-            //    transformedItemPos = ConvertUnits.ToSimUnits(transformedItemPos) + itemPos;
-            //}
-            //else
-            //{
-            //    Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
-
-            //    transformedItemPos = item.body.Position + Vector2.Transform(itemPos, transform);
-            //    transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);                    
-            //    //transformedItemRotation += item.body.Rotation;
-            //}
-
-            //foreach (Item containedItem in inventory.items)
-            //{
-            //    if (containedItem == null) continue;
-
-            //    Vector2 itemDist = (transformedItemPos - containedItem.body.Position);
-            //    Vector2 force = (itemDist - containedItem.body.LinearVelocity * 0.1f) * containedItem.body.Mass * 60.0f;
-
-            //    containedItem.body.ApplyForce(force);
-
-            //    containedItem.body.SmoothRotate(itemRotation);
-
-            //    transformedItemPos += transformedItemInterval;
-            //}
-            
 
         }
 

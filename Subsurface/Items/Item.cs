@@ -144,6 +144,20 @@ namespace Subsurface
             get { return prefab.IsLinkable; }
         }
 
+        public List<IPropertyObject> AllPropertyObjects
+        {
+            get
+            {
+                List<IPropertyObject> pobjects = new List<IPropertyObject>();
+                pobjects.Add(this);
+                foreach (ItemComponent ic in components)
+                {
+                    pobjects.Add(ic);
+                }
+                return pobjects;
+            }
+        }
+
         List<string> highlightText;
 
         public List<string> HighlightText
@@ -334,9 +348,11 @@ namespace Subsurface
                 }
             }
 
+            List<IPropertyObject> targets = new List<IPropertyObject>();
+
             if (containedItems!=null)
             {
-                if (effect.Targets.HasFlag(StatusEffect.Target.Contained))
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained))
                 {        
                     foreach (Item containedItem in containedItems)
                     {
@@ -344,7 +360,8 @@ namespace Subsurface
                         if (effect.TargetNames != null && !effect.TargetNames.Contains(containedItem.Name)) continue;
 
                         hasTargets = true;
-                        effect.Apply(type, deltaTime, containedItem);
+                        targets.Add(containedItem);
+                        //effect.Apply(type, deltaTime, containedItem);
                         //containedItem.ApplyStatusEffect(effect, type, deltaTime, containedItem);
                     }
                 }
@@ -353,19 +370,27 @@ namespace Subsurface
 
             if (hasTargets)
             {
-                if (effect.Targets.HasFlag(StatusEffect.Target.This))
-                    effect.Apply(type, deltaTime, this);
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+                {
+                    foreach (var pobject in AllPropertyObjects)
+                    {
+                        targets.Add(pobject);
+                    }
+                }
+                    //effect.Apply(type, deltaTime, this);
                     //ApplyStatusEffect(effect, type, deltaTime, this);
 
-                if (effect.Targets.HasFlag(StatusEffect.Target.Character))
-                    effect.Apply(type, deltaTime, null, character);
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
+                    //effect.Apply(type, deltaTime, null, character);
                     //ApplyStatusEffect(effect, type, deltaTime, null, character, limb);
 
-                if (container != null && effect.Targets.HasFlag(StatusEffect.Target.Parent))
-                {
-                    effect.Apply(type, deltaTime, container);
-                    //container.ApplyStatusEffect(effect, type, deltaTime, container);
-                }
+                if (container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(container);
+                //{
+                //    effect.Apply(type, deltaTime, container);
+                //    //container.ApplyStatusEffect(effect, type, deltaTime, container);
+                //}
+
+                effect.Apply(type, deltaTime, SimPosition, targets);
             }       
         }
 

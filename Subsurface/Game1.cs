@@ -103,7 +103,6 @@ namespace Subsurface
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
             base.Initialize();
 
             particleManager = new ParticleManager("Content/Particles/prefabs.xml", Cam);

@@ -96,7 +96,7 @@ namespace Subsurface
         {
             base.Select();
 
-            Map.Unload();
+            //Map.Unload();
 
             UpdateCharacterLists();
             
@@ -222,7 +222,8 @@ namespace Subsurface
 
         private bool StartShift(GUIButton button, object selection)
         {
-            Map.Load(Game1.GameSession.SaveFile);
+            
+            //Map.Load(Game1.GameSession.SaveFile);
 
             Game1.GameSession.StartShift();
 

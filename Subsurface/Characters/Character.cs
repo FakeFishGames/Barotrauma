@@ -14,7 +14,7 @@ using Subsurface.Particles;
 
 namespace Subsurface
 {
-    class Character : Entity, IDamageable
+    class Character : Entity, IDamageable, IPropertyObject
     {
         public static List<Character> characterList = new List<Character>();
         
@@ -40,12 +40,14 @@ namespace Subsurface
         public byte largeUpdateTimer;
 
         public readonly Dictionary<string, ObjectProperty> properties;
+        public Dictionary<string, ObjectProperty> ObjectProperties
+        {
+            get { return properties; }
+        }
 
         protected Key selectKeyHit;
-        protected Key actionKeyHit;
-        protected Key actionKeyDown;
-        protected Key secondaryKeyHit;
-        protected Key secondaryKeyDown;
+        protected Key actionKeyHit, actionKeyDown;
+        protected Key secondaryKeyHit, secondaryKeyDown;
                 
         private Item selectedConstruction;
         private Item[] selectedItems;
@@ -83,6 +85,14 @@ namespace Subsurface
         //which AIstate each sound is for
         private AIController.AiState[] soundStates;
         
+        public string Name
+        {
+            get
+            {
+                return speciesName;
+            }
+        }
+
         public Inventory Inventory
         {
             get { return inventory; }
@@ -344,10 +354,10 @@ namespace Subsurface
 
             animController.FindHull();
 
-            if (info.ID >= 0)
-            {
-                ID = info.ID;
-            }
+            //if (info.ID >= 0)
+            //{
+            //    ID = info.ID;
+            //}
 
             characterList.Add(this);
         }

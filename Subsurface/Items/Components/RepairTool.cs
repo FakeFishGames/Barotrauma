@@ -147,8 +147,8 @@ namespace Subsurface.Items.Components
 
                 foreach (StatusEffect effect in statusEffects)
                 {
-                    if (Array.IndexOf(effect.TargetNames, targetItem.Name) == -1) continue;
-                    effect.Apply(ActionType.OnUse, deltaTime, targetItem);
+                    //if (Array.IndexOf(effect.TargetNames, targetItem.Name) == -1) continue;
+                    effect.Apply(ActionType.OnUse, deltaTime, item.SimPosition, targetItem.AllPropertyObjects);
                     //targetItem.ApplyStatusEffect(effect, ActionType.OnUse, deltaTime);
                 }
                 //ApplyStatusEffects(ActionType.OnUse, 1.0f, null, targ);

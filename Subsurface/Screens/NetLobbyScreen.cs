@@ -6,6 +6,7 @@ using Subsurface.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics;
+using System.IO;
 
 namespace Subsurface
 {
@@ -472,7 +473,7 @@ namespace Subsurface
             }
             else
             {
-                msg.Write(selectedMap.Name);
+                msg.Write(Path.GetFileName(selectedMap.FilePath));
                 msg.Write(selectedMap.MapHash.MD5Hash);
             }
 
@@ -502,7 +503,7 @@ namespace Subsurface
                 else
                 {
                     mapList.Select(map);
-                    map.Load();
+                    //map.Load();
                     return true;
                 }
             }

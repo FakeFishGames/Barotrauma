@@ -62,6 +62,8 @@ namespace Subsurface
         {
             get
             {
+                if (mapHash != null) return mapHash;
+
                 XDocument doc = OpenDoc(filePath);
                 mapHash = new MapHash(doc);
 
@@ -286,8 +288,7 @@ namespace Subsurface
 
             try
             {
-                //string docString = doc.ToString();
-                ToolBox.CompressStringToFile(filePath, doc.ToString());
+                SaveUtil.CompressStringToFile(filePath, doc.ToString());
             }
             catch
             {
@@ -388,7 +389,7 @@ namespace Subsurface
 
             if (extension == ".gz")
             {
-                Stream stream = ToolBox.DecompressFiletoStream(file);
+                Stream stream = SaveUtil.DecompressFiletoStream(file);
                 if (stream == null)
                 {
                     DebugConsole.ThrowError("Loading map ''" + file + "'' failed!");
@@ -504,7 +505,7 @@ namespace Subsurface
 
         public static void Unload()
         {
-            if (loaded==null)return;
+            if (loaded == null) return;
             loaded.Clear();
             loaded = null;
         }

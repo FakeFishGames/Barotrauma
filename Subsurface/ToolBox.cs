@@ -128,50 +128,50 @@ namespace Subsurface
         }
 
 
-        public static void CompressStringToFile(string fileName, string value)
-        {
-            // A.
-            // Write string to temporary file.
-            string temp = Path.GetTempFileName();
-            File.WriteAllText(temp, value);
+        //public static void CompressStringToFile(string fileName, string value)
+        //{
+        //    // A.
+        //    // Write string to temporary file.
+        //    string temp = Path.GetTempFileName();
+        //    File.WriteAllText(temp, value);
 
-            // B.
-            // Read file into byte array buffer.
-            byte[] b;
-            using (FileStream f = new FileStream(temp, FileMode.Open))
-            {
-                b = new byte[f.Length];
-                f.Read(b, 0, (int)f.Length);
-            }
+        //    // B.
+        //    // Read file into byte array buffer.
+        //    byte[] b;
+        //    using (FileStream f = new FileStream(temp, FileMode.Open))
+        //    {
+        //        b = new byte[f.Length];
+        //        f.Read(b, 0, (int)f.Length);
+        //    }
 
-            // C.
-            // Use GZipStream to write compressed bytes to target file.
-            using (FileStream f2 = new FileStream(fileName, FileMode.Create))
-            using (GZipStream gz = new GZipStream(f2, CompressionMode.Compress, false))
-            {
-                gz.Write(b, 0, b.Length);
-            }
-        }
+        //    // C.
+        //    // Use GZipStream to write compressed bytes to target file.
+        //    using (FileStream f2 = new FileStream(fileName, FileMode.Create))
+        //    using (GZipStream gz = new GZipStream(f2, CompressionMode.Compress, false))
+        //    {
+        //        gz.Write(b, 0, b.Length);
+        //    }
+        //}
 
-        public static Stream DecompressFiletoStream(string fileName)
-        {
-            if (!File.Exists(fileName))
-            {
-                DebugConsole.ThrowError("File ''"+fileName+" doesn't exist!");
-                return null;
-            }
+        //public static Stream DecompressFiletoStream(string fileName)
+        //{
+        //    if (!File.Exists(fileName))
+        //    {
+        //        DebugConsole.ThrowError("File ''"+fileName+" doesn't exist!");
+        //        return null;
+        //    }
 
-            using (FileStream originalFileStream = new FileStream(fileName, FileMode.Open))
-            {
-                MemoryStream decompressedFileStream = new MemoryStream();
+        //    using (FileStream originalFileStream = new FileStream(fileName, FileMode.Open))
+        //    {
+        //        MemoryStream decompressedFileStream = new MemoryStream();
                 
-                using (GZipStream decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
-                {
-                    decompressionStream.CopyTo(decompressedFileStream);
-                    return decompressedFileStream;
-                }				
-            }
-        }
+        //        using (GZipStream decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
+        //        {
+        //            decompressionStream.CopyTo(decompressedFileStream);
+        //            return decompressedFileStream;
+        //        }				
+        //    }
+        //}
 
         public static XDocument TryLoadXml(string filePath)
         {

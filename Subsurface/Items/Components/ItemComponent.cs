@@ -291,7 +291,13 @@ namespace Subsurface
             return false;
         }
 
-        public virtual void Remove() { }
+        public virtual void Remove() 
+        {
+            if (loopingSound!=null)
+            {
+                Sounds.SoundManager.Stop(loopingSoundIndex);
+            }
+        }
 
         public bool HasRequiredContainedItems(bool addMessage)
         {
