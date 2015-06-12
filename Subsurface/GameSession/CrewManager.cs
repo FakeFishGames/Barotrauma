@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Xml.Linq;
 
 namespace Subsurface
 {
@@ -25,7 +26,7 @@ namespace Subsurface
             set { money = (int)Math.Max(value, 0.0f); }
         }
 
-        public CrewManager(GameSession session)
+        public CrewManager()
         {
             characters = new List<Character>();
             characterInfos = new List<CharacterInfo>();
@@ -37,6 +38,19 @@ namespace Subsurface
             listBox.OnSelected = SelectCharacter;
 
             money = 10000;
+        }
+
+        public CrewManager(XElement element)
+            : this()
+        {
+            money = ToolBox.GetAttributeInt(element, "money", 0);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLower()!="character") continue;
+
+                characterInfos.Add(new CharacterInfo(subElement));
+            }
         }
 
         private string CreateSaveFile(string mapName)
@@ -89,13 +103,18 @@ namespace Subsurface
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(40,0,0,25), 
                 name,
-                Color.Transparent, Color.Black,
+                Color.Transparent, Color.White,
                 Alignment.Left,
                 Alignment.Left,
                 frame);
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
             new GUIImage(new Rectangle(-10,-10,0,0), character.animController.limbs[0].sprite, Alignment.Left, frame);
+        }
+
+        public void Update(float deltaTime)
+        {
+            guiFrame.Update(deltaTime);
         }
 
         public void KillCharacter(Character killedCharacter)
@@ -137,6 +156,28 @@ namespace Subsurface
         public void Draw(SpriteBatch spriteBatch)
         {
             guiFrame.Draw(spriteBatch);
+        }
+
+        public void Save(string filePath)
+        {
+            XDocument doc = new XDocument(
+                new XElement((XName)"Crew"));
+
+            doc.Root.Add(new XAttribute("money", money));
+            
+            foreach (CharacterInfo ci in characterInfos)
+            {
+                ci.Save(doc.Root);
+            }
+
+            try
+            {
+                doc.Save(filePath);
+            }
+            catch
+            {
+                DebugConsole.ThrowError("Saving crewmanager to ''" + filePath + "'' failed!");
+            }
         }
     }
 }

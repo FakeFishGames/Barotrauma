@@ -227,7 +227,11 @@ namespace Subsurface
                         string spritePath = subElement.Attribute("texture").Value;
 
                         if (character.info!=null)
+                        {
                             spritePath = spritePath.Replace("[GENDER]", (character.info.gender == Gender.Female) ? "f" : "");
+                            spritePath = spritePath.Replace("[HEADID]", character.info.headSpriteId.ToString());
+                        }
+
 
                         sprite = new Sprite(subElement, "", spritePath);
                         break;

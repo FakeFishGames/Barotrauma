@@ -273,9 +273,9 @@ namespace Subsurface.Networking
             
             Map selectedMap = Game1.NetLobbyScreen.SelectedMap as Map;
 
-            selectedMap.Load();
+            //selectedMap.Load();
 
-            Game1.GameSession = new GameSession("", false, Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.SelectedMode);
+            Game1.GameSession = new GameSession(selectedMap, Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.SelectedMode);
             Game1.GameSession.StartShift(1);
             //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
             

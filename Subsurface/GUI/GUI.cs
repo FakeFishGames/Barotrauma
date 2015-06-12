@@ -269,7 +269,7 @@ namespace Subsurface
             //    new Vector2(10, 30), Color.White);
 
 
-            if (Character.Controlled != null) Character.Controlled.DrawHud(spriteBatch, cam);
+            if (Character.Controlled != null && cam!=null) Character.Controlled.DrawHud(spriteBatch, cam);
 
             DrawMessages(spriteBatch, (float)deltaTime);
 

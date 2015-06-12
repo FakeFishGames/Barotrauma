@@ -55,23 +55,20 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
             mapList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, menuTabs[1]);
 
-            //string[] mapFilePaths = Map.GetMapFilePaths();
-            //if (mapFilePaths!=null)
-            //{
-                foreach (Map map in Map.SavedMaps)
-                {
-                    GUITextBlock textBlock = new GUITextBlock(
-                        new Rectangle(0, 0, 0, 25),
-                        map.Name, 
-                        GUI.style,
-                        Alignment.Left,
-                        Alignment.Left,
-                        mapList);
-                    textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                    textBlock.UserData = map;
-                }
-                if (Map.SavedMaps.Count > 0) mapList.Select(Map.SavedMaps[0]);
-            //}
+            foreach (Map map in Map.SavedMaps)
+            {
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(0, 0, 0, 25),
+                    map.Name, 
+                    GUI.style,
+                    Alignment.Left,
+                    Alignment.Left,
+                    mapList);
+                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
+                textBlock.UserData = map;
+            }
+            if (Map.SavedMaps.Count > 0) mapList.Select(Map.SavedMaps[0]);
+
 
             button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", GUI.style, Alignment.Right | Alignment.Bottom, menuTabs[(int)Tabs.NewGame]);
             button.OnClicked = StartGame;
@@ -150,7 +147,7 @@ namespace Subsurface
             if (selectedMap == null) return false;
 
 
-            Game1.GameSession = new GameSession(selectedMap.FilePath, true, TimeSpan.Zero);
+            Game1.GameSession = new GameSession(selectedMap, TimeSpan.Zero);
 
             Game1.LobbyScreen.Select();
 

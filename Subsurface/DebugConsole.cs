@@ -209,11 +209,19 @@ namespace Subsurface
                     Game1.LobbyScreen.Select();
                     break;
                 case "savemap":
+                    if (commands.Length < 2) break;
                     Map.Loaded.SaveAs("Content/SavedMaps/" + commands[1]);
                     NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":
+                    if (commands.Length < 2) break;
                     Map.Load("Content/SavedMaps/" + commands[1]);
+                    break;
+                case "savegame":
+                    SaveUtil.SaveGame("Content/Data/test.save");
+                    break;
+                case "loadgame":
+                    SaveUtil.LoadGame("Content/Data/test.save");
                     break;
                 case "messagebox":
                     if (commands.Length < 3) break;
