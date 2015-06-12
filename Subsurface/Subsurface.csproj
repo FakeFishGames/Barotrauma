@@ -54,6 +54,7 @@
     <Compile Include="Characters\AI\AIController.cs" />
     <Compile Include="Characters\AI\AITarget.cs" />
     <Compile Include="Characters\AnimController.cs" />
+    <Compile Include="Characters\Attack.cs" />
     <Compile Include="Characters\Character.cs" />
     <Compile Include="Characters\CharacterInfo.cs" />
     <Compile Include="Characters\AI\ISteerable.cs" />
@@ -62,7 +63,6 @@
     <Compile Include="Characters\Jobs\Job.cs" />
     <Compile Include="Characters\AI\SteeringManager.cs" />
     <Compile Include="Characters\AI\SteeringPath.cs" />
-    <Compile Include="Characters\LimbAttack.cs" />
     <Compile Include="Events\PropertyTask.cs" />
     <Compile Include="Events\RepairTask.cs" />
     <Compile Include="GameSession\CrewManager.cs" />
@@ -75,7 +75,7 @@
     <Compile Include="GUI\GUIImage.cs" />
     <Compile Include="GUI\GUIMessageBox.cs" />
     <Compile Include="GUI\GUITickBox.cs" />
-    <Compile Include="Interface1.cs" />
+    <Compile Include="IPropertyObject.cs" />
     <Compile Include="Items\CharacterInventory.cs" />
     <Compile Include="Items\Components\MiniMap.cs" />
     <Compile Include="Items\Components\Pump.cs" />
@@ -124,6 +124,7 @@
     <Compile Include="Map\IDamageable.cs" />
     <Compile Include="Map\Lights\ConvexHull.cs" />
     <Compile Include="Map\Lights\LightManager.cs" />
+    <Compile Include="Map\MapHash.cs" />
     <Compile Include="Physics\PhysicsBody.cs" />
     <Compile Include="Networking\NetworkEvent.cs" />
     <Compile Include="Networking\NetworkMember.cs" />
