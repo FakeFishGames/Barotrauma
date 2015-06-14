@@ -7,16 +7,64 @@
 
     <Sprite texture ="weldingtool.png"  depth="0.04"/>
 
-    <Body width="50" height="44" density="5"/>
+    <Body width="39" height="18" density="5"/>
 
-    <Holdable holdpos="-9,-20" holdangle="-30"/>
+    <Holdable aimpos="50,0" handle1="-17,0" handle2="8,0"/>
 
-    <RepairTool range="80">
+    <RepairTool structurefixamount="50.0" range="80" barrelpos="19,8">
+      <RequiredItems name="Welding Fuel Tank" type="Contained"/>
+      <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-0.7"/>
+      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="10.0"/>
+      
       <Fixable name="structure"/>
     </RepairTool>
 
-    <Pickable slots="Any,RightHand"/>
+    <Pickable slots="Any,BothHands"/>
 
+    <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
+      <Containable name="Welding Fuel Tank"/>
+      <Containable name="Oxygen Tank"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Plasma Cutter"
+    Tags="smallitem"
+    pickdistance="200">
+
+    <Sprite texture ="plasmacutter.png"  depth="0.04"/>
+
+    <Body width="39" height="18" density="5"/>
+
+    <Holdable aimpos="50,0" handle1="-12,4"/>
+
+    <RepairTool structurefixamount="-10.0" range="50" barrelpos="19,8">
+      <RequiredItems name="Oxygen Tank" type="Contained"/>
+      <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-0.7"/>
+      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-10.0"/>
+
+      <Fixable name="structure"/>
+    </RepairTool>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+
+    <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
+      <Containable name="Welding Fuel Tank"/>
+      <Containable name="Oxygen Tank"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Welding Fuel Tank"
+    Tags="smallitem"
+    pickdistance="150">
+
+    <Sprite texture ="fueltank.png" depth="0.05"/>
+
+    <Body radius="6" height="22" density="5"/>
+
+    <Holdable holdpos="30,-15" handle1="0,5" handle2="0,-5"/>
+    <Pickable slots="RightHand,Any"/>
   </Item>
 
   <Item

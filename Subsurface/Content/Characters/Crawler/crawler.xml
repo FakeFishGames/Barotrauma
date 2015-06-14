@@ -26,7 +26,7 @@
       
     <limb id = "3" width="13" height="45" mass = "6" ignorecollisions="true" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="65,131,36,50" depth="0.15" origin="0.4,0.5"/>
-      <attack type="PinchCW" range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="20" structuredamage="350" damagetype="slash"/>
+      <attack type="PinchCW" range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="20" structuredamage="50" damagetype="slash"/>
     </limb>
 
     <limb id = "4" width="11" height="34" mass = "4" type="RightLeg" flip="true">

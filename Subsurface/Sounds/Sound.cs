@@ -13,6 +13,8 @@ namespace Subsurface
 
         private static List<Sound> loadedSounds = new List<Sound>();
 
+        private static OggStream stream;
+
         private OggSound oggSound;
 
         string filePath;
@@ -218,12 +220,17 @@ namespace Subsurface
 
         public static void StartStream(string file, float volume = 1.0f)
         {
-            SoundManager.StartStream(file, volume);
+            stream = SoundManager.StartStream(file, volume);
         }
 
-        public static void Stoptream()
+        public static void StreamVolume(float volume = 1.0f)
         {
-            SoundManager.StopStream();
+            stream.Volume = volume;
+        }
+
+        public static void StopStream()
+        {
+            if (stream!=null) SoundManager.StopStream();
         }
 
         public static void Dispose()

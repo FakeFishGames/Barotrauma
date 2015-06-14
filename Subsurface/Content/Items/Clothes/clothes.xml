@@ -1,0 +1,16 @@
+﻿<Items>
+  <Item
+    name="Captain's Cap"
+    pickdistance="150">
+
+    <Sprite texture ="captainhat.png" depth="0.4"/>
+
+    <Body radius="8" density="5"/>
+
+    <Wearable limbtype="Head" slots="Any,Head">
+      <sprite texture="captainhat.png" limb="Head" origin="0.4,0.94"/>
+    </Wearable>
+  </Item>
+
+</Items>
+

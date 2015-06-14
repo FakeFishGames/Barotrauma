@@ -68,7 +68,7 @@ namespace Subsurface
 
 
             damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
-            structureDamage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
+            structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
             bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
 
             stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);

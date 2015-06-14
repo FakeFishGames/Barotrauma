@@ -8,13 +8,15 @@ namespace Subsurface.Items.Components
     {
         PropertyTask powerUpTask;
 
+        float powerDownTimer;
+
         bool running;
 
         List<Vent> ventList;
 
         public bool IsRunning()
         {
-            return running && item.Condition>0.0f;
+            return (running && item.Condition>0.0f);
         }
 
         public OxygenGenerator(Item item, XElement element)
@@ -38,12 +40,17 @@ namespace Subsurface.Items.Components
 
             if (voltage < minVoltage)
             {
+                powerDownTimer += deltaTime;
                 running = false;
-                if (powerUpTask==null || powerUpTask.IsFinished)
+                if ((powerUpTask==null || powerUpTask.IsFinished) && powerDownTimer>5.0f)
                 {
-                    powerUpTask = new PropertyTask(Game1.gameSession.taskManager, item, IsRunning, 30.0f, "Turn on the oxygen generator");
+                    powerUpTask = new PropertyTask(item, IsRunning, 50.0f, "Turn on the oxygen generator");
                 }
                 return;                
+            }
+            else
+            {
+                powerDownTimer = 0.0f;
             }
 
             running = true;
@@ -53,7 +60,13 @@ namespace Subsurface.Items.Components
 
             UpdateVents(deltaOxygen);
 
+
             voltage = 0.0f;
+        }
+
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            powerDownTimer += deltaTime;
         }
 
         private void GetVents()

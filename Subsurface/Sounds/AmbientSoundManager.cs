@@ -6,6 +6,7 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Subsurface.Sounds;
+using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -33,14 +34,36 @@ namespace Subsurface
         }
     }
 
+    public class BackgroundMusic
+    {
+        public readonly string file;
+        public readonly string type;
+
+        public readonly Vector2 priorityRange;
+
+        public BackgroundMusic(string file, string type, Vector2 priorityRange)
+        {
+            this.file = file;
+            this.type = type;
+            this.priorityRange = priorityRange;
+        }
+    }
+
     static class AmbientSoundManager
     {
         public static Sound[] flowSounds = new Sound[3];
+
+        private const float MusicLerpSpeed = 0.01f;
 
         private static Sound waterAmbience;
         private static int waterAmbienceIndex;
 
         private static DamageSound[] damageSounds;
+
+        private static BackgroundMusic currentMusic;
+        private static BackgroundMusic targetMusic;
+        private static BackgroundMusic[] musicClips;
+        private static float musicVolume;
         
         public static void Init(string filePath)
         {
@@ -57,7 +80,7 @@ namespace Subsurface
             
             var xDamageSounds = doc.Root.Elements("damagesound").ToList();
             
-            if (!xDamageSounds.Any())
+            if (xDamageSounds.Any())
             {
                 damageSounds = new DamageSound[xDamageSounds.Count()];
                 int i = 0;
@@ -85,6 +108,24 @@ namespace Subsurface
                 }
             }
 
+            var xMusic = doc.Root.Elements("music").ToList();
+            
+            if (xMusic.Any())
+            {
+                musicClips = new BackgroundMusic[xMusic.Count];
+                int i = 0;
+                foreach (XElement element in xMusic)
+                {
+                    string file = ToolBox.GetAttributeString(element, "file", "").ToLower();
+                    string type = ToolBox.GetAttributeString(element, "type", "").ToLower();
+                    Vector2 priority = ToolBox.GetAttributeVector2(element, "priorityrange", new Vector2(0.0f,100.0f));
+
+                    musicClips[i] = new BackgroundMusic(file, type, priority);
+
+                    i++;
+                }
+            }
+
             //Sound.StartStream("Content/Sounds/Music/Simplex.ogg", 0.3f);
 
         }
@@ -92,6 +133,8 @@ namespace Subsurface
 
         public static void Update()
         {
+            UpdateMusic();
+
             float ambienceVolume = 0.5f;
             float lowpassHFGain = 1.0f;
             if (Character.Controlled != null)
@@ -108,6 +151,64 @@ namespace Subsurface
 
             SoundManager.LowPassHFGain = lowpassHFGain;
             waterAmbienceIndex = waterAmbience.Loop(waterAmbienceIndex, ambienceVolume);
+        }
+
+        private static void UpdateMusic()
+        {
+            
+            Task criticalTask = null;
+            if (Game1.GameSession!=null)
+            {
+                foreach (Task task in Game1.GameSession.taskManager.Tasks)
+                {
+                    if (criticalTask == null || task.Priority > criticalTask.Priority)
+                    {
+                        criticalTask = task;
+                    }
+                }
+            }
+
+            List<BackgroundMusic> suitableMusic = null;
+            if (criticalTask == null)
+            {
+                suitableMusic = musicClips.Where(x => x.type == "default").ToList();
+
+            }
+            else
+            {
+                suitableMusic = musicClips.Where(x =>
+                    x.type == criticalTask.MusicType &&
+                    x.priorityRange.X < criticalTask.Priority &&
+                    x.priorityRange.Y > criticalTask.Priority).ToList();                
+            }
+
+            if (suitableMusic.Count > 0 && !suitableMusic.Contains(currentMusic))
+            {
+                int index = Game1.localRandom.Next(suitableMusic.Count());
+
+                if (currentMusic == null || suitableMusic[index].file != currentMusic.file)
+                {
+                    targetMusic = suitableMusic[index];
+                }
+            }
+
+            if (targetMusic == null || currentMusic == null || targetMusic.file != currentMusic.file)
+            {
+                musicVolume = MathHelper.Lerp(musicVolume, 0.0f, MusicLerpSpeed);
+                if (currentMusic != null) Sound.StreamVolume(musicVolume);
+
+                if (musicVolume < 0.01f)
+                {
+                    Sound.StopStream();
+                    if (targetMusic != null) Sound.StartStream(targetMusic.file, musicVolume);
+                    currentMusic = targetMusic;
+                }
+            }
+            else
+            {
+                musicVolume = MathHelper.Lerp(musicVolume, 0.3f, MusicLerpSpeed);
+                Sound.StreamVolume(musicVolume);
+            }
         }
 
         public static void PlayDamageSound(DamageSoundType damageType, float damage, Body body)

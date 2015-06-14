@@ -40,21 +40,21 @@ namespace Subsurface
 
             if (traitor==null || target ==null)
             {
-                int clientCount = Game1.server.connectedClients.Count();
+                int clientCount = Game1.Server.connectedClients.Count();
                 if (clientCount < 2) return;
 
                 int traitorIndex = Game1.localRandom.Next(clientCount);
-                traitor = Game1.server.connectedClients[traitorIndex];
+                traitor = Game1.Server.connectedClients[traitorIndex];
 
                 int targetIndex = 0;
                 while (targetIndex==traitorIndex)
                 {
                     targetIndex = Game1.localRandom.Next(clientCount);
                 }
-                target = Game1.server.connectedClients[targetIndex];
+                target = Game1.Server.connectedClients[targetIndex];
 
 
-                Game1.server.NewTraitor(traitor, target);
+                Game1.Server.NewTraitor(traitor, target);
             }
             else
             {

@@ -117,7 +117,7 @@ namespace Subsurface
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
-
+            
             scrollBar.Update(deltaTime);
         }
 
@@ -188,7 +188,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-
+            base.Draw(spriteBatch);
             GUI.DrawRectangle(spriteBatch, rect, color*alpha, true);
 
             int x = rect.X, y = rect.Y;
@@ -205,7 +205,6 @@ namespace Subsurface
                     y -= (int)((totalSize - rect.Height) * scrollBar.BarScroll);
                 }
             }
-
 
             for (int i = 0; i < children.Count; i++ )
             {
@@ -232,7 +231,7 @@ namespace Subsurface
                         if (CheckSelected() != selected.UserData) selected = null;
                     }
                 }
-                else if (child.Rect.Contains(PlayerInput.GetMouseState.Position) && enabled)
+                else if (enabled && (MouseOn==this || ( MouseOn!=null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.GetMouseState.Position))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())

@@ -166,7 +166,7 @@ namespace Subsurface.Items.Components
             return true;
         }
 
-        public override bool Use(Character character = null)
+        public override bool Use(float deltaTime, Character character = null)
         {
             if (!attachable || item.body==null) return false;
 
@@ -213,7 +213,7 @@ namespace Subsurface.Items.Components
 
         public override void OnMapLoaded()
         {
-            if (attached) Use();
+            if (attached) Use(1.0f);
         }
     }
 }

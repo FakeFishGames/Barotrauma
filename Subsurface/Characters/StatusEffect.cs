@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -8,12 +9,12 @@ namespace Subsurface
     class StatusEffect
     {
         [Flags]
-        public enum Target 
+        public enum TargetType 
         {
-            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16
+            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget=32
         }
 
-        private Target targets;
+        private TargetType targetTypes;
         private string[] targetNames;
 
         public string[] propertyNames;
@@ -29,9 +30,9 @@ namespace Subsurface
 
         private Sound sound;
         
-        public Target Targets
+        public TargetType Targets
         {
-            get { return targets; }
+            get { return targetTypes; }
         }
 
         public string[] TargetNames
@@ -91,7 +92,7 @@ namespace Subsurface
                         string[] Flags = attribute.Value.Split(',');
                         foreach (string s in Flags)
                         {
-                            targets |= (Target)Enum.Parse(typeof(Target), s, true);
+                            targetTypes |= (TargetType)Enum.Parse(typeof(TargetType), s, true);
                         }
 
                         break;
@@ -142,42 +143,74 @@ namespace Subsurface
         }
 
 
-        public virtual void Apply(ActionType type, float deltaTime, Item item, Character character = null, Limb limb = null)
-        {
-            if (this.type == type) Apply(deltaTime, character, item);
+        //public virtual void Apply(ActionType type, float deltaTime, Item item, Character character = null)
+        //{
+        //    if (this.type == type) Apply(deltaTime, character, item);
+        //}
 
+        public virtual void Apply(ActionType type, float deltaTime, Vector2 position, IPropertyObject target)
+        {
+            if (!targetNames.Contains(target.Name)) return;
+
+            List<IPropertyObject> targets = new List<IPropertyObject>();
+            targets.Add(target);
+
+            if (this.type == type) Apply(deltaTime, position, targets);
         }
 
-        
-        protected virtual void Apply(float deltaTime, Character character, Item item, Limb limb = null)
+        public virtual void Apply(ActionType type, float deltaTime, Vector2 position, List<IPropertyObject> targets)
         {
-            if (explosion != null) explosion.Explode(item.SimPosition);
+            if (this.type == type) Apply(deltaTime, position, targets);
+        }
+        
+        protected virtual void Apply(float deltaTime, Vector2 position, List<IPropertyObject> targets)
+        {
+            if (explosion != null) explosion.Explode(position);
 
-            if (sound != null) sound.Play(1.0f, 1000.0f, item.body.FarseerBody);
-            
+            if (sound != null) sound.Play(1.0f, 1000.0f, position);
+
             for (int i = 0; i < propertyNames.Count(); i++)
             {
                 ObjectProperty property;
-
-                if (character!=null && character.properties.TryGetValue(propertyNames[i], out property))
+                foreach (IPropertyObject target in targets)
                 {
-                    ApplyToProperty(property, propertyEffects[i], deltaTime);                 
-                }
-
-                if (item == null) continue;
-
-                if (item.properties.TryGetValue(propertyNames[i], out property))
-                {
-                    ApplyToProperty(property, propertyEffects[i], deltaTime); 
-                }
-
-                foreach (ItemComponent ic in item.components)
-                {
-                    if (!ic.properties.TryGetValue(propertyNames[i], out property)) continue;
-                    ApplyToProperty(property, propertyEffects[i], deltaTime); 
+                    if (targetNames!=null && !targetNames.Contains(target.Name)) continue;
+                    if (!target.ObjectProperties.TryGetValue(propertyNames[i], out property)) continue;
+                    
+                    ApplyToProperty(property, propertyEffects[i], deltaTime);                    
                 }
             }
         }
+
+        //protected virtual void Apply(float deltaTime, Character character, Item item)
+        //{
+        //    if (explosion != null) explosion.Explode(item.SimPosition);
+
+        //    if (sound != null) sound.Play(1.0f, 1000.0f, item.body.FarseerBody);
+            
+        //    for (int i = 0; i < propertyNames.Count(); i++)
+        //    {
+        //        ObjectProperty property;
+
+        //        if (character!=null && character.properties.TryGetValue(propertyNames[i], out property))
+        //        {
+        //            ApplyToProperty(property, propertyEffects[i], deltaTime);                 
+        //        }
+
+        //        if (item == null) continue;
+
+        //        if (item.properties.TryGetValue(propertyNames[i], out property))
+        //        {
+        //            ApplyToProperty(property, propertyEffects[i], deltaTime); 
+        //        }
+
+        //        foreach (ItemComponent ic in item.components)
+        //        {
+        //            if (!ic.properties.TryGetValue(propertyNames[i], out property)) continue;
+        //            ApplyToProperty(property, propertyEffects[i], deltaTime); 
+        //        }
+        //    }
+        //}
 
         protected void ApplyToProperty(ObjectProperty property, object value, float deltaTime)
         {

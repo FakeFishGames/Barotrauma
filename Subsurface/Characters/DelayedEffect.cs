@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Subsurface
@@ -11,12 +12,10 @@ namespace Subsurface
 
         float timer;
         
-        private Item item;
+        Vector2 position;
 
-        private Character character;
-
-        private Limb limb;
-
+        List<IPropertyObject> targets;
+        
         public float Timer
         {
             get { return timer; }
@@ -28,15 +27,14 @@ namespace Subsurface
             delay = ToolBox.GetAttributeFloat(element, "delay", 1.0f);
         }
 
-        public override void Apply(ActionType type, float deltaTime, Item item, Character character = null, Limb limb = null)
+        public override void Apply(ActionType type, float deltaTime, Vector2 position, List<IPropertyObject> targets)
         {
             if (this.type != type) return;
-
-            this.item = item;
-            this.character = character;
-            this.limb = limb;
-
+            
             timer = delay;
+            this.position = position;
+
+            this.targets = targets;
 
             list.Add(this);
         }
@@ -47,7 +45,7 @@ namespace Subsurface
 
             if (timer > 0.0f) return;
 
-            base.Apply(1.0f, character, item, limb);
+            base.Apply(1.0f, position, targets);
             list.Remove(this);
         }
 

@@ -1,14 +1,14 @@
-﻿using System;
+﻿using FarseerPhysics;
+using FarseerPhysics.Collision;
+using FarseerPhysics.Dynamics;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using FarseerPhysics.Collision;
 
 namespace Subsurface
 {
@@ -62,6 +62,8 @@ namespace Subsurface
         {
             get
             {
+                if (mapHash != null) return mapHash;
+
                 XDocument doc = OpenDoc(filePath);
                 mapHash = new MapHash(doc);
 
@@ -286,8 +288,7 @@ namespace Subsurface
 
             try
             {
-                //string docString = doc.ToString();
-                ToolBox.CompressStringToFile(filePath+".gz", doc.ToString());
+                SaveUtil.CompressStringToFile(filePath, doc.ToString());
             }
             catch
             {
@@ -295,7 +296,18 @@ namespace Subsurface
             }
 
 
-            doc.Save(filePath);
+            //doc.Save(filePath);
+        }
+
+        public static void SaveCurrent(string savePath)
+        {
+            if (loaded==null)
+            {
+                loaded = new Map(savePath);
+                return;
+            }
+
+            loaded.SaveAs(savePath);
         }
 
         public static void PreloadMaps(string mapFolder)
@@ -342,7 +354,15 @@ namespace Subsurface
         public Map(string filePath, string mapHash="")
         {
             this.filePath = filePath;
-            name = Path.GetFileNameWithoutExtension(filePath);
+            try
+            {
+                name = Path.GetFileNameWithoutExtension(filePath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error loading map " + filePath + "!", e);
+            }
+
 
             if (mapHash != "")
             {
@@ -380,7 +400,7 @@ namespace Subsurface
 
             if (extension == ".gz")
             {
-                Stream stream = ToolBox.DecompressFiletoStream(file);
+                Stream stream = SaveUtil.DecompressFiletoStream(file);
                 if (stream == null)
                 {
                     DebugConsole.ThrowError("Loading map ''" + file + "'' failed!");
@@ -496,7 +516,7 @@ namespace Subsurface
 
         public static void Unload()
         {
-            if (loaded==null)return;
+            if (loaded == null) return;
             loaded.Clear();
             loaded = null;
         }
@@ -505,12 +525,12 @@ namespace Subsurface
         {
             filePath = "";
 
-            if (Game1.gameScreen.Cam != null) Game1.gameScreen.Cam.TargetPos = Vector2.Zero;
+            if (Game1.GameScreen.Cam != null) Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
             
-            if (Game1.gameSession!=null)
-            Game1.gameSession.crewManager.EndShift();
+            if (Game1.GameSession!=null)
+            Game1.GameSession.crewManager.EndShift();
 
             PhysicsBody.list.Clear();
 

@@ -115,46 +115,12 @@ namespace Subsurface.Items.Components
 
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
-                    if (effect.Targets.HasFlag(StatusEffect.Target.This)) effect.Apply(ActionType.OnContaining, deltaTime, item);
-                    if (effect.Targets.HasFlag(StatusEffect.Target.Contained)) effect.Apply(ActionType.OnContaining, deltaTime, contained);
+                    if (effect.Targets.HasFlag(StatusEffect.TargetType.This)) effect.Apply(ActionType.OnContaining, deltaTime, item.SimPosition, item.AllPropertyObjects);
+                    if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) effect.Apply(ActionType.OnContaining, deltaTime, item.SimPosition, contained.AllPropertyObjects);
                 }
 
                 contained.ApplyStatusEffects(ActionType.OnContained, deltaTime);
             }
-
-            //if (hideItems) return;
-            
-            //Vector2 transformedItemPos;
-            //Vector2 transformedItemInterval = itemInterval;
-            ////float transformedItemRotation = itemRotation;
-            //if (item.body==null)
-            //{
-            //    transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
-            //    transformedItemPos = ConvertUnits.ToSimUnits(transformedItemPos) + itemPos;
-            //}
-            //else
-            //{
-            //    Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
-
-            //    transformedItemPos = item.body.Position + Vector2.Transform(itemPos, transform);
-            //    transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);                    
-            //    //transformedItemRotation += item.body.Rotation;
-            //}
-
-            //foreach (Item containedItem in inventory.items)
-            //{
-            //    if (containedItem == null) continue;
-
-            //    Vector2 itemDist = (transformedItemPos - containedItem.body.Position);
-            //    Vector2 force = (itemDist - containedItem.body.LinearVelocity * 0.1f) * containedItem.body.Mass * 60.0f;
-
-            //    containedItem.body.ApplyForce(force);
-
-            //    containedItem.body.SmoothRotate(itemRotation);
-
-            //    transformedItemPos += transformedItemInterval;
-            //}
-            
 
         }
 
@@ -162,7 +128,7 @@ namespace Subsurface.Items.Components
         {
             base.Draw(spriteBatch);
 
-            if (hideItems) return;
+            if (hideItems || (item.body!=null && !item.body.Enabled)) return;
 
             Vector2 transformedItemPos = itemPos;
             Vector2 transformedItemInterval = itemInterval;
@@ -175,6 +141,8 @@ namespace Subsurface.Items.Components
             }
             else
             {
+                //item.body.Enabled = true;
+
                 Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
 
                 if (item.body.Dir==-1.0f)
@@ -184,9 +152,7 @@ namespace Subsurface.Items.Components
                 }
                 transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
-
-
-
+                
                 transformedItemPos += ConvertUnits.ToDisplayUnits(item.body.Position);
 
                 currentRotation += item.body.Rotation;
@@ -230,7 +196,7 @@ namespace Subsurface.Items.Components
             if (inventory.TryPutItem(item))
             {            
                 isActive = true;
-                if (hideItems) item.body.Enabled = false;
+                if (hideItems || (item.body!=null && !item.body.Enabled)) item.body.Enabled = false;
 
                 item.container = this.item;
             

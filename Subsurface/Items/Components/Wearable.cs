@@ -115,22 +115,14 @@ namespace Subsurface.Items.Components
 
             Item[] containedItems = item.ContainedItems;
           
+            ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
-            for (int i = 0; i < limb.Length; i++)
+            if (containedItems == null) return;
+            for (int j = 0; j<containedItems.Length; j++)
             {
-                if (limb[i] == null) continue;
-                ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker, limb[i]);
-
-                if (containedItems == null) continue;
-                for (int j = 0; j<containedItems.Length; j++)
-                {
-                    if (containedItems[j] == null) continue;
-                    containedItems[j].ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker, limb[i]);
-                }
-            }
-
-            
-            
+                if (containedItems[j] == null) continue;
+                containedItems[j].ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
+            } 
         }
 
     }

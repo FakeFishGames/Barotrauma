@@ -3,13 +3,15 @@
   <MonsterEvent name="Under attack" description=""  
     characterfile="Content/Characters/Crawler/Crawler.xml" 
     commonness="10" 
-    difficulty="10"
-    minamount="2" maxamount="4"
-    starttimemin="5" starttimemax="10"/>
+    difficulty="30"
+    minamount="2" maxamount="3"
+    starttimemin="5" starttimemax="10"
+    musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/TigerThresher/tigerthresher.xml"
     commonness="10"
-    difficulty="10"
-    starttimemin="5" starttimemax="10"/>
+    difficulty="50"
+    starttimemin="5" starttimemax="10"
+    musictype="monster"/>
 </Randomevents>

@@ -108,9 +108,8 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-
-
+            //ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            
             fissionRate = Math.Min(fissionRate, AvailableFuel);
             
             float heat = 100 * fissionRate;
@@ -128,7 +127,7 @@ namespace Subsurface.Items.Components
             {
                 if (powerUpTask==null || powerUpTask.IsFinished)
                 {
-                    powerUpTask = new PropertyTask(Game1.gameSession.taskManager, item, IsRunning, 20.0f, "Power up the reactor");
+                    powerUpTask = new PropertyTask(item, IsRunning, 50.0f, "Power up the reactor");
                 }  
             }
 
@@ -208,7 +207,7 @@ namespace Subsurface.Items.Components
         {
             if (item.Condition <= 0.0f) return;
  
-            new RepairTask(Game1.gameSession.taskManager, item, 50.0f, "Reactor meltdown!");
+            new RepairTask(item, 60.0f, "Reactor meltdown!");
             item.Condition = 0.0f;
             fissionRate = 0.0f;
             coolingRate = 0.0f;

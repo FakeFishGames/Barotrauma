@@ -94,7 +94,7 @@ namespace Subsurface
         public override void Select()
         {
             base.Select();
-
+            
             GUIComponent.MouseOn = null;
             characterMode = false;
              //CreateDummyCharacter();
@@ -197,7 +197,7 @@ namespace Subsurface
                 }
 
                 dummyCharacter.ControlLocalPlayer(cam, false);
-                dummyCharacter.Control(cam);
+                dummyCharacter.Control((float)deltaTime, cam);
             }
             else
             {
