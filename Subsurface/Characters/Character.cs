@@ -14,7 +14,7 @@ using Subsurface.Particles;
 
 namespace Subsurface
 {
-    class Character : Entity, IDamageable
+    class Character : Entity, IDamageable, IPropertyObject
     {
         public static List<Character> characterList = new List<Character>();
         
@@ -40,12 +40,14 @@ namespace Subsurface
         public byte largeUpdateTimer;
 
         public readonly Dictionary<string, ObjectProperty> properties;
+        public Dictionary<string, ObjectProperty> ObjectProperties
+        {
+            get { return properties; }
+        }
 
         protected Key selectKeyHit;
-        protected Key actionKeyHit;
-        protected Key actionKeyDown;
-        protected Key secondaryKeyHit;
-        protected Key secondaryKeyDown;
+        protected Key actionKeyHit, actionKeyDown;
+        protected Key secondaryKeyHit, secondaryKeyDown;
                 
         private Item selectedConstruction;
         private Item[] selectedItems;
@@ -58,6 +60,9 @@ namespace Subsurface
         protected bool needsAir;
         protected float oxygen;
         protected float drowningTime;
+
+        protected float health;
+        protected float maxHealth;
 
         protected Item closestItem;
 
@@ -73,12 +78,21 @@ namespace Subsurface
         protected float soundTimer;
         protected float soundInterval;
 
+        private float bleeding;
         private float blood;
                 
         private Sound[] sounds;
         //which AIstate each sound is for
         private AIController.AiState[] soundStates;
         
+        public string Name
+        {
+            get
+            {
+                return speciesName;
+            }
+        }
+
         public Inventory Inventory
         {
             get { return inventory; }
@@ -122,13 +136,19 @@ namespace Subsurface
         {
             get 
             {
-                float totalHealth = 0.0f;
-                foreach (Limb l in animController.limbs)
-                {
-                    totalHealth += (l.MaxHealth - l.Damage);
+                return health;
+                //float totalHealth = 0.0f;
+                //foreach (Limb l in animController.limbs)
+                //{
+                //    totalHealth += (l.MaxHealth - l.Damage);
 
-                }
-                return totalHealth/animController.limbs.Count();
+                //}
+                //return totalHealth/animController.limbs.Count();
+            }
+            set
+            {
+                health = MathHelper.Clamp(value, 0.0f, maxHealth);
+                if (health==0.0f) Kill();
             }
         }
 
@@ -301,6 +321,9 @@ namespace Subsurface
                 //limb.prevPosition = ConvertUnits.ToDisplayUnits(position);
             }
 
+            maxHealth = ToolBox.GetAttributeFloat(doc.Root, "health", 100.0f);
+            health = maxHealth;
+
             needsAir = ToolBox.GetAttributeBool(doc.Root, "needsair", false);
             drowningTime = ToolBox.GetAttributeFloat(doc.Root, "drowningtime", 10.0f);
 
@@ -331,10 +354,10 @@ namespace Subsurface
 
             animController.FindHull();
 
-            if (info.ID >= 0)
-            {
-                ID = info.ID;
-            }
+            //if (info.ID >= 0)
+            //{
+            //    ID = info.ID;
+            //}
 
             characterList.Add(this);
         }
@@ -343,7 +366,7 @@ namespace Subsurface
         /// <summary>
         /// Control the characte
         /// </summary>
-        public void Control(Camera cam, bool forcePick=false)
+        public void Control(float deltaTime, Camera cam, bool forcePick=false)
         {
             if (isDead) return;
 
@@ -370,15 +393,15 @@ namespace Subsurface
                 if (selectedItems[i] == null) continue;
                 if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
                 
-                if (actionKeyDown.State) selectedItems[i].Use(this);
-                if (secondaryKeyDown.State && selectedItems[i] != null) selectedItems[i].SecondaryUse(this);
+                if (actionKeyDown.State) selectedItems[i].Use(deltaTime, this);
+                if (secondaryKeyDown.State && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
                 
             }
 
             if (selectedConstruction != null)
             {
-                if (actionKeyDown.State) selectedConstruction.Use(this);
-                if (secondaryKeyDown.State) selectedConstruction.SecondaryUse(this);
+                if (actionKeyDown.State) selectedConstruction.Use(deltaTime, this);
+                if (secondaryKeyDown.State) selectedConstruction.SecondaryUse(deltaTime, this);
             }
 
             if (IsNetworkPlayer)
@@ -509,8 +532,8 @@ namespace Subsurface
             }
 
             if (controlled == this) ControlLocalPlayer(cam);
-            
-            Control(cam);
+
+            Control(deltaTime, cam);
 
             UpdateSightRange();
             aiTarget.SoundRange = 0.0f;
@@ -543,10 +566,10 @@ namespace Subsurface
                 soundTimer = soundInterval;
             }
 
-            foreach (Limb limb in animController.limbs)
-            {
-                Blood = blood - limb.Bleeding * deltaTime * 0.1f;
-            }
+            //foreach (Limb limb in animController.limbs)
+            //{
+                Blood = blood - bleeding * deltaTime;
+            //}
 
             if (aiController != null) aiController.Update(deltaTime);
         }
@@ -587,18 +610,24 @@ namespace Subsurface
         }
 
 
-        private static GUIProgressBar drowningBar;
+        private static GUIProgressBar drowningBar, bloodBar;
         public void DrawHud(SpriteBatch spriteBatch, Camera cam)
         {
             if (drowningBar==null)
             {
-                int width = 200, height = 20;
-                drowningBar = new GUIProgressBar(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, 20, width, height), Color.Blue, 1.0f);
+                int width = 100, height = 20;
+                drowningBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight/2, width, height), Color.Blue, 1.0f);
+
+                bloodBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight / 2 + 30, width, height), Color.Red, 1.0f);
             }
 
             drowningBar.BarSize = Controlled.Oxygen / 100.0f;
             if (drowningBar.BarSize < 1.0f)
                 drowningBar.Draw(spriteBatch);
+
+            bloodBar.BarSize = Blood / 100.0f;
+            if (bloodBar.BarSize < 1.0f)
+                bloodBar.Draw(spriteBatch);
 
             if (Controlled.Inventory != null)
                 Controlled.Inventory.Draw(spriteBatch);
@@ -674,7 +703,11 @@ namespace Subsurface
             closestLimb.body.ApplyForce(pull*Math.Min(amount*100.0f, 100.0f));
 
 
-            return closestLimb.AddDamage(position, damageType, amount, bleedingAmount, playSound);
+            AttackResult attackResult = closestLimb.AddDamage(position, damageType, amount, bleedingAmount, playSound);
+            health -= attackResult.damage;
+            bleeding += attackResult.bleeding;
+
+            return attackResult;
 
         }
 
@@ -705,12 +738,14 @@ namespace Subsurface
 
             centerOfMass /= totalMass;
 
+            health = 0.0f;
+
             foreach (Limb limb in animController.limbs)
             {
                 Vector2 diff = centerOfMass - limb.SimPosition;
                 if (diff == Vector2.Zero) continue;
                 limb.body.ApplyLinearImpulse(diff * 10.0f);
-                limb.Damage = 100.0f;
+               // limb.Damage = 100.0f;
             }
 
             AmbientSoundManager.PlayDamageSound(DamageSoundType.Implode, 50.0f, torso.body.FarseerBody);
@@ -739,7 +774,7 @@ namespace Subsurface
             if (isDead) return;
 
             //if the game is run by a client, characters are only killed when the server says so
-            if (Game1.client != null)
+            if (Game1.Client != null)
             {
                 if (networkMessage)
                 {
@@ -751,14 +786,14 @@ namespace Subsurface
                 }
             }
 
-            if (Game1.server != null)
+            if (Game1.Server != null)
             {
                 new NetworkEvent(NetworkEventType.KillCharacter, ID, false);
             }
 
-            if (Game1.gameSession.crewManager!=null)
+            if (Game1.GameSession!=null && Game1.GameSession.crewManager != null)
             {
-                Game1.gameSession.crewManager.KillCharacter(this);
+                Game1.GameSession.crewManager.KillCharacter(this);
             }
 
             isDead = true;
@@ -876,9 +911,9 @@ namespace Subsurface
             else if (type == NetworkEventType.KillCharacter)
             {
                 Kill(true);
-                if (Game1.client != null && controlled == this)
+                if (Game1.Client != null && controlled == this)
                 {
-                    Game1.client.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
+                    Game1.Client.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
                 }
                 return;
             }
@@ -970,7 +1005,7 @@ namespace Subsurface
 
             if (controlled == this) controlled = null;
 
-            if (Game1.client!=null && Game1.client.Character == this) Game1.client.Character = null; 
+            if (Game1.Client!=null && Game1.Client.Character == this) Game1.Client.Character = null; 
 
             if (aiTarget != null)
                 aiTarget.Remove();

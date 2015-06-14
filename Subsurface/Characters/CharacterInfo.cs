@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using Microsoft.Xna.Framework;
+using System.Xml.Linq;
 
 namespace Subsurface
 {
@@ -6,27 +7,28 @@ namespace Subsurface
 
     class CharacterInfo
     {
-        //the name of the character (e.q. Urist McEngineer)
         public string name;
 
         public readonly string file;
 
-        public int ID;
+        public readonly int headSpriteId;
+
+        //public int ID;
 
         public Gender gender;
 
         public int salary;
 
-        public string GenderString()
-        {
-            return gender.ToString();
-        }
+        //public string GenderString()
+        //{
+        //    return gender.ToString();
+        //}
 
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None)
         {
             this.file = file;
 
-            ID = -1;
+            //ID = -1;
 
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null) return;
@@ -35,7 +37,7 @@ namespace Subsurface
 
             if (ToolBox.GetAttributeBool(doc.Root, "genders", false))
             {
-                if (gender==Gender.None)
+                if (gender == Gender.None)
                 {
                     float femaleRatio = ToolBox.GetAttributeFloat(doc.Root, "femaleratio", 0.5f);
                     this.gender = (Game1.random.NextDouble() < femaleRatio) ? Gender.Female : Gender.Male;
@@ -45,7 +47,21 @@ namespace Subsurface
                     this.gender = gender;
                 }
             }
-            
+
+            Vector2 headSpriteRange = ToolBox.GetAttributeVector2(doc.Root, "headid", Vector2.Zero);
+            if (headSpriteRange == Vector2.Zero)
+            {
+                headSpriteRange = ToolBox.GetAttributeVector2(
+                    doc.Root,
+                    this.gender == Gender.Female ? "femaleheadid" : "maleheadid",
+                    Vector2.Zero);
+            }
+
+            if (headSpriteRange != Vector2.Zero)
+            {
+                headSpriteId = Game1.localRandom.Next((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
+            }
+
             if (!string.IsNullOrEmpty(name))
             {
                 this.name = name;
@@ -69,8 +85,30 @@ namespace Subsurface
                     this.name += ToolBox.GetRandomLine(lastNamePath);
                 }
             }
-            
+        }
 
+        public CharacterInfo(XElement element)
+        {
+            name = element.Name.ToString();
+
+            string genderStr = ToolBox.GetAttributeString(element, "gender", "male").ToLower();
+            gender = (genderStr == "male") ? Gender.Male : Gender.Female;
+
+            salary = ToolBox.GetAttributeInt(element, "salary", 1000);
+        }
+
+        public virtual XElement Save(XElement parentElement)
+        {
+            XElement componentElement = new XElement("character");
+
+            componentElement.Add(
+                new XAttribute("name", name),
+                new XAttribute("gender", gender == Gender.Male ? "male" : "female"),
+                new XAttribute("salary", salary),
+                new XAttribute("headspriteid", headSpriteId));
+
+            parentElement.Add(componentElement);
+            return componentElement;
         }
     }
 }

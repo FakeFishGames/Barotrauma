@@ -6,6 +6,7 @@ using Subsurface.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics;
+using System.IO;
 
 namespace Subsurface
 {
@@ -122,7 +123,7 @@ namespace Subsurface
         {
             infoFrame.ClearChildren();
             
-            if (isServer && Game1.server == null) Game1.server = new GameServer();
+            if (isServer && Game1.Server == null) Game1.Server = new GameServer();
 
             textBox.Select();
 
@@ -132,7 +133,7 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, infoFrame);
             mapList = new GUIListBox(new Rectangle(0, 60, 200, 200), Color.White, infoFrame);
             mapList.OnSelected = SelectMap;
-            mapList.Enabled = (Game1.server!=null);
+            mapList.Enabled = (Game1.Server!=null);
 
             if (Map.SavedMaps.Count>0)
             {
@@ -157,7 +158,7 @@ namespace Subsurface
 
             new GUITextBlock(new Rectangle(220, 30, 0, 30), "Selected game mode: ", Color.Transparent, Color.Black, Alignment.Left, infoFrame);
             modeList = new GUIListBox(new Rectangle(220, 60, 200, 200), Color.White, infoFrame);
-            modeList.Enabled = (Game1.server != null);
+            modeList.Enabled = (Game1.Server != null);
             //modeList.OnSelected = new GUIListBox.OnSelectedHandler(SelectEvent);
 
             foreach (GameMode mode in GameMode.list)
@@ -180,16 +181,16 @@ namespace Subsurface
             durationBar = new GUIScrollBar(new Rectangle((int)(modeList.Rect.X + modeList.Rect.Width + GUI.style.smallPadding.X), modeList.Rect.Y + 30, 100, 20),
                 Color.Gold, 0.1f, Alignment.Left, infoFrame);
             durationBar.BarSize = 0.1f;
-            durationBar.Enabled = (Game1.server != null);
+            durationBar.Enabled = (Game1.Server != null);
             
-            if (isServer && Game1.server!=null)
+            if (isServer && Game1.Server!=null)
             {
                 GUIButton startButton = new GUIButton(new Rectangle(0,0,200,30), "Start", Color.White, Alignment.Right | Alignment.Bottom, infoFrame);
-                startButton.OnClicked = Game1.server.StartGame;
+                startButton.OnClicked = Game1.Server.StartGame;
 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
-                modeList.OnSelected = Game1.server.UpdateNetLobby;
-                durationBar.OnMoved = Game1.server.UpdateNetLobby;
+                modeList.OnSelected = Game1.Server.UpdateNetLobby;
+                durationBar.OnMoved = Game1.Server.UpdateNetLobby;
 
                 if (mapList.CountChildren > 0) mapList.Select(Map.SavedMaps[0]);
                 if (GameMode.list.Count > 0) modeList.Select(GameMode.list[0]);                
@@ -199,7 +200,7 @@ namespace Subsurface
                 int x = playerFrame.Rect.Width / 2;
                 GUITextBox playerName = new GUITextBox(new Rectangle(x, 0, 0, 20), Color.White, Color.Black,
                     Alignment.Left | Alignment.Top, Alignment.Left, playerFrame);
-                playerName.Text = Game1.client.CharacterInfo.name;
+                playerName.Text = Game1.Client.CharacterInfo.name;
                 playerName.OnEnter += ChangeCharacterName;
 
                 new GUITextBlock(new Rectangle(x,40,200, 30), "Gender: ", Color.Transparent, Color.Black,
@@ -240,7 +241,7 @@ namespace Subsurface
 
         private bool SelectMap(object obj)
         {
-            if (Game1.server != null) Game1.server.UpdateNetLobby(obj);
+            if (Game1.Server != null) Game1.Server.UpdateNetLobby(obj);
 
             Map map = (Map)obj;
 
@@ -275,7 +276,7 @@ namespace Subsurface
         {
             base.Update(deltaTime);
 
-            Game1.gameScreen.Cam.MoveCamera((float)deltaTime);
+            Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
             Vector2 pos = new Vector2(
                 Map.Borders.X + Map.Borders.Width / 2,
@@ -288,7 +289,7 @@ namespace Subsurface
             
             pos += offset * 0.8f;
             
-            Game1.gameScreen.Cam.TargetPos = pos;
+            Game1.GameScreen.Cam.TargetPos = pos;
 
             menu.Update((float)deltaTime);
                         
@@ -299,7 +300,7 @@ namespace Subsurface
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            Game1.gameScreen.DrawMap(graphics, spriteBatch);
+            Game1.GameScreen.DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
 
@@ -310,18 +311,18 @@ namespace Subsurface
             spriteBatch.End();
 
 
-            if (Game1.client != null)
+            if (Game1.Client != null)
             {
-                if (Game1.client.Character != null)
+                if (Game1.Client.Character != null)
                 {
                     Vector2 position = new Vector2(playerFrame.Rect.X + playerFrame.Rect.Width * 0.25f, playerFrame.Rect.Y + 25.0f);
 
-                    Vector2 pos = Game1.client.Character.Position;
+                    Vector2 pos = Game1.Client.Character.Position;
                     pos.Y = -pos.Y;
                     Matrix transform = Matrix.CreateTranslation(new Vector3(-pos+position, 0.0f));
                     
                     spriteBatch.Begin(SpriteSortMode.BackToFront, null,null,null,null,null,transform);
-                    Game1.client.Character.Draw(spriteBatch);
+                    Game1.Client.Character.Draw(spriteBatch);
                     spriteBatch.End();
                 }
                 else
@@ -346,7 +347,7 @@ namespace Subsurface
 
         public bool StartGame(object obj)
         {
-            Game1.server.StartGame(null, obj);
+            Game1.Server.StartGame(null, obj);
             return true;
         }
 
@@ -356,11 +357,11 @@ namespace Subsurface
 
             if (isServer)
             {
-                Game1.server.SendChatMessage("Server: " + message);
+                Game1.Server.SendChatMessage("Server: " + message);
             }
             else
             {
-                Game1.client.SendChatMessage(Game1.client.Name + ": " + message);
+                Game1.Client.SendChatMessage(Game1.Client.Name + ": " + message);
             }
 
             return true;
@@ -368,13 +369,13 @@ namespace Subsurface
 
         private void CreatePreviewCharacter()
         {
-            if (Game1.client.Character != null) Game1.client.Character.Remove();
+            if (Game1.Client.Character != null) Game1.Client.Character.Remove();
 
             Vector2 pos = new Vector2(1000.0f, 1000.0f);
 
-            Character character = new Character(Game1.client.CharacterInfo, pos);
+            Character character = new Character(Game1.Client.CharacterInfo, pos);
 
-            Game1.client.Character = character;
+            Game1.Client.Character = character;
 
             character.animController.isStanding = true;
             
@@ -406,8 +407,8 @@ namespace Subsurface
             try
             {
                 Gender gender = (Gender)obj;
-                Game1.client.CharacterInfo.gender = gender;
-                Game1.client.SendCharacterData();
+                Game1.Client.CharacterInfo.gender = gender;
+                Game1.Client.SendCharacterData();
                 CreatePreviewCharacter();
             }
             catch
@@ -421,9 +422,9 @@ namespace Subsurface
         {
             if (string.IsNullOrEmpty(newName)) return false;
 
-            Game1.client.CharacterInfo.name = newName;
-            Game1.client.Name = newName;
-            Game1.client.SendCharacterData();
+            Game1.Client.CharacterInfo.name = newName;
+            Game1.Client.Name = newName;
+            Game1.Client.SendCharacterData();
 
             textBox.Text = newName;
 
@@ -472,7 +473,7 @@ namespace Subsurface
             }
             else
             {
-                msg.Write(selectedMap.Name);
+                msg.Write(Path.GetFileName(selectedMap.FilePath));
                 msg.Write(selectedMap.MapHash.MD5Hash);
             }
 
@@ -502,7 +503,7 @@ namespace Subsurface
                 else
                 {
                     mapList.Select(map);
-                    map.Load();
+                    //map.Load();
                     return true;
                 }
             }

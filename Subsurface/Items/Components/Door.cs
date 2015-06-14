@@ -19,6 +19,21 @@ namespace Subsurface.Items.Components
         ConvexHull convexHull;
         ConvexHull convexHull2;
 
+        private float stuck;
+        public float Stuck
+        {
+            get { return stuck; }
+            set 
+            {
+                if (isOpen) return;
+                stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
+                if (stuck == 0.0f) isStuck = false;
+                if (stuck == 100.0f) isStuck = true;
+            }
+        }
+
+        private bool isStuck;
+
         Gap LinkedGap
         {
             get
@@ -35,8 +50,9 @@ namespace Subsurface.Items.Components
                 return linkedGap;
             }
         }
-
+        
         bool isOpen;
+        
         float openState;
 
         [HasDefaultValue("0.0,0.0,0.0,0.0", false)]
@@ -199,7 +215,7 @@ namespace Subsurface.Items.Components
         {
             base.Move(amount);
 
-            linkedGap.Move(amount);
+            LinkedGap.Move(amount);
 
             body.SetTransform(body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
 
@@ -217,9 +233,12 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            OpenState += deltaTime * ((isOpen) ? 3.0f : -3.0f);
+            if (!isStuck)
+            {
+                OpenState += deltaTime * ((isOpen) ? 3.0f : -3.0f);
+                LinkedGap.Open = openState;
+            }
 
-            LinkedGap.Open = openState;
             
             item.SendSignal((isOpen) ? "1" : "0", "state_out");
         }

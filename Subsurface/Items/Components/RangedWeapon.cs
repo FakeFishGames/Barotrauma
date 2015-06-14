@@ -14,10 +14,11 @@ namespace Subsurface.Items.Components
 
         private Vector2 barrelPos;
 
-        //[Initable(new Vector2(0.0f, 0.0f))]
-        public Vector2 BarrelPos
+        [HasDefaultValue("0.0,0.0", false)]
+        public string BarrelPos
         {
-            get { return new Vector2(barrelPos.X * item.body.Dir, barrelPos.Y); }
+            get { return ToolBox.Vector2ToString(ConvertUnits.ToDisplayUnits(barrelPos)); }
+            set { barrelPos = ConvertUnits.ToSimUnits(ToolBox.ParseToVector2(value)); }
         }
 
         public Vector2 TransformedBarrelPos
@@ -25,7 +26,9 @@ namespace Subsurface.Items.Components
             get
             {
                 Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
-                return (Vector2.Transform(BarrelPos, bodyTransform) + item.body.Position);
+                Vector2 flippedPos = barrelPos;
+                if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
+                return (Vector2.Transform(flippedPos, bodyTransform) + item.body.Position);
             }
         }
                 
@@ -47,7 +50,7 @@ namespace Subsurface.Items.Components
             }
         }
         
-        public override bool Use(Character character = null)
+        public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
             if (!character.SecondaryKeyDown.State || reload > 0.0f) return false;
@@ -78,7 +81,7 @@ namespace Subsurface.Items.Components
                 projectile.SetTransform(TransformedBarrelPos, 
                     (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi);
 
-                projectile.Use();
+                projectile.Use(deltaTime);
                 item.RemoveContained(projectile);
                 
                 //recoil

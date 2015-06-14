@@ -6,9 +6,28 @@ namespace Subsurface
 {
     class TaskManager
     {
+        const float CriticalPriority = 50.0f;
+
         private List<Task> tasks;
 
         private GUIListBox taskListBox;
+
+        public List<Task> Tasks
+        {
+            get { return tasks; }
+        }
+
+        public bool CriticalTasks
+        {
+            get
+            {
+                foreach (Task task in tasks)
+                {
+                    if (task.Priority >= CriticalPriority) return true;
+                }
+                return false;
+            }
+        }
 
         public TaskManager(GameSession session)
         {
@@ -45,7 +64,7 @@ namespace Subsurface
             for (int i = 0; i < scriptedEventCount; i++)
             {
                 ScriptedEvent scriptedEvent = ScriptedEvent.LoadRandom();
-                AddTask(new ScriptedTask(this, scriptedEvent));
+                AddTask(new ScriptedTask(scriptedEvent));
             }
         }
 

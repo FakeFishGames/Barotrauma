@@ -25,7 +25,7 @@ namespace Subsurface.Items.Components
             //throwForce = ToolBox.GetAttributeFloat(element, "throwforce", 1.0f);
         }
 
-        public override bool Use(Character character = null)
+        public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
             if (!character.SecondaryKeyDown.State || throwing) return false;
@@ -36,7 +36,7 @@ namespace Subsurface.Items.Components
             return true;
         }
 
-        public override void SecondaryUse(Character character = null)
+        public override void SecondaryUse(float deltaTime, Character character = null)
         {
             if (throwing) return;
             throwPos = 0.25f;
@@ -54,7 +54,7 @@ namespace Subsurface.Items.Components
         {
             Update(deltaTime, cam);
         }
-
+        
         public override void Update(float deltaTime, Camera cam)
         {
             if (!item.body.Enabled) return;
@@ -68,11 +68,11 @@ namespace Subsurface.Items.Components
 
             AnimController ac = picker.animController;
 
-            ac.HoldItem(deltaTime, cam, item, handlePos, new Vector2(throwPos, 0.0f), Vector2.Zero, holdAngle);
+            ac.HoldItem(deltaTime, cam, item, handlePos, new Vector2(throwPos, 0.0f), aimPos, holdAngle);
 
             if (!throwing) return;
 
-            throwPos +=0.1f;
+            throwPos += deltaTime*5.0f;
 
             Vector2 throwVector = ConvertUnits.ToSimUnits(picker.CursorPosition) - item.body.Position;
             throwVector = Vector2.Normalize(throwVector);

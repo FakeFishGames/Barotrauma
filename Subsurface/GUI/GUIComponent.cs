@@ -142,14 +142,27 @@ namespace Subsurface
             return null;
         }
 
+        public bool IsParentOf(GUIComponent component)
+        {
+            foreach (GUIComponent child in children)
+            {
+                if (child == component) return true;
+                if (child.IsParentOf(component)) return true;
+            }
+
+            return false;
+        }
+
         public virtual void Draw(SpriteBatch spriteBatch) 
         {
-            Color newColor = color;
-            if (state == ComponentState.Selected)   newColor = selectedColor;
-            if (state == ComponentState.Hover)      newColor = hoverColor;
 
-            GUI.DrawRectangle(spriteBatch, rect, newColor*alpha, true);
-            DrawChildren(spriteBatch);
+
+            //Color newColor = color;
+            //if (state == ComponentState.Selected)   newColor = selectedColor;
+            //if (state == ComponentState.Hover)      newColor = hoverColor;
+
+            //GUI.DrawRectangle(spriteBatch, rect, newColor*alpha, true);
+            //DrawChildren(spriteBatch);
         }
 
         public virtual void Update(float deltaTime)

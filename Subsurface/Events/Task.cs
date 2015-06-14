@@ -8,6 +8,8 @@ namespace Subsurface
 
         private float priority;
 
+        protected string musicType;
+
         protected TaskManager taskManager;
 
         protected bool isFinished;
@@ -22,14 +24,22 @@ namespace Subsurface
             get { return priority; }
         }
 
+        public string MusicType
+        {
+            get { return musicType; }
+        }
+
         public bool IsFinished
         {
             get { return isFinished; }
         }
 
-        public Task(TaskManager taskManager, float priority, string name)
+        public Task(float priority, string name)
         {
-            this.taskManager = taskManager;
+            if (Game1.GameSession==null || Game1.GameSession.taskManager == null) return;
+
+            taskManager = Game1.GameSession.taskManager;
+            musicType = "repair";
             this.priority = priority;
             this.name = name;
 

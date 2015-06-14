@@ -75,7 +75,7 @@ namespace Subsurface
 
             if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
 
-            Game1.gameSession.EndShift(null, null);
+            Game1.GameSession.EndShift(null, null);
         }
 
         public static void Init()

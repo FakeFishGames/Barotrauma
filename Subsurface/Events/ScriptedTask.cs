@@ -6,9 +6,13 @@
 
         private bool prevStarted;
 
-        public ScriptedTask(TaskManager taskManager, ScriptedEvent scriptedEvent)
-            : base(taskManager, scriptedEvent.Difficulty, scriptedEvent.Name)
+        public ScriptedTask(ScriptedEvent scriptedEvent)
+            : base(scriptedEvent.Difficulty, scriptedEvent.Name)
         {
+            if (taskManager == null) return;
+
+            this.musicType = scriptedEvent.MusicType;
+
             this.scriptedEvent = scriptedEvent;
             scriptedEvent.Init();
         }

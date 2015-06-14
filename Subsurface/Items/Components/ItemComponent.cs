@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
 using Subsurface.Items.Components;
 using System.IO;
+using System.Globalization;
 
 namespace Subsurface
 {
@@ -16,6 +17,8 @@ namespace Subsurface
     {
         public readonly Sound sound;
         public readonly ActionType type;
+
+        public string volumeProperty;
 
         public readonly float range;
         
@@ -143,6 +146,7 @@ namespace Subsurface
                 switch (subElement.Name.ToString().ToLower())
                 {
                     case "requireditem":
+                    case "requireditems":
                         RelatedItem ri = RelatedItem.Load(subElement);
                         if (ri != null) requiredItems.Add(ri);
                         break;
@@ -172,8 +176,9 @@ namespace Subsurface
                         Sound sound = Sound.Load(filePath);
 
                         float range = ToolBox.GetAttributeFloat(subElement, "range", 800.0f);
-
-                        sounds.Add(new ItemSound(sound, type, range));
+                        ItemSound itemSound = new ItemSound(sound, type, range);
+                        itemSound.volumeProperty = ToolBox.GetAttributeString(subElement, "volume", "");
+                        sounds.Add(itemSound);
                         break;
                 }
                 
@@ -193,16 +198,30 @@ namespace Subsurface
                 int index = Game1.localRandom.Next(matchingSounds.Count);
                 itemSound = sounds[index];
 
+                if (itemSound.volumeProperty != "")
+                {
+                    ObjectProperty op = null;
+                    if (properties.TryGetValue(itemSound.volumeProperty.ToLower(), out op))
+                    {
+                        float newVolume = 0.0f;
+                        float.TryParse(op.GetValue().ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out newVolume);
+                        volume = MathHelper.Clamp(newVolume, 0.0f, 1.0f);
+                    }
+
+                }
+
                 if (loop) loopingSound = itemSound;
             }
-            
+                        
 
             if (loop)
             {
+                //if (loopingSound != null && loopingSound.volumeProperty != "") volume = float.Parse(properties[loopingSound.volumeProperty].GetValue().ToString());
                 loopingSoundIndex = loopingSound.sound.Loop(loopingSoundIndex, volume, position, loopingSound.range);
             }
             else
             {
+                
                 itemSound.sound.Play(volume, itemSound.range, position);  
             } 
         }
@@ -246,13 +265,13 @@ namespace Subsurface
 
         //called when the item is equipped and left mouse button is pressed
         //returns true if the item was used succesfully (not out of ammo, reloading, etc)
-        public virtual bool Use(Character character = null) 
+        public virtual bool Use(float deltaTime, Character character = null) 
         {
             return false;
         }
 
         //called when the item is equipped and right mouse button is pressed
-        public virtual void SecondaryUse(Character character = null) { }  
+        public virtual void SecondaryUse(float deltaTime, Character character = null) { }  
 
         //called when the item is placed in a "limbslot"
         public virtual void Equip(Character character) { }
@@ -272,7 +291,13 @@ namespace Subsurface
             return false;
         }
 
-        public virtual void Remove() { }
+        public virtual void Remove() 
+        {
+            if (loopingSound!=null)
+            {
+                Sounds.SoundManager.Stop(loopingSoundIndex);
+            }
+        }
 
         public bool HasRequiredContainedItems(bool addMessage)
         {
@@ -329,12 +354,21 @@ namespace Subsurface
             return true;
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
         {
             foreach (StatusEffect effect in statusEffects)
             {
                 if (effect.type != type) continue;
-                item.ApplyStatusEffect(effect, type, deltaTime, character, limb);
+                item.ApplyStatusEffect(effect, type, deltaTime, character);
+            }
+        }
+
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Vector2 position, IPropertyObject target)
+        {
+            foreach (StatusEffect effect in statusEffects)
+            {
+                if (effect.type != type) continue;
+                effect.Apply(type, deltaTime, position, target);
             }
         }
 

@@ -75,11 +75,11 @@ namespace Subsurface.Items.Components
 
         //}
 
-        public override bool Use(Character character = null)
+        public override bool Use(float deltaTime, Character character = null)
         {
             if (character != null && !characterUsable) return false;
 
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
+            //ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
 
             Debug.WriteLine(item.body.Rotation);
 

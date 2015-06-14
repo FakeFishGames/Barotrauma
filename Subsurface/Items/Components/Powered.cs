@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
@@ -62,7 +63,7 @@ namespace Subsurface.Items.Components
         {
             if (connection.name=="power_in")
             {
-                if (!float.TryParse(signal, out voltage))
+                if (!float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out voltage))
                 {
                     voltage = 0.0f;
                 }
