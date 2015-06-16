@@ -11,7 +11,7 @@
 
     <Pickable slots="Any"/>
     <Projectile launchimpulse="20.0" doesstick="true">
-      <Attack damage="20" bleedingdamage="30" structuredamage="50" damagetype="Blunt"/>
+      <Attack damage="20" bleedingdamage="2" structuredamage="50" damagetype="Blunt"/>
     </Projectile>
   </Item>
   

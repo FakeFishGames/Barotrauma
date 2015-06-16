@@ -2,15 +2,18 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
+using System.IO;
 
 namespace Subsurface
 {
     class MainMenuScreen : Screen
     {
-        enum Tabs { Main = 0, NewGame = 1, JoinServer = 2}
+        enum Tabs { Main = 0, NewGame = 1, LoadGame = 2, JoinServer = 3 }
 
         GUIFrame[] menuTabs;
         GUIListBox mapList;
+
+        GUIListBox saveList;
 
         GUITextBox nameBox;
         GUITextBox ipBox;
@@ -21,7 +24,7 @@ namespace Subsurface
 
         public MainMenuScreen(Game1 game)
         {
-            menuTabs = new GUIFrame[3];
+            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tabs)).Length];
 
             Rectangle panelRect = new Rectangle(                
                 Game1.GraphicsWidth / 2 - 250,
@@ -32,17 +35,23 @@ namespace Subsurface
             menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
             GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "New Game", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
-            button.OnClicked = NewGameClicked;
+            button.UserData = (int)Tabs.NewGame;
+            button.OnClicked = SelectTab;
             //button.Enabled = false;
 
-            button = new GUIButton(new Rectangle(0, 60, 0, 30), "Join Server", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
-            button.OnClicked = JoinServerClicked;
+            button = new GUIButton(new Rectangle(0, 60, 0, 30), "Load Game", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            button.UserData = (int)Tabs.LoadGame;
+            button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 120, 0, 30), "Host Server", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 120, 0, 30), "Join Server", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            button.UserData = (int)Tabs.JoinServer;
+            button.OnClicked = SelectTab;
+
+            button = new GUIButton(new Rectangle(0, 180, 0, 30), "Host Server", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
             button.OnClicked = HostServerClicked;
             //button.Enabled = false;
 
-            button = new GUIButton(new Rectangle(0, 180, 0, 30), "Quit", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 240, 0, 30), "Quit", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
             button.OnClicked = QuitClicked;
 
             //----------------------------------------------------------------------
@@ -53,7 +62,7 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 0, 0, 30), "New Game", Color.Transparent, Color.Black, Alignment.CenterX, menuTabs[(int)Tabs.NewGame]);
 
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
-            mapList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, menuTabs[1]);
+            mapList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, menuTabs[(int)Tabs.NewGame]);
 
             foreach (Map map in Map.SavedMaps)
             {
@@ -73,6 +82,34 @@ namespace Subsurface
             button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", GUI.style, Alignment.Right | Alignment.Bottom, menuTabs[(int)Tabs.NewGame]);
             button.OnClicked = StartGame;
 
+            //----------------------------------------------------------------------
+
+            menuTabs[(int)Tabs.LoadGame] = new GUIFrame(panelRect, GUI.style.backGroundColor);
+            menuTabs[(int)Tabs.LoadGame].Padding = GUI.style.smallPadding;
+
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Load Game", Color.Transparent, Color.Black, Alignment.CenterX, menuTabs[(int)Tabs.LoadGame]);
+
+
+            string[] saveFiles = Directory.GetFiles(SaveUtil.SaveFolder, "*.save");
+
+            //new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
+            saveList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, menuTabs[(int)Tabs.LoadGame]);
+
+            foreach (string saveFile in saveFiles)
+            {
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(0, 0, 0, 25),
+                    saveFile,
+                    GUI.style,
+                    Alignment.Left,
+                    Alignment.Left,
+                    saveList);
+                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
+                textBlock.UserData = saveFile;
+            }
+
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", GUI.style, Alignment.Right | Alignment.Bottom, menuTabs[(int)Tabs.LoadGame]);
+            button.OnClicked = LoadGame;
 
             //----------------------------------------------------------------------
 
@@ -95,18 +132,12 @@ namespace Subsurface
 
         }
 
-        private bool NewGameClicked(GUIButton button, object obj)
+        private bool SelectTab(GUIButton button, object obj)
         {
-            selectedTab = (int)Tabs.NewGame;
+            selectedTab = (int)obj;
             return true;
         }
-
-        private bool JoinServerClicked(GUIButton button, object obj)
-        {
-            selectedTab = (int)Tabs.JoinServer;
-            return true;
-        }
-
+        
         private bool HostServerClicked(GUIButton button, object obj)
         {
             Game1.NetLobbyScreen.isServer = true;
@@ -142,17 +173,38 @@ namespace Subsurface
 
         private bool StartGame(GUIButton button, object obj)
         {
-
             Map selectedMap = mapList.SelectedData as Map;
             if (selectedMap == null) return false;
 
-
-            Game1.GameSession = new GameSession(selectedMap, TimeSpan.Zero);
+            Game1.GameSession = new GameSession(selectedMap, TimeSpan.Zero, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
 
             Game1.LobbyScreen.Select();
 
             return true;
         }
+
+        private bool LoadGame(GUIButton button, object obj)
+        {
+
+            string saveFile = saveList.SelectedData as string;
+            if (string.IsNullOrWhiteSpace(saveFile)) return false;
+
+            try
+            {
+                SaveUtil.LoadGame(saveFile);                
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Loading map ''"+saveFile+"'' failed", e);
+                return false;
+            }
+
+
+            Game1.LobbyScreen.Select();
+
+            return true;
+        }
+
 
         private bool JoinServer(GUIButton button, object obj)
         {

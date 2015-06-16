@@ -242,7 +242,7 @@ namespace Subsurface
             if (children.Contains(child)) children.Remove(child);            
         }
 
-        public void ClearChildren()
+        public virtual void ClearChildren()
         {
             children.Clear();
         }

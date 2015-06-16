@@ -77,16 +77,16 @@ namespace Subsurface
                 characterInfos.Add(character.info);
             }
 
-            GUIFrame frame = new GUIFrame(new Rectangle(0,0,0,40), Color.Transparent, listBox);
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, listBox);
             frame.UserData = character;
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             frame.HoverColor = Color.LightGray * 0.5f;
             frame.SelectedColor = Color.Gold * 0.5f;
 
-            string name = character.info.name.Replace(' ','\n');
+            string name = character.info.name.Replace(' ', '\n');
 
             GUITextBlock textBlock = new GUITextBlock(
-                new Rectangle(40,0,0,25), 
+                new Rectangle(40, 0, 0, 25),
                 name,
                 Color.Transparent, Color.White,
                 Alignment.Left,
@@ -94,7 +94,7 @@ namespace Subsurface
                 frame);
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-            new GUIImage(new Rectangle(-10,-10,0,0), character.animController.limbs[0].sprite, Alignment.Left, frame);
+            new GUIImage(new Rectangle(-10, -10, 0, 0), character.animController.limbs[0].sprite, Alignment.Left, frame);
         }
 
         public void Update(float deltaTime)
@@ -106,7 +106,11 @@ namespace Subsurface
         {
             GUIComponent characterBlock = listBox.GetChild(killedCharacter) as GUIComponent;
             if (characterBlock != null) characterBlock.Color = Color.DarkRed * 0.5f;
-            
+
+            if (characters.Find(c => !c.IsDead)==null)
+            {
+                Game1.GameSession.EndShift(null, null);
+            }            
         }
 
         public void StartShift()

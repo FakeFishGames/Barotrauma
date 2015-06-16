@@ -13,12 +13,12 @@ namespace Subsurface
         //public OnClickedHandler OnClicked;
 
         //GUIFrame frame;
-        GUIButton[] buttons;
+        public GUIButton[] Buttons;
 
         public GUIMessageBox(string header, string text)
             : this(header, text, new string[] {"OK"})
         {
-            this.buttons[0].OnClicked = OkClicked;
+            this.Buttons[0].OnClicked = Close;
         }
 
         public GUIMessageBox(string header, string text, string[] buttons, Alignment textAlignment = (Alignment.Left | Alignment.Top))
@@ -37,22 +37,21 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 30, 0, DefaultHeight - 70), text, Color.Transparent, Color.White, textAlignment, this, true);
 
             int x = 0;
-            this.buttons = new GUIButton[buttons.Length];
+            this.Buttons = new GUIButton[buttons.Length];
             for (int i = 0; i < buttons.Length; i++)
             {
-                this.buttons[i] = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], GUI.style, Alignment.Left | Alignment.Bottom, this);
+                this.Buttons[i] = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], GUI.style, Alignment.Left | Alignment.Bottom, this);
 
-                x += this.buttons[i].Rect.Width + 20;
+                x += this.Buttons[i].Rect.Width + 20;
             }
 
             messageBoxes.Enqueue(this);
         }
 
-        private bool OkClicked(GUIButton button, object obj)
+        public bool Close(GUIButton button, object obj)
         {
             messageBoxes.Dequeue();
             return true;
-
         }
     }
 }
