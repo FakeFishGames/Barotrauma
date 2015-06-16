@@ -275,8 +275,7 @@ namespace Subsurface
             //    DebugConsole.ThrowError("No save file selected");
             //    return;
             //}
-            XDocument doc = new XDocument(
-                new XElement((XName)name));
+            XDocument doc = new XDocument(new XElement((XName)name));
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
@@ -290,9 +289,9 @@ namespace Subsurface
             {
                 SaveUtil.CompressStringToFile(filePath, doc.ToString());
             }
-            catch
+            catch (Exception e)
             {
-                DebugConsole.ThrowError("Saving map ''" + filePath + "'' failed!");
+                DebugConsole.ThrowError("Saving map ''" + filePath + "'' failed!", e);
             }
 
 
@@ -505,12 +504,14 @@ namespace Subsurface
             loaded = this;
         }
 
-        public static void Load(string file)
+        public static Map Load(string file)
         {
             Unload();
 
             Map map = new Map(file);
             map.Load();
+
+            return map;
             
         }
 
@@ -528,9 +529,8 @@ namespace Subsurface
             if (Game1.GameScreen.Cam != null) Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
-            
-            if (Game1.GameSession!=null)
-            Game1.GameSession.crewManager.EndShift();
+
+            if (Game1.GameSession != null) Game1.GameSession.EndShift(null, null);
 
             PhysicsBody.list.Clear();
 

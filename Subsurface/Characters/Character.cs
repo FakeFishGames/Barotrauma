@@ -79,7 +79,7 @@ namespace Subsurface
         protected float soundInterval;
 
         private float bleeding;
-        private float blood;
+        //private float blood;
                 
         private Sound[] sounds;
         //which AIstate each sound is for
@@ -152,15 +152,15 @@ namespace Subsurface
             }
         }
 
-        public float Blood
-        {
-            get { return blood; }
-            set
-            {
-                blood = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (blood == 0.0f) Kill();
-            }
-        }
+        //public float Blood
+        //{
+        //    get { return blood; }
+        //    set
+        //    {
+        //        blood = MathHelper.Clamp(value, 0.0f, 100.0f);
+        //        if (blood == 0.0f) Kill();
+        //    }
+        //}
 
         public Item[] SelectedItems
         {
@@ -286,20 +286,20 @@ namespace Subsurface
             IsNetworkPlayer = isNetworkPlayer;
 
             oxygen = 100.0f;
-            blood = 100.0f;
+            //blood = 100.0f;
             aiTarget = new AITarget(this);
 
             properties = ObjectProperty.GetProperties(this);
 
+            info = characterInfo==null ? new CharacterInfo(file) : characterInfo;
+
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null) return;
-
+            
             speciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
 
             isHumanoid = ToolBox.GetAttributeBool(doc.Root, "humanoid", false);
-
-            info = characterInfo ?? new CharacterInfo(file);
-
+            
             if (isHumanoid)
             {
                 animController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
@@ -427,7 +427,11 @@ namespace Subsurface
         /// </summary>
         public void ControlLocalPlayer(Camera cam, bool moveCam = true)
         {
-            if (isDead) return;
+            //if (isDead)
+            //{
+
+            //    return;
+            //}
 
             Limb head = animController.GetLimb(LimbType.Head);
 
@@ -522,7 +526,16 @@ namespace Subsurface
 
         public void Update(Camera cam, float deltaTime)
         {
-            if (isDead) return;
+            if (isDead)
+            {
+                if (controlled == this)
+                {
+                    cam.Zoom = MathHelper.Lerp(cam.Zoom, 1.5f, 0.1f);
+                    cam.TargetPos = ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition);
+                    cam.OffsetAmount = 0.0f;
+                }
+                return;
+            }
 
             if (PressureProtection==0.0f && 
                 (animController.CurrentHull == null || animController.CurrentHull.LethalPressure >= 100.0f))
@@ -568,7 +581,7 @@ namespace Subsurface
 
             //foreach (Limb limb in animController.limbs)
             //{
-                Blood = blood - bleeding * deltaTime;
+                Health = health - bleeding * deltaTime;
             //}
 
             if (aiController != null) aiController.Update(deltaTime);
@@ -591,17 +604,23 @@ namespace Subsurface
                 aiTarget.SightRange += torso.LinearVelocity.Length() * 500.0f;
             }
         }
-
+        
         public void Draw(SpriteBatch spriteBatch)
         {
             animController.Draw(spriteBatch);
 
             if (IsNetworkPlayer)
             {
-                Vector2 pos = new Vector2(Position.X, -Position.Y - 50.0f) - GUI.font.MeasureString(info.name) * 0.5f;
-                spriteBatch.DrawString(GUI.font, info.name, pos - new Vector2(1.0f, 1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.font, info.name, pos, Color.White);
+                Vector2 namePos = new Vector2(Position.X, -Position.Y - 80.0f) - GUI.font.MeasureString(info.name) * 0.5f;
+                spriteBatch.DrawString(GUI.font, info.name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
+                spriteBatch.DrawString(GUI.font, info.name, namePos, Color.White);
             }
+
+            if (this == Character.controlled) return;
+
+            Vector2 healthBarPos = new Vector2(Position.X - 50, -Position.Y - 50.0f);
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X-2, (int)healthBarPos.Y-2, 100+4, 15+4), Color.Black, false);
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f*(health/maxHealth)), 15), Color.Red, true);
 
             //spriteBatch.DrawString(GUI.font, ID.ToString(), ConvertUnits.ToDisplayUnits(animController.limbs[0].Position), Color.White);
             //GUI.DrawLine(spriteBatch, ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y),
@@ -610,7 +629,7 @@ namespace Subsurface
         }
 
 
-        private static GUIProgressBar drowningBar, bloodBar;
+        private static GUIProgressBar drowningBar, healthBar;
         public void DrawHud(SpriteBatch spriteBatch, Camera cam)
         {
             if (drowningBar==null)
@@ -618,19 +637,16 @@ namespace Subsurface
                 int width = 100, height = 20;
                 drowningBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight/2, width, height), Color.Blue, 1.0f);
 
-                bloodBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight / 2 + 30, width, height), Color.Red, 1.0f);
+                healthBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight / 2 + 30, width, height), Color.Red, 1.0f);
             }
 
             drowningBar.BarSize = Controlled.Oxygen / 100.0f;
-            if (drowningBar.BarSize < 1.0f)
-                drowningBar.Draw(spriteBatch);
+            if (drowningBar.BarSize < 0.95f) drowningBar.Draw(spriteBatch);
 
-            bloodBar.BarSize = Blood / 100.0f;
-            if (bloodBar.BarSize < 1.0f)
-                bloodBar.Draw(spriteBatch);
+            healthBar.BarSize = health / maxHealth;
+            if (healthBar.BarSize < 1.0f) healthBar.Draw(spriteBatch);
 
-            if (Controlled.Inventory != null)
-                Controlled.Inventory.Draw(spriteBatch);
+            if (Controlled.Inventory != null) Controlled.Inventory.Draw(spriteBatch);
 
             if (closestItem!=null)
             {
@@ -773,29 +789,6 @@ namespace Subsurface
         {
             if (isDead) return;
 
-            //if the game is run by a client, characters are only killed when the server says so
-            if (Game1.Client != null)
-            {
-                if (networkMessage)
-                {
-                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true);
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            if (Game1.Server != null)
-            {
-                new NetworkEvent(NetworkEventType.KillCharacter, ID, false);
-            }
-
-            if (Game1.GameSession!=null && Game1.GameSession.crewManager != null)
-            {
-                Game1.GameSession.crewManager.KillCharacter(this);
-            }
-
             isDead = true;
             animController.movement = Vector2.Zero;
             animController.TargetMovement = Vector2.Zero;
@@ -819,6 +812,30 @@ namespace Subsurface
             {
                 joint.MotorEnabled = false;
                 joint.MaxMotorTorque = 0.0f;
+            }
+
+
+            //if the game is run by a client, characters are only killed when the server says so
+            if (Game1.Client != null)
+            {
+                if (networkMessage)
+                {
+                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true);
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            if (Game1.Server != null)
+            {
+                new NetworkEvent(NetworkEventType.KillCharacter, ID, false);
+            }
+
+            if (Game1.GameSession != null)
+            {
+                Game1.GameSession.KillCharacter(this);
             }
         }
 

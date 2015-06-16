@@ -1,19 +1,53 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Subsurface
 {
+    class GameModePreset
+    {
+        public static List<GameModePreset> list = new List<GameModePreset>();
+
+        public ConstructorInfo Constructor;
+        public string Name;
+        public bool IsSinglePlayer;
+
+        public GameModePreset(string name, Type type, bool isSinglePlayer = false)
+        {
+            this.Name = name;
+            //Constructor = constructor;
+
+
+            Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset) });
+
+            IsSinglePlayer = isSinglePlayer;
+
+            list.Add(this);
+        }
+
+        public GameMode Instantiate()
+        {
+            object[] lobject = new object[] { this };
+            return(GameMode)Constructor.Invoke(lobject);            
+        }
+    }
+
     class GameMode
     {
-        public static List<GameMode> list = new List<GameMode>();
+        public static List<GameModePreset> presetList = new List<GameModePreset>();
 
         //TimeSpan duration;
         protected DateTime startTime;
         protected DateTime endTime;
 
+        //public readonly bool IsSinglePlayer;
+
         protected bool isRunning;
 
-        protected string name;
+        //protected string name;
+
+        protected GameModePreset preset;
 
         private string endMessage;
 
@@ -32,9 +66,14 @@ namespace Subsurface
             get { return isRunning; }
         }
 
+        public bool IsSinglePlayer
+        {
+            get { return preset.IsSinglePlayer; }
+        }
+
         public string Name
         {
-            get { return name; }
+            get { return preset.Name; }
         }
 
         public string EndMessage
@@ -42,12 +81,15 @@ namespace Subsurface
             get { return endMessage; }
         }
 
-        public GameMode(string name)
+        public GameMode(GameModePreset preset)
         {
-            this.name = name;
+            this.preset = preset;
 
-            list.Add(this);
+            //list.Add(this);
         }
+
+        public virtual void Draw(SpriteBatch spriteBatch)
+        { }
 
         public virtual void Start(TimeSpan duration)
         {
@@ -59,7 +101,7 @@ namespace Subsurface
             isRunning = true;
         }
 
-        public virtual void Update()
+        public virtual void Update(float deltaTime)
         {
             if (!isRunning) return;
 
@@ -69,7 +111,7 @@ namespace Subsurface
             }
         }
 
-        public void End(string endMessage = "")
+        public virtual void End(string endMessage = "")
         {
             isRunning = false;
 
@@ -80,8 +122,14 @@ namespace Subsurface
 
         public static void Init()
         {
-            new GameMode("Sandbox");
-            new TraitorMode("Traitor");
+            new GameModePreset("Single Player", typeof(SinglePlayerMode), true);
+            new GameModePreset("SandBox", typeof(GameMode), false);
+            new GameModePreset("Traitor", typeof(TraitorMode), false);
+
+
+            //new SinglePlayerMode("Single Player", true);
+            //new GameMode("Sandbox");
+            //new TraitorMode("Traitor");
         }
     }
 }
