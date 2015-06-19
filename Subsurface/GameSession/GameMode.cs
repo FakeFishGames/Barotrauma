@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -37,11 +38,16 @@ namespace Subsurface
     {
         public static List<GameModePreset> presetList = new List<GameModePreset>();
 
-        //TimeSpan duration;
+        TimeSpan duration;
         protected DateTime startTime;
         protected DateTime endTime;
 
         //public readonly bool IsSinglePlayer;
+
+        private GUIProgressBar timerBar;
+
+
+
 
         protected bool isRunning;
 
@@ -85,16 +91,25 @@ namespace Subsurface
         {
             this.preset = preset;
 
+
             //list.Add(this);
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)
-        { }
+        {
+            if (timerBar != null) timerBar.Draw(spriteBatch);
+        }
 
         public virtual void Start(TimeSpan duration)
         {
             startTime = DateTime.Now;
-            endTime = startTime + duration;
+            if (duration!=TimeSpan.Zero)
+            {
+                endTime = startTime + duration;
+                this.duration = duration;
+
+                timerBar = new GUIProgressBar(new Rectangle(Game1.GraphicsWidth - 120, 20, 100, 25), Color.Gold, 0.0f, null);  
+            }
 
             endMessage = "The round has ended!";
 
@@ -105,10 +120,15 @@ namespace Subsurface
         {
             if (!isRunning) return;
 
-            if (DateTime.Now >= endTime)
+            if (duration!=TimeSpan.Zero)
             {
-                End(endMessage);                
+                double elapsedTime = (DateTime.Now - startTime).TotalSeconds;
+                timerBar.BarSize = (float)(elapsedTime / duration.TotalSeconds);
             }
+            //if (DateTime.Now >= endTime)
+            //{
+            //    End(endMessage);                
+            //}
         }
 
         public virtual void End(string endMessage = "")
@@ -119,7 +139,7 @@ namespace Subsurface
 
             Game1.GameSession.EndShift(null, null);
         }
-
+        
         public static void Init()
         {
             new GameModePreset("Single Player", typeof(SinglePlayerMode), true);

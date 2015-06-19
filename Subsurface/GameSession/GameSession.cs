@@ -15,8 +15,8 @@ namespace Subsurface
         public readonly TaskManager taskManager;
 
 
-        protected DateTime startTime;
-        protected DateTime endTime;
+        //protected DateTime startTime;
+        //protected DateTime endTime;
 
         public readonly GameMode gameMode;
 
@@ -25,23 +25,17 @@ namespace Subsurface
         private GUIListBox chatBox;
         private GUITextBox textBox;
 
-        private GUIProgressBar timerBar;
-
-        private GUIButton endShiftButton;
-
         private string savePath;
 
-        private Map selectedMap;
-        
- 
+        private Map selectedMap;   
 
-        public GameSession(Map selectedMap, TimeSpan gameDuration, GameModePreset gameModePreset)
-            :this(selectedMap, gameDuration, gameModePreset.Instantiate())
+        public GameSession(Map selectedMap, GameModePreset gameModePreset)
+            :this(selectedMap, gameModePreset.Instantiate())
         {
 
         }
 
-        public GameSession(Map selectedMap, TimeSpan gameDuration, GameMode gameMode = null)
+        public GameSession(Map selectedMap, GameMode gameMode = null)
         {
             taskManager = new TaskManager(this);
 
@@ -63,23 +57,15 @@ namespace Subsurface
                     Color.White * 0.5f, Color.Black, Alignment.Bottom, Alignment.Left, guiRoot);
                             textBox.OnEnter = EnterChatMessage;
             }
-
-            if (Game1.Client==null)
-            {
-                endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 240, 20, 100, 25), "End shift", Color.White, Alignment.Left | Alignment.Top, guiRoot);
-                endShiftButton.OnClicked = EndShift;
-            }
-
-            timerBar = new GUIProgressBar(new Rectangle(Game1.GraphicsWidth - 120, 20, 100, 25), Color.Gold, 0.0f, guiRoot);           
-                       
+             
             this.gameMode = gameMode;
             //if (gameMode != null && !gameMode.IsSinglePlayer)
             //{                
             //    gameMode.Start(Game1.NetLobbyScreen.GameDuration);
             //}
 
-            startTime = DateTime.Now;
-            endTime = startTime + gameDuration;
+            //startTime = DateTime.Now;
+            //endTime = startTime + gameDuration;
 
             this.selectedMap = selectedMap;
             
@@ -90,7 +76,7 @@ namespace Subsurface
         }
 
         public GameSession(Map selectedMap, string savePath, string filePath)
-            : this(selectedMap, new TimeSpan(0,0,0,0))
+            : this(selectedMap)
         {
             XDocument doc = ToolBox.TryLoadXml(filePath);
             if (doc == null) return;
@@ -109,13 +95,13 @@ namespace Subsurface
             this.savePath = savePath;
         }
 
-        public void StartShift(int scriptedEventCount = 1)
+        public void StartShift(TimeSpan duration, int scriptedEventCount = 1)
         {
             //if (crewManager.characterInfos.Count == 0) return;
 
             if (Map.Loaded!=selectedMap) selectedMap.Load();
 
-            gameMode.Start(TimeSpan.Zero);
+            if (gameMode!=null) gameMode.Start(duration);
 
             //crewManager.StartShift();
             taskManager.StartShift(scriptedEventCount);
@@ -138,7 +124,7 @@ namespace Subsurface
             }
 
             taskManager.EndShift();
-            gameMode.End();
+            //gameMode.End();
 
             return true;
         }
@@ -194,7 +180,7 @@ namespace Subsurface
         {
             taskManager.Update(deltaTime);
             //if (endShiftButton!=null) endShiftButton.Enabled = !taskManager.CriticalTasks;
-            endShiftButton.Enabled = true;
+            //endShiftButton.Enabled = true;
             
             guiRoot.Update(deltaTime);
             
@@ -204,9 +190,9 @@ namespace Subsurface
 
             if (gameMode != null) gameMode.Update(deltaTime);
 
-            double duration = (endTime - startTime).TotalSeconds;
-            double elapsedTime = (DateTime.Now-startTime).TotalSeconds;
-            timerBar.BarSize = (float)(elapsedTime / Math.Max(duration, 1.0));
+            //double duration = (endTime - startTime).TotalSeconds;
+            //double elapsedTime = (DateTime.Now-startTime).TotalSeconds;
+            //timerBar.BarSize = (float)(elapsedTime / Math.Max(duration, 1.0));
 
             if (PlayerInput.KeyHit(Keys.Tab))
             {

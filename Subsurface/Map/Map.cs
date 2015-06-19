@@ -524,13 +524,9 @@ namespace Subsurface
 
         private void Clear()
         {
-            filePath = "";
-
             if (Game1.GameScreen.Cam != null) Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
-
-            if (Game1.GameSession != null) Game1.GameSession.EndShift(null, null);
 
             PhysicsBody.list.Clear();
 

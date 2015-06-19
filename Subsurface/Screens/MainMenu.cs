@@ -176,7 +176,7 @@ namespace Subsurface
             Map selectedMap = mapList.SelectedData as Map;
             if (selectedMap == null) return false;
 
-            Game1.GameSession = new GameSession(selectedMap, TimeSpan.Zero, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
+            Game1.GameSession = new GameSession(selectedMap, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
 
             Game1.LobbyScreen.Select();
 

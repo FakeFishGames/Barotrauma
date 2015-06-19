@@ -240,8 +240,8 @@ namespace Subsurface.Networking
                         TimeSpan duration = new TimeSpan(0,(int)durationMinutes,0);
 
                         //int gameModeIndex = inc.ReadInt32();
-                        Game1.GameSession = new GameSession(Map.Loaded, duration);
-                        Game1.GameSession.StartShift(1);
+                        Game1.GameSession = new GameSession(Map.Loaded);
+                        Game1.GameSession.StartShift(duration, 1);
 
                         myCharacter = ReadCharacterData(inc);
                         Character.Controlled = myCharacter;                       
