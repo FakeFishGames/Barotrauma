@@ -133,6 +133,16 @@ namespace Subsurface
             keyboardDispatcher = new KeyboardDispatcher(window);
         }
 
+        public T GetChild<T>()
+        {
+            foreach (GUIComponent child in children)
+            {
+                if (child is T) return (T)(object)child;
+            }
+
+            return default(T);
+        }
+
         public GUIComponent GetChild(object obj)
         {
             foreach (GUIComponent child in children)

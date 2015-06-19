@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace Subsurface
     {
         public readonly CrewManager crewManager;
         public readonly HireManager hireManager;
+
+        private GUIButton endShiftButton;
 
         private int day;
 
@@ -27,6 +30,9 @@ namespace Subsurface
         {
             crewManager = new CrewManager();
             hireManager = new HireManager();
+
+            endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 240, 20, 100, 25), "End shift", Color.White, Alignment.Left | Alignment.Top);
+            endShiftButton.OnClicked = EndShift;
 
             hireManager.GenerateCharacters("Content/Characters/Human/human.xml", 10);
 
@@ -73,8 +79,11 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            base.Draw(spriteBatch);
+
             crewManager.Draw(spriteBatch);
 
+            endShiftButton.Draw(spriteBatch);
             //chatBox.Draw(spriteBatch);
             //textBox.Draw(spriteBatch);
 
@@ -85,7 +94,11 @@ namespace Subsurface
 
         public override void Update(float deltaTime)
         {
+            base.Update(deltaTime);
+
             crewManager.Update(deltaTime);
+
+            endShiftButton.Update(deltaTime);
 
             if (!crewDead)
             {
@@ -102,7 +115,7 @@ namespace Subsurface
             }  
         }
 
-        public override void End(string endMessage = "")
+        private bool EndShift(GUIButton button, object obj)
         {
             StringBuilder sb = new StringBuilder();
             List<Character> casualties = crewManager.characters.FindAll(c => c.IsDead);
@@ -142,6 +155,10 @@ namespace Subsurface
             {
                 Character.characterList.RemoveAt(i);
             }
+
+            Game1.GameSession.EndShift(null, null);
+
+            return true;
         }
 
         public void Save(XElement element)

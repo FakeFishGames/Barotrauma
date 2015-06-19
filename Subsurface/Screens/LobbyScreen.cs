@@ -3,6 +3,7 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Subsurface
 {
@@ -351,7 +352,7 @@ namespace Subsurface
 
         private bool StartShift(GUIButton button, object selection)
         {           
-            Game1.GameSession.StartShift();
+            Game1.GameSession.StartShift(TimeSpan.Zero);
             Game1.GameScreen.Select();
             
             return true;

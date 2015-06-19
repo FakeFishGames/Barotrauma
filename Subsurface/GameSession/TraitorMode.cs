@@ -25,6 +25,8 @@ namespace Subsurface
 
         public override void Update(float deltaTime)
         {
+            base.Update(deltaTime);
+
             if (!isRunning) return;
 
             if (DateTime.Now >= endTime)
