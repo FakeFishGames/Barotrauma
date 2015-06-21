@@ -183,6 +183,8 @@ namespace Subsurface
                 BlendState.AlphaBlend,
                 null, null, null, null,
                 cam.Transform);
+
+            if (Game1.Level!=null) Game1.Level.Render(spriteBatch);
                         
             Map.DrawBack(spriteBatch);
 
