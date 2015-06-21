@@ -204,6 +204,9 @@ namespace Subsurface
                         Hull.EditWater = !Hull.EditWater;
                     }
                     break;
+                case "generatelevel":
+                    Game1.Level = new Level(Game1.localRandom.Next(), 20, 5000, 5000);
+                    break;
                 case "fowenabled":
                 case "fow":
                 case "drawfow":

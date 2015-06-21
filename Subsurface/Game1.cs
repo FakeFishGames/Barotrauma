@@ -30,6 +30,8 @@ namespace Subsurface
         public static EditMapScreen         EditMapScreen;
         public static EditCharacterScreen   EditCharacterScreen;
 
+        public static Level Level;
+
         public static GameSession GameSession;
                         
         public static GameClient Client;
