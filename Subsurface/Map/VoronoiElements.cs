@@ -117,9 +117,14 @@ namespace Voronoi2
     public class VoronoiCell
     {
         public List<GraphEdge> edges;
-        public int site;
+        public Site site;
 
-        public VoronoiCell(int site)
+        public Vector2 Center
+        {
+            get { return new Vector2((float)site.coord.x, (float)site.coord.y); }
+        }
+
+        public VoronoiCell(Site site)
         {
             edges = new List<GraphEdge>();
             this.site = site;
@@ -129,7 +134,7 @@ namespace Voronoi2
 	public class GraphEdge
 	{
         public Vector2 point1, point2;
-		public int site1, site2;
+		public Site site1, site2;
 	}
 	
 	// للترتيب

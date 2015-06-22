@@ -41,7 +41,7 @@ namespace Subsurface
             {
                 for (int i = 0; i<2; i++)
                 {
-                    int site = (i==0) ? ge.site1 : ge.site2;
+                    Site site = (i==0) ? ge.site1 : ge.site2;
                     VoronoiCell cell = cells.Find(c => c.site == site);
                     if (cell == null)
                     {
@@ -60,11 +60,11 @@ namespace Subsurface
                 List<Vector2> vlist = new List<Vector2>();
                 foreach (GraphEdge ge in cell.edges)
                 {
-                    if (vlist.Contains(ge.point1)) continue;
-                    vlist.Add(ge.point1);
+                    if (!vlist.Contains(ge.point1)) vlist.Add(ge.point1);
+                    if (!vlist.Contains(ge.point2)) vlist.Add(ge.point2);
                 }
 
-                if (vlist.Count < 2) continue;
+                if (vlist.Count < 3) continue;
 
                 for (int i = 0; i < vlist.Count; i++ )
                 {
@@ -74,7 +74,7 @@ namespace Subsurface
 
                 //get farseer 'vertices' from vectors
                 Vertices _shapevertices = new Vertices(vlist);
-                //_shapevertices.Sort(less);
+                _shapevertices.Sort(new CompareCCW(cell.Center));
 
                 //feed vertices array to BodyFactory.CreatePolygon to get a new farseer polygonal body
                 Body _newBody = BodyFactory.CreatePolygon(Game1.world, _shapevertices, 15);
@@ -83,29 +83,6 @@ namespace Subsurface
 
                 bodies.Add(_newBody);
             }
-        }
-
-
-        public int Compare(Vector2 a, Vector2 b, Vector2 center)
-        {
-            if (a.X - center.X >= 0 && b.X - center.X < 0) return 1;
-            if (a.X - center.X < 0 && b.X - center.X >= 0) return -1;
-            if (a.X - center.X == 0 && b.X - center.X == 0)
-            {
-                if (a.Y - center.Y >= 0 || b.Y - center.Y >= 0) return Math.Sign(a.Y - b.Y);
-                return Math.Sign(b.Y-a.Y);
-            }
-
-            // compute the cross product of vectors (center -> a) x (center -> b)
-            float det = (a.X - center.X) * (b.Y - center.Y) - (b.X - center.X) * (a.Y - center.Y);
-            if (det < 0) return 1;
-            if (det > 0) return -1;
-
-            // points a and b are on the same line from the center
-            // check which point is closer to the center
-            float d1 = (a.X - center.X) * (a.X - center.X) + (a.Y - center.Y) * (a.Y - center.Y);
-            float d2 = (b.X - center.X) * (b.X - center.X) + (b.Y - center.Y) * (b.Y - center.Y);
-            return Math.Sign(d1 - d2);
         }
 
         List<GraphEdge> MakeVoronoiGraph(List<PointF> sites, Voronoi voronoi, int width, int height)
@@ -129,6 +106,37 @@ namespace Subsurface
                     GUI.DrawLine(spriteBatch, cell.edges[i].point1, cell.edges[i].point2, Microsoft.Xna.Framework.Color.Red);
                 }
             }
+        }
+    }
+
+    class CompareCCW : IComparer<Vector2>
+    {
+        private Vector2 center;
+
+        public CompareCCW(Vector2 center)
+        {
+            this.center = center;
+        }
+        public int Compare(Vector2 a, Vector2 b)
+        {
+            if (a.X - center.X >= 0 && b.X - center.X < 0) return 1;
+            if (a.X - center.X < 0 && b.X - center.X >= 0) return -1;
+            if (a.X - center.X == 0 && b.X - center.X == 0)
+            {
+                if (a.Y - center.Y >= 0 || b.Y - center.Y >= 0) return Math.Sign(a.Y - b.Y);
+                return Math.Sign(b.Y - a.Y);
+            }
+
+            // compute the cross product of vectors (center -> a) x (center -> b)
+            float det = (a.X - center.X) * (b.Y - center.Y) - (b.X - center.X) * (a.Y - center.Y);
+            if (det < 0) return 1;
+            if (det > 0) return -1;
+
+            // points a and b are on the same line from the center
+            // check which point is closer to the center
+            float d1 = (a.X - center.X) * (a.X - center.X) + (a.Y - center.Y) * (a.Y - center.Y);
+            float d2 = (b.X - center.X) * (b.X - center.X) + (b.Y - center.Y) * (b.Y - center.Y);
+            return Math.Sign(d1 - d2);
         }
     }
 
