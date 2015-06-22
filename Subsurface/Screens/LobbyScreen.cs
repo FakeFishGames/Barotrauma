@@ -1,5 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Factories;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Subsurface
 {
@@ -14,6 +18,13 @@ namespace Subsurface
 
         GUIListBox characterList;
         GUIListBox hireList;
+
+        SinglePlayerMode gameMode;
+
+        Body previewPlatform;
+        Hull previewHull;
+
+        Character previewCharacter;
 
         public LobbyScreen()
         {
@@ -81,14 +92,14 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, rightPanel[0]);
 
             characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, rightPanel[0]);
+            characterList.OnSelected = SelectCharacter;
 
             //---------------------------------------
 
             rightPanel[1] = new GUIFrame(panelRect, GUI.style.backGroundColor);
             rightPanel[1].Padding = GUI.style.smallPadding;
 
-            hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, Alignment.Left, rightPanel[1]);
-            
+            hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, Alignment.Left, rightPanel[1]);            
             hireList.OnSelected = HireCharacter;
         }
 
@@ -96,16 +107,74 @@ namespace Subsurface
         {
             base.Select();
 
+            gameMode = Game1.GameSession.gameMode as SinglePlayerMode;
+
             //Map.Unload();
 
-            UpdateCharacterLists();
-            
+            UpdateCharacterLists();            
+        }
+
+        public override void Deselect()
+        {
+            base.Deselect();
+
+            if (previewPlatform != null)
+            {
+                Game1.world.RemoveBody(previewPlatform);
+                previewPlatform = null;
+            }
+
+            if (previewHull != null)
+            {
+                previewHull.Remove();
+                previewHull = null;
+            }
+
+            if (previewCharacter != null)
+            {
+                previewCharacter.Remove();
+                previewCharacter = null;
+            }
+        }
+
+        private void CreatePreviewCharacter()
+        {
+            if (previewCharacter != null) previewCharacter.Remove();
+
+            Vector2 pos = new Vector2(1000.0f, 1000.0f);
+
+            previewCharacter = new Character(characterList.SelectedData as CharacterInfo, pos);
+
+            previewCharacter.animController.isStanding = true;
+
+            if (previewPlatform == null)
+            {
+                Body platform = BodyFactory.CreateRectangle(Game1.world, 3.0f, 1.0f, 5.0f);
+                platform.SetTransform(new Vector2(pos.X, pos.Y - 3.5f), 0.0f);
+                platform.IsStatic = true;
+            }
+
+            if (previewHull == null)
+            {
+                pos = ConvertUnits.ToDisplayUnits(pos);
+                previewHull = new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 500));
+            }
+
+            Physics.Alpha = 1.0f;
+
+            for (int i = 0; i < 500; i++)
+            {
+                previewCharacter.animController.Update((float)Physics.step);
+                previewCharacter.animController.UpdateAnim((float)Physics.step);
+                Game1.world.Step((float)Physics.step);
+            }
+
         }
 
         private void UpdateCharacterLists()
         {
             characterList.ClearChildren();
-            foreach (CharacterInfo c in Game1.GameSession.crewManager.characterInfos)
+            foreach (CharacterInfo c in gameMode.crewManager.characterInfos)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
@@ -114,10 +183,11 @@ namespace Subsurface
                     Alignment.Left,
                     characterList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
+                textBlock.UserData = c;
             }
 
             hireList.ClearChildren();
-            foreach (CharacterInfo c in Game1.GameSession.hireManager.availableCharacters)
+            foreach (CharacterInfo c in gameMode.hireManager.availableCharacters)
             {
                 GUIFrame frame = new GUIFrame(
                     new Rectangle(0, 0, 0, 25), 
@@ -156,8 +226,8 @@ namespace Subsurface
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
 
-            if (characterList.CountChildren != Game1.GameSession.crewManager.characterInfos.Count
-                || hireList.CountChildren != Game1.GameSession.hireManager.availableCharacters.Count)
+            if (characterList.CountChildren != gameMode.crewManager.characterInfos.Count
+                || hireList.CountChildren != gameMode.hireManager.availableCharacters.Count)
             {
                 UpdateCharacterLists();
             }
@@ -168,10 +238,6 @@ namespace Subsurface
 
             spriteBatch.Begin();
 
-
-            //ConstructionPrefab.list[5].sprite.Draw(spriteBatch, Vector2.Zero, new Vector2(10.0f, 1.0f), Color.White);
-
-
             leftPanel.Draw(spriteBatch);
             shiftPanel.Draw(spriteBatch);
 
@@ -180,6 +246,26 @@ namespace Subsurface
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             spriteBatch.End();
+
+            if (characterList.SelectedData != null)
+            {
+                if (previewCharacter != null)
+                {
+                    Vector2 position = new Vector2(characterList.Rect.Right + 100, characterList.Rect.Y + 25.0f);
+
+                    Vector2 pos = previewCharacter.Position;
+                    pos.Y = -pos.Y;
+                    Matrix transform = Matrix.CreateTranslation(new Vector3(-pos + position, 0.0f));
+
+                    spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, transform);
+                    previewCharacter.Draw(spriteBatch);
+                    spriteBatch.End();
+                }
+                else
+                {
+                    CreatePreviewCharacter();
+                }
+            }
         }
 
         public bool SelectRightPanel(GUIButton button, object selection)
@@ -189,48 +275,92 @@ namespace Subsurface
             return true;
         }
 
+        //private void CreatePreviewCharacter()
+        //{
+        //    if (Game1.Client.Character != null) Game1.Client.Character.Remove();
+
+        //    Vector2 pos = new Vector2(1000.0f, 1000.0f);
+
+        //    Character character = new Character(Game1.Client.CharacterInfo, pos);
+
+        //    Game1.Client.Character = character;
+
+        //    character.animController.isStanding = true;
+
+        //    if (previewPlatform == null)
+        //    {
+        //        Body platform = BodyFactory.CreateRectangle(Game1.world, 3.0f, 1.0f, 5.0f);
+        //        platform.SetTransform(new Vector2(pos.X, pos.Y - 2.5f), 0.0f);
+        //        platform.IsStatic = true;
+        //    }
+
+        //    if (previewPlatform == null)
+        //    {
+        //        pos = ConvertUnits.ToDisplayUnits(pos);
+        //        new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 200));
+        //    }
+
+        //    Physics.Alpha = 1.0f;
+
+        //    for (int i = 0; i < 500; i++)
+        //    {
+        //        character.animController.Update((float)Physics.step);
+        //        character.animController.UpdateAnim((float)Physics.step);
+        //        Game1.world.Step((float)Physics.step);
+        //    }
+        //}
+
         private string GetMoney()
         {
-            return "Money: " + ((Game1.GameSession == null) ? "" : Game1.GameSession.crewManager.Money.ToString());
+            return "Money: " + ((Game1.GameSession == null) ? "" : gameMode.crewManager.Money.ToString());
         }
 
         private string GetDay()
         {
 
-            return "Day #" + ((Game1.GameSession == null) ? "" : Game1.GameSession.Day.ToString());
+            return "Day #" + ((Game1.GameSession == null) ? "" : gameMode.Day.ToString());
         }
 
         private float GetWeekProgress()
         {
             if (Game1.GameSession == null) return 0.0f;
 
-            return (float)((Game1.GameSession.Day - 1) % 7) / 7.0f;
+            return (float)((gameMode.Day - 1) % 7) / 7.0f;
+        }
+
+        private bool SelectCharacter(object selection)
+        {
+            CharacterInfo characterInfo = selection as CharacterInfo;
+            if (characterInfo == null) return false;
+
+            if (Character.Controlled != null && characterInfo == Character.Controlled.info) return false;
+
+            CreatePreviewCharacter();
+
+            return false;
         }
 
         private bool HireCharacter(object selection)
         {
-            CharacterInfo characterInfo;
-            try { characterInfo = (CharacterInfo)selection; }
-            catch { return false; }
-
+            CharacterInfo characterInfo = selection as CharacterInfo;
             if (characterInfo == null) return false;
 
-            Game1.GameSession.TryHireCharacter(characterInfo);
+            gameMode.TryHireCharacter(characterInfo);
 
             return false;
         }
 
         private bool StartShift(GUIButton button, object selection)
-        {
-            
-            //Map.Load(Game1.GameSession.SaveFile);
-
-            Game1.GameSession.StartShift();
-
-            //EventManager.StartShift();
-
+        {           
+            Game1.GameSession.StartShift(TimeSpan.Zero);
             Game1.GameScreen.Select();
             
+            return true;
+        }
+
+        public bool QuitToMainMenu(GUIButton button, object selection)
+        {
+            Game1.MainMenuScreen.Select();
             return true;
         }
     }

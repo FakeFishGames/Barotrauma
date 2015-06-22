@@ -13,11 +13,10 @@ namespace Subsurface
     class GameSession
     {
         public readonly TaskManager taskManager;
-        public readonly CrewManager crewManager;
-        public readonly HireManager hireManager;
 
-        protected DateTime startTime;
-        protected DateTime endTime;
+
+        //protected DateTime startTime;
+        //protected DateTime endTime;
 
         public readonly GameMode gameMode;
 
@@ -26,30 +25,21 @@ namespace Subsurface
         private GUIListBox chatBox;
         private GUITextBox textBox;
 
-        private GUIProgressBar timerBar;
-
-        private GUIButton endShiftButton;
-
         private string savePath;
 
-        private Map selectedMap;
-        
-        private int day;
+        private Map selectedMap;   
 
-        public int Day
+        public GameSession(Map selectedMap, GameModePreset gameModePreset)
+            :this(selectedMap, gameModePreset.Instantiate())
         {
-            get { return day; }
+
         }
 
-        public GameSession(Map selectedMap, TimeSpan gameDuration, GameMode gameMode = null)
+        public GameSession(Map selectedMap, GameMode gameMode = null)
         {
             taskManager = new TaskManager(this);
-            crewManager = new CrewManager();
-            hireManager = new HireManager();
 
             savePath = SaveUtil.CreateSavePath(SaveUtil.SaveFolder);
-
-            hireManager.GenerateCharacters("Content/Characters/Human/human.xml", 10);
 
             guiRoot = new GUIFrame(new Rectangle(0,0,Game1.GraphicsWidth,Game1.GraphicsWidth), Color.Transparent);
 
@@ -67,74 +57,53 @@ namespace Subsurface
                     Color.White * 0.5f, Color.Black, Alignment.Bottom, Alignment.Left, guiRoot);
                             textBox.OnEnter = EnterChatMessage;
             }
-
-            if (Game1.Client==null)
-            {
-                endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 240, 20, 100, 25), "End shift", Color.White, Alignment.Left | Alignment.Top, guiRoot);
-                endShiftButton.OnClicked = EndShift;
-            }
-
-            timerBar = new GUIProgressBar(new Rectangle(Game1.GraphicsWidth - 120, 20, 100, 25), Color.Gold, 0.0f, guiRoot);           
-
-            
+             
             this.gameMode = gameMode;
-            if (this.gameMode != null) this.gameMode.Start(Game1.NetLobbyScreen.GameDuration);
+            //if (gameMode != null && !gameMode.IsSinglePlayer)
+            //{                
+            //    gameMode.Start(Game1.NetLobbyScreen.GameDuration);
+            //}
 
-            startTime = DateTime.Now;
-            endTime = startTime + gameDuration;
+            //startTime = DateTime.Now;
+            //endTime = startTime + gameDuration;
 
             this.selectedMap = selectedMap;
             
             //if (!save) return;
 
             //CreateSaveFile(selectedMapFile);
-
-            day = 1;            
+          
         }
 
-        public GameSession(string filePath)
-            : this(null, new TimeSpan(0,0,0,0))
+        public GameSession(Map selectedMap, string savePath, string filePath)
+            : this(selectedMap)
         {
             XDocument doc = ToolBox.TryLoadXml(filePath);
             if (doc == null) return;
 
-            day = ToolBox.GetAttributeInt(doc.Root,"day",1);
+            //gameMode = GameModePreset.list.Find(gm => gm.Name == "Single Player").Instantiate();
+
+            //day = ToolBox.GetAttributeInt(doc.Root,"day",1);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                if (subElement.Name.ToString().ToLower()=="crew")
-                {
-                    crewManager = new CrewManager(subElement);
-                }
+                if (subElement.Name.ToString().ToLower() != "gamemode") continue;
+
+                gameMode = new SinglePlayerMode(subElement);
             }
 
-            savePath = filePath;
+            this.savePath = savePath;
         }
 
-        public bool TryHireCharacter(CharacterInfo characterInfo)
+        public void StartShift(TimeSpan duration, int scriptedEventCount = 1)
         {
-            if (crewManager.Money < characterInfo.salary) return false;
-
-            hireManager.availableCharacters.Remove(characterInfo);
-            crewManager.characterInfos.Add(characterInfo);
-
-            crewManager.Money -= characterInfo.salary;
-
-            return true;
-        }
-
-        public string GetMoney()
-        {
-            return ("Money: " + crewManager.Money);
-        }
-
-        public void StartShift(int scriptedEventCount = 1)
-        {
-            if (crewManager.characterInfos.Count == 0) return;
+            //if (crewManager.characterInfos.Count == 0) return;
 
             if (Map.Loaded!=selectedMap) selectedMap.Load();
 
-            crewManager.StartShift();
+            if (gameMode!=null) gameMode.Start(duration);
+
+            //crewManager.StartShift();
             taskManager.StartShift(scriptedEventCount);
         }
 
@@ -148,76 +117,30 @@ namespace Subsurface
 
             }
             else if (Game1.Client==null)
-            {
-                StringBuilder sb = new StringBuilder();                
-                List<Character> casualties = crewManager.characters.FindAll(c => c.IsDead);
-
-                if (casualties.Any())
-                {
-                    sb.Append("Casualties: \n");
-                    foreach (Character c in casualties)
-                    {
-                        sb.Append("    - " + c.info.name + "\n");
-                    }
-                }
-                else
-                {
-                    sb.Append("No casualties!");
-                }              
-
-                new GUIMessageBox("Day #" + day + " is over!\n", sb.ToString());
-
-
-                //if (saveFile == null) return false;
-
-                //Map.Loaded.SaveAs(saveFile);
-
-                crewManager.EndShift();
-
+            {                
                 Game1.LobbyScreen.Select();
 
-                day++;
-            }
-
-            for (int i = Character.characterList.Count - 1; i >= 0; i--) 
-            {
-                Character.characterList.RemoveAt(i);
+                SaveUtil.SaveGame(savePath);
             }
 
             taskManager.EndShift();
+            //gameMode.End();
 
             return true;
         }
         
-        private void CreateSaveFile(string mapName)
+        
+        public void KillCharacter(Character character)
         {
-            //string path = "Content/Data/Saves/";
+            SinglePlayerMode singlePlayerMode = gameMode as SinglePlayerMode;
+            if (singlePlayerMode == null) return;
+            singlePlayerMode.crewManager.KillCharacter(character);
+        }
 
-            //if (!Directory.Exists(path))
-            //{
-            //    Directory.CreateDirectory(path);
-            //}
-
-            //string name = Path.GetFileNameWithoutExtension(mapName);
-            //string extension = Path.GetExtension(mapName);
-
-            //int i = 0;
-            //while (File.Exists(path + name + i + extension))
-            //{
-            //    i++;
-            //}
-
-            //saveFile = path + name + i+extension;
-
-
-            //try
-            //{
-            //    File.Copy(mapName, saveFile);
-            //}
-            //catch (Exception e)
-            //{
-            //    DebugConsole.ThrowError("Copying map file ''" + mapName + "'' to ''" + saveFile + "'' failed", e);
-            //}
+        public bool LoadPrevious(GUIButton button, object obj)
+        {
+            SaveUtil.LoadGame(savePath);
+            return true;
         }
 
         public bool EnterChatMessage(GUITextBox textBox, string message)
@@ -237,7 +160,7 @@ namespace Subsurface
 
             return true;
         }
-
+        
         public void NewChatMessage(string text, Color color)
         {
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), text,
@@ -252,24 +175,24 @@ namespace Subsurface
                 chatBox.RemoveChild(chatBox.children.First());
             }
         }
-
+        
         public void Update(float deltaTime)
         {
             taskManager.Update(deltaTime);
-            if (endShiftButton!=null) endShiftButton.Enabled = !taskManager.CriticalTasks;
-
+            //if (endShiftButton!=null) endShiftButton.Enabled = !taskManager.CriticalTasks;
+            //endShiftButton.Enabled = true;
             
             guiRoot.Update(deltaTime);
-            crewManager.Update(deltaTime);
+            
             //endShiftButton.Update(deltaTime);
 
             //textBox.Update(deltaTime);
 
-            if (gameMode != null) gameMode.Update();
+            if (gameMode != null) gameMode.Update(deltaTime);
 
-            double duration = (endTime - startTime).TotalSeconds;
-            double elapsedTime = (DateTime.Now-startTime).TotalSeconds;
-            timerBar.BarSize = (float)(elapsedTime / Math.Max(duration, 1.0));
+            //double duration = (endTime - startTime).TotalSeconds;
+            //double elapsedTime = (DateTime.Now-startTime).TotalSeconds;
+            //timerBar.BarSize = (float)(elapsedTime / Math.Max(duration, 1.0));
 
             if (PlayerInput.KeyHit(Keys.Tab))
             {
@@ -288,8 +211,10 @@ namespace Subsurface
         public void Draw(SpriteBatch spriteBatch)
         {
             guiRoot.Draw(spriteBatch);
-            crewManager.Draw(spriteBatch);
+            //crewManager.Draw(spriteBatch);
             taskManager.Draw(spriteBatch);
+
+            gameMode.Draw(spriteBatch);
 
             //chatBox.Draw(spriteBatch);
             //textBox.Draw(spriteBatch);
@@ -304,7 +229,11 @@ namespace Subsurface
             XDocument doc = new XDocument(
                 new XElement((XName)"Gamesession"));
 
-            doc.Root.Add(new XAttribute("day", day));
+            ((SinglePlayerMode)gameMode).Save(doc.Root);
+
+            //doc.Root.Add(new XAttribute("day", day));
+
+            //crewManager.Save(doc.Root);
             
             try
             {

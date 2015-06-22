@@ -89,12 +89,16 @@ namespace Subsurface
 
         public CharacterInfo(XElement element)
         {
-            name = element.Name.ToString();
+            name = ToolBox.GetAttributeString(element, "name", "unnamed");
 
             string genderStr = ToolBox.GetAttributeString(element, "gender", "male").ToLower();
             gender = (genderStr == "male") ? Gender.Male : Gender.Female;
 
+            file = ToolBox.GetAttributeString(element, "file", "");
+
             salary = ToolBox.GetAttributeInt(element, "salary", 1000);
+
+            headSpriteId = ToolBox.GetAttributeInt(element, "headspriteid", 1);
         }
 
         public virtual XElement Save(XElement parentElement)
@@ -103,6 +107,7 @@ namespace Subsurface
 
             componentElement.Add(
                 new XAttribute("name", name),
+                new XAttribute("file", file),
                 new XAttribute("gender", gender == Gender.Male ? "male" : "female"),
                 new XAttribute("salary", salary),
                 new XAttribute("headspriteid", headSpriteId));

@@ -13,25 +13,13 @@ namespace Subsurface.Items.Components
         public ItemInventory inventory;
 
         //how many items can be contained
-        private int capacity;
-
-        private bool hideItems;
-        private bool drawInventory;
-
-        //the position of the first item in the container
-        private Vector2 itemPos;
-
-        //item[i].Pos = itemPos + itemInterval*i 
-        private Vector2 itemInterval;
-
-        private float itemRotation;
-
         [HasDefaultValue(5, false)]
         public int Capacity
         {
             get { return capacity; }
             set { capacity = Math.Max(value, 1); }
         }
+        private int capacity;
 
         [HasDefaultValue(true, false)]
         public bool HideItems
@@ -39,6 +27,7 @@ namespace Subsurface.Items.Components
             get { return hideItems; }
             set { hideItems = value; }
         }
+        private bool hideItems;
 
         [HasDefaultValue(false, false)]
         public bool DrawInventory
@@ -46,6 +35,25 @@ namespace Subsurface.Items.Components
             get { return drawInventory; }
             set { drawInventory = value; }
         }
+        private bool drawInventory;
+
+        //the position of the first item in the container
+        [HasDefaultValue("0.0,0.0", false)]
+        public string ItemPos
+        {
+            get { return ToolBox.Vector2ToString(itemPos); }
+            set { itemPos = ToolBox.ParseToVector2(value); }
+        }
+        private Vector2 itemPos;
+
+        //item[i].Pos = itemPos + itemInterval*i 
+        [HasDefaultValue("0.0,0.0", false)]
+        public string ItemInterval
+        {
+            get { return ToolBox.Vector2ToString(itemInterval); }
+            set { itemInterval = ToolBox.ParseToVector2(value); }
+        }
+        private Vector2 itemInterval;
 
         [HasDefaultValue(0.0f, false)]
         public float ItemRotation
@@ -53,25 +61,33 @@ namespace Subsurface.Items.Components
             get { return itemRotation; }
             set { itemRotation = value; }
         }
+        private float itemRotation;
 
-        [HasDefaultValue("0.0,0.0", false)]
-        public string ItemPos
-        {
-            get { return ToolBox.Vector2ToString(itemPos); }
-            set { itemPos = ToolBox.ParseToVector2(value); }
-        }
 
-        [HasDefaultValue("0.0,0.0", false)]
-        public string ItemInterval
+        [HasDefaultValue("0.5,0.9", false)]
+        public string HudPos
         {
-            get { return ToolBox.Vector2ToString(itemInterval); }
-            set { itemInterval = ToolBox.ParseToVector2(value); }
+            get { return ToolBox.Vector2ToString(hudPos); }
+            set 
+            { 
+                hudPos = ToolBox.ParseToVector2(value);
+                //inventory.CenterPos = hudPos;
+            }
         }
-        
+        private Vector2 hudPos;
+
+        [HasDefaultValue(5, false)]
+        public int SlotsPerRow
+        {
+            get { return slotsPerRow; }
+            set { slotsPerRow = value; }
+        }
+        private int slotsPerRow;
+
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
-            inventory = new ItemInventory(this, capacity);            
+            inventory = new ItemInventory(this, capacity, hudPos, slotsPerRow);            
             containableItems = new List<RelatedItem>();
 
             //itemPos = ToolBox.GetAttributeVector2(element, "ItemPos", Vector2.Zero);
@@ -99,6 +115,7 @@ namespace Subsurface.Items.Components
 
         public bool CanBeContained(Item item)
         {
+            if (containableItems.Count == 0) return true;
             return (containableItems.Find(x => x.MatchesItem(item)) != null);
         }
 
@@ -182,10 +199,7 @@ namespace Subsurface.Items.Components
 
         public override bool Pick(Character picker)
         {
-            if (picker == null) return false;
-            //picker.SelectedConstruction = item;
-
-            return true;
+            return (picker != null);
         }
 
 

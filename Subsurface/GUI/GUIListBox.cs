@@ -28,7 +28,10 @@ namespace Subsurface
 
         public object SelectedData
         {
-            get { return (selected == null) ? null : selected.UserData; }
+            get 
+            {
+                return (selected == null) ? null : selected.UserData; 
+            }
         }
 
         public int SelectedIndex
@@ -166,12 +169,19 @@ namespace Subsurface
             
         }
 
+        public override void ClearChildren()
+        {
+            base.ClearChildren();
+            selected = null;
+        }
+
         public override void RemoveChild(GUIComponent child)
         {
             base.RemoveChild(child);
 
-            UpdateScrollBarSize();
-            
+            if (selected == child) selected = null;
+
+            UpdateScrollBarSize();            
         }
 
         private void ShowScrollBar()

@@ -9,7 +9,6 @@ namespace Subsurface.Networking
 {
     class GameServer : NetworkMember
     {
-
         // Server object
         NetServer Server;
         // Configuration object
@@ -275,8 +274,8 @@ namespace Subsurface.Networking
 
             //selectedMap.Load();
 
-            Game1.GameSession = new GameSession(selectedMap, Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.SelectedMode);
-            Game1.GameSession.StartShift(1);
+            Game1.GameSession = new GameSession(selectedMap, Game1.NetLobbyScreen.SelectedMode);
+            Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, 1);
             //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
             
             foreach (Client client in connectedClients)

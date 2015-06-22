@@ -1,4 +1,5 @@
-﻿using Subsurface.Items.Components;
+﻿using Microsoft.Xna.Framework;
+using Subsurface.Items.Components;
 
 namespace Subsurface
 {
@@ -6,8 +7,8 @@ namespace Subsurface
     {
         ItemContainer container;
 
-        public ItemInventory(ItemContainer container, int capacity)
-            : base(capacity)
+        public ItemInventory(ItemContainer container, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
+            : base(capacity, centerPos, slotsPerRow)
         {
             this.container = container;
         }

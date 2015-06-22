@@ -166,6 +166,12 @@ namespace Subsurface
             
         }
 
+        public Item(ItemPrefab itemPrefab, Vector2 position)
+            : this(new Rectangle((int)position.X, (int)position.Y, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab)
+        {
+
+        }
+
         public Item(Rectangle newRect, ItemPrefab itemPrefab)
         {
             prefab = itemPrefab;
