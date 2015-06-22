@@ -9,8 +9,8 @@ namespace Subsurface
         Client traitor;
         Client target;
 
-        public TraitorMode(string name)
-            : base(name)
+        public TraitorMode(GameModePreset preset)
+            : base(preset)
         {
 
         }
@@ -23,8 +23,9 @@ namespace Subsurface
             target = null;
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
+            base.Update(deltaTime);
 
             if (!isRunning) return;
 

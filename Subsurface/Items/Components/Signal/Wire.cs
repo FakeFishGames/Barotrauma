@@ -224,10 +224,10 @@ namespace Subsurface.Items.Components
         {
             if (nodes.Count == 0) return;
 
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)nodes[i].X, (int)-nodes[i].Y, 5, 5), Color.DarkGray, true, wireSprite.Depth - 0.01f);
-            }
+            //for (int i = 0; i < nodes.Count; i++)
+            //{
+            //    GUI.DrawRectangle(spriteBatch, new Rectangle((int)nodes[i].X, (int)-nodes[i].Y, 5, 5), Color.DarkGray, true, wireSprite.Depth - 0.01f);
+            //}
 
             for (int i = 1; i < nodes.Count; i++)
             {

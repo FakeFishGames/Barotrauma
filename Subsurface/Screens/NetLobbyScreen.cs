@@ -36,9 +36,9 @@ namespace Subsurface
         }
 
 
-        public GameMode SelectedMode
+        public GameModePreset SelectedMode
         {
-            get { return modeList.SelectedData as GameMode; }
+            get { return modeList.SelectedData as GameModePreset; }
         }
 
         public TimeSpan GameDuration
@@ -161,8 +161,10 @@ namespace Subsurface
             modeList.Enabled = (Game1.Server != null);
             //modeList.OnSelected = new GUIListBox.OnSelectedHandler(SelectEvent);
 
-            foreach (GameMode mode in GameMode.list)
+            foreach (GameModePreset mode in GameModePreset.list)
             {
+                if (mode.IsSinglePlayer) continue;
+
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     mode.Name,
@@ -192,8 +194,8 @@ namespace Subsurface
                 modeList.OnSelected = Game1.Server.UpdateNetLobby;
                 durationBar.OnMoved = Game1.Server.UpdateNetLobby;
 
-                if (mapList.CountChildren > 0) mapList.Select(Map.SavedMaps[0]);
-                if (GameMode.list.Count > 0) modeList.Select(GameMode.list[0]);                
+                if (mapList.CountChildren > 0) mapList.Select(0);
+                if (GameModePreset.list.Count > 0) modeList.Select(0);                
             }
             else
             {
@@ -319,9 +321,9 @@ namespace Subsurface
 
                     Vector2 pos = Game1.Client.Character.Position;
                     pos.Y = -pos.Y;
-                    Matrix transform = Matrix.CreateTranslation(new Vector3(-pos+position, 0.0f));
-                    
-                    spriteBatch.Begin(SpriteSortMode.BackToFront, null,null,null,null,null,transform);
+                    Matrix transform = Matrix.CreateTranslation(new Vector3(-pos + position, 0.0f));
+
+                    spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, transform);
                     Game1.Client.Character.Draw(spriteBatch);
                     spriteBatch.End();
                 }
@@ -386,10 +388,10 @@ namespace Subsurface
                 platform.IsStatic = true;
             }
 
-            if (previewPlatform==null)
+            if (previewHull==null)
             {
                 pos = ConvertUnits.ToDisplayUnits(pos);
-                new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 200));
+                previewHull = new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 200));
             }
             
             Physics.Alpha = 1.0f;
@@ -473,7 +475,7 @@ namespace Subsurface
             }
             else
             {
-                msg.Write(Path.GetFileName(selectedMap.FilePath));
+                msg.Write(Path.GetFileName(selectedMap.Name));
                 msg.Write(selectedMap.MapHash.MD5Hash);
             }
 

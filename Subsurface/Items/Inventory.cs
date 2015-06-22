@@ -10,20 +10,44 @@ namespace Subsurface
 {
     class Inventory : Entity
     {
+        public static Item draggingItem;
+        public static Item doubleClickedItem;
+
+        private int slotsPerRow;
+
+        public int SlotsPerRow
+        {
+            set { slotsPerRow = Math.Max(1, value); }
+        }
+
         protected int capacity;
 
-        public static Item draggingItem;
+        public Vector2 CenterPos
+        {
+            get { return centerPos; }
+            set 
+            { 
+                centerPos = value;
+                centerPos.X *= Game1.GraphicsWidth;
+                centerPos.Y *= Game1.GraphicsHeight;
+            }
+        }
 
-        public static Item doubleClickedItem;
+        private Vector2 centerPos;
 
         protected int selectedSlot;
 
         public Item[] items;
 
-        public Inventory(int capacity)
+        public Inventory(int capacity, Vector2? centerPos = null, int slotsPerRow=5)
         {
             this.capacity = capacity;
+
+            this.slotsPerRow = slotsPerRow;
+
             items = new Item[capacity];
+
+            CenterPos = (centerPos==null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
         }
 
         public int FindIndex(Item item)
@@ -132,13 +156,11 @@ namespace Subsurface
             int rectWidth = 40, rectHeight = 40;
 
             int spacing = 10;
-
-            int slotsPerRow = 5;
-
+            
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
 
-            int startX = Game1.GraphicsWidth / 2 - (rectWidth * slotsPerRow + spacing * (slotsPerRow - 1)) / 2;
-            int startY = (int)(Game1.GraphicsHeight * 0.9) - rows*(spacing+rectHeight);
+            int startX = (int)centerPos.X - (rectWidth * slotsPerRow + spacing * (slotsPerRow - 1)) / 2;
+            int startY = (int)centerPos.Y - rows * (spacing + rectHeight);
 
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
             Rectangle draggingItemSlot = slotRect;

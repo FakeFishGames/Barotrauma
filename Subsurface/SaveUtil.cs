@@ -9,36 +9,40 @@ namespace Subsurface
 {
     class SaveUtil
     {
-        public const string SaveFolder = "Content/SavedMaps/";
+        public const string SaveFolder = "Content/Data/Saves/";
 
         public delegate void ProgressDelegate(string sMessage);
 
-        public static void SaveGame(string directory)
+        public static void SaveGame(string savePath)
         {
-            if (Directory.Exists(directory))
+            string tempPath = Path.GetDirectoryName(savePath) + "\\temp";
+            if (!Directory.Exists(tempPath))
             {
-                Directory.Delete(directory, true);
+                Directory.CreateDirectory(tempPath);
             }
 
-            Directory.CreateDirectory(directory);            
+            //Directory.CreateDirectory(Path.GetDirectoryName(filePath) + "\\temp");            
 
-            Map.Loaded.SaveAs(directory+"\\map.gz");
+            Map.Loaded.SaveAs(tempPath + "\\map.gz");
 
-            Game1.GameSession.Save(directory+"\\gamesession.xml");
+            Game1.GameSession.Save(tempPath + "\\gamesession.xml");
             //Game1.GameSession.crewManager.Save(directory+"\\crew.xml");
 
-            CompressDirectory(directory, directory+".save", null);
+            CompressDirectory(tempPath, savePath, null);
 
-            Directory.Delete(directory, true);
+            Directory.Delete(tempPath, true);
         }
 
         public static void LoadGame(string filePath)
         {
-            DecompressToDirectory(filePath+".save", Path.GetDirectoryName(filePath)+"\\temp", null);
+            string tempPath = Path.GetDirectoryName(filePath) + "\\temp";
 
-            Map.Load(Path.GetDirectoryName(filePath) + "\\temp\\map.gz");
-            Game1.GameSession = new GameSession(Path.GetDirectoryName(filePath) + "\\temp\\gamesession.gz");
+            DecompressToDirectory(filePath, tempPath, null);
 
+            Map selectedMap = Map.Load(tempPath +"\\map.gz");
+            Game1.GameSession = new GameSession(selectedMap, filePath, tempPath + "\\gamesession.xml");
+
+            Directory.Delete(tempPath, true);
         }
 
         public static string CreateSavePath(string saveFolder, string fileName="save")
@@ -57,7 +61,7 @@ namespace Subsurface
                 i++;
             }
 
-            return saveFolder + fileName + i + extension;
+            return saveFolder + fileName + i;
         }
 
         public static void CompressStringToFile(string fileName, string value)

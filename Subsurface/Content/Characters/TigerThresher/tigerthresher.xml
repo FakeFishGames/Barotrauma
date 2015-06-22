@@ -15,7 +15,7 @@
     <!-- lower yaw -->
     <limb id = "1" width="16" height="103">
       <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
-      <attack type="PinchCCW" range="200" duration="0.5" damage="150" bleedingdamage="50" structuredamage="500" damagetype="slash"/>
+      <attack type="PinchCCW" range="200" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash"/>
     </limb>
 
     <!-- body -->

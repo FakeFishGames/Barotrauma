@@ -71,12 +71,14 @@
     <Compile Include="GameSession\GameMode.cs" />
     <Compile Include="GameSession\HireManager.cs" />
     <Compile Include="Characters\HumanoidAnimController.cs" />
+    <Compile Include="GameSession\SinglePlayerMode.cs" />
     <Compile Include="GameSession\TraitorMode.cs" />
     <Compile Include="GUI\GUIImage.cs" />
     <Compile Include="GUI\GUIMessageBox.cs" />
     <Compile Include="GUI\GUITickBox.cs" />
     <Compile Include="IPropertyObject.cs" />
     <Compile Include="Items\CharacterInventory.cs" />
+    <Compile Include="Items\Components\Fabricator.cs" />
     <Compile Include="Items\Components\MiniMap.cs" />
     <Compile Include="Items\Components\Pump.cs" />
     <Compile Include="Items\Components\Signal\OxygenDetector.cs" />
@@ -305,6 +307,13 @@
     <Content Include="Content\Items\Door\windowedDoor.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\Fabricators\fabricator.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Fabricators\fabricators.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Content\Items\Lockers\locker.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -437,22 +446,22 @@
     <Content Include="Content\Items\poweritems.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\railgun.xml">
+    <Content Include="Content\Items\Weapons\railgun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\railgunbarrel.png">
+    <Content Include="Content\Items\Weapons\railgunbarrel.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\railgunbase.png">
+    <Content Include="Content\Items\Weapons\railgunbase.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\railguncontroller.png">
+    <Content Include="Content\Items\Weapons\railguncontroller.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\railgunloader.png">
+    <Content Include="Content\Items\Weapons\railgunloader.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\railgunshell.png">
+    <Content Include="Content\Items\Weapons\railgunshell.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Reactor\reactor.png">
@@ -587,7 +596,7 @@
     <None Include="Content\Items\Weapons\harpoon2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Content\Items\railgun.ogg">
+    <None Include="Content\Items\Weapons\railgun.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Weapons\stunGrenade.ogg">
