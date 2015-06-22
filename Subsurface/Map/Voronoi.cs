@@ -543,8 +543,8 @@ namespace Voronoi2
             newEdge.point1 = point1;
             newEdge.point2 = point2;
     			
-			newEdge.site1 = leftSite.sitenbr;
-			newEdge.site2 = rightSite.sitenbr;
+			newEdge.site1 = leftSite;
+			newEdge.site2 = rightSite;
 		}
 		
 		private void clip_line( Edge e )

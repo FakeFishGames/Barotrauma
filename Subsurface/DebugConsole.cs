@@ -200,7 +200,7 @@ namespace Subsurface
                     }
                     break;
                 case "generatelevel":
-                    Game1.Level = new Level(Game1.localRandom.Next(), 20, 5000, 5000);
+                    Game1.Level = new Level(Game1.localRandom.Next(), 20, 500, 500);
                     break;
                 case "fowenabled":
                 case "fow":
