@@ -68,7 +68,7 @@ namespace Subsurface
                 if (e.GetType()!=typeof(WayPoint)) continue;
                 if (e == this) continue;
 
-                if (!Map.RectContains(e.Rect, position)) continue;
+                if (!Submarine.RectContains(e.Rect, position)) continue;
 
                 linkedTo.Add(e);
                 e.linkedTo.Add(this);
@@ -123,7 +123,7 @@ namespace Subsurface
             Rectangle rect = new Rectangle(
                 int.Parse(element.Attribute("x").Value),
                 int.Parse(element.Attribute("y").Value),
-                (int)Map.gridSize.X, (int)Map.gridSize.Y);
+                (int)Submarine.gridSize.X, (int)Submarine.gridSize.Y);
 
             WayPoint w = new WayPoint(rect);
 

@@ -109,8 +109,8 @@ namespace Subsurface.Items.Components
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
 
-            Body targetBody = Map.PickBody(TransformedBarrelPos, targetPosition, ignoredBodies);
-            pickedPosition = Map.LastPickedPosition;
+            Body targetBody = Submarine.PickBody(TransformedBarrelPos, targetPosition, ignoredBodies);
+            pickedPosition = Submarine.LastPickedPosition;
 
             if (targetBody==null || targetBody.UserData==null) return true;
 

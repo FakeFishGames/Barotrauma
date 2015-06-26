@@ -287,8 +287,9 @@ namespace Subsurface
 
             if (itemList != null && body!=null)
             {
-                Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
-                body.SetTransform(ConvertUnits.ToSimUnits(pos), 0.0f);
+                amount = ConvertUnits.ToSimUnits(amount);
+                //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
+                body.SetTransform(body.Position+amount, body.Rotation);
             }
             foreach (ItemComponent ic in components)
             {
@@ -679,7 +680,7 @@ namespace Subsurface
                 {
                     Rectangle transformedTrigger = item.TransformTrigger(trigger);
                     
-                    if (!Map.RectContains(transformedTrigger, displayPos))continue;
+                    if (!Submarine.RectContains(transformedTrigger, displayPos))continue;
                     
                     
                     Vector2 triggerCenter =

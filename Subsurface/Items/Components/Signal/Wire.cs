@@ -35,6 +35,15 @@ namespace Subsurface.Items.Components
             connections = new Connection[2];
         }
 
+        public override void Move(Vector2 amount)
+        {
+            amount = FarseerPhysics.ConvertUnits.ToDisplayUnits(amount);
+            for (int i = 0; i<nodes.Count; i++)
+            {
+                nodes[i] += amount;
+            }
+        }
+
         public Connection OtherConnection(Connection connection)
         {
             if (connection == null) return null;

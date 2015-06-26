@@ -162,6 +162,8 @@ namespace Subsurface
                 if (Keyboard.GetState().IsKeyDown(Keys.Right))  moveCam.X += moveSpeed;                
                 if (Keyboard.GetState().IsKeyDown(Keys.Down))   moveCam.Y -= moveSpeed;
                 if (Keyboard.GetState().IsKeyDown(Keys.Up))     moveCam.Y += moveSpeed;
+
+                Zoom = MathHelper.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f, 0.1f, 2.0f);
             }
             else
             {

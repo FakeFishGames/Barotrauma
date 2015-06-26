@@ -972,5 +972,17 @@ namespace Voronoi2
 			return true;
 		}
 
+        public List<GraphEdge> MakeVoronoiGraph(List<Vector2> sites, int width, int height)
+        {
+            double[] xVal = new double[sites.Count];
+            double[] yVal = new double[sites.Count];
+            for (int i = 0; i < sites.Count; i++)
+            {
+                xVal[i] = sites[i].X;
+                yVal[i] = sites[i].Y;
+            }
+            return generateVoronoi(xVal, yVal, 0, width, 0, height);
+        }
+
 	} // Voronoi Class End
 } // namespace Voronoi2 End

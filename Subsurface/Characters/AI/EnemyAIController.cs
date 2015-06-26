@@ -219,9 +219,9 @@ namespace Subsurface
             //check if there's a wall between the target and the character   
             Vector2 rayStart = character.animController.limbs[0].SimPosition;
             Vector2 rayEnd = selectedTarget.Position;
-            Body closestBody = Map.CheckVisibility(rayStart, rayEnd);
+            Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
 
-            if (Map.LastPickedFraction == 1.0f || closestBody == null)
+            if (Submarine.LastPickedFraction == 1.0f || closestBody == null)
             {
                 wallAttackPos = Vector2.Zero;
                 return;
@@ -230,11 +230,11 @@ namespace Subsurface
             Structure wall = closestBody.UserData as Structure;
             if (wall == null)
             {
-                wallAttackPos = Map.LastPickedPosition;
+                wallAttackPos = Submarine.LastPickedPosition;
             }
             else
             {
-                int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Map.LastPickedPosition));
+                int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
 
                 float sectionDamage = wall.SectionDamage(sectionIndex);
                 for (int i = sectionIndex - 2; i <= sectionIndex + 2; i++)
@@ -377,7 +377,7 @@ namespace Subsurface
                     Vector2 rayStart = character.animController.limbs[0].SimPosition;
                     Vector2 rayEnd = target.Position;
 
-                    Body closestBody = Map.CheckVisibility(rayStart, rayEnd);
+                    Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
                     Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
                     
                     //if (targetCharacter != null)

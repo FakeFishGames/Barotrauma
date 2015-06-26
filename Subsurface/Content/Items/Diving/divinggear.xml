@@ -40,7 +40,7 @@
       <sprite texture="DivingSuit.png" limb="RightArm" sourcerect="0,0,18,40" origin="0.5,0.4" depth="0.005"/>
       <sprite texture="DivingSuit.png" limb="LeftArm" sourcerect="0,0,18,40" origin="0.5,0.4" depth="0.005"/>
 
-      <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Oxygen Tank" Condition="-0.7" Oxygen="20.0"/>
+      <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Oxygen Tank,human" Condition="-0.7" Oxygen="20.0"/>
       <StatusEffect type="OnWearing" target="Character" PressureProtection="100.0"/>
     </Wearable>
 

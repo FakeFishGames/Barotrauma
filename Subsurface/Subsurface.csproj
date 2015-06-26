@@ -127,7 +127,9 @@
     <Compile Include="Map\Level.cs" />
     <Compile Include="Map\Lights\ConvexHull.cs" />
     <Compile Include="Map\Lights\LightManager.cs" />
-    <Compile Include="Map\MapHash.cs" />
+    <Compile Include="Map\Location.cs" />
+    <Compile Include="Map\Map.cs" />
+    <Compile Include="Map\Md5Hash.cs" />
     <Compile Include="Map\Voronoi.cs" />
     <Compile Include="Map\VoronoiElements.cs" />
     <Compile Include="Physics\PhysicsBody.cs" />
@@ -161,7 +163,7 @@
     <Compile Include="Items\Components\Projectile.cs" />
     <Compile Include="Map\MapEntity.cs" />
     <Compile Include="Map\MapEntityPrefab.cs" />
-    <Compile Include="Map\Map.cs" />
+    <Compile Include="Map\Submarine.cs" />
     <Compile Include="Map\Structure.cs" />
     <Compile Include="Map\StructurePrefab.cs" />
     <Compile Include="Map\WaterRenderer.cs" />

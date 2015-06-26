@@ -30,9 +30,9 @@ namespace Subsurface
 
         public bool isServer;
 
-        public Map SelectedMap
+        public Submarine SelectedMap
         {
-            get { return mapList.SelectedData as Map; }
+            get { return mapList.SelectedData as Submarine; }
         }
 
 
@@ -135,9 +135,9 @@ namespace Subsurface
             mapList.OnSelected = SelectMap;
             mapList.Enabled = (Game1.Server!=null);
 
-            if (Map.SavedMaps.Count>0)
+            if (Submarine.SavedSubmarines.Count>0)
             {
-                foreach (Map map in Map.SavedMaps)
+                foreach (Submarine map in Submarine.SavedSubmarines)
                 {
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
@@ -245,10 +245,10 @@ namespace Subsurface
         {
             if (Game1.Server != null) Game1.Server.UpdateNetLobby(obj);
 
-            Map map = (Map)obj;
+            Submarine map = (Submarine)obj;
 
             //map already loaded
-            if (Map.Loaded!=null && map.FilePath == Map.Loaded.FilePath) return true;
+            if (Submarine.Loaded!=null && map.FilePath == Submarine.Loaded.FilePath) return true;
 
             map.Load();
 
@@ -281,13 +281,13 @@ namespace Subsurface
             Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
             Vector2 pos = new Vector2(
-                Map.Borders.X + Map.Borders.Width / 2,
-                Map.Borders.Y - Map.Borders.Height / 2);
+                Submarine.Borders.X + Submarine.Borders.Width / 2,
+                Submarine.Borders.Y - Submarine.Borders.Height / 2);
 
             camAngle += (float)deltaTime / 10.0f;
             Vector2 offset = (new Vector2(
-                (float)Math.Cos(camAngle) * (Map.Borders.Width / 2.0f),
-                (float)Math.Sin(camAngle) * (Map.Borders.Height / 2.0f)));
+                (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+                (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
             
             pos += offset * 0.8f;
             
@@ -466,7 +466,7 @@ namespace Subsurface
 
         public void WriteData(NetOutgoingMessage msg)
         {
-            Map selectedMap = mapList.SelectedData as Map;
+            Submarine selectedMap = mapList.SelectedData as Submarine;
 
             if (selectedMap==null)
             {
@@ -476,7 +476,7 @@ namespace Subsurface
             else
             {
                 msg.Write(Path.GetFileName(selectedMap.Name));
-                msg.Write(selectedMap.MapHash.MD5Hash);
+                msg.Write(selectedMap.Hash.MD5Hash);
             }
 
             msg.Write(modeList.SelectedIndex);
@@ -486,7 +486,7 @@ namespace Subsurface
         public bool TrySelectMap(string mapName, string md5Hash)
         {
 
-            Map map = Map.SavedMaps.Find(m => m.Name == mapName);
+            Submarine map = Submarine.SavedSubmarines.Find(m => m.Name == mapName);
             if (map==null)
             {
                 DebugConsole.ThrowError("The map ''" + mapName + "'' has been selected by the server.");
@@ -495,10 +495,10 @@ namespace Subsurface
             }
             else
             {
-                if (map.MapHash.MD5Hash!=md5Hash)
+                if (map.Hash.MD5Hash!=md5Hash)
                 {
                     DebugConsole.ThrowError("Your version of the map file ''"+map.Name+"'' doesn't match the server's version!");
-                    DebugConsole.ThrowError("Your file: "+map.Name+"(MD5 hash : "+map.MapHash.MD5Hash+")");
+                    DebugConsole.ThrowError("Your file: "+map.Name+"(MD5 hash : "+map.Hash.MD5Hash+")");
                     DebugConsole.ThrowError("Server's file: " + mapName + "(MD5 hash : " + md5Hash + ")");
                     return false;
                 }

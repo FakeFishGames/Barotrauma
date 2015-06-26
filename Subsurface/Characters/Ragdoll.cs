@@ -462,7 +462,7 @@ namespace Subsurface
                     //limb isn't in any room -> it's in the water
                     limb.inWater = true;
                 }
-                else if (limbHull.Volume>0.0f && Map.RectContains(limbHull.Rect, limbPosition))
+                else if (limbHull.Volume>0.0f && Submarine.RectContains(limbHull.Rect, limbPosition))
                 {
                     
                     if (limbPosition.Y < limbHull.Surface)                        

@@ -111,7 +111,7 @@ namespace Subsurface
                 Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
                 foreach (Body b in bodies)
                 {
-                    b.SetTransform(b.Position + simAmount, 0.0f);
+                    b.SetTransform(b.Position + simAmount, b.Rotation);
                 }
             }
 
@@ -203,15 +203,15 @@ namespace Subsurface
                     bodies = new List<Body>();
 
                     Body newBody = BodyFactory.CreateRectangle(Game1.world,
-                        ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) - Map.gridSize.X),
+                        ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) - Submarine.gridSize.X),
                         ConvertUnits.ToSimUnits(10),
                         1.5f);
 
                     newBody.BodyType = BodyType.Static;
                     Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
                     stairPos += new Vector2(
-                        (StairDirection == Direction.Right) ? -Map.gridSize.X*1.5f : Map.gridSize.X*1.5f,
-                        - Map.gridSize.Y*2.0f);
+                        (StairDirection == Direction.Right) ? -Submarine.gridSize.X*1.5f : Submarine.gridSize.X*1.5f,
+                        - Submarine.gridSize.Y*2.0f);
 
 
                     newBody.Position = ConvertUnits.ToSimUnits(stairPos);

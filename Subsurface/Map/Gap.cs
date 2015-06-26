@@ -90,8 +90,8 @@ namespace Subsurface
 
         public override bool Contains(Vector2 position)
         {
-            return (Map.RectContains(rect, position) &&
-                !Map.RectContains(new Rectangle(rect.X + 4, rect.Y - 4, rect.Width - 8, rect.Height - 8), position));
+            return (Submarine.RectContains(rect, position) &&
+                !Submarine.RectContains(new Rectangle(rect.X + 4, rect.Y - 4, rect.Width - 8, rect.Height - 8), position));
         }
 
         private void FindHulls()
@@ -102,7 +102,7 @@ namespace Subsurface
 
             foreach (Hull h in Hull.hullList)
             {
-                if (!Map.RectsOverlap(h.Rect, rect, false)) continue;
+                if (!Submarine.RectsOverlap(h.Rect, rect, false)) continue;
                 
                 //if the gap is inside the hull completely, ignore it
                 if (rect.X > h.Rect.X && rect.X + rect.Width < h.Rect.X+h.Rect.Width && 
@@ -250,20 +250,20 @@ namespace Subsurface
                     pos.Y = ConvertUnits.ToSimUnits(MathHelper.Clamp(lowerSurface, rect.Y-rect.Height, rect.Y));
 
                     Game1.particleManager.CreateParticle("watersplash",
-                        new Vector2(pos.X, pos.Y - ToolBox.RandomFloat(0.0f, 0.1f)),
-                        new Vector2(flowForce.X * ToolBox.RandomFloat(0.005f, 0.007f), flowForce.Y * ToolBox.RandomFloat(0.005f, 0.007f)));
+                        new Vector2(pos.X, pos.Y - ToolBox.RandomFloatLocal(0.0f, 0.1f)),
+                        new Vector2(flowForce.X * ToolBox.RandomFloatLocal(0.005f, 0.007f), flowForce.Y * ToolBox.RandomFloatLocal(0.005f, 0.007f)));
 
-                    pos.Y = ConvertUnits.ToSimUnits(ToolBox.RandomFloat(lowerSurface, rect.Y - rect.Height));
+                    pos.Y = ConvertUnits.ToSimUnits(ToolBox.RandomFloatLocal(lowerSurface, rect.Y - rect.Height));
                         Game1.particleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
                 }
                 else
                 {
                     pos.Y += Math.Sign(flowForce.Y) * ConvertUnits.ToSimUnits(rect.Height / 2.0f);
-                    for (int i = 0; i < rect.Width; i += (int)ToolBox.RandomFloat(80, 100))
+                    for (int i = 0; i < rect.Width; i += (int)ToolBox.RandomFloatLocal(80, 100))
                     {
-                        pos.X = ConvertUnits.ToSimUnits(ToolBox.RandomFloat(rect.X, rect.X+rect.Width));
+                        pos.X = ConvertUnits.ToSimUnits(ToolBox.RandomFloatLocal(rect.X, rect.X+rect.Width));
                         Subsurface.Particles.Particle splash = Game1.particleManager.CreateParticle("watersplash", pos,
-                            new Vector2(flowForce.X * ToolBox.RandomFloat(0.005f, 0.008f), flowForce.Y * ToolBox.RandomFloat(0.005f, 0.008f)));
+                            new Vector2(flowForce.X * ToolBox.RandomFloatLocal(0.005f, 0.008f), flowForce.Y * ToolBox.RandomFloatLocal(0.005f, 0.008f)));
 
                         if (splash!=null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 

@@ -150,8 +150,8 @@ namespace Subsurface
 
         public override bool Contains(Vector2 position)
         {
-            return (Map.RectContains(rect, position) &&
-                !Map.RectContains(new Rectangle(rect.X + 8, rect.Y - 8, rect.Width - 16, rect.Height - 16), position));
+            return (Submarine.RectContains(rect, position) &&
+                !Submarine.RectContains(new Rectangle(rect.X + 8, rect.Y - 8, rect.Width - 16, rect.Height - 16), position));
         }
 
         public int GetWaveIndex(Vector2 position)
@@ -189,7 +189,7 @@ namespace Subsurface
             if (EditWater)
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Map.RectContains(rect, position))
+                if (Submarine.RectContains(rect, position))
                 {
                     if (PlayerInput.LeftButtonDown())
                     {
@@ -210,7 +210,7 @@ namespace Subsurface
             for (int i = 0; i < waveY.Length; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
-                if (maxDelta > ToolBox.RandomFloat(0.2f,10.0f))
+                if (maxDelta > ToolBox.RandomFloatLocal(0.2f,10.0f))
                 {
                     Game1.particleManager.CreateParticle("mist",
                         ConvertUnits.ToSimUnits(new Vector2(rect.X + WaveWidth * i,surface + waveY[i])),
@@ -390,12 +390,12 @@ namespace Subsurface
         {
             if (guess != null && hullList.Contains(guess))
             {
-                if (Map.RectContains(guess.rect, position)) return guess;
+                if (Submarine.RectContains(guess.rect, position)) return guess;
             }
 
             foreach (Hull w in hullList)
             {
-                if (Map.RectContains(w.rect, position)) return w;
+                if (Submarine.RectContains(w.rect, position)) return w;
             }
 
             return null;

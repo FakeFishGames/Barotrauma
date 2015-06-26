@@ -32,7 +32,7 @@ namespace Subsurface
         {
             this.host = host;
 
-            wanderAngle = ToolBox.RandomFloat(0.0f, MathHelper.TwoPi);
+            wanderAngle = ToolBox.RandomFloatLocal(0.0f, MathHelper.TwoPi);
         }
 
         public void SteeringSeek(Vector2 target, float speed = 1.0f)
@@ -90,7 +90,7 @@ namespace Subsurface
 
             float angleChange = 1.5f;
             
-            wanderAngle += ToolBox.RandomFloat(0.0f, 1.0f) * angleChange - angleChange * 0.5f;
+            wanderAngle += ToolBox.RandomFloatLocal(0.0f, 1.0f) * angleChange - angleChange * 0.5f;
 
             Vector2 newSteering = circleCenter + displacement;
             float steeringSpeed = (newSteering + host.Steering).Length();
@@ -113,7 +113,7 @@ namespace Subsurface
             if (rayCastTimer <= 0.0f)
             {
                 rayCastTimer = RayCastInterval;
-                Body closestBody = Map.CheckVisibility(host.Position, ahead);
+                Body closestBody = Submarine.CheckVisibility(host.Position, ahead);
                 if (closestBody == null)
                 {
                     avoidSteering = Vector2.Zero;
@@ -124,7 +124,7 @@ namespace Subsurface
                     Structure closestStructure = closestBody.UserData as Structure;
                     if (closestStructure!=null)
                     {
-                        Vector2 obstaclePosition = Map.LastPickedPosition;
+                        Vector2 obstaclePosition = Submarine.LastPickedPosition;
                         if (closestStructure.IsHorizontal)
                         {
                             obstaclePosition.Y = closestStructure.SimPosition.Y;
@@ -134,7 +134,7 @@ namespace Subsurface
                             obstaclePosition.X = closestStructure.SimPosition.X;
                         }
 
-                        avoidSteering = Vector2.Normalize(Map.LastPickedPosition - obstaclePosition);
+                        avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - obstaclePosition);
                     }
                 }
                 

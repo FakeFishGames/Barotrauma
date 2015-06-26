@@ -117,7 +117,7 @@ namespace Subsurface
 
         public virtual bool Contains(Vector2 position)
         {
-            return (Map.RectContains(rect, position));
+            return (Submarine.RectContains(rect, position));
         }
         
         public virtual void Draw(SpriteBatch spriteBatch, bool editing) {}
@@ -216,7 +216,7 @@ namespace Subsurface
                     //mouse released -> move the entities to the new position of the mouse
 
                     Vector2 moveAmount = position - startMovingPos;
-                    moveAmount = Map.VectorToWorldGrid(moveAmount);
+                    moveAmount = Submarine.VectorToWorldGrid(moveAmount);
 
                     if (moveAmount != Vector2.Zero)
                     {
@@ -235,7 +235,7 @@ namespace Subsurface
                 selectionSize.Y = selectionPos.Y - position.Y;
 
                 List<MapEntity> newSelection = new List<MapEntity>();// FindSelectedEntities(selectionPos, selectionSize);
-                if (Math.Abs(selectionSize.X) > Map.gridSize.X || Math.Abs(selectionSize.Y) > Map.gridSize.Y)
+                if (Math.Abs(selectionSize.X) > Submarine.gridSize.X || Math.Abs(selectionSize.Y) > Submarine.gridSize.Y)
                 {
                     newSelection = FindSelectedEntities(selectionPos, selectionSize);
                 }
@@ -315,7 +315,7 @@ namespace Subsurface
             if (startMovingPos != Vector2.Zero)
             {
                 Vector2 moveAmount = position - startMovingPos;
-                moveAmount = Map.VectorToWorldGrid(moveAmount);
+                moveAmount = Submarine.VectorToWorldGrid(moveAmount);
                 moveAmount.Y = -moveAmount.Y;
                 //started moving the selected entities
                 if (moveAmount != Vector2.Zero)
@@ -358,7 +358,7 @@ namespace Subsurface
             List<MapEntity> foundEntities = new List<MapEntity>();
             foreach (MapEntity e in mapEntityList)
             {
-                if (Map.RectContains(e.rect, pos)) foundEntities.Add(e);
+                if (Submarine.RectContains(e.rect, pos)) foundEntities.Add(e);
             }
             return foundEntities;
         }
@@ -367,7 +367,7 @@ namespace Subsurface
         {
             foreach (MapEntity e in mapEntityList)
             {
-                if (Map.RectContains(e.rect, pos)) return e;
+                if (Submarine.RectContains(e.rect, pos)) return e;
             }
             return null;
         }
@@ -379,11 +379,11 @@ namespace Subsurface
         {
             List<MapEntity> foundEntities = new List<MapEntity>();
 
-            Rectangle selectionRect = Map.AbsRect(pos, size);
+            Rectangle selectionRect = Submarine.AbsRect(pos, size);
             
             foreach (MapEntity e in mapEntityList)
             {
-                if (Map.RectsOverlap(selectionRect, e.rect))
+                if (Submarine.RectsOverlap(selectionRect, e.rect))
                     foundEntities.Add(e);
             }
 

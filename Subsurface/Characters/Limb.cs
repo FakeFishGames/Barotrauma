@@ -314,7 +314,7 @@ namespace Subsurface
 
                 Game1.particleManager.CreateParticle("blood",
                     SimPosition,
-                    particleVel * ToolBox.RandomFloat(1.0f, 3.0f));
+                    particleVel * ToolBox.RandomFloatLocal(1.0f, 3.0f));
             }
 
             for (int i = 0; i < bloodAmount / 2; i++)

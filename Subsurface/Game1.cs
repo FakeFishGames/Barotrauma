@@ -15,9 +15,11 @@ namespace Subsurface
     /// </summary>
     class Game1 : Game
     {
-        GraphicsDeviceManager graphics;
+        public static GraphicsDeviceManager graphics;
         static int graphicsWidth, graphicsHeight;
         static SpriteBatch spriteBatch;
+
+        public static GraphicsDevice CurrGraphicsDevice;
 
         public static FrameCounter frameCounter;
 
@@ -46,7 +48,7 @@ namespace Subsurface
         public static Random localRandom;
         public static Random random;
 
-        private Stopwatch renderTimer;
+        //private Stopwatch renderTimer;
         public static int renderTimeElapsed;
 
         
@@ -54,6 +56,7 @@ namespace Subsurface
         {
             get { return GameScreen.Cam; }
         }
+
 
         public static int GraphicsWidth
         {
@@ -68,7 +71,7 @@ namespace Subsurface
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
-
+            
             graphicsWidth = 1280;
             graphicsHeight = 720;
 
@@ -76,13 +79,13 @@ namespace Subsurface
             graphics.PreferredBackBufferWidth = graphicsWidth;
             graphics.PreferredBackBufferHeight = graphicsHeight;
             Content.RootDirectory = "Content";
-
+            
             //graphics.SynchronizeWithVerticalRetrace = false;
             //graphics.ApplyChanges();
 
             frameCounter = new FrameCounter();
 
-            renderTimer = new Stopwatch();
+            //renderTimer = new Stopwatch();
 
             IsMouseVisible = true;
 
@@ -106,6 +109,8 @@ namespace Subsurface
         protected override void Initialize()
         {
             base.Initialize();
+
+            CurrGraphicsDevice = GraphicsDevice;
 
             particleManager = new ParticleManager("Content/Particles/prefabs.xml", Cam);
 
@@ -145,7 +150,7 @@ namespace Subsurface
                         
             AmbientSoundManager.Init("Content/Sounds/Sounds.xml");
 
-            Map.PreloadMaps("Content/SavedMaps");
+            Submarine.Preload("Content/SavedMaps");
             GameScreen          =   new GameScreen(graphics.GraphicsDevice);
             MainMenuScreen      =   new MainMenuScreen(this); 
             LobbyScreen         =   new LobbyScreen();
@@ -209,7 +214,7 @@ namespace Subsurface
         /// </summary>
         protected override void Draw(GameTime gameTime)
         {
-            renderTimer.Restart();
+            //renderTimer.Restart();
 
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -217,8 +222,8 @@ namespace Subsurface
 
             Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
 
-            renderTimeElapsed = (int)renderTimer.Elapsed.Ticks;
-            renderTimer.Stop();
+            //renderTimeElapsed = (int)renderTimer.Elapsed.Ticks;
+            //renderTimer.Stop();
         }
 
         protected override void OnExiting(object sender, EventArgs args)

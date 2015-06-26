@@ -240,7 +240,7 @@ namespace Subsurface.Networking
                         TimeSpan duration = new TimeSpan(0,(int)durationMinutes,0);
 
                         //int gameModeIndex = inc.ReadInt32();
-                        Game1.GameSession = new GameSession(Map.Loaded);
+                        Game1.GameSession = new GameSession(Submarine.Loaded);
                         Game1.GameSession.StartShift(duration, 1);
 
                         myCharacter = ReadCharacterData(inc);
@@ -323,7 +323,7 @@ namespace Subsurface.Networking
 
         public void EndGame(string endMessage)
         {
-            Map.Unload();
+            Submarine.Unload();
 
             Game1.NetLobbyScreen.Select();
 

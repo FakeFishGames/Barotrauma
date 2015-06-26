@@ -9,10 +9,12 @@ namespace Subsurface
 {
     class LobbyScreen : Screen
     {
+        enum PanelTab { Crew = 0, Map = 1, Hire = 2 }
+
         GUIFrame leftPanel;
         GUIFrame[] rightPanel;
 
-        GUIFrame shiftPanel;
+        GUIButton startButton;
 
         int selectedRightPanel;
 
@@ -25,6 +27,8 @@ namespace Subsurface
         Hull previewHull;
 
         Character previewCharacter;
+
+        Level selectedLevel;
 
         public LobbyScreen()
         {
@@ -44,62 +48,55 @@ namespace Subsurface
                 "", Color.Transparent, Color.White, Alignment.Left, leftPanel);
             moneyText.TextGetter = GetMoney;
             
-            GUIButton button = new GUIButton(new Rectangle(0, 60, 100, 30), "Crew", GUI.style, Alignment.CenterX, leftPanel);
-            button.UserData = 0;
+
+
+            GUIButton button = new GUIButton(new Rectangle(0, 60, 100, 30), "Map", GUI.style, Alignment.Left, leftPanel);
+            button.UserData = PanelTab.Map;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 100, 100, 30), "Hire", GUI.style, Alignment.CenterX, leftPanel);
-            button.UserData = 1;
+            button = new GUIButton(new Rectangle(0, 100, 100, 30), "Crew", GUI.style, Alignment.Left, leftPanel);
+            button.UserData = PanelTab.Crew;
             button.OnClicked = SelectRightPanel;
 
-            //--------------------------------------
+            button = new GUIButton(new Rectangle(0, 140, 100, 30), "Hire", GUI.style, Alignment.Left, leftPanel);
+            button.UserData = PanelTab.Hire;
+            button.OnClicked = SelectRightPanel;
+   
+            //---------------------------------------------------------------
+            //---------------------------------------------------------------
 
             panelRect = new Rectangle(
                 panelRect.X + panelRect.Width + (int)(GUI.style.largePadding.X),
-                panelRect.Y,
+                (int)GUI.style.largePadding.Y,
                 Game1.GraphicsWidth - panelRect.Width - (int)(GUI.style.largePadding.X * 3.0f),
-                (int)(Game1.GraphicsHeight * 0.3f) - (int)(GUI.style.largePadding.Y * 1.5f));
+                Game1.GraphicsHeight - (int)(GUI.style.largePadding.Y * 2));
 
-            shiftPanel = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            shiftPanel.Padding = GUI.style.smallPadding;
+            rightPanel = new GUIFrame[3];
 
-            GUITextBlock dayText = new GUITextBlock(new Rectangle(0, 0, 200, 25),
-                "", Color.Transparent, Color.White, Alignment.Left, shiftPanel);
-            dayText.TextGetter = GetDay;
+            rightPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.style.backGroundColor);
+            rightPanel[(int)PanelTab.Crew].Padding = GUI.style.smallPadding;
 
-            GUIProgressBar progressBar = new GUIProgressBar(new Rectangle(0, 30, 200, 20), Color.Green, 0.0f, shiftPanel);
-            progressBar.ProgressGetter = GetWeekProgress;
+            new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, rightPanel[(int)PanelTab.Crew]);
 
-
-            button = new GUIButton(new Rectangle(0,0,100,30), "Start", GUI.style, 
-                (Alignment.Right | Alignment.Bottom), shiftPanel);
-            button.OnClicked = StartShift;
-                       
-            //---------------------------------------------------------------
-            //---------------------------------------------------------------
-
-            rightPanel = new GUIFrame[2];
-
-            panelRect = new Rectangle(
-                panelRect.X,
-                panelRect.Y + panelRect.Height + (int)(GUI.style.largePadding.Y),
-                panelRect.Width,
-                (int)(Game1.GraphicsHeight * 0.7f) - (int)(GUI.style.largePadding.Y * 1.5f));
-
-            rightPanel[0] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            rightPanel[0].Padding = GUI.style.smallPadding;
-
-            new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, rightPanel[0]);
-
-            characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, rightPanel[0]);
+            characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, rightPanel[(int)PanelTab.Crew]);
             characterList.OnSelected = SelectCharacter;
 
             //---------------------------------------
 
-            rightPanel[1] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            rightPanel[1].Padding = GUI.style.smallPadding;
+            rightPanel[(int)PanelTab.Map] = new GUIFrame(panelRect, GUI.style.backGroundColor);
+            rightPanel[(int)PanelTab.Map].Padding = GUI.style.smallPadding;
 
-            hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, Alignment.Left, rightPanel[1]);            
+            startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", GUI.style,
+                Alignment.BottomRight, rightPanel[(int)PanelTab.Map]);
+            startButton.OnClicked = StartShift;
+            startButton.Enabled = false;
+
+            //---------------------------------------
+
+            rightPanel[(int)PanelTab.Hire] = new GUIFrame(panelRect, GUI.style.backGroundColor);
+            rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
+
+            hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, Alignment.Left, rightPanel[(int)PanelTab.Hire]);            
             hireList.OnSelected = HireCharacter;
         }
 
@@ -168,7 +165,22 @@ namespace Subsurface
                 previewCharacter.animController.UpdateAnim((float)Physics.step);
                 Game1.world.Step((float)Physics.step);
             }
+        }
 
+        public void SelectLocation(Location location, LocationConnection connection)
+        {
+            GUIComponent locationPanel = rightPanel[(int)PanelTab.Map].GetChild("selectedlocation");
+
+            if (locationPanel != null) rightPanel[(int)PanelTab.Map].RemoveChild(locationPanel);
+
+            locationPanel = new GUIFrame(new Rectangle(0, 0, rightPanel[(int)PanelTab.Map].Rect.Width / 2 - 40, 190), Color.Transparent, rightPanel[(int)PanelTab.Map]);
+            locationPanel.UserData = "selectedlocation";
+
+            new GUITextBlock(new Rectangle(0,0,100,20), location.Name, Color.Transparent, Color.White, Alignment.TopLeft, locationPanel);
+
+            startButton.Enabled = true;
+
+            selectedLevel = connection.Level;
         }
 
         private void UpdateCharacterLists()
@@ -220,7 +232,7 @@ namespace Subsurface
 
             leftPanel.Update((float)deltaTime);
             rightPanel[selectedRightPanel].Update((float)deltaTime);
-            shiftPanel.Update((float)deltaTime);
+            //shiftPanel.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -239,9 +251,16 @@ namespace Subsurface
             spriteBatch.Begin();
 
             leftPanel.Draw(spriteBatch);
-            shiftPanel.Draw(spriteBatch);
 
             rightPanel[selectedRightPanel].Draw(spriteBatch);
+
+            if (selectedRightPanel == (int)PanelTab.Map)
+            {
+                Game1.GameSession.map.Draw(spriteBatch, new Rectangle(
+                    rightPanel[selectedRightPanel].Rect.Right - 20 - 400, 
+                    rightPanel[selectedRightPanel].Rect.Y + 20, 
+                    400, 400));
+            }            
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -352,7 +371,7 @@ namespace Subsurface
 
         private bool StartShift(GUIButton button, object selection)
         {           
-            Game1.GameSession.StartShift(TimeSpan.Zero);
+            Game1.GameSession.StartShift(TimeSpan.Zero, selectedLevel);
             Game1.GameScreen.Select();
             
             return true;

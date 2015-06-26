@@ -140,7 +140,7 @@ namespace Subsurface
                 null, null, null, null,
                 cam.Transform);            
             
-            Map.Draw(spriteBatch, true);
+            Submarine.Draw(spriteBatch, true);
 
             spriteBatch.End();
             
