@@ -215,7 +215,7 @@ namespace Subsurface.Items.Components
         {
             base.Move(amount);
 
-            LinkedGap.Move(amount);
+            //LinkedGap.Move(amount);
 
             body.SetTransform(body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
 

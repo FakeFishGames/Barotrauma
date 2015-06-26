@@ -270,7 +270,7 @@ namespace Subsurface.Networking
             int seed = DateTime.Now.Millisecond;
             Game1.random = new Random(seed);
             
-            Map selectedMap = Game1.NetLobbyScreen.SelectedMap as Map;
+            Submarine selectedMap = Game1.NetLobbyScreen.SelectedMap as Submarine;
 
             //selectedMap.Load();
 
@@ -307,7 +307,7 @@ namespace Subsurface.Networking
                 msg.Write(seed);
 
                 msg.Write(Game1.NetLobbyScreen.SelectedMap.Name);
-                msg.Write(Game1.NetLobbyScreen.SelectedMap.MapHash.MD5Hash);
+                msg.Write(Game1.NetLobbyScreen.SelectedMap.Hash.MD5Hash);
                 
                 msg.Write(Game1.NetLobbyScreen.GameDuration.TotalMinutes);
 
@@ -339,7 +339,7 @@ namespace Subsurface.Networking
 
         public void EndGame(string endMessage)
         {
-            Map.Unload();
+            Submarine.Unload();
                       
             gameStarted = false;
 

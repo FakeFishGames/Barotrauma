@@ -41,12 +41,12 @@ namespace Subsurface.Items.Components
 
             Rectangle miniMap = new Rectangle(x + 20, y + 40, width - 40, height - 60);
 
-            float size = Math.Min((float)miniMap.Width / (float)Map.Borders.Width, (float)miniMap.Height / (float)Map.Borders.Height);
+            float size = Math.Min((float)miniMap.Width / (float)Submarine.Borders.Width, (float)miniMap.Height / (float)Submarine.Borders.Height);
             foreach (Hull hull in Hull.hullList)
             {
                 Rectangle hullRect = new Rectangle(
-                    miniMap.X + (int)((hull.Rect.X - Map.Borders.X) * size),
-                    miniMap.Y - (int)((hull.Rect.Y - Map.Borders.Y) * size),
+                    miniMap.X + (int)((hull.Rect.X - Submarine.Borders.X) * size),
+                    miniMap.Y - (int)((hull.Rect.Y - Submarine.Borders.Y) * size),
                     (int)(hull.Rect.Width * size), 
                     (int)(hull.Rect.Height * size));
 
@@ -71,8 +71,8 @@ namespace Subsurface.Items.Components
                 if (c.animController.CurrentHull!=null) continue;
 
                 Rectangle characterRect = new Rectangle(
-                    miniMap.X + (int)((c.Position.X - Map.Borders.X) * size),
-                    miniMap.Y - (int)((c.Position.Y - Map.Borders.Y) * size),
+                    miniMap.X + (int)((c.Position.X - Submarine.Borders.X) * size),
+                    miniMap.Y - (int)((c.Position.Y - Submarine.Borders.Y) * size),
                     5, 5);
 
                 GUI.DrawRectangle(spriteBatch, characterRect, Color.White, true);

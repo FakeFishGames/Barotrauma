@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Subsurface
 {
-    class MapHash
+    class Md5Hash
     {
         private string md5Hash;
         private string shortHash;
@@ -29,14 +26,14 @@ namespace Subsurface
             }
         }
 
-        public MapHash(string md5Hash)
+        public Md5Hash(string md5Hash)
         {
             this.md5Hash = md5Hash;
 
             shortHash = GetShortHash(md5Hash);
         }
 
-        public MapHash(XDocument doc)
+        public Md5Hash(XDocument doc)
         {
             string docString = Regex.Replace(doc.ToString(), @"\s+", "");
             // step 1, calculate MD5 hash from input

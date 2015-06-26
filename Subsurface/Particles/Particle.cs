@@ -66,7 +66,7 @@ namespace Subsurface.Particles
 
             velocity = speed;
 
-            this.rotation = rotation + ToolBox.RandomFloat(prefab.startRotationMin, prefab.startRotationMax);    
+            this.rotation = rotation + ToolBox.RandomFloatLocal(prefab.startRotationMin, prefab.startRotationMax);    
             prevRotation = rotation;
 
             float rand = (float)Game1.localRandom.NextDouble();
@@ -132,7 +132,7 @@ namespace Subsurface.Particles
                 }
                 else
                 {
-                    if (Map.InsideWall(new Vector2(drawPosition.X, -drawPosition.Y)))
+                    if (Submarine.InsideWall(new Vector2(drawPosition.X, -drawPosition.Y)))
                     {
                         return false;
                     }

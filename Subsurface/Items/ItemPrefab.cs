@@ -60,7 +60,7 @@ namespace Subsurface
 
         public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
         {
-            Vector2 position = Map.MouseToWorldGrid(cam); 
+            Vector2 position = Submarine.MouseToWorldGrid(cam); 
             
             if (!resizeHorizontal && !resizeVertical)
             {

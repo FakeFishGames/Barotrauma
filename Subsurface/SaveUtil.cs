@@ -23,7 +23,7 @@ namespace Subsurface
 
             //Directory.CreateDirectory(Path.GetDirectoryName(filePath) + "\\temp");            
 
-            Map.Loaded.SaveAs(tempPath + "\\map.gz");
+            Submarine.Loaded.SaveAs(tempPath + "\\map.gz");
 
             Game1.GameSession.Save(tempPath + "\\gamesession.xml");
             //Game1.GameSession.crewManager.Save(directory+"\\crew.xml");
@@ -39,7 +39,7 @@ namespace Subsurface
 
             DecompressToDirectory(filePath, tempPath, null);
 
-            Map selectedMap = Map.Load(tempPath +"\\map.gz");
+            Submarine selectedMap = Submarine.Load(tempPath +"\\map.gz");
             Game1.GameSession = new GameSession(selectedMap, filePath, tempPath + "\\gamesession.xml");
 
             Directory.Delete(tempPath, true);

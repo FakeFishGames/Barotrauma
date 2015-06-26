@@ -109,7 +109,7 @@ namespace Subsurface
 
         public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
         {
-            Vector2 position = Map.MouseToWorldGrid(cam);
+            Vector2 position = Submarine.MouseToWorldGrid(cam);
             //Vector2 placeSize = size;
 
             Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
@@ -118,7 +118,7 @@ namespace Subsurface
             if (placePosition == Vector2.Zero)
             {
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
-                    placePosition = Map.MouseToWorldGrid(cam);
+                    placePosition = Submarine.MouseToWorldGrid(cam);
 
                 newRect.X = (int)position.X;
                 newRect.Y = (int)position.Y;
@@ -131,7 +131,7 @@ namespace Subsurface
                 if (resizeHorizontal) placeSize.X = position.X - placePosition.X;  
                 if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
 
-                newRect = Map.AbsRect(placePosition, placeSize);
+                newRect = Submarine.AbsRect(placePosition, placeSize);
 
                 //newRect.Width = (int)Math.Max(newRect.Width, Map.gridSize.X);
                 //newRect.Height = (int)Math.Max(newRect.Height, Map.gridSize.Y);

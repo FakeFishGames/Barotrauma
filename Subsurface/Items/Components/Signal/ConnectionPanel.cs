@@ -6,8 +6,7 @@ using System.Xml.Linq;
 namespace Subsurface.Items.Components
 {
     class ConnectionPanel : ItemComponent
-    {
-        
+    {        
         public List<Connection> connections;
 
         Character user;
@@ -31,10 +30,20 @@ namespace Subsurface.Items.Components
             }
         }
 
-        public override void Move(Vector2 amount)
-        {
-            base.Move(amount);
-        }
+        //public override void Move(Vector2 amount)
+        //{
+        //    base.Move(amount);
+
+        //    foreach (Connection c in connections)
+        //    {
+        //        foreach (Wire w in c.wires)
+        //        {
+        //            if (w == null) continue;
+
+        //            w.Move
+        //        }
+        //    }
+        //}
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {

@@ -50,7 +50,9 @@
  */
 
 
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
+using Subsurface;
 using System;
 using System.Collections.Generic;
 
@@ -119,6 +121,8 @@ namespace Voronoi2
         public List<GraphEdge> edges;
         public Site site;
 
+        public List<Body> bodies;
+
         public Vector2 Center
         {
             get { return new Vector2((float)site.coord.x, (float)site.coord.y); }
@@ -127,6 +131,8 @@ namespace Voronoi2
         public VoronoiCell(Site site)
         {
             edges = new List<GraphEdge>();
+
+            bodies = new List<Body>();
             this.site = site;
         }
     }
@@ -135,6 +141,23 @@ namespace Voronoi2
 	{
         public Vector2 point1, point2;
 		public Site site1, site2;
+        public VoronoiCell cell1, cell2;
+
+        public VoronoiCell AdjacentCell(VoronoiCell cell)
+        {
+            if (cell1==cell)
+            {
+                return cell2;
+            }
+            else if (cell2==cell)
+            {
+                return cell1;
+            }
+            else
+            {
+                return null;
+            }
+        }
 	}
 	
 	// للترتيب

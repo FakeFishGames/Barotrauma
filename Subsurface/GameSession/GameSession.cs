@@ -27,21 +27,37 @@ namespace Subsurface
 
         private string savePath;
 
-        private Map selectedMap;   
+        private Submarine submarine;
 
-        public GameSession(Map selectedMap, GameModePreset gameModePreset)
-            :this(selectedMap, gameModePreset.Instantiate())
+        private Level level;
+
+        public Map map;
+
+        public Level Level
+        {
+            get { return level; }
+        }
+
+        public Submarine Submarine
+        {
+            get { return submarine; }
+        }
+
+        public GameSession(Submarine submarine, GameModePreset gameModePreset)
+            :this(submarine, gameModePreset.Instantiate())
         {
 
         }
 
-        public GameSession(Map selectedMap, GameMode gameMode = null)
+        public GameSession(Submarine selectedMap, GameMode gameMode = null)
         {
             taskManager = new TaskManager(this);
 
             savePath = SaveUtil.CreateSavePath(SaveUtil.SaveFolder);
 
             guiRoot = new GUIFrame(new Rectangle(0,0,Game1.GraphicsWidth,Game1.GraphicsWidth), Color.Transparent);
+
+            map = new Map(Game1.random.Next(), 500);
 
             int width = 350, height = 100;
             if (Game1.Client!=null || Game1.Server!=null)
@@ -67,7 +83,7 @@ namespace Subsurface
             //startTime = DateTime.Now;
             //endTime = startTime + gameDuration;
 
-            this.selectedMap = selectedMap;
+            this.submarine = selectedMap;
             
             //if (!save) return;
 
@@ -75,7 +91,7 @@ namespace Subsurface
           
         }
 
-        public GameSession(Map selectedMap, string savePath, string filePath)
+        public GameSession(Submarine selectedMap, string savePath, string filePath)
             : this(selectedMap)
         {
             XDocument doc = ToolBox.TryLoadXml(filePath);
@@ -95,13 +111,30 @@ namespace Subsurface
             this.savePath = savePath;
         }
 
+        public void StartShift(TimeSpan duration, Level level)
+        {
+
+            if (Submarine.Loaded != submarine) submarine.Load();
+
+            level.Generate(submarine==null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
+
+            this.level = level;
+
+            StartShift(duration, 1);
+        }
+
         public void StartShift(TimeSpan duration, int scriptedEventCount = 1)
         {
             //if (crewManager.characterInfos.Count == 0) return;
 
-            if (Map.Loaded!=selectedMap) selectedMap.Load();
+            if (Submarine.Loaded!=submarine) submarine.Load();
 
             if (gameMode!=null) gameMode.Start(duration);
+
+            if (level!=null)
+            {
+                submarine.Move(level.StartPosition - submarine.Center, 1.0f);
+            }
 
             //crewManager.StartShift();
             taskManager.StartShift(scriptedEventCount);
@@ -122,7 +155,7 @@ namespace Subsurface
 
                 SaveUtil.SaveGame(savePath);
             }
-
+            
             taskManager.EndShift();
             //gameMode.End();
 

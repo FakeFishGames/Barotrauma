@@ -25,10 +25,20 @@ namespace Subsurface
 
         public static float RandomFloat(float minimum, float maximum)
         {
-            return (float)Game1.localRandom.NextDouble() * (maximum - minimum) + minimum;
+            return (float)Game1.random.NextDouble() * (maximum - minimum) + minimum;
         }
 
         public static int RandomInt(int minimum, int maximum)
+        {
+            return Game1.random.Next(maximum - minimum) + minimum;
+        }
+
+        public static float RandomFloatLocal(float minimum, float maximum)
+        {
+            return (float)Game1.localRandom.NextDouble() * (maximum - minimum) + minimum;
+        }
+
+        public static int RandomIntLocal(int minimum, int maximum)
         {
             return Game1.localRandom.Next(maximum - minimum) + minimum;
         }

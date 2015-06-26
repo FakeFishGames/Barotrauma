@@ -229,7 +229,7 @@ namespace Subsurface
 
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
 
-            Map.Draw(spriteBatch, true);
+            Submarine.Draw(spriteBatch, true);
 
             if (!characterMode)
             {

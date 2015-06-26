@@ -57,16 +57,16 @@ namespace Subsurface
 
             AmbientSoundManager.Update();
 
-            //Vector2 targetMovement = Vector2.Zero;
-            //if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
-            //if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
-            //if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
-            //if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
+            if (Game1.GameSession.Level!=null)
+            {
+                Vector2 targetMovement = Vector2.Zero;
+                if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
+                if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
+                if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
+                if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
-            //foreach (MapEntity e in Structure.mapEntityList)
-            //{
-            //    e.Move(targetMovement);
-            //}
+                Game1.GameSession.Submarine.Move(targetMovement*1000.0f, (float)deltaTime);
+            }
 
             if (Game1.GameSession!=null) Game1.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);
@@ -170,8 +170,8 @@ namespace Subsurface
 
                 if (y<0)
                 {
-                    backgroundTop.SourceRect = new Rectangle(x, y, 1024, 1024);
-                    backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(Game1.GraphicsWidth, Math.Min(1024 - y, Game1.GraphicsHeight)),
+                    backgroundTop.SourceRect = new Rectangle(x, y, 1024, Math.Min(-y,1024));
+                    backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(Game1.GraphicsWidth, Math.Min(-y, Game1.GraphicsHeight)),
                         Vector2.Zero, Color.White);
                 }
             }
@@ -183,10 +183,8 @@ namespace Subsurface
                 BlendState.AlphaBlend,
                 null, null, null, null,
                 cam.Transform);
-
-            if (Game1.Level!=null) Game1.Level.Render(spriteBatch);
                         
-            Map.DrawBack(spriteBatch);
+            Submarine.DrawBack(spriteBatch);
 
             foreach (Character c in Character.characterList) c.Draw(spriteBatch);
 
@@ -257,9 +255,17 @@ namespace Subsurface
                 null, null, null, null,
                 cam.Transform);
 
-            Map.DrawFront(spriteBatch);
-
+            Submarine.DrawFront(spriteBatch);
+            
             spriteBatch.End();
+
+            if (Game1.GameSession != null && Game1.GameSession.Level != null)
+            {
+                Game1.GameSession.Level.Render(graphics, cam);
+                Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
+            }
+
+            if (Game1.Level != null) Game1.Level.Render(graphics, cam);
 
             LightManager.DrawFow(graphics,cam); 
         }

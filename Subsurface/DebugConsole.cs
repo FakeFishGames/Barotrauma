@@ -197,6 +197,10 @@ namespace Subsurface
                 case "editchar":
                     Game1.EditCharacterScreen.Select();
                     break;
+                case "freecamera":
+                    Character.Controlled = null;
+                    Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    break;
                 case "editwater":
                 case "water":
                     if (Game1.Client== null)
@@ -205,7 +209,8 @@ namespace Subsurface
                     }
                     break;
                 case "generatelevel":
-                    Game1.Level = new Level(Game1.localRandom.Next(), 20, 500, 500);
+                    Game1.Level = new Level(100, 500,500, 50);
+                    Game1.Level.Generate(100.0f);
                     break;
                 case "fowenabled":
                 case "fow":
@@ -218,12 +223,12 @@ namespace Subsurface
                     break;
                 case "savemap":
                     if (commands.Length < 2) break;
-                    Map.SaveCurrent("Content/SavedMaps/" + commands[1]);
+                    Submarine.SaveCurrent("Content/SavedMaps/" + commands[1]);
                     NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":
                     if (commands.Length < 2) break;
-                    Map.Load("Content/SavedMaps/" + commands[1]);
+                    Submarine.Load("Content/SavedMaps/" + commands[1]);
                     break;
                 case "savegame":
                     SaveUtil.SaveGame(SaveUtil.SaveFolder+"save");

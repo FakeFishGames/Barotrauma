@@ -64,7 +64,7 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
             mapList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, menuTabs[(int)Tabs.NewGame]);
 
-            foreach (Map map in Map.SavedMaps)
+            foreach (Submarine map in Submarine.SavedSubmarines)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
@@ -76,7 +76,7 @@ namespace Subsurface
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = map;
             }
-            if (Map.SavedMaps.Count > 0) mapList.Select(Map.SavedMaps[0]);
+            if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
 
 
             button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", GUI.style, Alignment.Right | Alignment.Bottom, menuTabs[(int)Tabs.NewGame]);
@@ -173,7 +173,7 @@ namespace Subsurface
 
         private bool StartGame(GUIButton button, object obj)
         {
-            Map selectedMap = mapList.SelectedData as Map;
+            Submarine selectedMap = mapList.SelectedData as Submarine;
             if (selectedMap == null) return false;
 
             Game1.GameSession = new GameSession(selectedMap, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
