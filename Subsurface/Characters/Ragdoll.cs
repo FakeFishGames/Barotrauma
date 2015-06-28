@@ -290,8 +290,7 @@ namespace Subsurface
         {
             Vector2 normal = contact.Manifold.LocalNormal;
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
-
-            
+                        
             Limb l = (Limb)f1.Body.UserData;
 
             if (impact > 1.0f && l.HitSound != null && l.soundTimer<=0.0f) l.HitSound.Play(Math.Min(impact / 5.0f, 1.0f), impact*100.0f, l.body.FarseerBody);

@@ -769,13 +769,13 @@ namespace Subsurface
             for (int i = 0; i < 10; i++)
             {
                 Particle p = Game1.particleManager.CreateParticle("waterblood",
-                    torso.SimPosition + new Vector2(ToolBox.RandomFloatLocal(-0.5f, 0.5f), ToolBox.RandomFloatLocal(-0.5f, 0.5f)),
+                    torso.SimPosition + new Vector2(MathUtils.RandomFloatLocal(-0.5f, 0.5f), MathUtils.RandomFloatLocal(-0.5f, 0.5f)),
                     Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
                 Game1.particleManager.CreateParticle("bubbles",
                     torso.SimPosition,
-                    new Vector2(ToolBox.RandomFloatLocal(-0.5f, 0.5f), ToolBox.RandomFloatLocal(-1.0f,0.5f)));
+                    new Vector2(MathUtils.RandomFloatLocal(-0.5f, 0.5f), MathUtils.RandomFloatLocal(-1.0f,0.5f)));
             }
 
             foreach (var joint in animController.limbJoints)

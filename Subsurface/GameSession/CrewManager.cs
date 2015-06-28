@@ -107,14 +107,17 @@ namespace Subsurface
             GUIComponent characterBlock = listBox.GetChild(killedCharacter) as GUIComponent;
             if (characterBlock != null) characterBlock.Color = Color.DarkRed * 0.5f;
 
-            if (characters.Find(c => !c.IsDead)==null)
-            {
-                Game1.GameSession.EndShift(null, null);
-            }            
+            //if (characters.Find(c => !c.IsDead)==null)
+            //{
+            //    Game1.GameSession.EndShift(null, null);
+            //}            
         }
 
         public void StartShift()
         {
+            listBox.ClearChildren();
+            characters.Clear();
+
             foreach (CharacterInfo ci in characterInfos)
             {
                 WayPoint randomWayPoint = WayPoint.GetRandom(WayPoint.SpawnType.Human);

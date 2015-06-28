@@ -156,7 +156,7 @@ namespace Subsurface
                 Character.characterList.RemoveAt(i);
             }
 
-            Game1.GameSession.EndShift(null, null);
+            Game1.GameSession.EndShift("");
 
             return true;
         }

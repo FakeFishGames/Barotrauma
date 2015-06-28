@@ -175,9 +175,22 @@ namespace Subsurface.Items.Components
 
             bool mouseInRect = panelRect.Contains(PlayerInput.MousePosition);
 
+            Wire equippedWire = null;
+                        //if the character using the panel has a wire item equipped
+            //and the wire hasn't been connected yet, draw it on the panel
+            for (int i = 0; i < character.SelectedItems.Length; i++)
+            {
+                Item selectedItem = character.SelectedItems[i];
+
+                if (selectedItem == null) continue;
+
+                Wire wireComponent = selectedItem.GetComponent<Wire>();
+                if (wireComponent != null) equippedWire = wireComponent;
+            }
+
             Vector2 rightPos = new Vector2(x + width - 110, y + 20);
             Vector2 leftPos = new Vector2(x + 110, y + 20);
-
+            
             float wireInterval = 10.0f;
 
             float rightWireX = x+width / 2 + wireInterval;
@@ -199,8 +212,9 @@ namespace Subsurface.Items.Components
                 if (c.isOutput)
                 {
                     c.Draw(spriteBatch, panel.Item, rightPos, 
-                        new Vector2(rightPos.X + 20, rightPos.Y), 
-                        new Vector2(rightWireX, y + height), mouseInRect);
+                        new Vector2(rightPos.X + 20, rightPos.Y),
+                        new Vector2(rightWireX, y + height), 
+                        mouseInRect, equippedWire != null);
 
                     rightPos.Y += 30;
                     rightWireX += wireInterval;
@@ -209,58 +223,40 @@ namespace Subsurface.Items.Components
                 {
                     c.Draw(spriteBatch, panel.Item, leftPos, 
                         new Vector2(leftPos.X - 100, leftPos.Y),
-                        new Vector2(leftWireX, y + height), mouseInRect);
+                        new Vector2(leftWireX, y + height), 
+                        mouseInRect, equippedWire != null);
 
                     leftPos.Y += 30;
                     leftWireX -= wireInterval;
                 }
             }
-
-
-            //draw a wire for all the items that are linked to this item, but not to any of the signal connections
-            //foreach (MapEntity entity in panel.Item.linkedTo)
-            //{
-            //    Item linked = entity as Item;
-            //    if (linked == null) continue;
-
-            //    //if the item is already connected, don't draw it again
-            //    if (panel.connections.Find(c => c.linked.Contains()) != null) continue;
-                
-            //    DrawWire(spriteBatch, false, linked, 
-            //        new Vector2(leftPos.X + (leftPos.Y - y), y + height- 50),
-            //        new Vector2(leftPos.X + (leftPos.Y - y), y + height), mouseInRect);
-                
-
-                
-
-
-            //    leftPos.Y += 30.0f;
-            //}
-
+            
             //if the character using the panel has a wire item equipped
             //and the wire hasn't been connected yet, draw it on the panel
-
-
-            for (int i = 0; i < character.SelectedItems.Length; i++ )
+            if (equippedWire!=null)
             {
-                Item selectedItem = character.SelectedItems[i];
-
-                if (selectedItem == null) continue;
-
-                Wire wireComponent = selectedItem.GetComponent<Wire>();
-
-                if (wireComponent != null &&
-                    panel.connections.Find(c => c.wires.Contains(wireComponent)) == null)
+                if (panel.connections.Find(c => c.wires.Contains(equippedWire)) == null)
                 {
-                    DrawWire(spriteBatch, selectedItem, selectedItem,
+                    DrawWire(spriteBatch, equippedWire.Item, equippedWire.Item,
                         new Vector2(x + width / 2, y + height - 100),
-                        new Vector2(x + width / 2, y + height), mouseInRect);
+                        new Vector2(x + width / 2, y + height), mouseInRect, false);
 
-                    if (draggingConnected == selectedItem) Inventory.draggingItem = selectedItem;
+                    if (draggingConnected == equippedWire.Item) Inventory.draggingItem = equippedWire.Item;
 
-                    break;
+                    //break;
                 }
             }
+
+            //for (int i = 0; i < character.SelectedItems.Length; i++ )
+            //{
+            //    Item selectedItem = character.SelectedItems[i];
+
+            //    if (selectedItem == null) continue;
+
+            //    Wire wireComponent = selectedItem.GetComponent<Wire>();
+
+
+            //}
 
             //stop dragging a wire item if cursor is outside the panel
             if (mouseInRect) Inventory.draggingItem = null;
@@ -275,7 +271,7 @@ namespace Subsurface.Items.Components
             }
         }
 
-        private void Draw(SpriteBatch spriteBatch, Item item, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn)
+        private void Draw(SpriteBatch spriteBatch, Item item, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, bool wireEquipped)
         {
 
             spriteBatch.DrawString(GUI.font, name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
@@ -289,7 +285,7 @@ namespace Subsurface.Items.Components
 
                 Connection recipient = wires[i].OtherConnection(this);
 
-                DrawWire(spriteBatch, wires[i].Item, (recipient == null) ? wires[i].Item : recipient.item, position, wirePosition, mouseIn);
+                DrawWire(spriteBatch, wires[i].Item, (recipient == null) ? wires[i].Item : recipient.item, position, wirePosition, mouseIn, wireEquipped);
                 wirePosition.X += (isOutput) ? -20 : 20;
             }            
             
@@ -318,6 +314,9 @@ namespace Subsurface.Items.Components
                     if (index>-1)
                     {
                         wires[index].RemoveConnection(this);
+                        wires[index].Item.SetTransform(item.SimPosition, 0.0f);
+                        wires[index].Item.Drop();
+                        wires[index].Item.body.Enabled = true;
                         wires[index] = null;
                     }
                 }                    
@@ -326,7 +325,7 @@ namespace Subsurface.Items.Components
 
         }
 
-        private static void DrawWire(SpriteBatch spriteBatch, Item wireItem, Item item, Vector2 end, Vector2 start, bool mouseIn)
+        private static void DrawWire(SpriteBatch spriteBatch, Item wireItem, Item item, Vector2 end, Vector2 start, bool mouseIn, bool wireEquipped)
         {
             if (draggingConnected == wireItem)
             {
@@ -339,27 +338,29 @@ namespace Subsurface.Items.Components
             int textX = (int)start.X;
             float connLength = 10.0f;
 
+            Color color = (wireEquipped) ? Color.Gray : Color.White;
+
             if (Math.Abs(end.X-start.X)<connLength*6.0f)
             {
                 wireVertical.DrawTiled(spriteBatch, 
                     new Vector2(end.X - wireVertical.size.X / 2, end.Y + connLength), 
-                    new Vector2(wireVertical.size.X, (float)Math.Abs(end.Y - start.Y)), Color.White);
+                    new Vector2(wireVertical.size.X, (float)Math.Abs(end.Y - start.Y)), color);
                 textX = (int)end.X;
-                connector.Draw(spriteBatch, end);                
+                connector.Draw(spriteBatch, end, color);                
             }
             else
             {
                 Vector2 pos = new Vector2(start.X, end.Y + wireCorner.size.Y) - wireVertical.size / 2;
                 Vector2 size = new Vector2(wireVertical.size.X, (float)Math.Abs((end.Y + wireCorner.size.Y) - start.Y));
-                wireVertical.DrawTiled(spriteBatch, pos, size, Color.White);
+                wireVertical.DrawTiled(spriteBatch, pos, size, color);
 
                 Rectangle rect = new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
-                if (rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
+                if (!wireEquipped && rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
 
                 float dir = (end.X > start.X) ? -1.0f : 1.0f;
 
                 wireCorner.Draw(spriteBatch, 
-                    new Vector2(start.X, end.Y), 0.0f, 1.0f,
+                    new Vector2(start.X, end.Y), color, 0.0f, 1.0f,
                     (end.X > start.X) ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
 
                 float wireStartX = start.X - wireCorner.size.X / 2 * dir;
@@ -368,14 +369,14 @@ namespace Subsurface.Items.Components
                 pos = new Vector2(Math.Min(wireStartX,wireEndX), end.Y - wireVertical.size.Y / 2);
                 size = new Vector2(Math.Abs(wireStartX - wireEndX), wireHorizontal.size.Y);
 
-                wireHorizontal.DrawTiled(spriteBatch, pos, size, Color.White);
+                wireHorizontal.DrawTiled(spriteBatch, pos, size, color);
                 rect = new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
-                if (rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
+                if (!wireEquipped && rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
 
-                connector.Draw(spriteBatch, end, -MathHelper.PiOver2*dir);
+                connector.Draw(spriteBatch, end, color, -MathHelper.PiOver2*dir);
             }
 
-            if (draggingConnected == null)
+            if (draggingConnected == null && !wireEquipped)
             {
                 if (mouseOn || Vector2.Distance(end, PlayerInput.MousePosition)<20.0f)
                 {
@@ -387,7 +388,7 @@ namespace Subsurface.Items.Components
                             
             spriteBatch.DrawString(GUI.font, item.Name, 
                 new Vector2(textX, start.Y-30), 
-                mouseOn ? Color.Gold : Color.White, 
+                (mouseOn && !wireEquipped) ? Color.Gold : Color.White, 
                 MathHelper.PiOver2, 
                 GUI.font.MeasureString(item.Name)*0.5f, 
                 1.0f, SpriteEffects.None, 0.0f);
@@ -431,7 +432,6 @@ namespace Subsurface.Items.Components
                 Item wireItem = MapEntity.FindEntityByID(wireId[i]) as Item;
 
                 if (wireItem == null) continue;
-
                 wires[i] = wireItem.GetComponent<Wire>();
 
                 if (wires[i]!=null)

@@ -418,7 +418,12 @@ namespace Subsurface
             {
                 if (sections[sectionIndex].gap == null)
                 {
-                    sections[sectionIndex].gap = new Gap(sections[sectionIndex].rect, !isHorizontal);
+                    Rectangle gapRect = sections[sectionIndex].rect;
+                    gapRect.X -= 10;
+                    gapRect.Y += 10;
+                    gapRect.Width += 20;
+                    gapRect.Height += 20;
+                    sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal);
                 }
             }
 

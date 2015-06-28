@@ -122,15 +122,15 @@ namespace Subsurface.Items.Components
             item.FindHull();
 
             Vector2 position = item.Position;
-            position.X = ToolBox.Round(item.Position.X, nodeDistance);
+            position.X = MathUtils.Round(item.Position.X, nodeDistance);
             if (item.currentHull == null)
             {
-                position.Y = ToolBox.Round(item.Position.Y, nodeDistance);
+                position.Y = MathUtils.Round(item.Position.Y, nodeDistance);
             }
             else
             {
                 position.Y -= item.currentHull.Rect.Y - item.currentHull.Rect.Height;
-                position.Y = Math.Max(ToolBox.Round(position.Y, nodeDistance), heightFromFloor);
+                position.Y = Math.Max(MathUtils.Round(position.Y, nodeDistance), heightFromFloor);
                 position.Y += item.currentHull.Rect.Y - item.currentHull.Rect.Height;
             }
 
@@ -258,7 +258,7 @@ namespace Subsurface.Items.Components
 
             spriteBatch.Draw(wireSprite.Texture,
                 start, null, color,
-                ToolBox.VectorToAngle(end - start),
+                MathUtils.VectorToAngle(end - start),
                 new Vector2(0.0f, wireSprite.size.Y / 2.0f),
                 new Vector2((Vector2.Distance(start, end)) / wireSprite.Texture.Width, 0.3f),
                 SpriteEffects.None,

@@ -174,7 +174,7 @@ namespace Subsurface
 
             float footMid = (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
 
-            movement = ToolBox.SmoothStep(movement, TargetMovement, 0.5f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.5f);
             movement.Y = 0.0f;
 
             //place the anchors of the head and the torso to make the ragdoll stand
@@ -201,12 +201,12 @@ namespace Subsurface
                 {
                     torso.pullJoint.Enabled = true;
                     torso.pullJoint.WorldAnchorB =
-                        ToolBox.SmoothStep(torso.SimPosition,
+                        MathUtils.SmoothStep(torso.SimPosition,
                         new Vector2(footMid + movement.X * 0.35f, colliderPos.Y + TorsoPosition - Math.Abs(walkPosX * 0.05f)), getUpSpeed);
 
                     head.pullJoint.Enabled = true;
                     head.pullJoint.WorldAnchorB =
-                        ToolBox.SmoothStep(head.SimPosition,
+                        MathUtils.SmoothStep(head.SimPosition,
                         new Vector2(footMid + movement.X * 0.4f, colliderPos.Y + HeadPosition - Math.Abs(walkPosX * 0.05f)), getUpSpeed);
                 }
 
@@ -389,7 +389,7 @@ namespace Subsurface
                 torso.body.ApplyTorque(torque);
             }
 
-            movement = ToolBox.SmoothStep(movement, TargetMovement, 0.3f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
 
             //dont try to move upwards if head is already out of water
             if (surfaceLimiter > 1.0f)
@@ -513,7 +513,7 @@ namespace Subsurface
             onGround = false;
             IgnorePlatforms = true;
 
-            movement = ToolBox.SmoothStep(movement, TargetMovement, 0.3f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
 
             Vector2 footPos, handPos;
 
@@ -543,12 +543,12 @@ namespace Subsurface
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
-                ToolBox.Round(handPos.Y - stepHeight, stepHeight * 2.0f) + stepHeight + ladderSimPos.Y),
+                MathUtils.Round(handPos.Y - stepHeight, stepHeight * 2.0f) + stepHeight + ladderSimPos.Y),
                 5.2f);
 
             MoveLimb(rightHand,
                 new Vector2(handPos.X,
-                ToolBox.Round(handPos.Y, stepHeight * 2.0f) + ladderSimPos.Y),
+                MathUtils.Round(handPos.Y, stepHeight * 2.0f) + ladderSimPos.Y),
                 5.2f);
 
             leftHand.body.ApplyTorque(Dir * 2.0f);
@@ -560,12 +560,12 @@ namespace Subsurface
 
             MoveLimb(leftFoot,
                 new Vector2(footPos.X,
-                ToolBox.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight + ladderSimPos.Y),
+                MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight + ladderSimPos.Y),
                 7.5f, true);
 
             MoveLimb(rightFoot,
                 new Vector2(footPos.X,
-                ToolBox.Round(footPos.Y, stepHeight * 2.0f) + ladderSimPos.Y),
+                MathUtils.Round(footPos.Y, stepHeight * 2.0f) + ladderSimPos.Y),
                 7.5f, true);
 
             //apply torque to the legs to make the knees bend
@@ -642,8 +642,8 @@ namespace Subsurface
 
                 Vector2 diff = (mousePos - torso.SimPosition) * Dir;
 
-                holdAngle = ToolBox.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
-                holdAngle = MathHelper.Clamp(ToolBox.WrapAnglePi(holdAngle), -1.3f, 1.0f);
+                holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
+                holdAngle = MathHelper.Clamp(MathUtils.WrapAnglePi(holdAngle), -1.3f, 1.0f);
 
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
 
@@ -701,7 +701,7 @@ namespace Subsurface
             Vector2 bodyVelocity = torso.body.LinearVelocity / 60.0f;
             
             item.body.ResetDynamics();
-            item.body.SetTransform(ToolBox.SmoothStep(item.body.Position, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
+            item.body.SetTransform(MathUtils.SmoothStep(item.body.Position, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
 
             //item.body.SmoothRotate(itemAngle, 50.0f);
 
@@ -723,10 +723,10 @@ namespace Subsurface
                 float c = ConvertUnits.ToDisplayUnits(Vector2.Distance(transformedHoldPos + transformedHandlePos[i], shoulderPos));
                 c = MathHelper.Clamp(a + b - 1, b-a, c);
 
-                float ang2 = ToolBox.VectorToAngle((transformedHoldPos + transformedHandlePos[i]) - shoulderPos)+MathHelper.PiOver2;
+                float ang2 = MathUtils.VectorToAngle((transformedHoldPos + transformedHandlePos[i]) - shoulderPos)+MathHelper.PiOver2;
 
-                float armAngle = ToolBox.SolveTriangleSSS(a, b, c);
-                float handAngle = ToolBox.SolveTriangleSSS(b, a, c);
+                float armAngle = MathUtils.SolveTriangleSSS(a, b, c);
+                float handAngle = MathUtils.SolveTriangleSSS(b, a, c);
 
                 arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f);
                 hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f);
@@ -755,7 +755,7 @@ namespace Subsurface
 
                     character.SelectedItems[i].body.SetTransform(
                         torso.SimPosition + Vector2.Transform(difference, -torsoTransform),
-                        ToolBox.WrapAngleTwoPi(-character.SelectedItems[i].body.Rotation));
+                        MathUtils.WrapAngleTwoPi(-character.SelectedItems[i].body.Rotation));
                 }
             }
 
@@ -775,7 +775,7 @@ namespace Subsurface
                         break;
                     default:
                         if (!inWater) l.body.SetTransform(l.body.Position, 
-                            ToolBox.WrapAnglePi(l.body.Rotation * (l.DoesFlip ? -1.0f : 1.0f)));
+                            MathUtils.WrapAnglePi(l.body.Rotation * (l.DoesFlip ? -1.0f : 1.0f)));
                         break;
                 }
             }

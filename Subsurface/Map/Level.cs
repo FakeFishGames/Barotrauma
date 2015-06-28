@@ -24,7 +24,7 @@ namespace Subsurface
 
         private int siteInterval;
 
-        const int gridCellWidth = 1000;
+        const int gridCellWidth = 2000;
         List<VoronoiCell>[,] cellGrid;
 
         //List<Body> bodies;
@@ -66,7 +66,7 @@ namespace Subsurface
 
             Game1.random = new Random(seed);
 
-            if (loaded != this && loaded != null)
+            if (loaded != null)
             {
                 loaded.Unload();                
             }
@@ -160,7 +160,7 @@ namespace Subsurface
                 borders.Right - siteInterval * 2, borders.Y + borders.Height - siteInterval * 2);
 
                 Vector2 start = pathCells[Game1.random.Next(1,pathCells.Count-2)].Center;
-                Vector2 end = new Vector2(ToolBox.RandomFloat(pathBorders.X, pathBorders.Right), ToolBox.RandomFloat(pathBorders.Y, pathBorders.Bottom));
+                Vector2 end = new Vector2(MathUtils.RandomFloat(pathBorders.X, pathBorders.Right), MathUtils.RandomFloat(pathBorders.Y, pathBorders.Bottom));
 
                 pathCells.AddRange
                 (
@@ -174,12 +174,16 @@ namespace Subsurface
             startPosition = pathCells[0].Center;
             endPosition = pathCells[pathCells.Count - 1].Center;
 
+            cells = CleanCells(pathCells);
+            
             foreach (VoronoiCell cell in pathCells)
             {
                 cells.Remove(cell);
             }
 
-            GenerateLevel(cells);
+            //GenerateBodies(cells, pathCells);
+
+            GeneratePolygons(cells, pathCells);
 
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
@@ -304,6 +308,25 @@ namespace Subsurface
         }
 
         /// <summary>
+        /// remove all cells except those that are adjacent to the empty cells
+        /// </summary>
+        private List<VoronoiCell> CleanCells(List<VoronoiCell> emptyCells)
+        {
+            List<VoronoiCell> newCells = new List<VoronoiCell>();
+
+            foreach (VoronoiCell cell in emptyCells)
+            {
+                foreach (GraphEdge edge in cell.edges)
+                {
+                    VoronoiCell adjacent = edge.AdjacentCell(cell);
+                    if (!newCells.Contains(adjacent)) newCells.Add(adjacent);
+                }
+            }
+
+            return newCells;
+        }
+
+        /// <summary>
         /// check whether line from a to b is intersecting with line from c to b
         /// </summary>
         bool IsIntersecting(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
@@ -319,6 +342,18 @@ namespace Subsurface
 
             return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
         }
+
+        //public Microsoft.Xna.Framework.Point GridCell(Vector2 position)
+        //{
+        //    Microsoft.Xna.Framework.Point point = new Microsoft.Xna.Framework.Point(
+        //        (int)Math.Floor(position.X / gridCellWidth),
+        //        (int)Math.Floor(position.Y / gridCellWidth));
+
+        //    point.X = MathHelper.Clamp(point.X, 0, cellGrid.GetLength(0) - 1);
+        //    point.Y = MathHelper.Clamp(point.X, 0, cellGrid.GetLength(1) - 1);
+
+        //    return point;
+        //}
         
         /// <summary>
         /// find the index of the cell which the point is inside
@@ -354,25 +389,71 @@ namespace Subsurface
             return cells.IndexOf(closestCell);            
         }
 
-        private void GenerateLevel(List<VoronoiCell> cells)
+        private void GenerateBodies(List<VoronoiCell> cells, List<VoronoiCell> emptyCells)
+        {
+            foreach (VoronoiCell cell in cells)
+            {
+                List<Vector2> points = new List<Vector2>();
+                foreach (GraphEdge edge in cell.edges)
+                {
+                    VoronoiCell adjacentCell = edge.AdjacentCell(cell);
+                    if (!emptyCells.Contains(adjacentCell)) continue;
+
+                    if (!points.Contains(edge.point1)) points.Add(edge.point1);
+                    if (!points.Contains(edge.point2)) points.Add(edge.point2);
+
+
+                }
+
+                if (points.Count == 0) continue;
+
+                for (int i = 0 ; i<points.Count; i++)
+                {
+                    points[i] = ConvertUnits.ToSimUnits(points[i]);
+                }
+
+                Vertices vertices = new Vertices(points);
+
+                Debug.WriteLine("simple: "+vertices.IsSimple());
+                Debug.WriteLine("convex: "+vertices.IsConvex());
+                Debug.WriteLine("ccw: "+ vertices.IsCounterClockWise());
+
+                Body edgeBody = BodyFactory.CreateChainShape(
+                    Game1.world, vertices, cell);
+
+                edgeBody.BodyType = BodyType.Static;
+                edgeBody.CollisionCategories = Physics.CollisionWall | Physics.CollisionLevel;
+
+                cell.body = edgeBody;
+            }
+        }
+
+        private void GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells)
         {
             List<VertexPositionColor> verticeList = new List<VertexPositionColor>();
             //bodies = new List<Body>();
 
-
             List<Vector2> tempVertices = new List<Vector2>();
+            List<Vector2> bodyPoints = new List<Vector2>();
 
             int n = 0;
             foreach (VoronoiCell cell in cells)
             {
                 n = (n + 30) % 255;
 
+                bodyPoints.Clear();
                 tempVertices.Clear();
                 foreach (GraphEdge ge in cell.edges)
                 {
                     if (ge.point1 == ge.point2) continue;
                     if (!tempVertices.Contains(ge.point1)) tempVertices.Add(ge.point1);
                     if (!tempVertices.Contains(ge.point2)) tempVertices.Add(ge.point2);
+
+                    VoronoiCell adjacentCell = ge.AdjacentCell(cell);
+                    if (!emptyCells.Contains(adjacentCell)) continue;
+
+                    if (!bodyPoints.Contains(ge.point1)) bodyPoints.Add(ge.point1);
+                    if (!bodyPoints.Contains(ge.point2)) bodyPoints.Add(ge.point2);
                 }
 
                 if (tempVertices.Count < 3) continue;
@@ -404,10 +485,28 @@ namespace Subsurface
 
                     if (isSame) continue;
 
-                    CreateBody(cell, triangleVertices);
+                    //CreateBody(cell, triangleVertices);
                 }
 
+                if (bodyPoints.Count < 2) continue;
 
+                bodyPoints.Sort(new CompareCCW(cell.Center));
+
+                for (int i = 0; i < bodyPoints.Count; i++)
+                {
+                    bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
+                }
+                
+                Vertices bodyVertices = new Vertices(bodyPoints);
+
+                Body edgeBody = BodyFactory.CreateChainShape(
+                    Game1.world, bodyVertices, cell);
+                edgeBody.UserData = cell;
+
+                edgeBody.BodyType = BodyType.Static;
+                edgeBody.CollisionCategories = Physics.CollisionWall | Physics.CollisionLevel;
+
+                cell.body = edgeBody;
             }
 
             vertices = verticeList.ToArray();
@@ -415,77 +514,96 @@ namespace Subsurface
             //return bodies;
         }
 
-        private void CreateBody(VoronoiCell  cell, List<Vector2> bodyVertices)
+        //private void CreateBody(VoronoiCell cell, List<Vector2> bodyVertices)
+        //{
+        //    for (int i = 0; i < bodyVertices.Count; i++)
+        //    {
+        //        bodyVertices[i] = ConvertUnits.ToSimUnits(bodyVertices[i]);
+        //    }
+        //    //get farseer 'vertices' from vectors
+        //    Vertices _shapevertices = new Vertices(bodyVertices);
+        //    //_shapevertices.Sort(new CompareCCW(cell.Center));
+
+        //    //feed vertices array to BodyFactory.CreatePolygon to get a new farseer polygonal body
+        //    Body _newBody = BodyFactory.CreatePolygon(Game1.world, _shapevertices, 15);
+        //    _newBody.BodyType = BodyType.Static;
+        //    _newBody.CollisionCategories = Physics.CollisionWall | Physics.CollisionLevel;
+        //    _newBody.UserData = cell;
+
+        //    cell.body = _newBody;
+        //}
+
+
+        public Vector2 position;
+
+        public void SetPosition(Vector2 pos)
         {
-            for (int i = 0; i < bodyVertices.Count; i++)
+            Vector2 amount = ConvertUnits.ToSimUnits(pos - position);
+            foreach (VoronoiCell cell in cells)
             {
-                bodyVertices[i] = ConvertUnits.ToSimUnits(bodyVertices[i]);
+                if (cell.body == null) continue;
+                //foreach (Body b in cell.bodies)
+                //{
+                cell.body.SetTransform(cell.body.Position + amount, cell.body.Rotation);
+                //}
             }
-            //get farseer 'vertices' from vectors
-            Vertices _shapevertices = new Vertices(bodyVertices);
-            //_shapevertices.Sort(new CompareCCW(cell.Center));
 
-            //feed vertices array to BodyFactory.CreatePolygon to get a new farseer polygonal body
-            Body _newBody = BodyFactory.CreatePolygon(Game1.world, _shapevertices, 15);
-            _newBody.BodyType = BodyType.Static;
-            _newBody.CollisionCategories = Physics.CollisionWall;
-
-            cell.bodies.Add(_newBody);
+            position = pos;
         }
 
-
-        Vector2 position;
-        public void Move(Vector2 amount, float deltaTime)
+        public void Move(Vector2 amount)
         {
-            amount = amount * deltaTime;
             position += amount;
 
             amount = ConvertUnits.ToSimUnits(amount);
             foreach (VoronoiCell cell in cells)
             {
-                foreach (Body b in cell.bodies)
-                {
-                    b.SetTransform(b.Position+amount, b.Rotation);
-                }  
+                if (cell.body == null) continue;
+                //foreach (Body b in cell.bodies)
+                //{
+                //    b.SetTransform(b.Position+amount, b.Rotation);
+                //}  
+                cell.body.SetTransform(cell.body.Position + amount, cell.body.Rotation);
             }
-          
-        }
 
-
-
-        public void SetObserverPosition(Vector2 position)
-        {
-            position = position - this.position;
-            int gridPosX = (int)Math.Floor(position.X / gridCellWidth);
-            int gridPosY = (int)Math.Floor(position.Y / gridCellWidth);
-            int searchOffset = 1;
-
-            for (int x = 0; x < cellGrid.GetLength(0); x++)
+            foreach (Character character in Character.characterList)
             {
-                for (int y = 0; y <cellGrid.GetLength(1); y++)
+                if (character.animController.CurrentHull==null)
                 {
-                    for (int i = 0; i < cellGrid[x, y].Count; i++)
+                    foreach (Limb limb in character.animController.limbs)
                     {
-                        foreach (Body b in cellGrid[x, y][i].bodies)
-                        {
-                            b.Enabled = false;
-                        }
-
-
+                        limb.body.SetTransform(limb.body.Position + amount, limb.body.Rotation);
                     }
                 }
             }
 
-            for (int x = Math.Max(gridPosX - searchOffset, 0); x <= Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1); x++)
+          
+        }
+        Vector2 observerPosition;
+        public void SetObserverPosition(Vector2 position)
+        {
+            observerPosition = position - this.position;
+            int gridPosX = (int)Math.Floor(observerPosition.X / gridCellWidth);
+            int gridPosY = (int)Math.Floor(observerPosition.Y / gridCellWidth);
+            int searchOffset = 2;
+
+            int startX = Math.Max(gridPosX - searchOffset, 0);
+            int endX = Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1);
+
+            int startY = Math.Max(gridPosY - searchOffset, 0);
+            int endY = Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1);
+
+            for (int x = 0; x < cellGrid.GetLength(0); x++)
             {
-                for (int y = Math.Max(gridPosY - searchOffset, 0); y <= Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1); y++)
+                for (int y = 0; y < cellGrid.GetLength(1); y++)
                 {
                     for (int i = 0; i < cellGrid[x, y].Count; i++)
                     {
-                        foreach (Body b in cellGrid[x, y][i].bodies)
-                        {
-                            b.Enabled = true;
-                        }   
+                        //foreach (Body b in cellGrid[x, y][i].bodies)
+                        //{
+                        if (cellGrid[x, y][i].body == null) continue;
+                        cellGrid[x, y][i].body.Enabled = (x >= startX && x <= endX && y >= startY && y <= endY);
+                        //}
                     }
                 }
             }
@@ -494,7 +612,37 @@ namespace Subsurface
 
         public void RenderLines(SpriteBatch spriteBatch)
         {
-            GUI.DrawRectangle(spriteBatch, new Rectangle(borders.X, borders.Y-borders.Height, borders.Width, borders.Height), Color.Cyan);
+            //GUI.DrawRectangle(spriteBatch, new Rectangle(borders.X, borders.Y-borders.Height, borders.Width, borders.Height), Color.Cyan);
+
+            //for (int x = 0; x < cellGrid.GetLength(0); x++)
+            //{
+            //    for (int y = 0; y < cellGrid.GetLength(1); y++)
+            //    {
+            //        GUI.DrawRectangle(spriteBatch,
+            //            new Rectangle(x * gridCellWidth + (int)position.X, borders.Y - borders.Height + y * gridCellWidth - (int)position.Y, gridCellWidth, gridCellWidth),
+            //            Color.Cyan);
+            //    }
+            //}
+
+            int gridPosX = (int)Math.Floor(-observerPosition.X / gridCellWidth);
+            int gridPosY = (int)Math.Floor(-observerPosition.Y / gridCellWidth);
+            int searchOffset = 2;
+
+            int startX = Math.Max(gridPosX - searchOffset, 0);
+            int endX = Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1);
+
+            int startY = Math.Max(gridPosY - searchOffset, 0);
+            int endY = Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1);
+
+            for (int x = startX; x < endX; x++)
+            {
+                for (int y = startY; y < endY; y++)
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                        new Rectangle(x * gridCellWidth + (int)position.X, borders.Y - borders.Height + y * gridCellWidth - (int)position.Y, gridCellWidth, gridCellWidth),
+                        Color.Cyan);
+                }
+            }
 
             foreach (VoronoiCell cell in cells)
             {
@@ -505,8 +653,8 @@ namespace Subsurface
 
                     Vector2 end = cell.edges[i].point2+position;
                     end.Y = -end.Y;
-
-                    GUI.DrawLine(spriteBatch, start, end, Color.Red);
+                    
+                    GUI.DrawLine(spriteBatch, start, end, (cell.body!=null && cell.body.Enabled) ? Color.Green : Color.Red);
                 }
             }
         }
@@ -528,13 +676,15 @@ namespace Subsurface
 
         private void Unload()
         {
-            foreach (VoronoiCell cell in cells)
-            {
-                foreach (Body b in cell.bodies)
-                {
-                    Game1.world.RemoveBody(b);
-                }
-            }
+            position = Vector2.Zero;
+
+            //foreach (VoronoiCell cell in cells)
+            //{
+            //    //foreach (Body b in cell.bodies)
+            //    //{
+            //        Game1.world.RemoveBody(cell.body);
+            //    //}
+            //}
 
 
             //bodies = null;
@@ -547,36 +697,5 @@ namespace Subsurface
             vertexBuffer = null;
         }
     }
-    
-    class CompareCCW : IComparer<Vector2>
-    {
-        private Vector2 center;
-
-        public CompareCCW(Vector2 center)
-        {
-            this.center = center;
-        }
-        public int Compare(Vector2 a, Vector2 b)
-        {
-            if (a.X - center.X >= 0 && b.X - center.X < 0) return -1;
-            if (a.X - center.X < 0 && b.X - center.X >= 0) return 1;
-            if (a.X - center.X == 0 && b.X - center.X == 0)
-            {
-                if (a.Y - center.Y >= 0 || b.Y - center.Y >= 0) return Math.Sign(b.Y-a.Y);
-                return Math.Sign(a.Y-b.Y);
-            }
-
-            // compute the cross product of vectors (center -> a) x (center -> b)
-            float det = (a.X - center.X) * (b.Y - center.Y) - (b.X - center.X) * (a.Y - center.Y);
-            if (det < 0) return -1;
-            if (det > 0) return 1;
-
-            // points a and b are on the same line from the center
-            // check which point is closer to the center
-            float d1 = (a.X - center.X) * (a.X - center.X) + (a.Y - center.Y) * (a.Y - center.Y);
-            float d2 = (b.X - center.X) * (b.X - center.X) + (b.Y - center.Y) * (b.Y - center.Y);
-            return Math.Sign(d2-d1);
-        }
-    }
-
+      
 }

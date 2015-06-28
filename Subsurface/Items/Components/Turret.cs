@@ -112,11 +112,11 @@ namespace Subsurface.Items.Components
 
             if (targetRotation < minRotation || targetRotation > maxRotation)
             {
-                float diff = ToolBox.WrapAngleTwoPi(targetRotation - (minRotation + maxRotation) / 2.0f);
+                float diff = MathUtils.WrapAngleTwoPi(targetRotation - (minRotation + maxRotation) / 2.0f);
                 targetRotation = (diff > Math.PI) ? minRotation : maxRotation;
             }
             
-            rotation = ToolBox.CurveAngle(rotation, targetRotation, 0.05f);
+            rotation = MathUtils.CurveAngle(rotation, targetRotation, 0.05f);
             
             //if (!prefab.FocusOnSelected) return;
 
@@ -131,7 +131,7 @@ namespace Subsurface.Items.Components
             Vector2 offset = character.CursorPosition - centerPos;
             offset.Y = -offset.Y;
                    
-            targetRotation = ToolBox.WrapAngleTwoPi(ToolBox.VectorToAngle(offset));
+            targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
 
             isActive = true;
 

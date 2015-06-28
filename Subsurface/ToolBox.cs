@@ -11,178 +11,6 @@ namespace Subsurface
 {
     static class ToolBox
     {
-        public static Vector2 SmoothStep(Vector2 v1, Vector2 v2, float amount)
-        {
-            return new Vector2(
-                 MathHelper.SmoothStep(v1.X, v2.X, amount),
-                 MathHelper.SmoothStep(v1.Y, v2.Y, amount));
-        }
-
-        public static float Round(float value, float div)
-        {
-            return (float)Math.Floor(value / div) * div;
-        }
-
-        public static float RandomFloat(float minimum, float maximum)
-        {
-            return (float)Game1.random.NextDouble() * (maximum - minimum) + minimum;
-        }
-
-        public static int RandomInt(int minimum, int maximum)
-        {
-            return Game1.random.Next(maximum - minimum) + minimum;
-        }
-
-        public static float RandomFloatLocal(float minimum, float maximum)
-        {
-            return (float)Game1.localRandom.NextDouble() * (maximum - minimum) + minimum;
-        }
-
-        public static int RandomIntLocal(int minimum, int maximum)
-        {
-            return Game1.localRandom.Next(maximum - minimum) + minimum;
-        }
-
-        public static float VectorToAngle(Vector2 vector)
-        {
-            return (float)Math.Atan2(vector.Y, vector.X);
-        }
-
-        public static float CurveAngle(float from, float to, float step)
-        {
-            // Ensure that 0 <= angle < 2pi for both "from" and "to" 
-            while (from < 0)
-                from += MathHelper.TwoPi;
-            while (from >= MathHelper.TwoPi)
-                from -= MathHelper.TwoPi;
-
-            while (to < 0)
-                to += MathHelper.TwoPi;
-            while (to >= MathHelper.TwoPi)
-                to -= MathHelper.TwoPi;
-
-            if (Math.Abs(from - to) < MathHelper.Pi)
-            {
-                // The simple case - a straight lerp will do. 
-                return MathHelper.Lerp(from, to, step);
-            }
-
-            // If we get here we have the more complex case. 
-            // First, increment the lesser value to be greater. 
-            if (from < to)
-                from += MathHelper.TwoPi;
-            else
-                to += MathHelper.TwoPi;
-
-            float retVal = MathHelper.Lerp(from, to, step);
-
-            // Now ensure the return value is between 0 and 2pi 
-            if (retVal >= MathHelper.TwoPi)
-                retVal -= MathHelper.TwoPi;
-            return retVal;
-        }
-
-        public static float WrapAngleTwoPi(float angle)
-        {
-            // Ensure that 0 <= angle < 2pi for both "from" and "to" 
-            while (angle < 0)
-                angle += MathHelper.TwoPi;
-            while (angle >= MathHelper.TwoPi)
-                angle -= MathHelper.TwoPi;
-
-            return angle;
-        }
-
-        public static float WrapAnglePi(float angle)
-        {
-            // Ensure that -pi <= angle < pi for both "from" and "to" 
-            while (angle < -MathHelper.Pi)
-                angle += MathHelper.TwoPi;
-            while (angle >= MathHelper.Pi)
-                angle -= MathHelper.TwoPi;
-
-            return angle;
-        }
-
-        public static float GetShortestAngle(float from, float to)
-        {
-            // Ensure that 0 <= angle < 2pi for both "from" and "to" 
-            from = WrapAngleTwoPi(from);
-            to = WrapAngleTwoPi(to);
-
-            if (Math.Abs(from - to) < MathHelper.Pi)
-            {
-                return to - from;
-            }
-
-            // If we get here we have the more complex case. 
-            // First, increment the lesser value to be greater. 
-            if (from < to)
-                from += MathHelper.TwoPi;
-            else
-                to += MathHelper.TwoPi;
-
-            return to - from;
-        }
-
-        /// <summary>
-        /// solves the angle opposite to side a (parameters: lengths of each side)
-        /// </summary>
-        public static float SolveTriangleSSS(float a, float b, float c)
-        {
-            float A = (float)Math.Acos((b*b + c*c - a*a) / (2*b*c));
-
-            if (float.IsNaN(A)) A = 1.0f;
-
-            return A;
-        }
-
-
-        //public static void CompressStringToFile(string fileName, string value)
-        //{
-        //    // A.
-        //    // Write string to temporary file.
-        //    string temp = Path.GetTempFileName();
-        //    File.WriteAllText(temp, value);
-
-        //    // B.
-        //    // Read file into byte array buffer.
-        //    byte[] b;
-        //    using (FileStream f = new FileStream(temp, FileMode.Open))
-        //    {
-        //        b = new byte[f.Length];
-        //        f.Read(b, 0, (int)f.Length);
-        //    }
-
-        //    // C.
-        //    // Use GZipStream to write compressed bytes to target file.
-        //    using (FileStream f2 = new FileStream(fileName, FileMode.Create))
-        //    using (GZipStream gz = new GZipStream(f2, CompressionMode.Compress, false))
-        //    {
-        //        gz.Write(b, 0, b.Length);
-        //    }
-        //}
-
-        //public static Stream DecompressFiletoStream(string fileName)
-        //{
-        //    if (!File.Exists(fileName))
-        //    {
-        //        DebugConsole.ThrowError("File ''"+fileName+" doesn't exist!");
-        //        return null;
-        //    }
-
-        //    using (FileStream originalFileStream = new FileStream(fileName, FileMode.Open))
-        //    {
-        //        MemoryStream decompressedFileStream = new MemoryStream();
-                
-        //        using (GZipStream decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
-        //        {
-        //            decompressionStream.CopyTo(decompressedFileStream);
-        //            return decompressedFileStream;
-        //        }				
-        //    }
-        //}
-
         public static XDocument TryLoadXml(string filePath)
         {
             XDocument doc;
@@ -352,7 +180,7 @@ namespace Subsurface
             return ParseToVector4(val);
         }
 
-        public static Vector2 ParseToVector2(string stringVector2)
+        public static Vector2 ParseToVector2(string stringVector2, bool errorMessages = true)
         {
             string[] components = stringVector2.Split(',');
 
@@ -360,6 +188,7 @@ namespace Subsurface
 
             if (components.Length!=2)
             {
+                if (!errorMessages) return vector;
                 DebugConsole.ThrowError("Failed to parse the string "+stringVector2+" to Vector2");
                 return vector;
             }
@@ -374,8 +203,6 @@ namespace Subsurface
         {
             return vector.X.ToString("G", CultureInfo.InvariantCulture) + "," + vector.Y.ToString("G", CultureInfo.InvariantCulture);
         }
-
-
 
         public static Vector4 ParseToVector4(string stringVector4)
         {
@@ -489,22 +316,5 @@ namespace Subsurface
                 return "";
             }            
         }
-
-
-        
-        public static byte AngleToByte(float angle)
-        {
-            angle = WrapAngleTwoPi(angle);
-            angle = angle * (255.0f / MathHelper.TwoPi); 
-            return Convert.ToByte(angle);
-        }
-
-        public static float ByteToAngle(byte b)
-        {
-            float angle = (float)b;
-            angle = angle * (MathHelper.TwoPi / 255.0f);
-            return angle;
-        }
-
     }
 }

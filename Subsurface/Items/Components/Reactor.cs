@@ -141,15 +141,33 @@ namespace Subsurface.Items.Components
             }
             else if (autoTemp)
             {
-                float load = 0.0f;
-                foreach (MapEntity e in item.linkedTo)
-                {
-                    Item it = e as Item;
-                    if (it == null) continue;
 
-                    PowerTransfer pt = it.GetComponent<PowerTransfer>();
-                    if (pt != null) load += pt.PowerLoad;
+                float load = 0.0f;
+
+                List<Connection> connections = item.Connections;
+                if (connections!=null && connections.Count>0)
+                {
+                    foreach (Connection connection in connections)
+                    {
+                        foreach (Connection recipient in connection.Recipients)
+                        {
+                            Item it = recipient.Item as Item;
+                            if (it == null) continue;
+
+                            PowerTransfer pt = it.GetComponent<PowerTransfer>();
+                            if (pt != null) load += pt.PowerLoad;
+                        }
+                    }
                 }
+
+                //foreach (MapEntity e in item.linkedTo)
+                //{
+                //    Item it = e as Item;
+                //    if (it == null) continue;
+
+                //    PowerTransfer pt = it.GetComponent<PowerTransfer>();
+                //    if (pt != null) load += pt.PowerLoad;
+                //}
 
                 fissionRate = Math.Min(load / 200.0f, shutDownTemp);
                 //float target = Math.Min(targetTemp, load);
@@ -319,8 +337,6 @@ namespace Subsurface.Items.Components
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 450, y + 180, 40, 40), "-", true)) shutDownTemp -= 100.0f;
 
             item.NewComponentEvent(this, true);
-
-
         }
 
         static void UpdateGraph<T>(IList<T> graph, T newValue)
