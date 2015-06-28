@@ -1,14 +1,16 @@
-﻿using System.Collections.Specialized;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Specialized;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
 {
     class Pump : Powered
     {
-        float flow;
+        float flowPercentage;
         float maxFlow;
 
-        bool flowIn;
+        //bool flowIn;
 
         Hull hull1, hull2;
 
@@ -37,9 +39,9 @@ namespace Subsurface.Items.Components
             if (hull2 == null && hull1 == null) return;
             
             float powerFactor = (currPowerConsumption==0.0f) ? 1.0f : voltage;
-            flow = maxFlow * powerFactor;
+            //flowPercentage = maxFlow * powerFactor;
 
-            float deltaVolume = flow * ((flowIn) ? 1.0f : -1.0f);
+            float deltaVolume = (flowPercentage/100.0f) * maxFlow * powerFactor;
             hull1.Volume += deltaVolume;
             if (hull2 != null) hull2.Volume -= deltaVolume; 
 
@@ -139,21 +141,31 @@ namespace Subsurface.Items.Components
             {
                 isActive = !isActive;
             }
-            else if (connection.name == "set_state")
+            else if (connection.name == "set_active")
             {
                 isActive = (signal != "0");
             }
+            else if (connection.name == "set_speed")
+            {
+                float tempSpeed;
+                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempSpeed))
+                {
+                    flowPercentage = MathHelper.Clamp(flowPercentage, -100.0f, 100.0f);
+                }
+            }
+
+
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
-            message.Write(flowIn);
+            message.Write(flowPercentage);
             message.Write(isActive);
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
         {
-            flowIn = message.ReadBoolean();
+            flowPercentage = message.ReadFloat();
             isActive = message.ReadBoolean();
         }
     }

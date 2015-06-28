@@ -8,20 +8,18 @@ namespace Subsurface
     {
         private static double alpha;
 
-        public const Category CollisionNone = Category.None;
-        public const Category CollisionAll = Category.All;
-        public const Category CollisionWall = Category.Cat1;
-        public const Category CollisionCharacter = Category.Cat2;
-        public const Category CollisionPlatform = Category.Cat3;
-        public const Category CollisionStairs = Category.Cat4;
-        public const Category CollisionMisc = Category.Cat5;
-        public const Category CollisionProjectile = Category.Cat6;
+        public const Category CollisionNone         = Category.None;
+        public const Category CollisionAll          = Category.All;
+        public const Category CollisionWall         = Category.Cat1;
+        public const Category CollisionCharacter    = Category.Cat2;
+        public const Category CollisionPlatform     = Category.Cat3;
+        public const Category CollisionStairs       = Category.Cat4;
+        public const Category CollisionMisc         = Category.Cat5;
+        public const Category CollisionProjectile   = Category.Cat6;
+        public const Category CollisionLevel        = Category.Cat7;
 
         public static double accumulator;
         public static double step = 1.0f/60.0f;
-
-        public static bool updated;
-
 
         public const float DisplayToSimRation = 100.0f;
 

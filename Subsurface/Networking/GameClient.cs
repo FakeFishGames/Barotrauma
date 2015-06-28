@@ -327,7 +327,7 @@ namespace Subsurface.Networking
 
             Game1.NetLobbyScreen.Select();
 
-            if (Game1.GameSession!=null) Game1.GameSession.EndShift(null, null);
+            if (Game1.GameSession!=null) Game1.GameSession.EndShift("");
             
             DebugConsole.ThrowError(endMessage);
 

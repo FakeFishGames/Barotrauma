@@ -269,7 +269,7 @@ namespace Subsurface.Items.Components
 
             spriteBatch.Draw(sprite.Texture,
                 ConvertUnits.ToDisplayUnits(start), null, Color.White,
-                ToolBox.VectorToAngle(end - start),
+                MathUtils.VectorToAngle(end - start),
                 new Vector2(0.0f, sprite.size.Y / 2.0f),
                 new Vector2((ConvertUnits.ToDisplayUnits(Vector2.Distance(start, end))) / sprite.Texture.Width, 1.0f),
                 SpriteEffects.None,

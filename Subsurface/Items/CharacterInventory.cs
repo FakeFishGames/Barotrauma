@@ -231,6 +231,7 @@ namespace Subsurface
                 }
                 else
                 {
+                    draggingItem.body.SetTransform(character.SimPosition, 0.0f);
                     draggingItem.Drop(character);
                     //draggingItem = null;
                 }

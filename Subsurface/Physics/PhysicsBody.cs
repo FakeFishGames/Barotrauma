@@ -297,7 +297,7 @@ namespace Subsurface
         {
             float nextAngle = body.Rotation + body.AngularVelocity * (float)Physics.step;
 
-            float angle = ToolBox.GetShortestAngle(nextAngle, targetRotation);
+            float angle = MathUtils.GetShortestAngle(nextAngle, targetRotation);
 
             float torque = body.Mass * angle * 60.0f * (force/100.0f);
 

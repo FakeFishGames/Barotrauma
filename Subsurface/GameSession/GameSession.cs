@@ -113,8 +113,7 @@ namespace Subsurface
 
         public void StartShift(TimeSpan duration, Level level)
         {
-
-            if (Submarine.Loaded != submarine) submarine.Load();
+            submarine.Load();
 
             level.Generate(submarine==null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
 
@@ -133,19 +132,17 @@ namespace Subsurface
 
             if (level!=null)
             {
-                submarine.Move(level.StartPosition - submarine.Center, 1.0f);
+                submarine.SetPosition(level.StartPosition);
             }
 
             //crewManager.StartShift();
             taskManager.StartShift(scriptedEventCount);
         }
 
-        public bool EndShift(GUIButton button, object obj)
+        public void EndShift(string endMessage)
         {
             if (Game1.Server!=null)
-            {
-                string endMessage = gameMode.EndMessage;
-                
+            {                
                 Game1.Server.EndGame(endMessage);
 
             }
@@ -159,7 +156,7 @@ namespace Subsurface
             taskManager.EndShift();
             //gameMode.End();
 
-            return true;
+            //return true;
         }
         
         

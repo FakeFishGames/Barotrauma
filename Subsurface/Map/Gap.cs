@@ -250,20 +250,20 @@ namespace Subsurface
                     pos.Y = ConvertUnits.ToSimUnits(MathHelper.Clamp(lowerSurface, rect.Y-rect.Height, rect.Y));
 
                     Game1.particleManager.CreateParticle("watersplash",
-                        new Vector2(pos.X, pos.Y - ToolBox.RandomFloatLocal(0.0f, 0.1f)),
-                        new Vector2(flowForce.X * ToolBox.RandomFloatLocal(0.005f, 0.007f), flowForce.Y * ToolBox.RandomFloatLocal(0.005f, 0.007f)));
+                        new Vector2(pos.X, pos.Y - MathUtils.RandomFloatLocal(0.0f, 0.1f)),
+                        new Vector2(flowForce.X * MathUtils.RandomFloatLocal(0.005f, 0.007f), flowForce.Y * MathUtils.RandomFloatLocal(0.005f, 0.007f)));
 
-                    pos.Y = ConvertUnits.ToSimUnits(ToolBox.RandomFloatLocal(lowerSurface, rect.Y - rect.Height));
+                    pos.Y = ConvertUnits.ToSimUnits(MathUtils.RandomFloatLocal(lowerSurface, rect.Y - rect.Height));
                         Game1.particleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
                 }
                 else
                 {
                     pos.Y += Math.Sign(flowForce.Y) * ConvertUnits.ToSimUnits(rect.Height / 2.0f);
-                    for (int i = 0; i < rect.Width; i += (int)ToolBox.RandomFloatLocal(80, 100))
+                    for (int i = 0; i < rect.Width; i += (int)MathUtils.RandomFloatLocal(80, 100))
                     {
-                        pos.X = ConvertUnits.ToSimUnits(ToolBox.RandomFloatLocal(rect.X, rect.X+rect.Width));
+                        pos.X = ConvertUnits.ToSimUnits(MathUtils.RandomFloatLocal(rect.X, rect.X+rect.Width));
                         Subsurface.Particles.Particle splash = Game1.particleManager.CreateParticle("watersplash", pos,
-                            new Vector2(flowForce.X * ToolBox.RandomFloatLocal(0.005f, 0.008f), flowForce.Y * ToolBox.RandomFloatLocal(0.005f, 0.008f)));
+                            new Vector2(flowForce.X * MathUtils.RandomFloatLocal(0.005f, 0.008f), flowForce.Y * MathUtils.RandomFloatLocal(0.005f, 0.008f)));
 
                         if (splash!=null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 

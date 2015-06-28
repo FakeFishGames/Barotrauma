@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+
+	<Item
+		name="Engine"
+		linkable="true"
+		pickdistance="150">
+
+		<Sprite texture ="engine.png" depth="0.8"/>
+		
+		<Engine minvoltage="0.5" powerperforce="10.0" maxforce="50" canbeselected = "true"/>
+
+		<ConnectionPanel canbeselected = "true">
+			<requireditem name="Screwdriver" type="Equipped"/>
+			<input name="power_in"/>
+			<input name="set_force"/>
+		</ConnectionPanel>		
+	</Item>
+
+	<Item
+		name="Navigation Terminal"
+		linkable="true"
+		pickdistance="150">
+
+		<Sprite texture ="fabricator.png" depth="0.8"/>
+
+		<Steering minvoltage="0.5" canbeselected = "true"/>
+
+		<ConnectionPanel canbeselected = "true">
+			<requireditem name="Screwdriver" type="Equipped"/>
+			<input name="velocity_in"/>
+			<output name="velocity_x_out"/>
+			<output name="velocity_y_out"/>
+		</ConnectionPanel>
+	</Item>
+</Items>

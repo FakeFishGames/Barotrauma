@@ -11,6 +11,7 @@
     <requireditem name="Screwdriver" type="Equipped"/>
     <input name="power_in"/>
     <input name="toggle"/>
-    <input name="set_state"/>    
+    <input name="set_active"/>
+    <input name="set_speed"/>
   </ConnectionPanel>
 </Item>

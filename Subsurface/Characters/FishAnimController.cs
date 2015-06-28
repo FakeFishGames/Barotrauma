@@ -72,7 +72,7 @@ namespace Subsurface
             else
             {
                 Limb head = GetLimb(LimbType.Head);
-                float rotation = ToolBox.WrapAngleTwoPi(head.Rotation);
+                float rotation = MathUtils.WrapAngleTwoPi(head.Rotation);
                 rotation = MathHelper.ToDegrees(rotation);
 
                 if (rotation < 0.0f) rotation += 360;
@@ -98,12 +98,12 @@ namespace Subsurface
 
         void UpdateSineAnim(float deltaTime)
         {
-            movement = ToolBox.SmoothStep(movement, TargetMovement*swimSpeed, 1.0f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement*swimSpeed, 1.0f);
             if (movement == Vector2.Zero) return;
 
             if (!inWater) movement.Y = Math.Min(0.0f, movement.Y);
 
-            float movementAngle = ToolBox.VectorToAngle(movement) - MathHelper.PiOver2;
+            float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
 
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null && waveAmplitude>0.0f)
@@ -112,7 +112,7 @@ namespace Subsurface
 
                 float waveRotation = (float)Math.Sin(walkPos / waveLength)*waveAmplitude;
                 
-                float angle = ToolBox.GetShortestAngle(tail.body.Rotation, movementAngle + waveRotation);
+                float angle = MathUtils.GetShortestAngle(tail.body.Rotation, movementAngle + waveRotation);
 
                 //limbs[tailIndex].body.ApplyTorque((Math.Sign(angle) + Math.Max(Math.Min(angle * 10.0f, 10.0f), -10.0f)) * limbs[tailIndex].body.Mass);
                 //limbs[tailIndex].body.ApplyTorque(-limbs[tailIndex].body.AngularVelocity * 0.5f * limbs[tailIndex].body.Mass);
@@ -123,7 +123,7 @@ namespace Subsurface
             Limb head = GetLimb(LimbType.Head);
             if (head != null)
             {
-                float angle = ToolBox.GetShortestAngle(head.body.Rotation, movementAngle);
+                float angle = MathUtils.GetShortestAngle(head.body.Rotation, movementAngle);
 
 
                 head.body.SmoothRotate(head.body.Rotation+angle, 25.0f);
@@ -179,7 +179,7 @@ namespace Subsurface
     
         void UpdateWalkAnim(float deltaTime)
         {
-            movement = ToolBox.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
             if (movement == Vector2.Zero) return;
 
             Limb colliderLimb;

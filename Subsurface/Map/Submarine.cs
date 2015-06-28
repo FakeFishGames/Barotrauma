@@ -1,6 +1,10 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Collision;
+using FarseerPhysics.Common;
+using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
+using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -9,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Voronoi2;
 
 namespace Subsurface
 {
@@ -19,29 +24,28 @@ namespace Subsurface
 
     class Submarine
     {
-        static string SaveFolder;
-        Md5Hash hash;
-
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
-
+        
         private static Submarine loaded;
-
-        //public static Map Loaded
-        //{
-        //    get { return loaded; }
-        //    set { loaded = value; }
-        //}
-
 
         public static readonly Vector2 gridSize = new Vector2(16.0f, 16.0f);
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
 
+        static string SaveFolder;
+        Md5Hash hash;
+        
+        Vector2 speed;
+
         private Rectangle borders;
+
+        private Body hullBody;
 
         private string filePath;
         private string name;
+
+        //properties ----------------------------------------------------
 
         public string Name
         {
@@ -94,6 +98,104 @@ namespace Subsurface
             get { return filePath; }
         }
 
+        //constructors & generation ----------------------------------------------------
+
+        public Submarine(string filePath, string hash = "")
+        {
+            this.filePath = filePath;
+            try
+            {
+                name = System.IO.Path.GetFileNameWithoutExtension(filePath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error loading map " + filePath + "!", e);
+            }
+
+            if (hash != "")
+            {
+                this.hash = new Md5Hash(hash);
+            }
+            else
+            {
+                //XDocument doc = OpenDoc(filePath);
+
+                //string md5Hash = ToolBox.GetAttributeString(doc.Root, "md5hash", "");
+                //if (md5Hash == "" || md5Hash.Length < 16)
+                //{
+                //    DebugConsole.ThrowError("Couldn't find a valid MD5 hash in the map file");
+                //}
+
+                //this.mapHash = new MapHash(md5Hash);
+            }
+
+        }
+
+        private List<Vector2> GenerateConvexHull()
+        {
+            List<Vector2> points = new List<Vector2>();
+            
+            Vector2 leftMost = Vector2.Zero;
+
+            foreach (Structure wall in Structure.wallList)
+            {
+                for (int x = -1; x <= 1; x += 2)
+                {
+                    for (int y = -1; y <= 1; y += 2)
+                    {
+                        Vector2 corner = new Vector2(wall.Rect.X + wall.Rect.Width / 2.0f, wall.Rect.Y - wall.Rect.Height / 2.0f);
+                        corner.X += x * wall.Rect.Width / 2.0f;
+                        corner.Y += y * wall.Rect.Height / 2.0f;
+
+                        if (points.Contains(corner)) continue;
+
+                        points.Add(corner);
+                        if (leftMost == Vector2.Zero || corner.X < leftMost.X) leftMost = corner;
+                    }
+                }
+            }
+
+            List<Vector2> hullPoints = new List<Vector2>();
+
+            Vector2 currPoint = leftMost;
+            Vector2 endPoint;
+            do
+            {
+                hullPoints.Add(currPoint);
+                endPoint = points[0];
+
+                for (int i = 1; i < points.Count; i++)
+                {
+                    if ((currPoint == endPoint)
+                        || (Orientation(currPoint, endPoint, points[i]) == -1))
+                    {
+                        endPoint = points[i];
+                    }
+                }
+
+                currPoint = endPoint;
+
+            }
+            while (endPoint != hullPoints[0]);
+
+            return hullPoints;
+        }
+
+        private static int Orientation(Vector2 p1, Vector2 p2, Vector2 p)
+        {
+            // Determinant
+            float Orin = (p2.X - p1.X) * (p.Y - p1.Y) - (p.X - p1.X) * (p2.Y - p1.Y);
+
+            if (Orin > 0)
+                return -1; //          (* Orientation is to the left-hand side  *)
+            if (Orin < 0)
+                return 1; // (* Orientation is to the right-hand side *)
+
+            return 0; //  (* Orientation is neutral aka collinear  *)
+        }
+
+        //drawing ----------------------------------------------------
+
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count(); i++ )
@@ -109,6 +211,19 @@ namespace Subsurface
                 if (MapEntity.mapEntityList[i].sprite == null || MapEntity.mapEntityList[i].sprite.Depth < 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
+
+            if (loaded == null) return;
+
+            //foreach (HullBody hb in loaded.hullBodies)
+            //{
+            //    spriteBatch.Draw(
+            //        hb.shapeTexture,
+            //        ConvertUnits.ToDisplayUnits(new Vector2(hb.body.Position.X, -hb.body.Position.Y)),
+            //        null,
+            //        Color.White,
+            //        -hb.body.Rotation,
+            //        new Vector2(hb.shapeTexture.Width / 2, hb.shapeTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
+            //}
         }
 
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false)
@@ -119,6 +234,8 @@ namespace Subsurface
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
         }
+
+        //math/physics stuff ----------------------------------------------------
 
         public static Vector2 MouseToWorldGrid(Camera cam)
         {
@@ -135,8 +252,7 @@ namespace Subsurface
 
             return position;
         }
-
-
+        
         public static Rectangle AbsRect(Vector2 pos, Vector2 size)
         {
             if (size.X < 0.0f)
@@ -173,28 +289,6 @@ namespace Subsurface
             }
         }
 
-        public void Move(Vector2 amount, float deltaTime)
-        {
-            if (amount == Vector2.Zero) return;
-
-            Level.Loaded.Move(-amount, deltaTime);
-            
-            //foreach (MapEntity e in Structure.mapEntityList)
-            //{
-            //    e.Move(amount);
-            //}
-
-            //amount = ConvertUnits.ToSimUnits(amount*deltaTime);
-            //foreach (Character c in Character.characterList)
-            //{
-            //    if (c.animController.CurrentHull != null) continue;
-            //    foreach (Limb l in c.animController.limbs)
-            //    {
-            //        l.body.SetTransform(l.body.Position - amount, l.body.Rotation);
-            //    }
-            //}            
-        }
-        
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null)
         {
             float closestFraction = 1.0f;
@@ -220,8 +314,7 @@ namespace Subsurface
             lastPickedFraction = closestFraction;
             return closestBody;
         }
-
-
+        
         public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd)
         {
             Body closestBody = null;
@@ -286,7 +379,134 @@ namespace Subsurface
             
             return true;
         }
+        
+        //movement ----------------------------------------------------
 
+        float collisionRigidness = 1.0f;
+
+        public void Update(float deltaTime)
+        {
+            Translate(ConvertUnits.ToDisplayUnits(hullBody.Position) * collisionRigidness + speed * deltaTime);
+
+
+            CalculateBuoyancy();
+
+            float dragCoefficient = 0.00001f;
+
+            float speedLength = speed.Length();
+            float drag = speedLength * speedLength * dragCoefficient * mass;
+            System.Diagnostics.Debug.WriteLine("speed: "+speed);
+            if (speed!=Vector2.Zero)
+            {
+                ApplyForce(-Vector2.Normalize(speed)*drag);
+            }
+            //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
+
+
+
+            hullBody.SetTransform(Vector2.Zero , 0.0f);
+
+            if (collidingCell == null)
+            {
+                collisionRigidness = MathHelper.Lerp(collisionRigidness, 1.0f, 0.1f);
+                return;
+            }
+
+            foreach (GraphEdge ge in collidingCell.edges)
+            {
+                Body body = PickBody(
+                    ConvertUnits.ToSimUnits(ge.point1+ Game1.GameSession.Level.position), 
+                    ConvertUnits.ToSimUnits(ge.point2 + Game1.GameSession.Level.position), new List<Body>(){collidingCell.body});
+                if (body == null || body.UserData == null) continue;
+
+                Structure structure = body.UserData as Structure;
+                if (structure == null) continue;
+                structure.AddDamage(lastPickedPosition, DamageType.Blunt, 50.0f, 0.0f, 0.0f, true);
+            }
+
+            //hullBodies[0].body.SetTransform(Vector2.Zero, 0.0f);
+
+            //position = hullBodies[0].body.Position;
+
+            //Level.Loaded.Move(-ConvertUnits.ToDisplayUnits(position - prevPosition));
+
+            //prevPosition = hullBodies[0].body.Position;
+
+        }
+
+        private void CalculateBuoyancy()
+        {
+            float waterVolume = 0.0f;
+            float volume = 0.0f;
+            foreach (Hull hull in Hull.hullList)
+            {
+                waterVolume += hull.Volume;
+                volume += hull.FullVolume;
+            }
+
+            float waterPercentage = waterVolume / volume;
+
+            float neutralPercentage = 0.1f;
+
+            float buoyancy = neutralPercentage-waterPercentage;
+            buoyancy *= mass * 10.0f;
+
+            ApplyForce(new Vector2(0.0f, buoyancy));
+        }
+
+        public void SetPosition(Vector2 position)
+        {
+            //hullBodies[0].body.SetTransform(position, 0.0f);
+            Translate(position);
+            //prevPosition = position;
+        }
+
+        private void Translate(Vector2 amount)
+        {
+            if (amount == Vector2.Zero) return;
+
+            Level.Loaded.Move(-amount);
+        }
+
+        float mass = 10000.0f;
+        public void ApplyForce(Vector2 force)
+        {
+            speed += force/mass;
+        }
+
+        //public void Move(Vector2 amount)
+        //{
+        //    speed = Vector2.Lerp(speed, amount, 0.05f);
+        //}
+
+        VoronoiCell collidingCell;
+        public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
+        {
+            System.Diagnostics.Debug.WriteLine("colliding");
+            VoronoiCell cell = f2.Body.UserData as VoronoiCell;
+            if (cell==null) return true;
+
+            Vector2 normal = contact.Manifold.LocalNormal;
+            float impact = Vector2.Dot(ConvertUnits.ToSimUnits(speed), normal);
+
+            System.Diagnostics.Debug.WriteLine("IMPACT:"+impact);
+            if (impact < 5.0f) return true;
+
+
+            collisionRigidness = 0.8f;
+
+            collidingCell = cell;
+
+            return true;
+        }
+
+        public void OnSeparation(Fixture f1, Fixture f2)
+        {            
+            collidingCell = null;
+        }
+        
+
+        //saving/loading ----------------------------------------------------
 
         public void Save()
         {
@@ -375,38 +595,6 @@ namespace Subsurface
             }
         }
 
-        public Submarine(string filePath, string hash="")
-        {
-            this.filePath = filePath;
-            try
-            {
-                name = Path.GetFileNameWithoutExtension(filePath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error loading map " + filePath + "!", e);
-            }
-
-
-            if (hash != "")
-            {
-                this.hash = new Md5Hash(hash);
-            }
-            else
-            {
-                //XDocument doc = OpenDoc(filePath);
-
-                //string md5Hash = ToolBox.GetAttributeString(doc.Root, "md5hash", "");
-                //if (md5Hash == "" || md5Hash.Length < 16)
-                //{
-                //    DebugConsole.ThrowError("Couldn't find a valid MD5 hash in the map file");
-                //}
-
-                //this.mapHash = new MapHash(md5Hash);
-            }
-
-        }
-
         private XDocument OpenDoc(string file)
         {
             XDocument doc = null;
@@ -414,7 +602,7 @@ namespace Subsurface
 
             try
             {
-                extension = Path.GetExtension(file);
+                extension = System.IO.Path.GetExtension(file);
             }
             catch
             {
@@ -469,6 +657,7 @@ namespace Subsurface
 
         public void Load()
         {
+            Unload();
             //string file = filePath;
 
             XDocument doc = OpenDoc(filePath);
@@ -507,15 +696,49 @@ namespace Subsurface
 
             }
 
-            borders = new Rectangle(0, 0, 1, 1);
-            foreach (Hull hull in Hull.hullList)
+            List<Vector2> convexHull = GenerateConvexHull();
+            for (int i = 0; i < convexHull.Count; i++)
             {
-                if (hull.Rect.X < borders.X || borders.X == 0) borders.X = hull.Rect.X;
-                if (hull.Rect.Y > borders.Y || borders.Y == 0) borders.Y = hull.Rect.Y;
-
-                if (hull.Rect.X + hull.Rect.Width > borders.X + borders.Width) borders.Width = hull.Rect.X + hull.Rect.Width - borders.X;
-                if (hull.Rect.Y - hull.Rect.Height < borders.Y - borders.Height) borders.Height = borders.Y - (hull.Rect.Y - hull.Rect.Height);
+                convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
             }
+
+            convexHull.Reverse();
+
+            //get farseer 'vertices' from vectors
+            Vertices _shapevertices = new Vertices(convexHull);
+            
+            AABB hullAABB = _shapevertices.GetAABB();
+
+            borders = new Rectangle(
+                (int)ConvertUnits.ToDisplayUnits(hullAABB.LowerBound.X),
+                (int)ConvertUnits.ToDisplayUnits(hullAABB.UpperBound.Y),
+                (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.X * 2.0f),
+                (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.Y * 2.0f));
+
+            
+            var triangulatedVertices = Triangulate.ConvexPartition(_shapevertices, TriangulationAlgorithm.Bayazit);
+
+            Body hullBody = BodyFactory.CreateCompoundPolygon(Game1.world, triangulatedVertices, 5.0f);
+            hullBody.BodyType = BodyType.Dynamic;
+
+            hullBody.CollisionCategories = Physics.CollisionMisc;
+            hullBody.CollidesWith = Physics.CollisionLevel;
+            hullBody.FixedRotation = true;
+            hullBody.Awake = true;
+            hullBody.SleepingAllowed = false;
+            hullBody.GravityScale = 0.0f;
+            hullBody.OnCollision += OnCollision;
+            hullBody.OnSeparation += OnSeparation;
+            //body.IsSensor = true;
+
+            //body.SetTransform();
+
+            //HullBody hullBody = new HullBody();
+            //hullBody.body = body;
+            ////hullBody.shapeTexture = GUI.CreateRectangle(borders.Width, borders.Height);
+
+            //hullBodies = new List<HullBody>();
+            //hullBodies.Add(hullBody);
 
             MapEntity.LinkAll();
             foreach (Item item in Item.itemList)
@@ -554,11 +777,17 @@ namespace Subsurface
             Entity.RemoveAll();
 
             PhysicsBody.list.Clear();
-
+            
             Ragdoll.list.Clear();
 
             Game1.world.Clear();
         }
 
     }
+
+    //class HullBody
+    //{
+    //    public Body body;
+    //    //public Texture2D shapeTexture;
+    //}
 }

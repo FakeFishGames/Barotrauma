@@ -66,7 +66,7 @@ namespace Subsurface.Particles
 
             velocity = speed;
 
-            this.rotation = rotation + ToolBox.RandomFloatLocal(prefab.startRotationMin, prefab.startRotationMax);    
+            this.rotation = rotation + MathUtils.RandomFloatLocal(prefab.startRotationMin, prefab.startRotationMax);    
             prevRotation = rotation;
 
             float rand = (float)Game1.localRandom.NextDouble();
@@ -96,7 +96,7 @@ namespace Subsurface.Particles
 
             if (prefab.rotateToDirection)
             {
-                rotation = ToolBox.VectorToAngle(velocity);
+                rotation = MathUtils.VectorToAngle(velocity);
             }
             else
             {

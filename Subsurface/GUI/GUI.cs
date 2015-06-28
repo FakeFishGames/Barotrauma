@@ -328,7 +328,7 @@ namespace Subsurface
                     alpha -= 1.0f - msg.LifeTime;
                 }
 
-                msg.Pos = ToolBox.SmoothStep(msg.Pos, currPos, deltaTime*20.0f);
+                msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime*20.0f);
 
                 spriteBatch.DrawString(font, msg.Text,
                     new Vector2((int)msg.Pos.X, (int)msg.Pos.Y), 

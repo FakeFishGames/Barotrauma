@@ -57,7 +57,7 @@ namespace Subsurface
 
             AmbientSoundManager.Update();
 
-            if (Game1.GameSession.Level!=null)
+            if (Game1.GameSession!=null && Game1.GameSession.Level != null)
             {
                 Vector2 targetMovement = Vector2.Zero;
                 if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
@@ -65,7 +65,7 @@ namespace Subsurface
                 if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
                 if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
-                Game1.GameSession.Submarine.Move(targetMovement*1000.0f, (float)deltaTime);
+                Game1.GameSession.Submarine.ApplyForce(targetMovement*100000.0f);
             }
 
             if (Game1.GameSession!=null) Game1.GameSession.Update((float)deltaTime);
@@ -93,6 +93,8 @@ namespace Subsurface
                 Character.UpdateAnimAll((float)Physics.step);
 
                 Ragdoll.UpdateAll((float)Physics.step);
+
+                if (Game1.GameSession != null && Game1.GameSession.Level != null) Game1.GameSession.Submarine.Update((float)Physics.step);
 
                 Game1.world.Step((float)Physics.step);
 
@@ -256,6 +258,12 @@ namespace Subsurface
                 cam.Transform);
 
             Submarine.DrawFront(spriteBatch);
+
+            if (Game1.GameSession != null && Game1.GameSession.Level != null)
+            {
+                Game1.GameSession.Level.RenderLines(spriteBatch);
+                //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
+            }
             
             spriteBatch.End();
 

@@ -210,7 +210,7 @@ namespace Subsurface
             for (int i = 0; i < waveY.Length; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
-                if (maxDelta > ToolBox.RandomFloatLocal(0.2f,10.0f))
+                if (maxDelta > MathUtils.RandomFloatLocal(0.2f,10.0f))
                 {
                     Game1.particleManager.CreateParticle("mist",
                         ConvertUnits.ToSimUnits(new Vector2(rect.X + WaveWidth * i,surface + waveY[i])),

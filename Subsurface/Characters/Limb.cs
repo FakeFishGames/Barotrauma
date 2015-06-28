@@ -275,7 +275,7 @@ namespace Subsurface
 
                 float mid = (armorLimits.X + armorLimits.Y) / 2.0f;
 
-                float angleDiff = ToolBox.GetShortestAngle(ToolBox.VectorToAngle(position - SimPosition), mid);
+                float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(position - SimPosition), mid);
 
                 if (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2.0f)
                 {
@@ -314,7 +314,7 @@ namespace Subsurface
 
                 Game1.particleManager.CreateParticle("blood",
                     SimPosition,
-                    particleVel * ToolBox.RandomFloatLocal(1.0f, 3.0f));
+                    particleVel * MathUtils.RandomFloatLocal(1.0f, 3.0f));
             }
 
             for (int i = 0; i < bloodAmount / 2; i++)
@@ -370,7 +370,7 @@ namespace Subsurface
 
             soundTimer -= deltaTime;
 
-            //if (ToolBox.RandomFloat(0.0f, 1000.0f) < Bleeding)
+            //if (MathUtils.RandomFloat(0.0f, 1000.0f) < Bleeding)
             //{
             //    Game1.particleManager.CreateParticle(
             //        !inWater ? "blood" : "waterblood",
