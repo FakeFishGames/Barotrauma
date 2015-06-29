@@ -310,7 +310,7 @@ namespace Subsurface.Items.Components
             if (convexHull2 != null) convexHull2.Remove();
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
             if (connection.name=="toggle")
             {

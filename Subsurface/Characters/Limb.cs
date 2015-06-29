@@ -187,7 +187,16 @@ namespace Subsurface
 
             if (element.Attribute("type") != null)
             {
-                type = (LimbType)Enum.Parse(typeof(LimbType), element.Attribute("type").Value, true);
+                try
+                {
+                    type = (LimbType)Enum.Parse(typeof(LimbType), element.Attribute("type").Value, true);
+                }
+                catch
+                {
+                    type = LimbType.None;
+                    DebugConsole.ThrowError("Error in "+element+"! ''"+element.Attribute("type").Value+"'' is not a valid limb type");
+                }
+
 
                 Vector2 jointPos = ToolBox.GetAttributeVector2(element, "pullpos", Vector2.Zero);
 

@@ -264,15 +264,15 @@ namespace Subsurface
 
         public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
-            spriteBatch.DrawString(font,
-                "FPS: " + (int)Game1.frameCounter.AverageFramesPerSecond
-                + " - render: " + Game1.renderTimeElapsed,
-                new Vector2(10, 10), Color.White);
+            //spriteBatch.DrawString(font,
+            //    "FPS: " + (int)Game1.frameCounter.AverageFramesPerSecond
+            //    + " - render: " + Game1.renderTimeElapsed,
+            //    new Vector2(10, 10), Color.White);
 
-            spriteBatch.DrawString(font,
-                "Physics: " + Game1.world.UpdateTime
-                + " - bodies: " + Game1.world.BodyList.Count,
-                new Vector2(10, 30), Color.White);
+            //spriteBatch.DrawString(font,
+            //    "Physics: " + Game1.world.UpdateTime
+            //    + " - bodies: " + Game1.world.BodyList.Count,
+            //    new Vector2(10, 30), Color.White);
 
 
             if (Character.Controlled != null && cam!=null) Character.Controlled.DrawHud(spriteBatch, cam);

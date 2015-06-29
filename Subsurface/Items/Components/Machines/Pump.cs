@@ -133,9 +133,11 @@ namespace Subsurface.Items.Components
         //    }
         //}
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
-            base.ReceiveSignal(signal, connection, sender);
+            base.ReceiveSignal(signal, connection, sender, power);
+
+            isActive = true;
 
             if (connection.name == "toggle")
             {
@@ -150,7 +152,7 @@ namespace Subsurface.Items.Components
                 float tempSpeed;
                 if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempSpeed))
                 {
-                    flowPercentage = MathHelper.Clamp(flowPercentage, -100.0f, 100.0f);
+                    flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
                 }
             }
 

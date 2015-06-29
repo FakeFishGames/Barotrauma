@@ -23,24 +23,22 @@ namespace Subsurface.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            item.SendSignal(targetVelocity.X.ToString(), "velocity_x_out", item);
-            item.SendSignal(targetVelocity.Y.ToString(), "velocity_y_out", item);
+            item.SendSignal(targetVelocity.X.ToString(), "velocity_x_out");
+            item.SendSignal((-targetVelocity.Y).ToString(), "velocity_y_out");
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            //isActive = true;
+            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
+            int x = GuiFrame.Rect.X;
+            int y = GuiFrame.Rect.Y;
 
-            int width = 300, height = 300;
-            int x = Game1.GraphicsWidth / 2 - width / 2;
-            int y = Game1.GraphicsHeight / 2 - height / 2 - 50;
+            GuiFrame.Draw(spriteBatch);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
-
-            Rectangle velRect = new Rectangle(x+20, y+20, 100, 100);
+            Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
 
-            GUI.DrawLine(spriteBatch, 
+            GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X,velRect.Center.Y), 
                 new Vector2(velRect.Center.X + currVelocity.X, velRect.Center.Y - currVelocity.Y), 
                 Color.Gray);
@@ -65,20 +63,27 @@ namespace Subsurface.Items.Components
                 }
             }
 
-            //spriteBatch.DrawString(GUI.font, "Force: " + (int)force + " %", new Vector2(x + 30, y + 30), Color.White);
-
-            //if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 30, 40, 40), "+", true)) targetForce += 1.0f;
-            //if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 80, 40, 40), "-", true)) targetForce -= 1.0f;
-
             item.NewComponentEvent(this, true);
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
             if (connection.name == "velocity_in")
             {
                 currVelocity = ToolBox.ParseToVector2(signal, false);
             }  
+        }
+
+        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
+        {
+            message.Write(targetVelocity.X);
+            message.Write(targetVelocity.Y);
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        {
+            targetVelocity.X = message.ReadFloat();
+            targetVelocity.Y = message.ReadFloat();
         }
     }
 }

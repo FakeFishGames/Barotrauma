@@ -49,9 +49,8 @@ namespace Subsurface.Items.Components
                 {
                     pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                     pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
-                    pt.Item.SendSignal(
-                        (fullPower / Math.Max(fullLoad,1.0f)).ToString(CultureInfo.InvariantCulture), 
-                        "power_out");
+                    pt.Item.SendSignal("",
+                        "power", fullPower / Math.Max(fullLoad, 1.0f));
                     
                 }
                 else
@@ -126,14 +125,26 @@ namespace Subsurface.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            int width = 300, height = 200;
-            int x = Game1.GraphicsWidth / 2 - width / 2;
-            int y = Game1.GraphicsHeight / 2 - height / 2;
+            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
+            int x = GuiFrame.Rect.X;
+            int y = GuiFrame.Rect.Y;
+
+            GuiFrame.Draw(spriteBatch);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
             spriteBatch.DrawString(GUI.font, "Power: " + (int)(-currPowerConsumption), new Vector2(x + 30, y + 30), Color.White);
             spriteBatch.DrawString(GUI.font, "Load: " + (int)powerLoad, new Vector2(x + 30, y + 100), Color.White);
+        }
+
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
+        {
+            base.ReceiveSignal(signal, connection, sender, power);
+
+            if (connection.name=="signal")
+            {
+                connection.SendSignal(signal, item, 0.0f);
+            }
         }
 
     }

@@ -32,7 +32,7 @@ namespace Subsurface
                 {
                     case Physics.CollisionStairs:
                         Structure structure = fixture.Body.UserData as Structure;
-                        if (stairs == null && (!inWater || TargetMovement.Y>0.0f) && structure!=null)
+                        if (stairs == null && !inWater && structure!=null)
                         {
                             if (LowestLimb.SimPosition.Y<structure.SimPosition.Y)
                             {
@@ -90,9 +90,17 @@ namespace Subsurface
             }
 
             if (closestFraction == 1) //raycast didn't hit anything
+            {
                 floorY = (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
+            }
+                
             else
+            {
                 floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
+            }
+
+            System.Diagnostics.Debug.WriteLine(floorY+" - "+inWater);
+               
 
             IgnorePlatforms = (TargetMovement.Y < 0.0f);
 
@@ -321,10 +329,7 @@ namespace Subsurface
                     {
                         MoveLimb(leftHand, handPos, 1.5f, true);
                     }
-
                 }
-
-
             }
 
             for (int i = 0; i < 2; i++)
@@ -348,19 +353,21 @@ namespace Subsurface
 
             Limb head = GetLimb(LimbType.Head);
 
-            if (currentHull != null && currentHull.Volume < currentHull.FullVolume)
+            if (currentHull != null && currentHull.Volume < currentHull.FullVolume && !head.inWater)
             {
                 surfaceLimiter = (ConvertUnits.ToDisplayUnits(head.SimPosition.Y)-surfaceY);
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
                 if (surfaceLimiter > 20.0f) return;
             }
 
-            Limb leftFoot   = GetLimb(LimbType.LeftFoot);
-            Limb rightFoot  = GetLimb(LimbType.RightFoot);
             Limb torso      = GetLimb(LimbType.Torso);
             Limb leftHand   = GetLimb(LimbType.LeftHand);
             Limb rightHand  = GetLimb(LimbType.RightHand);
 
+            Limb leftFoot   = GetLimb(LimbType.LeftFoot);
+            Limb rightFoot  = GetLimb(LimbType.RightFoot);
+            Limb leftLeg    = GetLimb(LimbType.LeftLeg);
+            Limb rightLeg   = GetLimb(LimbType.RightLeg);
             
             float rotation = MathHelper.WrapAngle(torso.Rotation);
             rotation = MathHelper.ToDegrees(rotation);
@@ -397,9 +404,9 @@ namespace Subsurface
                 if (TargetMovement.X == 0.0f)
                 {
                     head.body.ApplyForce(head.Mass * new Vector2(-Dir * 5.1f, -5.0f));
-                    torso.body.ApplyForce(torso.Mass *new Vector2(-Dir*5.1f,  -15.0f));
-                    leftFoot.body.ApplyForce(leftFoot.Mass *new Vector2(0.0f,  -80.0f));
-                    rightFoot.body.ApplyForce(rightFoot.Mass *new Vector2(0.0f,  -80.0f));
+                    torso.body.ApplyForce(torso.Mass * new Vector2(-Dir * 5.1f, -15.0f));
+                    leftFoot.body.ApplyForce(leftFoot.Mass * new Vector2(0.0f, -80.0f));
+                    rightFoot.body.ApplyForce(rightFoot.Mass * new Vector2(0.0f, -80.0f));
                 }
                 else
                 {
@@ -432,12 +439,19 @@ namespace Subsurface
             MoveLimb(leftFoot, footPos + transformedFootPos, 2.5f);
             MoveLimb(rightFoot, footPos - transformedFootPos, 2.5f);
 
-            Vector2 feetExtendForce = new Vector2(
-                (float)-Math.Sin(torso.body.Rotation), 
-                (float)Math.Cos(torso.body.Rotation));
+            float legCorrection = MathUtils.GetShortestAngle(leftLeg.Rotation, torso.body.Rotation);
 
-            leftFoot.body.ApplyForce(feetExtendForce);
-            rightFoot.body.ApplyForce(feetExtendForce);
+            leftLeg.body.ApplyTorque(legCorrection);
+
+            legCorrection = MathUtils.GetShortestAngle(rightLeg.Rotation, torso.body.Rotation);
+
+            rightLeg.body.ApplyTorque(legCorrection);
+            //Vector2 feetExtendForce = new Vector2(
+            //    (float)-Math.Sin(torso.body.Rotation), 
+            //    (float)Math.Cos(torso.body.Rotation));
+
+            //leftFoot.body.ApplyForce(feetExtendForce);
+            //rightFoot.body.ApplyForce(feetExtendForce);
             
             leftFoot.body.ApplyTorque(leftFoot.body.Mass * -Dir);
             rightFoot.body.ApplyTorque(rightFoot.body.Mass * -Dir);

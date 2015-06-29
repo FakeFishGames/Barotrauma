@@ -23,8 +23,15 @@ namespace Subsurface
             this.alignment = alignment;
             
             this.color = color;
-            if (parent!=null)
+
+            if (parent != null)
+            {
                 parent.AddChild(this);
+            }
+            else
+            {
+                UpdateDimensions();
+            }
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)

@@ -135,7 +135,7 @@ namespace Subsurface.Items.Components
         //    return false;
         //}
 
-        public void SendSignal(string signal, Item sender)
+        public void SendSignal(string signal, Item sender, float power)
         {
             for (int i = 0; i<MaxLinked; i++)
             {
@@ -146,7 +146,7 @@ namespace Subsurface.Items.Components
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {
-                    ic.ReceiveSignal(signal, recipient, sender);
+                    ic.ReceiveSignal(signal, recipient, sender, power);
                 }
             }
         }

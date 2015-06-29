@@ -181,9 +181,32 @@ namespace Subsurface
                 cells.Remove(cell);
             }
 
-            //GenerateBodies(cells, pathCells);
+            for (int x = 0; x < cellGrid.GetLength(0); x++ )
+            {
+                for (int y = 0; y < cellGrid.GetLength(1); y++ )
+                {
+                    cellGrid[x, y].Clear();
+                }
+            }
+
+            foreach (VoronoiCell cell in cells)
+            {
+                cellGrid[(int)Math.Floor(cell.Center.X / gridCellWidth), (int)Math.Floor(cell.Center.Y / gridCellWidth)].Add(cell);
+            }
 
             GeneratePolygons(cells, pathCells);
+
+            foreach (VoronoiCell cell in cells)
+            {
+                foreach (GraphEdge edge in cell.edges)
+                {
+                    edge.cell1 = null;
+                    edge.cell2 = null;
+                    edge.site1 = null;
+                    edge.site2 = null;
+                }
+
+            }
 
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
@@ -452,6 +475,8 @@ namespace Subsurface
                     VoronoiCell adjacentCell = ge.AdjacentCell(cell);
                     if (!emptyCells.Contains(adjacentCell)) continue;
 
+                    ge.isSolid = true;
+
                     if (!bodyPoints.Contains(ge.point1)) bodyPoints.Add(ge.point1);
                     if (!bodyPoints.Contains(ge.point2)) bodyPoints.Add(ge.point2);
                 }
@@ -624,39 +649,101 @@ namespace Subsurface
             //    }
             //}
 
-            int gridPosX = (int)Math.Floor(-observerPosition.X / gridCellWidth);
-            int gridPosY = (int)Math.Floor(-observerPosition.Y / gridCellWidth);
-            int searchOffset = 2;
+            //int gridPosX = (int)Math.Floor(-observerPosition.X / gridCellWidth);
+            //int gridPosY = (int)Math.Floor(-observerPosition.Y / gridCellWidth);
+            //int searchOffset = 2;
 
-            int startX = Math.Max(gridPosX - searchOffset, 0);
-            int endX = Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1);
+            //int startX = Math.Max(gridPosX - searchOffset, 0);
+            //int endX = Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1);
 
-            int startY = Math.Max(gridPosY - searchOffset, 0);
-            int endY = Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1);
+            //int startY = Math.Max(gridPosY - searchOffset, 0);
+            //int endY = Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1);
+
+            //for (int x = startX; x < endX; x++)
+            //{
+            //    for (int y = startY; y < endY; y++)
+            //    {
+            //        GUI.DrawRectangle(spriteBatch,
+            //            new Rectangle(x * gridCellWidth + (int)position.X, borders.Y - borders.Height + y * gridCellWidth - (int)position.Y, gridCellWidth, gridCellWidth),
+            //            Color.Cyan);
+            //    }
+            //}
+
+            List<Vector2[]> edges = GetCellEdges(-observerPosition);
+
+            for (int i = 0; i < edges.Count; i++ )
+            {
+                GUI.DrawLine(spriteBatch, edges[i][0], edges[i][1], Color.Green);
+            }
+
+                //foreach (VoronoiCell cell in cells)
+                //{
+                //    for (int i = 0; i < cell.edges.Count; i++)
+                //    {
+                //        Vector2 start = cell.edges[i].point1 + position;
+                //        start.Y = -start.Y;
+
+                //        Vector2 end = cell.edges[i].point2 + position;
+                //        end.Y = -end.Y;
+
+                //        GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Green : Color.Red);
+                //    }
+                //}
+        }
+
+        public List<Vector2[]> GetCellEdges(Vector2 refPos, int searchDepth = 2, bool onlySolid = true)
+        {
+
+            int gridPosX = (int)Math.Floor(refPos.X / gridCellWidth);
+            int gridPosY = (int)Math.Floor(refPos.Y / gridCellWidth);
+
+            int startX = Math.Max(gridPosX - searchDepth, 0);
+            int endX = Math.Min(gridPosX + searchDepth, cellGrid.GetLength(0) - 1);
+
+            int startY = Math.Max(gridPosY - searchDepth, 0);
+            int endY = Math.Min(gridPosY + searchDepth, cellGrid.GetLength(1) - 1);
+
+
+            List<Vector2[]> edges = new List<Vector2[]>();
 
             for (int x = startX; x < endX; x++)
             {
                 for (int y = startY; y < endY; y++)
                 {
-                    GUI.DrawRectangle(spriteBatch,
-                        new Rectangle(x * gridCellWidth + (int)position.X, borders.Y - borders.Height + y * gridCellWidth - (int)position.Y, gridCellWidth, gridCellWidth),
-                        Color.Cyan);
+                    foreach (VoronoiCell cell in cellGrid[x,y])
+                    {
+                        for (int i = 0; i < cell.edges.Count; i++)
+                        {
+                            if (onlySolid && !cell.edges[i].isSolid) continue;
+                            Vector2 start = cell.edges[i].point1 + position;
+                            start.Y = -start.Y;
+
+                            Vector2 end = cell.edges[i].point2 + position;
+                            end.Y = -end.Y;
+
+                            edges.Add(new Vector2[] { start, end });
+                            //GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Green : Color.Red);
+                        }
+                    }
                 }
             }
 
-            foreach (VoronoiCell cell in cells)
-            {
-                for (int i = 0; i<cell.edges.Count; i++)
-                {
-                    Vector2 start = cell.edges[i].point1+position;
-                    start.Y = -start.Y;
+            //foreach (VoronoiCell cell in cells)
+            //{
+            //    for (int i = 0; i < cell.edges.Count; i++)
+            //    {
+            //        Vector2 start = cell.edges[i].point1 + position;
+            //        start.Y = -start.Y;
 
-                    Vector2 end = cell.edges[i].point2+position;
-                    end.Y = -end.Y;
-                    
-                    GUI.DrawLine(spriteBatch, start, end, (cell.body!=null && cell.body.Enabled) ? Color.Green : Color.Red);
-                }
-            }
+            //        Vector2 end = cell.edges[i].point2 + position;
+            //        end.Y = -end.Y;
+
+            //        edges.Add(new Vector2[] {start, end});
+            //        //GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Green : Color.Red);
+            //    }
+            //}
+
+            return edges;
         }
 
         public void Render(GraphicsDevice graphicsDevice, Camera cam)

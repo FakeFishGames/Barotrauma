@@ -71,17 +71,18 @@ namespace Subsurface.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             //isActive = true;
+            GuiFrame.Draw(spriteBatch);
+            
+            //int width = 300, height = 300;
+            //int x = Game1.GraphicsWidth / 2 - width / 2;
+            //int y = Game1.GraphicsHeight / 2 - height / 2 - 50;
 
-            int width = 300, height = 300;
-            int x = Game1.GraphicsWidth / 2 - width / 2;
-            int y = Game1.GraphicsHeight / 2 - height / 2 - 50;
+            //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
+            spriteBatch.DrawString(GUI.font, "Force: " + (int)targetForce + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
 
-            spriteBatch.DrawString(GUI.font, "Force: " + (int)targetForce+" %", new Vector2(x + 30, y + 30), Color.White);
-
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 30, 40, 40), "+", true)) targetForce += 1.0f;
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 80, 40, 40), "-", true)) targetForce -= 1.0f;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(GuiFrame.Rect.X + 280, GuiFrame.Rect.Y + 30, 40, 40), "+", true)) targetForce += 1.0f;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(GuiFrame.Rect.X + 280, GuiFrame.Rect.Y + 80, 40, 40), "-", true)) targetForce -= 1.0f;
             
             item.NewComponentEvent(this, true);
         }
@@ -91,9 +92,9 @@ namespace Subsurface.Items.Components
             force = MathHelper.Lerp(force, 0.0f, 0.1f);
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
-            base.ReceiveSignal(signal, connection, sender);
+            base.ReceiveSignal(signal, connection, sender, power);
 
             if (connection.name == "set_force")
             {

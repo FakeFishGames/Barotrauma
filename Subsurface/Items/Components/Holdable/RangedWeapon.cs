@@ -35,8 +35,8 @@ namespace Subsurface.Items.Components
         public RangedWeapon(Item item, XElement element)
             : base(item, element)
         {
-            barrelPos = ToolBox.GetAttributeVector2(element, "barrelpos", Vector2.Zero);
-            barrelPos = ConvertUnits.ToSimUnits(barrelPos);
+            //barrelPos = ToolBox.GetAttributeVector2(element, "barrelpos", Vector2.Zero);
+            //barrelPos = ConvertUnits.ToSimUnits(barrelPos);
         }
 
         public override void Update(float deltaTime, Camera cam)

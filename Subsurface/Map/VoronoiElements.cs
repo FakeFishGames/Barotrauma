@@ -143,6 +143,8 @@ namespace Voronoi2
 		public Site site1, site2;
         public VoronoiCell cell1, cell2;
 
+        public bool isSolid;
+
         public VoronoiCell AdjacentCell(VoronoiCell cell)
         {
             if (cell1==cell)
