@@ -641,8 +641,7 @@ namespace Subsurface
             }
         }
         
-
-        public void SendSignal(string signal, string connectionName, Item ignoredReceiver = null)
+        public void SendSignal(string signal, string connectionName, float power=0.0f)
         {
             ConnectionPanel panel = GetComponent<ConnectionPanel>();
             if (panel == null) return;
@@ -650,7 +649,7 @@ namespace Subsurface
             {
                 if (c.name != connectionName) continue;
 
-                c.SendSignal(signal, this);
+                c.SendSignal(signal, this, power);
             }
 
         }

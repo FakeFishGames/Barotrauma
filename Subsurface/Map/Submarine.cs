@@ -62,6 +62,12 @@ namespace Subsurface
             get { return lastPickedFraction; }
         }
 
+        public List<Vector2> HullVertices
+        {
+            get;
+            private set;
+        }
+
         public Md5Hash Hash
         {
             get
@@ -401,9 +407,7 @@ namespace Subsurface
                 ApplyForce(-Vector2.Normalize(speed)*drag);
             }
             //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
-
-
-
+            
             hullBody.SetTransform(Vector2.Zero , 0.0f);
 
             if (collidingCell == null)
@@ -697,6 +701,9 @@ namespace Subsurface
             }
 
             List<Vector2> convexHull = GenerateConvexHull();
+
+            HullVertices = convexHull;
+
             for (int i = 0; i < convexHull.Count; i++)
             {
                 convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
@@ -718,7 +725,7 @@ namespace Subsurface
             
             var triangulatedVertices = Triangulate.ConvexPartition(_shapevertices, TriangulationAlgorithm.Bayazit);
 
-            Body hullBody = BodyFactory.CreateCompoundPolygon(Game1.world, triangulatedVertices, 5.0f);
+            hullBody = BodyFactory.CreateCompoundPolygon(Game1.world, triangulatedVertices, 5.0f);
             hullBody.BodyType = BodyType.Dynamic;
 
             hullBody.CollisionCategories = Physics.CollisionMisc;

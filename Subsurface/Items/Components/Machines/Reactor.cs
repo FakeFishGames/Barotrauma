@@ -300,9 +300,11 @@ namespace Subsurface.Items.Components
         {
             isActive = true;
 
-            int width = 500, height = 420;
-            int x = Game1.GraphicsWidth / 2 - width / 2;
-            int y = Game1.GraphicsHeight / 2 - height / 2 - 50;
+            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
+            int x = GuiFrame.Rect.X;
+            int y = GuiFrame.Rect.Y;
+
+            GuiFrame.Draw(spriteBatch);
 
             float xOffset = (graphTimer / (float)updateGraphInterval);
 

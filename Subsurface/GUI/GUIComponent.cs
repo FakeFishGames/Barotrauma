@@ -39,6 +39,11 @@ namespace Subsurface
         {
             get { return parent; }
         }
+
+        public Vector2 Center
+        {
+            get { return new Vector2(rect.Center.X, rect.Center.Y); }
+        }
                 
         public Rectangle Rect
         {
@@ -192,43 +197,44 @@ namespace Subsurface
             }
         }
 
-        protected virtual void UpdateDimensions(GUIComponent parent)
+        protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
-            if (parent!=null)
+            Rectangle parentRect = (parent==null) ? new Rectangle(0,0,Game1.GraphicsWidth, Game1.GraphicsHeight) : parent.rect;
+
+            Vector4 padding = (parent == null) ? Vector4.Zero : parent.padding;
+
+            if (rect.Width == 0) rect.Width = parentRect.Width - rect.X 
+                - (int)padding.X - (int)padding.Z;
+
+            if (rect.Height == 0) rect.Height = parentRect.Height - rect.Y
+                - (int)padding.Y - (int)padding.W;
+
+            if (alignment.HasFlag(Alignment.CenterX))
             {
-                if (rect.Width == 0) rect.Width = parent.Rect.Width - rect.X 
-                    - (int)parent.Padding.X - (int)parent.Padding.Z;
-
-                if (rect.Height == 0) rect.Height = parent.Rect.Height - rect.Y
-                    - (int)parent.Padding.Y - (int)parent.Padding.W;
-
-                if (alignment.HasFlag(Alignment.CenterX))
-                {
-                    rect.X += parent.Rect.X + (int)parent.Rect.Width/2 - (int)rect.Width/2;
-                }
-                else if (alignment.HasFlag(Alignment.Right))
-                {
-                    rect.X += parent.Rect.X + (int)parent.Rect.Width - (int)parent.Padding.Z - (int)rect.Width;
-                }
-                else
-                {
-                    rect.X += parent.Rect.X + (int)parent.Padding.X;
-                }
-
-                if (alignment.HasFlag(Alignment.CenterY))
-                {
-                    rect.Y += parent.Rect.Y + (int)parent.Rect.Height / 2 - (int)rect.Height / 2;
-                }
-                else if (alignment.HasFlag(Alignment.Bottom))
-                {
-                    rect.Y += parent.Rect.Y + (int)parent.Rect.Height - (int)parent.Padding.W - (int)rect.Height;
-                }
-                else
-                {
-                    rect.Y += parent.Rect.Y + (int)parent.Padding.Y;
-                }
-
+                rect.X += parentRect.X + (int)parentRect.Width/2 - (int)rect.Width/2;
             }
+            else if (alignment.HasFlag(Alignment.Right))
+            {
+                rect.X += parentRect.X + (int)parentRect.Width - (int)padding.Z - (int)rect.Width;
+            }
+            else
+            {
+                rect.X += parentRect.X + (int)padding.X;
+            }
+
+            if (alignment.HasFlag(Alignment.CenterY))
+            {
+                rect.Y += parentRect.Y + (int)parentRect.Height / 2 - (int)rect.Height / 2;
+            }
+            else if (alignment.HasFlag(Alignment.Bottom))
+            {
+                rect.Y += parentRect.Y + (int)parentRect.Height - (int)padding.W - (int)rect.Height;
+            }
+            else
+            {
+                rect.Y += parentRect.Y + (int)padding.Y;
+            }
+            
         }
 
         public virtual void DrawChildren(SpriteBatch spriteBatch)

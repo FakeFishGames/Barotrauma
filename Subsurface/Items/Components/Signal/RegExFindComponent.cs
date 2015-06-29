@@ -28,7 +28,7 @@ namespace Subsurface.Items.Components
         {
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
             switch (connection.name)
             {
@@ -44,11 +44,11 @@ namespace Subsurface.Items.Components
                     }
                     catch
                     {
-                        item.SendSignal("ERROR", "signal_out", item);
+                        item.SendSignal("ERROR", "signal_out");
                         return;
                     }
 
-                    item.SendSignal(success ? output : "0", "signal_out", item);
+                    item.SendSignal(success ? output : "0", "signal_out");
 
                     break;
                 case "set_output":

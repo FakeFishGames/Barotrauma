@@ -189,7 +189,7 @@ namespace Subsurface
             if (components.Length!=2)
             {
                 if (!errorMessages) return vector;
-                DebugConsole.ThrowError("Failed to parse the string "+stringVector2+" to Vector2");
+                DebugConsole.ThrowError("Failed to parse the string ''"+stringVector2+"'' to Vector2");
                 return vector;
             }
 
@@ -212,7 +212,7 @@ namespace Subsurface
 
             if (components.Length < 3)
             {
-                DebugConsole.ThrowError("Failed to parse the string " + stringVector4 + " to Vector4");
+                DebugConsole.ThrowError("Failed to parse the string ''" + stringVector4 + "'' to Vector4");
                 return vector;
             }
 

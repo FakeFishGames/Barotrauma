@@ -38,7 +38,7 @@ namespace Subsurface.Items.Components
             sprite.Draw(spriteBatch, new Vector2(item.Position.X, -item.Position.Y), 0.0f, 1.0f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None);
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
             switch (connection.name)
             {

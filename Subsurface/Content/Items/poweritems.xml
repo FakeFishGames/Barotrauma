@@ -8,12 +8,15 @@
 		
 		<Sprite texture ="junctionbox.png" depth="0.8"/>
 
-		<PowerTransfer canbeselected = "true"/>
+    <PowerTransfer canbeselected = "true">
+      <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+    </PowerTransfer>
 
 		<ConnectionPanel canbeselected = "true">
 			<requireditem name="Screwdriver" type="Equipped"/>
-			<output name="power_out"/>
-		</ConnectionPanel>
+			<output name="power"/>
+      <output name="signal"/>
+    </ConnectionPanel>
 
 	</Item>
 
@@ -23,8 +26,10 @@
 		pickdistance="150">
 
 		<Sprite texture ="battery.png" depth="0.8"/>
-		
-		<PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected = "true"/>
+
+    <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected = "true">
+      <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+    </PowerContainer>
 
 		<ConnectionPanel canbeselected = "true">
 			<requireditem name="Screwdriver" type="Equipped"/>

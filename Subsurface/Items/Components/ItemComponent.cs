@@ -54,6 +54,8 @@ namespace Subsurface
 
         private List<ItemSound> sounds;
 
+        private GUIFrame guiFrame;
+
         public readonly Dictionary<string, ObjectProperty> properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
         {
@@ -94,6 +96,19 @@ namespace Subsurface
         public string Name
         {
             get { return name; }
+        }
+
+        protected GUIFrame GuiFrame
+        {
+            get 
+            { 
+                if (guiFrame==null)
+                {
+                    DebugConsole.ThrowError("Error: the component "+name+" in "+item.Name+" doesn't have a guiFrame");
+                    guiFrame = new GUIFrame(new Rectangle(0, 0, 100, 100), Color.Black);
+                }
+                return guiFrame; 
+            }
         }
 
         [HasDefaultValue("", false)]
@@ -153,6 +168,32 @@ namespace Subsurface
                     case "statuseffect":
                         statusEffects.Add(StatusEffect.Load(subElement));
                         break;
+                    case "guiframe":
+                        Vector4 rect = ToolBox.GetAttributeVector4(subElement, "rect", Vector4.One);
+                        rect.X *= Game1.GraphicsWidth;
+                        rect.Y *= Game1.GraphicsHeight;
+                        rect.Z *= Game1.GraphicsWidth;
+                        rect.W *= Game1.GraphicsHeight;
+
+                        Vector4 color = ToolBox.GetAttributeVector4(subElement, "color", Vector4.One);
+
+                        Alignment alignment = Alignment.Center;
+                        try
+                        {
+                            alignment = (Alignment)Enum.Parse(typeof(Alignment),
+                                ToolBox.GetAttributeString(subElement, "alignment", "Center"), true);
+                        }
+                        catch
+                        {
+                            DebugConsole.ThrowError("Error in " + element + "! ''" + element.Attribute("type").Value + "'' is not a valid alignment");
+                        }
+
+                        guiFrame = new GUIFrame(
+                            new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W), 
+                            new Color(color.X, color.Y, color.Z), alignment);                        
+                        guiFrame.Alpha = color.W;
+
+                    break;
                     case "sound":
                         string filePath = ToolBox.GetAttributeString(subElement, "file", "");
                         if (filePath=="") continue;
@@ -284,7 +325,7 @@ namespace Subsurface
             return false;
         }
 
-        public virtual void ReceiveSignal(string signal, Connection connection, Item sender) { }
+        public virtual void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0.0f) { }
 
         public virtual bool Combine(Item item) 
         {

@@ -59,15 +59,9 @@ namespace Subsurface.Items.Components
             set { voltage = Math.Max(0.0f, value); }
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
         {
-            if (connection.name=="power_in")
-            {
-                if (!float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out voltage))
-                {
-                    voltage = 0.0f;
-                }
-            }
+            if (connection.name=="power_in") voltage = power;                
         }
 
         public override void Update(float deltaTime, Camera cam)

@@ -6,7 +6,9 @@
 
   <trigger/>
 
-  <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true"/>
+  <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
+    <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+  </MiniMap>
 
   <ConnectionPanel canbeselected = "true">
     <requireditem name="Screwdriver" type="Equipped"/>

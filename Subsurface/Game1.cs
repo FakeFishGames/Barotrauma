@@ -49,7 +49,7 @@ namespace Subsurface
         public static Random random;
 
         //private Stopwatch renderTimer;
-        public static int renderTimeElapsed;
+        //public static int renderTimeElapsed;
 
         
         public Camera Cam

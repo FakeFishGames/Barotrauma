@@ -32,12 +32,13 @@ namespace Subsurface.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            int width = 500, height = 400;
-            int x = Game1.GraphicsWidth / 2 - width / 2;
-            int y = Game1.GraphicsHeight / 2 - height / 2;
+            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
+            int x = GuiFrame.Rect.X;
+            int y = GuiFrame.Rect.Y;
 
+            GuiFrame.Draw(spriteBatch);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x,y,width,height), Color.Black, true);
+            //GUI.DrawRectangle(spriteBatch, new Rectangle(x,y,width,height), Color.Black, true);
 
             Rectangle miniMap = new Rectangle(x + 20, y + 40, width - 40, height - 60);
 

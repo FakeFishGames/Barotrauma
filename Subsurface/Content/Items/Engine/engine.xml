@@ -7,14 +7,16 @@
 		pickdistance="150">
 
 		<Sprite texture ="engine.png" depth="0.8"/>
-		
-		<Engine minvoltage="0.5" powerperforce="10.0" maxforce="50" canbeselected = "true"/>
 
+    <Engine minvoltage="0.5" powerperforce="10.0" maxforce="50" canbeselected = "true">
+      <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+    </Engine>
+    
 		<ConnectionPanel canbeselected = "true">
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<input name="power_in"/>
 			<input name="set_force"/>
-		</ConnectionPanel>		
+		</ConnectionPanel>
 	</Item>
 
 	<Item
@@ -24,7 +26,13 @@
 
 		<Sprite texture ="fabricator.png" depth="0.8"/>
 
-		<Steering minvoltage="0.5" canbeselected = "true"/>
+    <Steering minvoltage="0.5" canbeselected = "true">
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+    </Steering>
+
+    <Radar canbeselected = "true">
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.0"/>
+    </Radar>
 
 		<ConnectionPanel canbeselected = "true">
 			<requireditem name="Screwdriver" type="Equipped"/>
