@@ -60,16 +60,24 @@ namespace Subsurface
         {
             get { return caretPos; }
         }
-
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment, Alignment textAlignment, GUIComponent parent = null, bool wrap = false)
-            : this (rect, text, style.foreGroundColor, style.textColor, alignment, textAlignment, parent, wrap)
+        
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null, bool wrap = false)
+            : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, wrap)
         {
-            hoverColor = style.hoverColor;
-            selectedColor = style.selectedColor;
+            //hoverColor = style.hoverColor;
+            //selectedColor = style.selectedColor;
         }
 
-        public GUITextBlock(Rectangle rect, string text, Color color, Color textColor, Alignment textAlignment = Alignment.Left, GUIComponent parent = null, bool wrap = false)
-            : this(rect, text,color, textColor, (Alignment.Left | Alignment.Top), textAlignment, parent, wrap)
+
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = (Alignment.Left | Alignment.Top), Alignment textAlignment = (Alignment.Left | Alignment.Top), GUIComponent parent = null, bool wrap = false)
+            : this (rect, text, null, null, alignment, textAlignment, style, parent, wrap)
+        {
+            //hoverColor = style.hoverColor;
+            //selectedColor = style.selectedColor;
+        }
+
+        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)
+            : this(rect, text,color, textColor, (Alignment.Left | Alignment.Top), textAlignment, style, parent, wrap)
         {
         }
 
@@ -80,13 +88,21 @@ namespace Subsurface
             SetTextPos();
         }
 
+        public override void ApplyStyle(GUIComponentStyle style)
+        {
+            base.ApplyStyle(style);
 
-        public GUITextBlock(Rectangle rect, string text, Color color, Color textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, GUIComponent parent = null, bool wrap = false)
+            textColor = style.textColor;
+        }
+
+
+        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)
+            :base (style)
         {
             this.rect = rect;
 
-            this.color = color;
-            this.textColor = textColor;
+            if (color!=null) this.color = (Color)color;
+            if (textColor!=null) this.textColor = (Color)textColor;
             this.text = text;
 
             this.alignment = alignment;
@@ -174,7 +190,7 @@ namespace Subsurface
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
             
-            GUI.DrawRectangle(spriteBatch, rect, currColor*alpha, true);
+            GUI.DrawRectangle(spriteBatch, rect, currColor*(currColor.A/255.0f), true);
 
             if (TextGetter != null) text = TextGetter();
 
@@ -183,7 +199,7 @@ namespace Subsurface
                 spriteBatch.DrawString(GUI.font,
                     text,
                     new Vector2(rect.X, rect.Y) + textPos,
-                    textColor * alpha,
+                    textColor * (textColor.A / 255.0f),
                     0.0f, origin, 1.0f,
                     SpriteEffects.None, 0.0f);
             }

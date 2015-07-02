@@ -1,48 +1,48 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml.Linq;
+
 
 namespace Subsurface
 {
 
-    public enum DamageType { None, Blunt, Slash };
+    public enum DamageType { None, Blunt, Slash }
+
+    public enum AttackType
+    {
+        None, PinchCW, PinchCCW
+    }
 
     struct AttackResult
     {
-        public readonly float damage;
-        public readonly float bleeding;
+        public readonly float Damage;
+        public readonly float Bleeding;
 
-        public readonly bool hitArmor;
+        public readonly bool HitArmor;
 
         public AttackResult(float damage, float bleeding, bool hitArmor=false)
         {
-            this.damage = damage;
-            this.bleeding = bleeding;
+            this.Damage = damage;
+            this.Bleeding = bleeding;
 
-            this.hitArmor = hitArmor;
+            this.HitArmor = hitArmor;
         }
     }
 
     class Attack
     {
-        public enum Type
-        {
-            None, PinchCW, PinchCCW
-        };
-        public readonly Type type;
-        public readonly float range;
-        public readonly float duration;
 
-        public readonly DamageType damageType;
+        public readonly AttackType Type;
+        public readonly float Range;
+        public readonly float Duration;
 
-        public readonly float structureDamage;
-        public readonly float damage;
-        public readonly float bleedingDamage;
+        public readonly DamageType DamageType;
 
-        public readonly float stun;
+        public readonly float StructureDamage;
+        public readonly float Damage;
+        public readonly float BleedingDamage;
+
+        public readonly float Stun;
 
         private float priority;
 
@@ -50,62 +50,62 @@ namespace Subsurface
         {
             try
             {
-                type = (Type)Enum.Parse(typeof(Type), element.Attribute("type").Value, true);
+                Type = (AttackType)Enum.Parse(typeof(AttackType), element.Attribute("type").Value, true);
             }
             catch
             {
-                type = Type.None;
+                Type = AttackType.None;
             }
 
             try
             {
-                damageType = (DamageType)Enum.Parse(typeof(DamageType), ToolBox.GetAttributeString(element, "damagetype", "None"), true);
+                DamageType = (DamageType)Enum.Parse(typeof(DamageType), ToolBox.GetAttributeString(element, "damagetype", "None"), true);
             }
             catch
             {
-                damageType = DamageType.None;
+                DamageType = DamageType.None;
             }
 
 
-            damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
-            structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
-            bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
+            Damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
+            StructureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
+            BleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
 
-            stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
+            Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
 
-            range = FarseerPhysics.ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "range", 0.0f));
+            Range = FarseerPhysics.ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "range", 0.0f));
 
-            duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
+            Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
             priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
         }
 
-        public AttackResult DoDamage(IDamageable target, Vector2 position, float deltaTime, bool playSound=true)
+        public AttackResult DoDamage(IDamageable target, Vector2 position, float deltaTime, bool playSound = true)
         {
             float damageAmount = 0.0f;
             //DamageSoundType damageSoundType = DamageSoundType.None;
 
             if (target as Character == null)
             {
-                damageAmount = structureDamage;
+                damageAmount = StructureDamage;
                 //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt: DamageSoundType.StructureSlash;
 
             }
             else
             {
-                damageAmount = damage;
+                damageAmount = Damage;
                 //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
             }
             //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
             //if (playSound) AmbientSoundManager.PlayDamageSound(damageSoundType, damageAmount, position);
 
-            if (duration > 0.0f) damageAmount *= deltaTime;
-            float bleedingAmount = (duration == 0.0f) ? bleedingDamage : bleedingDamage * deltaTime;
+            if (Duration > 0.0f) damageAmount *= deltaTime;
+            float bleedingAmount = (Duration == 0.0f) ? BleedingDamage : BleedingDamage * deltaTime;
 
             if (damageAmount > 0.0f)
             {
-                return target.AddDamage(position, damageType, damageAmount, bleedingAmount, stun, playSound);
+                return target.AddDamage(position, DamageType, damageAmount, bleedingAmount, Stun, playSound);
             }
             else
             {

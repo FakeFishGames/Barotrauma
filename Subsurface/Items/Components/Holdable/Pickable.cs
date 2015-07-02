@@ -81,7 +81,7 @@ namespace Subsurface.Items.Components
             
             if (item.body!= null && !item.body.Enabled)
             {
-                Limb rightHand = picker.animController.GetLimb(LimbType.RightHand);
+                Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
                 item.SetTransform(rightHand.SimPosition, 0.0f);
                 item.body.Enabled = true;
             }

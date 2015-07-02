@@ -235,7 +235,7 @@ namespace Subsurface
                 selectionSize.Y = selectionPos.Y - position.Y;
 
                 List<MapEntity> newSelection = new List<MapEntity>();// FindSelectedEntities(selectionPos, selectionSize);
-                if (Math.Abs(selectionSize.X) > Submarine.gridSize.X || Math.Abs(selectionSize.Y) > Submarine.gridSize.Y)
+                if (Math.Abs(selectionSize.X) > Submarine.GridSize.X || Math.Abs(selectionSize.Y) > Submarine.GridSize.Y)
                 {
                     newSelection = FindSelectedEntities(selectionPos, selectionSize);
                 }

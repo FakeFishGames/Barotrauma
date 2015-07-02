@@ -31,7 +31,7 @@ namespace Subsurface
             crewManager = new CrewManager();
             hireManager = new HireManager();
 
-            endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 240, 20, 100, 25), "End shift", Color.White, Alignment.Left | Alignment.Top);
+            endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 240, 20, 100, 25), "End shift", Alignment.Left | Alignment.Top, GUI.style);
             endShiftButton.OnClicked = EndShift;
 
             hireManager.GenerateCharacters("Content/Characters/Human/human.xml", 10);
@@ -61,12 +61,12 @@ namespace Subsurface
 
         public bool TryHireCharacter(CharacterInfo characterInfo)
         {
-            if (crewManager.Money < characterInfo.salary) return false;
+            if (crewManager.Money < characterInfo.Salary) return false;
 
             hireManager.availableCharacters.Remove(characterInfo);
             crewManager.characterInfos.Add(characterInfo);
 
-            crewManager.Money -= characterInfo.salary;
+            crewManager.Money -= characterInfo.Salary;
 
             return true;
         }
@@ -137,7 +137,7 @@ namespace Subsurface
                     sb.Append("Casualties: \n");
                     foreach (Character c in casualties)
                     {
-                        sb.Append("    - " + c.info.name + "\n");
+                        sb.Append("    - " + c.Info.Name + "\n");
                     }
                 }
                 else
@@ -151,9 +151,9 @@ namespace Subsurface
             }
 
             crewManager.EndShift();
-            for (int i = Character.characterList.Count-1; i>=0; i--)
+            for (int i = Character.CharacterList.Count-1; i>=0; i--)
             {
-                Character.characterList.RemoveAt(i);
+                Character.CharacterList.RemoveAt(i);
             }
 
             Game1.GameSession.EndShift("");

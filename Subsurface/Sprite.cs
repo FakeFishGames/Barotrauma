@@ -61,17 +61,17 @@ namespace Subsurface
         {
             get { return file; }
         }
-        
-        public Sprite(XElement element, string path ="", string file="")
+
+        public Sprite(XElement element, string path = "", string file = "")
         {
-            if (file=="")
+            if (file == "")
             {
                 file = ToolBox.GetAttributeString(element, "texture", "");
             }
 
-            if (file=="")
+            if (file == "")
             {
-                DebugConsole.ThrowError("Sprite "+element+" doesn't have a texture specified!");
+                DebugConsole.ThrowError("Sprite " + element + " doesn't have a texture specified!");
                 return;
             }
 
@@ -99,7 +99,9 @@ namespace Subsurface
             origin.X = origin.X * sourceRect.Width;
             origin.Y = origin.Y * sourceRect.Height;
 
-            size = new Vector2(sourceRect.Width, sourceRect.Height);
+            size = ToolBox.GetAttributeVector2(element, "size", Vector2.One);
+            size.X *= sourceRect.Width;
+            size.Y *= sourceRect.Height;
 
             Depth = ToolBox.GetAttributeFloat(element, "depth", 0.0f);
         }

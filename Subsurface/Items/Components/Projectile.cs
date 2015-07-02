@@ -106,7 +106,7 @@ namespace Subsurface.Items.Components
             if (stickJoint != null && doesStick)
             {
                 if (stickTarget!=null) item.body.FarseerBody.RestoreCollisionWith(stickTarget);
-                Game1.world.RemoveJoint(stickJoint);
+                Game1.World.RemoveJoint(stickJoint);
                 stickJoint = null;
             }
         }
@@ -122,7 +122,7 @@ namespace Subsurface.Items.Components
                         item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                     }
 
-                    Game1.world.RemoveJoint(stickJoint);
+                    Game1.World.RemoveJoint(stickJoint);
                     stickJoint = null;
 
                     isActive = false;
@@ -181,7 +181,7 @@ namespace Subsurface.Items.Components
 
             ignoredBodies.Clear();
 
-            if (attackResult.hitArmor)
+            if (attackResult.HitArmor)
             {
                 item.body.LinearVelocity *= 0.5f;
             }
@@ -211,7 +211,7 @@ namespace Subsurface.Items.Components
 
             item.body.FarseerBody.IgnoreCollisionWith(targetBody);
             stickTarget = targetBody;
-            Game1.world.AddJoint(stickJoint);
+            Game1.World.AddJoint(stickJoint);
 
             isActive = true;
 

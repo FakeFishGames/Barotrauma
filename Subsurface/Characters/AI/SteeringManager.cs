@@ -32,7 +32,7 @@ namespace Subsurface
         {
             this.host = host;
 
-            wanderAngle = MathUtils.RandomFloatLocal(0.0f, MathHelper.TwoPi);
+            wanderAngle = Rand.Range(0.0f, MathHelper.TwoPi);
         }
 
         public void SteeringSeek(Vector2 target, float speed = 1.0f)
@@ -90,7 +90,7 @@ namespace Subsurface
 
             float angleChange = 1.5f;
             
-            wanderAngle += MathUtils.RandomFloatLocal(0.0f, 1.0f) * angleChange - angleChange * 0.5f;
+            wanderAngle += Rand.Range(0.0f, 1.0f) * angleChange - angleChange * 0.5f;
 
             Vector2 newSteering = circleCenter + displacement;
             float steeringSpeed = (newSteering + host.Steering).Length();
@@ -106,9 +106,9 @@ namespace Subsurface
         {
             if (steering == Vector2.Zero || host.Steering == Vector2.Zero) return Vector2.Zero;
 
-            float MaxDistance = 2.0f;
+            float maxDistance = 2.0f;
 
-            Vector2 ahead = host.Position + Vector2.Normalize(host.Steering)*MaxDistance;
+            Vector2 ahead = host.Position + Vector2.Normalize(host.Steering)*maxDistance;
 
             if (rayCastTimer <= 0.0f)
             {

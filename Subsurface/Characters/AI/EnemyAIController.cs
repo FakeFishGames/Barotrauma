@@ -11,7 +11,12 @@ namespace Subsurface
 {
     
     class EnemyAIController : AIController
-    {        //the preference to attack a specific type of target (-1.0 - 1.0)
+    {
+        private const float UpdateTargetsInterval = 5.0f;
+
+        private const float RaycastInterval = 1.0f;
+        
+        //the preference to attack a specific type of target (-1.0 - 1.0)
         //0.0 = doesn't attack targets of the type
         //positive values = attacks targets of this type
         //negative values = escapes targets of this type        
@@ -20,13 +25,9 @@ namespace Subsurface
         private float attackWeaker;
         private float attackStronger;
 
-
-
         private float updateTargetsTimer;
-        private const float UpdateTargetsInterval = 5.0f;
 
         private float raycastTimer;
-        private const float RaycastInterval = 1.0f;
 
         private Vector2 prevPosition;
         private float distanceAccumulator;
@@ -85,7 +86,7 @@ namespace Subsurface
         {
             UpdateDistanceAccumulator();
 
-            character.animController.IgnorePlatforms = (-character.animController.TargetMovement.Y > Math.Abs(character.animController.TargetMovement.X));
+            Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
             if (updateTargetsTimer > 0.0)
             {
@@ -94,7 +95,7 @@ namespace Subsurface
             else
             {
                 System.Diagnostics.Debug.WriteLine("updatetargets");
-                UpdateTargets(character);
+                UpdateTargets(Character);
                 updateTargetsTimer = UpdateTargetsInterval;
 
                 if (selectedTarget == null)
@@ -136,7 +137,7 @@ namespace Subsurface
 
         private void UpdateDistanceAccumulator()
         {
-            Limb limb = character.animController.limbs[0];
+            Limb limb = Character.AnimController.limbs[0];
             distanceAccumulator += (limb.SimPosition - prevPosition).Length();
 
             prevPosition = limb.body.Position;
@@ -178,10 +179,10 @@ namespace Subsurface
             //check if any of the limbs is close enough to attack the target
             if (attackingLimb == null)
             {
-                foreach (Limb limb in character.animController.limbs)
+                foreach (Limb limb in Character.AnimController.limbs)
                 {
-                    if (limb.attack==null || limb.attack.type == Attack.Type.None) continue;
-                    if (Vector2.Distance(limb.SimPosition, attackPosition) > limb.attack.range) continue;
+                    if (limb.attack==null || limb.attack.Type == AttackType.None) continue;
+                    if (Vector2.Distance(limb.SimPosition, attackPosition) > limb.attack.Range) continue;
                                         
                     attackingLimb = limb;
                     break;   
@@ -200,8 +201,8 @@ namespace Subsurface
 
             //System.Diagnostics.Debug.WriteLine("cooldown");
 
-            if (selectedTarget.entity is Hull ||
-                Vector2.Distance(attackPosition, character.animController.limbs[0].SimPosition) < ConvertUnits.ToSimUnits(500.0f))
+            if (selectedTarget.Entity is Hull ||
+                Vector2.Distance(attackPosition, Character.AnimController.limbs[0].SimPosition) < ConvertUnits.ToSimUnits(500.0f))
             {
                 steeringManager.SteeringSeek(attackPosition, -0.8f);
                 steeringManager.SteeringAvoid(deltaTime, 1.0f);
@@ -217,7 +218,7 @@ namespace Subsurface
         {
             targetEntity = null;
             //check if there's a wall between the target and the character   
-            Vector2 rayStart = character.animController.limbs[0].SimPosition;
+            Vector2 rayStart = Character.AnimController.limbs[0].SimPosition;
             Vector2 rayEnd = selectedTarget.Position;
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
 
@@ -257,12 +258,12 @@ namespace Subsurface
         {
             IDamageable damageTarget = null;
 
-            switch (limb.attack.type)
+            switch (limb.attack.Type)
             {
-                case Attack.Type.PinchCW:
-                case Attack.Type.PinchCCW:
+                case AttackType.PinchCW:
+                case AttackType.PinchCCW:
 
-                    float dir = (limb.attack.type == Attack.Type.PinchCW) ? 1.0f : -1.0f;
+                    float dir = (limb.attack.Type == AttackType.PinchCW) ? 1.0f : -1.0f;
                     float dist = Vector2.Distance(limb.SimPosition, attackPosition);
 
                     if (wallAttackPos != Vector2.Zero && targetEntity != null)
@@ -271,21 +272,21 @@ namespace Subsurface
                     }                     
                     else
                     {
-                        damageTarget = selectedTarget.entity as IDamageable;
+                        damageTarget = selectedTarget.Entity as IDamageable;
                     }
                     
                     attackTimer += deltaTime*0.05f;
 
                     if (damageTarget == null)
                     {
-                        attackTimer = limb.attack.duration;
+                        attackTimer = limb.attack.Duration;
                         break;
                     }
 
-                    if (dist < limb.attack.range * 0.5f)
+                    if (dist < limb.attack.Range * 0.5f)
                     {
                         attackTimer += deltaTime;
-                        limb.body.ApplyTorque(limb.Mass * 50.0f * character.animController.Dir * dir);
+                        limb.body.ApplyTorque(limb.Mass * 50.0f * Character.AnimController.Dir * dir);
 
                         limb.attack.DoDamage(damageTarget, limb.SimPosition, deltaTime, (limb.soundTimer <= 0.0f));
 
@@ -303,11 +304,11 @@ namespace Subsurface
 
                     break;
                 default:
-                    attackTimer = limb.attack.duration;
+                    attackTimer = limb.attack.Duration;
                     break;
             }
 
-            if (attackTimer >= limb.attack.duration)
+            if (attackTimer >= limb.attack.Duration)
             {
                 attackTimer = 0.0f;
                 if (Vector2.Distance(limb.SimPosition, attackPosition)<5.0) coolDownTimer = attackCoolDown;
@@ -320,10 +321,10 @@ namespace Subsurface
         //sight/hearing range
         public void UpdateTargets(Character character)
         {
-            if (distanceAccumulator<5.0f && Game1.random.Next(1,3)==1)
+            if (distanceAccumulator<5.0f && Rand.Range(1,3, false)==1)
             {
                 selectedTarget = null;
-                character.animController.TargetMovement = -character.animController.TargetMovement;
+                character.AnimController.TargetMovement = -character.AnimController.TargetMovement;
                 state = AiState.None;
                 return;
             }
@@ -335,35 +336,35 @@ namespace Subsurface
 
             UpdateTargetMemories();
             
-            foreach (AITarget target in AITarget.list)
+            foreach (AITarget target in AITarget.List)
             {
                 float valueModifier = 0.0f;
                 float dist = 0.0f;
                 
-                IDamageable targetDamageable = target.entity as IDamageable;
+                IDamageable targetDamageable = target.Entity as IDamageable;
                 if (targetDamageable!=null && targetDamageable.Health <= 0.0f) continue;
 
-                Character targetCharacter = target.entity as Character;
+                Character targetCharacter = target.Entity as Character;
 
                 //ignore the aitarget if it is the character itself
                 if (targetCharacter == character) continue;
                                 
                 if (targetCharacter!=null)
                 {
-                    if (attackHumans == 0.0f || targetCharacter.speciesName != "human") continue;
+                    if (attackHumans == 0.0f || targetCharacter.SpeciesName != "human") continue;
                     
                     valueModifier = attackHumans;                  
                 }
-                else if (target.entity!=null && attackRooms!=0.0f)
+                else if (target.Entity!=null && attackRooms!=0.0f)
                 {
                     //skip the target if it's the room the character is inside of
-                    if (character.animController.CurrentHull != null && character.animController.CurrentHull == target.entity as Hull) continue;
+                    if (character.AnimController.CurrentHull != null && character.AnimController.CurrentHull == target.Entity as Hull) continue;
 
                     valueModifier = attackRooms;
                 }
 
                 dist = Vector2.Distance(
-                    character.animController.limbs[0].SimPosition,
+                    character.AnimController.limbs[0].SimPosition,
                     target.Position);
                 dist = ConvertUnits.ToDisplayUnits(dist);
 
@@ -374,7 +375,7 @@ namespace Subsurface
 
                 if (Math.Abs(valueModifier) > Math.Abs(targetValue) && (dist < target.SightRange * sight || dist < target.SoundRange * hearing))
                 {                  
-                    Vector2 rayStart = character.animController.limbs[0].SimPosition;
+                    Vector2 rayStart = character.AnimController.limbs[0].SimPosition;
                     Vector2 rayEnd = target.Position;
 
                     Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
@@ -414,7 +415,7 @@ namespace Subsurface
                         selectedTargetMemory = targetMemory;
 
                         targetValue = valueModifier;
-                        Debug.WriteLine(selectedTarget.entity+": "+targetValue);
+                        Debug.WriteLine(selectedTarget.Entity+": "+targetValue);
                     }
                 }
             }
@@ -448,7 +449,7 @@ namespace Subsurface
             foreach(KeyValuePair<AITarget, AITargetMemory> memory in targetMemories)
             {
                 memory.Value.Priority += 0.5f;
-                if (memory.Value.Priority == 0.0f || !AITarget.list.Contains(memory.Key)) toBeRemoved.Add(memory.Key);
+                if (memory.Value.Priority == 0.0f || !AITarget.List.Contains(memory.Key)) toBeRemoved.Add(memory.Key);
             }
 
             foreach (AITarget target in toBeRemoved)

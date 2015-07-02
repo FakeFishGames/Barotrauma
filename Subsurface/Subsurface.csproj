@@ -63,6 +63,7 @@
     <Compile Include="Characters\Jobs\Job.cs" />
     <Compile Include="Characters\AI\SteeringManager.cs" />
     <Compile Include="Characters\AI\SteeringPath.cs" />
+    <Compile Include="Rand.cs" />
     <Compile Include="Events\PropertyTask.cs" />
     <Compile Include="Events\RepairTask.cs" />
     <Compile Include="GameSession\CrewManager.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Characters\HumanoidAnimController.cs" />
     <Compile Include="GameSession\SinglePlayerMode.cs" />
     <Compile Include="GameSession\TraitorMode.cs" />
+    <Compile Include="GUI\ComponentStyle.cs" />
     <Compile Include="GUI\GUIImage.cs" />
     <Compile Include="GUI\GUIMessageBox.cs" />
     <Compile Include="GUI\GUITickBox.cs" />
@@ -360,14 +362,14 @@
     <Content Include="Content\Items\Pump\pump.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\HUD\caret.png">
+    <Content Include="Content\UI\caret.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\HUD\style.xml">
+    <Content Include="Content\UI\style.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Content\HUD\textboxTexture.png">
+    <Content Include="Content\UI\textboxTexture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\battery.png">
@@ -546,6 +548,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Sounds\sounds.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\uiBackground.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\waterbump.jpg">

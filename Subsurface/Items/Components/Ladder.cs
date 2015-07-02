@@ -14,7 +14,7 @@ namespace Subsurface.Items.Components
         {
             if (picker == null) return false;
 
-            picker.animController.anim = AnimController.Animation.Climbing;
+            picker.AnimController.Anim = AnimController.Animation.Climbing;
             //picker.SelectedConstruction = item;
 
             return true;

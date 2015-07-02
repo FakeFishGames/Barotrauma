@@ -8,7 +8,7 @@
 
 		<Sprite texture ="engine.png" depth="0.8"/>
 
-    <Engine minvoltage="0.5" powerperforce="10.0" maxforce="50" canbeselected = "true">
+    <Engine minvoltage="0.5" powerperforce="10.0" maxforce="500" canbeselected = "true">
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
     </Engine>
     

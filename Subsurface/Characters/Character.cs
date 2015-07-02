@@ -16,11 +16,11 @@ namespace Subsurface
 {
     class Character : Entity, IDamageable, IPropertyObject
     {
-        public static List<Character> characterList = new List<Character>();
+        public static List<Character> CharacterList = new List<Character>();
         
-        public static Queue<CharacterInfo> newCharacterQueue = new Queue<CharacterInfo>();
+        public static Queue<CharacterInfo> NewCharacterQueue = new Queue<CharacterInfo>();
 
-        public static bool disableControls;
+        public static bool DisableControls;
 
         //the character that the player is currently controlling
         private static Character controlled;
@@ -35,14 +35,14 @@ namespace Subsurface
 
         private Inventory inventory;
 
-        public double lastNetworkUpdate;
+        public double LastNetworkUpdate;
 
-        public byte largeUpdateTimer;
+        public byte LargeUpdateTimer;
 
-        public readonly Dictionary<string, ObjectProperty> properties;
+        public readonly Dictionary<string, ObjectProperty> Properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
         {
-            get { return properties; }
+            get { return Properties; }
         }
 
         protected Key selectKeyHit;
@@ -52,7 +52,7 @@ namespace Subsurface
         private Item selectedConstruction;
         private Item[] selectedItems;
         
-        public AnimController animController;
+        public AnimController AnimController;
         private AIController aiController;
 
         private Vector2 cursorPosition;
@@ -71,9 +71,9 @@ namespace Subsurface
         bool isHumanoid;
 
         //the name of the species (e.q. human)
-        public readonly string speciesName;
+        public readonly string SpeciesName;
 
-        public CharacterInfo info;
+        public CharacterInfo Info;
 
         protected float soundTimer;
         protected float soundInterval;
@@ -89,7 +89,7 @@ namespace Subsurface
         {
             get
             {
-                return speciesName;
+                return SpeciesName;
             }
         }
 
@@ -251,12 +251,12 @@ namespace Subsurface
 
         public override Vector2 SimPosition
         {
-            get { return animController.limbs[0].SimPosition; }
+            get { return AnimController.limbs[0].SimPosition; }
         }
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition); }
+            get { return ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition); }
         }
 
         public Character(string file) : this(file, Vector2.Zero, null)
@@ -269,7 +269,7 @@ namespace Subsurface
         }
 
         public Character(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
-            : this(characterInfo.file, position, characterInfo, isNetworkPlayer)
+            : this(characterInfo.File, position, characterInfo, isNetworkPlayer)
         {
         }
 
@@ -289,33 +289,33 @@ namespace Subsurface
             //blood = 100.0f;
             aiTarget = new AITarget(this);
 
-            properties = ObjectProperty.GetProperties(this);
+            Properties = ObjectProperty.GetProperties(this);
 
-            info = characterInfo==null ? new CharacterInfo(file) : characterInfo;
+            Info = characterInfo==null ? new CharacterInfo(file) : characterInfo;
 
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null) return;
             
-            speciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
+            SpeciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
 
             isHumanoid = ToolBox.GetAttributeBool(doc.Root, "humanoid", false);
             
             if (isHumanoid)
             {
-                animController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
-                animController.targetDir = Direction.Right;
+                AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
+                AnimController.TargetDir = Direction.Right;
                 inventory = new CharacterInventory(10, this);
             }
             else
             {
-                animController = new FishAnimController(this, doc.Root.Element("ragdoll"));
+                AnimController = new FishAnimController(this, doc.Root.Element("ragdoll"));
                 PressureProtection = 100.0f;
                 //FishAnimController fishAnim = (FishAnimController)animController;
 
                 aiController = new EnemyAIController(this, file);
             }
 
-            foreach (Limb limb in animController.limbs)
+            foreach (Limb limb in AnimController.limbs)
             {
                 limb.body.SetTransform(position+limb.SimPosition, 0.0f);
                 //limb.prevPosition = ConvertUnits.ToDisplayUnits(position);
@@ -329,44 +329,40 @@ namespace Subsurface
 
             soundInterval = ToolBox.GetAttributeFloat(doc.Root, "soundinterval", 10.0f);
 
-            var xSounds = doc.Root.Elements("sound").ToList();
-            if (xSounds.Any())
+            var soundElements = doc.Root.Elements("sound").ToList();
+            if (soundElements.Any())
             {
-                sounds = new Sound[xSounds.Count()];
-                soundStates = new AIController.AiState[xSounds.Count()];
+                sounds = new Sound[soundElements.Count()];
+                soundStates = new AIController.AiState[soundElements.Count()];
                 int i = 0;
-                foreach (XElement xSound in xSounds)
+                foreach (XElement soundElement in soundElements)
                 {
-                    sounds[i] = Sound.Load(xSound.Attribute("file").Value);
-                    if (xSound.Attribute("state") == null)
+                    sounds[i] = Sound.Load(soundElement.Attribute("file").Value);
+                    if (soundElement.Attribute("state") == null)
                     {
                         soundStates[i] = AIController.AiState.None;
                     }
                     else
                     {
                         soundStates[i] = (AIController.AiState)Enum.Parse(
-                            typeof(AIController.AiState), xSound.Attribute("state").Value, true);
+                            typeof(AIController.AiState), soundElement.Attribute("state").Value, true);
                     }
                     i++;
                 }
             }
 
 
-            animController.FindHull();
+            AnimController.FindHull();
 
             //if (info.ID >= 0)
             //{
             //    ID = info.ID;
             //}
 
-            characterList.Add(this);
+            CharacterList.Add(this);
         }
 
-
-        /// <summary>
-        /// Control the characte
-        /// </summary>
-        public void Control(float deltaTime, Camera cam, bool forcePick=false)
+        public void Control(float deltaTime, Camera cam, bool forcePick = false)
         {
             if (isDead) return;
 
@@ -416,7 +412,7 @@ namespace Subsurface
 
         private Item FindClosestItem(Vector2 mouseSimPos)
         {
-            Limb torso = animController.GetLimb(LimbType.Torso);
+            Limb torso = AnimController.GetLimb(LimbType.Torso);
             Vector2 pos = (torso.body.TargetPosition != Vector2.Zero) ? torso.body.TargetPosition : torso.SimPosition;
 
             return Item.FindPickable(pos, selectedConstruction == null ? mouseSimPos : selectedConstruction.SimPosition, null, selectedItems);
@@ -433,13 +429,13 @@ namespace Subsurface
             //    return;
             //}
 
-            Limb head = animController.GetLimb(LimbType.Head);
+            Limb head = AnimController.GetLimb(LimbType.Head);
 
-            Lights.LightManager.viewPos = ConvertUnits.ToDisplayUnits(head.SimPosition);
+            Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(head.SimPosition);
 
             Vector2 targetMovement = Vector2.Zero;
 
-            if (!disableControls)
+            if (!DisableControls)
             {
                 if (PlayerInput.KeyDown(Keys.W)) targetMovement.Y += 1.0f;
                 if (PlayerInput.KeyDown(Keys.S)) targetMovement.Y -= 1.0f;
@@ -448,13 +444,13 @@ namespace Subsurface
 
                 //the vertical component is only used for falling through platforms and climbing ladders when not in water,
                 //so the movement can't be normalized or the character would walk slower when pressing down/up
-                if (animController.InWater)
+                if (AnimController.InWater)
                 {
                     float length = targetMovement.Length();
                     if (length > 0.0f) targetMovement = targetMovement / length;
                 }
 
-                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) && Math.Sign(targetMovement.X) == Math.Sign(animController.Dir))
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) && Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir))
                     targetMovement *= 3.0f;
 
                 selectKeyHit.SetState(PlayerInput.KeyHit(Keys.E));
@@ -472,53 +468,53 @@ namespace Subsurface
                 secondaryKeyDown.SetState(false);
             }
 
-            animController.TargetMovement = targetMovement;
-            animController.isStanding = true;
+            AnimController.TargetMovement = targetMovement;
+            AnimController.IsStanding = true;
 
             if (moveCam)
             {
-                cam.TargetPos = ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition);
+                cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
                 cam.OffsetAmount = 250.0f;
             }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);            
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
 
-            if (animController.onGround &&
-                !animController.InWater &&
-                animController.anim != AnimController.Animation.UsingConstruction)
+            if (AnimController.onGround &&
+                !AnimController.InWater &&
+                AnimController.Anim != AnimController.Animation.UsingConstruction)
             {                
                 if (mouseSimPos.X < head.SimPosition.X-1.0f)
                 {
-                    animController.targetDir = Direction.Left;
+                    AnimController.TargetDir = Direction.Left;
                 }
                 else if (mouseSimPos.X > head.SimPosition.X + 1.0f)
                 {
-                    animController.targetDir = Direction.Right;
+                    AnimController.TargetDir = Direction.Right;
                 }
             }
 
-            disableControls = false;
+            DisableControls = false;
         }
         
 
         public static void UpdateAnimAll(float deltaTime)
         {
-            foreach (Character c in characterList)
+            foreach (Character c in CharacterList)
             {
                 if (c.isDead) continue;
-                c.animController.UpdateAnim(deltaTime);
+                c.AnimController.UpdateAnim(deltaTime);
             }
         }
         
         public static void UpdateAll(Camera cam, float deltaTime)
         {
-            if (newCharacterQueue.Count>0)
+            if (NewCharacterQueue.Count>0)
             {
-                new Character(newCharacterQueue.Dequeue(), Vector2.Zero);
+                new Character(NewCharacterQueue.Dequeue(), Vector2.Zero);
             }
 
-            foreach (Character c in characterList)
+            foreach (Character c in CharacterList)
             {
                 c.Update(cam, deltaTime);
             }
@@ -531,14 +527,14 @@ namespace Subsurface
                 if (controlled == this)
                 {
                     cam.Zoom = MathHelper.Lerp(cam.Zoom, 1.5f, 0.1f);
-                    cam.TargetPos = ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition);
+                    cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
                     cam.OffsetAmount = 0.0f;
                 }
                 return;
             }
 
             if (PressureProtection==0.0f && 
-                (animController.CurrentHull == null || animController.CurrentHull.LethalPressure >= 100.0f))
+                (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 100.0f))
             {
                 Implode();
                 return;
@@ -553,18 +549,18 @@ namespace Subsurface
 
             if (needsAir)
             {
-                if (animController.HeadInWater)
+                if (AnimController.HeadInWater)
                 {
                     Oxygen -= deltaTime*100.0f / drowningTime;
                 }
-                else if (animController.CurrentHull != null)
+                else if (AnimController.CurrentHull != null)
                 {
-                    float hullOxygen = animController.CurrentHull.OxygenPercentage;
+                    float hullOxygen = AnimController.CurrentHull.OxygenPercentage;
                     hullOxygen -= 30.0f;
 
                     Oxygen += deltaTime * 100.0f * (hullOxygen / 500.0f);
 
-                    animController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
+                    AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
                 }
                 PressureProtection -= deltaTime*100.0f;
             }
@@ -593,12 +589,12 @@ namespace Subsurface
 
             //distance is approximated based on the mass of the character 
             //(which corresponds to size because all the characters have the same limb density)
-            foreach (Limb limb in animController.limbs)
+            foreach (Limb limb in AnimController.limbs)
             {
                 aiTarget.SightRange += limb.Mass * 1000.0f;
             }
             //the faster the character is moving, the easier it is to see it
-            Limb torso = animController.GetLimb(LimbType.Torso);
+            Limb torso = AnimController.GetLimb(LimbType.Torso);
             if (torso !=null)
             {
                 aiTarget.SightRange += torso.LinearVelocity.Length() * 500.0f;
@@ -607,13 +603,13 @@ namespace Subsurface
         
         public void Draw(SpriteBatch spriteBatch)
         {
-            animController.Draw(spriteBatch);
+            AnimController.Draw(spriteBatch);
 
             if (IsNetworkPlayer)
             {
-                Vector2 namePos = new Vector2(Position.X, -Position.Y - 80.0f) - GUI.font.MeasureString(info.name) * 0.5f;
-                spriteBatch.DrawString(GUI.font, info.name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.font, info.name, namePos, Color.White);
+                Vector2 namePos = new Vector2(Position.X, -Position.Y - 80.0f) - GUI.font.MeasureString(Info.Name) * 0.5f;
+                spriteBatch.DrawString(GUI.font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
+                spriteBatch.DrawString(GUI.font, Info.Name, namePos, Color.White);
             }
 
             if (this == Character.controlled) return;
@@ -622,7 +618,9 @@ namespace Subsurface
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X-2, (int)healthBarPos.Y-2, 100+4, 15+4), Color.Black, false);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f*(health/maxHealth)), 15), Color.Red, true);
 
-            //spriteBatch.DrawString(GUI.font, ID.ToString(), ConvertUnits.ToDisplayUnits(animController.limbs[0].Position), Color.White);
+            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
+            pos.Y = -pos.Y;
+            spriteBatch.DrawString(GUI.font, ID.ToString(), pos, Color.White);
             //GUI.DrawLine(spriteBatch, ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y),
             //    ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y) +
             //    ConvertUnits.ToDisplayUnits(animController.targetMovement.X, animController.targetMovement.Y), Color.Green);
@@ -681,7 +679,7 @@ namespace Subsurface
             if (sounds == null || !sounds.Any()) return;
             var matchingSoundStates = soundStates.Where(x => x == state).ToList();
 
-            int selectedSound = Game1.localRandom.Next(matchingSoundStates.Count());
+            int selectedSound = Rand.Int(matchingSoundStates.Count());
 
             int n = 0;
             for (int i = 0; i < sounds.Count(); i++)
@@ -690,7 +688,7 @@ namespace Subsurface
                 if (n == selectedSound)
                 {
                     sounds[i].Play(1.0f, 2000.0f,
-                            animController.limbs[0].body.FarseerBody);
+                            AnimController.limbs[0].body.FarseerBody);
                     Debug.WriteLine("playing: " + sounds[i]);
                     return;
                 }
@@ -700,11 +698,11 @@ namespace Subsurface
 
         public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
         {
-            animController.StunTimer = Math.Max(animController.StunTimer, stun);
+            AnimController.StunTimer = Math.Max(AnimController.StunTimer, stun);
 
             Limb closestLimb = null;
             float closestDistance = 0.0f;
-            foreach (Limb limb in animController.limbs)
+            foreach (Limb limb in AnimController.limbs)
             {
                 float distance = Vector2.Distance(position, limb.SimPosition);
                 if (closestLimb == null || distance < closestDistance)
@@ -720,8 +718,8 @@ namespace Subsurface
 
 
             AttackResult attackResult = closestLimb.AddDamage(position, damageType, amount, bleedingAmount, playSound);
-            health -= attackResult.damage;
-            bleeding += attackResult.bleeding;
+            health -= attackResult.Damage;
+            bleeding += attackResult.Bleeding;
 
             return attackResult;
 
@@ -741,12 +739,12 @@ namespace Subsurface
 
         private void Implode()
         {
-            Limb torso= animController.GetLimb(LimbType.Torso);
-            if (torso == null) torso = animController.GetLimb(LimbType.Head);
+            Limb torso= AnimController.GetLimb(LimbType.Torso);
+            if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
 
             Vector2 centerOfMass = Vector2.Zero;
             float totalMass = 0.0f;
-            foreach (Limb limb in animController.limbs)
+            foreach (Limb limb in AnimController.limbs)
             {
                 centerOfMass += limb.Mass * limb.SimPosition;
                 totalMass += limb.Mass;
@@ -756,7 +754,7 @@ namespace Subsurface
 
             health = 0.0f;
 
-            foreach (Limb limb in animController.limbs)
+            foreach (Limb limb in AnimController.limbs)
             {
                 Vector2 diff = centerOfMass - limb.SimPosition;
                 if (diff == Vector2.Zero) continue;
@@ -769,16 +767,16 @@ namespace Subsurface
             for (int i = 0; i < 10; i++)
             {
                 Particle p = Game1.particleManager.CreateParticle("waterblood",
-                    torso.SimPosition + new Vector2(MathUtils.RandomFloatLocal(-0.5f, 0.5f), MathUtils.RandomFloatLocal(-0.5f, 0.5f)),
+                    torso.SimPosition + new Vector2(Rand.Range(-0.5f, 0.5f), Rand.Range(-0.5f, 0.5f)),
                     Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
                 Game1.particleManager.CreateParticle("bubbles",
                     torso.SimPosition,
-                    new Vector2(MathUtils.RandomFloatLocal(-0.5f, 0.5f), MathUtils.RandomFloatLocal(-1.0f,0.5f)));
+                    new Vector2(Rand.Range(-0.5f, 0.5f), Rand.Range(-1.0f,0.5f)));
             }
 
-            foreach (var joint in animController.limbJoints)
+            foreach (var joint in AnimController.limbJoints)
             {
                 joint.LimitEnabled = false;
             }
@@ -790,8 +788,8 @@ namespace Subsurface
             if (isDead) return;
 
             isDead = true;
-            animController.movement = Vector2.Zero;
-            animController.TargetMovement = Vector2.Zero;
+            AnimController.movement = Vector2.Zero;
+            AnimController.TargetMovement = Vector2.Zero;
 
             for (int i = 0; i < selectedItems.Length; i++ )
             {
@@ -802,13 +800,13 @@ namespace Subsurface
             aiTarget.Remove();
             aiTarget = null;
 
-            foreach (Limb limb in animController.limbs)
+            foreach (Limb limb in AnimController.limbs)
             {
                 if (limb.pullJoint == null) continue;
                 limb.pullJoint.Enabled = false;
             }
 
-            foreach (RevoluteJoint joint in animController.limbJoints)
+            foreach (RevoluteJoint joint in AnimController.limbJoints)
             {
                 joint.MotorEnabled = false;
                 joint.MaxMotorTorque = 0.0f;
@@ -863,20 +861,25 @@ namespace Subsurface
             message.Write(NetTime.Now);
 
             // Write byte = move direction
-            message.Write(animController.TargetMovement.X);
-            message.Write(animController.TargetMovement.Y);
+            message.Write(AnimController.TargetMovement.X);
+            message.Write(AnimController.TargetMovement.Y);
 
-            message.Write(animController.targetDir==Direction.Right);
+            message.Write(AnimController.TargetDir==Direction.Right);
 
             message.Write(cursorPosition.X);
             message.Write(cursorPosition.Y);
 
-            message.Write(largeUpdateTimer <= 0);
+            message.Write(AnimController.limbs.Count());
 
-            if (largeUpdateTimer<=0)
+
+            message.Write(LargeUpdateTimer <= 0);
+
+            if (LargeUpdateTimer<=0)
             {
-                foreach (Limb limb in animController.limbs)
+                int i = 0;
+                foreach (Limb limb in AnimController.limbs)
                 {
+                    message.Write(42.0f+i);
                     message.Write(limb.body.Position.X);
                     message.Write(limb.body.Position.Y);
 
@@ -885,19 +888,20 @@ namespace Subsurface
 
                     message.Write(limb.body.Rotation);
                     message.Write(limb.body.AngularVelocity);
+                    i++;
                 }
 
-                message.Write(animController.StunTimer);
+                message.Write(AnimController.StunTimer);
 
-                largeUpdateTimer = 5;
+                LargeUpdateTimer = 5;
             }
             else
             {
-                Limb torso = animController.GetLimb(LimbType.Torso);
+                Limb torso = AnimController.GetLimb(LimbType.Torso);
                 message.Write(torso.body.Position.X);
                 message.Write(torso.body.Position.Y);
 
-                largeUpdateTimer = (byte)Math.Max(0, largeUpdateTimer-1);
+                LargeUpdateTimer = (byte)Math.Max(0, LargeUpdateTimer-1);
             }
 
 
@@ -950,7 +954,7 @@ namespace Subsurface
             targetMovement.X = message.ReadFloat();
             targetMovement.Y = message.ReadFloat();
             
-            animController.isStanding = true;
+            AnimController.IsStanding = true;
 
             bool targetDir = message.ReadBoolean();
 
@@ -958,67 +962,77 @@ namespace Subsurface
             cursorPos.X = message.ReadFloat();
             cursorPos.Y = message.ReadFloat();
 
-            if (sendingTime > lastNetworkUpdate)
-            {
-                cursorPosition = cursorPos;
+            int num1 = message.ReadInt32();
+            System.Diagnostics.Debug.WriteLine(num1);
 
-                animController.TargetMovement= targetMovement;
-                animController.targetDir = (targetDir) ? Direction.Right : Direction.Left;
+            if (sendingTime <= LastNetworkUpdate) return;
+            
+            cursorPosition = cursorPos;
+
+
+            AnimController.TargetMovement= targetMovement;
+            AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
                 
-                if (message.ReadBoolean())
+            if (message.ReadBoolean())
+            {
+                foreach (Limb limb in AnimController.limbs)
                 {
-                    foreach (Limb limb in animController.limbs)
+                    float num = message.ReadFloat();
+                    System.Diagnostics.Debug.WriteLine(num);
+                    Vector2 pos = Vector2.Zero;
+                    pos.X = message.ReadFloat();
+                    pos.Y = message.ReadFloat();
+
+                    Vector2 vel = Vector2.Zero;
+                    vel.X = message.ReadFloat();
+                    vel.Y = message.ReadFloat();
+
+                    float rotation = message.ReadFloat();
+                    float angularVel = message.ReadFloat();
+
+                    
+
+                    if (vel != Vector2.Zero && vel.Length() > 100.0f) { }
+
+                    if (pos != Vector2.Zero && pos.Length() > 100.0f) { }
+                    
+                    if (limb.body != null)
                     {
-                        Vector2 pos = Vector2.Zero;
-                        pos.X = message.ReadFloat();
-                        pos.Y = message.ReadFloat();
-
-                        Vector2 vel = Vector2.Zero;
-                        vel.X = message.ReadFloat();
-                        vel.Y = message.ReadFloat();
-
-                        float rotation = message.ReadFloat();
-                        float angularVel = message.ReadFloat();
-
-                        if (limb.body == null) continue;
-
-                        if (vel != Vector2.Zero && vel.Length() > 100.0f) { }
-
-                        if (pos != Vector2.Zero && pos.Length() > 100.0f) { }
-
                         limb.body.TargetVelocity = vel;
                         limb.body.TargetPosition = pos;// +vel * (float)(deltaTime / 60.0);
                         limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
                         limb.body.TargetAngularVelocity = angularVel;
                     }
 
-                    animController.StunTimer = message.ReadFloat();
-
-                    largeUpdateTimer = 1;
-                }
-                else
-                {
-                    Vector2 pos = Vector2.Zero;
-                    pos.X = message.ReadFloat();
-                    pos.Y = message.ReadFloat();
-
-                    Limb torso = animController.GetLimb(LimbType.Torso);
-                    torso.body.TargetPosition = pos;
-
-                    largeUpdateTimer = 0;
                 }
 
-                if (aiController != null) aiController.ReadNetworkData(message);
+                AnimController.StunTimer = message.ReadFloat();
 
-                lastNetworkUpdate = sendingTime;
+                LargeUpdateTimer = 1;
             }
+            else
+            {
+                Vector2 pos = Vector2.Zero;
+                pos.X = message.ReadFloat();
+                pos.Y = message.ReadFloat();
+
+                Limb torso = AnimController.GetLimb(LimbType.Torso);
+                torso.body.TargetPosition = pos;
+
+                LargeUpdateTimer = 0;
+            }
+
+            if (aiController != null) aiController.ReadNetworkData(message);
+
+            LastNetworkUpdate = sendingTime;
+            
         }
 
         public override void Remove()
         {
             base.Remove();
 
-            characterList.Remove(this);
+            CharacterList.Remove(this);
 
             if (controlled == this) controlled = null;
 
@@ -1027,8 +1041,8 @@ namespace Subsurface
             if (aiTarget != null)
                 aiTarget.Remove();
 
-            if (animController!=null)
-                animController.Remove();
+            if (AnimController!=null)
+                AnimController.Remove();
         }
 
     }

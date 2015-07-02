@@ -57,20 +57,20 @@ namespace Subsurface
 
             guiRoot = new GUIFrame(new Rectangle(0,0,Game1.GraphicsWidth,Game1.GraphicsWidth), Color.Transparent);
 
-            map = new Map(Game1.random.Next(), 500);
+            map = new Map(Rand.Int(), 500);
 
             int width = 350, height = 100;
-            if (Game1.Client!=null || Game1.Server!=null)
+            if (Game1.NetworkMember!=null)
             {
                 chatBox = new GUIListBox(new Rectangle(
-                    Game1.GraphicsWidth - (int)GUI.style.smallPadding.X - width, 
-                    Game1.GraphicsHeight - (int)GUI.style.smallPadding.W*2 - 25 - height, 
+                    Game1.GraphicsWidth - 20 - width, 
+                    Game1.GraphicsHeight - 40 - 25 - height, 
                     width, height), 
-                    Color.White * 0.5f, guiRoot);
+                    Color.White * 0.5f, GUI.style, guiRoot);
 
                 textBox = new GUITextBox(
-                    new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + (int)GUI.style.smallPadding.W, chatBox.Rect.Width, 25),
-                    Color.White * 0.5f, Color.Black, Alignment.Bottom, Alignment.Left, guiRoot);
+                    new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
+                    Color.White * 0.5f, Color.Black, Alignment.Bottom, Alignment.Left, GUI.style, guiRoot);
                             textBox.OnEnter = EnterChatMessage;
             }
              
@@ -91,8 +91,8 @@ namespace Subsurface
           
         }
 
-        public GameSession(Submarine selectedMap, string savePath, string filePath)
-            : this(selectedMap)
+        public GameSession(Submarine selectedSub, string savePath, string filePath)
+            : this(selectedSub)
         {
             XDocument doc = ToolBox.TryLoadXml(filePath);
             if (doc == null) return;
@@ -111,27 +111,26 @@ namespace Subsurface
             this.savePath = savePath;
         }
 
-        public void StartShift(TimeSpan duration, Level level)
+        public void StartShift(TimeSpan duration, string levelSeed, int scriptedEventCount = 1)
         {
-            submarine.Load();
 
-            level.Generate(submarine==null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
-
-            this.level = level;
-
-            StartShift(duration, 1);
         }
 
-        public void StartShift(TimeSpan duration, int scriptedEventCount = 1)
+        public void StartShift(TimeSpan duration, Level level, int scriptedEventCount = 1)
         {
             //if (crewManager.characterInfos.Count == 0) return;
+
+
+
+            this.level = level;
 
             if (Submarine.Loaded!=submarine) submarine.Load();
 
             if (gameMode!=null) gameMode.Start(duration);
 
-            if (level!=null)
+            if (level != null)
             {
+                level.Generate(submarine == null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
                 submarine.SetPosition(level.StartPosition);
             }
 
@@ -177,13 +176,9 @@ namespace Subsurface
         {
             if (string.IsNullOrWhiteSpace(message)) return false;
 
-            if (Game1.Server!=null)
+            else if (Game1.NetworkMember != null)
             {
-                Game1.Server.SendChatMessage(message);
-            }
-            else if (Game1.Client!=null)
-            {
-                Game1.Client.SendChatMessage(Game1.Client.Name + ": " + message);
+                Game1.NetworkMember.SendChatMessage(Game1.NetworkMember.Name + ": " + message);
             }
 
             textBox.Deselect();
@@ -195,9 +190,9 @@ namespace Subsurface
         {
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), text,
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, color,
-                Alignment.Left, null, true);
+                Alignment.Left, null, null, true);
 
-            msg.Padding = new Vector4(GUI.style.smallPadding.X, 0, 0, 0);
+            msg.Padding = new Vector4(20.0f, 0, 0, 0);
             chatBox.AddChild(msg);
 
             while (chatBox.CountChildren > 20)
@@ -244,7 +239,7 @@ namespace Subsurface
             //crewManager.Draw(spriteBatch);
             taskManager.Draw(spriteBatch);
 
-            gameMode.Draw(spriteBatch);
+            if (gameMode!=null) gameMode.Draw(spriteBatch);
 
             //chatBox.Draw(spriteBatch);
             //textBox.Draw(spriteBatch);

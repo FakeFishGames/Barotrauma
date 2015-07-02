@@ -7,7 +7,7 @@ namespace Subsurface
     {
         private Queue<Vector2> nodes;
 
-        const float minDistance = 0.1f;
+        const float MinDistance = 0.1f;
 
         Vector2 currentNode;
 
@@ -30,7 +30,7 @@ namespace Subsurface
         public Vector2 GetNode(Vector2 pos)
         {
             if (nodes.Count == 0) return Vector2.Zero;
-            if (currentNode==Vector2.Zero || Vector2.Distance(pos, currentNode)<minDistance) currentNode = nodes.Dequeue();
+            if (currentNode == Vector2.Zero || Vector2.Distance(pos, currentNode) < MinDistance) currentNode = nodes.Dequeue();
 
             return currentNode;
         }

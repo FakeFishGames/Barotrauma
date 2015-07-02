@@ -64,9 +64,9 @@ namespace Subsurface.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.animController.Dir) Flip(item);
+            if (item.body.Dir != picker.AnimController.Dir) Flip(item);
 
-            AnimController ac = picker.animController;
+            AnimController ac = picker.AnimController;
 
             ac.HoldItem(deltaTime, cam, item, handlePos, new Vector2(throwPos, 0.0f), aimPos, holdAngle);
 

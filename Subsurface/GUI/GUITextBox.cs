@@ -24,6 +24,12 @@ namespace Subsurface
         public delegate bool OnTextChangedHandler(GUITextBox textBox, string text);
         public OnTextChangedHandler OnTextChanged;
 
+        public bool Enabled
+        {
+            get;
+            set;
+        }
+
         public override Color Color
         {
             get { return color; }
@@ -68,11 +74,24 @@ namespace Subsurface
             }
         }
 
-        public GUITextBox(Rectangle rect, Color color, Color textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, GUIComponent parent = null)
+        public GUITextBox(Rectangle rect, GUIStyle style = null, GUIComponent parent = null)
+            : this(rect, null, null, Alignment.Left, Alignment.Left, style, parent)
+        {
+
+        }
+
+        public GUITextBox(Rectangle rect, Alignment alignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null)
+            : this(rect, null, null, alignment, Alignment.Left, style, parent)
+        {
+
+        }
+
+        public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null)
+            : base(style)
         {
             this.rect = rect;
 
-            this.color = color;
+            if (color!=null) this.color = (Color)color;
                         
             this.alignment = alignment;
 
@@ -81,10 +100,11 @@ namespace Subsurface
             if (parent != null)
                 parent.AddChild(this);
 
-            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, this);
+            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, null, this);
             textBlock.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
+            if (style != null) style.Apply(textBlock, this);
 
-            _previousMouse = PlayerInput.GetMouseState;
+            previousMouse = PlayerInput.GetMouseState;
             //SetTextPos();
         }
 
@@ -99,19 +119,18 @@ namespace Subsurface
             if (keyboardDispatcher.Subscriber == this) keyboardDispatcher.Subscriber = null;
         }
 
-        MouseState _previousMouse;
+        MouseState previousMouse;
         public override void Update(float deltaTime)
         {
+            if (!Enabled) return;
+
             caretTimer += deltaTime;
             caretVisible = ((caretTimer*1000.0f) % 1000) < 500;
             
             if (rect.Contains(PlayerInput.GetMouseState.Position))
             {
                 state = ComponentState.Hover;
-                if (PlayerInput.LeftButtonClicked())
-                {
-                    Select();
-                }
+                if (PlayerInput.LeftButtonClicked()) Select();                
             }
             else
             {
@@ -120,7 +139,7 @@ namespace Subsurface
 
             if (keyboardDispatcher.Subscriber == this)
             {
-                Character.disableControls = true;
+                Character.DisableControls = true;
                 if (OnEnter != null &&  PlayerInput.KeyHit(Keys.Enter))
                 {
                     string input = Text;
@@ -143,7 +162,7 @@ namespace Subsurface
                 GUI.DrawLine(spriteBatch,
                     new Vector2((int)caretPos.X + 2, caretPos.Y + 3),
                     new Vector2((int)caretPos.X + 2, caretPos.Y + rect.Height - 3),
-                    textBlock.TextColor * alpha);
+                    textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
             }
 
         }

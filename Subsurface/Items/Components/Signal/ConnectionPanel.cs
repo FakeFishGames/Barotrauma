@@ -107,10 +107,10 @@ namespace Subsurface.Items.Components
         {
             foreach (Connection c in connections)
             {
-                int wireCount = c.wires.Length;                
+                int wireCount = c.Wires.Length;                
                 for (int i = 0 ; i < wireCount; i++)
                 {
-                    message.Write(c.wires[i]==null ? -1 : c.wires[i].Item.ID);
+                    message.Write(c.Wires[i]==null ? -1 : c.Wires[i].Item.ID);
                 }
             }
         }
@@ -120,7 +120,7 @@ namespace Subsurface.Items.Components
             System.Diagnostics.Debug.WriteLine("connectionpanel update");
             foreach (Connection c in connections)
             {
-                int wireCount = c.wires.Length;
+                int wireCount = c.Wires.Length;
                 c.ClearConnections();
 
                 for (int i = 0; i < wireCount; i++)
@@ -134,7 +134,7 @@ namespace Subsurface.Items.Components
                     Wire wireComponent = wireItem.GetComponent<Wire>();
                     if (wireComponent == null) continue;
 
-                    c.wires[i] = wireComponent;
+                    c.Wires[i] = wireComponent;
                     wireComponent.Connect(c, false);
                 }
             } 

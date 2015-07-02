@@ -237,9 +237,9 @@ namespace Subsurface
 
         public static void UpdateAll(float deltaTime)
         {
-            for (int i = DelayedEffect.list.Count-1; i>= 0; i--)
+            for (int i = DelayedEffect.List.Count-1; i>= 0; i--)
             {
-                DelayedEffect.list[i].Update(deltaTime);
+                DelayedEffect.List[i].Update(deltaTime);
             }
         }
 

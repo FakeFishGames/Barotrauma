@@ -67,9 +67,9 @@ namespace Subsurface.Items.Components
                 GUI.DrawRectangle(spriteBatch, hullRect, Color.White);
             }
 
-            foreach (Character c in Character.characterList)
+            foreach (Character c in Character.CharacterList)
             {
-                if (c.animController.CurrentHull!=null) continue;
+                if (c.AnimController.CurrentHull!=null) continue;
 
                 Rectangle characterRect = new Rectangle(
                     miniMap.X + (int)((c.Position.X - Submarine.Borders.X) * size),

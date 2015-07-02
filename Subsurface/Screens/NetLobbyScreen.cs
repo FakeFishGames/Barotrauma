@@ -12,27 +12,27 @@ namespace Subsurface
 {
     class NetLobbyScreen : Screen
     {
-        GUIFrame menu;
-        GUIFrame infoFrame;
-        GUIListBox playerList;
+        private GUIFrame menu;
+        private GUIFrame infoFrame;
+        private GUIListBox playerList;
 
-        GUIListBox mapList, modeList, chatBox;
-        GUITextBox textBox;
+        private GUIListBox subList, modeList, chatBox;
+        private GUITextBox textBox;
 
-        GUIScrollBar durationBar;
+        private GUIScrollBar durationBar;
 
-        GUIFrame playerFrame;
+        private GUIFrame playerFrame;
 
-        float camAngle;
+        private float camAngle;
 
-        Body previewPlatform;
-        Hull previewHull;
-
-        public bool isServer;
+        private Body previewPlatform;
+        private Hull previewHull;
+        
+        public bool IsServer;
 
         public Submarine SelectedMap
         {
-            get { return mapList.SelectedData as Submarine; }
+            get { return subList.SelectedData as Submarine; }
         }
 
 
@@ -50,6 +50,12 @@ namespace Subsurface
             }
         }
 
+        public string LevelSeed
+        {
+            get;
+            private set;
+        }
+
         public string DurationText()
         {
             return "Game duration: "+GameDuration+" min";
@@ -58,48 +64,42 @@ namespace Subsurface
         public NetLobbyScreen()
         {
             Rectangle panelRect = new Rectangle(
-                (int)GUI.style.largePadding.X,
-                (int)GUI.style.largePadding.Y,
-                (int)(Game1.GraphicsWidth - GUI.style.largePadding.X * 2.0f),
-                (int)(Game1.GraphicsHeight - GUI.style.largePadding.Y * 2.0f));
+                40, 40, Game1.GraphicsWidth - 80, Game1.GraphicsHeight - 80);
 
             menu = new GUIFrame(panelRect, Color.Transparent);
             //menu.Padding = GUI.style.smallPadding;
 
             //server info panel ------------------------------------------------------------
 
-            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.6f), (int)(panelRect.Height * 0.6f)), GUI.style.backGroundColor, menu);
-            infoFrame.Padding = GUI.style.smallPadding;
+            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.6f), (int)(panelRect.Height * 0.6f)), GUI.style, menu);
+            //infoFrame.Padding = GUI.style.smallPadding;
             
             //chatbox ----------------------------------------------------------------------
             GUIFrame chatFrame = new GUIFrame(
-                new Rectangle(0, (int)(panelRect.Height * 0.6f + GUI.style.smallPadding.W),
+                new Rectangle(0, (int)(panelRect.Height * 0.6f + 20),
                     (int)(panelRect.Width * 0.6f),
-                    (int)(panelRect.Height * 0.4f - GUI.style.smallPadding.W)),
-                GUI.style.backGroundColor, menu);
-            chatFrame.Padding = GUI.style.smallPadding;
+                    (int)(panelRect.Height * 0.4f - 20)),
+                GUI.style, menu);
 
-            chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, chatFrame);            
-            textBox = new GUITextBox(new Rectangle(0, 0, 0, 25), Color.White, Color.Black, Alignment.Bottom, Alignment.Left, chatFrame);
+            chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, GUI.style, chatFrame);            
+            textBox = new GUITextBox(new Rectangle(0, 0, 0, 25), Alignment.Bottom, GUI.style, chatFrame);
             textBox.OnEnter = EnterChatMessage;
 
             //player info panel ------------------------------------------------------------
 
             playerFrame = new GUIFrame(
-                new Rectangle((int)(panelRect.Width * 0.6f + GUI.style.smallPadding.Z), 0,
-                    (int)(panelRect.Width * 0.4f - GUI.style.smallPadding.Z), (int)(panelRect.Height * 0.6f)),
-                GUI.style.backGroundColor, menu);
-            playerFrame.Padding = GUI.style.smallPadding;
+                new Rectangle((int)(panelRect.Width * 0.6f + 20), 0,
+                    (int)(panelRect.Width * 0.4f - 20), (int)(panelRect.Height * 0.6f)),
+                GUI.style, menu);
 
             //player list ------------------------------------------------------------------
 
             GUIFrame playerListFrame = new GUIFrame(
-                new Rectangle((int)(panelRect.Width * 0.6f + GUI.style.smallPadding.Z), (int)(panelRect.Height * 0.6f + GUI.style.smallPadding.W),
-                    (int)(panelRect.Width * 0.4f - GUI.style.smallPadding.Z), (int)(panelRect.Height * 0.4f - GUI.style.smallPadding.W)),
-                GUI.style.backGroundColor, menu);
-            playerListFrame.Padding = GUI.style.smallPadding;
+                new Rectangle((int)(panelRect.Width * 0.6f + 20), (int)(panelRect.Height * 0.6f + 20),
+                    (int)(panelRect.Width * 0.4f - 20), (int)(panelRect.Height * 0.4f - 20)),
+                GUI.style, menu);
 
-            playerList = new GUIListBox(new Rectangle(0,0,0,0), Color.White, playerListFrame);
+            playerList = new GUIListBox(new Rectangle(0,0,0,0), Color.White, null, playerListFrame);
         }
 
         public override void Deselect()
@@ -108,7 +108,7 @@ namespace Subsurface
 
             if (previewPlatform!=null)
             {
-                Game1.world.RemoveBody(previewPlatform);
+                Game1.World.RemoveBody(previewPlatform);
                 previewPlatform = null;
             }
 
@@ -123,41 +123,39 @@ namespace Subsurface
         {
             infoFrame.ClearChildren();
             
-            if (isServer && Game1.Server == null) Game1.Server = new GameServer();
+            if (IsServer && Game1.Server == null) Game1.NetworkMember = new GameServer();
 
             textBox.Select();
 
             //int oldMapIndex = 0;
             //if (mapList != null && mapList.SelectedData != null) oldMapIndex = mapList.SelectedIndex;
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, infoFrame);
-            mapList = new GUIListBox(new Rectangle(0, 60, 200, 200), Color.White, infoFrame);
-            mapList.OnSelected = SelectMap;
-            mapList.Enabled = (Game1.Server!=null);
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", null, null, Alignment.Left, null, infoFrame);
+            subList = new GUIListBox(new Rectangle(0, 60, 200, 200), Color.White, GUI.style, infoFrame);
+            subList.OnSelected = SelectMap;
+            subList.Enabled = (Game1.Server!=null);
 
-            if (Submarine.SavedSubmarines.Count>0)
+            if (Submarine.SavedSubmarines.Count > 0)
             {
-                foreach (Submarine map in Submarine.SavedSubmarines)
+                foreach (Submarine sub in Submarine.SavedSubmarines)
                 {
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
-                        map.Name,
-                        GUI.style,
-                        Alignment.Left,
-                        Alignment.Left,
-                        mapList);
+                        sub.Name, GUI.style,
+                        Alignment.Left, Alignment.Left,
+                        subList);
                     textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                    textBlock.UserData = map;
+                    textBlock.UserData = sub;
                 }
             }
             else
             {
-                DebugConsole.ThrowError("No saved maps found!");
+                DebugConsole.ThrowError("No saved submarines found!");
                 return;
             }
 
-            new GUITextBlock(new Rectangle(220, 30, 0, 30), "Selected game mode: ", Color.Transparent, Color.Black, Alignment.Left, infoFrame);
-            modeList = new GUIListBox(new Rectangle(220, 60, 200, 200), Color.White, infoFrame);
+            new GUITextBlock(new Rectangle(220, 30, 0, 30), "Selected game mode: ", null, null, Alignment.Left, GUI.style, infoFrame);
+            modeList = new GUIListBox(new Rectangle(220, 60, 200, 200), GUI.style, infoFrame);
             modeList.Enabled = (Game1.Server != null);
             //modeList.OnSelected = new GUIListBox.OnSelectedHandler(SelectEvent);
 
@@ -167,69 +165,75 @@ namespace Subsurface
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    mode.Name,
-                    GUI.style,
-                    Alignment.Left,
-                    Alignment.Left,
+                    mode.Name, GUI.style,
+                    Alignment.Left, Alignment.Left,
                     modeList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = mode;
             }
 
-            GUITextBlock durationText = new GUITextBlock(new Rectangle((int)(modeList.Rect.X + modeList.Rect.Width + GUI.style.smallPadding.X), modeList.Rect.Y, 100, 20),
-                "Game duration: ", Color.Transparent, Color.Black, Alignment.Left, infoFrame);
+            GUITextBlock durationText = new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 100), 30, 100, 20),
+                "Game duration: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
             durationText.TextGetter = DurationText;
 
-            durationBar = new GUIScrollBar(new Rectangle((int)(modeList.Rect.X + modeList.Rect.Width + GUI.style.smallPadding.X), modeList.Rect.Y + 30, 100, 20),
-                Color.Gold, 0.1f, Alignment.Left, infoFrame);
+            durationBar = new GUIScrollBar(new Rectangle((int)(modeList.Rect.Right + 20 - 100), 60, 180, 20),
+                GUI.style, 0.1f, infoFrame);
             durationBar.BarSize = 0.1f;
             durationBar.Enabled = (Game1.Server != null);
+
+            new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 100, 100, 20),
+                "Level Seed: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
+
+            GUITextBox seedBox = new GUITextBox(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 130, 180, 20),
+                Alignment.TopLeft, GUI.style, infoFrame);
+            seedBox.OnEnter = SelectSeed;
+            seedBox.Enabled = (Game1.Server != null);
             
-            if (isServer && Game1.Server!=null)
+            if (IsServer && Game1.Server!=null)
             {
-                GUIButton startButton = new GUIButton(new Rectangle(0,0,200,30), "Start", Color.White, Alignment.Right | Alignment.Bottom, infoFrame);
+                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", GUI.style, infoFrame);
                 startButton.OnClicked = Game1.Server.StartGame;
 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
                 modeList.OnSelected = Game1.Server.UpdateNetLobby;
                 durationBar.OnMoved = Game1.Server.UpdateNetLobby;
 
-                if (mapList.CountChildren > 0) mapList.Select(0);
+                if (subList.CountChildren > 0) subList.Select(0);
                 if (GameModePreset.list.Count > 0) modeList.Select(0);                
             }
             else
             {
                 int x = playerFrame.Rect.Width / 2;
-                GUITextBox playerName = new GUITextBox(new Rectangle(x, 0, 0, 20), Color.White, Color.Black,
-                    Alignment.Left | Alignment.Top, Alignment.Left, playerFrame);
-                playerName.Text = Game1.Client.CharacterInfo.name;
+                GUITextBox playerName = new GUITextBox(new Rectangle(x, 0, 0, 20),
+                    Alignment.TopLeft, GUI.style, playerFrame);
+                playerName.Text = Game1.Client.CharacterInfo.Name;
                 playerName.OnEnter += ChangeCharacterName;
 
                 new GUITextBlock(new Rectangle(x,40,200, 30), "Gender: ", Color.Transparent, Color.Black,
-                    Alignment.Left | Alignment.Top, Alignment.Left, playerFrame);
+                    Alignment.TopLeft, GUI.style, playerFrame);
 
-                GUIButton maleButton = new GUIButton(new Rectangle(x+70,50,70,20), "Male", GUI.style,
-                    Alignment.Left | Alignment.Top, playerFrame);
+                GUIButton maleButton = new GUIButton(new Rectangle(x+70,50,70,20), "Male", 
+                    Alignment.TopLeft, GUI.style,playerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
-                GUIButton femaleButton = new GUIButton(new Rectangle(x+150, 50, 70, 20), "Female", GUI.style,
-                    Alignment.Left | Alignment.Top, playerFrame);
+                GUIButton femaleButton = new GUIButton(new Rectangle(x+150, 50, 70, 20), "Female",
+                    Alignment.TopLeft, GUI.style, playerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", Color.Transparent, Color.Black, Alignment.Left, playerFrame);
+                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.style, playerFrame);
 
-                GUIListBox jobList = new GUIListBox(new Rectangle(0,180,200,0), Color.White, playerFrame);
+                GUIListBox jobList = new GUIListBox(new Rectangle(0,180,200,0), GUI.style, playerFrame);
 
                 foreach (Job job in Job.jobList)
                 {
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, Color.Transparent, Color.Black, Alignment.Left, jobList);
-                    GUIButton upButton = new GUIButton(new Rectangle(jobText.Rect.Width - 40, 0, 20, 20), "u", Color.White, jobText);
+                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, jobList);
+                    GUIButton upButton = new GUIButton(new Rectangle(jobText.Rect.Width - 40, 0, 20, 20), "u", GUI.style, jobText);
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
-                    GUIButton downButton = new GUIButton(new Rectangle(jobText.Rect.Width - 20, 0, 20, 20), "d", Color.White, jobText);
+                    GUIButton downButton = new GUIButton(new Rectangle(jobText.Rect.Width - 20, 0, 20, 20), "d", GUI.style, jobText);
                     downButton.UserData = 1;
                     downButton.OnClicked += ChangeJobPreference;
                 }
@@ -340,9 +344,9 @@ namespace Subsurface
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20),
                 message, 
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, color, 
-                Alignment.Left, null, true);
+                Alignment.Left, GUI.style, null, true);
 
-            msg.Padding = new Vector4(GUI.style.smallPadding.X, 0, 0, 0);
+            msg.Padding = new Vector4(20, 0, 0, 0);
             chatBox.AddChild(msg);
         }
 
@@ -357,15 +361,8 @@ namespace Subsurface
         {
             if (String.IsNullOrEmpty(message)) return false;
 
-            if (isServer)
-            {
-                Game1.Server.SendChatMessage("Server: " + message);
-            }
-            else
-            {
-                Game1.Client.SendChatMessage(Game1.Client.Name + ": " + message);
-            }
-
+            Game1.NetworkMember.SendChatMessage(Game1.NetworkMember.Name + ": " + message);
+            
             return true;
         }
 
@@ -379,11 +376,11 @@ namespace Subsurface
 
             Game1.Client.Character = character;
 
-            character.animController.isStanding = true;
+            character.AnimController.IsStanding = true;
             
             if (previewPlatform==null)
             {
-                Body platform = BodyFactory.CreateRectangle(Game1.world, 3.0f, 1.0f, 5.0f);
+                Body platform = BodyFactory.CreateRectangle(Game1.World, 3.0f, 1.0f, 5.0f);
                 platform.SetTransform(new Vector2(pos.X, pos.Y - 2.5f), 0.0f);
                 platform.IsStatic = true;
             }
@@ -398,9 +395,9 @@ namespace Subsurface
 
             for (int i = 0; i < 500; i++)
             {
-                character.animController.Update((float)Physics.step);
-                character.animController.UpdateAnim((float)Physics.step);
-                Game1.world.Step((float)Physics.step);
+                character.AnimController.Update((float)Physics.step);
+                character.AnimController.UpdateAnim((float)Physics.step);
+                Game1.World.Step((float)Physics.step);
             }
         }
 
@@ -409,7 +406,7 @@ namespace Subsurface
             try
             {
                 Gender gender = (Gender)obj;
-                Game1.Client.CharacterInfo.gender = gender;
+                Game1.Client.CharacterInfo.Gender = gender;
                 Game1.Client.SendCharacterData();
                 CreatePreviewCharacter();
             }
@@ -420,11 +417,25 @@ namespace Subsurface
             return true;
         }
 
+        private bool SelectSeed(GUITextBox textBox, string seed)
+        {
+            if (string.IsNullOrWhiteSpace(seed))
+            {
+                textBox.Text = LevelSeed;
+            }
+            else
+            {
+                LevelSeed = seed;
+            }
+
+            return true;
+        }
+
         private bool ChangeCharacterName(GUITextBox textBox, string newName)
         {
             if (string.IsNullOrEmpty(newName)) return false;
 
-            Game1.Client.CharacterInfo.name = newName;
+            Game1.Client.CharacterInfo.Name = newName;
             Game1.Client.Name = newName;
             Game1.Client.SendCharacterData();
 
@@ -463,10 +474,37 @@ namespace Subsurface
             }
         }
 
+        public bool TrySelectMap(string mapName, string md5Hash)
+        {
 
+            Submarine map = Submarine.SavedSubmarines.Find(m => m.Name == mapName);
+            if (map == null)
+            {
+                DebugConsole.ThrowError("The map ''" + mapName + "'' has been selected by the server.");
+                DebugConsole.ThrowError("Matching map not found in your map folder.");
+                return false;
+            }
+            else
+            {
+                if (map.Hash.MD5Hash != md5Hash)
+                {
+                    DebugConsole.ThrowError("Your version of the map file ''" + map.Name + "'' doesn't match the server's version!");
+                    DebugConsole.ThrowError("Your file: " + map.Name + "(MD5 hash : " + map.Hash.MD5Hash + ")");
+                    DebugConsole.ThrowError("Server's file: " + mapName + "(MD5 hash : " + md5Hash + ")");
+                    return false;
+                }
+                else
+                {
+                    subList.Select(map);
+                    //map.Load();
+                    return true;
+                }
+            }
+        }
+        
         public void WriteData(NetOutgoingMessage msg)
         {
-            Submarine selectedMap = mapList.SelectedData as Submarine;
+            Submarine selectedMap = subList.SelectedData as Submarine;
 
             if (selectedMap==null)
             {
@@ -481,35 +519,10 @@ namespace Subsurface
 
             msg.Write(modeList.SelectedIndex);
             msg.Write(durationBar.BarScroll);
+            msg.Write(LevelSeed);
         }
 
-        public bool TrySelectMap(string mapName, string md5Hash)
-        {
 
-            Submarine map = Submarine.SavedSubmarines.Find(m => m.Name == mapName);
-            if (map==null)
-            {
-                DebugConsole.ThrowError("The map ''" + mapName + "'' has been selected by the server.");
-                DebugConsole.ThrowError("Matching map not found in your map folder.");
-                return false;
-            }
-            else
-            {
-                if (map.Hash.MD5Hash!=md5Hash)
-                {
-                    DebugConsole.ThrowError("Your version of the map file ''"+map.Name+"'' doesn't match the server's version!");
-                    DebugConsole.ThrowError("Your file: "+map.Name+"(MD5 hash : "+map.Hash.MD5Hash+")");
-                    DebugConsole.ThrowError("Server's file: " + mapName + "(MD5 hash : " + md5Hash + ")");
-                    return false;
-                }
-                else
-                {
-                    mapList.Select(map);
-                    //map.Load();
-                    return true;
-                }
-            }
-        }
 
         public void ReadData(NetIncomingMessage msg)
         {
@@ -523,6 +536,8 @@ namespace Subsurface
             modeList.Select(msg.ReadInt32());
 
             durationBar.BarScroll = msg.ReadFloat();
+
+            LevelSeed = msg.ReadString();
         }
     }
 }

@@ -197,7 +197,7 @@ namespace Subsurface
                         joint.MotorEnabled = true;
                         joint.MaxMotorTorque = 0.25f;
 
-                        Game1.world.AddJoint(joint);
+                        Game1.World.AddJoint(joint);
 
                         for (int i = 0; i < limbJoints.Length; i++ )
                         {
@@ -223,7 +223,7 @@ namespace Subsurface
             float startDepth = 0.1f;
             float increment = 0.0001f;
 
-            foreach (Character otherCharacter in Character.characterList)
+            foreach (Character otherCharacter in Character.CharacterList)
             {
                 if (otherCharacter==character) continue;
                 startDepth+=increment;
@@ -541,7 +541,7 @@ namespace Subsurface
             float allowedDistance = 0.1f;
 
             float dist = Vector2.Distance(limbs[0].body.Position, refLimb.body.TargetPosition);
-            bool resetAll = (dist > resetDistance && character.largeUpdateTimer == 1);
+            bool resetAll = (dist > resetDistance && character.LargeUpdateTimer == 1);
 
             Vector2 newMovement = (refLimb.body.TargetPosition - refLimb.body.Position);
 
@@ -632,7 +632,7 @@ namespace Subsurface
             foreach (Limb l in limbs) l.Remove();
             foreach (RevoluteJoint joint in limbJoints)
             {
-                Game1.world.RemoveJoint(joint);
+                Game1.World.RemoveJoint(joint);
             }
         }
 

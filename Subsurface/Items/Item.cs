@@ -27,7 +27,7 @@ namespace Subsurface
 
         private List<string> tags;
 
-        public Hull currentHull;
+        public Hull CurrentHull;
 
         //components that determine the functionality of the item
         public List<ItemComponent> components;
@@ -318,8 +318,8 @@ namespace Subsurface
         
         public virtual Hull FindHull()
         {
-            currentHull = Hull.FindHull((body == null) ? Position : ConvertUnits.ToDisplayUnits(body.Position), currentHull);
-            return currentHull;
+            CurrentHull = Hull.FindHull((body == null) ? Position : ConvertUnits.ToDisplayUnits(body.Position), CurrentHull);
+            return CurrentHull;
         }
         
 
@@ -441,9 +441,9 @@ namespace Subsurface
 
             body.SetToTargetPosition();
 
-            if (currentHull != null)
+            if (CurrentHull != null)
             {
-                float surfaceY = ConvertUnits.ToSimUnits(currentHull.Surface);
+                float surfaceY = ConvertUnits.ToSimUnits(CurrentHull.Surface);
                 if (surfaceY > body.Position.Y) return;
 
                 //the item has gone through the surface of the water -> apply an impulse which serves as surface tension
@@ -451,8 +451,8 @@ namespace Subsurface
                 {
                     Vector2 impulse = -body.LinearVelocity * (body.Mass / body.Density);
                     body.ApplyLinearImpulse(impulse);
-                    int n = (int)((displayPos.X - currentHull.Rect.X) / Hull.WaveWidth);
-                    currentHull.WaveVel[n] = impulse.Y * 10.0f;
+                    int n = (int)((displayPos.X - CurrentHull.Rect.X) / Hull.WaveWidth);
+                    CurrentHull.WaveVel[n] = impulse.Y * 10.0f;
                 }
             }
 
@@ -509,7 +509,7 @@ namespace Subsurface
 
             GUI.DrawRectangle(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), Color.Green);
 
-            foreach (Rectangle t in prefab.triggers)
+            foreach (Rectangle t in prefab.Triggers)
             {
                 Rectangle transformedTrigger = TransformTrigger(t);
                 GUI.DrawRectangle(spriteBatch, 
@@ -574,7 +574,7 @@ namespace Subsurface
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
             
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, Color.Transparent, Color.White, Alignment.Left, editingHUD);
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, GUI.style, editingHUD);
 
             y += 20;
 
@@ -582,7 +582,7 @@ namespace Subsurface
             {
                 if (prefab.IsLinkable) 
                 {
-                    new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another construction", Color.Transparent, Color.White, Alignment.Left, editingHUD);
+                    new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another construction", GUI.style, editingHUD);
                     y += 25;
                 }
                 foreach (ItemComponent ic in components)
@@ -590,8 +590,8 @@ namespace Subsurface
                     foreach (RelatedItem relatedItem in ic.requiredItems)
                     {
 
-                        new GUITextBlock(new Rectangle(0, y, 100, 20),ic.Name+ ": "+relatedItem.Type.ToString()+" required", Color.Transparent, Color.White, Alignment.Left, editingHUD);
-                        GUITextBox namesBox = new GUITextBox(new Rectangle(0, y, 200, 20), Color.White, Color.Black, Alignment.Right, Alignment.Left, editingHUD);
+                        new GUITextBlock(new Rectangle(0, y, 100, 20), ic.Name + ": " + relatedItem.Type.ToString() + " required", GUI.style, editingHUD);
+                        GUITextBox namesBox = new GUITextBox(new Rectangle(0, y, 200, 20), Alignment.Right, GUI.style, editingHUD);
 
                         PropertyDescriptorCollection properties = TypeDescriptor.GetProperties (relatedItem);
                         PropertyDescriptor property = properties.Find("JoinedNames", false);
@@ -609,8 +609,8 @@ namespace Subsurface
             
             foreach (var objectProperty in editableProperties)
             {
-                new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, editingHUD);
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), Color.White, Color.Black, Alignment.Left, Alignment.Left, editingHUD);
+                new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, null, editingHUD);
+                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.style, editingHUD);
 
                 object value = objectProperty.GetValue();
                 if (value != null)
@@ -647,7 +647,7 @@ namespace Subsurface
             if (panel == null) return;
             foreach (Connection c in panel.connections)
             {
-                if (c.name != connectionName) continue;
+                if (c.Name != connectionName) continue;
 
                 c.SendSignal(signal, this, power);
             }
@@ -669,13 +669,13 @@ namespace Subsurface
             foreach (Item item in itemList)
             {
                 if (ignoredItems!=null && ignoredItems.Contains(item)) continue;
-                if (hull != null && item.currentHull != hull) continue;
+                if (hull != null && item.CurrentHull != hull) continue;
                 if (item.body != null && !item.body.Enabled) continue;
 
                 Pickable pickableComponent = item.GetComponent<Pickable>();
                 if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) continue;
 
-                foreach (Rectangle trigger in item.prefab.triggers)
+                foreach (Rectangle trigger in item.prefab.Triggers)
                 {
                     Rectangle transformedTrigger = item.TransformTrigger(trigger);
                     

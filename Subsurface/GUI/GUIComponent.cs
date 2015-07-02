@@ -9,15 +9,16 @@ namespace Subsurface
 {
     abstract class GUIComponent
     {
-
         public static GUIComponent MouseOn;
+        
+        protected static KeyboardDispatcher keyboardDispatcher;
 
         public enum ComponentState { None, Hover, Selected};
 
         protected Alignment alignment;
 
-        protected static KeyboardDispatcher keyboardDispatcher;
-
+        protected GUIComponentStyle style;
+        
         protected object userData;
 
         protected Rectangle rect;
@@ -33,7 +34,7 @@ namespace Subsurface
 
         protected ComponentState state;
 
-        protected float alpha;
+        //protected float alpha;
                 
         public GUIComponent Parent
         {
@@ -67,6 +68,12 @@ namespace Subsurface
                 }                
             }
         }
+
+        protected List<Sprite> sprites;
+        //public Alignment SpriteAlignment { get; set; }
+        //public bool RepeatSpriteX, RepeatSpriteY;
+
+        public Color OutlineColor { get; set; }
 
         public ComponentState State
         {
@@ -110,27 +117,32 @@ namespace Subsurface
         }
 
 
-        public float Alpha
-        {
-            get
-            {
-                return alpha;
-            }
-            set
-            {
-                alpha = MathHelper.Clamp(value, 0.0f, 1.0f);
-                foreach (GUIComponent child in children)
-                {
-                    child.Alpha = value;
-                }
-            }
-        }
+        //public float Alpha
+        //{
+        //    get
+        //    {
+        //        return alpha;
+        //    }
+        //    set
+        //    {
+        //        alpha = MathHelper.Clamp(value, 0.0f, 1.0f);
+        //        foreach (GUIComponent child in children)
+        //        {
+        //            child.Alpha = value;
+        //        }
+        //    }
+        //}
 
-        protected GUIComponent()
+        protected GUIComponent(GUIStyle style)
         {
-            alpha = 1.0f;
+            //alpha = 1.0f;
 
+            OutlineColor = Color.Transparent;
+
+            sprites = new List<Sprite>();
             children = new List<GUIComponent>();
+
+            if (style!=null) style.Apply(this);
         }
 
         public static void Init(GameWindow window)
@@ -233,8 +245,21 @@ namespace Subsurface
             else
             {
                 rect.Y += parentRect.Y + (int)padding.Y;
-            }
+            }            
+        }
+
+        public virtual void ApplyStyle(GUIComponentStyle style)
+        {            
+            color = style.Color;
+            hoverColor = style.HoverColor;
+            selectedColor = style.SelectedColor;
             
+            padding = style.Padding;
+            sprites = style.Sprites;
+
+            OutlineColor = style.OutlineColor;
+
+            this.style = style;
         }
 
         public virtual void DrawChildren(SpriteBatch spriteBatch)

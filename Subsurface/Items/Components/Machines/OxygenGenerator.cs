@@ -36,7 +36,7 @@ namespace Subsurface.Items.Components
 
             currPowerConsumption = powerConsumption;
 
-            if (item.currentHull == null) return;
+            if (item.CurrentHull == null) return;
 
             if (voltage < minVoltage)
             {
@@ -56,7 +56,7 @@ namespace Subsurface.Items.Components
             running = true;
             
             float deltaOxygen = Math.Min(voltage, 1.0f) * 50000.0f;
-            item.currentHull.Oxygen += deltaOxygen * deltaTime;
+            item.CurrentHull.Oxygen += deltaOxygen * deltaTime;
 
             UpdateVents(deltaOxygen);
 

@@ -14,11 +14,6 @@ namespace Subsurface.Networking
         private Character myCharacter;
         private CharacterInfo characterInfo;
                 
-        string name;
-
-        // Create timer that tells client, when to send update
-       // System.Timers.Timer update;
-
         public Character Character
         {
             get { return myCharacter; }
@@ -28,16 +23,6 @@ namespace Subsurface.Networking
         public CharacterInfo CharacterInfo
         {
             get { return characterInfo; }
-        }
-
-        public string Name
-        {
-            get { return name; }
-            set 
-            {
-                if (string.IsNullOrEmpty(name)) return;
-                name = value; 
-            }
         }
 
         public GameClient(string newName)
@@ -64,7 +49,7 @@ namespace Subsurface.Networking
             Client.Start();
 
             outmsg.Write((byte)PacketTypes.Login);
-            outmsg.Write(Game1.version.ToString());
+            outmsg.Write(Game1.Version.ToString());
             outmsg.Write(name);
 
             // Connect client, to ip previously requested from user 
@@ -163,7 +148,7 @@ namespace Subsurface.Networking
             }
         }
 
-        public void Update()
+        public override void Update()
         {
             if (updateTimer > DateTime.Now) return;
             
@@ -222,8 +207,10 @@ namespace Subsurface.Networking
                     case (byte)PacketTypes.StartGame:
                         if (gameStarted) continue;
 
+                        if (this.Character != null) Character.Remove();
+
                         int seed = inc.ReadInt32();
-                        Game1.random = new Random(seed);
+                        Rand.SetSyncedSeed(seed);
 
                         string mapName = inc.ReadString();
                         string mapHash = inc.ReadString();
@@ -241,7 +228,7 @@ namespace Subsurface.Networking
 
                         //int gameModeIndex = inc.ReadInt32();
                         Game1.GameSession = new GameSession(Submarine.Loaded);
-                        Game1.GameSession.StartShift(duration, 1);
+                        Game1.GameSession.StartShift(duration, "asdf");
 
                         myCharacter = ReadCharacterData(inc);
                         Character.Controlled = myCharacter;                       
@@ -270,14 +257,6 @@ namespace Subsurface.Networking
 
                         Game1.NetLobbyScreen.AddPlayer(otherClient.name);
 
-                        //string newPlayerName = inc.ReadString();
-                        //int newPlayerID = inc.ReadInt32();
-
-                        //CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", newPlayerName);
-                        //ch.ID = newPlayerID;
-
-                        //Character.newCharacterQueue.Enqueue(ch);
-
                         AddChatMessage(otherClient.name + " has joined the server", ChatMessageType.Server);
 
                         break;
@@ -289,7 +268,7 @@ namespace Subsurface.Networking
                         break;
 
                     case (byte)PacketTypes.KickedOut:
-                        string msg= inc.ReadString();
+                        string msg = inc.ReadString();
 
                         DebugConsole.ThrowError(msg);
 
@@ -336,7 +315,7 @@ namespace Subsurface.Networking
             gameStarted = false;
         }
 
-        public void Disconnect()
+        public override void Disconnect()
         {
             NetOutgoingMessage msg = Client.CreateMessage();
             msg.Write((byte)PacketTypes.PlayerLeft);
@@ -350,8 +329,9 @@ namespace Subsurface.Networking
 
             NetOutgoingMessage msg = Client.CreateMessage();
             msg.Write((byte)PacketTypes.CharacterInfo);
-            msg.Write(characterInfo.name);
-            msg.Write(characterInfo.gender == Gender.Male);
+            msg.Write(characterInfo.Name);
+            msg.Write(characterInfo.Gender == Gender.Male);
+            msg.Write(characterInfo.HeadSpriteId);
 
             Client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
@@ -359,11 +339,11 @@ namespace Subsurface.Networking
 
         private Character ReadCharacterData(NetIncomingMessage inc)
         {
-            string newName = inc.ReadString();
-            int ID = inc.ReadInt32();
-            bool isFemale = inc.ReadBoolean();
-            int inventoryID = inc.ReadInt32();
-            Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
+            string newName      = inc.ReadString();
+            int ID              = inc.ReadInt32();
+            bool isFemale       = inc.ReadBoolean();
+            int inventoryID     = inc.ReadInt32();
+            Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
             CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", newName, isFemale ? Gender.Female : Gender.Male);
             Character character = new Character(ch, position);
@@ -373,11 +353,11 @@ namespace Subsurface.Networking
             return character;
         }
 
-        public void SendChatMessage(string message)
+        public override void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Default)
         {
             //AddChatMessage(message);
 
-            ChatMessageType type = (gameStarted && myCharacter != null && myCharacter.IsDead) ? ChatMessageType.Dead : ChatMessageType.Default;
+            type = (gameStarted && myCharacter != null && myCharacter.IsDead) ? ChatMessageType.Dead : ChatMessageType.Default;
 
             NetOutgoingMessage msg = Client.CreateMessage();
             msg.Write((byte)PacketTypes.Chatmessage);

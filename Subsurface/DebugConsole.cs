@@ -61,7 +61,7 @@ namespace Subsurface
 
             if (isOpen)
             {
-                Character.disableControls = true;
+                Character.DisableControls = true;
 
                 if (PlayerInput.KeyHit(Keys.Up))
                 {
@@ -165,7 +165,7 @@ namespace Subsurface
                     break;
                 case "startserver":
                     if (Game1.Server==null)
-                        Game1.Server = new GameServer();
+                        Game1.NetworkMember = new GameServer();
                     break;
                 case "kick":
                     if (Game1.Server == null) break;
@@ -175,7 +175,7 @@ namespace Subsurface
                     if (commands.Length == 1) return;
                     if (Game1.Client == null)
                     {
-                        Game1.Client = new GameClient("Name");
+                        Game1.NetworkMember = new GameClient("Name");
                         Game1.Client.ConnectToServer(commands[1]);
                     }
                     break;
@@ -198,6 +198,7 @@ namespace Subsurface
                     Game1.EditCharacterScreen.Select();
                     break;
                 case "freecamera":
+                case "freecam":
                     Character.Controlled = null;
                     Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
                     break;
@@ -209,13 +210,13 @@ namespace Subsurface
                     }
                     break;
                 case "generatelevel":
-                    Game1.Level = new Level(100, 500,500, 50);
+                    Game1.Level = new Level("asdf", 500,500, 50);
                     Game1.Level.Generate(100.0f);
                     break;
                 case "fowenabled":
                 case "fow":
                 case "drawfow":
-                    Lights.LightManager.fowEnabled = !Lights.LightManager.fowEnabled;
+                    Lights.LightManager.FowEnabled = !Lights.LightManager.FowEnabled;
                     break;
                 case "lobbyscreen":
                 case "lobby":

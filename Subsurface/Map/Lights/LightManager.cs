@@ -5,16 +5,16 @@ namespace Subsurface.Lights
 {
     class LightManager
     {
-        public static Vector2 viewPos;
+        public static Vector2 ViewPos;
 
-        public static bool fowEnabled = true;
+        public static bool FowEnabled = true;
 
         public static void DrawFow(GraphicsDevice graphics, Camera cam)
         {
-            if (!fowEnabled) return;
+            if (!FowEnabled) return;
             foreach (ConvexHull convexHull in ConvexHull.list)
             {
-                convexHull.DrawShadows(graphics, cam, viewPos);
+                convexHull.DrawShadows(graphics, cam, ViewPos);
             }
         }
     }

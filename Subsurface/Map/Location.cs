@@ -31,7 +31,7 @@ namespace Subsurface
 
         public static Location CreateRandom(Vector2 position)
         {
-            return new Location("Location " + (Game1.random.Next() % 10000), position);        
+            return new Location("Location " + Rand.Int(10000, false), position);        
         }
     }
 }

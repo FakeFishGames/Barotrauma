@@ -5,28 +5,23 @@ using Microsoft.Xna.Framework.Input;
 namespace Subsurface
 {
     public class Camera
-    {        
-        float zoom;
-
+    {
         const float DefaultZoom = 1.0f;
         const float ZoomSmoothness = 8.0f;
         const float MoveSmoothness = 8.0f;
 
-        float offsetAmount;
+        private float zoom;
 
-        Matrix transform;
-        Matrix shaderTransform;
+        private float offsetAmount;
 
-        Matrix viewMatrix;
+        private Matrix transform, shaderTransform, viewMatrix;
         private Vector2 position;
-        float rotation;
+        private float rotation;
 
         //the area of the world inside the camera view
-        //used by the sprite drawing functions to determine whether
-        //a sprite should be drawn
-        Rectangle worldView;
+        private Rectangle worldView;
 
-        Point resolution;
+        private Point resolution;
 
         private Vector2 targetPos;
 
@@ -35,7 +30,6 @@ namespace Subsurface
             get { return zoom; }
             set 
             {
-                //prevZoom = zoom;
                 zoom = value; 
                 if (zoom < 0.1f) zoom = 0.1f;
 
@@ -46,8 +40,8 @@ namespace Subsurface
                 float newHeight = resolution.Y / zoom;
 
                 worldView = new Rectangle(
-                    (int)(center.X - newWidth/2.0f),
-                    (int)(center.Y - newHeight/2.0f),
+                    (int)(center.X - newWidth / 2.0f),
+                    (int)(center.Y - newHeight / 2.0f),
                     (int)newWidth,
                     (int)newHeight);
 
@@ -110,7 +104,6 @@ namespace Subsurface
             resolution = new Point(Game1.GraphicsWidth, Game1.GraphicsHeight);
 
             viewMatrix = 
-                //Matrix.CreateRotationZ(Rotation) *                
                 Matrix.CreateTranslation(new Vector3(Game1.GraphicsWidth / 2.0f, Game1.GraphicsHeight / 2.0f, 0));
         }
 

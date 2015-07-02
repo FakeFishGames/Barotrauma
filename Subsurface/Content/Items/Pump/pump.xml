@@ -13,5 +13,6 @@
     <input name="toggle"/>
     <input name="set_active"/>
     <input name="set_speed"/>
+    <input name="set_targetlevel"/>
   </ConnectionPanel>
 </Item>

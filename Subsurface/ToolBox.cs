@@ -247,6 +247,16 @@ namespace Subsurface
             return floatArray;
         }
 
+        public static int SeedToInt(string seed)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < seed.Length; i++)
+            {
+                sb.Append((int)seed[i]);
+            }
+            return int.Parse(sb.ToString()) % int.MaxValue;
+        }
+
         public static string WrapText(string text, float lineWidth)
         {
             if (GUI.font.MeasureString(text).X < lineWidth) return text;
@@ -291,7 +301,7 @@ namespace Subsurface
                     return "";
                 }
 
-                int lineNumber = Game1.random.Next(lineCount);
+                int lineNumber = Rand.Int(lineCount, false);
 
                 int i = 0;
                     

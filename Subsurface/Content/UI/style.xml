@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<style>
+  <GUIFrame
+    padding="40.0, 40.0, 40.0, 40.0"
+    color="1.0, 1.0, 1.0, 1.0"
+  
+    textcolor="0.0, 0.0, 0.0, 1.0"
+  
+    hovercolor="0.8, 0.8, 0.8, 1.0"
+    selectedcolor="1.0, 0.82, 0.05, 1.0"    
+    
+    outlinecolor="0.5, 0.57, 0.6, 1.0">    
+    
+    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>    
+    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
+  </GUIFrame>
+
+  <GUIButton
+    color="0.6, 0.2, 0.2, 1.0"
+  
+    textcolor="1.0, 1.0, 1.0, 1.0"
+  
+    hovercolor="0.88, 0.19, 0.16, 1.0"
+    selectedcolor="0.8, 0.8, 0.8, 1.0"/>
+
+  <GUITextBlock
+    textcolor="1.0, 1.0, 1.0, 1.0"
+    hovercolor="1.0, 1.0, 1.0, 0.3"
+    selectedcolor="1.0, 0.6, 0.0, 0.3"/>
+  
+  <GUIListBox
+    color="0.5, 0.5, 0.5, 1.0"
+  
+    textcolor="1.0, 1.0, 1.0, 1.0"
+    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
+    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
+  </GUIListBox>
+
+  <GUIScrollBar
+    color="0.5, 0.5, 0.5, 1.0"
+  
+    textcolor="1.0, 1.0, 1.0, 1.0"
+    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0"/>
+  </GUIScrollBar>
+
+  <GUITextBox
+    color="0.5, 0.5, 0.5, 1.0"
+  
+    textcolor="1.0, 1.0, 1.0, 1.0"
+    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
+  </GUITextBox>
+  
+</style>

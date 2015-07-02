@@ -37,6 +37,7 @@ namespace Subsurface
         }
 
         public GUIProgressBar(Rectangle rect, Color color, float barSize, Alignment alignment, GUIComponent parent = null)
+            : base(null)
         {
             this.rect = rect;
             this.color = color;
@@ -49,7 +50,7 @@ namespace Subsurface
             if (parent != null)
                 parent.AddChild(this);
 
-            frame = new GUIFrame(new Rectangle(0,0,0,0), Color.White, this);
+            frame = new GUIFrame(new Rectangle(0,0,0,0), Color.White, null, this);
 
             this.barSize = barSize;
             UpdateRect();
@@ -70,7 +71,7 @@ namespace Subsurface
 
             DrawChildren(spriteBatch);
 
-            GUI.DrawRectangle(spriteBatch, rect, color*alpha, true);
+            GUI.DrawRectangle(spriteBatch, rect, color * (color.A / 255.0f), true);
         }
 
     }

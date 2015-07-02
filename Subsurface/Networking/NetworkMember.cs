@@ -30,10 +30,22 @@ namespace Subsurface.Networking
     {
         protected static Color[] messageColor = { Color.Black, Color.DarkRed, Color.DarkBlue, Color.DarkGreen };
 
+        protected string name;
+
         protected TimeSpan updateInterval;
         protected DateTime updateTimer;
 
         protected bool gameStarted;
+
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                if (string.IsNullOrEmpty(name)) return;
+                name = value;
+            }
+        }
         
         public void AddChatMessage(string message, ChatMessageType messageType)
         {
@@ -42,6 +54,12 @@ namespace Subsurface.Networking
 
             GUI.PlayMessageSound();
         }
+
+        public virtual void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server) { }
+
+        public virtual void Update() { }
+
+        public virtual void Disconnect() { }
     }
 
     enum ChatMessageType
