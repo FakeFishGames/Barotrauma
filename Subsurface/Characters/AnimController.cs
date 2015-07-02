@@ -6,16 +6,16 @@ namespace Subsurface
 {
     class AnimController : Ragdoll
     {
-        protected Character character;
-
-        public bool isStanding;
+        public bool IsStanding;
 
         public enum Animation { None, Climbing, UsingConstruction, Struggle };
-        public Animation anim;
+        public Animation Anim;
 
-        protected float walkSpeed, swimSpeed;
-            
-        public Direction targetDir;
+        public Direction TargetDir;
+
+        protected Character character;
+
+        protected float walkSpeed, swimSpeed;  
 
         //how large impacts the character can take before being stunned
         //protected float impactTolerance;

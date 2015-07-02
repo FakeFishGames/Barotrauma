@@ -62,11 +62,11 @@ namespace Subsurface
                 //targetDir = (movement.X > 0.0f) ? Direction.Right : Direction.Left;
                 if (movement.X > 0.1f && movement.X > Math.Abs(movement.Y))
                 {
-                    targetDir = Direction.Right;
+                    TargetDir = Direction.Right;
                 }
                 else if (movement.X < -0.1f && movement.X < -Math.Abs(movement.Y))
                 {
-                    targetDir = Direction.Left;
+                    TargetDir = Direction.Left;
                 }
             }
             else
@@ -79,17 +79,17 @@ namespace Subsurface
 
                 if (rotation > 20 && rotation < 160)
                 {
-                    targetDir = Direction.Left;
+                    TargetDir = Direction.Left;
                 }
                 else if (rotation > 200 && rotation < 340)
                 {
-                    targetDir = Direction.Right;
+                    TargetDir = Direction.Right;
                 }
             }
             
             //if (stunTimer > gameTime.TotalGameTime.TotalMilliseconds) return;
 
-            if (targetDir != dir) 
+            if (TargetDir != dir) 
             {
                 Flip();
                 if (flip) Mirror();                
@@ -213,7 +213,7 @@ namespace Subsurface
             //out whether the  ragdoll is standing on ground
             float closestFraction = 1;
             //Structure closestStructure = null;
-            Game1.world.RayCast((fixture, point, normal, fraction) =>
+            Game1.World.RayCast((fixture, point, normal, fraction) =>
             {
                 //other limbs and bodies with no collision detection are ignored
                 if (fixture == null ||

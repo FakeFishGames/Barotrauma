@@ -9,22 +9,20 @@ namespace Subsurface.Networking
 {
     class GameServer : NetworkMember
     {
-        // Server object
         NetServer Server;
-        // Configuration object
         NetPeerConfiguration Config;
         
         public List<Client> connectedClients = new List<Client>();
 
-        //NetIncomingMessage inc;
-
-        const int sparseUpdateInterval = 150;
+        const int SparseUpdateInterval = 150;
         int sparseUpdateTimer;
 
         Client myClient;
 
         public GameServer()
         {
+            name = "Server";
+
             Config = new NetPeerConfiguration("subsurface");
 
             Config.Port = 14242;
@@ -54,7 +52,7 @@ namespace Subsurface.Networking
 
         }
 
-        public void Update()
+        public override void Update()
         {
             // Server.ReadMessage() Returns new messages, that have not yet been read.
             // If "inc" is null -> ReadMessage returned null -> Its null, so dont do this :)
@@ -109,10 +107,10 @@ namespace Subsurface.Networking
 
                         if (sender == null) break;
 
-                        if (sender.version != Game1.version.ToString())
+                        if (sender.version != Game1.Version.ToString())
                         {
                             DisconnectClient(sender, sender.name+" was unable to connect to the server (nonmatching game version)", 
-                                "Subsurface version " + Game1.version + " required to connect to the server (Your version: " + sender.version + ")");
+                                "Subsurface version " + Game1.Version + " required to connect to the server (Your version: " + sender.version + ")");
 
                         }
                         else
@@ -208,7 +206,7 @@ namespace Subsurface.Networking
 
         private void SparseUpdate()
         {
-            foreach (Character c in Character.characterList)
+            foreach (Character c in Character.CharacterList)
             {
                 bool isClient = false;
                 foreach (Client client in connectedClients)
@@ -220,12 +218,12 @@ namespace Subsurface.Networking
 
                 if (!isClient)
                 {
-                    c.largeUpdateTimer = 0;
+                    c.LargeUpdateTimer = 0;
                     new NetworkEvent(c.ID, false);
                 }
             }
 
-            sparseUpdateTimer = sparseUpdateInterval;
+            sparseUpdateTimer = SparseUpdateInterval;
         }
 
         private void SendMessage(NetOutgoingMessage msg, NetDeliveryMethod deliveryMethod, NetConnection excludedConnection)
@@ -268,14 +266,14 @@ namespace Subsurface.Networking
         public bool StartGame(GUIButton button, object obj)
         {
             int seed = DateTime.Now.Millisecond;
-            Game1.random = new Random(seed);
+            Rand.SetSyncedSeed(seed);
             
             Submarine selectedMap = Game1.NetLobbyScreen.SelectedMap as Submarine;
 
             //selectedMap.Load();
 
             Game1.GameSession = new GameSession(selectedMap, Game1.NetLobbyScreen.SelectedMode);
-            Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, 1);
+            Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, "asdf", 1);
             //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
             
             foreach (Client client in connectedClients)
@@ -446,16 +444,16 @@ namespace Subsurface.Networking
 
 
 
-        public void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server)
+        public override void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server)
         {
             AddChatMessage(message, type);
+
+            if (Server.Connections.Count == 0) return;
 
             NetOutgoingMessage msg = Server.CreateMessage();
             msg.Write((byte)PacketTypes.Chatmessage);
             msg.Write((byte)type);
             msg.Write(message);
-
-            if (Server.Connections.Count == 0) return;
 
             if (type==ChatMessageType.Dead)
             {
@@ -478,13 +476,15 @@ namespace Subsurface.Networking
 
         private void ReadCharacterData(NetIncomingMessage message)
         {
-            string name = message.ReadString();
-            Gender gender = message.ReadBoolean() ? Gender.Male : Gender.Female;
+            string name         = message.ReadString();
+            Gender gender       = message.ReadBoolean() ? Gender.Male : Gender.Female;
+            int headSpriteId    = message.ReadInt32();
 
             foreach (Client c in connectedClients)
             {
                 if (c.Connection != message.SenderConnection) continue;
                 c.characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", name, gender);
+                c.characterInfo.HeadSpriteId = headSpriteId;
             }
         }
 
@@ -492,7 +492,7 @@ namespace Subsurface.Networking
         {
             message.Write(name);
             message.Write(character.ID);
-            message.Write(character.info.gender==Gender.Female);
+            message.Write(character.Info.Gender == Gender.Female);
             message.Write(character.Inventory.ID);
             message.Write(character.SimPosition.X);
             message.Write(character.SimPosition.Y);

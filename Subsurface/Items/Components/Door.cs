@@ -120,7 +120,7 @@ namespace Subsurface.Items.Components
                 (int)doorSprite.size.Y);
 
 
-            body = new PhysicsBody(BodyFactory.CreateRectangle(Game1.world,
+            body = new PhysicsBody(BodyFactory.CreateRectangle(Game1.World,
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),
                 1.5f));
@@ -281,10 +281,10 @@ namespace Subsurface.Items.Components
                     Vector2 simSize = ConvertUnits.ToSimUnits(new Vector2(item.Rect.Width,
                     item.Rect.Height * (1.0f - openState)));
 
-                    foreach (Character c in Character.characterList)
+                    foreach (Character c in Character.CharacterList)
                     {
-                        int dir = Math.Sign(c.animController.limbs[0].SimPosition.X - simPos.X);
-                        foreach (Limb l in c.animController.limbs)
+                        int dir = Math.Sign(c.AnimController.limbs[0].SimPosition.X - simPos.X);
+                        foreach (Limb l in c.AnimController.limbs)
                         {
                             if (l.SimPosition.Y < simPos.Y || l.SimPosition.Y > simPos.Y - simSize.Y) continue;
                             if (Math.Abs(l.SimPosition.X - simPos.X) > simSize.X * 2.0f) continue;
@@ -300,7 +300,7 @@ namespace Subsurface.Items.Components
         {
             base.Remove();
 
-            Game1.world.RemoveBody(body.FarseerBody);
+            Game1.World.RemoveBody(body.FarseerBody);
 
             if (linkedGap!=null) linkedGap.Remove();
 
@@ -312,11 +312,11 @@ namespace Subsurface.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
-            if (connection.name=="toggle")
+            if (connection.Name=="toggle")
             {
                 isOpen = !isOpen;
             }
-            else if (connection.name == "set_state")
+            else if (connection.Name == "set_state")
             {
                 isOpen = (signal!="0");                
             }            

@@ -47,6 +47,7 @@ namespace Subsurface
         }
 
         public GUIImage(Rectangle rect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
+            : base(null)
         {
             this.rect = rect;
 
@@ -54,7 +55,7 @@ namespace Subsurface
 
             color = Color.White;
 
-            alpha = 1.0f;
+            //alpha = 1.0f;
 
             Scale = 1.0f;
 
@@ -75,7 +76,7 @@ namespace Subsurface
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
 
-            spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * alpha, 0.0f, Vector2.Zero,
+            spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero,
                 Scale, SpriteEffects.None, 0.0f);            
             
             DrawChildren(spriteBatch);

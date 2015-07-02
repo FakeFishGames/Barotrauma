@@ -23,9 +23,9 @@ namespace Subsurface.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            if (item.currentHull == null) return;
+            if (item.CurrentHull == null) return;
 
-            item.currentHull.Oxygen += oxygenFlow * deltaTime;
+            item.CurrentHull.Oxygen += oxygenFlow * deltaTime;
             OxygenFlow -= deltaTime * 1000.0f;
         }
     }

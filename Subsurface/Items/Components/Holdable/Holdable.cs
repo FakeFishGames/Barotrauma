@@ -129,7 +129,7 @@ namespace Subsurface.Items.Components
 
             if (!item.body.Enabled)
             {
-                Limb rightHand = picker.animController.GetLimb(LimbType.RightHand);
+                Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
                 item.SetTransform(rightHand.SimPosition, 0.0f);                
             }
 
@@ -197,9 +197,9 @@ namespace Subsurface.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
             
-            if (item.body.Dir != picker.animController.Dir) Flip(item);
+            if (item.body.Dir != picker.AnimController.Dir) Flip(item);
 
-            AnimController ac = picker.animController;
+            AnimController ac = picker.AnimController;
 
             ac.HoldItem(deltaTime, cam, item, handlePos, holdPos, aimPos, holdAngle);
         }    

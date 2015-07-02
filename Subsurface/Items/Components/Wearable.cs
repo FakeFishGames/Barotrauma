@@ -55,7 +55,7 @@ namespace Subsurface.Items.Components
             picker = character;
             for (int i = 0; i < sprite.Length; i++ )
             {
-                Limb equipLimb  = character.animController.GetLimb(limbType[i]);
+                Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
 
                 //something is already on the limb -> unequip it
@@ -91,7 +91,7 @@ namespace Subsurface.Items.Components
             if (picker == null) return;
             for (int i = 0; i < sprite.Length; i++)
             {
-                Limb equipLimb = character.animController.GetLimb(limbType[i]);
+                Limb equipLimb = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
 
                 if (equipLimb.WearingItem != item) continue;

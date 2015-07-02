@@ -35,7 +35,7 @@ namespace Subsurface
 
             taskListBox = new GUIListBox(new Rectangle(Game1.GraphicsWidth - 250, 50, 250, 500), Color.Transparent);
             //taskListBox.ScrollBarEnabled = false;
-            taskListBox.Padding = GUI.style.smallPadding;           
+            //taskListBox.Padding = GUI.style.smallPadding;           
         }
 
         public void AddTask(Task newTask)
@@ -83,12 +83,12 @@ namespace Subsurface
                 color = Color.Orange;
             }
 
-            GUIFrame frame = new GUIFrame(new Rectangle(0,0,width,40), Color.Transparent, Alignment.Right, taskListBox);
+            GUIFrame frame = new GUIFrame(new Rectangle(0,0,width,40), Color.Transparent, Alignment.Right, null, taskListBox);
             frame.UserData = task;
             frame.Padding = new Vector4(0.0f, 5.0f, 5.0f, 5.0f);
 
-            GUIFrame colorFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), color * 0.5f, Alignment.Right, frame);
-            GUITextBlock textBlock = new GUITextBlock(new Rectangle(5, 5, 0, 20), task.Name, Color.Transparent, Color.Black, Alignment.Right, colorFrame);
+            GUIFrame colorFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), color * 0.5f, Alignment.Right, null, frame);
+            GUITextBlock textBlock = new GUITextBlock(new Rectangle(5, 5, 0, 20), task.Name, Color.Transparent, Color.Black, Alignment.Right, null, colorFrame);
             //textBlock.Padding = new Vector4(10.0f, 10.0f, 0.0f, 0.0f);
 
             //colorFrame.AddChild(textBlock);

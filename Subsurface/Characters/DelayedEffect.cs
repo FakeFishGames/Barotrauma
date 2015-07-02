@@ -6,15 +6,15 @@ namespace Subsurface
 {
     class DelayedEffect : StatusEffect
     {
-        public static List<DelayedEffect> list = new List<DelayedEffect>();
+        public static List<DelayedEffect> List = new List<DelayedEffect>();
 
-        float delay;
+        private float delay;
 
-        float timer;
-        
-        Vector2 position;
+        private float timer;
 
-        List<IPropertyObject> targets;
+        private Vector2 position;
+
+        private List<IPropertyObject> targets;
         
         public float Timer
         {
@@ -36,7 +36,7 @@ namespace Subsurface
 
             this.targets = targets;
 
-            list.Add(this);
+            List.Add(this);
         }
 
         public void Update(float deltaTime)
@@ -46,7 +46,7 @@ namespace Subsurface
             if (timer > 0.0f) return;
 
             base.Apply(1.0f, position, targets);
-            list.Remove(this);
+            List.Remove(this);
         }
 
     }

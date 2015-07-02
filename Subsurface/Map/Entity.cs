@@ -25,6 +25,7 @@ namespace Subsurface
                 Entity existingEntity;
                 if (dictionary.TryGetValue(value, out existingEntity))
                 {
+                    System.Diagnostics.Debug.WriteLine(existingEntity+" had the same ID as "+this);
                     dictionary.Remove(value);
                     dictionary.Add(id, existingEntity);
                     existingEntity.id = id;

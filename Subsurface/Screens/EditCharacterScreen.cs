@@ -46,28 +46,28 @@ namespace Subsurface
             GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, Game1.GraphicsHeight), Color.DarkGray * 0.8f);
             GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Color.White, GUIpanel);
+            physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, GUI.style, GUIpanel);
             physicsButton.OnClicked += TogglePhysics;
 
-            new GUITextBlock(new Rectangle(0, 80, 0, 25), "Limbs:", Color.Transparent, Color.Black, Alignment.Left, GUIpanel);
-            limbList = new GUIListBox(new Rectangle(0, 110, 0, 250), Color.White * 0.7f, GUIpanel);
+            new GUITextBlock(new Rectangle(0, 80, 0, 25), "Limbs:", Color.Transparent, Color.Black, Alignment.Left, null, GUIpanel);
+            limbList = new GUIListBox(new Rectangle(0, 110, 0, 250), Color.White * 0.7f, GUI.style, GUIpanel);
             limbList.OnSelected = SelectLimb;
 
-            new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", Color.Transparent, Color.Black, Alignment.Left, GUIpanel);
-            jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, GUIpanel);
+            new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", Color.Transparent, Color.Black, Alignment.Left, null, GUIpanel);
+            jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, GUI.style, GUIpanel);
 
 
-            while (Character.characterList.Count > 1)
+            while (Character.CharacterList.Count > 1)
             {
-                Character.characterList.First().Remove();
+                Character.CharacterList.First().Remove();
             }
 
-            if (Character.characterList.Count == 1)
+            if (Character.CharacterList.Count == 1)
             {
-                if (editingCharacter != Character.characterList[0]) UpdateLimbLists(Character.characterList[0]);
-                editingCharacter = Character.characterList[0];
+                if (editingCharacter != Character.CharacterList[0]) UpdateLimbLists(Character.CharacterList[0]);
+                editingCharacter = Character.CharacterList[0];
 
-                Vector2 camPos = editingCharacter.animController.limbs[0].body.Position;
+                Vector2 camPos = editingCharacter.AnimController.limbs[0].body.Position;
                 camPos = ConvertUnits.ToDisplayUnits(camPos);
                 camPos.Y = -camPos.Y;
                 cam.TargetPos = camPos;
@@ -84,7 +84,7 @@ namespace Subsurface
 
             textures = new List<Texture2D>();
             texturePaths = new List<string>();
-            foreach (Limb limb in editingCharacter.animController.limbs)
+            foreach (Limb limb in editingCharacter.AnimController.limbs)
             {
                 if (texturePaths.Contains(limb.sprite.FilePath)) continue;
                 textures.Add(limb.sprite.Texture);
@@ -113,7 +113,7 @@ namespace Subsurface
 
                     Ragdoll.UpdateAll((float)Physics.step);
 
-                    Game1.world.Step((float)Physics.step);
+                    Game1.World.Step((float)Physics.step);
 
                     Physics.accumulator -= Physics.step;
                 }
@@ -173,7 +173,7 @@ namespace Subsurface
                 x = Game1.GraphicsWidth - textures[i].Width;
                 spriteBatch.Draw(textures[i], new Vector2(x, y), Color.White);
 
-                foreach (Limb limb in editingCharacter.animController.limbs)
+                foreach (Limb limb in editingCharacter.AnimController.limbs)
                 {
                     if (limb.sprite.FilePath != texturePaths[i]) continue;
                     Rectangle rect = limb.sprite.SourceRect;
@@ -220,21 +220,21 @@ namespace Subsurface
         private void UpdateLimbLists(Character character)
         {
             limbList.ClearChildren();
-            foreach (Limb limb in character.animController.limbs)
+            foreach (Limb limb in character.AnimController.limbs)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0,0,0,25),
                     limb.type.ToString(),
                     Color.Transparent,
                     Color.Black,
-                    Alignment.Left,
+                    Alignment.Left, null,
                     limbList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = limb;
             }
 
             jointList.ClearChildren();
-            foreach (RevoluteJoint joint in character.animController.limbJoints)
+            foreach (RevoluteJoint joint in character.AnimController.limbJoints)
             {
                 Limb limb1 = (Limb)(joint.BodyA.UserData);
                 Limb limb2 = (Limb)(joint.BodyB.UserData);
@@ -244,7 +244,7 @@ namespace Subsurface
                     limb1.type.ToString() + " - " + limb2.type.ToString(),
                     Color.Transparent,
                     Color.Black,
-                    Alignment.Left,
+                    Alignment.Left, null,
                     jointList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = joint;
@@ -253,7 +253,7 @@ namespace Subsurface
 
         private void DrawJoints(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
         {
-            foreach (var joint in editingCharacter.animController.limbJoints)
+            foreach (var joint in editingCharacter.AnimController.limbJoints)
             {
                 Vector2 jointPos = Vector2.Zero;
 
@@ -297,7 +297,7 @@ namespace Subsurface
                 editingLimb = (Limb)selection;
                 limbPanel = new GUIFrame(new Rectangle(300, 0, 500, 100), Color.Gray*0.8f);
                 limbPanel.Padding = new Vector4(10.0f,10.0f,10.0f,10.0f);
-                new GUITextBlock(new Rectangle(0, 0, 200, 25), editingLimb.type.ToString(), Color.Transparent, Color.Black, Alignment.Left, limbPanel);
+                new GUITextBlock(new Rectangle(0, 0, 200, 25), editingLimb.type.ToString(), Color.Transparent, Color.Black, Alignment.Left, null, limbPanel);
 
                 //spriteOrigin = new GUITextBlock(new Rectangle(0, 25, 200, 25), "Sprite origin: ", Color.White, Color.Black, Alignment.Left, limbPanel);
                 

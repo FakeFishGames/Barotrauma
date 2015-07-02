@@ -92,7 +92,7 @@ namespace Subsurface
             t.SetData<Color>(
                 new Color[] { Color.White });// fill the texture with white
             
-            style = new GUIStyle("Content/HUD/style.xml");
+            style = new GUIStyle("Content/UI/style.xml");
         }
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f)

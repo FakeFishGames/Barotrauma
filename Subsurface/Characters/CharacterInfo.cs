@@ -7,17 +7,17 @@ namespace Subsurface
 
     class CharacterInfo
     {
-        public string name;
+        public string Name;
 
-        public readonly string file;
+        public readonly string File;
 
-        public readonly int headSpriteId;
+        public int HeadSpriteId;
 
         //public int ID;
 
-        public Gender gender;
+        public Gender Gender;
 
-        public int salary;
+        public int Salary;
 
         //public string GenderString()
         //{
@@ -26,25 +26,25 @@ namespace Subsurface
 
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None)
         {
-            this.file = file;
+            this.File = file;
 
             //ID = -1;
 
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null) return;
 
-            salary = 500;
+            Salary = 500;
 
             if (ToolBox.GetAttributeBool(doc.Root, "genders", false))
             {
                 if (gender == Gender.None)
                 {
                     float femaleRatio = ToolBox.GetAttributeFloat(doc.Root, "femaleratio", 0.5f);
-                    this.gender = (Game1.random.NextDouble() < femaleRatio) ? Gender.Female : Gender.Male;
+                    this.Gender = (Rand.Range(0.0f, 1.0f, false) < femaleRatio) ? Gender.Female : Gender.Male;
                 }
                 else
                 {
-                    this.gender = gender;
+                    this.Gender = gender;
                 }
             }
 
@@ -53,18 +53,18 @@ namespace Subsurface
             {
                 headSpriteRange = ToolBox.GetAttributeVector2(
                     doc.Root,
-                    this.gender == Gender.Female ? "femaleheadid" : "maleheadid",
+                    this.Gender == Gender.Female ? "femaleheadid" : "maleheadid",
                     Vector2.Zero);
             }
 
             if (headSpriteRange != Vector2.Zero)
             {
-                headSpriteId = Game1.localRandom.Next((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
+                HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
             }
 
             if (!string.IsNullOrEmpty(name))
             {
-                this.name = name;
+                this.Name = name;
                 return;
             }
 
@@ -73,32 +73,32 @@ namespace Subsurface
                 string firstNamePath = (ToolBox.GetAttributeString(doc.Root.Element("name"), "firstname", ""));
                 if (firstNamePath != "")
                 {
-                    firstNamePath = firstNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
-                    this.name = ToolBox.GetRandomLine(firstNamePath);
+                    firstNamePath = firstNamePath.Replace("[GENDER]", (this.Gender == Gender.Female) ? "f" : "");
+                    this.Name = ToolBox.GetRandomLine(firstNamePath);
                 }
 
                 string lastNamePath = (ToolBox.GetAttributeString(doc.Root.Element("name"), "lastname", ""));
                 if (lastNamePath != "")
                 {
-                    lastNamePath = lastNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
-                    if (this.name != "") this.name += " ";
-                    this.name += ToolBox.GetRandomLine(lastNamePath);
+                    lastNamePath = lastNamePath.Replace("[GENDER]", (this.Gender == Gender.Female) ? "f" : "");
+                    if (this.Name != "") this.Name += " ";
+                    this.Name += ToolBox.GetRandomLine(lastNamePath);
                 }
             }
         }
 
         public CharacterInfo(XElement element)
         {
-            name = ToolBox.GetAttributeString(element, "name", "unnamed");
+            Name = ToolBox.GetAttributeString(element, "name", "unnamed");
 
             string genderStr = ToolBox.GetAttributeString(element, "gender", "male").ToLower();
-            gender = (genderStr == "male") ? Gender.Male : Gender.Female;
+            Gender = (genderStr == "male") ? Gender.Male : Gender.Female;
 
-            file = ToolBox.GetAttributeString(element, "file", "");
+            File = ToolBox.GetAttributeString(element, "file", "");
 
-            salary = ToolBox.GetAttributeInt(element, "salary", 1000);
+            Salary = ToolBox.GetAttributeInt(element, "salary", 1000);
 
-            headSpriteId = ToolBox.GetAttributeInt(element, "headspriteid", 1);
+            HeadSpriteId = ToolBox.GetAttributeInt(element, "headspriteid", 1);
         }
 
         public virtual XElement Save(XElement parentElement)
@@ -106,11 +106,11 @@ namespace Subsurface
             XElement componentElement = new XElement("character");
 
             componentElement.Add(
-                new XAttribute("name", name),
-                new XAttribute("file", file),
-                new XAttribute("gender", gender == Gender.Male ? "male" : "female"),
-                new XAttribute("salary", salary),
-                new XAttribute("headspriteid", headSpriteId));
+                new XAttribute("name", Name),
+                new XAttribute("file", File),
+                new XAttribute("gender", Gender == Gender.Male ? "male" : "female"),
+                new XAttribute("salary", Salary),
+                new XAttribute("headspriteid", HeadSpriteId));
 
             parentElement.Add(componentElement);
             return componentElement;

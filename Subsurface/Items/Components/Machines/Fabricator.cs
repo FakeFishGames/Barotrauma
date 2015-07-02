@@ -90,12 +90,9 @@ namespace Subsurface.Items.Components
                 //frame.SelectedColor = Color.Gold * 0.5f;
 
                 GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    fi.TargetItem.Name,
+                    new Rectangle(0, 0, 0, 25),  fi.TargetItem.Name,
                     color, Color.Black,
-                    Alignment.Left,
-                    Alignment.Left,
-                    itemList);
+                    Alignment.Left,  Alignment.Left, null, itemList);
                 textBlock.UserData = fi;
                 textBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
@@ -114,7 +111,7 @@ namespace Subsurface.Items.Components
 
             int width = 200, height = 150;
             selectedItemFrame = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, itemList.Rect.Bottom+20, width, height), Color.Black*0.8f);
-            selectedItemFrame.Padding = GUI.style.smallPadding;
+            //selectedItemFrame.Padding = GUI.style.smallPadding;
 
             if (targetItem.TargetItem.sprite != null)
             {
@@ -134,10 +131,10 @@ namespace Subsurface.Items.Components
                     text,
                     Color.Transparent, Color.White,
                     Alignment.CenterX | Alignment.CenterY,
-                    Alignment.Left,
+                    Alignment.Left, null,
                     selectedItemFrame);
 
-                GUIButton button = new GUIButton(new Rectangle(0,0,100,20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, selectedItemFrame);
+                GUIButton button = new GUIButton(new Rectangle(0,0,100,20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, GUI.style, selectedItemFrame);
                 button.OnClicked = StartFabricating;
                 button.UserData = targetItem;
 

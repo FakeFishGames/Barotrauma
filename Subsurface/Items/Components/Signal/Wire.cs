@@ -123,15 +123,15 @@ namespace Subsurface.Items.Components
 
             Vector2 position = item.Position;
             position.X = MathUtils.Round(item.Position.X, nodeDistance);
-            if (item.currentHull == null)
+            if (item.CurrentHull == null)
             {
                 position.Y = MathUtils.Round(item.Position.Y, nodeDistance);
             }
             else
             {
-                position.Y -= item.currentHull.Rect.Y - item.currentHull.Rect.Height;
+                position.Y -= item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
                 position.Y = Math.Max(MathUtils.Round(position.Y, nodeDistance), heightFromFloor);
-                position.Y += item.currentHull.Rect.Y - item.currentHull.Rect.Height;
+                position.Y += item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
             }
 
             newNodePos = position;

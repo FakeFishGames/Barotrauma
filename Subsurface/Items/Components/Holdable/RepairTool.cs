@@ -104,7 +104,7 @@ namespace Subsurface.Items.Components
                 (float)Math.Sin(item.body.Rotation)) * range * item.body.Dir;
 
             List<Body> ignoredBodies = new List<Body>();
-            foreach (Limb limb in character.animController.limbs)
+            foreach (Limb limb in character.AnimController.limbs)
             {
                 ignoredBodies.Add(limb.body.FarseerBody);
             }

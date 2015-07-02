@@ -16,6 +16,7 @@ namespace Subsurface
         public CheckSelectedHandler CheckSelected;
 
         private GUIScrollBar scrollBar;
+        private GUIFrame frame;
 
         private int totalSize;
 
@@ -73,36 +74,46 @@ namespace Subsurface
             }
         }
 
-        public GUIListBox(Rectangle rect, GUIStyle style, Alignment alignment, GUIComponent parent = null)
-            : this(rect, style.foreGroundColor, alignment, parent)
+        public GUIListBox(Rectangle rect, GUIStyle style, GUIComponent parent = null)
+            : this(rect, style, Alignment.TopLeft, parent)
         {
         }
 
-        public GUIListBox(Rectangle rect, Color color, GUIComponent parent = null)
-            : this(rect, color, (Alignment.Left | Alignment.Top), parent)
+        public GUIListBox(Rectangle rect, GUIStyle style, Alignment alignment, GUIComponent parent = null)
+            : this(rect, null, style, parent)
+        {
+        }
+
+        public GUIListBox(Rectangle rect, Color? color, GUIStyle style = null, GUIComponent parent = null)
+            : this(rect, color, (Alignment.Left | Alignment.Top), style, parent)
         {            
         }
 
-        public GUIListBox(Rectangle rect, Color color, Alignment alignment, GUIComponent parent = null)
+        public GUIListBox(Rectangle rect, Color? color, Alignment alignment, GUIStyle style = null, GUIComponent parent = null)
+            : base(style)
         {
             this.rect = rect;
             this.alignment = alignment;
 
-            this.color = color;
+            if (color!=null) this.color = (Color)color;
 
             if (parent != null)
                 parent.AddChild(this);
 
-            this.rect.Width -= 20;
 
             scrollBar = new GUIScrollBar(
-                new Rectangle(this.rect.X + this.rect.Width, this.rect.Y, 20, this.rect.Height), color, 1.0f);
+                new Rectangle(this.rect.X + this.rect.Width, this.rect.Y, 20, this.rect.Height), color, 1.0f, style);
+
+            frame = new GUIFrame(Rectangle.Empty, style, this);
+            if (style != null) style.Apply(frame, this);
 
             UpdateScrollBarSize();
 
             enabled = true;
 
             scrollBarEnabled = true;
+
+            scrollBar.BarScroll = 0.0f;
         }
 
         public void Select(object selection)
@@ -126,6 +137,9 @@ namespace Subsurface
 
         public void Select(int childIndex)
         {
+            //children[0] is the GUIFrame, ignore it
+            childIndex += 1;
+
             if (childIndex >= children.Count || childIndex<0) return;
 
             selected = children[childIndex];
@@ -142,6 +156,7 @@ namespace Subsurface
             totalSize = 0;
             foreach (GUIComponent child in children)
             {
+                if (child == frame) continue;
                 totalSize += (scrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
                 totalSize += spacing;
             }
@@ -161,8 +176,8 @@ namespace Subsurface
             float oldScroll = scrollBar.BarScroll;
             float oldSize = scrollBar.BarSize;
             UpdateScrollBarSize();
-            
-            if (scrollBar.BarSize<1.0f && (oldSize>=1.0f || oldScroll==1.0f))
+
+            if (scrollBar.BarSize < 1.0f && oldScroll == 1.0f)
             {
                 scrollBar.BarScroll = 1.0f;
             }
@@ -199,7 +214,9 @@ namespace Subsurface
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-            GUI.DrawRectangle(spriteBatch, rect, color*alpha, true);
+
+            frame.Draw(spriteBatch);
+            //GUI.DrawRectangle(spriteBatch, rect, color*alpha, true);
 
             int x = rect.X, y = rect.Y;
 
@@ -219,6 +236,7 @@ namespace Subsurface
             for (int i = 0; i < children.Count; i++ )
             {
                 GUIComponent child = children[i];
+                if (child == frame) continue;
 
                 child.Rect = new Rectangle(child.Rect.X, y, child.Rect.Width, child.Rect.Height);
                 y += child.Rect.Height + spacing;
@@ -241,7 +259,7 @@ namespace Subsurface
                         if (CheckSelected() != selected.UserData) selected = null;
                     }
                 }
-                else if (enabled && (MouseOn==this || ( MouseOn!=null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.GetMouseState.Position))
+                else if (enabled && (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.GetMouseState.Position))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())

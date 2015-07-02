@@ -77,7 +77,7 @@ namespace Subsurface
             //    connections.Add(new LocationConnection(locations[i], locations[closestIndex], level));
             //}
 
-            currentLocation = locations[0];
+            currentLocation = locations[locations.Count/2];
         }
 
         private void GenerateLocations()
@@ -87,8 +87,9 @@ namespace Subsurface
             List<Vector2> sites = new List<Vector2>();
             for (int i = 0; i < 50; i++)
             {
-                sites.Add(new Vector2((float)Game1.random.NextDouble() * size, (float)Game1.random.NextDouble() * size));
+                sites.Add(new Vector2(Rand.Range(0.0f, size), Rand.Range(0.0f, size)));
             }
+            
             List<GraphEdge> edges = voronoi.MakeVoronoiGraph(sites, size, size);
             
             sites.Clear();
@@ -106,7 +107,7 @@ namespace Subsurface
 
                     Vector2[] points = new Vector2[] { edge.point1, edge.point2 };
 
-                    int positionIndex = Game1.random.Next(0, 1);
+                    int positionIndex = Rand.Int(1);
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
@@ -167,6 +168,8 @@ namespace Subsurface
             if (highlightedLocation!=null)
             {
                 Vector2 pos = highlightedLocation.MapPosition * scale;
+                pos.X = (int)pos.X;
+                pos.Y = (int)pos.Y;
                 spriteBatch.DrawString(GUI.font, highlightedLocation.Name, pos + new Vector2(rect.X - 50, rect.Y), Color.White);
                 GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X + (int)pos.X - 4, rect.Y + (int)pos.Y - 4, 5 + 8, 5 + 8), Color.White, false);
             }
@@ -174,6 +177,8 @@ namespace Subsurface
             if (selectedLocation != null)
             {
                 Vector2 pos = selectedLocation.MapPosition * scale;
+                pos.X = (int)pos.X;
+                pos.Y = (int)pos.Y;
                 spriteBatch.DrawString(GUI.font, selectedLocation.Name, pos + new Vector2(rect.X - 50, rect.Y), Color.White);
                 GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X + (int)pos.X - 4, rect.Y + (int)pos.Y - 4, 5 + 8, 5 + 8), Color.White, false);
             }

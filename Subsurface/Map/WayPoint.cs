@@ -91,7 +91,7 @@ namespace Subsurface
 
             if (!wayPoints.Any()) return null;
 
-            return wayPoints[Game1.random.Next(wayPoints.Count())];
+            return wayPoints[Rand.Int(wayPoints.Count())];
         }
 
         public override XElement Save(XDocument doc)
@@ -123,7 +123,7 @@ namespace Subsurface
             Rectangle rect = new Rectangle(
                 int.Parse(element.Attribute("x").Value),
                 int.Parse(element.Attribute("y").Value),
-                (int)Submarine.gridSize.X, (int)Submarine.gridSize.Y);
+                (int)Submarine.GridSize.X, (int)Submarine.GridSize.Y);
 
             WayPoint w = new WayPoint(rect);
 

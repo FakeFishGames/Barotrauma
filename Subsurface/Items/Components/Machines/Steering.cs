@@ -68,7 +68,7 @@ namespace Subsurface.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
-            if (connection.name == "velocity_in")
+            if (connection.Name == "velocity_in")
             {
                 currVelocity = ToolBox.ParseToVector2(signal, false);
             }  

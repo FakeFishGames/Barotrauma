@@ -23,9 +23,9 @@ namespace Subsurface
 
         public GUIMessageBox(string header, string text, string[] buttons, Alignment textAlignment = (Alignment.Left | Alignment.Top))
             : base(new Rectangle(Game1.GraphicsWidth / 2 - DefaultWidth / 2, Game1.GraphicsHeight / 2 - DefaultHeight / 2, DefaultWidth, DefaultHeight),
-                GUI.style.backGroundColor, Alignment.CenterX, GUI.style)
+                null, Alignment.CenterX, GUI.style, null)
         {
-            Padding = GUI.style.smallPadding;
+            //Padding = GUI.style.smallPadding;
 
             if (buttons == null || buttons.Length == 0)
             {
@@ -33,14 +33,14 @@ namespace Subsurface
                 return;
             }
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, this, true);
-            new GUITextBlock(new Rectangle(0, 30, 0, DefaultHeight - 70), text, Color.Transparent, Color.White, textAlignment, this, true);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, GUI.style, this, true);
+            new GUITextBlock(new Rectangle(0, 30, 0, DefaultHeight - 70), text, Color.Transparent, Color.White, textAlignment, GUI.style, this, true);
 
             int x = 0;
             this.Buttons = new GUIButton[buttons.Length];
             for (int i = 0; i < buttons.Length; i++)
             {
-                this.Buttons[i] = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], GUI.style, Alignment.Left | Alignment.Bottom, this);
+                this.Buttons[i] = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], Alignment.Left | Alignment.Bottom, GUI.style, this);
 
                 x += this.Buttons[i].Rect.Width + 20;
             }

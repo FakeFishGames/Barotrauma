@@ -96,7 +96,9 @@ namespace Subsurface
 
                 if (Game1.GameSession != null && Game1.GameSession.Level != null) Game1.GameSession.Submarine.Update((float)Physics.step);
 
-                Game1.world.Step((float)Physics.step);
+                Game1.World.Step((float)Physics.step);
+
+                Level.AfterWorldStep();
 
                 Physics.accumulator -= Physics.step;
             }
@@ -188,7 +190,7 @@ namespace Subsurface
                         
             Submarine.DrawBack(spriteBatch);
 
-            foreach (Character c in Character.characterList) c.Draw(spriteBatch);
+            foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
 
             spriteBatch.End();
 

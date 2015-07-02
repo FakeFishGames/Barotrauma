@@ -25,15 +25,15 @@ namespace Subsurface
         {
             WayPoint randomWayPoint = WayPoint.GetRandom(WayPoint.SpawnType.Enemy);
 
-            int amount = Game1.random.Next(minAmount, maxAmount);
+            int amount = Rand.Range(minAmount, maxAmount, false);
 
             monsters = new Character[amount];
 
             for (int i = 0; i < amount; i++)
             {
                 Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
-                position.X += MathUtils.RandomFloatLocal(-0.5f,0.5f);
-                position.Y += MathUtils.RandomFloatLocal(-0.5f,0.5f);
+                position.X += Rand.Range(-0.5f, 0.5f);
+                position.Y += Rand.Range(-0.5f, 0.5f);
                 monsters[i] = new Character(characterFile, position);
             }
         }

@@ -5,14 +5,13 @@ namespace Subsurface
 {
     class AITarget
     {
-        public static List<AITarget> list = new List<AITarget>();
+        public static List<AITarget> List = new List<AITarget>();
 
+        public Entity Entity;
 
         protected float soundRange;
         protected float sightRange;
-
-        public Entity entity;
-
+        
         public float SoundRange
         {
             get 
@@ -30,18 +29,18 @@ namespace Subsurface
 
         public Vector2 Position
         {
-            get { return entity.SimPosition; }
+            get { return Entity.SimPosition; }
         }
 
         public AITarget(Entity e)
         {
-            entity = e;
-            list.Add(this);
+            Entity = e;
+            List.Add(this);
         }
 
         public void Remove()
         {
-            list.Remove(this);
+            List.Remove(this);
         }
 
     }

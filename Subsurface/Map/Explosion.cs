@@ -48,8 +48,7 @@ namespace Subsurface
             for (int i = 0; i<range*10; i++)
             {
                 Game1.particleManager.CreateParticle("explosionfire", position,
-                    Vector2.Normalize(new Vector2(MathUtils.RandomFloatLocal(-1.0f, 1.0f), MathUtils.RandomFloatLocal(-1.0f, 1.0f))) * MathUtils.RandomFloatLocal(3.0f, 4.0f),
-                    0.0f);
+                    Rand.Vector(Rand.Range(3.0f, 4.0f)), 0.0f);
             }
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(position);
@@ -83,7 +82,7 @@ namespace Subsurface
                 }
             }
 
-            foreach (Character c in Character.characterList)
+            foreach (Character c in Character.CharacterList)
             {
                 float dist = Vector2.Distance(c.SimPosition, position);
 
@@ -91,7 +90,7 @@ namespace Subsurface
 
                 float distFactor = 1.0f - dist / range;
                                 
-                foreach (Limb limb in c.animController.limbs)
+                foreach (Limb limb in c.AnimController.limbs)
                 {
                     distFactor = 1.0f - Vector2.Distance(limb.SimPosition, position)/range;
 

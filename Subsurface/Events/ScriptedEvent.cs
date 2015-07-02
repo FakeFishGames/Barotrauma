@@ -125,7 +125,7 @@ namespace Subsurface
                 i++;
             }                
 
-            float randomNumber = (float)Game1.random.NextDouble() * probabilitySum;
+            float randomNumber = Rand.Range(0.0f,probabilitySum);
 
             i = 0;
             foreach (XElement element in doc.Root.Elements())
@@ -169,7 +169,7 @@ namespace Subsurface
         {
             isStarted = false;
             isFinished = false;
-            startTimer = Game1.random.Next(startTimeMin, startTimeMax);
+            startTimer = Rand.Range(startTimeMin, startTimeMax, false);
         }
 
         protected virtual void Start()

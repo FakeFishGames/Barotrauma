@@ -33,32 +33,29 @@ namespace Subsurface
         public LobbyScreen()
         {
             Rectangle panelRect = new Rectangle(
-                (int)GUI.style.largePadding.X,
-                (int)GUI.style.largePadding.Y,
-                (int)(Game1.GraphicsWidth * 0.3f) - (int)(GUI.style.largePadding.X * 1.5f),
-                Game1.GraphicsHeight - (int)(GUI.style.largePadding.Y * 2));
+                40, 40,
+                (int)(Game1.GraphicsWidth * 0.3f) - 60,
+                Game1.GraphicsHeight - 80);
 
-            leftPanel = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            leftPanel.Padding = GUI.style.smallPadding;
+            leftPanel = new GUIFrame(panelRect, GUI.style);
+            //leftPanel.Padding = GUI.style.smallPadding;
 
             new GUITextBlock(new Rectangle(0, 0, 200, 25), 
-                "asdfdasfasdf", Color.Transparent, Color.White, Alignment.Left, leftPanel);
+                "asdfdasfasdf", Color.Transparent, Color.White, Alignment.Left, GUI.style, leftPanel);
 
             GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 200, 25), 
-                "", Color.Transparent, Color.White, Alignment.Left, leftPanel);
+                "", Color.Transparent, Color.White, Alignment.Left, GUI.style, leftPanel);
             moneyText.TextGetter = GetMoney;
             
-
-
-            GUIButton button = new GUIButton(new Rectangle(0, 60, 100, 30), "Map", GUI.style, Alignment.Left, leftPanel);
+            GUIButton button = new GUIButton(new Rectangle(0, 60, 100, 30), "Map", null, Alignment.Left, GUI.style, leftPanel);
             button.UserData = PanelTab.Map;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 100, 100, 30), "Crew", GUI.style, Alignment.Left, leftPanel);
+            button = new GUIButton(new Rectangle(0, 100, 100, 30), "Crew", null, Alignment.Left, GUI.style, leftPanel);
             button.UserData = PanelTab.Crew;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 140, 100, 30), "Hire", GUI.style, Alignment.Left, leftPanel);
+            button = new GUIButton(new Rectangle(0, 140, 100, 30), "Hire", null, Alignment.Left, GUI.style, leftPanel);
             button.UserData = PanelTab.Hire;
             button.OnClicked = SelectRightPanel;
    
@@ -66,37 +63,37 @@ namespace Subsurface
             //---------------------------------------------------------------
 
             panelRect = new Rectangle(
-                panelRect.X + panelRect.Width + (int)(GUI.style.largePadding.X),
-                (int)GUI.style.largePadding.Y,
-                Game1.GraphicsWidth - panelRect.Width - (int)(GUI.style.largePadding.X * 3.0f),
-                Game1.GraphicsHeight - (int)(GUI.style.largePadding.Y * 2));
+                panelRect.X + panelRect.Width + 40,
+                40,
+                Game1.GraphicsWidth - panelRect.Width - 120,
+                Game1.GraphicsHeight - 80);
 
             rightPanel = new GUIFrame[3];
 
-            rightPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            rightPanel[(int)PanelTab.Crew].Padding = GUI.style.smallPadding;
+            rightPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.style);
+            //rightPanel[(int)PanelTab.Crew].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, rightPanel[(int)PanelTab.Crew]);
+            new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, GUI.style, rightPanel[(int)PanelTab.Crew]);
 
-            characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, rightPanel[(int)PanelTab.Crew]);
+            characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.style, rightPanel[(int)PanelTab.Crew]);
             characterList.OnSelected = SelectCharacter;
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.Map] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            rightPanel[(int)PanelTab.Map].Padding = GUI.style.smallPadding;
+            rightPanel[(int)PanelTab.Map] = new GUIFrame(panelRect, GUI.style);
+            //rightPanel[(int)PanelTab.Map].Padding = GUI.style.smallPadding;
 
-            startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", GUI.style,
-                Alignment.BottomRight, rightPanel[(int)PanelTab.Map]);
+            startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",
+                Alignment.BottomRight, GUI.style, rightPanel[(int)PanelTab.Map]);
             startButton.OnClicked = StartShift;
             startButton.Enabled = false;
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.Hire] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
+            rightPanel[(int)PanelTab.Hire] = new GUIFrame(panelRect, GUI.style);
+            //rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
 
-            hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), Color.White, Alignment.Left, rightPanel[(int)PanelTab.Hire]);            
+            hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.style, Alignment.Left, rightPanel[(int)PanelTab.Hire]);            
             hireList.OnSelected = HireCharacter;
         }
 
@@ -117,7 +114,7 @@ namespace Subsurface
 
             if (previewPlatform != null)
             {
-                Game1.world.RemoveBody(previewPlatform);
+                Game1.World.RemoveBody(previewPlatform);
                 previewPlatform = null;
             }
 
@@ -142,11 +139,11 @@ namespace Subsurface
 
             previewCharacter = new Character(characterList.SelectedData as CharacterInfo, pos);
 
-            previewCharacter.animController.isStanding = true;
+            previewCharacter.AnimController.IsStanding = true;
 
             if (previewPlatform == null)
             {
-                Body platform = BodyFactory.CreateRectangle(Game1.world, 3.0f, 1.0f, 5.0f);
+                Body platform = BodyFactory.CreateRectangle(Game1.World, 3.0f, 1.0f, 5.0f);
                 platform.SetTransform(new Vector2(pos.X, pos.Y - 3.5f), 0.0f);
                 platform.IsStatic = true;
             }
@@ -161,9 +158,9 @@ namespace Subsurface
 
             for (int i = 0; i < 500; i++)
             {
-                previewCharacter.animController.Update((float)Physics.step);
-                previewCharacter.animController.UpdateAnim((float)Physics.step);
-                Game1.world.Step((float)Physics.step);
+                previewCharacter.AnimController.Update((float)Physics.step);
+                previewCharacter.AnimController.UpdateAnim((float)Physics.step);
+                Game1.World.Step((float)Physics.step);
             }
         }
 
@@ -173,10 +170,10 @@ namespace Subsurface
 
             if (locationPanel != null) rightPanel[(int)PanelTab.Map].RemoveChild(locationPanel);
 
-            locationPanel = new GUIFrame(new Rectangle(0, 0, rightPanel[(int)PanelTab.Map].Rect.Width / 2 - 40, 190), Color.Transparent, rightPanel[(int)PanelTab.Map]);
+            locationPanel = new GUIFrame(new Rectangle(0, 0, rightPanel[(int)PanelTab.Map].Rect.Width / 2 - 40, 190), Color.Transparent, null, rightPanel[(int)PanelTab.Map]);
             locationPanel.UserData = "selectedlocation";
 
-            new GUITextBlock(new Rectangle(0,0,100,20), location.Name, Color.Transparent, Color.White, Alignment.TopLeft, locationPanel);
+            new GUITextBlock(new Rectangle(0,0,100,20), location.Name, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
 
             startButton.Enabled = true;
 
@@ -190,7 +187,7 @@ namespace Subsurface
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    c.name, GUI.style, 
+                    c.Name, GUI.style, 
                     Alignment.Left, 
                     Alignment.Left,
                     characterList);
@@ -202,27 +199,21 @@ namespace Subsurface
             foreach (CharacterInfo c in gameMode.hireManager.availableCharacters)
             {
                 GUIFrame frame = new GUIFrame(
-                    new Rectangle(0, 0, 0, 25), 
-                    Color.White, 
-                    Alignment.Left, 
-                    GUI.style,
-                    hireList);
+                    new Rectangle(0, 0, 0, 25), Color.White, Alignment.Left, null, hireList);
                 frame.UserData = c;
                 frame.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    c.name,
+                    c.Name,
                     Color.Transparent, Color.Black,
-                    Alignment.Left,
-                    frame);
+                    Alignment.Left, null, frame);
 
                 textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    c.salary.ToString(),
+                    c.Salary.ToString(),
                     Color.Transparent, Color.Black,
-                    Alignment.Right,
-                    frame);
+                    Alignment.Right, null, frame);
             }
         }
 
@@ -334,25 +325,12 @@ namespace Subsurface
             return "Money: " + ((Game1.GameSession == null) ? "" : gameMode.crewManager.Money.ToString());
         }
 
-        private string GetDay()
-        {
-
-            return "Day #" + ((Game1.GameSession == null) ? "" : gameMode.Day.ToString());
-        }
-
-        private float GetWeekProgress()
-        {
-            if (Game1.GameSession == null) return 0.0f;
-
-            return (float)((gameMode.Day - 1) % 7) / 7.0f;
-        }
-
         private bool SelectCharacter(object selection)
         {
             CharacterInfo characterInfo = selection as CharacterInfo;
             if (characterInfo == null) return false;
 
-            if (Character.Controlled != null && characterInfo == Character.Controlled.info) return false;
+            if (Character.Controlled != null && characterInfo == Character.Controlled.Info) return false;
 
             CreatePreviewCharacter();
 

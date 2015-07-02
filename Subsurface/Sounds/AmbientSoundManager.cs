@@ -139,7 +139,7 @@ namespace Subsurface
             float lowpassHFGain = 1.0f;
             if (Character.Controlled != null)
             {
-                AnimController animController = Character.Controlled.animController;
+                AnimController animController = Character.Controlled.AnimController;
                 if (animController.HeadInWater)
                 {
                     ambienceVolume = 0.5f;
@@ -184,7 +184,7 @@ namespace Subsurface
 
             if (suitableMusic.Count > 0 && !suitableMusic.Contains(currentMusic))
             {
-                int index = Game1.localRandom.Next(suitableMusic.Count());
+                int index = Rand.Int(suitableMusic.Count());
 
                 if (currentMusic == null || suitableMusic[index].file != currentMusic.file)
                 {
@@ -225,7 +225,7 @@ namespace Subsurface
             var sounds = damageSounds.Where(x => damage >= x.damageRange.X && damage <= x.damageRange.Y && x.damageType == damageType).ToList();
             if (!sounds.Any()) return;
 
-            int selectedSound = Game1.localRandom.Next(sounds.Count());
+            int selectedSound = Rand.Int(sounds.Count());
 
             int i = 0;
             foreach (var s in sounds)

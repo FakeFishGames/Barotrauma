@@ -12,7 +12,7 @@ namespace Subsurface
 
             public const int MaximumSamples = 10;
 
-            private Queue<double> _sampleBuffer = new Queue<double>();
+            private Queue<double> sampleBuffer = new Queue<double>();
 
             public bool Update(double deltaTime)
             {
@@ -23,12 +23,12 @@ namespace Subsurface
 
                 CurrentFramesPerSecond = (1.0 / deltaTime);
 
-                _sampleBuffer.Enqueue(CurrentFramesPerSecond);
+                sampleBuffer.Enqueue(CurrentFramesPerSecond);
 
-                if (_sampleBuffer.Count > MaximumSamples)
+                if (sampleBuffer.Count > MaximumSamples)
                 {
-                    _sampleBuffer.Dequeue();
-                    AverageFramesPerSecond = _sampleBuffer.Average(i => i);
+                    sampleBuffer.Dequeue();
+                    AverageFramesPerSecond = sampleBuffer.Average(i => i);
                 }
                 else
                 {

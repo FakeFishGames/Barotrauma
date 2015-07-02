@@ -43,7 +43,7 @@ namespace Subsurface
 
             if (wasPut)
             {
-                foreach (Character c in Character.characterList)
+                foreach (Character c in Character.CharacterList)
                 {
                     if (!c.HasSelectedItem(item)) continue;
                     

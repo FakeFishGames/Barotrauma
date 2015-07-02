@@ -16,13 +16,13 @@ namespace Subsurface.Items.Components
         //how many wires can be linked to a single connector
         private const int MaxLinked = 5;
 
-        public readonly string name;
+        public readonly string Name;
 
-        public Wire[] wires;
+        public Wire[] Wires;
 
         private Item item;   
 
-        public readonly bool isOutput;
+        public readonly bool IsOutput;
         
         private static Item draggingConnected;
 
@@ -35,8 +35,8 @@ namespace Subsurface.Items.Components
                 List<Connection> recipients = new List<Connection>();
                 for (int i = 0; i<MaxLinked; i++)
                 {
-                    if (wires[i] == null) continue;
-                    Connection recipient = wires[i].OtherConnection(this);
+                    if (Wires[i] == null) continue;
+                    Connection recipient = Wires[i].OtherConnection(this);
                     if (recipient != null) recipients.Add(recipient);
                 }
                 return recipients;
@@ -62,10 +62,10 @@ namespace Subsurface.Items.Components
             this.item = item;
 
             //recipient = new Connection[MaxLinked];
-            wires = new Wire[MaxLinked];
+            Wires = new Wire[MaxLinked];
 
-            isOutput = (element.Name.ToString() == "output");
-            name = ToolBox.GetAttributeString(element, "name", (isOutput) ? "output" : "input");
+            IsOutput = (element.Name.ToString() == "output");
+            Name = ToolBox.GetAttributeString(element, "name", (IsOutput) ? "output" : "input");
 
             wireId = new int[MaxLinked];
 
@@ -88,7 +88,7 @@ namespace Subsurface.Items.Components
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wires[i]==null) return i;
+                if (Wires[i]==null) return i;
             }
             return -1;
         }
@@ -107,8 +107,8 @@ namespace Subsurface.Items.Components
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wires[i] == null && wireItem == null) return i;
-                if (wires[i] != null && wires[i].Item == wireItem) return i;
+                if (Wires[i] == null && wireItem == null) return i;
+                if (Wires[i] != null && Wires[i].Item == wireItem) return i;
             }
             return -1;
         }
@@ -117,7 +117,7 @@ namespace Subsurface.Items.Components
         {
             //linked[index] = connectedItem;
             //recipient[index] = otherConnection;
-            wires[index] = wire;
+            Wires[index] = wire;
         }
 
         //public bool AddLink(Item connectedItem, Connection otherConnection)
@@ -139,9 +139,9 @@ namespace Subsurface.Items.Components
         {
             for (int i = 0; i<MaxLinked; i++)
             {
-                if (wires[i]==null) continue;
+                if (Wires[i]==null) continue;
 
-                Connection recipient = wires[i].OtherConnection(this);
+                Connection recipient = Wires[i].OtherConnection(this);
                 if (recipient == null) continue;
 
                 foreach (ItemComponent ic in recipient.item.components)
@@ -155,10 +155,10 @@ namespace Subsurface.Items.Components
         {
             for (int i = 0; i<MaxLinked; i++)
             {
-                if (wires[i] == null) continue;
+                if (Wires[i] == null) continue;
 
-                wires[i].RemoveConnection(this);
-                wires[i] = null;
+                Wires[i].RemoveConnection(this);
+                Wires[i] = null;
             }
         }
 
@@ -204,12 +204,12 @@ namespace Subsurface.Items.Components
                     int linkIndex = c.FindWireIndex(draggingConnected);
                     if (linkIndex>-1)
                     {
-                        Inventory.draggingItem = c.wires[linkIndex].Item;
+                        Inventory.draggingItem = c.Wires[linkIndex].Item;
                     }
                 }
 
                 //outputs are drawn at the right side of the panel, inputs at the left
-                if (c.isOutput)
+                if (c.IsOutput)
                 {
                     c.Draw(spriteBatch, panel.Item, rightPos, 
                         new Vector2(rightPos.X + 20, rightPos.Y),
@@ -235,7 +235,7 @@ namespace Subsurface.Items.Components
             //and the wire hasn't been connected yet, draw it on the panel
             if (equippedWire!=null)
             {
-                if (panel.connections.Find(c => c.wires.Contains(equippedWire)) == null)
+                if (panel.connections.Find(c => c.Wires.Contains(equippedWire)) == null)
                 {
                     DrawWire(spriteBatch, equippedWire.Item, equippedWire.Item,
                         new Vector2(x + width / 2, y + height - 100),
@@ -274,19 +274,19 @@ namespace Subsurface.Items.Components
         private void Draw(SpriteBatch spriteBatch, Item item, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, bool wireEquipped)
         {
 
-            spriteBatch.DrawString(GUI.font, name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
+            spriteBatch.DrawString(GUI.font, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)position.X-10, (int)position.Y-10, 20, 20), Color.White);
             
             
             for (int i = 0; i<MaxLinked; i++)
             {
-                if (wires[i]==null) continue;
+                if (Wires[i]==null) continue;
 
-                Connection recipient = wires[i].OtherConnection(this);
+                Connection recipient = Wires[i].OtherConnection(this);
 
-                DrawWire(spriteBatch, wires[i].Item, (recipient == null) ? wires[i].Item : recipient.item, position, wirePosition, mouseIn, wireEquipped);
-                wirePosition.X += (isOutput) ? -20 : 20;
+                DrawWire(spriteBatch, Wires[i].Item, (recipient == null) ? Wires[i].Item : recipient.item, position, wirePosition, mouseIn, wireEquipped);
+                wirePosition.X += (IsOutput) ? -20 : 20;
             }            
             
             //dragging a wire and released the mouse -> see if the wire can be connected to this connection
@@ -301,9 +301,9 @@ namespace Subsurface.Items.Components
 
                     Wire wireComponent = draggingConnected.GetComponent<Wire>();
                     
-                    if (index>-1 && wireComponent!=null && !wires.Contains(wireComponent))
+                    if (index>-1 && wireComponent!=null && !Wires.Contains(wireComponent))
                     {
-                        wires[index] = wireComponent;
+                        Wires[index] = wireComponent;
                         wireComponent.Connect(this);
                     }                    
                 }
@@ -313,11 +313,11 @@ namespace Subsurface.Items.Components
                     int index = FindWireIndex(draggingConnected);
                     if (index>-1)
                     {
-                        wires[index].RemoveConnection(this);
-                        wires[index].Item.SetTransform(item.SimPosition, 0.0f);
-                        wires[index].Item.Drop();
-                        wires[index].Item.body.Enabled = true;
-                        wires[index] = null;
+                        Wires[index].RemoveConnection(this);
+                        Wires[index].Item.SetTransform(item.SimPosition, 0.0f);
+                        Wires[index].Item.Drop();
+                        Wires[index].Item.body.Enabled = true;
+                        Wires[index] = null;
                     }
                 }                    
             }
@@ -396,9 +396,9 @@ namespace Subsurface.Items.Components
 
         public void Save(XElement parentElement)
         {
-            XElement newElement = new XElement(isOutput ? "output" : "input", new XAttribute("name", name));
+            XElement newElement = new XElement(IsOutput ? "output" : "input", new XAttribute("name", Name));
 
-            Array.Sort(wires, delegate(Wire wire1, Wire wire2)             
+            Array.Sort(Wires, delegate(Wire wire1, Wire wire2)             
             {
                 if (wire1 == null) return 1;
                 if (wire2 == null) return -1;
@@ -407,13 +407,13 @@ namespace Subsurface.Items.Components
 
             for (int i = 0; i < MaxLinked; i++ )
             {
-                if (wires[i] == null) continue;
+                if (Wires[i] == null) continue;
                 
                 //Connection recipient = wires[i].OtherConnection(this);
 
                 //int connectionIndex = recipient.item.Connections.FindIndex(x => x == recipient);
                 newElement.Add(new XElement("link", 
-                    new XAttribute("w", wires[i].Item.ID.ToString())));                
+                    new XAttribute("w", Wires[i].Item.ID.ToString())));                
             }
       
             parentElement.Add(newElement);                
@@ -432,12 +432,12 @@ namespace Subsurface.Items.Components
                 Item wireItem = MapEntity.FindEntityByID(wireId[i]) as Item;
 
                 if (wireItem == null) continue;
-                wires[i] = wireItem.GetComponent<Wire>();
+                Wires[i] = wireItem.GetComponent<Wire>();
 
-                if (wires[i]!=null)
+                if (Wires[i]!=null)
                 {
-                    wires[i].Item.body.Enabled = false;
-                    wires[i].Connect(this, false);
+                    Wires[i].Item.body.Enabled = false;
+                    Wires[i].Connect(this, false);
                 }
             }
 

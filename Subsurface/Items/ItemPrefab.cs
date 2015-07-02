@@ -23,14 +23,14 @@ namespace Subsurface
         protected Vector2 size;
 
         //how close the character has to be to the item to pick it up
-        float pickDistance;
+        private float pickDistance;
 
 
         //public List<Sound> sounds;
         
         //an area next to the construction
         //the construction can be Activated() by a character inside the area
-        public List<Rectangle> triggers;
+        public List<Rectangle> Triggers;
 
         public string ConfigFile
         {
@@ -177,7 +177,7 @@ namespace Subsurface
 
             offsetOnSelected = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
             
-            triggers = new List<Rectangle>();
+            Triggers = new List<Rectangle>();
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLower())
@@ -195,7 +195,7 @@ namespace Subsurface
                         trigger.Width = ToolBox.GetAttributeInt(subElement, "width", 0);
                         trigger.Height = ToolBox.GetAttributeInt(subElement, "height", 0);
 
-                        triggers.Add(trigger);
+                        Triggers.Add(trigger);
 
                         break;
                 }

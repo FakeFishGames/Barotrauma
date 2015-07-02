@@ -9,7 +9,7 @@ namespace Subsurface
         public enum AiState { None, Attack, GoTo, Escape }
         public enum SteeringState { Wander, Seek, Escape }
 
-        public Character character;
+        public Character Character;
         
         protected AiState state;
 
@@ -17,18 +17,18 @@ namespace Subsurface
 
         public Vector2 Steering
         {
-            get { return character.animController.TargetMovement; }
-            set { character.animController.TargetMovement = value; }
+            get { return Character.AnimController.TargetMovement; }
+            set { Character.AnimController.TargetMovement = value; }
         }
         
         public Vector2 Position
         {
-            get { return character.animController.limbs[0].SimPosition; }
+            get { return Character.AnimController.limbs[0].SimPosition; }
         }
 
         public Vector2 Velocity
         {
-            get { return character.animController.limbs[0].LinearVelocity; }
+            get { return Character.AnimController.limbs[0].LinearVelocity; }
         }
 
         public AiState State
@@ -38,7 +38,7 @@ namespace Subsurface
 
         public AIController (Character c)
         {
-            character = c;
+            Character = c;
 
             steeringManager = new SteeringManager(this);
         }

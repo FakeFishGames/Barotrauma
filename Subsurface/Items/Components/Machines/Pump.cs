@@ -10,6 +10,8 @@ namespace Subsurface.Items.Components
         float flowPercentage;
         float maxFlow;
 
+        float? targetLevel;
+
         //bool flowIn;
 
         Hull hull1, hull2;
@@ -41,7 +43,18 @@ namespace Subsurface.Items.Components
             float powerFactor = (currPowerConsumption==0.0f) ? 1.0f : voltage;
             //flowPercentage = maxFlow * powerFactor;
 
-            float deltaVolume = (flowPercentage/100.0f) * maxFlow * powerFactor;
+            float deltaVolume = 0.0f;
+            if (targetLevel!=null)
+            {
+                float hullPercentage = 0.0f;
+                if (hull1 != null) hullPercentage = (hull1.Volume / hull1.FullVolume)*100.0f;
+                deltaVolume = ((float)targetLevel - hullPercentage)/100.0f * maxFlow * powerFactor;
+            }
+            else
+            {
+                deltaVolume = (flowPercentage/100.0f) * maxFlow * powerFactor;
+            }
+
             hull1.Volume += deltaVolume;
             if (hull2 != null) hull2.Volume -= deltaVolume; 
 
@@ -139,20 +152,28 @@ namespace Subsurface.Items.Components
 
             isActive = true;
 
-            if (connection.name == "toggle")
+            if (connection.Name == "toggle")
             {
                 isActive = !isActive;
             }
-            else if (connection.name == "set_active")
+            else if (connection.Name == "set_active")
             {
                 isActive = (signal != "0");
             }
-            else if (connection.name == "set_speed")
+            else if (connection.Name == "set_speed")
             {
                 float tempSpeed;
                 if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
+                }
+            }
+            else if (connection.Name == "set_targetlevel")
+            {
+                float tempTarget;
+                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempTarget))
+                {
+                    targetLevel = MathHelper.Clamp(tempTarget, 0.0f, 100.0f);
                 }
             }
 

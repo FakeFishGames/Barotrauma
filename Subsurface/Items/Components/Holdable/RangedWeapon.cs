@@ -58,7 +58,7 @@ namespace Subsurface.Items.Components
             reload = 1.0f;
             
             List<Body> limbBodies = new List<Body>();
-            foreach (Limb l in character.animController.limbs)
+            foreach (Limb l in character.AnimController.limbs)
             {
                 limbBodies.Add(l.body.FarseerBody);
             }

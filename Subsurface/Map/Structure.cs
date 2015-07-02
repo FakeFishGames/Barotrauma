@@ -144,7 +144,7 @@ namespace Subsurface
                 bodies = new List<Body>();
                 //gaps = new List<Gap>();
 
-                Body newBody = BodyFactory.CreateRectangle(Game1.world,
+                Body newBody = BodyFactory.CreateRectangle(Game1.World,
                     ConvertUnits.ToSimUnits(rect.Width),
                     ConvertUnits.ToSimUnits(rect.Height),
                     1.5f);
@@ -202,16 +202,16 @@ namespace Subsurface
                 {
                     bodies = new List<Body>();
 
-                    Body newBody = BodyFactory.CreateRectangle(Game1.world,
-                        ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) - Submarine.gridSize.X),
+                    Body newBody = BodyFactory.CreateRectangle(Game1.World,
+                        ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) - Submarine.GridSize.X),
                         ConvertUnits.ToSimUnits(10),
                         1.5f);
 
                     newBody.BodyType = BodyType.Static;
                     Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
                     stairPos += new Vector2(
-                        (StairDirection == Direction.Right) ? -Submarine.gridSize.X*1.5f : Submarine.gridSize.X*1.5f,
-                        - Submarine.gridSize.Y*2.0f);
+                        (StairDirection == Direction.Right) ? -Submarine.GridSize.X*1.5f : Submarine.GridSize.X*1.5f,
+                        - Submarine.GridSize.Y*2.0f);
 
 
                     newBody.Position = ConvertUnits.ToSimUnits(stairPos);
@@ -251,7 +251,7 @@ namespace Subsurface
             if (bodies != null)
             {
                 foreach (Body b in bodies)
-                    Game1.world.RemoveBody(b);
+                    Game1.World.RemoveBody(b);
             }
 
             if (convexHull != null) convexHull.Remove();
@@ -299,7 +299,7 @@ namespace Subsurface
                 Limb limb;
                 if ((limb = f2.Body.UserData as Limb) != null)
                 {
-                    if (limb.character.animController.IgnorePlatforms) return false;
+                    if (limb.character.AnimController.IgnorePlatforms) return false;
                 }
             }
             
@@ -443,7 +443,7 @@ namespace Subsurface
         {
             foreach (Body b in bodies)
             {
-                Game1.world.RemoveBody(b);
+                Game1.World.RemoveBody(b);
             }
             bodies.Clear();
 
@@ -497,7 +497,7 @@ namespace Subsurface
 
         private Body CreateRectBody(Rectangle rect)
         {
-            Body newBody = BodyFactory.CreateRectangle(Game1.world,
+            Body newBody = BodyFactory.CreateRectangle(Game1.World,
                 ConvertUnits.ToSimUnits(rect.Width),
                 ConvertUnits.ToSimUnits(rect.Height),
                 1.5f);

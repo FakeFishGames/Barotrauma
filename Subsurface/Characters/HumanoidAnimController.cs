@@ -20,13 +20,13 @@ namespace Subsurface
             Vector2 rayStart = colliderPos; // at the bottom of the player sprite
             Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
             if (stairs != null) rayEnd.Y -= 0.5f;
-            if (anim != Animation.UsingConstruction) ResetPullJoints();
+            if (Anim != Animation.UsingConstruction) ResetPullJoints();
 
             //do a raytrace straight down from the torso to figure 
             //out whether the  ragdoll is standing on ground
             float closestFraction = 1;
             Structure closestStructure = null;
-            Game1.world.RayCast((fixture, point, normal, fraction) =>
+            Game1.World.RayCast((fixture, point, normal, fraction) =>
             {
                 switch (fixture.CollisionCategories)
                 {
@@ -119,7 +119,7 @@ namespace Subsurface
                 return;
             }
 
-            switch (anim)
+            switch (Anim)
             {
                 case Animation.Climbing:
                     UpdateClimbing();
@@ -129,13 +129,13 @@ namespace Subsurface
                 default:
                     if (inWater)
                         UpdateSwimming();
-                    else if (isStanding)
+                    else if (IsStanding)
                         UpdateStanding();
 
                     break;
             }
 
-            if (targetDir != dir) Flip();
+            if (TargetDir != dir) Flip();
 
             foreach (Limb limb in limbs)
             {
@@ -376,9 +376,9 @@ namespace Subsurface
             if (!character.IsNetworkPlayer)
             {
                 if (rotation > 20 && rotation < 170)
-                    targetDir = Direction.Left;
+                    TargetDir = Direction.Left;
                 else if (rotation > 190 && rotation < 340)
-                    targetDir = Direction.Right;
+                    TargetDir = Direction.Right;
             }
 
             if (TargetMovement == Vector2.Zero) return;
@@ -520,7 +520,7 @@ namespace Subsurface
         {
             if (character.SelectedConstruction == null)
             {
-                anim = Animation.None;
+                Anim = Animation.None;
                 return;
             }
 
@@ -597,7 +597,7 @@ namespace Subsurface
             torso.body.ApplyForce(climbForce * 65.0f * torso.Mass);
             head.body.SmoothRotate(0.0f);
 
-            Rectangle trigger = character.SelectedConstruction.Prefab.triggers.First();
+            Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.First();
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
             //stop climbing if:
@@ -609,7 +609,7 @@ namespace Subsurface
                 (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition*2.0f) ||
                 (TargetMovement.Y > 0.0f && -handPos.Y < ConvertUnits.ToSimUnits(10.0f)))
             {
-                anim = Animation.None;
+                Anim = Animation.None;
                 character.SelectedConstruction = null;
                 IgnorePlatforms = false;
             }

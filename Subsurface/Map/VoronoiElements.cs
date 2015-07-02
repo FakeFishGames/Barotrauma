@@ -121,6 +121,8 @@ namespace Voronoi2
         public List<GraphEdge> edges;
         public Site site;
 
+        public List<Vector2> bodyVertices;
+
         public Body body;
 
         public Vector2 Center
@@ -131,7 +133,7 @@ namespace Voronoi2
         public VoronoiCell(Site site)
         {
             edges = new List<GraphEdge>();
-
+            bodyVertices = new List<Vector2>();
             //bodies = new List<Body>();
             this.site = site;
         }

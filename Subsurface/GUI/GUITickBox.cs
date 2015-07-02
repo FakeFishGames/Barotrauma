@@ -15,12 +15,13 @@ namespace Subsurface
         bool selected;
 
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
+            : base(null)
         {
             if (parent != null)
                 parent.AddChild(this);
 
-            box = new GUIFrame(new Rectangle(rect.X, rect.Y, 30, 30), Color.LightGray, this);
-            text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, 30), label, Color.Transparent, Color.White, Alignment.Left | Alignment.CenterY, this);
+            box = new GUIFrame(new Rectangle(rect.X, rect.Y, 30, 30), Color.LightGray, null, this);
+            text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, 30), label, Color.Transparent, Color.White, Alignment.Left | Alignment.CenterY, null, this);
         }
 
         public override void Update(float deltaTime)
@@ -53,7 +54,7 @@ namespace Subsurface
 
             if (selected)
             {
-                GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 5, box.Rect.Y + 5, box.Rect.Width - 10, box.Rect.Height - 10), Color.Green * alpha, true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 5, box.Rect.Y + 5, box.Rect.Width - 10, box.Rect.Height - 10), Color.Green * (color.A / 255.0f), true);
             }
         }
     }

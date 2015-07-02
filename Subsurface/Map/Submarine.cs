@@ -28,7 +28,7 @@ namespace Subsurface
         
         private static Submarine loaded;
 
-        public static readonly Vector2 gridSize = new Vector2(16.0f, 16.0f);
+        public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
@@ -253,8 +253,8 @@ namespace Subsurface
 
         public static Vector2 VectorToWorldGrid(Vector2 position)
         {
-            position.X = (float)Math.Floor(Convert.ToDouble(position.X / gridSize.X)) * gridSize.X;
-            position.Y = (float)Math.Ceiling(Convert.ToDouble(position.Y / gridSize.Y)) * gridSize.Y;
+            position.X = (float)Math.Floor(Convert.ToDouble(position.X / GridSize.X)) * GridSize.X;
+            position.Y = (float)Math.Ceiling(Convert.ToDouble(position.Y / GridSize.Y)) * GridSize.Y;
 
             return position;
         }
@@ -299,7 +299,7 @@ namespace Subsurface
         {
             float closestFraction = 1.0f;
             Body closestBody = null;
-            Game1.world.RayCast((fixture, point, normal, fraction) =>
+            Game1.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null || fixture.CollisionCategories == Category.None) return -1;                
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
@@ -332,7 +332,7 @@ namespace Subsurface
                 return null;
             }
             
-            Game1.world.RayCast((fixture, point, normal, fraction) =>
+            Game1.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null || fixture.CollisionCategories != Physics.CollisionWall) return -1;
 
@@ -364,7 +364,7 @@ namespace Subsurface
             Body foundBody = null;
             AABB aabb = new AABB(point, point);
 
-            Game1.world.QueryAABB(p =>
+            Game1.World.QueryAABB(p =>
             {
                 foundBody = p.Body;
 
@@ -408,7 +408,8 @@ namespace Subsurface
             }
             //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
             
-            hullBody.SetTransform(Vector2.Zero , 0.0f);
+            //hullBody.SetTransform(Vector2.Zero , 0.0f);
+            hullBody.LinearVelocity = -hullBody.Position;
 
             if (collidingCell == null)
             {
@@ -419,8 +420,8 @@ namespace Subsurface
             foreach (GraphEdge ge in collidingCell.edges)
             {
                 Body body = PickBody(
-                    ConvertUnits.ToSimUnits(ge.point1+ Game1.GameSession.Level.position), 
-                    ConvertUnits.ToSimUnits(ge.point2 + Game1.GameSession.Level.position), new List<Body>(){collidingCell.body});
+                    ConvertUnits.ToSimUnits(ge.point1+ Game1.GameSession.Level.Position), 
+                    ConvertUnits.ToSimUnits(ge.point2 + Game1.GameSession.Level.Position), new List<Body>(){collidingCell.body});
                 if (body == null || body.UserData == null) continue;
 
                 Structure structure = body.UserData as Structure;
@@ -461,7 +462,7 @@ namespace Subsurface
         public void SetPosition(Vector2 position)
         {
             //hullBodies[0].body.SetTransform(position, 0.0f);
-            Translate(position);
+            Level.Loaded.SetPosition(-position);
             //prevPosition = position;
         }
 
@@ -712,9 +713,9 @@ namespace Subsurface
             convexHull.Reverse();
 
             //get farseer 'vertices' from vectors
-            Vertices _shapevertices = new Vertices(convexHull);
+            Vertices shapevertices = new Vertices(convexHull);
             
-            AABB hullAABB = _shapevertices.GetAABB();
+            AABB hullAABB = shapevertices.GetAABB();
 
             borders = new Rectangle(
                 (int)ConvertUnits.ToDisplayUnits(hullAABB.LowerBound.X),
@@ -723,9 +724,9 @@ namespace Subsurface
                 (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.Y * 2.0f));
 
             
-            var triangulatedVertices = Triangulate.ConvexPartition(_shapevertices, TriangulationAlgorithm.Bayazit);
+            var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
 
-            hullBody = BodyFactory.CreateCompoundPolygon(Game1.world, triangulatedVertices, 5.0f);
+            hullBody = BodyFactory.CreateCompoundPolygon(Game1.World, triangulatedVertices, 5.0f);
             hullBody.BodyType = BodyType.Dynamic;
 
             hullBody.CollisionCategories = Physics.CollisionMisc;
@@ -787,7 +788,7 @@ namespace Subsurface
             
             Ragdoll.list.Clear();
 
-            Game1.world.Clear();
+            Game1.World.Clear();
         }
 
     }

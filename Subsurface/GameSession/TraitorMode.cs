@@ -31,9 +31,9 @@ namespace Subsurface
 
             if (DateTime.Now >= endTime)
             {
-                string endMessage = traitor.character.info.name + " was a traitor! ";
-                endMessage += (traitor.character.info.gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + target.character.info.name + ". The task was unsuccesful.";
+                string endMessage = traitor.character.Info.Name + " was a traitor! ";
+                endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
+                endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was unsuccesful.";
                 End(endMessage);
                 return;
             }
@@ -44,13 +44,13 @@ namespace Subsurface
                 int clientCount = Game1.Server.connectedClients.Count();
                 if (clientCount < 2) return;
 
-                int traitorIndex = Game1.localRandom.Next(clientCount);
+                int traitorIndex = Rand.Int(clientCount, false);
                 traitor = Game1.Server.connectedClients[traitorIndex];
 
                 int targetIndex = 0;
-                while (targetIndex==traitorIndex)
+                while (targetIndex == traitorIndex)
                 {
-                    targetIndex = Game1.localRandom.Next(clientCount);
+                    targetIndex = Rand.Int(clientCount, false);
                 }
                 target = Game1.Server.connectedClients[targetIndex];
 
@@ -61,9 +61,9 @@ namespace Subsurface
             {
                 if (target.character.IsDead)
                 {
-                    string endMessage = traitor.character.info.name + " was a traitor! ";
-                    endMessage += (traitor.character.info.gender == Gender.Male) ? "his" : "her";
-                    endMessage += " task was to assassinate " + target.character.info.name + ". The task was succesful.";
+                    string endMessage = traitor.character.Info.Name + " was a traitor! ";
+                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "his" : "her";
+                    endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was succesful.";
                     End(endMessage);
                 }
             }

@@ -208,7 +208,7 @@ namespace Subsurface
                 pullJoint.Enabled = false;
                 pullJoint.MaxForce = 150.0f * body.Mass;
 
-                Game1.world.AddJoint(pullJoint);
+                Game1.World.AddJoint(pullJoint);
             }
             else
             {
@@ -235,10 +235,10 @@ namespace Subsurface
                     case "sprite":
                         string spritePath = subElement.Attribute("texture").Value;
 
-                        if (character.info!=null)
+                        if (character.Info!=null)
                         {
-                            spritePath = spritePath.Replace("[GENDER]", (character.info.gender == Gender.Female) ? "f" : "");
-                            spritePath = spritePath.Replace("[HEADID]", character.info.headSpriteId.ToString());
+                            spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
+                            spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
                         }
 
 
@@ -323,7 +323,7 @@ namespace Subsurface
 
                 Game1.particleManager.CreateParticle("blood",
                     SimPosition,
-                    particleVel * MathUtils.RandomFloatLocal(1.0f, 3.0f));
+                    particleVel * Rand.Range(1.0f, 3.0f));
             }
 
             for (int i = 0; i < bloodAmount / 2; i++)
@@ -339,7 +339,7 @@ namespace Subsurface
             if (LinearVelocity.X>100.0f)
             {
                 DebugConsole.ThrowError("CHARACTER EXPLODED");
-                foreach (Limb limb in character.animController.limbs)
+                foreach (Limb limb in character.AnimController.limbs)
                 {
                     limb.body.ResetDynamics();
                     limb.body.SetTransform(body.Position, 0.0f);

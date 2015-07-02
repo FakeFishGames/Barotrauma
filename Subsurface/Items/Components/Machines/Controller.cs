@@ -80,7 +80,7 @@ namespace Subsurface.Items.Components
                 if (character != null)
                 {
                     character.SelectedConstruction = null;
-                    character.animController.anim = AnimController.Animation.None;
+                    character.AnimController.Anim = AnimController.Animation.None;
                     character = null;
                 }
                 isActive = false;
@@ -89,33 +89,33 @@ namespace Subsurface.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, character);
 
-            if (userPos != 0.0f && character.animController.anim != AnimController.Animation.UsingConstruction)
+            if (userPos != 0.0f && character.AnimController.Anim != AnimController.Animation.UsingConstruction)
             {
-                Limb torso = character.animController.GetLimb(LimbType.Torso);
+                Limb torso = character.AnimController.GetLimb(LimbType.Torso);
                 float torsoX = ConvertUnits.ToDisplayUnits(torso.SimPosition.X);
 
                 if (Math.Abs(torsoX - item.Rect.X + userPos) > 10.0f)
                 {
-                    character.animController.anim = AnimController.Animation.None;
+                    character.AnimController.Anim = AnimController.Animation.None;
 
-                    character.animController.TargetMovement = 
+                    character.AnimController.TargetMovement = 
                         new Vector2(
                             Math.Min(Math.Max(item.Rect.X + userPos - torsoX, -1.0f), 1.0f), 
                             0.0f);
-                    character.animController.targetDir = (Math.Sign(torsoX - item.Rect.X + userPos) == 1) ? Direction.Right : Direction.Left;
+                    character.AnimController.TargetDir = (Math.Sign(torsoX - item.Rect.X + userPos) == 1) ? Direction.Right : Direction.Left;
                     return;
                 }
             }
 
             if (limbPositions.Count == 0) return;
 
-            character.animController.anim = AnimController.Animation.UsingConstruction;
-            character.animController.ResetPullJoints();
-            if (dir != 0) character.animController.targetDir = dir;
+            character.AnimController.Anim = AnimController.Animation.UsingConstruction;
+            character.AnimController.ResetPullJoints();
+            if (dir != 0) character.AnimController.TargetDir = dir;
 
             foreach (LimbPos lb in limbPositions)
             {
-                Limb limb = character.animController.GetLimb(lb.limbType);
+                Limb limb = character.AnimController.GetLimb(lb.limbType);
                 if (limb == null) continue;
 
                 FixedMouseJoint fmj = limb.pullJoint;
@@ -167,7 +167,7 @@ namespace Subsurface.Items.Components
             {
                 character = null;
                 isActive = false;
-                if (activator != null) activator.animController.anim = AnimController.Animation.None;
+                if (activator != null) activator.AnimController.Anim = AnimController.Animation.None;
 
                 return false;
             }

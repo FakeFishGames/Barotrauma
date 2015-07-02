@@ -10,12 +10,9 @@ using Subsurface.Particles;
 
 namespace Subsurface
 {
-    /// <summary>
-    /// This is the main type for your game
-    /// </summary>
     class Game1 : Game
     {
-        public static GraphicsDeviceManager graphics;
+        public static GraphicsDeviceManager Graphics;
         static int graphicsWidth, graphicsHeight;
         static SpriteBatch spriteBatch;
 
@@ -23,7 +20,7 @@ namespace Subsurface
 
         public static FrameCounter frameCounter;
 
-        public static readonly Version version = Assembly.GetEntryAssembly().GetName().Version;
+        public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
         public static GameScreen            GameScreen;
         public static MainMenuScreen        MainMenuScreen;
@@ -35,18 +32,17 @@ namespace Subsurface
         public static Level Level;
 
         public static GameSession GameSession;
-                        
-        public static GameClient Client;
-        public static GameServer Server;
+
+        public static NetworkMember NetworkMember;
 
         public static ParticleManager particleManager;
 
         public static TextureLoader textureLoader;
         
-        public static World world;
+        public static World World;
 
-        public static Random localRandom;
-        public static Random random;
+        //public static Random localRandom;
+        //public static Random random;
 
         //private Stopwatch renderTimer;
         //public static int renderTimeElapsed;
@@ -57,7 +53,6 @@ namespace Subsurface
             get { return GameScreen.Cam; }
         }
 
-
         public static int GraphicsWidth
         {
             get { return graphicsWidth; }
@@ -67,17 +62,27 @@ namespace Subsurface
         {
             get { return graphicsHeight; }
         }
+
+        public static GameServer Server
+        {
+            get { return NetworkMember as GameServer; }
+        }
+
+        public static GameClient Client
+        {
+            get { return NetworkMember as GameClient; }
+        }
         
         public Game1()
         {
-            graphics = new GraphicsDeviceManager(this);
+            Graphics = new GraphicsDeviceManager(this);
             
             graphicsWidth = 1280;
             graphicsHeight = 720;
 
             //graphics.IsFullScreen = true;
-            graphics.PreferredBackBufferWidth = graphicsWidth;
-            graphics.PreferredBackBufferHeight = graphicsHeight;
+            Graphics.PreferredBackBufferWidth = graphicsWidth;
+            Graphics.PreferredBackBufferHeight = graphicsHeight;
             Content.RootDirectory = "Content";
             
             //graphics.SynchronizeWithVerticalRetrace = false;
@@ -92,12 +97,9 @@ namespace Subsurface
             IsFixedTimeStep = false;
             //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
 
-            world = new World(new Vector2(0, -9.82f));
+            World = new World(new Vector2(0, -9.82f));
             Settings.VelocityIterations = 2;
             Settings.PositionIterations = 1;
-
-            random = new Random();
-            localRandom = new Random();
         }
 
         /// <summary>
@@ -151,7 +153,7 @@ namespace Subsurface
             AmbientSoundManager.Init("Content/Sounds/Sounds.xml");
 
             Submarine.Preload("Content/SavedMaps");
-            GameScreen          =   new GameScreen(graphics.GraphicsDevice);
+            GameScreen          =   new GameScreen(Graphics.GraphicsDevice);
             MainMenuScreen      =   new MainMenuScreen(this); 
             LobbyScreen         =   new LobbyScreen();
             NetLobbyScreen      =   new NetLobbyScreen();
@@ -190,18 +192,11 @@ namespace Subsurface
 
             DebugConsole.Update(this, (float)deltaTime);
 
-            if (!DebugConsole.IsOpen || Server != null || Client != null) Screen.Selected.Update(deltaTime);
+            if (!DebugConsole.IsOpen || NetworkMember != null) Screen.Selected.Update(deltaTime);
 
             GUI.Update((float)deltaTime);
 
-            if (Server != null)
-            {
-                Server.Update();
-            }
-            else if (Client != null)
-            {
-                Client.Update();
-            }
+            if (NetworkMember != null) NetworkMember.Update();
             else
             {
                 NetworkEvent.events.Clear();
@@ -228,7 +223,7 @@ namespace Subsurface
 
         protected override void OnExiting(object sender, EventArgs args)
         {
-            if (Client != null) Client.Disconnect();
+            if (NetworkMember != null) NetworkMember.Disconnect();
 
             base.OnExiting(sender, args);
         }

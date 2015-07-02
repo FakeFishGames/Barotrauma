@@ -119,7 +119,7 @@ namespace Subsurface
         {
             rect = rectangle;
             
-            OxygenPercentage = (float)(Game1.random.NextDouble() * 100.0);
+            OxygenPercentage = Rand.Range(0.0f, 100.0f, false);
 
             properties = TypeDescriptor.GetProperties(GetType())
                 .Cast<PropertyDescriptor>()
@@ -210,7 +210,7 @@ namespace Subsurface
             for (int i = 0; i < waveY.Length; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
-                if (maxDelta > MathUtils.RandomFloatLocal(0.2f,10.0f))
+                if (maxDelta > Rand.Range(0.2f,10.0f))
                 {
                     Game1.particleManager.CreateParticle("mist",
                         ConvertUnits.ToSimUnits(new Vector2(rect.X + WaveWidth * i,surface + waveY[i])),

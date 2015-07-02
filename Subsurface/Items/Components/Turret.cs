@@ -137,7 +137,7 @@ namespace Subsurface.Items.Components
 
             if (character == Character.Controlled && cam!=null)
             {
-                Lights.LightManager.viewPos = centerPos;
+                Lights.LightManager.ViewPos = centerPos;
                 cam.TargetPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
             }
         }

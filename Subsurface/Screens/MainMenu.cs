@@ -31,38 +31,38 @@ namespace Subsurface
                 Game1.GraphicsHeight/ 2 - 250,
                 500, 500);
 
-            menuTabs[(int)Tabs.Main] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
+            menuTabs[(int)Tabs.Main] = new GUIFrame(panelRect, GUI.style);
+            //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
-            GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "New Game", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "New Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.NewGame;
             button.OnClicked = SelectTab;
             //button.Enabled = false;
 
-            button = new GUIButton(new Rectangle(0, 60, 0, 30), "Load Game", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 60, 0, 30), "Load Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.LoadGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 120, 0, 30), "Join Server", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 120, 0, 30), "Join Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.JoinServer;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 180, 0, 30), "Host Server", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 180, 0, 30), "Host Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.OnClicked = HostServerClicked;
             //button.Enabled = false;
 
-            button = new GUIButton(new Rectangle(0, 240, 0, 30), "Quit", GUI.style, Alignment.CenterX, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 240, 0, 30), "Quit", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.OnClicked = QuitClicked;
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tabs.NewGame] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            menuTabs[(int)Tabs.NewGame].Padding = GUI.style.smallPadding;
+            menuTabs[(int)Tabs.NewGame] = new GUIFrame(panelRect, GUI.style);
+            //menuTabs[(int)Tabs.NewGame].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "New Game", Color.Transparent, Color.Black, Alignment.CenterX, menuTabs[(int)Tabs.NewGame]);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "New Game", null, null, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.NewGame]);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
-            mapList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, menuTabs[(int)Tabs.NewGame]);
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", null, null, Alignment.Left, GUI.style, menuTabs[(int)Tabs.NewGame]);
+            mapList = new GUIListBox(new Rectangle(0, 60, 200, 400), GUI.style, menuTabs[(int)Tabs.NewGame]);
 
             foreach (Submarine map in Submarine.SavedSubmarines)
             {
@@ -70,30 +70,28 @@ namespace Subsurface
                     new Rectangle(0, 0, 0, 25),
                     map.Name, 
                     GUI.style,
-                    Alignment.Left,
-                    Alignment.Left,
-                    mapList);
+                    Alignment.Left, Alignment.Left, mapList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = map;
             }
             if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
 
 
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", GUI.style, Alignment.Right | Alignment.Bottom, menuTabs[(int)Tabs.NewGame]);
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",Alignment.Right | Alignment.Bottom, GUI.style,  menuTabs[(int)Tabs.NewGame]);
             button.OnClicked = StartGame;
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tabs.LoadGame] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            menuTabs[(int)Tabs.LoadGame].Padding = GUI.style.smallPadding;
+            menuTabs[(int)Tabs.LoadGame] = new GUIFrame(panelRect, GUI.style);
+            //menuTabs[(int)Tabs.LoadGame].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Load Game", Color.Transparent, Color.Black, Alignment.CenterX, menuTabs[(int)Tabs.LoadGame]);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Load Game", Color.Transparent, Color.Black, Alignment.CenterX, null, menuTabs[(int)Tabs.LoadGame]);
 
 
             string[] saveFiles = Directory.GetFiles(SaveUtil.SaveFolder, "*.save");
 
             //new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
-            saveList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, menuTabs[(int)Tabs.LoadGame]);
+            saveList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, GUI.style, menuTabs[(int)Tabs.LoadGame]);
 
             foreach (string saveFile in saveFiles)
             {
@@ -108,23 +106,23 @@ namespace Subsurface
                 textBlock.UserData = saveFile;
             }
 
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", GUI.style, Alignment.Right | Alignment.Bottom, menuTabs[(int)Tabs.LoadGame]);
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",Alignment.Right | Alignment.Bottom, GUI.style, menuTabs[(int)Tabs.LoadGame]);
             button.OnClicked = LoadGame;
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tabs.JoinServer] = new GUIFrame(panelRect, GUI.style.backGroundColor);
-            menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
+            menuTabs[(int)Tabs.JoinServer] = new GUIFrame(panelRect, GUI.style);
+            //menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Join Server", Color.Transparent, Color.Black, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
-            
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Name:", Color.Transparent, Color.Black, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
-            nameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Join Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
 
-            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", Color.Transparent, Color.Black, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
-            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Name:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
+            nameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
 
-            GUIButton joinButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Join", Color.White, Alignment.Bottom | Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
+            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
+            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
+
+            GUIButton joinButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Join", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.JoinServer]);
             joinButton.OnClicked = JoinServer;
 
 
@@ -140,7 +138,7 @@ namespace Subsurface
         
         private bool HostServerClicked(GUIButton button, object obj)
         {
-            Game1.NetLobbyScreen.isServer = true;
+            Game1.NetLobbyScreen.IsServer = true;
             Game1.NetLobbyScreen.Select();
             return true;
         }
@@ -211,7 +209,7 @@ namespace Subsurface
             if (string.IsNullOrEmpty(nameBox.Text)) return false;
             if (string.IsNullOrEmpty(ipBox.Text)) return false;
 
-            Game1.Client = new GameClient(nameBox.Text);
+            Game1.NetworkMember = new GameClient(nameBox.Text);
             if (Game1.Client.ConnectToServer(ipBox.Text))
             {
                 Game1.NetLobbyScreen.Select();
@@ -219,7 +217,7 @@ namespace Subsurface
             }
             else
             {
-                Game1.Client = null;
+                Game1.NetworkMember = null;
                 return false;
             }
         }

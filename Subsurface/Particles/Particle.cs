@@ -66,19 +66,16 @@ namespace Subsurface.Particles
 
             velocity = speed;
 
-            this.rotation = rotation + MathUtils.RandomFloatLocal(prefab.startRotationMin, prefab.startRotationMax);    
+            this.rotation = rotation + Rand.Range(prefab.startRotationMin, prefab.startRotationMax);    
             prevRotation = rotation;
 
-            float rand = (float)Game1.localRandom.NextDouble();
-            angularVelocity = prefab.angularVelocityMin + (prefab.angularVelocityMax - prefab.angularVelocityMin) * rand;
+            angularVelocity = prefab.angularVelocityMin + (prefab.angularVelocityMax - prefab.angularVelocityMin) * Rand.Range(0.0f, 1.0f);
 
             lifeTime = prefab.lifeTime;
 
-            rand = (float)Game1.localRandom.NextDouble();
-            size = prefab.startSizeMin + (prefab.startSizeMax - prefab.startSizeMin)*rand;
+            size = prefab.startSizeMin + (prefab.startSizeMax - prefab.startSizeMin) * Rand.Range(0.0f, 1.0f);
 
-            rand = (float)Game1.localRandom.NextDouble();
-            sizeChange = prefab.sizeChangeMin + (prefab.sizeChangeMax - prefab.sizeChangeMin) * rand;
+            sizeChange = prefab.sizeChangeMin + (prefab.sizeChangeMax - prefab.sizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
             yLimits = Vector2.Zero;
 

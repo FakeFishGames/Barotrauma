@@ -33,7 +33,7 @@ namespace Subsurface
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
 
-            listBox = new GUIListBox(new Rectangle(0, 0, 150, 0), Color.Transparent, guiFrame);
+            listBox = new GUIListBox(new Rectangle(0, 0, 150, 0), Color.Transparent, null, guiFrame);
             listBox.ScrollBarEnabled = false;
             listBox.OnSelected = SelectCharacter;
 
@@ -72,29 +72,28 @@ namespace Subsurface
         public void AddCharacter(Character character)
         {
             characters.Add(character);
-            if (!characterInfos.Contains(character.info))
+            if (!characterInfos.Contains(character.Info))
             {
-                characterInfos.Add(character.info);
+                characterInfos.Add(character.Info);
             }
 
-            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, listBox);
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, listBox);
             frame.UserData = character;
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             frame.HoverColor = Color.LightGray * 0.5f;
             frame.SelectedColor = Color.Gold * 0.5f;
 
-            string name = character.info.name.Replace(' ', '\n');
+            string name = character.Info.Name.Replace(' ', '\n');
 
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(40, 0, 0, 25),
                 name,
                 Color.Transparent, Color.White,
-                Alignment.Left,
-                Alignment.Left,
-                frame);
+                Alignment.Left, Alignment.Left,
+                null, frame);
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-            new GUIImage(new Rectangle(-10, -10, 0, 0), character.animController.limbs[0].sprite, Alignment.Left, frame);
+            new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.limbs[0].sprite, Alignment.Left, frame);
         }
 
         public void Update(float deltaTime)
@@ -123,7 +122,7 @@ namespace Subsurface
                 WayPoint randomWayPoint = WayPoint.GetRandom(WayPoint.SpawnType.Human);
                 Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
 
-                Character character = new Character(ci.file, position, ci);
+                Character character = new Character(ci.File, position, ci);
                 Character.Controlled = character;
                 AddCharacter(character);
             }
@@ -137,7 +136,7 @@ namespace Subsurface
             {
                 if (!c.IsDead) continue;
 
-                CharacterInfo deadInfo = characterInfos.Find(x => c.info == x);
+                CharacterInfo deadInfo = characterInfos.Find(x => c.Info == x);
                 if (deadInfo != null) characterInfos.Remove(deadInfo);
             }
 

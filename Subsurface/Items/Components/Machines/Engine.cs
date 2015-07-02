@@ -30,7 +30,7 @@ namespace Subsurface.Items.Components
             }
         }
 
-        [Editable, HasDefaultValue(50000.0f, true)]
+        [Editable, HasDefaultValue(500.0f, true)]
         public float MaxForce
         {
             get { return maxForce; }
@@ -62,9 +62,17 @@ namespace Subsurface.Items.Components
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Force != 0.0f)
             {
-                Submarine.Loaded.ApplyForce(new Vector2((force / 100.0f) * maxForce * (voltage / minVoltage), 0.0f));
+                Vector2 currForce = new Vector2((force / 100.0f) * maxForce * (voltage / minVoltage), 0.0f);
+
+                Submarine.Loaded.ApplyForce(currForce);
+
+                for (int i = 0; i < 5; i++)
+                {
+                    Game1.particleManager.CreateParticle("bubbles", item.SimPosition,
+                        -currForce/500.0f + new Vector2(Rand.Range(-1.0f, 1.0f), Rand.Range(-0.5f, 0.5f)));
+                }
             }
-            
+
             voltage = 0.0f;
         }
 
@@ -79,7 +87,7 @@ namespace Subsurface.Items.Components
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.font, "Force: " + (int)targetForce + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
+            spriteBatch.DrawString(GUI.font, "Force: " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(GuiFrame.Rect.X + 280, GuiFrame.Rect.Y + 30, 40, 40), "+", true)) targetForce += 1.0f;
             if (GUI.DrawButton(spriteBatch, new Rectangle(GuiFrame.Rect.X + 280, GuiFrame.Rect.Y + 80, 40, 40), "-", true)) targetForce -= 1.0f;
@@ -96,12 +104,13 @@ namespace Subsurface.Items.Components
         {
             base.ReceiveSignal(signal, connection, sender, power);
 
-            if (connection.name == "set_force")
+            if (connection.Name == "set_force")
             {
                 float tempForce;
                 if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempForce))
                 {
-                    Force = tempForce;
+                    targetForce = tempForce;
+                    targetForce = MathHelper.Clamp(targetForce, -100.0f, 100.0f);
                 }
             }  
         }

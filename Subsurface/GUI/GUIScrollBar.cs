@@ -63,22 +63,23 @@ namespace Subsurface
             {
                 float oldBarSize = barSize;
                 barSize = Math.Min(Math.Max(value, 0.0f), 1.0f);
-                if (barSize!=oldBarSize) UpdateRect();
+                if (barSize != oldBarSize) UpdateRect();
             }
         }
 
         public GUIScrollBar(Rectangle rect, GUIStyle style, float barSize, GUIComponent parent = null)
-            : this(rect, style.foreGroundColor, barSize, parent)
+            : this(rect, null, barSize, style, parent)
         {
         }
 
-        public GUIScrollBar(Rectangle rect, Color color, float barSize, GUIComponent parent = null)
-            : this(rect, color, barSize, (Alignment.Left | Alignment.Top), parent)
+        public GUIScrollBar(Rectangle rect, Color? color, float barSize, GUIStyle style = null, GUIComponent parent = null)
+            : this(rect, color, barSize, Alignment.TopLeft, style, parent)
         {
         }
 
 
-        public GUIScrollBar(Rectangle rect, Color color, float barSize, Alignment alignment, GUIComponent parent = null)
+        public GUIScrollBar(Rectangle rect, Color? color, float barSize, Alignment alignment, GUIStyle style = null, GUIComponent parent = null)
+            : base(style)
         {
             this.rect = rect;
             //GetDimensions(parent);
@@ -89,12 +90,13 @@ namespace Subsurface
                 parent.AddChild(this);
 
             isHorizontal = (rect.Width > rect.Height);
-            frame = new GUIFrame(new Rectangle(0,0,0,0), Color.White, this);
+            frame = new GUIFrame(new Rectangle(0,0,0,0), Color.White, style, this);
             //AddChild(frame);
 
             //System.Diagnostics.Debug.WriteLine(frame.rect);
 
-            bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, this);
+            bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, style, this);
+            
             bar.OnPressed = SelectBar;
             //AddChild(bar);
 

@@ -73,7 +73,7 @@ namespace Subsurface
 
         public virtual void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
         {
-            Vector2 placeSize = Submarine.gridSize;
+            Vector2 placeSize = Submarine.GridSize;
 
             if (placePosition == Vector2.Zero)
             {
@@ -88,8 +88,8 @@ namespace Subsurface
                 if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
                 
                 Rectangle newRect = Submarine.AbsRect(placePosition, placeSize);
-                newRect.Width = (int)Math.Max(newRect.Width, Submarine.gridSize.X);
-                newRect.Height = (int)Math.Max(newRect.Height, Submarine.gridSize.Y);
+                newRect.Width = (int)Math.Max(newRect.Width, Submarine.GridSize.X);
+                newRect.Height = (int)Math.Max(newRect.Height, Submarine.GridSize.Y);
 
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
                 {

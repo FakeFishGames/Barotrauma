@@ -15,18 +15,18 @@ namespace Subsurface
 {
     class ItemSound
     {
-        public readonly Sound sound;
-        public readonly ActionType type;
+        public readonly Sound Sound;
+        public readonly ActionType Type;
 
-        public string volumeProperty;
+        public string VolumeProperty;
 
-        public readonly float range;
+        public readonly float Range;
         
         public ItemSound(Sound sound, ActionType type, float range)
         {
-            this.sound = sound;
-            this.type = type;
-            this.range = range;
+            this.Sound = sound;
+            this.Type = type;
+            this.Range = range;
         }
     }
 
@@ -191,7 +191,7 @@ namespace Subsurface
                         guiFrame = new GUIFrame(
                             new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W), 
                             new Color(color.X, color.Y, color.Z), alignment);                        
-                        guiFrame.Alpha = color.W;
+                        //guiFrame.Alpha = color.W;
 
                     break;
                     case "sound":
@@ -218,7 +218,7 @@ namespace Subsurface
 
                         float range = ToolBox.GetAttributeFloat(subElement, "range", 800.0f);
                         ItemSound itemSound = new ItemSound(sound, type, range);
-                        itemSound.volumeProperty = ToolBox.GetAttributeString(subElement, "volume", "");
+                        itemSound.VolumeProperty = ToolBox.GetAttributeString(subElement, "volume", "");
                         sounds.Add(itemSound);
                         break;
                 }
@@ -233,16 +233,16 @@ namespace Subsurface
             ItemSound itemSound = null;
             if (!loop || !Sounds.SoundManager.IsPlaying(loopingSoundIndex))
             {
-                List<ItemSound> matchingSounds = sounds.FindAll(x => x.type == type);
+                List<ItemSound> matchingSounds = sounds.FindAll(x => x.Type == type);
                 if (matchingSounds.Count == 0) return;
 
-                int index = Game1.localRandom.Next(matchingSounds.Count);
+                int index = Rand.Int(matchingSounds.Count);
                 itemSound = sounds[index];
 
-                if (itemSound.volumeProperty != "")
+                if (itemSound.VolumeProperty != "")
                 {
                     ObjectProperty op = null;
-                    if (properties.TryGetValue(itemSound.volumeProperty.ToLower(), out op))
+                    if (properties.TryGetValue(itemSound.VolumeProperty.ToLower(), out op))
                     {
                         float newVolume = 0.0f;
                         float.TryParse(op.GetValue().ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out newVolume);
@@ -258,12 +258,12 @@ namespace Subsurface
             if (loop)
             {
                 //if (loopingSound != null && loopingSound.volumeProperty != "") volume = float.Parse(properties[loopingSound.volumeProperty].GetValue().ToString());
-                loopingSoundIndex = loopingSound.sound.Loop(loopingSoundIndex, volume, position, loopingSound.range);
+                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, volume, position, loopingSound.Range);
             }
             else
             {
                 
-                itemSound.sound.Play(volume, itemSound.range, position);  
+                itemSound.Sound.Play(volume, itemSound.Range, position);  
             } 
         }
 
