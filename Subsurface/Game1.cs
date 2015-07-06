@@ -145,7 +145,7 @@ namespace Subsurface
 
             MapEntityPrefab.Init();
 
-            Job.LoadAll("Content/Characters/Jobs.xml");
+            JobPrefab.LoadAll("Content/Characters/Jobs.xml");
 
             StructurePrefab.LoadAll("Content/Map/StructurePrefabs.xml");
             ItemPrefab.LoadAll();

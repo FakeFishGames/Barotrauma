@@ -1,56 +1,52 @@
-﻿using System.Collections.Generic;
-using System.Xml.Linq;
+﻿using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Subsurface
 {
     class Job
     {
-        public static List<Job> jobList;
 
-        string name;
-        string description;
-        
-        //names of the items the character spawns with
-        public List<string> itemNames;
+        private JobPrefab prefab;
+
+        private Dictionary<string, float> skills;
 
         public string Name
         {
-            get { return name; }
+            get { return prefab.Name; }
         }
 
-        public Job(XElement element)
+        public string Description
         {
-            name = element.Name.ToString();
+            get { return prefab.Description; }
+        }
 
-            description = ToolBox.GetAttributeString(element, "description", "");
+        public Job(JobPrefab jobPrefab)
+        {
+            prefab = jobPrefab;
 
-            itemNames = new List<string>();
-
-            foreach (XElement subElement in element.Elements())
+            skills = new Dictionary<string, float>();
+            foreach (KeyValuePair<string, Vector2> skill in prefab.skills)
             {
-                switch (subElement.Name.ToString())
-                {
-                    case "item":
-                        string itemName = ToolBox.GetAttributeString(subElement, "name", "");
-                        if (!string.IsNullOrEmpty(itemName)) itemNames.Add(itemName);
-                        break;
-                }
+                skills.Add(skill.Key, Rand.Range(skill.Value.X, skill.Value.Y, false));
             }
         }
 
-
-        public static void LoadAll(string filePath)
+        public static Job Random()
         {
-            jobList = new List<Job>();
+            JobPrefab prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count-1, false)];
 
-            XDocument doc = ToolBox.TryLoadXml(filePath);
-            if (doc == null) return;
+            return new Job(prefab);
+        }
 
-            foreach (XElement element in doc.Root.Elements())
-            {
-                Job job = new Job(element);
-                jobList.Add(job);
-            }
+        public float GetSkill(string skillName)
+        {
+            float skillLevel = 0.0f;
+            skills.TryGetValue(skillName.ToLower(), out skillLevel);
+
+            return skillLevel;
         }
     }
 }
