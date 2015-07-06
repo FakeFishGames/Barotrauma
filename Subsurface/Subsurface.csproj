@@ -61,6 +61,7 @@
     <Compile Include="Characters\DelayedEffect.cs" />
     <Compile Include="Characters\Job.cs" />
     <Compile Include="Characters\Jobs\Job.cs" />
+    <Compile Include="Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Characters\AI\SteeringManager.cs" />
     <Compile Include="Characters\AI\SteeringPath.cs" />
     <Compile Include="Rand.cs" />
@@ -197,6 +198,10 @@
     <Compile Include="Map\Hull.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FarseerPhysics MonoGame, Version=3.5.0.30657, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Windows\Debug\FarseerPhysics MonoGame.dll</HintPath>
+    </Reference>
     <Reference Include="Lidgren.Network, Version=3.3.0.2069, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Lidgren.Network.dll</HintPath>
@@ -715,10 +720,6 @@
     <Folder Include="Data\Saves\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Lataukset\Selain-lataukset\Farseer Physics Engine 3.5\Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj">
-      <Project>{0aad36e3-51a5-4a07-ab60-5c8a66bd38b7}</Project>
-      <Name>Farseer Physics MonoGame</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Subsurface_content\Subsurface_content\Subsurface_content.csproj">
       <Project>{1e6bf44d-6e31-40cc-8321-3d5958c983e7}</Project>
       <Name>Subsurface_content</Name>

@@ -10,15 +10,15 @@ namespace Subsurface
     {
         enum Tabs { Main = 0, NewGame = 1, LoadGame = 2, JoinServer = 3 }
 
-        GUIFrame[] menuTabs;
-        GUIListBox mapList;
+        private GUIFrame[] menuTabs;
+        private GUIListBox mapList;
 
-        GUIListBox saveList;
+        private GUIListBox saveList;
 
-        GUITextBox nameBox;
-        GUITextBox ipBox;
+        private GUITextBox nameBox;
+        private GUITextBox ipBox;
 
-        Game1 game;
+        private Game1 game;
 
         int selectedTab;
 
@@ -87,6 +87,18 @@ namespace Subsurface
 
             new GUITextBlock(new Rectangle(0, 0, 0, 30), "Load Game", Color.Transparent, Color.Black, Alignment.CenterX, null, menuTabs[(int)Tabs.LoadGame]);
 
+            if (!Directory.Exists(SaveUtil.SaveFolder))
+            {
+                DebugConsole.ThrowError("Save folder ''"+SaveUtil.SaveFolder+" not found! Attempting to create a new folder");
+                try
+                {
+                    Directory.CreateDirectory(SaveUtil.SaveFolder);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to create the folder ''"+SaveUtil.SaveFolder+"''!", e);
+                }
+            }
 
             string[] saveFiles = Directory.GetFiles(SaveUtil.SaveFolder, "*.save");
 

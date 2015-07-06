@@ -5,6 +5,7 @@ using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Factories;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -22,13 +23,13 @@ namespace Subsurface
         None = 0, Left = 1, Right = 2
     }
 
-    class Submarine
+    class Submarine : Entity
     {
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
-        private static Submarine loaded;
-
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
+
+        private static Submarine loaded;
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
@@ -38,12 +39,19 @@ namespace Subsurface
         
         Vector2 speed;
 
+        Vector2 targetPosition;
+        Vector2 targetSpeed;
+
         private Rectangle borders;
 
         private Body hullBody;
 
         private string filePath;
         private string name;
+
+
+        private double lastNetworkUpdate;
+
 
         //properties ----------------------------------------------------
 
@@ -97,6 +105,11 @@ namespace Subsurface
         public Vector2 Center
         {
             get { return new Vector2(borders.X+borders.Width/2, borders.Y - borders.Height/2); }
+        }
+
+        public Vector2 Position
+        {
+            get { return (Level.Loaded==null) ? Vector2.Zero : -Level.Loaded.Position; }
         }
 
         public string FilePath
@@ -392,19 +405,30 @@ namespace Subsurface
 
         public void Update(float deltaTime)
         {
-            Translate(ConvertUnits.ToDisplayUnits(hullBody.Position) * collisionRigidness + speed * deltaTime);
+            Vector2 translateAmount = speed * deltaTime;
+            translateAmount += ConvertUnits.ToDisplayUnits(hullBody.Position) * collisionRigidness;
 
+            if (targetPosition != Vector2.Zero && Vector2.Distance(targetPosition, Position) > 5.0f)
+            {
+                translateAmount += (targetPosition - Position)*0.1f;
+            }
+            else
+            {
+                targetPosition = Vector2.Zero;
+            }
 
-            CalculateBuoyancy();
+            Translate(translateAmount);
+            
+            ApplyForce(CalculateBuoyancy());
 
             float dragCoefficient = 0.00001f;
 
             float speedLength = speed.Length();
             float drag = speedLength * speedLength * dragCoefficient * mass;
-            System.Diagnostics.Debug.WriteLine("speed: "+speed);
-            if (speed!=Vector2.Zero)
+
+            if (speed != Vector2.Zero)
             {
-                ApplyForce(-Vector2.Normalize(speed)*drag);
+                ApplyForce(-Vector2.Normalize(speed) * drag);
             }
             //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
             
@@ -439,7 +463,7 @@ namespace Subsurface
 
         }
 
-        private void CalculateBuoyancy()
+        private Vector2 CalculateBuoyancy()
         {
             float waterVolume = 0.0f;
             float volume = 0.0f;
@@ -456,7 +480,7 @@ namespace Subsurface
             float buoyancy = neutralPercentage-waterPercentage;
             buoyancy *= mass * 10.0f;
 
-            ApplyForce(new Vector2(0.0f, buoyancy));
+            return new Vector2(0.0f, buoyancy);
         }
 
         public void SetPosition(Vector2 position)
@@ -509,6 +533,34 @@ namespace Subsurface
         {            
             collidingCell = null;
         }
+
+        public override void FillNetworkData(Networking.NetworkEventType type, NetOutgoingMessage message, object data)
+        {
+            message.Write(NetTime.Now);
+            message.Write(Position.X);
+            message.Write(Position.Y);
+
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message)
+        {
+            double sendingTime = message.ReadDouble();
+
+            if (sendingTime <= lastNetworkUpdate) return;
+
+            Vector2 newPosition = new Vector2(message.ReadFloat(), message.ReadFloat());
+            if (newPosition == Position) return;
+            if ((newPosition - Position).Length() > 500.0f)
+            {
+                System.Diagnostics.Debug.WriteLine("Submarine has moved over 500 pixels since last update");
+                return;
+            }
+
+            targetPosition = Position;
+
+            lastNetworkUpdate = sendingTime;
+        }
+    
         
 
         //saving/loading ----------------------------------------------------
@@ -553,7 +605,7 @@ namespace Subsurface
             if (loaded==null)
             {
                 loaded = new Submarine(savePath);
-                return;
+               // return;
             }
 
             loaded.SaveAs(savePath);
@@ -767,8 +819,7 @@ namespace Subsurface
             Submarine sub = new Submarine(file);
             sub.Load();
 
-            return sub;
-            
+            return sub;            
         }
 
         public static void Unload()
@@ -793,9 +844,4 @@ namespace Subsurface
 
     }
 
-    //class HullBody
-    //{
-    //    public Body body;
-    //    //public Texture2D shapeTexture;
-    //}
 }

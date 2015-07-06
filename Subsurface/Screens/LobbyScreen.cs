@@ -187,7 +187,7 @@ namespace Subsurface
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    c.Name, GUI.style, 
+                    c.Name + " ("+c.Job.Name+")", GUI.style, 
                     Alignment.Left, 
                     Alignment.Left,
                     characterList);
@@ -205,7 +205,7 @@ namespace Subsurface
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    c.Name,
+                    c.Name + " (" + c.Job.Name + ")",
                     Color.Transparent, Color.Black,
                     Alignment.Left, null, frame);
 
