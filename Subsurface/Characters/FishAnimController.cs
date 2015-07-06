@@ -106,14 +106,16 @@ namespace Subsurface
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
 
             Limb tail = GetLimb(LimbType.Tail);
-            if (tail != null && waveAmplitude>0.0f)
+            if (tail != null && waveAmplitude > 0.0f)
             {
                 walkPos -= movement.Length();
 
-                float waveRotation = (float)Math.Sin(walkPos / waveLength)*waveAmplitude;
+                float waveRotation = (float)Math.Sin(walkPos / waveLength) * waveAmplitude;
                 
                 float angle = MathUtils.GetShortestAngle(tail.body.Rotation, movementAngle + waveRotation);
 
+                tail.body.ApplyTorque(angle * tail.Mass);
+                
                 //limbs[tailIndex].body.ApplyTorque((Math.Sign(angle) + Math.Max(Math.Min(angle * 10.0f, 10.0f), -10.0f)) * limbs[tailIndex].body.Mass);
                 //limbs[tailIndex].body.ApplyTorque(-limbs[tailIndex].body.AngularVelocity * 0.5f * limbs[tailIndex].body.Mass);
             }

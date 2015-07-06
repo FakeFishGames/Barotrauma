@@ -13,7 +13,7 @@ namespace Subsurface
 
         public int HeadSpriteId;
 
-        //public int ID;
+        public Job Job;
 
         public Gender Gender;
 
@@ -24,7 +24,7 @@ namespace Subsurface
         //    return gender.ToString();
         //}
 
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None)
+        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, Job job = null)
         {
             this.File = file;
 
@@ -61,6 +61,8 @@ namespace Subsurface
             {
                 HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
             }
+
+            this.Job = (job == null) ? Job.Random() : job;            
 
             if (!string.IsNullOrEmpty(name))
             {

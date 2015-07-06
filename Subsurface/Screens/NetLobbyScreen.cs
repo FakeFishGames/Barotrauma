@@ -227,7 +227,7 @@ namespace Subsurface
 
                 GUIListBox jobList = new GUIListBox(new Rectangle(0,180,200,0), GUI.style, playerFrame);
 
-                foreach (Job job in Job.jobList)
+                foreach (JobPrefab job in JobPrefab.List)
                 {
                     GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, jobList);
                     GUIButton upButton = new GUIButton(new Rectangle(jobText.Rect.Width - 40, 0, 20, 20), "u", GUI.style, jobText);
