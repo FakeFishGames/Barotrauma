@@ -61,10 +61,9 @@ namespace Subsurface
 
         public static Level CreateRandom(string seed = "")
         {
-
             if (seed == "")
             {
-                seed = Rand.Range(0, int.MaxValue).ToString();
+                seed = Rand.Range(0, int.MaxValue, false).ToString();
             }
            return new Level((string)seed, 100000, 40000, 2000);        
         }

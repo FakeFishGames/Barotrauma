@@ -180,6 +180,7 @@ namespace Subsurface
                 GUI.style, 0.1f, infoFrame);
             durationBar.BarSize = 0.1f;
             durationBar.Enabled = (Game1.Server != null);
+            LevelSeed = ToolBox.RandomSeed(8);
 
             new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 100, 100, 20),
                 "Level Seed: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);

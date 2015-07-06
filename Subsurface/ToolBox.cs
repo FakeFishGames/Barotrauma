@@ -247,6 +247,15 @@ namespace Subsurface
             return floatArray;
         }
 
+        public static string RandomSeed(int length)
+        {
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            return new string(
+                Enumerable.Repeat(chars, length)
+                          .Select(s => s[Rand.Int(s.Length)])
+                          .ToArray());
+        }
+
         public static int SeedToInt(string seed)
         {
             StringBuilder sb = new StringBuilder();

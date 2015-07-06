@@ -212,23 +212,20 @@ namespace Subsurface.Networking
                         int seed = inc.ReadInt32();
                         Rand.SetSyncedSeed(seed);
 
+                        string levelSeed = inc.ReadString();
+
                         string mapName = inc.ReadString();
                         string mapHash = inc.ReadString();
 
                         Game1.NetLobbyScreen.TrySelectMap(mapName, mapHash);
-
-
-                        //Map.Load(mapFile);
-
-
-
+                        
                         double durationMinutes = inc.ReadDouble();
 
                         TimeSpan duration = new TimeSpan(0,(int)durationMinutes,0);
 
                         //int gameModeIndex = inc.ReadInt32();
                         Game1.GameSession = new GameSession(Submarine.Loaded);
-                        Game1.GameSession.StartShift(duration, "asdf");
+                        Game1.GameSession.StartShift(duration, levelSeed);
 
                         myCharacter = ReadCharacterData(inc);
                         Character.Controlled = myCharacter;                       

@@ -273,7 +273,7 @@ namespace Subsurface.Networking
             //selectedMap.Load();
 
             Game1.GameSession = new GameSession(selectedMap, Game1.NetLobbyScreen.SelectedMode);
-            Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, "asdf", 1);
+            Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.LevelSeed, 1);
             //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
             
             foreach (Client client in connectedClients)
@@ -303,6 +303,8 @@ namespace Subsurface.Networking
                 msg.Write((byte)PacketTypes.StartGame);
 
                 msg.Write(seed);
+
+                msg.Write(Game1.NetLobbyScreen.LevelSeed);
 
                 msg.Write(Game1.NetLobbyScreen.SelectedMap.Name);
                 msg.Write(Game1.NetLobbyScreen.SelectedMap.Hash.MD5Hash);

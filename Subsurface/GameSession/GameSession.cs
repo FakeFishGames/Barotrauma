@@ -113,14 +113,14 @@ namespace Subsurface
 
         public void StartShift(TimeSpan duration, string levelSeed, int scriptedEventCount = 1)
         {
+            Level level = Level.CreateRandom(levelSeed);
 
+            StartShift(duration, level, scriptedEventCount);
         }
 
         public void StartShift(TimeSpan duration, Level level, int scriptedEventCount = 1)
         {
             //if (crewManager.characterInfos.Count == 0) return;
-
-
 
             this.level = level;
 
