@@ -24,7 +24,7 @@ namespace Subsurface
         //    return gender.ToString();
         //}
 
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, Job job = null)
+        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
         {
             this.File = file;
 
@@ -62,7 +62,7 @@ namespace Subsurface
                 HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
             }
 
-            this.Job = (job == null) ? Job.Random() : job;            
+            this.Job = (jobPrefab == null) ? Job.Random() : new Job(jobPrefab);            
 
             if (!string.IsNullOrEmpty(name))
             {
@@ -72,14 +72,14 @@ namespace Subsurface
 
             if (doc.Root.Element("name") != null)
             {
-                string firstNamePath = (ToolBox.GetAttributeString(doc.Root.Element("name"), "firstname", ""));
+                string firstNamePath = ToolBox.GetAttributeString(doc.Root.Element("name"), "firstname", "");
                 if (firstNamePath != "")
                 {
                     firstNamePath = firstNamePath.Replace("[GENDER]", (this.Gender == Gender.Female) ? "f" : "");
                     this.Name = ToolBox.GetRandomLine(firstNamePath);
                 }
 
-                string lastNamePath = (ToolBox.GetAttributeString(doc.Root.Element("name"), "lastname", ""));
+                string lastNamePath = ToolBox.GetAttributeString(doc.Root.Element("name"), "lastname", "");
                 if (lastNamePath != "")
                 {
                     lastNamePath = lastNamePath.Replace("[GENDER]", (this.Gender == Gender.Female) ? "f" : "");
@@ -101,21 +101,31 @@ namespace Subsurface
             Salary = ToolBox.GetAttributeInt(element, "salary", 1000);
 
             HeadSpriteId = ToolBox.GetAttributeInt(element, "headspriteid", 1);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLower() != "job") continue;
+
+                Job = new Job(subElement);
+                break;
+            }
         }
 
         public virtual XElement Save(XElement parentElement)
         {
-            XElement componentElement = new XElement("character");
+            XElement charElement = new XElement("character");
 
-            componentElement.Add(
+            charElement.Add(
                 new XAttribute("name", Name),
                 new XAttribute("file", File),
                 new XAttribute("gender", Gender == Gender.Male ? "male" : "female"),
                 new XAttribute("salary", Salary),
                 new XAttribute("headspriteid", HeadSpriteId));
 
-            parentElement.Add(componentElement);
-            return componentElement;
+            Job.Save(charElement);
+
+            parentElement.Add(charElement);
+            return charElement;
         }
     }
 }

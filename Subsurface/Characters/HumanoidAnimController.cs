@@ -98,9 +98,7 @@ namespace Subsurface
             {
                 floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
             }
-
-            System.Diagnostics.Debug.WriteLine(floorY+" - "+inWater);
-               
+                          
 
             IgnorePlatforms = (TargetMovement.Y < 0.0f);
 

@@ -36,6 +36,12 @@ namespace Subsurface
         protected bool isHighlighted;
 
         protected bool isSelected;
+
+        public bool MoveWithLevel
+        {
+            get;
+            set;
+        }
         
         //the position and dimensions of the entity
         protected Rectangle rect;

@@ -7,6 +7,7 @@ using FarseerPhysics;
 using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -17,7 +18,12 @@ namespace Subsurface
         private GUIListBox playerList;
 
         private GUIListBox subList, modeList, chatBox;
+
+        private GUIListBox jobList;
+
         private GUITextBox textBox;
+
+        private GUITextBox seedBox;
 
         private GUIScrollBar durationBar;
 
@@ -50,10 +56,34 @@ namespace Subsurface
             }
         }
 
+        public List<JobPrefab> JobPreferences
+        {
+            get
+            {
+                List<JobPrefab> jobPreferences = new List<JobPrefab>();
+                foreach (GUIComponent child in jobList.children)
+                {
+                    JobPrefab jobPrefab = child.UserData as JobPrefab;
+                    if (jobPrefab == null) continue;
+                    jobPreferences.Add(jobPrefab);
+                }
+                return jobPreferences;
+            }
+        }
+
+        private string levelSeed;
+
         public string LevelSeed
         {
-            get;
-            private set;
+            get
+            {
+                return levelSeed;
+            }
+            private set
+            {
+                levelSeed = value;
+                seedBox.Text = levelSeed;
+            }
         }
 
         public string DurationText()
@@ -99,7 +129,7 @@ namespace Subsurface
                     (int)(panelRect.Width * 0.4f - 20), (int)(panelRect.Height * 0.4f - 20)),
                 GUI.style, menu);
 
-            playerList = new GUIListBox(new Rectangle(0,0,0,0), Color.White, null, playerListFrame);
+            playerList = new GUIListBox(new Rectangle(0,0,0,0), null, GUI.style, playerListFrame);
         }
 
         public override void Deselect()
@@ -133,7 +163,7 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", null, null, Alignment.Left, null, infoFrame);
             subList = new GUIListBox(new Rectangle(0, 60, 200, 200), Color.White, GUI.style, infoFrame);
             subList.OnSelected = SelectMap;
-            subList.Enabled = (Game1.Server!=null);
+            subList.Enabled = (Game1.Server != null);
 
             if (Submarine.SavedSubmarines.Count > 0)
             {
@@ -180,17 +210,18 @@ namespace Subsurface
                 GUI.style, 0.1f, infoFrame);
             durationBar.BarSize = 0.1f;
             durationBar.Enabled = (Game1.Server != null);
-            LevelSeed = ToolBox.RandomSeed(8);
+            
 
             new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 100, 100, 20),
                 "Level Seed: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
 
-            GUITextBox seedBox = new GUITextBox(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 130, 180, 20),
+            seedBox = new GUITextBox(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 130, 180, 20),
                 Alignment.TopLeft, GUI.style, infoFrame);
             seedBox.OnEnter = SelectSeed;
             seedBox.Enabled = (Game1.Server != null);
-            
-            if (IsServer && Game1.Server!=null)
+            LevelSeed = ToolBox.RandomSeed(8);
+
+            if (IsServer && Game1.Server != null)
             {
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", GUI.style, infoFrame);
                 startButton.OnClicked = Game1.Server.StartGame;
@@ -225,11 +256,13 @@ namespace Subsurface
 
                 new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.style, playerFrame);
 
-                GUIListBox jobList = new GUIListBox(new Rectangle(0,180,200,0), GUI.style, playerFrame);
+                jobList = new GUIListBox(new Rectangle(0, 180, 200, 0), GUI.style, playerFrame);
 
                 foreach (JobPrefab job in JobPrefab.List)
                 {
                     GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, jobList);
+                    jobText.UserData = job;
+
                     GUIButton upButton = new GUIButton(new Rectangle(jobText.Rect.Width - 40, 0, 20, 20), "u", GUI.style, jobText);
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
@@ -250,33 +283,32 @@ namespace Subsurface
         {
             if (Game1.Server != null) Game1.Server.UpdateNetLobby(obj);
 
-            Submarine map = (Submarine)obj;
+            Submarine sub = (Submarine)obj;
 
-            //map already loaded
-            if (Submarine.Loaded!=null && map.FilePath == Submarine.Loaded.FilePath) return true;
+            //submarine already loaded
+            if (Submarine.Loaded != null && sub.FilePath == Submarine.Loaded.FilePath) return true;
 
-            map.Load();
+            sub.Load();
 
             return true;
         }
 
 
-        public void AddPlayer(string name)
+        public void AddPlayer(Client client)
         {
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(0, 0, 0, 25),
-                name,
-                GUI.style,
-                Alignment.Left,
-                Alignment.Left,
+                 client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")"), 
+                 GUI.style, Alignment.Left, Alignment.Left,
                 playerList);
             textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-            textBlock.UserData = name;          
+            textBlock.UserData = client;          
         }
 
-        public void RemovePlayer(string name)
+        public void RemovePlayer(Client client)
         {
-            playerList.RemoveChild(playerList.GetChild(name));
+            if (client == null) return;
+            playerList.RemoveChild(playerList.GetChild(client));
         }
 
         public override void Update(double deltaTime)
@@ -378,15 +410,15 @@ namespace Subsurface
             Game1.Client.Character = character;
 
             character.AnimController.IsStanding = true;
-            
-            if (previewPlatform==null)
+
+            if (previewPlatform == null)
             {
                 Body platform = BodyFactory.CreateRectangle(Game1.World, 3.0f, 1.0f, 5.0f);
                 platform.SetTransform(new Vector2(pos.X, pos.Y - 2.5f), 0.0f);
                 platform.IsStatic = true;
             }
 
-            if (previewHull==null)
+            if (previewHull == null)
             {
                 pos = ConvertUnits.ToDisplayUnits(pos);
                 previewHull = new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 200));
@@ -400,6 +432,8 @@ namespace Subsurface
                 character.AnimController.UpdateAnim((float)Physics.step);
                 Game1.World.Step((float)Physics.step);
             }
+
+            Game1.Client.SendCharacterData();
         }
 
         private bool SwitchGender(GUIButton button, object obj)
@@ -420,14 +454,15 @@ namespace Subsurface
 
         private bool SelectSeed(GUITextBox textBox, string seed)
         {
-            if (string.IsNullOrWhiteSpace(seed))
-            {
-                textBox.Text = LevelSeed;
-            }
-            else
+            if (!string.IsNullOrWhiteSpace(seed))
             {
                 LevelSeed = seed;
             }
+
+            //textBox.Text = LevelSeed;
+            textBox.Selected = false;
+
+            if (Game1.Server != null) Game1.Server.UpdateNetLobby(null);
 
             return true;
         }
@@ -473,6 +508,8 @@ namespace Subsurface
 
                 listBox.children[i].Color = color;
             }
+
+            Game1.Client.SendCharacterData();
         }
 
         public bool TrySelectMap(string mapName, string md5Hash)
@@ -518,9 +555,18 @@ namespace Subsurface
                 msg.Write(selectedMap.Hash.MD5Hash);
             }
 
-            msg.Write(modeList.SelectedIndex);
+            msg.Write(modeList.SelectedIndex-1);
             msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
+
+            msg.Write(playerList.CountChildren - 1);
+            for (int i = 1; i < playerList.CountChildren; i++)
+            {
+                Client client = playerList.children[i].UserData as Client;
+                msg.Write(client.ID);
+                msg.Write(client.assignedJob==null ? "" : client.assignedJob.Name);
+            }
+
         }
 
 
@@ -539,6 +585,32 @@ namespace Subsurface
             durationBar.BarScroll = msg.ReadFloat();
 
             LevelSeed = msg.ReadString();
+
+            int playerCount = msg.ReadInt32();
+            for (int i = 0; i < playerCount; i++)
+            {
+                int clientID = msg.ReadInt32();
+                string jobName = msg.ReadString();
+
+
+                Client client = null;
+                GUITextBlock textBlock = null;
+                foreach (GUIComponent child in playerList.children)
+                {
+                    Client tempClient = child.UserData as Client;
+                    if (tempClient == null || tempClient.ID != clientID) continue;
+
+                    client = tempClient;
+                    textBlock = child as GUITextBlock;
+                    break;
+                }
+                if (client == null) continue;
+
+                client.assignedJob = JobPrefab.List.Find(jp => jp.Name == jobName);
+                
+                textBlock.Text = client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")");
+            }
         }
+
     }
 }

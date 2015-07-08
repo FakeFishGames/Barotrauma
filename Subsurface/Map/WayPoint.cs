@@ -10,11 +10,18 @@ using System.Collections.ObjectModel;
 
 namespace Subsurface
 {
+    public enum SpawnType { None, Human, Enemy };
     class WayPoint : MapEntity
     {
-        public enum SpawnType { None, Human, Enemy };
+        
 
         private SpawnType spawnType;
+
+        public SpawnType SpawnType
+        {
+            get { return spawnType; }
+            set { spawnType = value; }
+        }
 
         public override Vector2 SimPosition
         {
@@ -31,7 +38,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (!editing) return;
+            //if (!editing) return;
 
             Color clr = (isSelected) ? Color.Red : Color.LightGreen;
             GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), clr, true);

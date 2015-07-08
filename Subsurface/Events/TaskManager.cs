@@ -45,9 +45,9 @@ namespace Subsurface
             tasks.Add(newTask);
         }
 
-        public void StartShift(int scriptedEventCount)
+        public void StartShift(Level level)
         {
-            CreateScriptedEvents(scriptedEventCount);
+            CreateScriptedEvents(level);
 
             taskListBox.ClearChildren();
         }
@@ -59,13 +59,11 @@ namespace Subsurface
             tasks.Clear();
         }
 
-        private void CreateScriptedEvents(int scriptedEventCount)
+        private void CreateScriptedEvents(Level level)
         {
-            for (int i = 0; i < scriptedEventCount; i++)
-            {
-                ScriptedEvent scriptedEvent = ScriptedEvent.LoadRandom();
-                AddTask(new ScriptedTask(scriptedEvent));
-            }
+            ScriptedEvent scriptedEvent = ScriptedEvent.LoadRandom(level.Seed);
+            AddTask(new ScriptedTask(scriptedEvent));
+            
         }
 
         public void TaskStarted(Task task)

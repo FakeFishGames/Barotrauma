@@ -1,0 +1,218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A4610E4C-DD34-428B-BABB-779CA0B5993A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FarseerPhysics</RootNamespace>
+    <AssemblyName>FarseerPhysics</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\Debug\FarseerPhysics.XML</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\Release\FarseerPhysics.XML</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Collision\Collision.cs" />
+    <Compile Include="Collision\Distance.cs" />
+    <Compile Include="Collision\DynamicTree.cs" />
+    <Compile Include="Collision\DynamicTreeBroadPhase.cs" />
+    <Compile Include="Collision\IBroadPhase.cs" />
+    <Compile Include="Collision\Shapes\ChainShape.cs" />
+    <Compile Include="Collision\Shapes\CircleShape.cs" />
+    <Compile Include="Collision\Shapes\EdgeShape.cs" />
+    <Compile Include="Collision\Shapes\PolygonShape.cs" />
+    <Compile Include="Collision\Shapes\Shape.cs" />
+    <Compile Include="Collision\TimeOfImpact.cs" />
+    <Compile Include="Common\ConvexHull\ChainHull.cs" />
+    <Compile Include="Common\ConvexHull\GiftWrap.cs" />
+    <Compile Include="Common\ConvexHull\Melkman.cs" />
+    <Compile Include="Common\Curve.cs" />
+    <Compile Include="Common\CurveKey.cs" />
+    <Compile Include="Common\CurveKeyCollection.cs" />
+    <Compile Include="Common\Decomposition\BayazitDecomposer.cs" />
+    <Compile Include="Common\Decomposition\CDTDecomposer.cs" />
+    <Compile Include="Common\Decomposition\CDT\Delaunay\DelaunayTriangle.cs" />
+    <Compile Include="Common\Decomposition\CDT\Delaunay\Sweep\AdvancingFront.cs" />
+    <Compile Include="Common\Decomposition\CDT\Delaunay\Sweep\AdvancingFrontNode.cs" />
+    <Compile Include="Common\Decomposition\CDT\Delaunay\Sweep\DTSweep.cs" />
+    <Compile Include="Common\Decomposition\CDT\Delaunay\Sweep\DTSweepConstraint.cs" />
+    <Compile Include="Common\Decomposition\CDT\Delaunay\Sweep\DTSweepContext.cs" />
+    <Compile Include="Common\Decomposition\CDT\Delaunay\Sweep\DTSweepPointComparator.cs" />
+    <Compile Include="Common\Decomposition\CDT\Delaunay\Sweep\PointOnEdgeException.cs" />
+    <Compile Include="Common\Decomposition\CDT\ITriangulatable.cs" />
+    <Compile Include="Common\Decomposition\CDT\Orientation.cs" />
+    <Compile Include="Common\Decomposition\CDT\Polygon\Polygon.cs" />
+    <Compile Include="Common\Decomposition\CDT\Polygon\PolygonPoint.cs" />
+    <Compile Include="Common\Decomposition\CDT\Polygon\PolygonSet.cs" />
+    <Compile Include="Common\Decomposition\CDT\Sets\ConstrainedPointSet.cs" />
+    <Compile Include="Common\Decomposition\CDT\Sets\PointSet.cs" />
+    <Compile Include="Common\Decomposition\CDT\TriangulationConstraint.cs" />
+    <Compile Include="Common\Decomposition\CDT\TriangulationContext.cs" />
+    <Compile Include="Common\Decomposition\CDT\TriangulationMode.cs" />
+    <Compile Include="Common\Decomposition\CDT\TriangulationPoint.cs" />
+    <Compile Include="Common\Decomposition\CDT\TriangulationUtil.cs" />
+    <Compile Include="Common\Decomposition\CDT\Util\FixedArray3.cs" />
+    <Compile Include="Common\Decomposition\CDT\Util\FixedBitArray3.cs" />
+    <Compile Include="Common\Decomposition\CDT\Util\PointGenerator.cs" />
+    <Compile Include="Common\Decomposition\CDT\Util\PolygonGenerator.cs" />
+    <Compile Include="Common\Decomposition\EarclipDecomposer.cs" />
+    <Compile Include="Common\Decomposition\FlipcodeDecomposer.cs" />
+    <Compile Include="Common\Decomposition\SeidelDecomposer.cs" />
+    <Compile Include="Common\Decomposition\Seidel\Edge.cs" />
+    <Compile Include="Common\Decomposition\Seidel\MonotoneMountain.cs" />
+    <Compile Include="Common\Decomposition\Seidel\Node.cs" />
+    <Compile Include="Common\Decomposition\Seidel\Point.cs" />
+    <Compile Include="Common\Decomposition\Seidel\QueryGraph.cs" />
+    <Compile Include="Common\Decomposition\Seidel\Sink.cs" />
+    <Compile Include="Common\Decomposition\Seidel\Trapezoid.cs" />
+    <Compile Include="Common\Decomposition\Seidel\TrapezoidalMap.cs" />
+    <Compile Include="Common\Decomposition\Seidel\Triangulator.cs" />
+    <Compile Include="Common\Decomposition\Seidel\XNode.cs" />
+    <Compile Include="Common\Decomposition\Seidel\YNode.cs" />
+    <Compile Include="Common\Decomposition\Triangulate.cs" />
+    <Compile Include="Common\FixedArray.cs" />
+    <Compile Include="Common\HashSet.cs" />
+    <Compile Include="Common\LineTools.cs" />
+    <Compile Include="Common\Math.cs" />
+    <Compile Include="Common\MathHelper.cs" />
+    <Compile Include="Common\Matrix.cs" />
+    <Compile Include="Common\Path.cs" />
+    <Compile Include="Common\PathManager.cs" />
+    <Compile Include="Common\PhysicsLogic\FilterData.cs" />
+    <Compile Include="Common\PhysicsLogic\PhysicsLogic.cs" />
+    <Compile Include="Common\PhysicsLogic\RealExplosion.cs" />
+    <Compile Include="Common\PhysicsLogic\SimpleExplosion.cs" />
+    <Compile Include="Common\PolygonManipulation\CuttingTools.cs" />
+    <Compile Include="Common\PolygonManipulation\SimplifyTools.cs" />
+    <Compile Include="Common\PolygonManipulation\YuPengClipper.cs" />
+    <Compile Include="Common\PolygonTools.cs" />
+    <Compile Include="Common\Serialization.cs" />
+    <Compile Include="Common\TextureTools\MarchingSquares.cs" />
+    <Compile Include="Common\TextureTools\Terrain.cs" />
+    <Compile Include="Common\TextureTools\TextureConverter.cs" />
+    <Compile Include="Common\Vector2.cs" />
+    <Compile Include="Common\Vector3.cs" />
+    <Compile Include="Common\Vertices.cs" />
+    <Compile Include="Controllers\AbstractForceController.cs" />
+    <Compile Include="Controllers\BuoyancyController.cs" />
+    <Compile Include="Controllers\Controller.cs" />
+    <Compile Include="Controllers\GravityController.cs" />
+    <Compile Include="Controllers\SimpleWindForce.cs" />
+    <Compile Include="Controllers\VelocityLimitController.cs" />
+    <Compile Include="ConvertUnits.cs" />
+    <Compile Include="DebugViewBase.cs" />
+    <Compile Include="Dynamics\Body.cs" />
+    <Compile Include="Dynamics\BreakableBody.cs" />
+    <Compile Include="Dynamics\ContactManager.cs" />
+    <Compile Include="Dynamics\Contacts\Contact.cs" />
+    <Compile Include="Dynamics\Contacts\ContactSolver.cs" />
+    <Compile Include="Dynamics\Fixture.cs" />
+    <Compile Include="Dynamics\Island.cs" />
+    <Compile Include="Dynamics\Joints\AngleJoint.cs" />
+    <Compile Include="Dynamics\Joints\DistanceJoint.cs" />
+    <Compile Include="Dynamics\Joints\FixedMouseJoint.cs" />
+    <Compile Include="Dynamics\Joints\FrictionJoint.cs" />
+    <Compile Include="Dynamics\Joints\GearJoint.cs" />
+    <Compile Include="Dynamics\Joints\Joint.cs" />
+    <Compile Include="Dynamics\Joints\MotorJoint.cs" />
+    <Compile Include="Dynamics\Joints\PrismaticJoint.cs" />
+    <Compile Include="Dynamics\Joints\PulleyJoint.cs" />
+    <Compile Include="Dynamics\Joints\RevoluteJoint.cs" />
+    <Compile Include="Dynamics\Joints\RopeJoint.cs" />
+    <Compile Include="Dynamics\Joints\WeldJoint.cs" />
+    <Compile Include="Dynamics\Joints\WheelJoint.cs" />
+    <Compile Include="Dynamics\TimeStep.cs" />
+    <Compile Include="Dynamics\World.cs" />
+    <Compile Include="Dynamics\WorldCallbacks.cs" />
+    <Compile Include="Factories\BodyFactory.cs" />
+    <Compile Include="Factories\FixtureFactory.cs" />
+    <Compile Include="Factories\JointFactory.cs" />
+    <Compile Include="Factories\LinkFactory.cs" />
+    <Compile Include="Settings.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

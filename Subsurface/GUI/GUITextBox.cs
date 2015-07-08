@@ -89,9 +89,11 @@ namespace Subsurface
         public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null)
             : base(style)
         {
+            Enabled = true;
+
             this.rect = rect;
 
-            if (color!=null) this.color = (Color)color;
+            if (color != null) this.color = (Color)color;
                         
             this.alignment = alignment;
 

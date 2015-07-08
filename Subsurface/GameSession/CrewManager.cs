@@ -119,7 +119,7 @@ namespace Subsurface
 
             foreach (CharacterInfo ci in characterInfos)
             {
-                WayPoint randomWayPoint = WayPoint.GetRandom(WayPoint.SpawnType.Human);
+                WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Human);
                 Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
 
                 Character character = new Character(ci.File, position, ci);

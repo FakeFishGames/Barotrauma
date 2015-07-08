@@ -11,11 +11,25 @@ namespace Subsurface
 
         string name;
         string description;
+
+        //how many crew members can have the job (only one captain etc)        
+        private int maxNumber;
+
+        //how many crew members are REQUIRED to have a job 
+        //(i.e. if one captain is required, one captain is chosen even if all the players have set captain to lowest preference)
+        private int minNumber;
+
+        //if set to true, a client that has chosen this as their preferred job will get it no matter what
+        public bool AllowAlways
+        {
+            get;
+            private set;
+        }
         
         //names of the items the character spawns with
-        public List<string> itemNames;
+        public List<string> ItemNames;
 
-        public Dictionary<string, Vector2> skills;
+        public Dictionary<string, Vector2> Skills;
 
         public string Name
         {
@@ -27,19 +41,15 @@ namespace Subsurface
             get { return description; }
         }
 
-        //public float GetSkill(string skillName)
-        //{
-        //    float skillLevel = 0.0f;
-        //    if (skills.TryGetValue(skillName.ToLower(), out skillLevel))
-        //    {
-        //        return skillLevel;
-        //    }
-        //    else
-        //    {
-        //        DebugConsole.ThrowError("Skill ''"+skillName+" not found!");
-        //        return skillLevel;
-        //    }
-        //}
+        public int MaxNumber
+        {
+            get { return maxNumber; }
+        }
+
+        public int MinNumber
+        {
+            get { return minNumber; }
+        }
 
         public JobPrefab(XElement element)
         {
@@ -47,9 +57,14 @@ namespace Subsurface
 
             description = ToolBox.GetAttributeString(element, "description", "");
 
-            itemNames = new List<string>();
+            minNumber = ToolBox.GetAttributeInt(element, "minnumber", 0);
+            maxNumber = ToolBox.GetAttributeInt(element, "maxnumber", 10);
 
-            skills = new Dictionary<string, Vector2>();
+            AllowAlways = ToolBox.GetAttributeBool(element, "allowalways", false);
+
+            ItemNames = new List<string>();
+
+            Skills = new Dictionary<string, Vector2>();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -57,7 +72,7 @@ namespace Subsurface
                 {
                     case "item":
                         string itemName = ToolBox.GetAttributeString(subElement, "name", "");
-                        if (!string.IsNullOrEmpty(itemName)) itemNames.Add(itemName);
+                        if (!string.IsNullOrEmpty(itemName)) ItemNames.Add(itemName);
                         break;
                     case "skills":
                         LoadSkills(subElement);
@@ -70,18 +85,18 @@ namespace Subsurface
         {
             foreach (XElement subElement in element.Elements())
             {
-                string skillName = subElement.Name.ToString().ToLower();
-                if (skills.ContainsKey(skillName)) continue;
+                string skillName = subElement.Name.ToString();
+                if (Skills.ContainsKey(skillName)) continue;
 
                 var levelAttribute = subElement.Attribute("level").ToString();
                 if (levelAttribute.Contains("'"))
                 {
-                    skills.Add(skillName, ToolBox.ParseToVector2(levelAttribute, false));
+                    Skills.Add(skillName, ToolBox.ParseToVector2(levelAttribute, false));
                 }
                 else
                 {
                     float skillLevel = float.Parse(levelAttribute, CultureInfo.InvariantCulture);
-                    skills.Add(skillName, new Vector2(skillLevel, skillLevel));
+                    Skills.Add(skillName, new Vector2(skillLevel, skillLevel));
                 }
 
             }

@@ -23,7 +23,7 @@ namespace Subsurface
 
         protected override void Start()
         {
-            WayPoint randomWayPoint = WayPoint.GetRandom(WayPoint.SpawnType.Enemy);
+            WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Enemy);
 
             int amount = Rand.Range(minAmount, maxAmount, false);
 

@@ -255,17 +255,7 @@ namespace Subsurface
                           .Select(s => s[Rand.Int(s.Length)])
                           .ToArray());
         }
-
-        public static int SeedToInt(string seed)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < seed.Length; i++)
-            {
-                sb.Append((int)seed[i]);
-            }
-            return int.Parse(sb.ToString()) % int.MaxValue;
-        }
-
+        
         public static string WrapText(string text, float lineWidth)
         {
             if (GUI.font.MeasureString(text).X < lineWidth) return text;
