@@ -198,22 +198,21 @@ namespace Subsurface
             hireList.ClearChildren();
             foreach (CharacterInfo c in gameMode.hireManager.availableCharacters)
             {
-                GUIFrame frame = new GUIFrame(
-                    new Rectangle(0, 0, 0, 25), Color.White, Alignment.Left, null, hireList);
-                frame.UserData = c;
-                frame.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
+                //GUIFrame frame = new GUIFrame(
+                //    new Rectangle(0, 0, 0, 25), Color.Transparent, null, hireList);
+                //frame.UserData = c;
+                //frame.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    c.Name + " (" + c.Job.Name + ")",
-                    Color.Transparent, Color.Black,
-                    Alignment.Left, null, frame);
+                    c.Name + " (" + c.Job.Name + ")", GUI.style, hireList);
+                textBlock.UserData = c;
 
                 textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     c.Salary.ToString(),
-                    Color.Transparent, Color.Black,
-                    Alignment.Right, null, frame);
+                    null, null,
+                    Alignment.TopRight, GUI.style, textBlock);
             }
         }
 
@@ -257,7 +256,7 @@ namespace Subsurface
 
             spriteBatch.End();
 
-            if (characterList.SelectedData != null)
+            if (characterList.SelectedData != null && selectedRightPanel == (int)PanelTab.Crew)
             {
                 if (previewCharacter != null)
                 {

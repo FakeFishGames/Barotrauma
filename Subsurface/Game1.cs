@@ -196,11 +196,16 @@ namespace Subsurface
 
             GUI.Update((float)deltaTime);
 
-            if (NetworkMember != null) NetworkMember.Update();
+            if (NetworkMember != null)
+            {
+                NetworkMember.Update();
+            }
             else
             {
                 NetworkEvent.events.Clear();
-            }           
+            }
+
+            CoroutineManager.Update();
         }
 
 

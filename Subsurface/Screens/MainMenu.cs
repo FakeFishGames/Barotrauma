@@ -222,16 +222,18 @@ namespace Subsurface
             if (string.IsNullOrEmpty(ipBox.Text)) return false;
 
             Game1.NetworkMember = new GameClient(nameBox.Text);
-            if (Game1.Client.ConnectToServer(ipBox.Text))
-            {
-                Game1.NetLobbyScreen.Select();
-                return true;
-            }
-            else
-            {
-                Game1.NetworkMember = null;
-                return false;
-            }
+            Game1.Client.ConnectToServer(ipBox.Text);
+
+            return true;
+            //{
+            //    Game1.NetLobbyScreen.Select();
+            //    return true;
+            //}
+            //else
+            //{
+            //    Game1.NetworkMember = null;
+            //    return false;
+            //}
         }
         
     }

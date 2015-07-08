@@ -21,17 +21,17 @@ namespace Subsurface
             this.Buttons[0].OnClicked = Close;
         }
 
-        public GUIMessageBox(string header, string text, string[] buttons, Alignment textAlignment = (Alignment.Left | Alignment.Top))
-            : base(new Rectangle(Game1.GraphicsWidth / 2 - DefaultWidth / 2, Game1.GraphicsHeight / 2 - DefaultHeight / 2, DefaultWidth, DefaultHeight),
-                null, Alignment.CenterX, GUI.style, null)
+        public GUIMessageBox(string header, string text, string[] buttons, Alignment textAlignment = Alignment.TopLeft)
+            : base(new Rectangle(0,0, DefaultWidth, DefaultHeight),
+                null, Alignment.Center, GUI.style, null)
         {
             //Padding = GUI.style.smallPadding;
 
-            if (buttons == null || buttons.Length == 0)
-            {
-                DebugConsole.ThrowError("Creating a message box with no buttons isn't allowed");
-                return;
-            }
+            //if (buttons == null || buttons.Length == 0)
+            //{
+            //    DebugConsole.ThrowError("Creating a message box with no buttons isn't allowed");
+            //    return;
+            //}
 
             new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, GUI.style, this, true);
             new GUITextBlock(new Rectangle(0, 30, 0, DefaultHeight - 70), text, Color.Transparent, Color.White, textAlignment, GUI.style, this, true);

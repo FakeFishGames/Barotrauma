@@ -19,6 +19,10 @@ namespace Subsurface
         private int seed;
         private int size;
 
+        private Texture2D iceTexture;
+        private Texture2D iceCraters;
+        private Texture2D iceCrack;
+
         private Location currentLocation;
         private Location selectedLocation;
 
@@ -34,48 +38,11 @@ namespace Subsurface
 
             connections = new List<LocationConnection>();
 
+            iceTexture  = Game1.textureLoader.FromFile("Content/Map/iceSurface.png");
+            iceCraters  = Game1.textureLoader.FromFile("Content/Map/iceCraters.png");
+            iceCrack    = Game1.textureLoader.FromFile("Content/Map/iceCrack.png");
+
             GenerateLocations();
-
-            //for (int i = 0; i<10; i++)
-            //{
-            //    Vector2 pos = new Vector2((float)Game1.random.NextDouble() * size, (float)Game1.random.NextDouble() * size);
-
-            //    Location location = 
-            //    locations.Add(location);
-            //}
-
-            //for (int i = 0; i < 10; i++)
-            //{
-
-            //    int closestIndex = 0;
-            //    float closestDistance = 0.0f;
-            //    for (int j = 0; j<10; j++)
-            //    {
-            //        if (j == i) continue;
-
-            //        //ignore if already connected
-            //        bool alreadyConnected = false;
-            //        foreach (LocationConnection connection in connections)
-            //        {
-            //            if (connection.Locations.Contains(locations[i]) && connection.Locations.Contains(locations[j]))
-            //            {
-            //                alreadyConnected = true;
-            //                break;
-            //            }
-            //        }
-
-            //        if (alreadyConnected) continue;
-
-            //        float dist = Vector2.Distance(locations[i].MapPosition, locations[j].MapPosition);
-            //        if (closestDistance > 0.0f && dist > closestDistance) continue;
-
-            //        closestDistance = dist;
-            //        closestIndex = j;
-            //    }
-
-                
-            //    connections.Add(new LocationConnection(locations[i], locations[closestIndex], level));
-            //}
 
             currentLocation = locations[locations.Count/2];
         }
@@ -97,6 +64,12 @@ namespace Subsurface
             {
                 if (edge.point1 == edge.point2) continue;
 
+                //remove points from the edge of the map
+                if (edge.point1.X == 0 || edge.point1.X == size) continue;
+                if (edge.point1.Y == 0 || edge.point1.Y == size) continue;
+                if (edge.point2.X == 0 || edge.point2.X == size) continue;
+                if (edge.point2.Y == 0 || edge.point2.Y == size) continue;
+
                 Location[] newLocations = new Location[2];
                 newLocations[0] = locations.Find(l => l.MapPosition == edge.point1 || l.MapPosition == edge.point2);
                 newLocations[1] = locations.Find(l => l != newLocations[0] && (l.MapPosition == edge.point1 || l.MapPosition == edge.point2));
@@ -117,6 +90,8 @@ namespace Subsurface
                 }               
 
                 connections.Add(new LocationConnection(newLocations[0], newLocations[1], Level.CreateRandom()));
+
+
             }
 
             float minDistance = 50.0f;
@@ -124,40 +99,103 @@ namespace Subsurface
             {
                 LocationConnection connection = connections[i];
 
-                if (Vector2.Distance(connection.Locations[0].MapPosition, connection.Locations[1].MapPosition) > minDistance) continue;
+                if (Vector2.Distance(connection.Locations[0].MapPosition, connection.Locations[1].MapPosition) > minDistance)
+                {
+                    continue;
+                }
 
                 locations.Remove(connection.Locations[0]);
                 connections.Remove(connection);
-           
+
                 foreach (LocationConnection connection2 in connections)
                 {
+                    if (connection == connection2) continue;
                     if (connection2.Locations[0] == connection.Locations[0]) connection2.Locations[0] = connection.Locations[1];
                     if (connection2.Locations[1] == connection.Locations[0]) connection2.Locations[1] = connection.Locations[1];
                 }
             }
 
+            for (int i = connections.Count - 1; i >= 0; i--)
+            {
+                LocationConnection connection = connections[i];
+
+                for (int n = i-1; n >= 0; n--)
+                {
+                    if (connection.Locations.Contains(connections[n].Locations[0])
+                        && connection.Locations.Contains(connections[n].Locations[1]))
+                    {
+                        connections.RemoveAt(i);
+                    }
+                }
+            }
+
+            foreach (LocationConnection connection in connections)
+            {
+                Vector2 start = connection.Locations[0].MapPosition;
+                Vector2 end = connection.Locations[1].MapPosition;
+                int generations = (int)(Math.Sqrt(Vector2.Distance(start, end) / 10.0f));
+                connection.CrackSegments = GenerateCrack(start, end, generations);
+            }
         }
 
+        private List<Vector2[]> GenerateCrack(Vector2 start, Vector2 end, int generations)
+        {
+            List<Vector2[]> segments = new List<Vector2[]>();
+
+            segments.Add(new Vector2[] {start, end});
+
+            float offsetAmount = 5.0f;
+
+            for (int n = 0; n<generations; n++)
+            {
+                for (int i = 0; i<segments.Count; i++)
+                {
+                    Vector2 startSegment = segments[i][0];
+                    Vector2 endSegment = segments[i][1];
+
+                    segments.RemoveAt(i);
+
+                    Vector2 midPoint = (startSegment + endSegment) / 2.0f;
+
+                    Vector2 normal = Vector2.Normalize(endSegment - startSegment);
+                    normal = new Vector2(-normal.Y, normal.X);
+                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount);
+
+                    segments.Insert(i, new Vector2[] { startSegment, midPoint });
+                    segments.Insert(i+1, new Vector2[] { midPoint, endSegment });
+
+                    i++;
+                }
+            }
+
+            return segments;
+        }
+
+        public void MoveToNextLocation()
+        {
+            currentLocation = selectedLocation;
+            selectedLocation = null;
+        }
+
+        private Location highlightedLocation;
         public void Draw(SpriteBatch spriteBatch, Rectangle rect)
         {
-            GUI.DrawRectangle(spriteBatch, rect, Color.DarkBlue, true);
+            //GUI.DrawRectangle(spriteBatch, rect, Color.DarkBlue, true);
 
+            spriteBatch.Draw(iceTexture, rect, Color.White);
+
+            Vector2 rectCorner = new Vector2(rect.X, rect.Y);
             Vector2 scale = new Vector2((float)rect.Width/ size, (float)rect.Height/size);
 
             float maxDist = 20.0f;
             float closestDist = 0.0f;
-            Location highlightedLocation = null;
-            foreach (Location location in locations)
+            highlightedLocation = null;
+            for (int i = 0; i < locations.Count;i++ )
             {
-                Vector2 pos = location.MapPosition * scale;
-                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X + (int)pos.X, rect.Y + (int)pos.Y, 5, 5), Color.White, true);
+                Location location = locations[i];
+                Vector2 pos = rectCorner + location.MapPosition * scale;
 
-                if (currentLocation == location)
-                {
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X + (int)pos.X - 4, rect.Y + (int)pos.Y - 4, 5+8, 5+8), Color.Red, false);
-                }
-
-                float dist = Vector2.Distance(PlayerInput.MousePosition, new Vector2(rect.X + pos.X, rect.Y + pos.Y));
+                float dist = Vector2.Distance(PlayerInput.MousePosition, new Vector2(pos.X, pos.Y));
                 if (dist < maxDist && (highlightedLocation == null || dist < closestDist))
                 {
                     closestDist = dist;
@@ -165,55 +203,78 @@ namespace Subsurface
                 }
             }
 
-            if (highlightedLocation!=null)
-            {
-                Vector2 pos = highlightedLocation.MapPosition * scale;
-                pos.X = (int)pos.X;
-                pos.Y = (int)pos.Y;
-                spriteBatch.DrawString(GUI.font, highlightedLocation.Name, pos + new Vector2(rect.X - 50, rect.Y), Color.White);
-                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X + (int)pos.X - 4, rect.Y + (int)pos.Y - 4, 5 + 8, 5 + 8), Color.White, false);
-            }
 
-            if (selectedLocation != null)
-            {
-                Vector2 pos = selectedLocation.MapPosition * scale;
-                pos.X = (int)pos.X;
-                pos.Y = (int)pos.Y;
-                spriteBatch.DrawString(GUI.font, selectedLocation.Name, pos + new Vector2(rect.X - 50, rect.Y), Color.White);
-                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X + (int)pos.X - 4, rect.Y + (int)pos.Y - 4, 5 + 8, 5 + 8), Color.White, false);
-            }
-
-            Vector2 rectCorner = new Vector2(rect.X, rect.Y);
             foreach (LocationConnection connection in connections)
             {
-                GUI.DrawLine(spriteBatch, 
-                    connection.Locations[0].MapPosition * scale + rectCorner, 
-                    connection.Locations[1].MapPosition * scale + rectCorner, Color.LightGray);
-                
-                if (highlightedLocation!=currentLocation &&
+                Color crackColor = Color.White;
+
+                if (highlightedLocation != currentLocation &&
                     connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation))
                 {
-                    GUI.DrawLine(spriteBatch,
-                        connection.Locations[0].MapPosition * scale + rectCorner +Vector2.One,
-                        connection.Locations[1].MapPosition * scale + rectCorner + Vector2.One, Color.White);
+                    crackColor = Color.Red;
 
-                    if (PlayerInput.LeftButtonClicked())
-                        if(selectedLocation!=highlightedLocation && highlightedLocation!=null)
+                    if (PlayerInput.LeftButtonClicked()&&
+                        selectedLocation != highlightedLocation && highlightedLocation != null)
                     {
                         //currentLocation = highlightedLocation;
                         Game1.LobbyScreen.SelectLocation(highlightedLocation, connection);
-                        selectedLocation = highlightedLocation;
-                    }                
+                        selectedLocation = highlightedLocation;                        
+                    } 
                 }
+
 
                 if (selectedLocation != currentLocation &&
                     (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))
                 {
-                    GUI.DrawLine(spriteBatch,
-                        connection.Locations[0].MapPosition * scale + rectCorner + Vector2.One,
-                        connection.Locations[1].MapPosition * scale + rectCorner + Vector2.One, Color.White);
-
+                    crackColor = Color.Red;
                 }
+
+                foreach (Vector2[] segment in connection.CrackSegments)
+                {
+                    Vector2 start = segment[0] * scale + rectCorner;
+                    Vector2 end = segment[1] * scale + rectCorner;
+                    float dist = Vector2.Distance(start, end);
+
+                    //spriteBatch.Draw(iceCrack,
+                    //    new Rectangle((int)((start.X + end.X) / 2.0f), (int)((start.Y + end.Y) / 2.0f), (int)dist, 30),
+                    //    new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(start - end),
+                    //    new Vector2(dist / 2, 30), SpriteEffects.None, 0.01f);
+                    GUI.DrawLine(spriteBatch,
+                        segment[0] * scale + rectCorner,
+                        segment[1] * scale + rectCorner, crackColor);
+                }
+            }
+
+            for (int i = 0; i < locations.Count; i++)
+            {
+                Location location = locations[i];
+                Vector2 pos = rectCorner  + location.MapPosition * scale;
+
+                int imgIndex = i % 16;
+                int xCell = imgIndex % 4;
+                int yCell = (int)Math.Floor(imgIndex / 4.0f);
+                spriteBatch.Draw(iceCraters, pos, 
+                    new Rectangle(xCell * 64, yCell * 64, 64, 64), 
+                    Color.White, i, 
+                    new Vector2(32, 32), 0.5f*scale, SpriteEffects.None, 0.0f);
+
+            }
+
+            for (int i = 0; i < 3; i++ )
+            {
+                Location location = (i == 0) ? highlightedLocation : selectedLocation;
+                if (i == 2) location = currentLocation;
+                
+                if (location == null) continue;
+
+                Vector2 pos = rectCorner + location.MapPosition * scale;
+                pos.X = (int)pos.X;
+                pos.Y = (int)pos.Y;
+                if (highlightedLocation==location)
+                {
+                    spriteBatch.DrawString(GUI.font, location.Name, pos + new Vector2(-50, -20), Color.DarkRed);
+                }
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 4, (int)pos.Y - 4, 5 + 8, 5 + 8), Color.DarkRed, false);
             }
 
         }
@@ -222,8 +283,10 @@ namespace Subsurface
 
     class LocationConnection
     {
-        Location[] locations;
-        Level level;
+        private Location[] locations;
+        private Level level;
+        
+        public List<Vector2[]> CrackSegments;
 
         public Location[] Locations
         {

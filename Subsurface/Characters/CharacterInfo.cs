@@ -19,6 +19,8 @@ namespace Subsurface
 
         public int Salary;
 
+        public bool StartItemsGiven;
+
         //public string GenderString()
         //{
         //    return gender.ToString();
@@ -96,11 +98,10 @@ namespace Subsurface
             string genderStr = ToolBox.GetAttributeString(element, "gender", "male").ToLower();
             Gender = (genderStr == "male") ? Gender.Male : Gender.Female;
 
-            File = ToolBox.GetAttributeString(element, "file", "");
-
-            Salary = ToolBox.GetAttributeInt(element, "salary", 1000);
-
-            HeadSpriteId = ToolBox.GetAttributeInt(element, "headspriteid", 1);
+            File            = ToolBox.GetAttributeString(element, "file", "");
+            Salary          = ToolBox.GetAttributeInt(element, "salary", 1000);
+            HeadSpriteId    = ToolBox.GetAttributeInt(element, "headspriteid", 1);
+            StartItemsGiven = ToolBox.GetAttributeBool(element, "startitemsgiven", false);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -120,7 +121,8 @@ namespace Subsurface
                 new XAttribute("file", File),
                 new XAttribute("gender", Gender == Gender.Male ? "male" : "female"),
                 new XAttribute("salary", Salary),
-                new XAttribute("headspriteid", HeadSpriteId));
+                new XAttribute("headspriteid", HeadSpriteId),
+                new XAttribute("startitemsgiven", StartItemsGiven));
 
             Job.Save(charElement);
 

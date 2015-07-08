@@ -15,7 +15,15 @@ namespace Subsurface.Networking
         private Character myCharacter;
         private CharacterInfo characterInfo;
 
+        GUIMessageBox reconnectBox;
+
+        private bool connected;
+
+        private int myID;
+
         List<Client> otherClients;
+
+        private string serverIP;
                 
         public Character Character
         {
@@ -37,8 +45,10 @@ namespace Subsurface.Networking
             otherClients = new List<Client>();
         }
 
-        public bool ConnectToServer(string hostIP)
+        public void ConnectToServer(string hostIP)
         {
+            serverIP = hostIP;
+
             myCharacter = Character.Controlled;
 
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
@@ -65,7 +75,7 @@ namespace Subsurface.Networking
             catch (ArgumentNullException e)
             {
                 DebugConsole.ThrowError("Couldn't connect to "+hostIP+". Error message: "+e.Message);
-                return false;
+                return;
             }
 
             // Create timespan of 30ms
@@ -78,27 +88,24 @@ namespace Subsurface.Networking
             //update.Elapsed += new System.Timers.ElapsedEventHandler(Update);
 
             // Funtion that waits for connection approval info from server
-            WaitForStartingInfo();
-
-            if (Client.ConnectionStatus != NetConnectionStatus.Connected)
-            {
-                DebugConsole.ThrowError("Couldn't connect to server");
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-
+            CoroutineManager.StartCoroutine(WaitForStartingInfo());
+            
             // Start the timer
             //update.Start();
 
+        }
 
+        private bool RetryConnection(GUIButton button, object obj)
+        {
+            ConnectToServer(serverIP);
+            return true;
         }
 
         // Before main looping starts, we loop here and wait for approval message
-        private void WaitForStartingInfo()
+        private IEnumerable<Status> WaitForStartingInfo()
         {
+            reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to "+serverIP, new string[0]);
+
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;
             
@@ -107,7 +114,9 @@ namespace Subsurface.Networking
             // Loop untill we are approved
             while (!CanStart)
             {
-                if (DateTime.Now>timeOut) return;
+                yield return Status.Running;
+
+                if (DateTime.Now > timeOut) break;
 
                 NetIncomingMessage inc;
                 // If new messages arrived
@@ -120,7 +129,9 @@ namespace Subsurface.Networking
                     case NetIncomingMessageType.Data:
                         if (inc.ReadByte() == (byte)PacketTypes.LoggedIn)
                         {
-                            int myID = inc.ReadInt32();
+                            myID = inc.ReadInt32();
+
+                            Game1.NetLobbyScreen.ClearPlayers();
 
                             //add the names of other connected clients to the lobby screen
                             int existingClients = inc.ReadInt32();
@@ -149,19 +160,50 @@ namespace Subsurface.Networking
 
                         break;
                     default:
-                        // Should not happen and if happens, don't care
                         Console.WriteLine(inc.ReadString() + " Strange message");
                         break;
-                }
-                
+                }                
             }
+
+            if (reconnectBox != null)
+            {
+                reconnectBox.Close(null, null);
+                reconnectBox = null;
+            }
+
+            if (Client.ConnectionStatus != NetConnectionStatus.Connected)
+            {
+                reconnectBox = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to server.", new string[] { "Retry", "Cancel" });
+                reconnectBox.Buttons[0].OnClicked += RetryConnection;
+                reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
+            }
+            else
+            {
+                Game1.NetLobbyScreen.Select();
+                connected = true;
+            }
+
+            yield return Status.Success;
         }
 
         public override void Update()
         {
-            if (updateTimer > DateTime.Now) return;
-            
-            if (myCharacter!=null)
+            if (!connected || updateTimer > DateTime.Now) return;
+
+            if (reconnectBox != null)
+            {
+                ConnectToServer(serverIP);
+                return;
+            }
+
+            if (Client.ConnectionStatus == NetConnectionStatus.Disconnected)
+            {
+                reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
+                
+                return;
+            }
+
+            if (myCharacter != null)
             {
                 if (myCharacter.IsDead)
                 {
@@ -190,7 +232,6 @@ namespace Subsurface.Networking
                     
             NetworkEvent.events.Clear();
             
-
             CheckServerMessages();
 
             // Update current time
@@ -236,13 +277,20 @@ namespace Subsurface.Networking
                         Game1.GameSession = new GameSession(Submarine.Loaded);
                         Game1.GameSession.StartShift(duration, levelSeed);
 
-                        myCharacter = ReadCharacterData(inc);
-                        Character.Controlled = myCharacter;                       
+                        //myCharacter = ReadCharacterData(inc);
+                        //Character.Controlled = myCharacter;                       
 
                         int count = inc.ReadInt32();
                         for (int n = 0; n < count; n++)
                         {
-                            ReadCharacterData(inc);
+                            int id = inc.ReadInt32();
+                            Character newCharacter = ReadCharacterData(inc);
+
+                            if (id == myID)
+                            {
+                                myCharacter = newCharacter;
+                                Character.Controlled = myCharacter;   
+                            }
                         }
 
                         gameStarted = true;
@@ -275,7 +323,7 @@ namespace Subsurface.Networking
                     case (byte)PacketTypes.KickedOut:
                         string msg = inc.ReadString();
 
-                        DebugConsole.ThrowError(msg);
+                        new GUIMessageBox("KICKED", msg);
 
                         Game1.MainMenuScreen.Select();
 
@@ -296,8 +344,8 @@ namespace Subsurface.Networking
                     case (byte)PacketTypes.Traitor:
                         string targetName = inc.ReadString();
 
-                        Game1.GameSession.NewChatMessage("You are an agent of Ordo Europae", messageColor[(int)ChatMessageType.Server]);
-                        Game1.GameSession.NewChatMessage("Your secret task is to assassinate " + targetName + "!", messageColor[(int)ChatMessageType.Server]);
+                        new GUIMessageBox("You are the Traitor!", "Your secret task is to assassinate " + targetName + "!");
+
                         break;
                 }
 
@@ -356,19 +404,36 @@ namespace Subsurface.Networking
             bool isFemale       = inc.ReadBoolean();
             int inventoryID     = inc.ReadInt32();
 
-            int headSpriteID = inc.ReadInt32();
-
+            int headSpriteID    = inc.ReadInt32();
+            
+            Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
             string jobName = inc.ReadString();
             JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
 
-            Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
-
             CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
             ch.HeadSpriteId = headSpriteID;
-            Character character = new Character(ch, position);
+
+            WayPoint closestWaypoint = null;
+            float closestDist = 0.0f;
+            foreach (WayPoint wp in WayPoint.WayPointList)
+            {
+                float dist = Vector2.Distance(wp.SimPosition, position);
+                if (closestWaypoint != null && dist > closestDist) continue;
+                
+                closestWaypoint = wp;
+                closestDist = dist;
+                continue;                
+            }
+
+            Character character = (closestWaypoint == null) ?
+                new Character(ch, position) :
+                new Character(ch, closestWaypoint);
+
             character.ID = ID;
             character.Inventory.ID = inventoryID;
+
+            character.GiveJobItems();
 
             return character;
         }

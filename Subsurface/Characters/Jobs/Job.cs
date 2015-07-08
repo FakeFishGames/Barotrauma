@@ -24,6 +24,16 @@ namespace Subsurface
             get { return prefab.Description; }
         }
 
+        public JobPrefab Prefab
+        {
+            get { return prefab; }
+        }
+
+        public List<string> SpawnItemNames
+        {
+            get { return prefab.ItemNames; }
+        }
+
 
         public Job(JobPrefab jobPrefab)
         {
