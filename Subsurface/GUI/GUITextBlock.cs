@@ -69,7 +69,7 @@ namespace Subsurface
         }
 
 
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = (Alignment.Left | Alignment.Top), Alignment textAlignment = (Alignment.Left | Alignment.Top), GUIComponent parent = null, bool wrap = false)
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false)
             : this (rect, text, null, null, alignment, textAlignment, style, parent, wrap)
         {
             //hoverColor = style.hoverColor;
@@ -77,7 +77,7 @@ namespace Subsurface
         }
 
         public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)
-            : this(rect, text,color, textColor, (Alignment.Left | Alignment.Top), textAlignment, style, parent, wrap)
+            : this(rect, text,color, textColor, Alignment.TopLeft, textAlignment, style, parent, wrap)
         {
         }
 

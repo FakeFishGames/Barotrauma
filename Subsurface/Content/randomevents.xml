@@ -5,13 +5,13 @@
     commonness="10" 
     difficulty="30"
     minamount="2" maxamount="3"
-    starttimemin="5" starttimemax="10"
+    starttimemin="15" starttimemax="20"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/TigerThresher/tigerthresher.xml"
     commonness="10"
     difficulty="50"
-    starttimemin="5" starttimemax="10"
+    starttimemin="15" starttimemax="20"
     musictype="monster"/>
 </Randomevents>

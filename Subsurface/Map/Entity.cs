@@ -45,7 +45,7 @@ namespace Subsurface
         {
             //give  an unique ID
             bool IDfound;
-            id = 0;
+            id = 1;//Rand.Int(int.MaxValue);
             do
             {
                 id += 1;

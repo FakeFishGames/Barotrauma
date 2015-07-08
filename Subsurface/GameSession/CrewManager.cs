@@ -117,17 +117,26 @@ namespace Subsurface
             listBox.ClearChildren();
             characters.Clear();
 
-            foreach (CharacterInfo ci in characterInfos)
+            WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
+
+            for (int i = 0; i < waypoints.Length; i++)
             {
                 WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Human);
                 Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
-
-                Character character = new Character(ci.File, position, ci);
+                
+                Character character = new Character(characterInfos[i], waypoints[i]);
                 Character.Controlled = character;
+
+                if (!character.Info.StartItemsGiven)
+                {
+                    character.GiveJobItems();
+                    character.Info.StartItemsGiven = true;
+                }
+
                 AddCharacter(character);
             }
 
-            if (characters.Count>0) SelectCharacter(characters[0]);
+            if (characters.Count > 0) SelectCharacter(characters[0]);
         }
 
         public void EndShift()

@@ -291,7 +291,9 @@ namespace Subsurface.Networking
             Game1.GameSession = new GameSession(selectedMap, Game1.NetLobbyScreen.SelectedMode);
             Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.LevelSeed);
             //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
-            
+
+            List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+
             foreach (Client client in connectedClients)
             {
                 client.inGame = true;
@@ -302,10 +304,21 @@ namespace Subsurface.Networking
                 {
                     client.characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", client.name);
                 }
+                characterInfos.Add(client.characterInfo);
 
-                client.character = new Character(client.characterInfo, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition, true);
+                //client.character = new Character(client.characterInfo, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition, true);
             }
 
+            WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
+
+            for (int i = 0; i < connectedClients.Count; i++ )
+            {
+                connectedClients[i].character = new Character(
+                    connectedClients[i].characterInfo, assignedWayPoints[i], true);
+                connectedClients[i].character.GiveJobItems();
+            }
+
+            //todo: fix
             if (myClient != null)
             {
                 WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
@@ -313,36 +326,37 @@ namespace Subsurface.Networking
                 myClient.character = new Character(ch, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
             }
 
+            //foreach (Client client in connectedClients)
+            //{
+            NetOutgoingMessage msg = Server.CreateMessage();
+            msg.Write((byte)PacketTypes.StartGame);
+
+            msg.Write(seed);
+
+            msg.Write(Game1.NetLobbyScreen.LevelSeed);
+
+            msg.Write(Game1.NetLobbyScreen.SelectedMap.Name);
+            msg.Write(Game1.NetLobbyScreen.SelectedMap.Hash.MD5Hash);
+                
+            msg.Write(Game1.NetLobbyScreen.GameDuration.TotalMinutes);
+
+            //WriteCharacterData(msg, client.name, client.character);
+
+            msg.Write((myClient == null) ? connectedClients.Count : connectedClients.Count+1);
             foreach (Client client in connectedClients)
             {
-                NetOutgoingMessage msg = Server.CreateMessage();
-                msg.Write((byte)PacketTypes.StartGame);
-
-                msg.Write(seed);
-
-                msg.Write(Game1.NetLobbyScreen.LevelSeed);
-
-                msg.Write(Game1.NetLobbyScreen.SelectedMap.Name);
-                msg.Write(Game1.NetLobbyScreen.SelectedMap.Hash.MD5Hash);
-                
-                msg.Write(Game1.NetLobbyScreen.GameDuration.TotalMinutes);
-
+                //if (otherClient == client) continue;
+                msg.Write(client.ID);
                 WriteCharacterData(msg, client.name, client.character);
-
-                msg.Write((myClient == null) ? connectedClients.Count - 1 : connectedClients.Count);
-                foreach (Client otherClient in connectedClients)
-                {
-                    if (otherClient == client) continue;
-                    WriteCharacterData(msg, otherClient.name, otherClient.character);
-                }
-
-                if (myClient!=null)
-                {
-                    WriteCharacterData(msg, myClient.name, myClient.character);
-                }
-
-                Server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered, 0);
             }
+
+            if (myClient!=null)
+            {
+                WriteCharacterData(msg, myClient.name, myClient.character);
+            }
+
+                SendMessage(msg, NetDeliveryMethod.ReliableUnordered, null);
+            //}
 
             gameStarted = true;
 
@@ -580,7 +594,7 @@ namespace Subsurface.Networking
                     //if there's enough crew members assigned to the job already, continue
                     if (assignedClientCount[jobIndex] >= JobPrefab.List[jobIndex].MaxNumber) continue;
 
-                    unassigned[i].assignedJob = JobPrefab.List[i];
+                    unassigned[i].assignedJob = JobPrefab.List[jobIndex];
 
                     assignedClientCount[jobIndex]++;
                     unassigned.RemoveAt(i);

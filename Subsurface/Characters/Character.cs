@@ -268,6 +268,12 @@ namespace Subsurface
         {
         }
 
+        public Character(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
+            : this(characterInfo.File, spawnPoint.SimPosition, characterInfo, isNetworkPlayer)
+        {
+
+        }
+
         public Character(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
             : this(characterInfo.File, position, characterInfo, isNetworkPlayer)
         {
@@ -351,7 +357,6 @@ namespace Subsurface
                 }
             }
 
-
             AnimController.FindHull();
 
             //if (info.ID >= 0)
@@ -360,6 +365,24 @@ namespace Subsurface
             //}
 
             CharacterList.Add(this);
+        }
+
+        public void GiveJobItems()
+        {
+            if (Info == null || Info.Job == null) return;
+            
+            foreach (string itemName in Info.Job.SpawnItemNames)
+            {
+                ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Tried to spawn ''" + Name + "'' with the item ''" + itemName + "''. Matching item prefab not found.");
+                    continue;
+                }
+
+                Item item = new Item(itemPrefab, Position);
+                inventory.TryPutItem(item, item.AllowedSlots, false);
+            }            
         }
 
         public void Control(float deltaTime, Camera cam, bool forcePick = false)
@@ -612,15 +635,17 @@ namespace Subsurface
                 spriteBatch.DrawString(GUI.font, Info.Name, namePos, Color.White);
             }
 
+            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
+            pos.Y = -pos.Y;
+            spriteBatch.DrawString(GUI.font, ID.ToString(), pos, Color.White);
+
             if (this == Character.controlled) return;
 
             Vector2 healthBarPos = new Vector2(Position.X - 50, -Position.Y - 50.0f);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X-2, (int)healthBarPos.Y-2, 100+4, 15+4), Color.Black, false);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f*(health/maxHealth)), 15), Color.Red, true);
 
-            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
-            pos.Y = -pos.Y;
-            spriteBatch.DrawString(GUI.font, ID.ToString(), pos, Color.White);
+
             //GUI.DrawLine(spriteBatch, ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y),
             //    ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y) +
             //    ConvertUnits.ToDisplayUnits(animController.targetMovement.X, animController.targetMovement.Y), Color.Green);
@@ -1036,7 +1061,9 @@ namespace Subsurface
 
             if (controlled == this) controlled = null;
 
-            if (Game1.Client!=null && Game1.Client.Character == this) Game1.Client.Character = null; 
+            if (Game1.Client!=null && Game1.Client.Character == this) Game1.Client.Character = null;
+
+            if (inventory != null) inventory.Remove();
 
             if (aiTarget != null)
                 aiTarget.Remove();

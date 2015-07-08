@@ -820,7 +820,7 @@ namespace Subsurface
                 }
             }
 
-            ID = 1;
+            //ID = 1;
 
             loaded = this;
         }
@@ -838,8 +838,7 @@ namespace Subsurface
         public static void Unload()
         {
             if (loaded == null) return;
-
-
+            
             loaded.Remove();
 
             loaded.Clear();

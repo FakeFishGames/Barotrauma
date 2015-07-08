@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Jobs>
-  <Captain description="The Commanding Officer with authority over the entire crew.">
+  <Captain description="The Commanding Officer with authority over the entire crew." minnumber="1" maxnumber="1">
     <Item name="ID Card"/>
   </Captain>
 
@@ -15,4 +15,10 @@
     <Item name="Wrench"/>
     <Item name="Screwdriver"/>
   </Mechanic>
+
+  <Assistant allowalways="true">
+    <Item name="ID Card"/>
+    <Item name="Wrench"/>
+    <Item name="Screwdriver"/>
+  </Assistant>
 </Jobs>

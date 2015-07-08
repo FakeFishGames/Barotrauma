@@ -59,7 +59,7 @@ namespace Subsurface
             return -1;
         }
 
-        public virtual int CanBePut(Item item)
+        public virtual int FindAllowedSlot(Item item)
         {
             for (int i = 0; i < capacity; i++)
             {
@@ -84,9 +84,9 @@ namespace Subsurface
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, LimbSlot usedSlots = 0, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, LimbSlot allowedSlots = 0, bool createNetworkEvent = true)
         {
-            int slot = CanBePut(item);
+            int slot = FindAllowedSlot(item);
             if (slot < 0) return false;
 
             PutItem(item, slot, createNetworkEvent);
@@ -268,8 +268,8 @@ namespace Subsurface
                 Vector2 pos = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height + 20) - GUI.font.MeasureString(item.Name)*0.5f;
                 pos.X = (int)pos.X;
                 pos.Y = (int)pos.Y;
-                spriteBatch.DrawString(GUI.font, item.Name, pos - new Vector2(1.0f,1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.font, item.Name, pos, Color.White);
+                spriteBatch.DrawString(GUI.font, item.Name + " - "+item.ID, pos - new Vector2(1.0f,1.0f), Color.Black);
+                spriteBatch.DrawString(GUI.font, item.Name + " - " + item.ID, pos, Color.White);
             }
 
             if (item.Condition < 100.0f)

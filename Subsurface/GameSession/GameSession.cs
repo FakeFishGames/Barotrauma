@@ -22,7 +22,7 @@ namespace Subsurface
 
         private GUIFrame guiRoot;
 
-        private GUIListBox chatBox;
+        //private GUIListBox chatBox;
         private GUITextBox textBox;
 
         private string savePath;
@@ -59,20 +59,20 @@ namespace Subsurface
 
             map = new Map(Rand.Int(), 500);
 
-            int width = 350, height = 100;
-            if (Game1.NetworkMember!=null)
-            {
-                chatBox = new GUIListBox(new Rectangle(
-                    Game1.GraphicsWidth - 20 - width, 
-                    Game1.GraphicsHeight - 40 - 25 - height, 
-                    width, height), 
-                    Color.White * 0.5f, GUI.style, guiRoot);
+            //int width = 350, height = 100;
+            //if (Game1.NetworkMember!=null)
+            //{
+            //    chatBox = new GUIListBox(new Rectangle(
+            //        Game1.GraphicsWidth - 20 - width, 
+            //        Game1.GraphicsHeight - 40 - 25 - height, 
+            //        width, height), 
+            //        Color.White * 0.5f, GUI.style, guiRoot);
 
-                textBox = new GUITextBox(
-                    new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
-                    Color.White * 0.5f, Color.Black, Alignment.Bottom, Alignment.Left, GUI.style, guiRoot);
-                            textBox.OnEnter = EnterChatMessage;
-            }
+            //    textBox = new GUITextBox(
+            //        new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
+            //        Color.White * 0.5f, Color.Black, Alignment.Bottom, Alignment.Left, GUI.style, guiRoot);
+            //                textBox.OnEnter = EnterChatMessage;
+            //}
              
             this.gameMode = gameMode;
             //if (gameMode != null && !gameMode.IsSinglePlayer)
@@ -124,7 +124,7 @@ namespace Subsurface
 
             this.level = level;
 
-            if (Submarine.Loaded!=submarine) submarine.Load();
+            if (Submarine.Loaded != submarine) submarine.Load();
 
             if (gameMode!=null) gameMode.Start(duration);
 
@@ -172,34 +172,35 @@ namespace Subsurface
             return true;
         }
 
-        public bool EnterChatMessage(GUITextBox textBox, string message)
-        {
-            if (string.IsNullOrWhiteSpace(message)) return false;
+        //public bool EnterChatMessage(GUITextBox textBox, string message)
+        //{
+        //    if (string.IsNullOrWhiteSpace(message)) return false;
 
-            else if (Game1.NetworkMember != null)
-            {
-                Game1.NetworkMember.SendChatMessage(Game1.NetworkMember.Name + ": " + message);
-            }
+        //    else if (Game1.NetworkMember != null)
+        //    {
+        //        Game1.NetworkMember.SendChatMessage(Game1.NetworkMember.Name + ": " + message);
+        //    }
 
-            textBox.Deselect();
+        //    textBox.Deselect();
 
-            return true;
-        }
+        //    return true;
+        //}
         
-        public void NewChatMessage(string text, Color color)
-        {
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), text,
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, color,
-                Alignment.Left, null, null, true);
+        //public void NewChatMessage(string text, Color color)
+        //{
+        //    GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), text,
 
-            msg.Padding = new Vector4(20.0f, 0, 0, 0);
-            chatBox.AddChild(msg);
+        //        ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, color,
+        //        Alignment.Left, null, null, true);
 
-            while (chatBox.CountChildren > 20)
-            {
-                chatBox.RemoveChild(chatBox.children.First());
-            }
-        }
+        //    msg.Padding = new Vector4(20.0f, 0, 0, 0);
+        //    chatBox.AddChild(msg);
+
+        //    while (chatBox.CountChildren > 20)
+        //    {
+        //        chatBox.RemoveChild(chatBox.children.First());
+        //    }
+        //}
         
         public void Update(float deltaTime)
         {

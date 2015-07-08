@@ -46,7 +46,7 @@ namespace Subsurface
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public override bool TryPutItem(Item item, LimbSlot usedSlots, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, LimbSlot allowedSlots, bool createNetworkEvent = true)
         {
             for (int i = 0; i < capacity; i++)
             {
@@ -54,7 +54,7 @@ namespace Subsurface
                 if (items[i] == item) return true;
             }
 
-            if (usedSlots.HasFlag(LimbSlot.Any))
+            if (allowedSlots.HasFlag(LimbSlot.Any))
             {
                 for (int i = 0; i < capacity; i++)
                 {
@@ -68,12 +68,12 @@ namespace Subsurface
 
             for (int i = 0; i < capacity; i++)
             {
-                if (usedSlots.HasFlag(limbSlots[i]) && items[i]!=null) return false;
+                if (allowedSlots.HasFlag(limbSlots[i]) && items[i]!=null) return false;
             }
 
             for (int i = 0; i < capacity; i++)
             {
-                if (usedSlots.HasFlag(limbSlots[i]) && items[i] == null)
+                if (allowedSlots.HasFlag(limbSlots[i]) && items[i] == null)
                 {
                     PutItem(item, i, createNetworkEvent);
                     item.Equip(character);

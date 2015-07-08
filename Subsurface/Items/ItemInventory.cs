@@ -13,7 +13,7 @@ namespace Subsurface
             this.container = container;
         }
 
-        public override int CanBePut(Item item)
+        public override int FindAllowedSlot(Item item)
         {
             for (int i = 0; i < capacity; i++)
             {

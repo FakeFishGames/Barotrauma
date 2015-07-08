@@ -160,7 +160,7 @@ namespace Subsurface
             //int oldMapIndex = 0;
             //if (mapList != null && mapList.SelectedData != null) oldMapIndex = mapList.SelectedIndex;
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", null, null, Alignment.Left, null, infoFrame);
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", GUI.style, infoFrame);
             subList = new GUIListBox(new Rectangle(0, 60, 200, 200), Color.White, GUI.style, infoFrame);
             subList.OnSelected = SelectMap;
             subList.Enabled = (Game1.Server != null);
@@ -184,7 +184,7 @@ namespace Subsurface
                 return;
             }
 
-            new GUITextBlock(new Rectangle(220, 30, 0, 30), "Selected game mode: ", null, null, Alignment.Left, GUI.style, infoFrame);
+            new GUITextBlock(new Rectangle(220, 30, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
             modeList = new GUIListBox(new Rectangle(220, 60, 200, 200), GUI.style, infoFrame);
             modeList.Enabled = (Game1.Server != null);
             //modeList.OnSelected = new GUIListBox.OnSelectedHandler(SelectEvent);
@@ -202,15 +202,14 @@ namespace Subsurface
                 textBlock.UserData = mode;
             }
 
-            GUITextBlock durationText = new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 100), 30, 100, 20),
+            GUITextBlock durationText = new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 30, 100, 20),
                 "Game duration: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
             durationText.TextGetter = DurationText;
 
-            durationBar = new GUIScrollBar(new Rectangle((int)(modeList.Rect.Right + 20 - 100), 60, 180, 20),
+            durationBar = new GUIScrollBar(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 60, 180, 20),
                 GUI.style, 0.1f, infoFrame);
             durationBar.BarSize = 0.1f;
-            durationBar.Enabled = (Game1.Server != null);
-            
+            durationBar.Enabled = (Game1.Server != null);            
 
             new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 100, 100, 20),
                 "Level Seed: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
@@ -236,20 +235,24 @@ namespace Subsurface
             else
             {
                 int x = playerFrame.Rect.Width / 2;
-                GUITextBox playerName = new GUITextBox(new Rectangle(x, 0, 0, 20),
+
+
+                new GUITextBlock(new Rectangle(x, 0, 200, 30), "Name: ", GUI.style, playerFrame);
+
+
+                GUITextBox playerName = new GUITextBox(new Rectangle(x, 30, 0, 20),
                     Alignment.TopLeft, GUI.style, playerFrame);
                 playerName.Text = Game1.Client.CharacterInfo.Name;
                 playerName.OnEnter += ChangeCharacterName;
 
-                new GUITextBlock(new Rectangle(x,40,200, 30), "Gender: ", Color.Transparent, Color.Black,
-                    Alignment.TopLeft, GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(x,70,200, 30), "Gender: ", GUI.style, playerFrame);
 
-                GUIButton maleButton = new GUIButton(new Rectangle(x+70,50,70,20), "Male", 
+                GUIButton maleButton = new GUIButton(new Rectangle(x, 100, 70, 20), "Male", 
                     Alignment.TopLeft, GUI.style,playerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
-                GUIButton femaleButton = new GUIButton(new Rectangle(x+150, 50, 70, 20), "Female",
+                GUIButton femaleButton = new GUIButton(new Rectangle(x+150, 100, 70, 20), "Female",
                     Alignment.TopLeft, GUI.style, playerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
@@ -309,6 +312,14 @@ namespace Subsurface
         {
             if (client == null) return;
             playerList.RemoveChild(playerList.GetChild(client));
+        }
+
+        public void ClearPlayers()
+        {
+            for (int i = 1; i<playerList.CountChildren; i++)
+            {
+                playerList.RemoveChild(playerList.children[i]);
+            }
         }
 
         public override void Update(double deltaTime)
@@ -406,6 +417,7 @@ namespace Subsurface
             Vector2 pos = new Vector2(1000.0f, 1000.0f);
 
             Character character = new Character(Game1.Client.CharacterInfo, pos);
+            character.ID = int.MaxValue;
 
             Game1.Client.Character = character;
 
@@ -422,6 +434,7 @@ namespace Subsurface
             {
                 pos = ConvertUnits.ToDisplayUnits(pos);
                 previewHull = new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 200));
+                previewHull.ID = int.MaxValue - 2;
             }
             
             Physics.Alpha = 1.0f;
@@ -501,11 +514,12 @@ namespace Subsurface
         private void UpdateJobPreferences(GUIListBox listBox)
         {
             listBox.Deselect();
-            for (int i = 0; i<listBox.children.Count; i++)
+            for (int i = 1; i<listBox.children.Count; i++)
             {
-                float a = (float)i/listBox.children.Count;
-                Color color = new Color(a, 1.0f - a, 0.5f, 1.0f);
-
+                float a = (float)(i - 1) / 3.0f;
+                a = Math.Min(a, 3);
+                Color color = new Color(1.0f-a, (1.0f - a)*0.6f, 0.0f, 0.3f);
+                
                 listBox.children[i].Color = color;
             }
 

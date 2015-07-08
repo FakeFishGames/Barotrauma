@@ -190,7 +190,7 @@ namespace Subsurface
 
                         guiFrame = new GUIFrame(
                             new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W), 
-                            new Color(color.X, color.Y, color.Z), alignment);                        
+                            new Color(color.X, color.Y, color.Z, color.W), alignment);                        
                         //guiFrame.Alpha = color.W;
 
                     break;

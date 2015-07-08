@@ -15,12 +15,12 @@ namespace Subsurface
 
         private GUIButton endShiftButton;
 
-        private int day;
+        //private int day;
 
-        public int Day
-        {
-            get { return day; }
-        }
+        //public int Day
+        //{
+        //    get { return day; }
+        //}
 
         bool crewDead;
         private float endTimer;
@@ -36,13 +36,13 @@ namespace Subsurface
 
             hireManager.GenerateCharacters("Content/Characters/Human/human.xml", 10);
 
-            day = 1;  
+            //day = 1;  
         }
 
         public SinglePlayerMode(XElement element)
             : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"))
         {
-            day = ToolBox.GetAttributeInt(element,"day",1);
+            //day = ToolBox.GetAttributeInt(element,"day",1);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -145,15 +145,17 @@ namespace Subsurface
                     sb.Append("No casualties!");
                 }
 
-                new GUIMessageBox("Day #" + day + " is over!\n", sb.ToString());
+                Game1.GameSession.map.MoveToNextLocation();
 
-                day++;
+                //new GUIMessageBox("Day #" + day + " is over!\n", sb.ToString());
+
+                //day++;
             }
 
             crewManager.EndShift();
-            for (int i = Character.CharacterList.Count-1; i>=0; i--)
+            for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
             {
-                Character.CharacterList.RemoveAt(i);
+                Character.CharacterList[i].Remove();
             }
 
             Game1.GameSession.EndShift("");
@@ -163,7 +165,7 @@ namespace Subsurface
 
         public void Save(XElement element)
         {
-            element.Add(new XAttribute("day", day));
+            //element.Add(new XAttribute("day", day));
 
             crewManager.Save(element);
             

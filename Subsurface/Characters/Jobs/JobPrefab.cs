@@ -68,7 +68,7 @@ namespace Subsurface
 
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString())
+                switch (subElement.Name.ToString().ToLower())
                 {
                     case "item":
                         string itemName = ToolBox.GetAttributeString(subElement, "name", "");

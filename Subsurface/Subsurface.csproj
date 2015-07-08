@@ -63,6 +63,7 @@
     <Compile Include="Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Characters\AI\SteeringManager.cs" />
     <Compile Include="Characters\AI\SteeringPath.cs" />
+    <Compile Include="CoroutineManager.cs" />
     <Compile Include="Rand.cs" />
     <Compile Include="Events\PropertyTask.cs" />
     <Compile Include="Events\RepairTask.cs" />
@@ -360,6 +361,15 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\Pump\pump.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Map\iceCrack.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Map\iceCraters.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Map\iceSurface.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\caret.png">

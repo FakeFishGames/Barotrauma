@@ -63,7 +63,6 @@ namespace Subsurface
         {
             ScriptedEvent scriptedEvent = ScriptedEvent.LoadRandom(level.Seed);
             AddTask(new ScriptedTask(scriptedEvent));
-            
         }
 
         public void TaskStarted(Task task)
