@@ -14,8 +14,8 @@ namespace Subsurface.Networking
         
         public List<Client> connectedClients = new List<Client>();
 
-        const int SparseUpdateInterval = 150;
-        int sparseUpdateTimer;
+        TimeSpan SparseUpdateInterval = new TimeSpan(0, 0, 0, 1);
+        DateTime sparseUpdateTimer;
 
         Client myClient;
 
@@ -61,16 +61,15 @@ namespace Subsurface.Networking
             if (inc != null) ReadMessage(inc);
 
             // if 30ms has passed
-            if ((updateTimer) < DateTime.Now)
+            if (updateTimer < DateTime.Now)
             {
                 if (Server.ConnectionsCount > 0)
                 {
-                    if (sparseUpdateTimer <= 0) SparseUpdate();
+                    if (sparseUpdateTimer < DateTime.Now) SparseUpdate();
 
                     SendNetworkEvents();
                 }
 
-                sparseUpdateTimer -= 1;
                 updateTimer = DateTime.Now + updateInterval;
             }
         }
@@ -88,10 +87,18 @@ namespace Subsurface.Networking
 
                     //Character ch = new Character("Content/Characters/Human/human.xml");
 
-                    Client newClient = new Client();
-                    newClient.version = inc.ReadString();
-                    newClient.name = inc.ReadString();
+                    string version = inc.ReadString();
+                    string name = inc.ReadString();
+
+                    int id = 1;
+                    while (connectedClients.Find(c=>c.ID==id)!=null)
+                    {
+                        id++;
+                    }
+
+                    Client newClient = new Client(name, id);
                     newClient.Connection = inc.SenderConnection;
+                    newClient.version = version;
 
                     connectedClients.Add(newClient);
                     
@@ -101,8 +108,6 @@ namespace Subsurface.Networking
                     Debug.WriteLine(inc.SenderConnection + " status changed. " + (NetConnectionStatus)inc.SenderConnection.Status);
                     if (inc.SenderConnection.Status == NetConnectionStatus.Connected)
                     {
-
-
                         Client sender = connectedClients.Find(x => x.Connection == inc.SenderConnection);
 
                         if (sender == null) break;
@@ -115,13 +120,16 @@ namespace Subsurface.Networking
                         }
                         else
                         {
+                            AssignJobs();
 
-                            Game1.NetLobbyScreen.AddPlayer(sender.name);
+                            Game1.NetLobbyScreen.AddPlayer(sender);
 
                             // Notify the client that they have logged in
                             outmsg = Server.CreateMessage();
 
                             outmsg.Write((byte)PacketTypes.LoggedIn);
+
+                            outmsg.Write(sender.ID);
 
                             //notify the client about other clients already logged in
                             outmsg.Write((myClient == null) ? connectedClients.Count - 1 : connectedClients.Count);
@@ -129,6 +137,7 @@ namespace Subsurface.Networking
                             {
                                 if (c.Connection == inc.SenderConnection) continue;
                                 outmsg.Write(c.name);
+                                outmsg.Write(c.ID);
                             }
 
                             if (myClient != null) outmsg.Write(myClient.name);
@@ -141,6 +150,7 @@ namespace Subsurface.Networking
                             outmsg.Write((byte)PacketTypes.PlayerJoined);
 
                             outmsg.Write(sender.name);
+                            outmsg.Write(sender.ID);
                         
                             //send the message to everyone except the client who just logged in
                             SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, inc.SenderConnection);
@@ -223,7 +233,9 @@ namespace Subsurface.Networking
                 }
             }
 
-            sparseUpdateTimer = SparseUpdateInterval;
+            new NetworkEvent(Submarine.Loaded.ID, false);
+
+            sparseUpdateTimer = DateTime.Now + SparseUpdateInterval;
         }
 
         private void SendMessage(NetOutgoingMessage msg, NetDeliveryMethod deliveryMethod, NetConnection excludedConnection)
@@ -256,8 +268,12 @@ namespace Subsurface.Networking
                             
                 networkEvent.FillData(message);
 
-                Server.SendMessage(message, Server.Connections, 
-                    (networkEvent.IsImportant) ? NetDeliveryMethod.Unreliable : NetDeliveryMethod.ReliableUnordered, 0);                              
+                if (Server.ConnectionsCount>0)
+                {
+                    Server.SendMessage(message, Server.Connections, 
+                        (networkEvent.IsImportant) ? NetDeliveryMethod.Unreliable : NetDeliveryMethod.ReliableUnordered, 0);  
+                }
+                            
             }
             NetworkEvent.events.Clear();                       
         }
@@ -273,14 +289,14 @@ namespace Subsurface.Networking
             //selectedMap.Load();
 
             Game1.GameSession = new GameSession(selectedMap, Game1.NetLobbyScreen.SelectedMode);
-            Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.LevelSeed, 1);
+            Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.LevelSeed);
             //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
             
             foreach (Client client in connectedClients)
             {
                 client.inGame = true;
 
-                WayPoint spawnPoint = WayPoint.GetRandom(WayPoint.SpawnType.Human);
+                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
 
                 if (client.characterInfo==null)
                 {
@@ -292,7 +308,7 @@ namespace Subsurface.Networking
 
             if (myClient != null)
             {
-                WayPoint spawnPoint = WayPoint.GetRandom(WayPoint.SpawnType.Human);
+                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
                 CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", myClient.name);
                 myClient.character = new Character(ch, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
             }
@@ -390,10 +406,10 @@ namespace Subsurface.Networking
 
             outmsg = Server.CreateMessage();
             outmsg.Write((byte)PacketTypes.PlayerLeft);
-            outmsg.Write(client.name);
+            outmsg.Write(client.ID);
             outmsg.Write(msg);
 
-            Game1.NetLobbyScreen.RemovePlayer(client.name);
+            Game1.NetLobbyScreen.RemovePlayer(client);
 
             if (Server.Connections.Count > 0)
             {
@@ -482,11 +498,24 @@ namespace Subsurface.Networking
             Gender gender       = message.ReadBoolean() ? Gender.Male : Gender.Female;
             int headSpriteId    = message.ReadInt32();
 
+
+            List<JobPrefab> jobPreferences = new List<JobPrefab>();
+            int count = message.ReadInt32();
+            for (int i = 0; i < count; i++)
+            {
+                string jobName = message.ReadString();
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+                if (jobPrefab != null) jobPreferences.Add(jobPrefab);
+            }
+
             foreach (Client c in connectedClients)
             {
                 if (c.Connection != message.SenderConnection) continue;
+
                 c.characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", name, gender);
                 c.characterInfo.HeadSpriteId = headSpriteId;
+                c.jobPreferences = jobPreferences;
+                break;
             }
         }
 
@@ -496,19 +525,116 @@ namespace Subsurface.Networking
             message.Write(character.ID);
             message.Write(character.Info.Gender == Gender.Female);
             message.Write(character.Inventory.ID);
+
+            message.Write(character.Info.HeadSpriteId);
+
             message.Write(character.SimPosition.X);
             message.Write(character.SimPosition.Y);
+
+            message.Write(character.Info.Job.Name);
+        }
+
+        private void AssignJobs()
+        {
+            List<Client> unassigned = new List<Client>(connectedClients);
+
+            int[] assignedClientCount = new int[JobPrefab.List.Count];
+
+            //if any of the players has chosen a job that is Always Allowed, give them that job
+            for (int i = unassigned.Count - 1; i >= 0; i--)
+            {
+                if (!unassigned[i].jobPreferences[0].AllowAlways) continue;
+                unassigned[i].assignedJob = unassigned[i].jobPreferences[0];
+                unassigned.RemoveAt(i);
+            }
+
+            //go throught the jobs whose MinNumber>0 (i.e. at least one crew member has to have the job)
+            bool unassignedJobsFound = true;
+            while (unassignedJobsFound && unassigned.Count > 0)
+            {
+                unassignedJobsFound = false;
+                for (int i = 0; i < JobPrefab.List.Count; i++)
+                {
+                    if (unassigned.Count == 0) break;
+                    if (JobPrefab.List[i].MinNumber < 1 || assignedClientCount[i] >= JobPrefab.List[i].MinNumber) continue;
+
+                    //find the client that wants the job the most, or force it to random client if none of them want it
+                    Client assignedClient = FindClientWithJobPreference(unassigned, JobPrefab.List[i], true);
+
+                    assignedClient.assignedJob = JobPrefab.List[i];
+
+                    assignedClientCount[i]++;
+                    unassigned.Remove(assignedClient);
+
+                    //the job still needs more crew members, set unassignedJobsFound to true to keep the while loop running
+                    if (assignedClientCount[i] < JobPrefab.List[i].MinNumber) unassignedJobsFound = true;
+                }
+            }
+
+            for (int preferenceIndex = 0; preferenceIndex < 3; preferenceIndex++)
+            {
+                for (int i = unassigned.Count - 1; i >= 0; i--)
+                {
+                    int jobIndex = JobPrefab.List.FindIndex(jp => jp == unassigned[i].jobPreferences[preferenceIndex]);
+
+                    //if there's enough crew members assigned to the job already, continue
+                    if (assignedClientCount[jobIndex] >= JobPrefab.List[jobIndex].MaxNumber) continue;
+
+                    unassigned[i].assignedJob = JobPrefab.List[i];
+
+                    assignedClientCount[jobIndex]++;
+                    unassigned.RemoveAt(i);
+                }
+            }
+
+            UpdateNetLobby(null);
+
+        }
+
+        private Client FindClientWithJobPreference(List<Client> clients, JobPrefab job, bool forceAssign = false)
+        {
+            int bestPreference = 0;
+            Client preferredClient = null;
+            foreach (Client c in clients)
+            {
+                int index = c.jobPreferences.FindIndex(jp => jp == job);
+                if (preferredClient == null || index < bestPreference)
+                {
+                    bestPreference = index;
+                    preferredClient = c;
+                }
+            }
+
+            //none of the clients wants the job
+            if (forceAssign && preferredClient == null)
+            {
+                preferredClient = clients[Rand.Int(clients.Count)];
+            }
+
+            return preferredClient;
         }
     }
 
     class Client
     {
         public string name;
+        public int ID;
 
         public Character character;
         public CharacterInfo characterInfo;
         public NetConnection Connection { get; set; }
         public string version;
         public bool inGame;
+
+        public List<JobPrefab> jobPreferences;
+        public JobPrefab assignedJob;
+
+        public Client(string name, int ID)
+        {
+            this.name = name;
+            this.ID = ID;
+
+            jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0,3));
+        }
     }
 }

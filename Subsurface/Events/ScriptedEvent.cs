@@ -92,10 +92,12 @@ namespace Subsurface
         }
 
 
-        public static ScriptedEvent LoadRandom()
+        public static ScriptedEvent LoadRandom(string seed)
         {
             XDocument doc = ToolBox.TryLoadXml(configFile);
             if (doc == null) return null;
+
+            Random rand = new Random(seed.GetHashCode());
 
             int eventCount = doc.Root.Elements().Count();
             //int[] commonness = new int[eventCount];
@@ -123,9 +125,9 @@ namespace Subsurface
                 probabilitySum += eventProbability[i];
 
                 i++;
-            }                
+            }
 
-            float randomNumber = Rand.Range(0.0f,probabilitySum);
+            float randomNumber = (float)rand.NextDouble() * probabilitySum;
 
             i = 0;
             foreach (XElement element in doc.Root.Elements())

@@ -148,6 +148,8 @@ namespace Subsurface
                 //this.mapHash = new MapHash(md5Hash);
             }
 
+            base.Remove();
+
         }
 
         private List<Vector2> GenerateConvexHull()
@@ -410,7 +412,7 @@ namespace Subsurface
 
             if (targetPosition != Vector2.Zero && Vector2.Distance(targetPosition, Position) > 5.0f)
             {
-                translateAmount += (targetPosition - Position)*0.1f;
+                translateAmount += (targetPosition - Position) * 0.05f;
             }
             else
             {
@@ -433,7 +435,7 @@ namespace Subsurface
             //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
             
             //hullBody.SetTransform(Vector2.Zero , 0.0f);
-            hullBody.LinearVelocity = -hullBody.Position;
+            hullBody.LinearVelocity = -hullBody.Position/(float)Physics.step;
 
             if (collidingCell == null)
             {
@@ -515,12 +517,17 @@ namespace Subsurface
             VoronoiCell cell = f2.Body.UserData as VoronoiCell;
             if (cell==null) return true;
 
-            Vector2 normal = contact.Manifold.LocalNormal;
-            float impact = Vector2.Dot(ConvertUnits.ToSimUnits(speed), normal);
+            Vector2 normal = -contact.Manifold.LocalNormal;
+            Vector2 simSpeed = ConvertUnits.ToSimUnits(speed);
+            float impact = -Vector2.Dot(simSpeed, normal);
+
+            Vector2 u = Vector2.Dot(simSpeed, normal)*normal;
+            Vector2 w = simSpeed - u;
+
+            speed = ConvertUnits.ToDisplayUnits(w*f2.Body.Friction - u*0.5f);
 
             System.Diagnostics.Debug.WriteLine("IMPACT:"+impact);
             if (impact < 5.0f) return true;
-
 
             collisionRigidness = 0.8f;
 
@@ -540,6 +547,9 @@ namespace Subsurface
             message.Write(Position.X);
             message.Write(Position.Y);
 
+            message.Write(speed.X);
+            message.Write(speed.Y);
+
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message)
@@ -548,15 +558,16 @@ namespace Subsurface
 
             if (sendingTime <= lastNetworkUpdate) return;
 
-            Vector2 newPosition = new Vector2(message.ReadFloat(), message.ReadFloat());
-            if (newPosition == Position) return;
-            if ((newPosition - Position).Length() > 500.0f)
-            {
-                System.Diagnostics.Debug.WriteLine("Submarine has moved over 500 pixels since last update");
-                return;
-            }
+            //Vector2 newPosition = 
+            //if (newPosition == Position) return;
+            //if ((newPosition - Position).Length() > 500.0f)
+            //{
+            //    System.Diagnostics.Debug.WriteLine("Submarine has moved over 500 pixels since last update");
+            //    return;
+            //}
 
-            targetPosition = Position;
+            targetPosition = new Vector2(message.ReadFloat(), message.ReadFloat());
+            speed = new Vector2(message.ReadFloat(), message.ReadFloat());
 
             lastNetworkUpdate = sendingTime;
         }
@@ -809,6 +820,8 @@ namespace Subsurface
                 }
             }
 
+            ID = 1;
+
             loaded = this;
         }
 
@@ -825,6 +838,10 @@ namespace Subsurface
         public static void Unload()
         {
             if (loaded == null) return;
+
+
+            loaded.Remove();
+
             loaded.Clear();
             loaded = null;
         }

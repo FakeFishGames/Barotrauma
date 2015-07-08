@@ -111,14 +111,14 @@ namespace Subsurface
             this.savePath = savePath;
         }
 
-        public void StartShift(TimeSpan duration, string levelSeed, int scriptedEventCount = 1)
+        public void StartShift(TimeSpan duration, string levelSeed)
         {
             Level level = Level.CreateRandom(levelSeed);
 
-            StartShift(duration, level, scriptedEventCount);
+            StartShift(duration, level);
         }
 
-        public void StartShift(TimeSpan duration, Level level, int scriptedEventCount = 1)
+        public void StartShift(TimeSpan duration, Level level)
         {
             //if (crewManager.characterInfos.Count == 0) return;
 
@@ -135,7 +135,7 @@ namespace Subsurface
             }
 
             //crewManager.StartShift();
-            taskManager.StartShift(scriptedEventCount);
+            taskManager.StartShift(level);
         }
 
         public void EndShift(string endMessage)

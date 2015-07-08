@@ -142,6 +142,8 @@ namespace Subsurface
             sprites = new List<Sprite>();
             children = new List<GUIComponent>();
 
+            
+
             if (style!=null) style.Apply(this);
         }
 

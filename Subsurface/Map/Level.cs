@@ -51,6 +51,11 @@ namespace Subsurface
             get { return ConvertUnits.ToDisplayUnits(cells[0].body.Position); }
         }
 
+        public string Seed
+        {
+            get { return seed; }
+        }
+
         public Level(string seed, int width, int height, int siteInterval)
         {
             this.seed = seed;
@@ -66,7 +71,7 @@ namespace Subsurface
             {
                 seed = Rand.Range(0, int.MaxValue, false).ToString();
             }
-            return new Level((string)seed, 100000, 40000, 2000);
+            return new Level(seed, 100000, 40000, 2000);
         }
 
         public void Generate(float minWidth)
@@ -86,7 +91,10 @@ namespace Subsurface
             Voronoi voronoi = new Voronoi(1.0);
 
             List<Vector2> sites = new List<Vector2>();
-            Random rand = new Random(ToolBox.SeedToInt(seed));
+
+            int aa = seed.GetHashCode();
+
+            Random rand = new Random(seed.GetHashCode());
 
             float siteVariance = siteInterval * 0.8f;
             for (int x = siteInterval / 2; x < borders.Width; x += siteInterval)
@@ -153,21 +161,29 @@ namespace Subsurface
 
             //generate a path from the left edge of the map to right edge
             Rectangle pathBorders = new Rectangle(
-                borders.X + (int)minWidth, borders.Y + (int)minWidth,
-                borders.Right - (int)minWidth, borders.Y + borders.Height - (int)minWidth);
+                borders.X + (int)minWidth * 2, borders.Y + (int)minWidth * 2,
+                borders.Right - (int)minWidth * 4, borders.Y + borders.Height - (int)minWidth * 4);
 
             List<VoronoiCell> pathCells = GeneratePath(rand,
-                new Vector2((int)minWidth, rand.Next((int)minWidth, borders.Height - (int)minWidth)),
-                new Vector2(borders.Width - (int)minWidth, rand.Next((int)minWidth, borders.Height - (int)minWidth)),
+                new Vector2((int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2)),
+                new Vector2(borders.Width - (int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2)),
                 cells, pathBorders, minWidth);
+
+            for (int i = 0; i <3 ; i++ )
+            {
+                Vector2 position = pathCells[rand.Next((int)(pathCells.Count*0.5f), pathCells.Count - 2)].Center;
+                WayPoint wayPoint = new WayPoint(new Rectangle((int)position.X, (int)position.Y, 10, 10));
+                wayPoint.MoveWithLevel = true;
+                wayPoint.SpawnType = SpawnType.Enemy;
+            }
 
 
             //generate a couple of random paths
             for (int i = 0; i < rand.Next() % 3; i++)
             {
-                pathBorders = new Rectangle(
-                borders.X + siteInterval * 2, borders.Y - siteInterval * 2,
-                borders.Right - siteInterval * 2, borders.Y + borders.Height - siteInterval * 2);
+                //pathBorders = new Rectangle(
+                //borders.X + siteInterval * 2, borders.Y - siteInterval * 2,
+                //borders.Right - siteInterval * 2, borders.Y + borders.Height - siteInterval * 2);
 
                 Vector2 start = pathCells[rand.Next(1, pathCells.Count - 2)].Center;
 
@@ -236,7 +252,6 @@ namespace Subsurface
 
         private List<VoronoiCell> GeneratePath(Random rand, Vector2 start, Vector2 end, List<VoronoiCell> cells, Microsoft.Xna.Framework.Rectangle limits, float minWidth, float wanderAmount = 0.3f)
         {
-
             Stopwatch sw2 = new Stopwatch();
             sw2.Start();
 
@@ -503,6 +518,13 @@ namespace Subsurface
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
 
+                for (int i = bodyPoints.Count-1; i >0 ; i--)
+                {
+                    if (Vector2.Distance(bodyPoints[i], bodyPoints[i - 1]) < 0.1f) bodyPoints.RemoveAt(i);
+                }
+
+                if (bodyPoints.Count < 2) continue;
+
                 Vertices bodyVertices = new Vertices(bodyPoints);
 
                 Body edgeBody = BodyFactory.CreateLoopShape(Game1.World, bodyVertices);
@@ -528,12 +550,28 @@ namespace Subsurface
 
         public void SetPosition(Vector2 pos)
         {
-            Vector2 amount = ConvertUnits.ToSimUnits(pos - Position);
+            Vector2 amount = pos - Position;
+            Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
             foreach (VoronoiCell cell in cells)
             {
                 if (cell.body == null) continue;
                 cell.body.SleepingAllowed = false;
-                cell.body.SetTransform(cell.body.Position + amount, cell.body.Rotation);
+                cell.body.SetTransform(cell.body.Position + simAmount, cell.body.Rotation);
+            }
+
+            foreach (MapEntity mapEntity in MapEntity.mapEntityList)
+            {
+                Item item = mapEntity as Item;
+                if (item == null)
+                {
+                    if (!mapEntity.MoveWithLevel) continue;
+                    mapEntity.Move(amount);
+                }
+                else if (item.body != null)
+                {
+                    if (item.CurrentHull != null) continue;
+                    item.SetTransform(item.SimPosition+amount, item.body.Rotation);
+                }
             }
         }
 
@@ -564,25 +602,27 @@ namespace Subsurface
                     }
                     else
                     {
-                        if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot) continue;
-                        limb.body.ApplyForce((simVelocity - prevVelocity) * 10.0f * limb.Mass);
+                        //if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot) continue;
+                        //limb.body.ApplyForce((simVelocity - prevVelocity) * 10.0f * limb.Mass);
                     }
                 }
             }
 
-            foreach (Item item in Item.itemList)
-            {
-                if (item.CurrentHull != null) continue;
-                if (item.body == null)
+            foreach (MapEntity mapEntity in MapEntity.mapEntityList)
+            {               
+                Item item = mapEntity as Item;
+                if (item == null)
                 {
-                    item.Move(velocity);
+                    if (!mapEntity.MoveWithLevel) continue;
+                    mapEntity.Move(velocity);
                 }
-                else
+                else if (item.body!=null)
                 {
+                    if (item.CurrentHull != null) continue;
                     item.body.LinearVelocity += simVelocity;
                 }
             }
-
+            
             prevVelocity = simVelocity;
         }
 

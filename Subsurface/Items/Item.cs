@@ -285,7 +285,7 @@ namespace Subsurface
         {
             base.Move(amount);
 
-            if (itemList != null && body!=null)
+            if (itemList != null && body != null)
             {
                 amount = ConvertUnits.ToSimUnits(amount);
                 //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
@@ -296,7 +296,7 @@ namespace Subsurface
                 ic.Move(amount);
             }
 
-            FindHull();
+            if (body != null) FindHull();
         }
 
         public Rectangle TransformTrigger(Rectangle trigger)

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Subsurface.Networking
 {
@@ -13,6 +14,8 @@ namespace Subsurface.Networking
 
         private Character myCharacter;
         private CharacterInfo characterInfo;
+
+        List<Client> otherClients;
                 
         public Character Character
         {
@@ -30,6 +33,8 @@ namespace Subsurface.Networking
             name = newName;
 
             characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", name);
+
+            otherClients = new List<Client>();
         }
 
         public bool ConnectToServer(string hostIP)
@@ -75,7 +80,7 @@ namespace Subsurface.Networking
             // Funtion that waits for connection approval info from server
             WaitForStartingInfo();
 
-            if (Client.ConnectionStatus!=NetConnectionStatus.Connected)
+            if (Client.ConnectionStatus != NetConnectionStatus.Connected)
             {
                 DebugConsole.ThrowError("Couldn't connect to server");
                 return false;
@@ -115,17 +120,21 @@ namespace Subsurface.Networking
                     case NetIncomingMessageType.Data:
                         if (inc.ReadByte() == (byte)PacketTypes.LoggedIn)
                         {
+                            int myID = inc.ReadInt32();
+
                             //add the names of other connected clients to the lobby screen
                             int existingClients = inc.ReadInt32();
                             for (int i = 1; i <= existingClients; i++)
                             {
-                                Game1.NetLobbyScreen.AddPlayer(inc.ReadString());
+                                Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
+
+                                Game1.NetLobbyScreen.AddPlayer(otherClient);
                             }
 
                             //add the name of own client to the lobby screen
-                            Game1.NetLobbyScreen.AddPlayer(name);
+                            Game1.NetLobbyScreen.AddPlayer(new Client(name, myID));
 
-                            CanStart = true;                        
+                            CanStart = true;
                         }
                         else if (inc.ReadByte() == (byte)PacketTypes.KickedOut)
                         {
@@ -249,19 +258,18 @@ namespace Subsurface.Networking
                         break;
                     case (byte)PacketTypes.PlayerJoined:
 
-                        Client otherClient = new Client();
-                        otherClient.name = inc.ReadString();
+                        Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
 
-                        Game1.NetLobbyScreen.AddPlayer(otherClient.name);
+                        Game1.NetLobbyScreen.AddPlayer(otherClient);
 
                         AddChatMessage(otherClient.name + " has joined the server", ChatMessageType.Server);
 
                         break;
                     case (byte)PacketTypes.PlayerLeft:
-                        string leavingName = inc.ReadString();
+                        int leavingID = inc.ReadInt32();
 
                         AddChatMessage(inc.ReadString(), ChatMessageType.Server);
-                        Game1.NetLobbyScreen.RemovePlayer(leavingName);
+                        Game1.NetLobbyScreen.RemovePlayer(otherClients.Find(c => c.ID==leavingID));
                         break;
 
                     case (byte)PacketTypes.KickedOut:
@@ -330,8 +338,15 @@ namespace Subsurface.Networking
             msg.Write(characterInfo.Gender == Gender.Male);
             msg.Write(characterInfo.HeadSpriteId);
 
-            Client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            var jobPreferences = Game1.NetLobbyScreen.JobPreferences;
+            int count = Math.Min(jobPreferences.Count, 3);
+            msg.Write(count);
+            for (int i = 0; i < count; i++ )
+            {
+                msg.Write(jobPreferences[i].Name);
+            }
 
+            Client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         private Character ReadCharacterData(NetIncomingMessage inc)
@@ -340,9 +355,17 @@ namespace Subsurface.Networking
             int ID              = inc.ReadInt32();
             bool isFemale       = inc.ReadBoolean();
             int inventoryID     = inc.ReadInt32();
+
+            int headSpriteID = inc.ReadInt32();
+
+
+            string jobName = inc.ReadString();
+            JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+
             Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
-            CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", newName, isFemale ? Gender.Female : Gender.Male);
+            CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
+            ch.HeadSpriteId = headSpriteID;
             Character character = new Character(ch, position);
             character.ID = ID;
             character.Inventory.ID = inventoryID;
