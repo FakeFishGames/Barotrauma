@@ -151,6 +151,8 @@ namespace Subsurface
 
         public override void Select()
         {
+            Lights.LightManager.FowEnabled = false;
+
             infoFrame.ClearChildren();
             
             if (IsServer && Game1.Server == null) Game1.NetworkMember = new GameServer();

@@ -149,7 +149,7 @@ namespace Subsurface
             }
 
             base.Remove();
-
+            ID = -1;
         }
 
         private List<Vector2> GenerateConvexHull()
@@ -524,10 +524,17 @@ namespace Subsurface
             Vector2 u = Vector2.Dot(simSpeed, normal)*normal;
             Vector2 w = simSpeed - u;
 
-            speed = ConvertUnits.ToDisplayUnits(w*f2.Body.Friction - u*0.5f);
 
             System.Diagnostics.Debug.WriteLine("IMPACT:"+impact);
-            if (impact < 5.0f) return true;
+            if (impact < 5.0f)
+            {
+                speed = ConvertUnits.ToDisplayUnits(w * 0.9f - u * 0.2f);
+                return true;
+            }
+            else
+            {
+                speed = ConvertUnits.ToDisplayUnits(w * 0.9f + u * 0.5f);
+            }
 
             collisionRigidness = 0.8f;
 
@@ -820,17 +827,20 @@ namespace Subsurface
                 }
             }
 
-            //ID = 1;
+
+            ID = int.MaxValue-10;
 
             loaded = this;
         }
 
         public static Submarine Load(string file)
         {
-            Unload();
+            Unload();            
 
             Submarine sub = new Submarine(file);
             sub.Load();
+
+            //Entity.dictionary.Add(int.MaxValue, sub);
 
             return sub;            
         }

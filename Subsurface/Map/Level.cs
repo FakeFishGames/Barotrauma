@@ -21,6 +21,8 @@ namespace Subsurface
 
         static Level loaded;
 
+        private static Texture2D shaftTexture;
+
         private string seed;
 
         private int siteInterval;
@@ -41,6 +43,8 @@ namespace Subsurface
 
         private Rectangle borders;
 
+        private List<Body> bodies = new List<Body>();
+
         public Vector2 StartPosition
         {
             get { return startPosition; }
@@ -58,6 +62,8 @@ namespace Subsurface
 
         public Level(string seed, int width, int height, int siteInterval)
         {
+            if (shaftTexture == null) shaftTexture = Game1.textureLoader.FromFile("Content/Map/shaft.png");
+
             this.seed = seed;
 
             this.siteInterval = siteInterval;
@@ -79,8 +85,6 @@ namespace Subsurface
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            //Game1.random = new Random(ToolBox.SeedToInt(seed));
-
             if (loaded != null)
             {
                 loaded.Unload();
@@ -91,8 +95,6 @@ namespace Subsurface
             Voronoi voronoi = new Voronoi(1.0);
 
             List<Vector2> sites = new List<Vector2>();
-
-            int aa = seed.GetHashCode();
 
             Random rand = new Random(seed.GetHashCode());
 
@@ -177,6 +179,8 @@ namespace Subsurface
                 wayPoint.SpawnType = SpawnType.Enemy;
             }
 
+            startPosition = pathCells[0].Center;
+            endPosition = pathCells[pathCells.Count - 1].Center;
 
             //generate a couple of random paths
             for (int i = 0; i < rand.Next() % 3; i++)
@@ -200,11 +204,21 @@ namespace Subsurface
             Debug.WriteLine("path: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
 
-            startPosition = pathCells[0].Center;
-            endPosition = pathCells[pathCells.Count - 1].Center;
+
+
+            for (int i = 0; i < 2; i++ )
+            {
+                Vector2 tunnelStart = (i == 0) ? startPosition : endPosition;
+
+
+                pathCells.AddRange
+                (
+                    GeneratePath(rand, tunnelStart, new Vector2(tunnelStart.X, borders.Height), cells, pathBorders, minWidth, 0.1f)
+                );
+            }
 
             cells = CleanCells(pathCells);
-
+            
             foreach (VoronoiCell cell in pathCells)
             {
                 cells.Remove(cell);
@@ -222,6 +236,26 @@ namespace Subsurface
             {
                 cellGrid[(int)Math.Floor(cell.Center.X / GridCellWidth), (int)Math.Floor(cell.Center.Y / GridCellWidth)].Add(cell);
             }
+
+            startPosition.Y = borders.Height;
+            endPosition.Y = borders.Height;
+            for (int i = 0; i < 2; i++)
+            {
+                Vector2 tunnelStart = (i == 0) ? startPosition : endPosition;
+
+                for (int n = -1; n < 2; n += 2)
+                {
+                    int cellIndex = FindCellIndex(new Vector2(tunnelStart.X + minWidth * 0.5f * n, tunnelStart.Y), 3);
+                    foreach (GraphEdge ge in cells[cellIndex].edges)
+                    {
+                        if (ge.point1.Y > cells[cellIndex].Center.Y) ge.point1.Y = borders.Height + 5000.0f;
+                        if (ge.point2.Y > cells[cellIndex].Center.Y) ge.point2.Y = borders.Height + 5000.0f;
+                    }
+                }
+            }
+
+            startPosition.Y += 5000.0f;
+            endPosition.Y += 5000.0f;
 
             GeneratePolygons(cells, pathCells);
 
@@ -394,23 +428,11 @@ namespace Subsurface
             return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
         }
 
-        //public Microsoft.Xna.Framework.Point GridCell(Vector2 position)
-        //{
-        //    Microsoft.Xna.Framework.Point point = new Microsoft.Xna.Framework.Point(
-        //        (int)Math.Floor(position.X / gridCellWidth),
-        //        (int)Math.Floor(position.Y / gridCellWidth));
-
-        //    point.X = MathHelper.Clamp(point.X, 0, cellGrid.GetLength(0) - 1);
-        //    point.Y = MathHelper.Clamp(point.X, 0, cellGrid.GetLength(1) - 1);
-
-        //    return point;
-        //}
-
         /// <summary>
         /// find the index of the cell which the point is inside
         /// (actually finds the cell whose center is closest, but it's always the correct cell assuming the point is inside the borders of the diagram)
         /// </summary>
-        private int FindCellIndex(Vector2 position)
+        private int FindCellIndex(Vector2 position, int searchDepth = 1)
         {
             float closestDist = 0.0f;
             VoronoiCell closestCell = null;
@@ -418,11 +440,9 @@ namespace Subsurface
             int gridPosX = (int)Math.Floor(position.X / GridCellWidth);
             int gridPosY = (int)Math.Floor(position.Y / GridCellWidth);
 
-            int searchOffset = 1;
-
-            for (int x = Math.Max(gridPosX - searchOffset, 0); x <= Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1); x++)
+            for (int x = Math.Max(gridPosX - searchDepth, 0); x <= Math.Min(gridPosX + searchDepth, cellGrid.GetLength(0) - 1); x++)
             {
-                for (int y = Math.Max(gridPosY - searchOffset, 0); y <= Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1); y++)
+                for (int y = Math.Max(gridPosY - searchDepth, 0); y <= Math.Min(gridPosY + searchDepth, cellGrid.GetLength(1) - 1); y++)
                 {
                     for (int i = 0; i < cellGrid[x, y].Count; i++)
                     {
@@ -472,45 +492,27 @@ namespace Subsurface
 
                 if (tempVertices.Count < 3) continue;
 
-                int triangleCount = tempVertices.Count - 2;
-
-                tempVertices.Sort(new CompareCCW(cell.Center));
-
-                int lastIndex = 1;
-                for (int i = 0; i < triangleCount; i++)
+                var triangles = TriangulateConvex(tempVertices, cell.Center);
+                for (int i = 0; i < triangles.Count; i++ )
                 {
-                    //simple triangulation
-                    List<Vector2> triangleVertices = new List<Vector2>();
-                    triangleVertices.Add(tempVertices[0]);
-                    for (int j = lastIndex; j <= lastIndex + 1; j++)
+                    foreach (Vector2 vertex in triangles[i])
                     {
-                        triangleVertices.Add(tempVertices[j]);
+                        verticeList.Add(new VertexPositionColor(new Vector3(vertex, 0.0f), new Color(n,(n*2)%255,(n*3)%255)*0.5f));
                     }
-                    lastIndex += 1;
-
-                    foreach (Vector2 vertex in triangleVertices)
-                    {
-                        verticeList.Add(new VertexPositionColor(new Vector3(vertex, 0.0f), Color.LightGray * 0.8f));//new Color(n,(n*2)%255,(n*3)%255)*0.5f));
-                    }
-
-                    //bool isSame = false;
-                    //if (triangleVertices[0].Y == triangleVertices[1].Y && triangleVertices[1].Y == triangleVertices[2].Y) isSame = true;
-                    //if (triangleVertices[0].X == triangleVertices[1].X && triangleVertices[1].X == triangleVertices[2].X) isSame = true;
-
-                    //if (isSame) continue;
-
-                    //CreateBody(cell, triangleVertices);
                 }
+
 
                 if (bodyPoints.Count < 2) continue;
 
-
-                //todo: make sure the first point is the one where the edge should start from
-                bodyPoints.Sort(new CompareCCW(cell.Center));
-
-                //if (bodyPoints.Count == tempVertices.Count)
-                //{
-                //}
+                if (bodyPoints.Count < 3)
+                {
+                    foreach(Vector2 vertex in tempVertices)
+                    {
+                        if (bodyPoints.Contains(vertex)) continue;
+                        bodyPoints.Add(vertex);
+                        break;
+                    }
+                }
 
                 for (int i = 0; i < bodyPoints.Count; i++)
                 {
@@ -518,45 +520,81 @@ namespace Subsurface
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
 
-                for (int i = bodyPoints.Count-1; i >0 ; i--)
+                triangles = TriangulateConvex(bodyPoints, cell.Center);
+
+                Body edgeBody = new Body(Game1.World);
+
+                for (int i = 0; i < triangles.Count; i++)
                 {
-                    if (Vector2.Distance(bodyPoints[i], bodyPoints[i - 1]) < 0.1f) bodyPoints.RemoveAt(i);
+                    Vertices bodyVertices = new Vertices(triangles[i]);
+
+                    FixtureFactory.AttachPolygon(bodyVertices, 5.0f, edgeBody); 
                 }
 
-                if (bodyPoints.Count < 2) continue;
-
-                Vertices bodyVertices = new Vertices(bodyPoints);
-
-                Body edgeBody = BodyFactory.CreateLoopShape(Game1.World, bodyVertices);
-
-                //Body edgeBody = (bodyVertices.Count == tempVertices.Count) ?
-                //    BodyFactory.CreateLoopShape(Game1.world, bodyVertices) : 
-                //    BodyFactory.CreateChainShape(Game1.world, bodyVertices);
-
                 edgeBody.UserData = cell;
-
+                edgeBody.SleepingAllowed = false;
                 edgeBody.BodyType = BodyType.Kinematic;
                 edgeBody.CollisionCategories = Physics.CollisionWall | Physics.CollisionLevel;
 
                 cell.body = edgeBody;
+                bodies.Add(edgeBody);
             }
 
-            vertices = verticeList.ToArray();
+            for (int i = 0; i < 2; i++ )
+            {
+                Body shaftBody = BodyFactory.CreateRectangle(Game1.World, 100.0f, 10.0f, 5.0f);
+                shaftBody.BodyType = BodyType.Kinematic;
+                shaftBody.CollisionCategories = Physics.CollisionWall | Physics.CollisionLevel;
+                shaftBody.SetTransform(ConvertUnits.ToSimUnits((i==0) ? startPosition : endPosition), 0.0f);
+                shaftBody.SleepingAllowed = false;
+                bodies.Add(shaftBody);
+            }
 
-            //return bodies;
+                vertices = verticeList.ToArray();
         }
 
+        private List<Vector2[]> TriangulateConvex(List<Vector2> vertices, Vector2 center)
+        {
+            List<Vector2[]> triangles = new List<Vector2[]>();
 
+            int triangleCount = vertices.Count - 2;
+
+            vertices.Sort(new CompareCCW(center));
+
+            int lastIndex = 1;
+            for (int i = 0; i < triangleCount; i++)
+            {
+                Vector2[] triangleVertices = new Vector2[3];
+                triangleVertices[0] = vertices[0];
+                int k = 1;
+                for (int j = lastIndex; j <= lastIndex + 1; j++)
+                {
+                    triangleVertices[k]=vertices[j];
+                    k++;
+                }
+                lastIndex += 1;
+
+                triangles.Add(triangleVertices);
+            }
+
+            return triangles;
+        }
 
         public void SetPosition(Vector2 pos)
         {
             Vector2 amount = pos - Position;
             Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
-            foreach (VoronoiCell cell in cells)
+            //foreach (VoronoiCell cell in cells)
+            //{
+            //    if (cell.body == null) continue;
+            //    cell.body.SleepingAllowed = false;
+            //    cell.body.SetTransform(cell.body.Position + simAmount, cell.body.Rotation);
+            //}
+
+
+            foreach (Body body in bodies)
             {
-                if (cell.body == null) continue;
-                cell.body.SleepingAllowed = false;
-                cell.body.SetTransform(cell.body.Position + simAmount, cell.body.Rotation);
+                body.SetTransform(body.Position + simAmount, body.Rotation);
             }
 
             foreach (MapEntity mapEntity in MapEntity.mapEntityList)
@@ -585,10 +623,15 @@ namespace Subsurface
 
             //DebugCheckPos();
 
-            foreach (VoronoiCell cell in cells)
+            //foreach (VoronoiCell cell in cells)
+            //{
+            //    if (cell.body == null) continue;
+            //    cell.body.LinearVelocity = simVelocity;
+            //}
+
+            foreach (Body body in bodies)
             {
-                if (cell.body == null) continue;
-                cell.body.LinearVelocity = simVelocity;
+                body.LinearVelocity = simVelocity;
             }
 
             foreach (Character character in Character.CharacterList)
@@ -703,64 +746,51 @@ namespace Subsurface
         }
 
 
-        public void RenderLines(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch)
         {
-            //GUI.DrawRectangle(spriteBatch, new Rectangle(borders.X, borders.Y-borders.Height, borders.Width, borders.Height), Color.Cyan);
+            Vector2 pos = endPosition;
+            pos.X += Position.X;
+            pos.Y = -pos.Y - Position.Y;
 
-            //for (int x = 0; x < cellGrid.GetLength(0); x++)
+            int shaftWidth = 10000;
+
+            spriteBatch.Draw(shaftTexture,
+                new Rectangle((int)(pos.X - shaftWidth / 2), (int)pos.Y, shaftWidth, 512), 
+                new Rectangle(0, 0, shaftWidth, 256),
+                Color.White, 0.0f,
+                Vector2.Zero,
+                SpriteEffects.None, 0.0f);
+
+            pos = startPosition;
+            pos.X += Position.X;
+            pos.Y = -pos.Y - Position.Y;
+
+            spriteBatch.Draw(shaftTexture,
+                new Rectangle((int)(pos.X - shaftWidth/2), (int)pos.Y, shaftWidth, 512), 
+                new Rectangle(0, 0, shaftWidth, 256),
+                Color.White, 0.0f,
+                Vector2.Zero,
+                SpriteEffects.None, 0.0f);
+
+            //List<Vector2[]> edges = GetCellEdges(observerPosition, 1, false);
+
+            //foreach (VoronoiCell cell in cells)
             //{
-            //    for (int y = 0; y < cellGrid.GetLength(1); y++)
+            //    for (int i = 0; i < cell.bodyVertices.Count - 1; i++)
             //    {
-            //        GUI.DrawRectangle(spriteBatch,
-            //            new Rectangle(x * gridCellWidth + (int)position.X, borders.Y - borders.Height + y * gridCellWidth - (int)position.Y, gridCellWidth, gridCellWidth),
-            //            Color.Cyan);
+            //        Vector2 start = cell.bodyVertices[i];
+            //        start.X += Position.X;
+            //        start.Y = -start.Y - Position.Y;
+            //        start.X += Rand.Range(-10.0f, 10.0f);
+
+            //        Vector2 end = cell.bodyVertices[i + 1];
+            //        end.X += Position.X;
+            //        end.Y = -end.Y - Position.Y;
+            //        end.X += Rand.Range(-10.0f, 10.0f);
+
+            //        GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Red : Color.Red);
             //    }
             //}
-
-            //int gridPosX = (int)Math.Floor(-observerPosition.X / gridCellWidth);
-            //int gridPosY = (int)Math.Floor(-observerPosition.Y / gridCellWidth);
-            //int searchOffset = 2;
-
-            //int startX = Math.Max(gridPosX - searchOffset, 0);
-            //int endX = Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1);
-
-            //int startY = Math.Max(gridPosY - searchOffset, 0);
-            //int endY = Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1);
-
-            //for (int x = startX; x < endX; x++)
-            //{
-            //    for (int y = startY; y < endY; y++)
-            //    {
-            //        GUI.DrawRectangle(spriteBatch,
-            //            new Rectangle(x * gridCellWidth + (int)position.X, borders.Y - borders.Height + y * gridCellWidth - (int)position.Y, gridCellWidth, gridCellWidth),
-            //            Color.Cyan);
-            //    }
-            //}
-
-            List<Vector2[]> edges = GetCellEdges(observerPosition, 1, false);
-
-            //for (int i = 0; i < edges.Count; i++)
-            //{
-            //    GUI.DrawLine(spriteBatch, edges[i][0], edges[i][1], Color.Green);
-            //}
-
-            foreach (VoronoiCell cell in cells)
-            {
-                for (int i = 0; i < cell.bodyVertices.Count - 1; i++)
-                {
-                    Vector2 start = cell.bodyVertices[i];
-                    start.X += Position.X;
-                    start.Y = -start.Y - Position.Y;
-                    start.X += Rand.Range(-10.0f, 10.0f);
-
-                    Vector2 end = cell.bodyVertices[i + 1];
-                    end.X += Position.X;
-                    end.Y = -end.Y - Position.Y;
-                    end.X += Rand.Range(-10.0f, 10.0f);
-
-                    GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Red : Color.Red);
-                }
-            }
         }
 
         public List<Vector2[]> GetCellEdges(Vector2 refPos, int searchDepth = 2, bool onlySolid = true)
@@ -813,7 +843,6 @@ namespace Subsurface
 
 
             basicEffect.CurrentTechnique.Passes[0].Apply();
-
 
             graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, vertices, 0, (int)Math.Floor(vertices.Length / 3.0f));
         }

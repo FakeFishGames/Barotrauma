@@ -374,6 +374,7 @@ namespace Subsurface.Networking
             msg.Write((byte)PacketTypes.PlayerLeft);
 
             Client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            Client.Shutdown("");
         }
 
         public void SendCharacterData()
@@ -411,6 +412,11 @@ namespace Subsurface.Networking
             string jobName = inc.ReadString();
             JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
 
+            if (inc.Position > inc.LengthBits)
+            {
+                return null;
+            }
+
             CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
             ch.HeadSpriteId = headSpriteID;
 
@@ -433,7 +439,7 @@ namespace Subsurface.Networking
             character.ID = ID;
             character.Inventory.ID = inventoryID;
 
-            character.GiveJobItems();
+            character.GiveJobItems(closestWaypoint);
 
             return character;
         }

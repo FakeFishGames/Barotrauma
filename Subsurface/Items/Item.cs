@@ -144,6 +144,11 @@ namespace Subsurface
             get { return prefab.IsLinkable; }
         }
 
+        public override string ToString()
+        {
+            return Name +"("+ID+")";
+        }
+
         public List<IPropertyObject> AllPropertyObjects
         {
             get
@@ -322,6 +327,11 @@ namespace Subsurface
             return CurrentHull;
         }
         
+        public void AddTag(string tag)
+        {
+            if (tags.Contains(tag)) return;
+            tags.Add(tag);
+        }
 
         public bool HasTag(string tag)
         {

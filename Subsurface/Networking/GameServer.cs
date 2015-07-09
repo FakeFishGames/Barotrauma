@@ -285,6 +285,7 @@ namespace Subsurface.Networking
             Rand.SetSyncedSeed(seed);
             
             Submarine selectedMap = Game1.NetLobbyScreen.SelectedMap as Submarine;
+            
 
             //selectedMap.Load();
 
@@ -315,7 +316,7 @@ namespace Subsurface.Networking
             {
                 connectedClients[i].character = new Character(
                     connectedClients[i].characterInfo, assignedWayPoints[i], true);
-                connectedClients[i].character.GiveJobItems();
+                connectedClients[i].character.GiveJobItems(assignedWayPoints[i]);
             }
 
             //todo: fix
@@ -626,6 +627,11 @@ namespace Subsurface.Networking
             }
 
             return preferredClient;
+        }
+
+        public override void Disconnect()
+        {
+            Server.Shutdown("");
         }
     }
 

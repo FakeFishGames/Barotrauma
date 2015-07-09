@@ -17,9 +17,7 @@ namespace Subsurface
         public static bool EditWater;
 
         public static WaterRenderer renderer;
-
-        public static bool DebugDraw;
-
+        
         public const float OxygenDistributionSpeed = 500.0f;
         public const float OxygenDetoriationSpeed = 0.3f;
         public const float OxygenConsumptionSpeed = 1000.0f;
@@ -277,7 +275,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (!editing && !DebugDraw) return;
+            if (!editing && !Game1.DebugDraw) return;
 
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(rect.X, -rect.Y),

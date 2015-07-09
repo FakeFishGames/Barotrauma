@@ -56,8 +56,7 @@ namespace Subsurface.Items.Components
             float scale = 0.01f;
 
             List<Vector2[]> edges = Level.Loaded.GetCellEdges(-Level.Loaded.Position, 5);
-            Vector2 offset = Vector2.Zero; //Level.Loaded.position;
-            //offset.Y = -offset.Y;
+            Vector2 offset = Vector2.Zero;
 
             for (int i = 0; i < edges.Count; i++)
             {

@@ -388,7 +388,7 @@ namespace Subsurface
         }
 
 
-        public void Draw(SpriteBatch spriteBatch, bool debugDraw)
+        public void Draw(SpriteBatch spriteBatch)
         {
             Color color = Color.White;// new Color(1.0f, 1.0f - damage / maxHealth, 1.0f - damage / maxHealth);
 
@@ -405,7 +405,7 @@ namespace Subsurface
                     1.0f, spriteEffect);
             }
 
-            if (!debugDraw) return;
+            if (!Game1.DebugDraw) return;
 
             if (pullJoint!=null)
             {

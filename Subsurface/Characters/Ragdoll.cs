@@ -15,8 +15,6 @@ namespace Subsurface
     {
         public static List<Ragdoll> list = new List<Ragdoll>();
 
-        public static bool DebugDraw = false;
-
         protected Hull currentHull;
 
         public Limb[] limbs;
@@ -308,10 +306,10 @@ namespace Subsurface
             
             foreach (Limb limb in limbs)
             {
-                limb.Draw(spriteBatch, DebugDraw);
+                limb.Draw(spriteBatch);
             }
             
-            if (!DebugDraw) return;
+            if (!Game1.DebugDraw) return;
 
             foreach (Limb limb in limbs)
             {

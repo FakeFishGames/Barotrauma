@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Xml.Linq;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
@@ -11,6 +6,11 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Subsurface.Networking;
 using Subsurface.Particles;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Subsurface
 {
@@ -37,7 +37,7 @@ namespace Subsurface
 
         public double LastNetworkUpdate;
 
-        public byte LargeUpdateTimer;
+        public float LargeUpdateTimer;
 
         public readonly Dictionary<string, ObjectProperty> Properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
@@ -367,7 +367,7 @@ namespace Subsurface
             CharacterList.Add(this);
         }
 
-        public void GiveJobItems()
+        public void GiveJobItems(WayPoint spawnPoint)
         {
             if (Info == null || Info.Job == null) return;
             
@@ -382,6 +382,15 @@ namespace Subsurface
 
                 Item item = new Item(itemPrefab, Position);
                 inventory.TryPutItem(item, item.AllowedSlots, false);
+                
+                if (item.Prefab.Name == "ID Card" && spawnPoint!=null)
+                {
+                    foreach (string s in spawnPoint.IdCardTags)
+                    {
+                        
+                        item.AddTag(s);
+                    }                    
+                }
             }            
         }
 
@@ -893,10 +902,7 @@ namespace Subsurface
 
             message.Write(cursorPosition.X);
             message.Write(cursorPosition.Y);
-
-            message.Write(AnimController.limbs.Count());
-
-
+            
             message.Write(LargeUpdateTimer <= 0);
 
             if (LargeUpdateTimer<=0)
@@ -904,7 +910,6 @@ namespace Subsurface
                 int i = 0;
                 foreach (Limb limb in AnimController.limbs)
                 {
-                    message.Write(42.0f+i);
                     message.Write(limb.body.Position.X);
                     message.Write(limb.body.Position.Y);
 
@@ -926,7 +931,7 @@ namespace Subsurface
                 message.Write(torso.body.Position.X);
                 message.Write(torso.body.Position.Y);
 
-                LargeUpdateTimer = (byte)Math.Max(0, LargeUpdateTimer-1);
+                LargeUpdateTimer = Math.Max(0, LargeUpdateTimer-1);
             }
 
 
@@ -964,11 +969,6 @@ namespace Subsurface
                 return;
             }
 
-            //if (type == Networking.NetworkEventType.KeyHit)
-            //{
-            //    selectKeyHit.State = message.ReadBoolean();
-
-            //}
             actionKeyDown.State = message.ReadBoolean();
             secondaryKeyDown.State = message.ReadBoolean();
 
@@ -987,13 +987,9 @@ namespace Subsurface
             cursorPos.X = message.ReadFloat();
             cursorPos.Y = message.ReadFloat();
 
-            int num1 = message.ReadInt32();
-            System.Diagnostics.Debug.WriteLine(num1);
-
             if (sendingTime <= LastNetworkUpdate) return;
             
             cursorPosition = cursorPos;
-
 
             AnimController.TargetMovement= targetMovement;
             AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
@@ -1002,8 +998,6 @@ namespace Subsurface
             {
                 foreach (Limb limb in AnimController.limbs)
                 {
-                    float num = message.ReadFloat();
-                    System.Diagnostics.Debug.WriteLine(num);
                     Vector2 pos = Vector2.Zero;
                     pos.X = message.ReadFloat();
                     pos.Y = message.ReadFloat();
@@ -1013,9 +1007,7 @@ namespace Subsurface
                     vel.Y = message.ReadFloat();
 
                     float rotation = message.ReadFloat();
-                    float angularVel = message.ReadFloat();
-
-                    
+                    float angularVel = message.ReadFloat();                    
 
                     if (vel != Vector2.Zero && vel.Length() > 100.0f) { }
 

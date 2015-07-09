@@ -242,8 +242,9 @@ namespace Subsurface
                     new GUIMessageBox(commands[1], commands[2]);
                     break;
                 case "debugdraw":
-                    Hull.DebugDraw = !Hull.DebugDraw;
-                    Ragdoll.DebugDraw = !Ragdoll.DebugDraw;
+                    //Hull.DebugDraw = !Hull.DebugDraw;
+                    //Ragdoll.DebugDraw = !Ragdoll.DebugDraw;
+                    Game1.DebugDraw = !Game1.DebugDraw;
                     break;
                 default:
                     NewMessage("Command not found", Color.Red);
