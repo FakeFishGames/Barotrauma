@@ -16,6 +16,8 @@ namespace Subsurface
         static int graphicsWidth, graphicsHeight;
         static SpriteBatch spriteBatch;
 
+        public static bool DebugDraw;
+
         public static GraphicsDevice CurrGraphicsDevice;
 
         public static FrameCounter frameCounter;

@@ -39,7 +39,7 @@ namespace Subsurface
         {
             base.Select();
 
-            Ragdoll.DebugDraw = true;
+            Game1.DebugDraw = true;
 
             cam = new Camera();
 

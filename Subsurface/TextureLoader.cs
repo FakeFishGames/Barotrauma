@@ -3,6 +3,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
+using System;
 
 namespace Subsurface
 {
@@ -41,8 +42,17 @@ namespace Subsurface
 
         public Texture2D FromFile(string path, bool preMultiplyAlpha = true)
         {
-            using (Stream fileStream = File.OpenRead(path))
-                return FromStream(fileStream, preMultiplyAlpha);
+            try
+            {
+                using (Stream fileStream = File.OpenRead(path))
+                    return FromStream(fileStream, preMultiplyAlpha);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Loading texture ''"+path+"'' failed!", e);
+                return null;
+            }
+
         }
 
         public Texture2D FromStream(Stream stream, bool preMultiplyAlpha = true)

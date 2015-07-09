@@ -161,21 +161,26 @@ namespace Subsurface
 
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearWrap);
 
-            int x = (int)(cam.Position.X / 20.0f);
-            int y = (int)((-cam.Position.Y+5000) / 20.0f);
-            if (y<1024)
+            Vector2 backgroundPos = cam.Position;
+            if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
+            backgroundPos.Y = -backgroundPos.Y;
+            backgroundPos /= 20.0f;
+
+            if (backgroundPos.Y < 1024)
             {
-                if (y>-1024)
+                if (backgroundPos.Y > -1024)
                 {
-                    background.SourceRect = new Rectangle(x, Math.Max(y,0), 1024, 1024);
-                    background.DrawTiled(spriteBatch, (y<0) ? new Vector2(0.0f, -y) : Vector2.Zero, new Vector2(Game1.GraphicsWidth, 1024 - y),
+                    background.SourceRect = new Rectangle((int)backgroundPos.X, (int)Math.Max(backgroundPos.Y, 0), 1024, 1024);
+                    background.DrawTiled(spriteBatch, 
+                        (backgroundPos.Y < 0) ? new Vector2(0.0f, -backgroundPos.Y) : Vector2.Zero, 
+                        new Vector2(Game1.GraphicsWidth, 1024 - backgroundPos.Y),
                         Vector2.Zero, Color.White);
                 }
 
-                if (y<0)
+                if (backgroundPos.Y < 0)
                 {
-                    backgroundTop.SourceRect = new Rectangle(x, y, 1024, Math.Min(-y,1024));
-                    backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(Game1.GraphicsWidth, Math.Min(-y, Game1.GraphicsHeight)),
+                    backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
+                    backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(Game1.GraphicsWidth, Math.Min(-backgroundPos.Y, Game1.GraphicsHeight)),
                         Vector2.Zero, Color.White);
                 }
             }
@@ -255,15 +260,15 @@ namespace Subsurface
             //----------------------------------------------------------------------------------------
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                null, null, null, null,
+                BlendState.AlphaBlend, SamplerState.LinearWrap,
+                null, null, null,
                 cam.Transform);
 
             Submarine.DrawFront(spriteBatch);
 
             if (Game1.GameSession != null && Game1.GameSession.Level != null)
             {
-                Game1.GameSession.Level.RenderLines(spriteBatch);
+                Game1.GameSession.Level.Draw(spriteBatch);
                 //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
             }
             

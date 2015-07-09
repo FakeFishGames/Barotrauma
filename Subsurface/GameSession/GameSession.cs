@@ -120,7 +120,7 @@ namespace Subsurface
 
         public void StartShift(TimeSpan duration, Level level)
         {
-            //if (crewManager.characterInfos.Count == 0) return;
+            Lights.LightManager.FowEnabled = (Game1.Server==null);
 
             this.level = level;
 
@@ -131,10 +131,9 @@ namespace Subsurface
             if (level != null)
             {
                 level.Generate(submarine == null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
-                submarine.SetPosition(level.StartPosition);
+                submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
             }
 
-            //crewManager.StartShift();
             taskManager.StartShift(level);
         }
 

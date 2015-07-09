@@ -121,15 +121,15 @@ namespace Subsurface
 
             for (int i = 0; i < waypoints.Length; i++)
             {
-                WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Human);
-                Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
+                //WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Human);
+                //Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
                 
                 Character character = new Character(characterInfos[i], waypoints[i]);
                 Character.Controlled = character;
 
                 if (!character.Info.StartItemsGiven)
                 {
-                    character.GiveJobItems();
+                    character.GiveJobItems(waypoints[i]);
                     character.Info.StartItemsGiven = true;
                 }
 

@@ -103,7 +103,7 @@ namespace Subsurface.Networking
                 DebugConsole.ThrowError("Received invalid network message");
                 return false;
             }
-            //288=id, 280=char
+            
             Entity e = Entity.FindEntityByID(id);
             if (e == null)
             {

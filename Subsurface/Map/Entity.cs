@@ -7,7 +7,7 @@ namespace Subsurface
 {
     class Entity
     {
-        public static Dictionary<int, Entity> dictionary = new Dictionary<int, Entity>();
+        private static Dictionary<int, Entity> dictionary = new Dictionary<int, Entity>();
 
         private int id;
 
@@ -20,7 +20,11 @@ namespace Subsurface
             get { return id; }
             set 
             {
-                dictionary.Remove(id);  
+                Entity thisEntity;
+                if (dictionary.TryGetValue(id, out thisEntity) && thisEntity == this)
+                {
+                    dictionary.Remove(id);
+                }
                 //if there's already an entity with the same ID, give it the old ID of this one
                 Entity existingEntity;
                 if (dictionary.TryGetValue(value, out existingEntity))
@@ -76,6 +80,7 @@ namespace Subsurface
             {
                 e.Remove();
             }
+            dictionary.Clear();
         }
 
         public virtual void Remove()
