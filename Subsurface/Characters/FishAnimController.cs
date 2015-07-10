@@ -14,7 +14,11 @@ namespace Subsurface
         private float waveAmplitude;
         private float waveLength;
 
+        private bool rotateTowardsMovement;
+
         private bool flip;
+
+        private float flipTimer;
 
         public FishAnimController(Character character, XElement element)
             : base(character, element)
@@ -26,6 +30,8 @@ namespace Subsurface
             
             walkSpeed = ToolBox.GetAttributeFloat(element, "walkspeed", 1.0f);
             swimSpeed = ToolBox.GetAttributeFloat(element, "swimspeed", 1.0f);
+
+            rotateTowardsMovement = ToolBox.GetAttributeBool(element, "rotatetowardsmovement", true);
         }
 
         public override void UpdateAnim(float deltaTime)
@@ -60,11 +66,11 @@ namespace Subsurface
             if (flip)
             {
                 //targetDir = (movement.X > 0.0f) ? Direction.Right : Direction.Left;
-                if (movement.X > 0.1f && movement.X > Math.Abs(movement.Y))
+                if (movement.X > 0.1f && movement.X > Math.Abs(movement.Y)*0.5f)
                 {
                     TargetDir = Direction.Right;
                 }
-                else if (movement.X < -0.1f && movement.X < -Math.Abs(movement.Y))
+                else if (movement.X < -0.1f && movement.X < -Math.Abs(movement.Y)*0.5f)
                 {
                     TargetDir = Direction.Left;
                 }
@@ -88,11 +94,16 @@ namespace Subsurface
             }
             
             //if (stunTimer > gameTime.TotalGameTime.TotalMilliseconds) return;
-
+            flipTimer += deltaTime;
+            
             if (TargetDir != dir) 
-            {
-                Flip();
-                if (flip) Mirror();                
+            {   
+                if (flipTimer>1.0f)
+                {
+                    Flip();
+                    if (flip) Mirror();
+                    flipTimer = 0.0f;
+                }              
             }
         }
 
@@ -125,11 +136,12 @@ namespace Subsurface
             Limb head = GetLimb(LimbType.Head);
             if (head != null)
             {
-                float angle = MathUtils.GetShortestAngle(head.body.Rotation, movementAngle);
+                float angle = (rotateTowardsMovement) ?
+                    head.body.Rotation+ MathUtils.GetShortestAngle(head.body.Rotation, movementAngle) :
+                    HeadAngle*Dir;                    
 
 
-                head.body.SmoothRotate(head.body.Rotation+angle, 25.0f);
-
+                head.body.SmoothRotate(angle, 25.0f);
                 //rotate head towards the angle of movement
                 //float torque = (Math.Sign(angle)*10.0f + MathHelper.Clamp(angle * 10.0f, -10.0f, 10.0f));
                 //angular drag

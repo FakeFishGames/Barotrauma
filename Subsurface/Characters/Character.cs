@@ -82,6 +82,7 @@ namespace Subsurface
         //private float blood;
                 
         private Sound[] sounds;
+        private float[] soundRange;
         //which AIstate each sound is for
         private AIController.AiState[] soundStates;
         
@@ -340,10 +341,12 @@ namespace Subsurface
             {
                 sounds = new Sound[soundElements.Count()];
                 soundStates = new AIController.AiState[soundElements.Count()];
+                soundRange = new float[soundElements.Count()];
                 int i = 0;
                 foreach (XElement soundElement in soundElements)
                 {
                     sounds[i] = Sound.Load(soundElement.Attribute("file").Value);
+                    soundRange[i] = ToolBox.GetAttributeFloat(soundElement, "range", 1000.0f);
                     if (soundElement.Attribute("state") == null)
                     {
                         soundStates[i] = AIController.AiState.None;

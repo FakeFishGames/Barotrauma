@@ -23,6 +23,9 @@ namespace Subsurface
 
         private static Texture2D shaftTexture;
 
+        //how close the sub has to be to start/endposition to exit
+        const float ExitDistance = 3000.0f;
+
         private string seed;
 
         private int siteInterval;
@@ -48,6 +51,18 @@ namespace Subsurface
         public Vector2 StartPosition
         {
             get { return startPosition; }
+        }
+
+        public bool AtStartPosition
+        {
+            get;
+            private set;
+        }
+
+        public bool AtEndPosition
+        {
+            get;
+            private set;
         }
 
         public Vector2 Position
@@ -80,8 +95,9 @@ namespace Subsurface
             return new Level(seed, 100000, 40000, 2000);
         }
 
-        public void Generate(float minWidth)
+        public void Generate(float minWidth, bool mirror=false)
         {
+            mirror = true;
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -96,16 +112,20 @@ namespace Subsurface
 
             List<Vector2> sites = new List<Vector2>();
 
-            Random rand = new Random(seed.GetHashCode());
+            Random rand = new Random(100);
 
             float siteVariance = siteInterval * 0.8f;
             for (int x = siteInterval / 2; x < borders.Width; x += siteInterval)
             {
                 for (int y = siteInterval / 2; y < borders.Height; y += siteInterval)
                 {
-                    sites.Add(new Vector2(
+                    Vector2 site = new Vector2(
                         x + (float)(rand.NextDouble() - 0.5) * siteVariance,
-                        y + (float)(rand.NextDouble() - 0.5) * siteVariance));
+                        y + (float)(rand.NextDouble() - 0.5) * siteVariance);
+
+                    if (mirror) site.X = borders.Width - site.X;
+
+                    sites.Add(site);
                 }
             }
 
@@ -166,14 +186,22 @@ namespace Subsurface
                 borders.X + (int)minWidth * 2, borders.Y + (int)minWidth * 2,
                 borders.Right - (int)minWidth * 4, borders.Y + borders.Height - (int)minWidth * 4);
 
-            List<VoronoiCell> pathCells = GeneratePath(rand,
-                new Vector2((int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2)),
-                new Vector2(borders.Width - (int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2)),
-                cells, pathBorders, minWidth);
+            Vector2 startPath = new Vector2((int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2));
+            Vector2 endPath = new Vector2(borders.Width - (int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2));
 
+            if (mirror)
+            {
+                startPath.X = borders.Width - startPath.X;
+                endPath.X = borders.Width - endPath.X;
+            }
+
+            List<VoronoiCell> pathCells = GeneratePath(rand,
+                startPath, endPath, cells, pathBorders, minWidth);
+
+            //place some enemy spawnpoints at random points in the path
             for (int i = 0; i <3 ; i++ )
             {
-                Vector2 position = pathCells[rand.Next((int)(pathCells.Count*0.5f), pathCells.Count - 2)].Center;
+                Vector2 position = pathCells[rand.Next((int)(pathCells.Count * 0.5f), pathCells.Count - 2)].Center;
                 WayPoint wayPoint = new WayPoint(new Rectangle((int)position.X, (int)position.Y, 10, 10));
                 wayPoint.MoveWithLevel = true;
                 wayPoint.SpawnType = SpawnType.Enemy;
@@ -193,6 +221,9 @@ namespace Subsurface
 
                 float x = pathBorders.X + (float)rand.NextDouble() * (pathBorders.Right - pathBorders.X);
                 float y = pathBorders.Y + (float)rand.NextDouble() * (pathBorders.Bottom - pathBorders.Y);
+
+                if (mirror) x = borders.Width - x;
+
                 Vector2 end = new Vector2(x, y);
 
                 pathCells.AddRange
@@ -203,13 +234,10 @@ namespace Subsurface
 
             Debug.WriteLine("path: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
-
-
-
+            
             for (int i = 0; i < 2; i++ )
             {
                 Vector2 tunnelStart = (i == 0) ? startPosition : endPosition;
-
 
                 pathCells.AddRange
                 (
@@ -288,7 +316,7 @@ namespace Subsurface
         {
             Stopwatch sw2 = new Stopwatch();
             sw2.Start();
-
+            
             //how heavily the path "steers" towards the endpoint
             //lower values will cause the path to "wander" more, higher will make it head straight to the end
             wanderAmount = MathHelper.Clamp(wanderAmount, 0.0f, 1.0f);
@@ -309,7 +337,7 @@ namespace Subsurface
                 {
                     for (int i = 0; i < currentCell.edges.Count; i++)
                     {
-                        if (!IsIntersecting(currentCell.Center, end, currentCell.edges[i].point1, currentCell.edges[i].point2)) continue;
+                        if (!MathUtils.LinesIntersect(currentCell.Center, end, currentCell.edges[i].point1, currentCell.edges[i].point2)) continue;
                         edgeIndex = i;
                         break;
                     }
@@ -412,23 +440,6 @@ namespace Subsurface
         }
 
         /// <summary>
-        /// check whether line from a to b is intersecting with line from c to b
-        /// </summary>
-        bool IsIntersecting(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
-        {
-            float denominator = ((b.X - a.X) * (d.Y - c.Y)) - ((b.Y - a.Y) * (d.X - c.X));
-            float numerator1 = ((a.Y - c.Y) * (d.X - c.X)) - ((a.X - c.X) * (d.Y - c.Y));
-            float numerator2 = ((a.Y - c.Y) * (b.X - a.X)) - ((a.X - c.X) * (b.Y - a.Y));
-
-            if (denominator == 0) return numerator1 == 0 && numerator2 == 0;
-
-            float r = numerator1 / denominator;
-            float s = numerator2 / denominator;
-
-            return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
-        }
-
-        /// <summary>
         /// find the index of the cell which the point is inside
         /// (actually finds the cell whose center is closest, but it's always the correct cell assuming the point is inside the borders of the diagram)
         /// </summary>
@@ -492,7 +503,7 @@ namespace Subsurface
 
                 if (tempVertices.Count < 3) continue;
 
-                var triangles = TriangulateConvex(tempVertices, cell.Center);
+                var triangles = MathUtils.TriangulateConvexHull(tempVertices, cell.Center);
                 for (int i = 0; i < triangles.Count; i++ )
                 {
                     foreach (Vector2 vertex in triangles[i])
@@ -520,7 +531,7 @@ namespace Subsurface
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
 
-                triangles = TriangulateConvex(bodyPoints, cell.Center);
+                triangles = MathUtils.TriangulateConvexHull(bodyPoints, cell.Center);
 
                 Body edgeBody = new Body(Game1.World);
 
@@ -551,33 +562,6 @@ namespace Subsurface
             }
 
                 vertices = verticeList.ToArray();
-        }
-
-        private List<Vector2[]> TriangulateConvex(List<Vector2> vertices, Vector2 center)
-        {
-            List<Vector2[]> triangles = new List<Vector2[]>();
-
-            int triangleCount = vertices.Count - 2;
-
-            vertices.Sort(new CompareCCW(center));
-
-            int lastIndex = 1;
-            for (int i = 0; i < triangleCount; i++)
-            {
-                Vector2[] triangleVertices = new Vector2[3];
-                triangleVertices[0] = vertices[0];
-                int k = 1;
-                for (int j = lastIndex; j <= lastIndex + 1; j++)
-                {
-                    triangleVertices[k]=vertices[j];
-                    k++;
-                }
-                lastIndex += 1;
-
-                triangles.Add(triangleVertices);
-            }
-
-            return triangles;
         }
 
         public void SetPosition(Vector2 pos)
@@ -616,18 +600,8 @@ namespace Subsurface
         Vector2 prevVelocity;
         public void Move(Vector2 amount)
         {
-            //position += amount;
-
             Vector2 velocity = amount;
             Vector2 simVelocity = ConvertUnits.ToSimUnits(amount / (float)Physics.step);
-
-            //DebugCheckPos();
-
-            //foreach (VoronoiCell cell in cells)
-            //{
-            //    if (cell.body == null) continue;
-            //    cell.body.LinearVelocity = simVelocity;
-            //}
 
             foreach (Body body in bodies)
             {
@@ -638,16 +612,9 @@ namespace Subsurface
             {
                 foreach (Limb limb in character.AnimController.limbs)
                 {
-                    //limb.body.SetTransform(limb.body.Position + amount * (float)Physics.step, limb.body.Rotation);
-                    if (character.AnimController.CurrentHull == null)
-                    {
-                        limb.body.LinearVelocity += simVelocity;
-                    }
-                    else
-                    {
-                        //if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot) continue;
-                        //limb.body.ApplyForce((simVelocity - prevVelocity) * 10.0f * limb.Mass);
-                    }
+                    if (character.AnimController.CurrentHull != null) continue;
+                    
+                    limb.body.LinearVelocity += simVelocity;                    
                 }
             }
 
@@ -665,6 +632,9 @@ namespace Subsurface
                     item.body.LinearVelocity += simVelocity;
                 }
             }
+
+            AtStartPosition = Vector2.Distance(startPosition, -Position) < ExitDistance;
+            AtEndPosition   = Vector2.Distance(endPosition, -Position) < ExitDistance;
             
             prevVelocity = simVelocity;
         }
