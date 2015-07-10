@@ -26,6 +26,17 @@ namespace Subsurface
         private Location currentLocation;
         private Location selectedLocation;
 
+        public Location CurrentLocation
+        {
+            get { return currentLocation; }
+        }
+
+        public Location SelectedLocation
+        {
+            get { return selectedLocation; }
+        }
+
+
         public Map(int seed, int size)
         {
             this.seed = seed;

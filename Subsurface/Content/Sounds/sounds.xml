@@ -10,14 +10,14 @@
   <damagesound file="Content/Sounds/Damage/StructureCrunch2.ogg" damagerange="5.0,70.0" damagesoundtype="StructureSlash"/>
   <damagesound file="Content/Sounds/Damage/StructureCrunch3.ogg" damagerange="5.0,100.0" damagesoundtype="StructureSlash"/>
 
-  <damagesound file="Content/Sounds/Damage/LimbBlunt1.ogg" damagerange="5.0,40.0" damagesoundtype="LimbBlunt"/>
-  <damagesound file="Content/Sounds/Damage/LimbBlunt2.ogg" damagerange="5.0,40.0" damagesoundtype="LimbBlunt"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbBlunt"/>
+  <damagesound file="Content/Sounds/Damage/LimbBlunt2.ogg" damagerange="0.0,40.0" damagesoundtype="LimbBlunt"/>
   <damagesound file="Content/Sounds/Damage/LimbBlunt3.ogg" damagerange="5.0,40.0" damagesoundtype="LimbBlunt"/>
   <damagesound file="Content/Sounds/Damage/LimbBlunt4.ogg" damagerange="25.0,75.0" damagesoundtype="LimbBlunt"/>
   <damagesound file="Content/Sounds/Damage/LimbBlunt5.ogg" damagerange="50.0,100.0" damagesoundtype="LimbBlunt"/>
 
-  <damagesound file="Content/Sounds/Damage/LimbSlash1.ogg" damagerange="5.0,40.0" damagesoundtype="LimbSlash"/>
-  <damagesound file="Content/Sounds/Damage/LimbSlash2.ogg" damagerange="10.0,80.0" damagesoundtype="LimbSlash"/>
+  <damagesound file="Content/Sounds/Damage/LimbSlash1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbSlash"/>
+  <damagesound file="Content/Sounds/Damage/LimbSlash2.ogg" damagerange="0.0,80.0" damagesoundtype="LimbSlash"/>
   <damagesound file="Content/Sounds/Damage/LimbSlash3.ogg" damagerange="40.0,100.0" damagesoundtype="LimbSlash"/>
 
   <damagesound file="Content/Sounds/Damage/HitArmor1.ogg" damagerange="5.0,80.0" damagesoundtype="LimbArmor"/>

@@ -10,6 +10,7 @@ namespace Subsurface
 {
     public class Sound
     {
+        public static Vector3 CameraPos;
 
         private static List<Sound> loadedSounds = new List<Sound>();
 
@@ -19,7 +20,6 @@ namespace Subsurface
 
         string filePath;
                 
-        public static Vector3 CameraPos;
         
         //public float Volume
         //{

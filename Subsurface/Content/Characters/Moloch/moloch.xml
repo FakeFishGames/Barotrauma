@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<character name ="moloch" humanoid="false" health ="1000">
+
+  <sound file="Content/Characters/Moloch/attack1.ogg" state="Attack" range="3000"/>
+  <sound file="Content/Characters/Moloch/attack2.ogg" state="Attack" range="3000"/>
+  <sound file="Content/Characters/Moloch/idle1.ogg" state="None" range="3000"/>
+  <sound file="Content/Characters/Moloch/idle2.ogg" state="None" range="3000"/>
+
+  <ragdoll waveamplitude="0.0" swimspeed="1.0" walkspeed="0.3" flip="true" rotatetowardsmovement="false" headangle="-90">
+
+    <!-- head -->
+    <limb id = "0" radius="230" height="500" type="Head" steerforce="1.0" flip="true" armorsector="0.0,180.0" armorvalue="10.0f">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="0,0,628,1024" depth="0.02" origin ="0.4,0.5"/>
+    </limb>
+
+    
+    <limb id = "1" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.025" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "2" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.026" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "3" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.027" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "4" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.025" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "5" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.026" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "6" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.027" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "7" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.025" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "8" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.026" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "9" width="51" height="435" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.028" origin="0.5,0.5"/>
+    </limb>
+
+    <joint limb1="0" limb1anchor="112,77" limb2="1" limb2anchor="0,-100" lowerlimit="-180" upperlimit="-90"/>
+    <joint limb1="1" limb1anchor="0,100" limb2="2" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="2" limb1anchor="0,100" limb2="3" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+
+    <joint limb1="0" limb1anchor="0,0" limb2="4" limb2anchor="0,-100" lowerlimit="-180" upperlimit="-90"/>
+    <joint limb1="4" limb1anchor="0,100" limb2="5" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="5" limb1anchor="0,100" limb2="6" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+
+    <joint limb1="0" limb1anchor="-53,-164" limb2="7" limb2anchor="0,-100" lowerlimit="-180" upperlimit="-90"/>
+    <joint limb1="7" limb1anchor="0,100" limb2="8" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="8" limb1anchor="0,100" limb2="9" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+
+  </ragdoll>
+
+  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="0.5" hearing="1.0"/>
+</character>

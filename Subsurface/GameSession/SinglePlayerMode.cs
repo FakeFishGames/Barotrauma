@@ -31,7 +31,7 @@ namespace Subsurface
             crewManager = new CrewManager();
             hireManager = new HireManager();
 
-            endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 240, 20, 100, 25), "End shift", Alignment.Left | Alignment.Top, GUI.style);
+            endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.style);
             endShiftButton.OnClicked = EndShift;
 
             hireManager.GenerateCharacters("Content/Characters/Human/human.xml", 10);
@@ -83,7 +83,17 @@ namespace Subsurface
 
             crewManager.Draw(spriteBatch);
 
-            endShiftButton.Draw(spriteBatch);
+            if (Level.Loaded.AtEndPosition)
+            {
+                endShiftButton.Text = "Enter " + Game1.GameSession.map.SelectedLocation.Name;
+                endShiftButton.Draw(spriteBatch);
+            }
+            else if (Level.Loaded.AtStartPosition)
+            {
+                endShiftButton.Text = "Enter " + Game1.GameSession.map.CurrentLocation.Name;
+                endShiftButton.Draw(spriteBatch);
+            }
+
             //chatBox.Draw(spriteBatch);
             //textBox.Draw(spriteBatch);
 
@@ -145,11 +155,11 @@ namespace Subsurface
                     sb.Append("No casualties!");
                 }
 
-                Game1.GameSession.map.MoveToNextLocation();
+                if (Level.Loaded.AtEndPosition)
+                {
+                    Game1.GameSession.map.MoveToNextLocation();
+                }
 
-                //new GUIMessageBox("Day #" + day + " is over!\n", sb.ToString());
-
-                //day++;
             }
 
             crewManager.EndShift();

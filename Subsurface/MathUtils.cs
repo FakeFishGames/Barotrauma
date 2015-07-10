@@ -127,6 +127,54 @@ namespace Subsurface
             angle = angle * (MathHelper.TwoPi / 255.0f);
             return angle;
         }
+
+        /// <summary>
+        /// check whether line from a to b is intersecting with line from c to b
+        /// </summary>
+        public static bool LinesIntersect(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            float denominator = ((b.X - a.X) * (d.Y - c.Y)) - ((b.Y - a.Y) * (d.X - c.X));
+            float numerator1 = ((a.Y - c.Y) * (d.X - c.X)) - ((a.X - c.X) * (d.Y - c.Y));
+            float numerator2 = ((a.Y - c.Y) * (b.X - a.X)) - ((a.X - c.X) * (b.Y - a.Y));
+
+            if (denominator == 0) return numerator1 == 0 && numerator2 == 0;
+
+            float r = numerator1 / denominator;
+            float s = numerator2 / denominator;
+
+            return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
+        }
+
+        /// <summary>
+        /// divide a convex hull into triangles
+        /// </summary>
+        /// <returns>List of triangle vertices (sorted counter-clockwise)</returns>
+        public static List<Vector2[]> TriangulateConvexHull(List<Vector2> vertices, Vector2 center)
+        {
+            List<Vector2[]> triangles = new List<Vector2[]>();
+
+            int triangleCount = vertices.Count - 2;
+
+            vertices.Sort(new CompareCCW(center));
+
+            int lastIndex = 1;
+            for (int i = 0; i < triangleCount; i++)
+            {
+                Vector2[] triangleVertices = new Vector2[3];
+                triangleVertices[0] = vertices[0];
+                int k = 1;
+                for (int j = lastIndex; j <= lastIndex + 1; j++)
+                {
+                    triangleVertices[k] = vertices[j];
+                    k++;
+                }
+                lastIndex += 1;
+
+                triangles.Add(triangleVertices);
+            }
+
+            return triangles;
+        }
     }
 
     class CompareCCW : IComparer<Vector2>

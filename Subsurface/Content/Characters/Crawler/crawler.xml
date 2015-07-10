@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <character name ="crawler" humanoid="false">
 
+  <sound file="Content/Characters/Crawler/attack.ogg" state="Attack" range="500"/>
+
   <ragdoll headposition="50" headangle="-70" 
            waveamplitude="50.0" wavelength="2500" 
            swimspeed="2.0" walkspeed="2.0"
