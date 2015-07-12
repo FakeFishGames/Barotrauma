@@ -188,13 +188,20 @@ namespace Subsurface.Networking
 
         public override void Update()
         {
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.K))
+            {
+                SendRandomData();
+            }
+
+
             if (!connected || updateTimer > DateTime.Now) return;
 
-            if (reconnectBox != null)
-            {
-                ConnectToServer(serverIP);
-                return;
-            }
+            //if (reconnectBox != null)
+            //{
+            //    ConnectToServer(serverIP);
+            //    return;
+            //}
 
             if (Client.ConnectionStatus == NetConnectionStatus.Disconnected)
             {
@@ -456,6 +463,40 @@ namespace Subsurface.Networking
             msg.Write(message);
 
             Client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        /// <summary>
+        /// sends some random data to the server (can be a networkevent or just something completely random)
+        /// use for debugging purposes
+        /// </summary>
+        public void SendRandomData()
+        {
+            NetOutgoingMessage msg = Client.CreateMessage();
+            switch (Rand.Int(4))
+            {
+                case 0:
+                    msg.Write((byte)PacketTypes.NetworkEvent);
+                    msg.Write((byte)NetworkEventType.UpdateEntity);
+                    msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
+                    break;
+                case 1:
+                    msg.Write((byte)PacketTypes.NetworkEvent);
+                    msg.Write((byte)Enum.GetNames(typeof(NetworkEventType)).Length);
+                    msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
+                    break;
+                case 2:
+                    msg.Write((byte)Enum.GetNames(typeof(PacketTypes)).Length);
+                    break;
+            }
+
+            int byteCount = Rand.Int(100);
+            for (int i = 0; i<byteCount; i++)
+            {
+                msg.Write((Rand.Int(2)==0) ? true : false);
+            }
+
+
+            Client.SendMessage(msg, (Rand.Int(2)==0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable);
         }
 
     }

@@ -475,19 +475,37 @@ namespace Subsurface
 
         public override void ReadNetworkData(NetIncomingMessage message)
         {
-            state = (AiState)(message.ReadByte());
+            AiState newState = AiState.None;
+            Vector2 newWallAttackPos;
+            float wanderAngle;
+            float updateTargetsTimer, raycastTimer, coolDownTimer;
 
-            wallAttackPos.X = message.ReadFloat();
-            wallAttackPos.Y = message.ReadFloat();
+            int targetID;
 
-            steeringManager.WanderAngle = message.ReadFloat();
-            updateTargetsTimer = message.ReadFloat();
-            raycastTimer = message.ReadFloat();
-            coolDownTimer = message.ReadFloat();
+            try
+            {
 
-            int targetID = message.ReadInt32();
-            
-            if (targetID>-1)            
+                newState = (AiState)(message.ReadByte());
+                newWallAttackPos = new Vector2(message.ReadFloat(), message.ReadFloat());
+
+                wanderAngle = MathUtils.WrapAngleTwoPi(message.ReadFloat());
+                updateTargetsTimer = MathHelper.Clamp(message.ReadFloat(), 0.0f, UpdateTargetsInterval);
+                raycastTimer = MathHelper.Clamp(message.ReadFloat(), 0.0f, RaycastInterval);
+                coolDownTimer = MathHelper.Clamp(message.ReadFloat(), 0.0f, attackCoolDown);
+
+                targetID = message.ReadInt32();
+            }
+
+            catch { return; }
+
+            wallAttackPos = newWallAttackPos;
+
+            steeringManager.WanderAngle = wanderAngle;
+            this.updateTargetsTimer = updateTargetsTimer;
+            this.raycastTimer = raycastTimer;
+            this.coolDownTimer = coolDownTimer;
+
+            if (targetID > -1)
                 targetEntity = Entity.FindEntityByID(targetID) as IDamageable;            
             
         }

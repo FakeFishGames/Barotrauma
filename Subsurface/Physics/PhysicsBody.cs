@@ -46,19 +46,31 @@ namespace Subsurface
         public Vector2 TargetPosition
         {
             get { return targetPosition; }
-            set { targetPosition = value; }
+            set
+            {
+                targetPosition.X = MathHelper.Clamp(value.X, -10000.0f, 10000.0f);
+                targetPosition.Y = MathHelper.Clamp(value.Y, -10000.0f, 10000.0f);
+            }
         }
 
         public Vector2 TargetVelocity
         {
             get { return targetVelocity; }
-            set { targetVelocity = value; }
+            set 
+            { 
+                targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f); 
+            }
         }
 
         public float TargetRotation
         {
             get { return targetRotation; }
-            set { targetRotation = value; }
+            set 
+            {
+                if (float.IsNaN(value) || float.IsInfinity(value) || float.IsNegativeInfinity(value)) return;
+                targetRotation = value; 
+            }
         }
 
         public float TargetAngularVelocity

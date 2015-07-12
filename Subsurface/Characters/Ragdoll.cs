@@ -62,7 +62,11 @@ namespace Subsurface
         public Vector2 TargetMovement
         {
             get { return (correctionMovement == Vector2.Zero) ? targetMovement : correctionMovement; }
-            set { targetMovement = value; }
+            set 
+            {
+                targetMovement.X = MathHelper.Clamp(value.X, -3.0f, 3.0f);
+                targetMovement.Y = MathHelper.Clamp(value.Y, -3.0f, 3.0f);
+            }
         }
 
         public float HeadPosition

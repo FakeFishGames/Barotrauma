@@ -109,7 +109,7 @@ namespace Subsurface
 
         public Vector2 Position
         {
-            get { return (Level.Loaded==null) ? Vector2.Zero : -Level.Loaded.Position; }
+            get { return (Level.Loaded == null) ? Vector2.Zero : -Level.Loaded.Position; }
         }
 
         public string FilePath
@@ -561,20 +561,26 @@ namespace Subsurface
 
         public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message)
         {
-            double sendingTime = message.ReadDouble();
+            double sendingTime;
+            Vector2 newTargetPosition, newSpeed;
+            try
+            {
+                sendingTime = message.ReadDouble();
 
-            if (sendingTime <= lastNetworkUpdate) return;
+                if (sendingTime <= lastNetworkUpdate) return;
 
-            //Vector2 newPosition = 
-            //if (newPosition == Position) return;
-            //if ((newPosition - Position).Length() > 500.0f)
-            //{
-            //    System.Diagnostics.Debug.WriteLine("Submarine has moved over 500 pixels since last update");
-            //    return;
-            //}
+                newTargetPosition = new Vector2(message.ReadFloat(), message.ReadFloat());
+                newSpeed = new Vector2(message.ReadFloat(), message.ReadFloat());
+            }
 
-            targetPosition = new Vector2(message.ReadFloat(), message.ReadFloat());
-            speed = new Vector2(message.ReadFloat(), message.ReadFloat());
+            catch
+            {
+                return;
+            }
+
+
+            targetPosition = newTargetPosition;
+            speed = newSpeed;
 
             lastNetworkUpdate = sendingTime;
         }

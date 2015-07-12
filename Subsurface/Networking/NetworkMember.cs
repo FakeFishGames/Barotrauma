@@ -108,6 +108,7 @@ namespace Subsurface.Networking
         public virtual void Update() { }
 
         public virtual void Disconnect() { }
+
     }
 
     enum ChatMessageType
