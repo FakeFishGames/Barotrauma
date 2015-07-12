@@ -188,8 +188,19 @@ namespace Subsurface.Items.Components
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
         {
-            flowPercentage = message.ReadFloat();
-            isActive = message.ReadBoolean();
+            float newFlow = 0.0f;
+            bool newActive;
+
+            try
+            {
+                newFlow = MathHelper.Clamp(message.ReadFloat(), -100.0f, 100.0f);
+                newActive = message.ReadBoolean();
+            }
+
+            catch { return; }
+
+            flowPercentage = newFlow;
+            isActive = newActive;
         }
     }
 }

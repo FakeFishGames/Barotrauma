@@ -91,11 +91,12 @@ namespace Subsurface.Networking
 
         public static bool ReadData(NetIncomingMessage message)
         {
-            NetworkEventType eventType = (NetworkEventType)message.ReadByte();
-
+            NetworkEventType eventType;
             int id;
+
             try
             {
+                eventType = (NetworkEventType)message.ReadByte();
                 id = message.ReadInt32();
             }
             catch
@@ -107,18 +108,15 @@ namespace Subsurface.Networking
             Entity e = Entity.FindEntityByID(id);
             if (e == null)
             {
-                //DebugConsole.ThrowError("Couldn't find an entity matching the ID ''" + id + "''");
-                
+                //DebugConsole.ThrowError("Couldn't find an entity matching the ID ''" + id + "''");                
                 return false;
             }
-
 
             //System.Diagnostics.Debug.WriteLine("new message: " + eventType +" - "+e);
 
             e.ReadNetworkData(eventType, message);
 
             return true;
-
         }
     }
 }

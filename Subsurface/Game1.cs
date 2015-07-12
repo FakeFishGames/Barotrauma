@@ -86,7 +86,7 @@ namespace Subsurface
             Graphics.PreferredBackBufferWidth = graphicsWidth;
             Graphics.PreferredBackBufferHeight = graphicsHeight;
             Content.RootDirectory = "Content";
-            
+
             //graphics.SynchronizeWithVerticalRetrace = false;
             //graphics.ApplyChanges();
 
@@ -132,7 +132,7 @@ namespace Subsurface
         {
             graphicsWidth   = GraphicsDevice.Viewport.Width;
             graphicsHeight  = GraphicsDevice.Viewport.Height;
-            
+                        
             Sound.Init();
 
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);

@@ -972,23 +972,35 @@ namespace Subsurface
                 return;
             }
 
-            actionKeyDown.State = message.ReadBoolean();
-            secondaryKeyDown.State = message.ReadBoolean();
+            bool actionKeyState     = false;
+            bool secondaryKeyState  = false;
+            double sendingTime      = 0.0f;
+            Vector2 targetMovement  = Vector2.Zero;
+            bool targetDir          = false;
+            Vector2 cursorPos       = Vector2.Zero;
 
-            double sendingTime = message.ReadDouble();
-
-            Vector2 targetMovement = Vector2.Zero;
-
-            targetMovement.X = message.ReadFloat();
-            targetMovement.Y = message.ReadFloat();
+            try
+            {
+                actionKeyState      = message.ReadBoolean();
+                secondaryKeyState   = message.ReadBoolean();
             
+                sendingTime         = message.ReadDouble();
+
+                targetMovement      = new Vector2 (message.ReadFloat(), message.ReadFloat());
+                targetDir           = message.ReadBoolean();
+
+                cursorPos           = new Vector2(message.ReadFloat(), message.ReadFloat());
+            }
+
+            catch
+            {
+                return;
+            }
+
             AnimController.IsStanding = true;
 
-            bool targetDir = message.ReadBoolean();
-
-            Vector2 cursorPos = Vector2.Zero;
-            cursorPos.X = message.ReadFloat();
-            cursorPos.Y = message.ReadFloat();
+            actionKeyDown.State = actionKeyState;
+            secondaryKeyDown.State = secondaryKeyState;
 
             if (sendingTime <= LastNetworkUpdate) return;
             
@@ -1012,9 +1024,9 @@ namespace Subsurface
                     float rotation = message.ReadFloat();
                     float angularVel = message.ReadFloat();                    
 
-                    if (vel != Vector2.Zero && vel.Length() > 100.0f) { }
+                    //if (vel != Vector2.Zero && vel.Length() > 100.0f) { }
 
-                    if (pos != Vector2.Zero && pos.Length() > 100.0f) { }
+                    //if (pos != Vector2.Zero && pos.Length() > 100.0f) { }
                     
                     if (limb.body != null)
                     {

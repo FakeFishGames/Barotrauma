@@ -27,16 +27,9 @@ namespace Subsurface
 
         public static float CurveAngle(float from, float to, float step)
         {
-            // Ensure that 0 <= angle < 2pi for both "from" and "to" 
-            while (from < 0)
-                from += MathHelper.TwoPi;
-            while (from >= MathHelper.TwoPi)
-                from -= MathHelper.TwoPi;
 
-            while (to < 0)
-                to += MathHelper.TwoPi;
-            while (to >= MathHelper.TwoPi)
-                to -= MathHelper.TwoPi;
+            from = WrapAngleTwoPi(from);
+            to = WrapAngleTwoPi(to);
 
             if (Math.Abs(from - to) < MathHelper.Pi)
             {
@@ -59,9 +52,16 @@ namespace Subsurface
             return retVal;
         }
 
+        /// <summary>
+        /// wrap the angle between 0.0f and 2pi
+        /// </summary>
         public static float WrapAngleTwoPi(float angle)
         {
-            // Ensure that 0 <= angle < 2pi for both "from" and "to" 
+            if (float.IsInfinity(angle) || float.IsNegativeInfinity(angle) || float.IsNaN(angle))
+            {
+                return 0.0f;
+            }
+
             while (angle < 0)
                 angle += MathHelper.TwoPi;
             while (angle >= MathHelper.TwoPi)
@@ -70,8 +70,15 @@ namespace Subsurface
             return angle;
         }
 
+        /// <summary>
+        /// wrap the angle between -pi and pi
+        /// </summary>
         public static float WrapAnglePi(float angle)
         {
+            if (float.IsInfinity(angle) || float.IsNegativeInfinity(angle) || float.IsNaN(angle))
+            {
+                return 0.0f;
+            }
             // Ensure that -pi <= angle < pi for both "from" and "to" 
             while (angle < -MathHelper.Pi)
                 angle += MathHelper.TwoPi;

@@ -393,12 +393,28 @@ namespace Subsurface.Items.Components
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            autoTemp = message.ReadBoolean();
-            temperature = message.ReadFloat();
-            shutDownTemp = message.ReadFloat();
+            bool newAutoTemp;
+            float newTemperature, newShutDownTemp;
+            float newCoolingRate, newFissionRate;
 
-            coolingRate = message.ReadFloat();
-            fissionRate = message.ReadFloat();
+            try
+            {
+                newAutoTemp = message.ReadBoolean();
+                newTemperature = message.ReadFloat();
+                newShutDownTemp = message.ReadFloat();
+
+                newCoolingRate = message.ReadFloat();
+                newFissionRate = message.ReadFloat();
+            }
+
+            catch { return; }
+
+            autoTemp = newAutoTemp;
+            Temperature = newTemperature;
+            shutDownTemp = newShutDownTemp;
+
+            CoolingRate = newCoolingRate;
+            FissionRate = newFissionRate;
         }
     }
 }
