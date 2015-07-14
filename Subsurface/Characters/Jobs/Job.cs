@@ -7,12 +7,34 @@ using System.Xml.Linq;
 
 namespace Subsurface
 {
+    class Skill
+    {
+        string name;
+        int level;
+
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public int Level
+        {
+            get { return level; }
+        }
+
+        public Skill(string name, int level)
+        {
+            this.name = name;
+            this.level = level;
+        }
+    }
+
     class Job
     {
 
         private JobPrefab prefab;
 
-        private Dictionary<string, float> skills;
+        private Dictionary<string, Skill> skills;
 
         public string Name
         {
@@ -34,15 +56,26 @@ namespace Subsurface
             get { return prefab.ItemNames; }
         }
 
+        public List<Skill> Skills
+        {
+            get { return skills.Values.ToList(); }
+        }
+
+        //public List<float> SkillLevels
+        //{
+        //    get { return skills.Values.ToList(); }
+        //}
 
         public Job(JobPrefab jobPrefab)
         {
             prefab = jobPrefab;
 
-            skills = new Dictionary<string, float>();
+            skills = new Dictionary<string, Skill>();
             foreach (KeyValuePair<string, Vector2> skill in prefab.Skills)
             {
-                skills.Add(skill.Key, Rand.Range(skill.Value.X, skill.Value.Y, false));
+                skills.Add(
+                    skill.Key, 
+                    new Skill( skill.Key, (int)Rand.Range(skill.Value.X, skill.Value.Y, false)));
             }
         }
 
@@ -53,10 +86,12 @@ namespace Subsurface
 
             foreach (XElement subElement in element.Elements())
             {
-                skills.Add(subElement.Name.ToString(), ToolBox.GetAttributeFloat(subElement, "level", 0.0f));
+                skills.Add(
+                    subElement.Name.ToString(),
+                    new Skill(subElement.Name.ToString(), ToolBox.GetAttributeInt(subElement, "level", 0)));
             }
         }
-
+        
         public static Job Random()
         {
             JobPrefab prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count-1, false)];
@@ -64,12 +99,12 @@ namespace Subsurface
             return new Job(prefab);
         }
 
-        public float GetSkill(string skillName)
+        public int GetSkillLevel(string skillName)
         {
-            float skillLevel = 0.0f;
-            skills.TryGetValue(skillName.ToLower(), out skillLevel);
+            Skill skill = null;
+            skills.TryGetValue(skillName, out skill);
 
-            return skillLevel;
+            return (skill==null) ? 0 : skill.Level;
         }
 
         public virtual XElement Save(XElement parentElement)
@@ -78,9 +113,9 @@ namespace Subsurface
 
             jobElement.Add(new XAttribute("name", Name));
 
-            foreach (KeyValuePair<string, float> skill in skills)
+            foreach (KeyValuePair<string, Skill> skill in skills)
             {
-                jobElement.Add(new XElement(skill.Key, new XAttribute("level", skill.Value)));
+                jobElement.Add(new XElement(skill.Key, new XAttribute("level", skill.Value.Level)));
             }
             
             parentElement.Add(jobElement);

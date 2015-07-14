@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<character name ="mantis" humanoid="false">
+
+  <sound file="Content/Characters/Crawler/attack.ogg" state="Attack" range="500"/>
+
+  <ragdoll headposition="80" headangle="-70" 
+           waveamplitude="50.0" wavelength="2500" 
+           swimspeed="2.0" walkspeed="0.5"
+           stepsize ="30.0,10.0" 
+           stepoffset="30.0,0.0"
+           legtorque="10"
+           footrotation ="180.0"
+           flip="true">
+
+    <!-- head -->
+    <limb id = "0" radius="30" height="30"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="5.0f">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.7"/>
+    </limb>
+
+    <!-- middle part -->
+    <limb id = "1" width="42" height="61"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="5.0f">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="3,168,59,64" depth="0.021" origin="0.3,0.65"/>
+    </limb>
+
+    <!-- middle part -->
+    <limb id = "2" width="35" height="52"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="5.0f">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65"/>
+    </limb>
+
+    <!-- tail -->
+    <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true" armorsector="0.0,180.0" armorvalue="5.0f">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="130,158,46,93" depth="0.023" origin="0.37,0.3"/>
+    </limb>
+      
+
+    <limb id = "4" width="15" height="63" mass = "4" refjoint="3" flip="true">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="232,153,20,63" depth="0.012" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "5" width="15" height="63" mass = "4" refjoint="3" flip="true">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="231,80,23,67" depth="0.011" origin="0.5,0.5"/>
+      <sound file ="Content/Sounds/stepMetal.ogg"/>
+    </limb>
+    <!-- ""claw" -->
+    <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
+      <attack type="PinchCW" range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="5" structuredamage="50" damagetype="slash"/>
+      <sound file ="Content/Sounds/stepMetal.ogg"/>
+    </limb>
+
+    <limb id = "7" width="15" height="63" mass = "4" type="LeftLeg" flip="true">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="205,91,20,63" depth="0.01" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "8" width="15" height="63" mass = "4" type="LeftFoot" flip="true" pullpos="0.0,30.0" refjoint="6">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="206,3,20,85" depth="0.011" origin="0.5,0.5"/>
+      <sound file ="Content/Sounds/stepMetal.ogg"/>
+    </limb>
+
+    <limb id = "9" width="15" height="63" mass = "4" type="RightLeg" flip="true">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="159,3,38,66" depth="0.01" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "10" width="15" height="102" mass = "4" type="RightFoot" flip="true" pullpos="0.0,50.0" refjoint="2">
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="111,0,32,112" depth="0.011" origin="0.5,0.5"/>
+      <sound file ="Content/Sounds/stepMetal.ogg"/>
+    </limb>
+    
+    <joint limb1="0" limb1anchor="-5,-25" limb2="1" limb2anchor="0,20" lowerlimit="-20" upperlimit="20"/>
+
+    <joint limb1="1" limb1anchor="6,-18" limb2="2" limb2anchor="-2,36" lowerlimit="-20" upperlimit="30"/>
+
+    <joint limb1="2" limb1anchor="1,7" limb2="3" limb2anchor="6,15" lowerlimit="-20" upperlimit="40"/>
+
+
+    <joint limb1="0" limb1anchor="16,30" limb2="4" limb2anchor="-5,-20" lowerlimit="-90" upperlimit="0"/>
+    <joint limb1="4" limb1anchor="2,21" limb2="5" limb2anchor="-8,-23" lowerlimit="-350" upperlimit="-280"/>
+    <joint limb1="5" limb1anchor="-2,27" limb2="6" limb2anchor="0,-30" lowerlimit="-190" upperlimit="-30"/>
+
+    <joint limb1="0" limb1anchor="52,-6" limb2="7" limb2anchor="-4,-19" lowerlimit="-90" upperlimit="0"/>
+    <joint limb1="7" limb1anchor="-2,28" limb2="8" limb2anchor="2,-32" lowerlimit="-190" upperlimit="-30"/>
+
+    <joint limb1="0" limb1anchor="43,-39" limb2="9" limb2anchor="0,21" lowerlimit="-180" upperlimit="-10"/>
+    <joint limb1="9" limb1anchor="0,-28" limb2="10" limb2anchor="-11,-46" lowerlimit="-190" upperlimit="-50"/>  
+    
+  </ragdoll>
+
+  <ai attackhumans="500" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
+      sight="0.5" hearing="1.0"
+      attackcooldown="5.0"/>
+</character>
+

@@ -53,6 +53,7 @@
     <Compile Include="Camera.cs" />
     <Compile Include="Characters\AI\AIController.cs" />
     <Compile Include="Characters\AI\AITarget.cs" />
+    <Compile Include="Characters\AI\PathFinder.cs" />
     <Compile Include="Characters\AnimController.cs" />
     <Compile Include="Characters\Attack.cs" />
     <Compile Include="Characters\Character.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="Characters\AI\SteeringManager.cs" />
     <Compile Include="Characters\AI\SteeringPath.cs" />
     <Compile Include="CoroutineManager.cs" />
+    <Compile Include="Map\LocationType.cs" />
     <Compile Include="Rand.cs" />
     <Compile Include="Events\PropertyTask.cs" />
     <Compile Include="Events\RepairTask.cs" />
@@ -130,14 +132,14 @@
     <Compile Include="Map\Entity.cs" />
     <Compile Include="Map\Explosion.cs" />
     <Compile Include="Map\IDamageable.cs" />
-    <Compile Include="Map\Level.cs" />
+    <Compile Include="Map\Levels\Level.cs" />
     <Compile Include="Map\Lights\ConvexHull.cs" />
     <Compile Include="Map\Lights\LightManager.cs" />
     <Compile Include="Map\Location.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="Map\Md5Hash.cs" />
-    <Compile Include="Map\Voronoi.cs" />
-    <Compile Include="Map\VoronoiElements.cs" />
+    <Compile Include="Map\Levels\Voronoi.cs" />
+    <Compile Include="Map\Levels\VoronoiElements.cs" />
     <Compile Include="MathUtils.cs" />
     <Compile Include="Physics\PhysicsBody.cs" />
     <Compile Include="Networking\NetworkEvent.cs" />
@@ -269,6 +271,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Content\Characters\Mantis\mantis.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Mantis\mantis.xml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Characters\Moloch\moloch.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -328,6 +337,12 @@
     <Content Include="Content\Items\Engine\fabricator.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\Engine\pingCircle.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Engine\radarOverlay.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Items\Fabricators\fabricator.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -379,7 +394,13 @@
     <Content Include="Content\Map\iceSurface.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Map\locationNames.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Map\shaft.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Map\locationTypes.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\caret.png">

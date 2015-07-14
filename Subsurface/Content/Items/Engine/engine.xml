@@ -32,6 +32,8 @@
 
     <Radar canbeselected = "true">
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.0"/>
+      <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
+      <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
     </Radar>
 
 		<ConnectionPanel canbeselected = "true">

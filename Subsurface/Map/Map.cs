@@ -98,9 +98,9 @@ namespace Subsurface
 
                     newLocations[i] = Location.CreateRandom(position);
                     locations.Add(newLocations[i]);
-                }               
-
-                connections.Add(new LocationConnection(newLocations[0], newLocations[1], Level.CreateRandom()));
+                }
+                int seed = (newLocations[0].GetHashCode() | newLocations[1].GetHashCode());
+                connections.Add(new LocationConnection(newLocations[0], newLocations[1], Level.CreateRandom(seed.ToString())));
 
 
             }
@@ -157,9 +157,9 @@ namespace Subsurface
 
             float offsetAmount = 5.0f;
 
-            for (int n = 0; n<generations; n++)
+            for (int n = 0; n < generations; n++)
             {
-                for (int i = 0; i<segments.Count; i++)
+                for (int i = 0; i < segments.Count; i++)
                 {
                     Vector2 startSegment = segments[i][0];
                     Vector2 endSegment = segments[i][1];

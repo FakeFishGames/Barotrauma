@@ -58,7 +58,17 @@ namespace Subsurface.Networking
             // If "inc" is null -> ReadMessage returned null -> Its null, so dont do this :)
 
             NetIncomingMessage inc = Server.ReadMessage();
-            if (inc != null) ReadMessage(inc);
+            if (inc != null)
+            {
+                try
+                {
+                    ReadMessage(inc);
+                }
+                catch
+                {
+
+                }
+            }
 
             // if 30ms has passed
             if (updateTimer < DateTime.Now)

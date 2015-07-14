@@ -56,7 +56,7 @@ namespace Subsurface
         {
             Vector2 randomVector = new Vector2(Range(-1.0f, 1.0f, local), Range(-1.0f, 1.0f, local));
 
-            if (randomVector == Vector2.Zero) return Vector2.One * length;
+            if (randomVector == Vector2.Zero) return new Vector2(0.0f, length);
 
             return Vector2.Normalize(randomVector) * length;
         }       

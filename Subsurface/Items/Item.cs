@@ -727,10 +727,13 @@ namespace Subsurface
 
         public bool Pick(Character picker, bool forcePick=false)
         {
-            
+
+            bool hasRequiredSkills = true;
+
             bool picked = false, selected = false;
             foreach (ItemComponent ic in components)
             {
+                if (!ic.HasRequiredSkills(picker)) hasRequiredSkills = false;
                 if ((ic.CanBePicked || ic.CanBeSelected) 
                     && (ic.HasRequiredEquippedItems(picker, picker == Character.Controlled) || forcePick) 
                     && ic.Pick(picker))
@@ -745,6 +748,11 @@ namespace Subsurface
             if (selected)
             {
                 picker.SelectedConstruction = (picker.SelectedConstruction == this) ? null : this;
+            }
+
+            if (!hasRequiredSkills)
+            {
+                GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);
             }
 
             if (container!=null) container.RemoveContained(this);

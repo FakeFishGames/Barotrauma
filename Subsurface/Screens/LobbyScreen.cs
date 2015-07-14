@@ -23,10 +23,7 @@ namespace Subsurface
 
         SinglePlayerMode gameMode;
 
-        Body previewPlatform;
-        Hull previewHull;
-
-        Character previewCharacter;
+        GUIFrame previewFrame;
 
         Level selectedLevel;
 
@@ -112,57 +109,57 @@ namespace Subsurface
         {
             base.Deselect();
 
-            if (previewPlatform != null)
-            {
-                Game1.World.RemoveBody(previewPlatform);
-                previewPlatform = null;
-            }
+            //if (previewPlatform != null)
+            //{
+            //    Game1.World.RemoveBody(previewPlatform);
+            //    previewPlatform = null;
+            //}
 
-            if (previewHull != null)
-            {
-                previewHull.Remove();
-                previewHull = null;
-            }
+            //if (previewHull != null)
+            //{
+            //    previewHull.Remove();
+            //    previewHull = null;
+            //}
 
-            if (previewCharacter != null)
-            {
-                previewCharacter.Remove();
-                previewCharacter = null;
-            }
+            //if (previewCharacter != null)
+            //{
+            //    previewCharacter.Remove();
+            //    previewCharacter = null;
+            //}
         }
 
-        private void CreatePreviewCharacter()
-        {
-            if (previewCharacter != null) previewCharacter.Remove();
+        //private void CreatePreviewCharacter()
+        //{
+        //    if (previewCharacter != null) previewCharacter.Remove();
 
-            Vector2 pos = new Vector2(1000.0f, 1000.0f);
+        //    Vector2 pos = new Vector2(1000.0f, 1000.0f);
 
-            previewCharacter = new Character(characterList.SelectedData as CharacterInfo, pos);
+        //    previewCharacter = new Character(characterList.SelectedData as CharacterInfo, pos);
 
-            previewCharacter.AnimController.IsStanding = true;
+        //    previewCharacter.AnimController.IsStanding = true;
 
-            if (previewPlatform == null)
-            {
-                Body platform = BodyFactory.CreateRectangle(Game1.World, 3.0f, 1.0f, 5.0f);
-                platform.SetTransform(new Vector2(pos.X, pos.Y - 3.5f), 0.0f);
-                platform.IsStatic = true;
-            }
+        //    if (previewPlatform == null)
+        //    {
+        //        Body platform = BodyFactory.CreateRectangle(Game1.World, 3.0f, 1.0f, 5.0f);
+        //        platform.SetTransform(new Vector2(pos.X, pos.Y - 3.5f), 0.0f);
+        //        platform.IsStatic = true;
+        //    }
 
-            if (previewHull == null)
-            {
-                pos = ConvertUnits.ToDisplayUnits(pos);
-                previewHull = new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 500));
-            }
+        //    if (previewHull == null)
+        //    {
+        //        pos = ConvertUnits.ToDisplayUnits(pos);
+        //        previewHull = new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 500));
+        //    }
 
-            Physics.Alpha = 1.0f;
+        //    Physics.Alpha = 1.0f;
 
-            for (int i = 0; i < 500; i++)
-            {
-                previewCharacter.AnimController.Update((float)Physics.step);
-                previewCharacter.AnimController.UpdateAnim((float)Physics.step);
-                Game1.World.Step((float)Physics.step);
-            }
-        }
+        //    for (int i = 0; i < 500; i++)
+        //    {
+        //        previewCharacter.AnimController.Update((float)Physics.step);
+        //        previewCharacter.AnimController.UpdateAnim((float)Physics.step);
+        //        Game1.World.Step((float)Physics.step);
+        //    }
+        //}
 
         public void SelectLocation(Location location, LocationConnection connection)
         {
@@ -258,22 +255,34 @@ namespace Subsurface
 
             if (characterList.SelectedData != null && selectedRightPanel == (int)PanelTab.Crew)
             {
-                if (previewCharacter != null)
+                if (previewFrame==null || previewFrame.UserData != characterList.UserData)
                 {
-                    Vector2 position = new Vector2(characterList.Rect.Right + 100, characterList.Rect.Y + 25.0f);
+                    CharacterInfo previewCharacter = (characterList.SelectedData as CharacterInfo);
 
-                    Vector2 pos = previewCharacter.Position;
-                    pos.Y = -pos.Y;
-                    Matrix transform = Matrix.CreateTranslation(new Vector3(-pos + position, 0.0f));
+                    GUIFrame frameRoot = new GUIFrame(new Rectangle(350, 30, 300, 500),
+                            new Color(0.0f, 0.0f, 0.0f, 0.8f),
+                            Alignment.Top, GUI.style, rightPanel[selectedRightPanel]);
+                    frameRoot.Padding = new Vector4(20.0f,20.0f,20.0f,20.0f);
 
-                    spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, transform);
-                    previewCharacter.Draw(spriteBatch);
-                    spriteBatch.End();
+                    previewFrame = previewCharacter.CreateInfoFrame(frameRoot);
+                    previewFrame.UserData = previewCharacter;
                 }
-                else
-                {
-                    CreatePreviewCharacter();
-                }
+                //if (previewCharacter != null)
+                //{
+                //    Vector2 position = new Vector2(characterList.Rect.Right + 100, characterList.Rect.Y + 25.0f);
+
+                //    Vector2 pos = previewCharacter.Position;
+                //    pos.Y = -pos.Y;
+                //    Matrix transform = Matrix.CreateTranslation(new Vector3(-pos + position, 0.0f));
+
+                //    spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, transform);
+                //    previewCharacter.Draw(spriteBatch);
+                //    spriteBatch.End();
+                //}
+                //else
+                //{
+                //    CreatePreviewCharacter();
+                //}
             }
         }
 
@@ -331,7 +340,7 @@ namespace Subsurface
 
             if (Character.Controlled != null && characterInfo == Character.Controlled.Info) return false;
 
-            CreatePreviewCharacter();
+            //CreatePreviewCharacter();
 
             return false;
         }

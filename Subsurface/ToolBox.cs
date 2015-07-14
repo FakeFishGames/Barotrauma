@@ -193,8 +193,8 @@ namespace Subsurface
                 return vector;
             }
 
-            float.TryParse(components[0], NumberStyles.Float, CultureInfo.InvariantCulture, out vector.X);            
-            float.TryParse(components[1], NumberStyles.Float, CultureInfo.InvariantCulture, out vector.Y);
+            float.TryParse(components[0], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.X);            
+            float.TryParse(components[1], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.Y);
 
             return vector;
         }

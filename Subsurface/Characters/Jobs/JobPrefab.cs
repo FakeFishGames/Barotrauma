@@ -85,17 +85,18 @@ namespace Subsurface
         {
             foreach (XElement subElement in element.Elements())
             {
-                string skillName = subElement.Name.ToString();
-                if (Skills.ContainsKey(skillName)) continue;
+                string skillName = ToolBox.GetAttributeString(subElement, "name", "");
 
-                var levelAttribute = subElement.Attribute("level").ToString();
-                if (levelAttribute.Contains("'"))
+                if (string.IsNullOrEmpty(skillName) || Skills.ContainsKey(skillName)) continue;
+
+                var levelString = ToolBox.GetAttributeString(subElement, "level", "");
+                if (levelString.Contains(","))
                 {
-                    Skills.Add(skillName, ToolBox.ParseToVector2(levelAttribute, false));
+                    Skills.Add(skillName, ToolBox.ParseToVector2(levelString, false));
                 }
                 else
                 {
-                    float skillLevel = float.Parse(levelAttribute, CultureInfo.InvariantCulture);
+                    float skillLevel = float.Parse(levelString, CultureInfo.InvariantCulture);
                     Skills.Add(skillName, new Vector2(skillLevel, skillLevel));
                 }
 

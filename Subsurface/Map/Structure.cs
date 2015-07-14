@@ -78,6 +78,11 @@ namespace Subsurface
             get { return prefab.HasBody; }
         }
 
+        public bool CastShadow
+        {
+            get { return prefab.CastShadow; }
+        }
+
         public bool IsHorizontal
         {
             get { return isHorizontal; }

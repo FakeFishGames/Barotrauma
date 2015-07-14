@@ -1,0 +1,37 @@
+﻿<locationtypes>
+  <None
+    commonness="3">
+    <nameformats
+      f0="[name]"
+      f1="[name]"
+      f2="[name]"
+      f3="[name] Outpost"/>
+  </None>
+
+  <City
+    commonness="3">
+    <nameformats
+      f0="The City of [name]"
+      f1="[name] City"
+      f2="[name] Outpost"
+      f3="[name] Station"/>
+  </City>
+
+  <Military
+    commonness="1">
+    <nameformats
+      f0="[name] Outpost"
+      f1="[name] Facility"
+      f2="[name] Station"
+      f3="[name] Fortification"/>
+  </Military>
+
+  <Research
+    commonness="1">
+    <nameformats
+      f0="[name] Research Facility"
+      f1="[name] Research Center"
+      f2="[name] Institute of Astrobiology"
+      f3="[name] Biomedical Research Center"/>
+  </Research>
+</locationtypes>

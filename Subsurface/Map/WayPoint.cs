@@ -256,6 +256,7 @@ namespace Subsurface
 
         public override XElement Save(XDocument doc)
         {
+            if (MoveWithLevel) return null;
             XElement element = new XElement("WayPoint");
 
             element.Add(new XAttribute("ID", ID),

@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
@@ -13,18 +15,69 @@ namespace Subsurface.Items.Components
         Vector2 currVelocity;
         Vector2 targetVelocity;
 
+        bool autoPilot;
+
+        SteeringPath steeringPath;
+
+        private Vector2 TargetVelocity
+        {
+            get { return targetVelocity;}
+            set 
+            {
+                targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
+            }
+        }
+
         public Steering(Item item, XElement element)
             : base(item, element)
         {
             isActive = true;
         }
 
+        public override void OnMapLoaded()
+        {
+            PathFinder pathFinder = new PathFinder(WayPoint.WayPointList, false);
+            steeringPath = pathFinder.FindPath(
+                ConvertUnits.ToSimUnits(Level.Loaded.StartPosition), 
+                ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
 
-            item.SendSignal(targetVelocity.X.ToString(), "velocity_x_out");
-            item.SendSignal((-targetVelocity.Y).ToString(), "velocity_y_out");
+            if (autoPilot || true)
+            {
+                steeringPath.GetNode(Vector2.Zero, 5.0f);
+
+                if (steeringPath.CurrentNode!=null)
+                {
+                    Vector2 targetSpeed = steeringPath.CurrentNode.Position;
+
+                    float dist = targetSpeed.Length();
+                    targetSpeed = Vector2.Normalize(targetSpeed);
+
+                    if (dist<2000.0f)
+                    {
+                        targetSpeed = targetSpeed * Math.Max(dist / 2000.0f, 0.5f);
+                    
+                    }
+
+
+                    Vector2 currSpeed = (Submarine.Loaded.Speed  == Vector2.Zero) ? Vector2.Zero : Vector2.Normalize(Submarine.Loaded.Speed);
+
+                    //targetSpeed.X = (targetSpeed.X - currSpeed.X);
+                    //targetSpeed.Y = (targetSpeed.Y - currSpeed.Y);
+
+                    //TargetVelocity += targetSpeed;
+
+                    TargetVelocity += (targetSpeed-currSpeed);
+                }
+            }
+
+            item.SendSignal(targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out");
+            item.SendSignal((-targetVelocity.Y).ToString(CultureInfo.InvariantCulture), "velocity_y_out");
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -52,7 +105,7 @@ namespace Subsurface.Items.Components
 
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)targetVelPos.X - 5, (int)targetVelPos.Y - 5, 10, 10), Color.White);
 
-            if (Vector2.Distance(PlayerInput.MousePosition, targetVelPos)<10.0f)
+            if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)targetVelPos.X -10, (int)targetVelPos.Y - 10, 20, 20), Color.Red);
 
@@ -82,8 +135,18 @@ namespace Subsurface.Items.Components
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
         {
-            targetVelocity.X = message.ReadFloat();
-            targetVelocity.Y = message.ReadFloat();
+            Vector2 newTargetVelocity = Vector2.Zero;
+            try
+            {
+                newTargetVelocity = new Vector2(message.ReadFloat(), message.ReadFloat());
+            }
+
+            catch
+            {
+                return;
+            }
+
+            TargetVelocity = newTargetVelocity;
         }
     }
 }

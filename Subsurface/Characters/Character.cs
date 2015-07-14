@@ -1,4 +1,5 @@
 ﻿using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
@@ -92,6 +93,11 @@ namespace Subsurface
             {
                 return SpeciesName;
             }
+        }
+
+        public float Mass
+        {
+            get { return AnimController.Mass; }
         }
 
         public Inventory Inventory
@@ -397,6 +403,11 @@ namespace Subsurface
             }            
         }
 
+        public int GetSkillLevel(string skillName)
+        {
+            return Info.Job.GetSkillLevel(skillName);
+        }
+
         public void Control(float deltaTime, Camera cam, bool forcePick = false)
         {
             if (isDead) return;
@@ -509,11 +520,22 @@ namespace Subsurface
             if (moveCam)
             {
                 cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
-                cam.OffsetAmount = 250.0f;
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
             }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);            
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
+
+            Body body = Submarine.PickBody(AnimController.limbs[0].SimPosition, mouseSimPos);
+            Structure structure = null;
+            if (body != null) structure = body.UserData as Structure;
+            if (structure!=null)
+            {
+                if (!structure.CastShadow && moveCam)
+                {
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
+                }
+            }
 
             if (AnimController.onGround &&
                 !AnimController.InWater &&
@@ -780,14 +802,12 @@ namespace Subsurface
             if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
 
             Vector2 centerOfMass = Vector2.Zero;
-            float totalMass = 0.0f;
             foreach (Limb limb in AnimController.limbs)
             {
                 centerOfMass += limb.Mass * limb.SimPosition;
-                totalMass += limb.Mass;
             }
 
-            centerOfMass /= totalMass;
+            centerOfMass /= AnimController.Mass;
 
             health = 0.0f;
 

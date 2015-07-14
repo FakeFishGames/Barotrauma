@@ -17,6 +17,8 @@ namespace Subsurface
         {
             Vector2 colliderPos = GetLimb(LimbType.Torso).SimPosition;
 
+            if (inWater) stairs = null;
+
             Vector2 rayStart = colliderPos; // at the bottom of the player sprite
             Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
             if (stairs != null) rayEnd.Y -= 0.5f;
@@ -31,10 +33,11 @@ namespace Subsurface
                 switch (fixture.CollisionCategories)
                 {
                     case Physics.CollisionStairs:
+                        if (inWater) return -1;
                         Structure structure = fixture.Body.UserData as Structure;
-                        if (stairs == null && !inWater && structure!=null)
+                        if (stairs == null && structure!=null)
                         {
-                            if (LowestLimb.SimPosition.Y<structure.SimPosition.Y)
+                            if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
                             {
                                 return -1;
                             }
@@ -92,8 +95,7 @@ namespace Subsurface
             if (closestFraction == 1) //raycast didn't hit anything
             {
                 floorY = (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
-            }
-                
+            }                
             else
             {
                 floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;

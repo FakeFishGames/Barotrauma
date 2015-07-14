@@ -21,9 +21,9 @@ namespace Subsurface
 
         private GUIListBox jobList;
 
-        private GUITextBox textBox;
+        private GUITextBox textBox, seedBox;
 
-        private GUITextBox seedBox;
+        GUIFrame previewPlayer;
 
         private GUIScrollBar durationBar;
 
@@ -31,8 +31,8 @@ namespace Subsurface
 
         private float camAngle;
 
-        private Body previewPlatform;
-        private Hull previewHull;
+        //private Body previewPlatform;
+        //private Hull previewHull;
         
         public bool IsServer;
 
@@ -136,17 +136,17 @@ namespace Subsurface
         {
             textBox.Deselect();
 
-            if (previewPlatform!=null)
-            {
-                Game1.World.RemoveBody(previewPlatform);
-                previewPlatform = null;
-            }
+            //if (previewPlatform!=null)
+            //{
+            //    Game1.World.RemoveBody(previewPlatform);
+            //    previewPlatform = null;
+            //}
 
-            if (previewHull!=null)
-            {
-                previewHull.Remove();
-                previewHull = null;
-            }
+            //if (previewHull!=null)
+            //{
+            //    previewHull.Remove();
+            //    previewHull = null;
+            //}
         }
 
         public override void Select()
@@ -158,9 +158,6 @@ namespace Subsurface
             if (IsServer && Game1.Server == null) Game1.NetworkMember = new GameServer();
 
             textBox.Select();
-
-            //int oldMapIndex = 0;
-            //if (mapList != null && mapList.SelectedData != null) oldMapIndex = mapList.SelectedIndex;
 
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", GUI.style, infoFrame);
             subList = new GUIListBox(new Rectangle(0, 60, 200, 200), Color.White, GUI.style, infoFrame);
@@ -238,30 +235,28 @@ namespace Subsurface
             {
                 int x = playerFrame.Rect.Width / 2;
 
-
                 new GUITextBlock(new Rectangle(x, 0, 200, 30), "Name: ", GUI.style, playerFrame);
-
 
                 GUITextBox playerName = new GUITextBox(new Rectangle(x, 30, 0, 20),
                     Alignment.TopLeft, GUI.style, playerFrame);
                 playerName.Text = Game1.Client.CharacterInfo.Name;
                 playerName.OnEnter += ChangeCharacterName;
 
-                new GUITextBlock(new Rectangle(x,70,200, 30), "Gender: ", GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(x, 70, 200, 30), "Gender: ", GUI.style, playerFrame);
 
                 GUIButton maleButton = new GUIButton(new Rectangle(x, 100, 70, 20), "Male", 
                     Alignment.TopLeft, GUI.style,playerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
-                GUIButton femaleButton = new GUIButton(new Rectangle(x+150, 100, 70, 20), "Female",
+                GUIButton femaleButton = new GUIButton(new Rectangle(x+90, 100, 70, 20), "Female",
                     Alignment.TopLeft, GUI.style, playerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(x, 150, 200, 30), "Job preferences:", GUI.style, playerFrame);
 
-                jobList = new GUIListBox(new Rectangle(0, 180, 200, 0), GUI.style, playerFrame);
+                jobList = new GUIListBox(new Rectangle(x, 180, 200, 0), GUI.style, playerFrame);
 
                 foreach (JobPrefab job in JobPrefab.List)
                 {
@@ -278,6 +273,8 @@ namespace Subsurface
                 }
 
                 UpdateJobPreferences(jobList);
+
+                UpdatePreviewPlayer(Game1.Client.CharacterInfo);
 
             }
 
@@ -358,30 +355,32 @@ namespace Subsurface
 
             menu.Draw(spriteBatch);
 
+            if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
+
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             spriteBatch.End();
 
 
-            if (Game1.Client != null)
-            {
-                if (Game1.Client.Character != null)
-                {
-                    Vector2 position = new Vector2(playerFrame.Rect.X + playerFrame.Rect.Width * 0.25f, playerFrame.Rect.Y + 25.0f);
+            //if (Game1.Client != null)
+            //{
+            //    if (Game1.Client.Character != null)
+            //    {
+            //        Vector2 position = new Vector2(playerFrame.Rect.X + playerFrame.Rect.Width * 0.25f, playerFrame.Rect.Y + 25.0f);
 
-                    Vector2 pos = Game1.Client.Character.Position;
-                    pos.Y = -pos.Y;
-                    Matrix transform = Matrix.CreateTranslation(new Vector3(-pos + position, 0.0f));
+            //        Vector2 pos = Game1.Client.Character.Position;
+            //        pos.Y = -pos.Y;
+            //        Matrix transform = Matrix.CreateTranslation(new Vector3(-pos + position, 0.0f));
 
-                    spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, transform);
-                    Game1.Client.Character.Draw(spriteBatch);
-                    spriteBatch.End();
-                }
-                else
-                {
-                    CreatePreviewCharacter();
-                }
-            }
+            //        spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, transform);
+            //        Game1.Client.Character.Draw(spriteBatch);
+            //        spriteBatch.End();
+            //    }
+            //    else
+            //    {
+            //        CreatePreviewCharacter();
+            //    }
+            //}
 
         }
 
@@ -412,43 +411,15 @@ namespace Subsurface
             return true;
         }
 
-        private void CreatePreviewCharacter()
+        private void UpdatePreviewPlayer(CharacterInfo characterInfo)
         {
-            if (Game1.Client.Character != null) Game1.Client.Character.Remove();
+            previewPlayer = new GUIFrame(
+                new Rectangle(playerFrame.Rect.X + 20, playerFrame.Rect.Y + 20, 230, 300), 
+                new Color(0.0f, 0.0f, 0.0f, 0.8f), GUI.style);
+            previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            characterInfo.CreateInfoFrame(previewPlayer);
 
-            Vector2 pos = new Vector2(1000.0f, 1000.0f);
-
-            Character character = new Character(Game1.Client.CharacterInfo, pos);
-            character.ID = int.MaxValue;
-
-            Game1.Client.Character = character;
-
-            character.AnimController.IsStanding = true;
-
-            if (previewPlatform == null)
-            {
-                Body platform = BodyFactory.CreateRectangle(Game1.World, 3.0f, 1.0f, 5.0f);
-                platform.SetTransform(new Vector2(pos.X, pos.Y - 2.5f), 0.0f);
-                platform.IsStatic = true;
-            }
-
-            if (previewHull == null)
-            {
-                pos = ConvertUnits.ToDisplayUnits(pos);
-                previewHull = new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 200));
-                previewHull.ID = int.MaxValue - 2;
-            }
-            
-            Physics.Alpha = 1.0f;
-
-            for (int i = 0; i < 500; i++)
-            {
-                character.AnimController.Update((float)Physics.step);
-                character.AnimController.UpdateAnim((float)Physics.step);
-                Game1.World.Step((float)Physics.step);
-            }
-
-            Game1.Client.SendCharacterData();
+            previewPlayer.UserData = characterInfo;
         }
 
         private bool SwitchGender(GUIButton button, object obj)
@@ -458,7 +429,8 @@ namespace Subsurface
                 Gender gender = (Gender)obj;
                 Game1.Client.CharacterInfo.Gender = gender;
                 Game1.Client.SendCharacterData();
-                CreatePreviewCharacter();
+                UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+                //CreatePreviewCharacter();
             }
             catch
             {
@@ -491,6 +463,7 @@ namespace Subsurface
             Game1.Client.SendCharacterData();
 
             textBox.Text = newName;
+            textBox.Selected = false;
 
             return true;
         }
@@ -502,7 +475,7 @@ namespace Subsurface
 
             int index = jobList.children.IndexOf(jobText);
             int newIndex = index + (int)obj;
-            if (newIndex<0 || newIndex>jobList.children.Count-1) return false;
+            if (newIndex < 0 || newIndex > jobList.children.Count - 1) return false;
 
             GUIComponent temp = jobList.children[newIndex];
             jobList.children[newIndex] = jobText;
@@ -516,12 +489,12 @@ namespace Subsurface
         private void UpdateJobPreferences(GUIListBox listBox)
         {
             listBox.Deselect();
-            for (int i = 1; i<listBox.children.Count; i++)
+            for (int i = 1; i < listBox.children.Count; i++)
             {
                 float a = (float)(i - 1) / 3.0f;
                 a = Math.Min(a, 3);
-                Color color = new Color(1.0f-a, (1.0f - a)*0.6f, 0.0f, 0.3f);
-                
+                Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
+
                 listBox.children[i].Color = color;
             }
 
@@ -592,8 +565,7 @@ namespace Subsurface
             string mapName = msg.ReadString();
             string md5Hash = msg.ReadString();
 
-            TrySelectMap(mapName, md5Hash);
-            
+            TrySelectMap(mapName, md5Hash);            
 
             //mapList.Select(msg.ReadInt32());
             modeList.Select(msg.ReadInt32());
@@ -607,8 +579,7 @@ namespace Subsurface
             {
                 int clientID = msg.ReadInt32();
                 string jobName = msg.ReadString();
-
-
+                
                 Client client = null;
                 GUITextBlock textBlock = null;
                 foreach (GUIComponent child in playerList.children)
@@ -621,10 +592,17 @@ namespace Subsurface
                     break;
                 }
                 if (client == null) continue;
-
-                client.assignedJob = JobPrefab.List.Find(jp => jp.Name == jobName);
                 
+                client.assignedJob = JobPrefab.List.Find(jp => jp.Name == jobName);
+                                
                 textBlock.Text = client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")");
+
+                if (clientID == Game1.Client.ID)
+                {
+                    Game1.Client.CharacterInfo.Job = new Job(client.assignedJob);
+                    Game1.Client.CharacterInfo.Name = client.name;
+                    UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+                }
             }
         }
 

@@ -112,6 +112,11 @@ namespace Subsurface
             get { return (Level.Loaded == null) ? Vector2.Zero : -Level.Loaded.Position; }
         }
 
+        public Vector2 Speed
+        {
+            get { return speed; }
+        }
+
         public string FilePath
         {
             get { return filePath; }
@@ -477,10 +482,10 @@ namespace Subsurface
 
             float waterPercentage = waterVolume / volume;
 
-            float neutralPercentage = 0.1f;
+            float neutralPercentage = 0.07f;
 
             float buoyancy = neutralPercentage-waterPercentage;
-            buoyancy *= mass * 10.0f;
+            buoyancy *= mass * 30.0f;
 
             return new Vector2(0.0f, buoyancy);
         }
@@ -825,13 +830,7 @@ namespace Subsurface
             //hullBodies.Add(hullBody);
 
             MapEntity.LinkAll();
-            foreach (Item item in Item.itemList)
-            {
-                foreach (ItemComponent ic in item.components)
-                {
-                    ic.OnMapLoaded();
-                }
-            }
+
 
 
             ID = int.MaxValue-10;

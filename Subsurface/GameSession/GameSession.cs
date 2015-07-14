@@ -49,7 +49,7 @@ namespace Subsurface
 
         }
 
-        public GameSession(Submarine selectedMap, GameMode gameMode = null)
+        public GameSession(Submarine selectedSub, GameMode gameMode = null)
         {
             taskManager = new TaskManager(this);
 
@@ -83,7 +83,7 @@ namespace Subsurface
             //startTime = DateTime.Now;
             //endTime = startTime + gameDuration;
 
-            this.submarine = selectedMap;
+            this.submarine = selectedSub;
             
             //if (!save) return;
 
@@ -132,6 +132,14 @@ namespace Subsurface
             {
                 level.Generate(submarine == null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
                 submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
+            }
+
+            foreach (Item item in Item.itemList)
+            {
+                foreach (ItemComponent ic in item.components)
+                {
+                    ic.OnMapLoaded();
+                }
             }
 
             taskManager.StartShift(level);

@@ -31,6 +31,7 @@
       <Sound file="harpoon1.ogg" type="OnUse"/>
       <Sound file="harpoon2.ogg" type="OnUse"/>
       <RequiredItems name="Spear" type="Contained"/>
+      <RequiredSkill name="Weapons" level="30"/>
     </RangedWeapon>
 
     <ItemContainer itempos="27,10" iteminterval="0,-8" hideitems="false">

@@ -36,6 +36,11 @@ namespace Subsurface.Networking
             get { return characterInfo; }
         }
 
+        public int ID
+        {
+            get { return myID; }
+        }
+
         public GameClient(string newName)
         {
             name = newName;
@@ -189,20 +194,14 @@ namespace Subsurface.Networking
         public override void Update()
         {
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.K))
+            if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.K))
             {
                 SendRandomData();
             }
 
 
             if (!connected || updateTimer > DateTime.Now) return;
-
-            //if (reconnectBox != null)
-            //{
-            //    ConnectToServer(serverIP);
-            //    return;
-            //}
-
+            
             if (Client.ConnectionStatus == NetConnectionStatus.Disconnected)
             {
                 reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
@@ -472,7 +471,7 @@ namespace Subsurface.Networking
         public void SendRandomData()
         {
             NetOutgoingMessage msg = Client.CreateMessage();
-            switch (Rand.Int(4))
+            switch (Rand.Int(5))
             {
                 case 0:
                     msg.Write((byte)PacketTypes.NetworkEvent);
@@ -485,6 +484,12 @@ namespace Subsurface.Networking
                     msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
                     break;
                 case 2:
+                    msg.Write((byte)PacketTypes.NetworkEvent);
+                    msg.Write((byte)NetworkEventType.UpdateComponent);
+                    msg.Write((int)Item.itemList[Rand.Int(Item.itemList.Count)].ID);
+                    msg.Write(Rand.Int(8));
+                    break;
+                case 3:
                     msg.Write((byte)Enum.GetNames(typeof(PacketTypes)).Length);
                     break;
             }
