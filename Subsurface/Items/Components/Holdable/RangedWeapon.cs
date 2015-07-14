@@ -57,6 +57,8 @@ namespace Subsurface.Items.Components
             isActive = true;
             reload = 1.0f;
             
+            bool failed = UseFailed(character);
+
             List<Body> limbBodies = new List<Body>();
             foreach (Limb l in character.AnimController.limbs)
             {
@@ -75,18 +77,44 @@ namespace Subsurface.Items.Components
                 Projectile projectileComponent= projectile.GetComponent<Projectile>();
                 if (projectileComponent == null) continue;
 
-                projectileComponent.ignoredBodies = limbBodies;
-
                 projectile.body.ResetDynamics();
                 projectile.SetTransform(TransformedBarrelPos, 
                     (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi);
 
                 projectile.Use(deltaTime);
+
+
+                if (failed)
+                {
+                    Vector2 modifiedVelocity = projectile.body.LinearVelocity;
+                    modifiedVelocity.X *= Rand.Range(0.0f, 0.5f);
+                    modifiedVelocity.Y *= Rand.Range(0.0f, 0.5f);
+
+                    projectile.body.LinearVelocity = modifiedVelocity;
+                    projectile.body.ApplyTorque(projectile.body.Mass * Rand.Range(-10.0f, 10.0f));
+
+                    //recoil
+                    item.body.ApplyLinearImpulse(
+                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -10.0f);
+
+                    if (Rand.Int(2) == 0)
+                    {
+                        item.Drop(character);
+                        item.body.ApplyTorque(projectile.body.Mass * Rand.Range(-10.0f, 10.0f));
+                    }
+                }
+                else
+                {
+                    projectileComponent.ignoredBodies = limbBodies;
+
+                    //recoil
+                    item.body.ApplyLinearImpulse(
+                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * -item.body.Mass);
+                }
+
                 item.RemoveContained(projectile);
                 
-                //recoil
-                item.body.ApplyLinearImpulse(
-                    new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass);
+
 
                 Rope rope = item.GetComponent<Rope>();
                 if (rope != null) rope.Attach(projectile);

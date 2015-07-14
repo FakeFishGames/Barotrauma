@@ -20,6 +20,8 @@ namespace Subsurface
 
         private float flipTimer;
 
+        private float? footRotation;
+
         public FishAnimController(Character character, XElement element)
             : base(character, element)
         {
@@ -30,6 +32,12 @@ namespace Subsurface
             
             walkSpeed = ToolBox.GetAttributeFloat(element, "walkspeed", 1.0f);
             swimSpeed = ToolBox.GetAttributeFloat(element, "swimspeed", 1.0f);
+
+            float footRot = ToolBox.GetAttributeFloat(element,"footrotation", float.NaN);
+            if (!float.IsNaN(footRot))
+            {
+                footRotation = MathHelper.ToRadians(footRot);
+            }
 
             rotateTowardsMovement = ToolBox.GetAttributeBool(element, "rotatetowardsmovement", true);
         }
@@ -202,19 +210,20 @@ namespace Subsurface
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
 
+
             if (torso!=null)
             {
                 colliderLimb = torso;
                 colliderHeight = TorsoPosition;
 
-                colliderLimb.body.SmoothRotate(TorsoAngle*Dir, 5.0f);
+                colliderLimb.body.SmoothRotate(TorsoAngle*Dir, 10.0f);
             }
             else
             {
                 colliderLimb = head;
                 colliderHeight = HeadPosition;
 
-                colliderLimb.body.SmoothRotate(HeadAngle*Dir, 10.0f);
+                colliderLimb.body.SmoothRotate(HeadAngle*Dir, 100.0f);
             }
             
             Vector2 colliderPos = colliderLimb.SimPosition;
@@ -270,7 +279,9 @@ namespace Subsurface
                 colliderLimb.Move(new Vector2(colliderPos.X + movement.X * 0.2f, floorY + colliderHeight), 5.0f);
             }
 
-            float walkCycleSpeed = head.LinearVelocity.X * 0.08f;
+            //colliderLimb.body.SetTransform(Vector2.Zero, colliderLimb.Rotation);
+
+            float walkCycleSpeed = head.LinearVelocity.X * 0.05f;
 
             walkPos -= walkCycleSpeed;
 
@@ -308,6 +319,9 @@ namespace Subsurface
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f),
                             8.0f);
                         }
+
+                        if (footRotation!=null) limb.body.SmoothRotate((float)footRotation*Dir, 50.0f);
+
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:

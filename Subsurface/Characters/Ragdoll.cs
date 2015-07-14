@@ -59,6 +59,12 @@ namespace Subsurface
             get { return lowestLimb; }
         }
 
+        public float Mass
+        {
+            get;
+            private set;
+        }
+
         public Vector2 TargetMovement
         {
             get { return (correctionMovement == Vector2.Zero) ? targetMovement : correctionMovement; }
@@ -173,6 +179,7 @@ namespace Subsurface
                         limb.body.FarseerBody.OnCollision += OnLimbCollision;
                         
                         limbs[ID] = limb;
+                        Mass += limb.Mass;
                         if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
                         break;
                     case "joint":
@@ -257,7 +264,7 @@ namespace Subsurface
             }
             else if (structure.StairDirection!=Direction.None)
             {
-                if (inWater || (!(targetMovement.Y>Math.Abs(targetMovement.X/2.0f)) && lowestLimb.body.Position.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height) + 0.5f))
+                if (inWater || !(targetMovement.Y>Math.Abs(targetMovement.X/2.0f)) && lowestLimb.body.Position.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height) + 0.5f)
                 {
                     stairs = null;
                     return false;

@@ -6,11 +6,14 @@ using System.Text;
 
 namespace Subsurface
 {
+
     class Location
     {
         string name;
 
         Vector2 mapPosition;
+
+        LocationType type;
 
         public string Name
         {
@@ -22,16 +25,23 @@ namespace Subsurface
             get { return mapPosition; }
         }
 
-        public Location(string name, Vector2 mapPosition)
+        public Location(Vector2 mapPosition)
         {
-            this.name = name;
+            this.name = RandomName(LocationType.Random());
 
             this.mapPosition = mapPosition;
         }
 
         public static Location CreateRandom(Vector2 position)
         {
-            return new Location("Location " + Rand.Int(10000, false), position);        
+            return new Location(position);        
+        }
+
+        private string RandomName(LocationType type)
+        {
+            string name = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
+            int nameFormatIndex = Rand.Int(type.NameFormats.Count);
+            return type.NameFormats[nameFormatIndex].Replace("[name]", name);
         }
     }
 }

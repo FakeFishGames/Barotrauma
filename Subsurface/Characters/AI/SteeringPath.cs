@@ -5,32 +5,30 @@ namespace Subsurface
 {
     class SteeringPath
     {
-        private Queue<Vector2> nodes;
-
-        const float MinDistance = 0.1f;
-
-        Vector2 currentNode;
+        private Queue<WayPoint> nodes;
+        
+        WayPoint currentNode;
 
         public SteeringPath()
         {
-            nodes = new Queue<Vector2>();
+            nodes = new Queue<WayPoint>();
         }
 
-        public void AddNode(Vector2 node)
+        public void AddNode(WayPoint node)
         {
-            if (node == Vector2.Zero) return;
+            if (node == null) return;
             nodes.Enqueue(node);
         }
 
-        public Vector2 CurrentNode
+        public WayPoint CurrentNode
         {
             get { return currentNode; }
         }
 
-        public Vector2 GetNode(Vector2 pos)
+        public WayPoint GetNode(Vector2 pos, float minDistance = 0.1f)
         {
-            if (nodes.Count == 0) return Vector2.Zero;
-            if (currentNode == Vector2.Zero || Vector2.Distance(pos, currentNode) < MinDistance) currentNode = nodes.Dequeue();
+            if (nodes.Count == 0) return null;
+            if (currentNode == null || Vector2.Distance(pos, currentNode.SimPosition) < minDistance) currentNode = nodes.Dequeue();
 
             return currentNode;
         }

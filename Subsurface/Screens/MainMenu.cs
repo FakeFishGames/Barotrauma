@@ -15,8 +15,7 @@ namespace Subsurface
 
         private GUIListBox saveList;
 
-        private GUITextBox nameBox;
-        private GUITextBox ipBox;
+        private GUITextBox nameBox, ipBox;
 
         private Game1 game;
 
@@ -61,8 +60,8 @@ namespace Subsurface
 
             new GUITextBlock(new Rectangle(0, 0, 0, 30), "New Game", null, null, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.NewGame]);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", null, null, Alignment.Left, GUI.style, menuTabs[(int)Tabs.NewGame]);
-            mapList = new GUIListBox(new Rectangle(0, 60, 200, 400), GUI.style, menuTabs[(int)Tabs.NewGame]);
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", null, null, Alignment.Left, GUI.style, menuTabs[(int)Tabs.NewGame]);
+            mapList = new GUIListBox(new Rectangle(0, 60, 200, 360), GUI.style, menuTabs[(int)Tabs.NewGame]);
 
             foreach (Submarine map in Submarine.SavedSubmarines)
             {
@@ -77,7 +76,7 @@ namespace Subsurface
             if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
 
 
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",Alignment.Right | Alignment.Bottom, GUI.style,  menuTabs[(int)Tabs.NewGame]);
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",Alignment.BottomRight, GUI.style,  menuTabs[(int)Tabs.NewGame]);
             button.OnClicked = StartGame;
 
             //----------------------------------------------------------------------
@@ -137,6 +136,13 @@ namespace Subsurface
             GUIButton joinButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Join", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.JoinServer]);
             joinButton.OnClicked = JoinServer;
 
+            //----------------------------------------------------------------------
+
+            for (int i = 1; i < 4; i++ )
+            {
+                button = new GUIButton(new Rectangle(0, 0, 100, 30), "Back", Alignment.TopLeft, GUI.style, menuTabs[i]);
+                button.OnClicked = PreviousTab;
+            }
 
             this.game = game;
 
@@ -189,6 +195,13 @@ namespace Subsurface
             Game1.GameSession = new GameSession(selectedMap, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
 
             Game1.LobbyScreen.Select();
+
+            return true;
+        }
+
+        private bool PreviousTab(GUIButton button, object obj)
+        {
+            selectedTab = (int)Tabs.Main;
 
             return true;
         }

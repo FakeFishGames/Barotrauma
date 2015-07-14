@@ -30,8 +30,10 @@ namespace Subsurface
 
         private int siteInterval;
 
-        const int GridCellWidth = 2000;
+        public const int GridCellWidth = 2000;
         private List<VoronoiCell>[,] cellGrid;
+
+        private float shaftHeight;
 
         //List<Body> bodies;
         private List<VoronoiCell> cells;
@@ -59,6 +61,11 @@ namespace Subsurface
             private set;
         }
 
+        public Vector2 EndPosition
+        {
+            get { return endPosition; }
+        }
+
         public bool AtEndPosition
         {
             get;
@@ -67,7 +74,7 @@ namespace Subsurface
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(cells[0].body.Position); }
+            get { return ConvertUnits.ToDisplayUnits(cells[1].body.Position); }
         }
 
         public string Seed
@@ -97,7 +104,6 @@ namespace Subsurface
 
         public void Generate(float minWidth, bool mirror=false)
         {
-            mirror = true;
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -112,7 +118,7 @@ namespace Subsurface
 
             List<Vector2> sites = new List<Vector2>();
 
-            Random rand = new Random(100);
+            Random rand = new Random(seed.GetHashCode());
 
             float siteVariance = siteInterval * 0.8f;
             for (int x = siteInterval / 2; x < borders.Width; x += siteInterval)
@@ -186,17 +192,23 @@ namespace Subsurface
                 borders.X + (int)minWidth * 2, borders.Y + (int)minWidth * 2,
                 borders.Right - (int)minWidth * 4, borders.Y + borders.Height - (int)minWidth * 4);
 
-            Vector2 startPath = new Vector2((int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2));
-            Vector2 endPath = new Vector2(borders.Width - (int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2));
+            List<Vector2> pathNodes = new List<Vector2>();
+
+            startPosition = new Vector2((int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2));
+            endPosition = new Vector2(borders.Width - (int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2));
+
+            pathNodes.Add(new Vector2(startPosition.X, borders.Height));
+            pathNodes.Add(startPosition);            
+            pathNodes.Add(endPosition);
+            pathNodes.Add(new Vector2(endPosition.X, borders.Height));
 
             if (mirror)
             {
-                startPath.X = borders.Width - startPath.X;
-                endPath.X = borders.Width - endPath.X;
+                pathNodes.Reverse();
             }
 
             List<VoronoiCell> pathCells = GeneratePath(rand,
-                startPath, endPath, cells, pathBorders, minWidth);
+                pathNodes, cells, pathBorders, minWidth, 0.3f, mirror, true);
 
             //place some enemy spawnpoints at random points in the path
             for (int i = 0; i <3 ; i++ )
@@ -228,22 +240,22 @@ namespace Subsurface
 
                 pathCells.AddRange
                 (
-                    GeneratePath(rand, start, end, cells, pathBorders, 0.0f, 0.8f)
+                    GeneratePath(rand, new List<Vector2> { start, end }, cells, pathBorders, 0.0f, 0.8f, mirror)
                 );
             }
 
             Debug.WriteLine("path: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
             
-            for (int i = 0; i < 2; i++ )
-            {
-                Vector2 tunnelStart = (i == 0) ? startPosition : endPosition;
+            //for (int i = 0; i < 2; i++ )
+            //{
+            //    Vector2 tunnelStart = (i == 0) ? startPosition : endPosition;
 
-                pathCells.AddRange
-                (
-                    GeneratePath(rand, tunnelStart, new Vector2(tunnelStart.X, borders.Height), cells, pathBorders, minWidth, 0.1f)
-                );
-            }
+            //    pathCells.AddRange
+            //    (
+            //        GeneratePath(rand, tunnelStart, new Vector2(tunnelStart.X, borders.Height), cells, pathBorders, minWidth, 0.1f, mirror)
+            //    );
+            //}
 
             cells = CleanCells(pathCells);
             
@@ -276,14 +288,14 @@ namespace Subsurface
                     int cellIndex = FindCellIndex(new Vector2(tunnelStart.X + minWidth * 0.5f * n, tunnelStart.Y), 3);
                     foreach (GraphEdge ge in cells[cellIndex].edges)
                     {
-                        if (ge.point1.Y > cells[cellIndex].Center.Y) ge.point1.Y = borders.Height + 5000.0f;
-                        if (ge.point2.Y > cells[cellIndex].Center.Y) ge.point2.Y = borders.Height + 5000.0f;
+                        if (ge.point1.Y > cells[cellIndex].Center.Y) ge.point1.Y = borders.Height + shaftHeight;
+                        if (ge.point2.Y > cells[cellIndex].Center.Y) ge.point2.Y = borders.Height + shaftHeight;
                     }
                 }
             }
 
-            startPosition.Y += 5000.0f;
-            endPosition.Y += 5000.0f;
+            startPosition.Y += shaftHeight;
+            endPosition.Y += shaftHeight;
 
             GeneratePolygons(cells, pathCells);
 
@@ -309,10 +321,17 @@ namespace Subsurface
             basicEffect = new BasicEffect(Game1.CurrGraphicsDevice);
             basicEffect.VertexColorEnabled = true;
 
+            if (mirror)
+            {
+                Vector2 temp = startPosition;
+                startPosition = endPosition;
+                endPosition = temp;
+            }
+
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
         }
 
-        private List<VoronoiCell> GeneratePath(Random rand, Vector2 start, Vector2 end, List<VoronoiCell> cells, Microsoft.Xna.Framework.Rectangle limits, float minWidth, float wanderAmount = 0.3f)
+        private List<VoronoiCell> GeneratePath(Random rand, List<Vector2> points, List<VoronoiCell> cells, Microsoft.Xna.Framework.Rectangle limits, float minWidth, float wanderAmount = 0.3f, bool mirror=false, bool placeWaypoints=false)
         {
             Stopwatch sw2 = new Stopwatch();
             sw2.Start();
@@ -323,11 +342,18 @@ namespace Subsurface
 
             List<VoronoiCell> pathCells = new List<VoronoiCell>();
 
-            VoronoiCell currentCell = cells[FindCellIndex(start)];
+            VoronoiCell[] targetCells = new VoronoiCell[points.Count];
+            for (int i = 0; i <targetCells.Length; i++)
+            {
+                targetCells[i]= cells[FindCellIndex(points[i])];
+            }
+
+            VoronoiCell currentCell = targetCells[0];
             pathCells.Add(currentCell);
 
-            VoronoiCell endCell = cells[FindCellIndex(end)];
-
+int currentTargetIndex = 1;
+            
+            
             do
             {
                 int edgeIndex = 0;
@@ -337,7 +363,7 @@ namespace Subsurface
                 {
                     for (int i = 0; i < currentCell.edges.Count; i++)
                     {
-                        if (!MathUtils.LinesIntersect(currentCell.Center, end, currentCell.edges[i].point1, currentCell.edges[i].point2)) continue;
+                        if (!MathUtils.LinesIntersect(currentCell.Center, targetCells[currentTargetIndex].Center, currentCell.edges[i].point1, currentCell.edges[i].point2)) continue;
                         edgeIndex = i;
                         break;
                     }
@@ -353,16 +379,57 @@ namespace Subsurface
 
                         allowedEdges.Add(edge);
                     }
-                    edgeIndex = (allowedEdges.Count == 0) ?
-                        0 : currentCell.edges.IndexOf(allowedEdges[rand.Next() % allowedEdges.Count]);
+                    if (allowedEdges.Count==0)
+                    {
+                        edgeIndex = 0;
+                    }
+                    else
+                    {
+                        edgeIndex = rand.Next() % allowedEdges.Count;
+                        if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
+                        edgeIndex = currentCell.edges.IndexOf(allowedEdges[edgeIndex]);
+                    }
                 }
 
                 currentCell = currentCell.edges[edgeIndex].AdjacentCell(currentCell);
-
-
                 pathCells.Add(currentCell);
 
-            } while (currentCell != endCell);
+                if (currentCell==targetCells[currentTargetIndex])
+                {
+                    currentTargetIndex += 1;
+                    if (currentTargetIndex>=targetCells.Length) break;
+                }
+
+            } while (currentCell != targetCells[targetCells.Length-1]);
+
+            if (placeWaypoints)
+            {
+                WayPoint newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, (int)(borders.Height + shaftHeight), 10, 10));
+                newWaypoint.MoveWithLevel = true;
+
+                WayPoint prevWaypoint = newWaypoint;
+
+                for (int i = 0; i < pathCells.Count; i++)
+                {
+                    newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10));
+                    newWaypoint.MoveWithLevel = true;
+                    if (prevWaypoint != null)
+                    {
+                        prevWaypoint.linkedTo.Add(newWaypoint);
+                        newWaypoint.linkedTo.Add(prevWaypoint);
+                    }
+                    prevWaypoint = newWaypoint;
+                }
+
+                newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, (int)(borders.Height + shaftHeight), 10, 10));
+                newWaypoint.MoveWithLevel = true;
+
+                if (prevWaypoint != null)
+                {
+                    prevWaypoint.linkedTo.Add(newWaypoint);
+                    newWaypoint.linkedTo.Add(prevWaypoint);
+                }
+            }
 
             Debug.WriteLine("genpath: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
@@ -537,8 +604,10 @@ namespace Subsurface
 
                 for (int i = 0; i < triangles.Count; i++)
                 {
-                    Vertices bodyVertices = new Vertices(triangles[i]);
+                    if (triangles[i][0].Y == triangles[i][1].Y && triangles[i][0].Y == triangles[i][2].Y) continue;
+                    if (triangles[i][0].X == triangles[i][1].X && triangles[i][0].X == triangles[i][2].X) continue;
 
+                    Vertices bodyVertices = new Vertices(triangles[i]);
                     FixtureFactory.AttachPolygon(bodyVertices, 5.0f, edgeBody); 
                 }
 

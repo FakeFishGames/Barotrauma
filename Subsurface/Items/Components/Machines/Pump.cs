@@ -163,7 +163,7 @@ namespace Subsurface.Items.Components
             else if (connection.Name == "set_speed")
             {
                 float tempSpeed;
-                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempSpeed))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
                 }
@@ -171,7 +171,7 @@ namespace Subsurface.Items.Components
             else if (connection.Name == "set_targetlevel")
             {
                 float tempTarget;
-                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempTarget))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempTarget))
                 {
                     targetLevel = MathHelper.Clamp(tempTarget, 0.0f, 100.0f);
                 }

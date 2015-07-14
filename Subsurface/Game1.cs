@@ -74,7 +74,7 @@ namespace Subsurface
         {
             get { return NetworkMember as GameClient; }
         }
-        
+                
         public Game1()
         {
             Graphics = new GraphicsDeviceManager(this);
@@ -121,6 +121,8 @@ namespace Subsurface
             GameMode.Init();
             GUIComponent.Init(Window);
             DebugConsole.Init(Window);
+
+            LocationType.Init("Content/Map/locationTypes.xml");
             //Event.Init("Content/randomevents.xml");
         }
 

@@ -52,6 +52,8 @@ namespace Subsurface
         
         public List<RelatedItem> requiredItems;
 
+        public List<Skill> requiredSkills;
+
         private List<ItemSound> sounds;
 
         private GUIFrame guiFrame;
@@ -133,6 +135,8 @@ namespace Subsurface
             
             requiredItems = new List<RelatedItem>();
 
+            requiredSkills = new List<Skill>();
+
             sounds = new List<ItemSound>();
 
             statusEffects = new List<StatusEffect>();
@@ -164,6 +168,12 @@ namespace Subsurface
                     case "requireditems":
                         RelatedItem ri = RelatedItem.Load(subElement);
                         if (ri != null) requiredItems.Add(ri);
+                        break;
+
+                    case "requiredskill":
+                    case "requiredskills":
+                        string skillName = ToolBox.GetAttributeString(subElement, "name", "");
+                        requiredSkills.Add(new Skill(skillName, ToolBox.GetAttributeInt(subElement, "level", 0)));
                         break;
                     case "statuseffect":
                         statusEffects.Add(StatusEffect.Load(subElement));
@@ -340,6 +350,30 @@ namespace Subsurface
             }
         }
 
+        public bool HasRequiredSkills(Character character)
+        {
+            foreach (Skill skill in requiredSkills)
+            {
+                int characterLevel = character.GetSkillLevel(skill.Name);
+                if (characterLevel < skill.Level) return false;
+            }
+
+            return true;
+        }
+
+        protected bool UseFailed(Character character)
+        {
+            foreach (Skill skill in requiredSkills)
+            {
+                int characterLevel = character.GetSkillLevel(skill.Name);
+                if (characterLevel > skill.Level) continue;
+
+                if (Rand.Int(characterLevel) - skill.Level < 0) return true;                
+            }
+
+            return false;
+        }
+
         public bool HasRequiredContainedItems(bool addMessage)
         {
             if (!requiredItems.Any()) return true;
@@ -367,7 +401,7 @@ namespace Subsurface
 
             foreach (RelatedItem ri in requiredItems)
             {
-                if (ri.Type == RelatedItem.RelationType.Equipped)
+                if (ri.Type.HasFlag(RelatedItem.RelationType.Equipped))
                 {
                     for (int i = 0; i < character.SelectedItems.Length; i++ )
                     {
@@ -381,7 +415,7 @@ namespace Subsurface
                     //if (addMessage && !String.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
                     return false;
                 }
-                else if (ri.Type == RelatedItem.RelationType.Picked)
+                else if (ri.Type.HasFlag(RelatedItem.RelationType.Picked))
                 {
                     Item pickedItem = character.Inventory.items.FirstOrDefault(x => x!=null && x.Condition>0.0f && ri.MatchesItem(x));
                     if (pickedItem == null)
