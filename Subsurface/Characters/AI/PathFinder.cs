@@ -116,7 +116,7 @@ namespace Subsurface
             if (startNode == null || endNode == null)
             {
                 DebugConsole.ThrowError("Pathfinding error, couldn't find pathnodes");
-                return null;
+                return new SteeringPath();
             }
 
             return FindPath(startNode,endNode);
@@ -141,7 +141,7 @@ namespace Subsurface
                 if (startNode==null || endNode==null)
                 {
                     DebugConsole.ThrowError("Pathfinding error, couldn't find matching pathnodes to waypoints");
-                    return null;
+                    return new SteeringPath();;
                 }
             }
 

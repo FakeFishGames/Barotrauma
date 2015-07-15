@@ -609,7 +609,7 @@ namespace Subsurface
 
                 float dist = Vector2.Distance(limbPos, gapPos);
 
-                force += Vector2.Normalize(gap.FlowForce)*(Math.Max(gap.FlowForce.Length() - dist, 0.0f)/500.0f);
+                force += Vector2.Normalize(gap.FlowForce)*(Math.Max(gap.FlowForce.Length() - dist, 0.0f)/1000.0f);
             }
 
             if (force.Length() > 20.0f) return force;

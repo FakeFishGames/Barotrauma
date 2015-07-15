@@ -132,7 +132,8 @@ namespace Subsurface.Networking
                 {
                     // All manually sent messages are type of "Data"
                     case NetIncomingMessageType.Data:
-                        if (inc.ReadByte() == (byte)PacketTypes.LoggedIn)
+                        byte packetType = inc.ReadByte();
+                        if (packetType == (byte)PacketTypes.LoggedIn)
                         {
                             myID = inc.ReadInt32();
 
@@ -152,7 +153,7 @@ namespace Subsurface.Networking
 
                             CanStart = true;
                         }
-                        else if (inc.ReadByte() == (byte)PacketTypes.KickedOut)
+                        else if (packetType == (byte)PacketTypes.KickedOut)
                         {
                             string msg = inc.ReadString();
                             DebugConsole.ThrowError(msg);
@@ -199,6 +200,7 @@ namespace Subsurface.Networking
                 SendRandomData();
             }
 
+            if (gameStarted) inGameHUD.Update((float)Physics.step);
 
             if (!connected || updateTimer > DateTime.Now) return;
             

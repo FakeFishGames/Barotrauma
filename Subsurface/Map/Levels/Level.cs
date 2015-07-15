@@ -74,7 +74,7 @@ namespace Subsurface
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(cells[1].body.Position); }
+            get { return ConvertUnits.ToDisplayUnits(cells[0].body.Position); }
         }
 
         public string Seed
@@ -546,11 +546,10 @@ int currentTargetIndex = 1;
             List<Vector2> tempVertices = new List<Vector2>();
             List<Vector2> bodyPoints = new List<Vector2>();
 
-            int n = 0;
-            foreach (VoronoiCell cell in cells)
+            for (int n = cells.Count - 1; n >= 0; n-- )
             {
-                n = (n + 30) % 255;
-
+                VoronoiCell cell = cells[n];
+                
                 bodyPoints.Clear();
                 tempVertices.Clear();
                 foreach (GraphEdge ge in cell.edges)
@@ -568,14 +567,18 @@ int currentTargetIndex = 1;
                     if (!bodyPoints.Contains(ge.point2)) bodyPoints.Add(ge.point2);
                 }
 
-                if (tempVertices.Count < 3) continue;
+                if (tempVertices.Count < 3 || bodyPoints.Count < 2)
+                {
+                    cells.RemoveAt(n);
+                    continue;
+                }
 
                 var triangles = MathUtils.TriangulateConvexHull(tempVertices, cell.Center);
-                for (int i = 0; i < triangles.Count; i++ )
+                for (int i = 0; i < triangles.Count; i++)
                 {
                     foreach (Vector2 vertex in triangles[i])
                     {
-                        verticeList.Add(new VertexPositionColor(new Vector3(vertex, 0.0f), new Color(n,(n*2)%255,(n*3)%255)*0.5f));
+                        verticeList.Add(new VertexPositionColor(new Vector3(vertex, 0.0f), new Color(n*30, (n * 60) % 255, (n * 90) % 255) * 0.5f));
                     }
                 }
 
@@ -584,7 +587,7 @@ int currentTargetIndex = 1;
 
                 if (bodyPoints.Count < 3)
                 {
-                    foreach(Vector2 vertex in tempVertices)
+                    foreach (Vector2 vertex in tempVertices)
                     {
                         if (bodyPoints.Contains(vertex)) continue;
                         bodyPoints.Add(vertex);
@@ -608,7 +611,7 @@ int currentTargetIndex = 1;
                     if (triangles[i][0].X == triangles[i][1].X && triangles[i][0].X == triangles[i][2].X) continue;
 
                     Vertices bodyVertices = new Vertices(triangles[i]);
-                    FixtureFactory.AttachPolygon(bodyVertices, 5.0f, edgeBody); 
+                    FixtureFactory.AttachPolygon(bodyVertices, 5.0f, edgeBody);
                 }
 
                 edgeBody.UserData = cell;
@@ -655,8 +658,8 @@ int currentTargetIndex = 1;
                 Item item = mapEntity as Item;
                 if (item == null)
                 {
-                    if (!mapEntity.MoveWithLevel) continue;
-                    mapEntity.Move(amount);
+                    //if (!mapEntity.MoveWithLevel) continue;
+                    //mapEntity.Move(amount);
                 }
                 else if (item.body != null)
                 {
@@ -692,8 +695,8 @@ int currentTargetIndex = 1;
                 Item item = mapEntity as Item;
                 if (item == null)
                 {
-                    if (!mapEntity.MoveWithLevel) continue;
-                    mapEntity.Move(velocity);
+                    //if (!mapEntity.MoveWithLevel) continue;
+                    //mapEntity.Move(velocity);
                 }
                 else if (item.body!=null)
                 {

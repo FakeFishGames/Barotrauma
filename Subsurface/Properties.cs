@@ -30,16 +30,7 @@ namespace Subsurface
             this.isSaveable = isSaveable;
         }
     }
-
-    //[AttributeUsage(AttributeTargets.Property)]
-    //public class Saveable : Initable
-    //{
-    //    public Saveable(object defaultValue)
-    //        :base(defaultValue)
-    //    {
-    //    }
-    //}
-    
+        
     class ObjectProperty
     {
         readonly PropertyDescriptor property;

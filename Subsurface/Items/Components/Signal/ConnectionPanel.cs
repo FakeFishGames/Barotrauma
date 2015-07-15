@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -28,26 +29,13 @@ namespace Subsurface.Items.Components
                         break;
                 }
             }
+
+            isActive = true;
         }
-
-        //public override void Move(Vector2 amount)
-        //{
-        //    base.Move(amount);
-
-        //    foreach (Connection c in connections)
-        //    {
-        //        foreach (Wire w in c.wires)
-        //        {
-        //            if (w == null) continue;
-
-        //            w.Move
-        //        }
-        //    }
-        //}
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (user!=character) return;
+            if (character != Character.Controlled || character != user) return;
             Connection.DrawConnections(spriteBatch, this, character);
         }
 
@@ -76,7 +64,7 @@ namespace Subsurface.Items.Components
             if (user != null && user.SelectedConstruction != item) user = null;
         }
 
-        public override bool Pick(Character picker)
+        public override bool Select(Character picker)
         {
             user = picker;
             isActive = true;
@@ -107,10 +95,12 @@ namespace Subsurface.Items.Components
         {
             foreach (Connection c in connections)
             {
-                int wireCount = c.Wires.Length;                
-                for (int i = 0 ; i < wireCount; i++)
+                Wire[] wires = Array.FindAll(c.Wires, w => w != null);
+                message.Write((byte)wires.Length);
+                for (int i = 0 ; i < c.Wires.Length; i++)
                 {
-                    message.Write(c.Wires[i]==null ? -1 : c.Wires[i].Item.ID);
+                    if (c.Wires[i] == null) continue;
+                    message.Write(c.Wires[i].Item.ID);
                 }
             }
         }
@@ -120,23 +110,28 @@ namespace Subsurface.Items.Components
             System.Diagnostics.Debug.WriteLine("connectionpanel update");
             foreach (Connection c in connections)
             {
-                int wireCount = c.Wires.Length;
+                //int wireCount = c.Wires.Length;
                 c.ClearConnections();
-
-                for (int i = 0; i < wireCount; i++)
+                try
                 {
-                    int wireId = message.ReadInt32();
-                    if (wireId == -1) continue;
+                    byte wireCount = message.ReadByte();                
 
-                    Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
-                    if (wireItem == null) continue;
+                    for (int i = 0; i < wireCount; i++)
+                    {
+                        int wireId = message.ReadInt32();
+                        
+                        Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
+                        if (wireItem == null) continue;
 
-                    Wire wireComponent = wireItem.GetComponent<Wire>();
-                    if (wireComponent == null) continue;
+                        Wire wireComponent = wireItem.GetComponent<Wire>();
+                        if (wireComponent == null) continue;
 
-                    c.Wires[i] = wireComponent;
-                    wireComponent.Connect(c, false);
+                        c.Wires[i] = wireComponent;
+                        wireComponent.Connect(c, false);
+                    }
                 }
+
+                catch { }
             } 
         }
     }

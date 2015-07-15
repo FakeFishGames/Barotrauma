@@ -31,9 +31,6 @@ namespace Subsurface
 
         private float camAngle;
 
-        //private Body previewPlatform;
-        //private Hull previewHull;
-        
         public bool IsServer;
 
         public Submarine SelectedMap
@@ -112,7 +109,7 @@ namespace Subsurface
                 GUI.style, menu);
 
             chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, GUI.style, chatFrame);            
-            textBox = new GUITextBox(new Rectangle(0, 0, 0, 25), Alignment.Bottom, GUI.style, chatFrame);
+            textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, GUI.style, chatFrame);
             textBox.OnEnter = EnterChatMessage;
 
             //player info panel ------------------------------------------------------------
@@ -135,18 +132,6 @@ namespace Subsurface
         public override void Deselect()
         {
             textBox.Deselect();
-
-            //if (previewPlatform!=null)
-            //{
-            //    Game1.World.RemoveBody(previewPlatform);
-            //    previewPlatform = null;
-            //}
-
-            //if (previewHull!=null)
-            //{
-            //    previewHull.Remove();
-            //    previewHull = null;
-            //}
         }
 
         public override void Select()
@@ -186,7 +171,6 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(220, 30, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
             modeList = new GUIListBox(new Rectangle(220, 60, 200, 200), GUI.style, infoFrame);
             modeList.Enabled = (Game1.Server != null);
-            //modeList.OnSelected = new GUIListBox.OnSelectedHandler(SelectEvent);
 
             foreach (GameModePreset mode in GameModePreset.list)
             {
@@ -324,7 +308,8 @@ namespace Subsurface
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-
+            
+            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
             Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
             Vector2 pos = new Vector2(
@@ -342,7 +327,7 @@ namespace Subsurface
 
             menu.Update((float)deltaTime);
                         
-            durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
+            //durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -361,31 +346,13 @@ namespace Subsurface
 
             spriteBatch.End();
 
-
-            //if (Game1.Client != null)
-            //{
-            //    if (Game1.Client.Character != null)
-            //    {
-            //        Vector2 position = new Vector2(playerFrame.Rect.X + playerFrame.Rect.Width * 0.25f, playerFrame.Rect.Y + 25.0f);
-
-            //        Vector2 pos = Game1.Client.Character.Position;
-            //        pos.Y = -pos.Y;
-            //        Matrix transform = Matrix.CreateTranslation(new Vector3(-pos + position, 0.0f));
-
-            //        spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, transform);
-            //        Game1.Client.Character.Draw(spriteBatch);
-            //        spriteBatch.End();
-            //    }
-            //    else
-            //    {
-            //        CreatePreviewCharacter();
-            //    }
-            //}
-
         }
 
         public void NewChatMessage(string message, Color color)
         {
+            float prevSize = chatBox.BarSize;
+            float oldScroll = chatBox.BarScroll;
+
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20),
                 message, 
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, color, 
@@ -393,6 +360,8 @@ namespace Subsurface
 
             msg.Padding = new Vector4(20, 0, 0, 0);
             chatBox.AddChild(msg);
+
+            if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
 
 

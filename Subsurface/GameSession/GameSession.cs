@@ -134,14 +134,6 @@ namespace Subsurface
                 submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
             }
 
-            foreach (Item item in Item.itemList)
-            {
-                foreach (ItemComponent ic in item.components)
-                {
-                    ic.OnMapLoaded();
-                }
-            }
-
             taskManager.StartShift(level);
         }
 
@@ -227,7 +219,7 @@ namespace Subsurface
             //double elapsedTime = (DateTime.Now-startTime).TotalSeconds;
             //timerBar.BarSize = (float)(elapsedTime / Math.Max(duration, 1.0));
 
-            if (PlayerInput.KeyHit(Keys.Tab))
+            if (PlayerInput.KeyHit(Keys.Tab) && textBox!=null)
             {
                 if (textBox.Selected)
                 {

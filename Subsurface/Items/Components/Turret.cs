@@ -4,6 +4,7 @@ using System.IO;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using FarseerPhysics;
 
 namespace Subsurface.Items.Components
 {
@@ -13,14 +14,11 @@ namespace Subsurface.Items.Components
 
         Vector2 barrelPos;
 
-        float targetRotation;
-        float rotation;
+        float rotation, targetRotation;
 
-        float reload;
-        float reloadTime;
+        float reload, reloadTime;
 
-        float minRotation;
-        float maxRotation;
+        float minRotation, maxRotation;
 
         float launchImpulse;
 
@@ -53,12 +51,16 @@ namespace Subsurface.Items.Components
             set { reloadTime = value; }
         }
 
-        [HasDefaultValue("0.0,0.0", false)]
+        [HasDefaultValue("0.0,0.0", true)]
         public string RotationLimits
         {
             get
             {
-                return ToolBox.Vector2ToString(barrelPos); 
+                Vector2 limits = new Vector2(minRotation, maxRotation);
+                limits.X = MathHelper.ToDegrees(limits.X);
+                limits.Y = MathHelper.ToDegrees(limits.Y);
+
+                return ToolBox.Vector2ToString(limits); 
             }
             set
             {
@@ -75,35 +77,15 @@ namespace Subsurface.Items.Components
 
             barrelSprite = new Sprite(Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\" +element.Attribute("barrelsprite").Value,
                 ToolBox.GetAttributeVector2(element, "origin", Vector2.Zero));
-
-            //barrelPos = ToolBox.GetAttributeVector2(element, "BarrelPos", Vector2.Zero);
-
-            //launchImpulse = ToolBox.GetAttributeFloat(element, "launchimpulse", 0.0f);
-
-            //minRotation = ToolBox.GetAttributeFloat(element, "MinimumRotation", 0.0f);
-            //maxRotation = ToolBox.GetAttributeFloat(element, "MaximumRotation", MathHelper.TwoPi);
-
-            //reloadTime = ToolBox.GetAttributeFloat(element, "reload", 5.0f);
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
             barrelSprite.Draw(spriteBatch, new Vector2(item.Rect.X, -item.Rect.Y) + barrelPos, rotation + MathHelper.PiOver2, 1.0f);
-
-            //GUI.DrawRectangle(spriteBatch,
-            //    new Rectangle((int)(rect.X + barrelPos.X), (int)(-rect.Y + barrelPos.Y), 10, 10),
-            //    Color.White, true);
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            //if (character == null || character.SelectedConstruction != item)
-            //{
-            //    character = null;
-            //    isActive = false;
-            //    return;
-            //}
-
             this.cam = cam;
 
             if (reload>0.0f) reload -= deltaTime;
@@ -117,30 +99,22 @@ namespace Subsurface.Items.Components
             }
             
             rotation = MathUtils.CurveAngle(rotation, targetRotation, 0.05f);
-            
-            //if (!prefab.FocusOnSelected) return;
 
-            //cam.OffsetAmount = prefab.OffsetOnSelected;
+
         }
 
-        public override void SecondaryUse(float deltaTime, Character character = null)
-        {
-            if (character == null) return;
-            Vector2 centerPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
+        //public override void SecondaryUse(float deltaTime, Character character = null)
+        //{
+        //    if (character == null) return;
+
+        //    Vector2 centerPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
             
-            Vector2 offset = character.CursorPosition - centerPos;
-            offset.Y = -offset.Y;
-                   
-            targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
-
-            isActive = true;
-
-            if (character == Character.Controlled && cam!=null)
-            {
-                Lights.LightManager.ViewPos = centerPos;
-                cam.TargetPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
-            }
-        }
+        //    if (character == Character.Controlled && cam!=null)
+        //    {
+        //        Lights.LightManager.ViewPos = centerPos;
+        //        cam.TargetPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
+        //    }
+        //}
 
         public override bool Use(float deltaTime, Character character = null)
         {
@@ -148,23 +122,25 @@ namespace Subsurface.Items.Components
 
             Projectile projectileComponent = null;
 
-            currPowerConsumption = powerConsumption;
+            //currPowerConsumption = powerConsumption;
 
             float availablePower = 0.0f;
             //List<PowerContainer> batteries = new List<PowerContainer>();
-            foreach (MapEntity e in item.linkedTo)
+            foreach (Connection c in item.Connections)
             {
-                Item battery = e as Item;
-                if (battery == null) continue;
+                foreach (Connection c2 in c.Recipients)
+                {
+                    if (c2 == null || c2.Item == null) continue;
 
-                PowerContainer batteryComponent = battery.GetComponent<PowerContainer>();
-                if (batteryComponent == null) continue;
+                    PowerContainer batteryComponent = c2.Item.GetComponent<PowerContainer>();
+                    if (batteryComponent == null) continue;
 
-                float batteryPower = Math.Min(batteryComponent.Charge, batteryComponent.MaxOutPut);
-                float takePower = Math.Min(currPowerConsumption - availablePower, batteryPower);
+                    float batteryPower = Math.Min(batteryComponent.Charge, batteryComponent.MaxOutPut);
+                    float takePower = Math.Min(currPowerConsumption - availablePower, batteryPower);
 
-                batteryComponent.Charge -= takePower;
-                availablePower += takePower;
+                    batteryComponent.Charge -= takePower;
+                    availablePower += takePower;
+                }
             }
 
             reload = reloadTime;
@@ -198,7 +174,7 @@ namespace Subsurface.Items.Components
 
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
-            projectile.SetTransform(item.SimPosition, rotation);
+            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y)), -rotation);
 
             //if (useSounds.Count() > 0) useSounds[Game1.localRandom.Next(useSounds.Count())].Play(1.0f, 800.0f, item.body.FarseerBody);
 
@@ -206,6 +182,29 @@ namespace Subsurface.Items.Components
             item.RemoveContained(projectile);
 
             return true;
+        }
+
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
+        {
+            switch (connection.Name)
+            {
+                case "position_in":
+                    Vector2 receivedPos = ToolBox.ParseToVector2(signal, false);
+
+                    Vector2 centerPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
+
+                    Vector2 offset = receivedPos - centerPos;
+                    offset.Y = -offset.Y;
+                   
+                    targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+
+                    isActive = true;
+
+                    break;
+                case "trigger_in":
+                    item.Use((float)Physics.step, null);
+                    break;
+            }
         }
     }
 }

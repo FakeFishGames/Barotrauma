@@ -134,20 +134,17 @@ namespace Subsurface
             }
         }
 
-        //protected virtual void DropItem(Item item)
-        //{
-        //    for (int i = 0; i < capacity; i++)
-        //    {
-        //        if (items[i] == item) items[i] = null;                
-        //    }
-        //    item.Drop();
-        //    return;
-        //}
-                //public void DropItem(int i)
-        //{
-        //    items[i].Drop();
-        //    items[i] = null;
-        //}
+        protected virtual void DropItem(Item item)
+        {
+
+            item.Drop(null, false);
+            return;
+        }
+        public void DropItem(int i)
+        {
+            items[i].Drop();
+            items[i] = null;
+        }
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
@@ -188,12 +185,10 @@ namespace Subsurface
                 }
                 else
                 {
-                    draggingItem.Drop(null, false);
-
                     int[] data = { draggingItem.ID, -1 };
                     new NetworkEvent(NetworkEventType.InventoryUpdate, ID, true, data);
-                    
-                    //draggingItem = null;
+
+                    DropItem(draggingItem);
                 }
             }                       
         }

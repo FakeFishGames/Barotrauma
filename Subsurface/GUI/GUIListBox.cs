@@ -44,6 +44,17 @@ namespace Subsurface
             }
         }
 
+        public float BarScroll
+        {
+            get { return scrollBar.BarScroll; }
+            set { scrollBar.BarScroll = value; }
+        }
+
+        public float BarSize
+        {
+            get { return scrollBar.BarSize; }
+        }
+
         public int Spacing
         {
             get { return spacing; }
@@ -173,14 +184,16 @@ namespace Subsurface
         {
             base.AddChild(child);
 
-            float oldScroll = scrollBar.BarScroll;
-            float oldSize = scrollBar.BarSize;
+            //float oldScroll = scrollBar.BarScroll;
+            //float oldSize = scrollBar.BarSize;
             UpdateScrollBarSize();
 
-            if (scrollBar.BarSize < 1.0f && oldScroll == 1.0f)
-            {
-                scrollBar.BarScroll = 1.0f;
-            }
+            //if (oldSize == 1.0f && scrollBar.BarScroll == 0.0f) scrollBar.BarScroll = 1.0f;
+
+            //if (scrollBar.BarSize < 1.0f && oldScroll == 1.0f)
+            //{
+            //    scrollBar.BarScroll = 1.0f;
+            //}
             
         }
 

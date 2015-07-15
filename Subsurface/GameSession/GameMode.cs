@@ -120,7 +120,7 @@ namespace Subsurface
         {
             if (!isRunning) return;
 
-            if (duration!=TimeSpan.Zero)
+            if (duration != TimeSpan.Zero)
             {
                 double elapsedTime = (DateTime.Now - startTime).TotalSeconds;
                 timerBar.BarSize = (float)(elapsedTime / duration.TotalSeconds);

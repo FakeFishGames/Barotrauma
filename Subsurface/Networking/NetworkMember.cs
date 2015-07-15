@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface.Networking
 {
@@ -93,12 +94,17 @@ namespace Subsurface.Networking
                 Alignment.Left, null, null, true);
 
             msg.Padding = new Vector4(20.0f, 0, 0, 0);
-            chatBox.AddChild(msg);
 
-            while (chatBox.CountChildren > 20)
-            {
-                chatBox.RemoveChild(chatBox.children[0]);
-            }
+            //float prevScroll = chatBox.BarScroll;
+
+            //chatBox.AddChild(msg);
+
+            //while (chatBox.CountChildren > 20)
+            //{
+            //    chatBox.RemoveChild(chatBox.children[0]);
+            //}
+
+            //if (prevScroll == 1.0f) chatBox.BarScroll = 1.0f;
 
             GUI.PlayMessageSound();
         }
@@ -106,6 +112,13 @@ namespace Subsurface.Networking
         public virtual void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server) { }
 
         public virtual void Update() { }
+
+        public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        {
+            if (!gameStarted) return;
+
+            inGameHUD.Draw(spriteBatch);
+        }
 
         public virtual void Disconnect() { }
 

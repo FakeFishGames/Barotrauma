@@ -734,9 +734,8 @@ namespace Subsurface
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredSkills(picker)) hasRequiredSkills = false;
-                if ((ic.CanBePicked || ic.CanBeSelected) 
-                    && (ic.HasRequiredEquippedItems(picker, picker == Character.Controlled) || forcePick) 
-                    && ic.Pick(picker))
+                if (!ic.HasRequiredItems(picker, picker == Character.Controlled) && !forcePick) continue;
+                if ((ic.CanBePicked && ic.Pick(picker)) || (ic.CanBeSelected && ic.Select(picker)))                     
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);

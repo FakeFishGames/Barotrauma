@@ -42,11 +42,6 @@ namespace Subsurface
             }
         }
 
-        public override Vector2 SimPosition
-        {
-            get { return ConvertUnits.ToSimUnits(new Vector2(rect.X, rect.Y)); }
-        }
-
         public WayPoint(Rectangle newRect)
         {
             rect = newRect;
@@ -61,14 +56,16 @@ namespace Subsurface
         {
             //if (!editing) return;
 
+            Point pos = new Point((int)Position.X, (int)Position.Y);
+
             Color clr = (isSelected) ? Color.Red : Color.LightGreen;
-            GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), clr, true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(pos.X, -pos.Y, rect.Width, rect.Height), clr, true);
 
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(rect.X + rect.Width / 2, -rect.Y + rect.Height / 2),
-                    new Vector2(e.Rect.X + e.Rect.Width / 2, -e.Rect.Y + e.Rect.Height / 2),
+                    new Vector2(pos.X, -pos.Y),
+                    new Vector2(e.Position.X + e.Rect.Width / 2, -e.Position.Y + e.Rect.Height / 2),
                     Color.Green);
             }
         }

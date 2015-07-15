@@ -284,6 +284,11 @@ namespace Subsurface
         {
             return false;
         }
+
+        public virtual bool Select(Character character)
+        {
+            return CanBeSelected;
+        }
         
         /// <summary>a character has dropped the item</summary>
         public virtual void Drop(Character dropper)  { }
@@ -395,40 +400,31 @@ namespace Subsurface
             return true;
         }
 
-        public bool HasRequiredEquippedItems(Character character, bool addMessage)
+        public bool HasRequiredItems(Character character, bool addMessage)
         {
             if (!requiredItems.Any()) return true;
 
+            
+                
             foreach (RelatedItem ri in requiredItems)
             {
+                if (!ri.Type.HasFlag(RelatedItem.RelationType.Equipped) && !ri.Type.HasFlag(RelatedItem.RelationType.Picked)) continue;
+
+                bool hasItem = false;
                 if (ri.Type.HasFlag(RelatedItem.RelationType.Equipped))
                 {
-                    for (int i = 0; i < character.SelectedItems.Length; i++ )
-                    {
-                        Item selectedItem = character.SelectedItems[i];
-                        if (selectedItem !=null && selectedItem.Condition>0.0f && ri.MatchesItem(selectedItem ))
-                        {
-                            return true;
-                        }
-                    }
-
-                    //if (addMessage && !String.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
-                    return false;
+                    if (character.SelectedItems.FirstOrDefault(it => it != null && it.Condition > 0.0f && ri.MatchesItem(it)) != null) hasItem = true;
                 }
-                else if (ri.Type.HasFlag(RelatedItem.RelationType.Picked))
+                if (!hasItem && ri.Type.HasFlag(RelatedItem.RelationType.Picked))
                 {
-                    Item pickedItem = character.Inventory.items.FirstOrDefault(x => x!=null && x.Condition>0.0f && ri.MatchesItem(x));
-                    if (pickedItem == null)
-                    {
-                        //if (addMessage && !String.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
-                        return false;
-                    }
+                    if (character.Inventory.items.FirstOrDefault(x => x!=null && x.Condition>0.0f && ri.MatchesItem(x))!=null) hasItem = true;
                 }
+                if (!hasItem) return false;
             }
 
             return true;
         }
-
+        
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
         {
             foreach (StatusEffect effect in statusEffects)

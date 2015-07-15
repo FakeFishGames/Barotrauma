@@ -23,6 +23,8 @@ namespace Subsurface.Items.Components
         //the x-position where the user walks to when using the controller
         float userPos;
 
+        Camera cam;
+
         Character character;
 
         [HasDefaultValue(1.0f,false)]
@@ -37,19 +39,6 @@ namespace Subsurface.Items.Components
             limbPositions = new List<LimbPos>();
 
             dir = (Direction)Enum.Parse(typeof(Direction), ToolBox.GetAttributeString(element, "direction", "None"), true);
-
-            //userPos = ToolBox.GetAttributeInt(element, "userpos", 1);
-            
-            //string allowedIdString = ToolBox.GetAttributeString(element, "allowedids", "");
-            //if (allowedIdString!="")
-            //{
-            //    string[] splitIds = allowedIdString.Split(',');
-            //    allowedIDs = new string[splitIds.Length];
-            //    for (int i = 0; i<splitIds.Length; i++)
-            //    {
-            //        allowedIDs[i] = allowedIDs[i].Trim();
-            //    }
-            //}
 
             foreach (XElement el in element.Elements())
             {
@@ -75,6 +64,8 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
+            this.cam = cam;
+
             if (character == null || character.SelectedConstruction != item)
             {
                 if (character != null)
@@ -126,25 +117,29 @@ namespace Subsurface.Items.Components
                 fmj.WorldAnchorB = position;
             }
 
-            foreach (MapEntity e in item.linkedTo)
-            {
-                Item linkedItem = e as Item;
-                if (linkedItem == null) continue;
-                linkedItem.Update(cam, deltaTime);
-            }
+            //foreach (MapEntity e in item.linkedTo)
+            //{
+            //    Item linkedItem = e as Item;
+            //    if (linkedItem == null) continue;
+            //    linkedItem.Update(cam, deltaTime);
+            //}
+
+            item.SendSignal(ToolBox.Vector2ToString(character.CursorPosition), "position_out");
         }
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            character = activator;
-            foreach (MapEntity e in item.linkedTo)
-            {
-                Item linkedItem = e as Item;
-                if (linkedItem == null) continue;
-                linkedItem.Use(deltaTime, activator);
-            }
+            //character = activator;
+            //foreach (MapEntity e in item.linkedTo)
+            //{
+            //    Item linkedItem = e as Item;
+            //    if (linkedItem == null) continue;
+            //    linkedItem.Use(deltaTime, activator);
+            //}
 
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
+            item.SendSignal("1", "trigger_out");
+
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             
             return true;
         }
@@ -153,15 +148,43 @@ namespace Subsurface.Items.Components
         {
             if (character == null) return;
 
-            foreach (MapEntity e in item.linkedTo)
+            foreach (Connection c in item.Connections)
             {
-                Item linkedItem = e as Item;
-                if (linkedItem == null) continue;
-                linkedItem.SecondaryUse(deltaTime, character);
+                if (c.Name != "position_out") continue;
+
+                foreach (Connection c2 in c.Recipients)
+                {
+                    if (c2 == null || c2.Item==null || !c2.Item.Prefab.FocusOnSelected) continue;
+
+                    Vector2 centerPos = c2.Item.Position;
+
+                    if (character == Character.Controlled && cam != null)
+                    {
+                        Lights.LightManager.ViewPos = centerPos;
+                        cam.TargetPos = c2.Item.Position;
+                    }
+
+                    break;
+                }
             }
+
+            //foreach (MapEntity e in item.linkedTo)
+            //{
+            //    Item linkedItem = e as Item;
+            //    if (linkedItem == null) continue;
+            //    linkedItem.SecondaryUse(deltaTime, character);
+            //}
+
+
         }
 
-        public override bool Pick(Character activator = null)
+        public override bool Pick(Character picker)
+        {
+            item.SendSignal("1", "signal_out");
+            return true;
+        }
+
+        public override bool Select(Character activator = null)
         {
             if (character!=null && character.SelectedConstruction == item)
             {

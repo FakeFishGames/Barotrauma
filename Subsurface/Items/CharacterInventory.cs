@@ -25,6 +25,12 @@ namespace Subsurface
             this.character = character;
         }
 
+        protected override void DropItem(Item item)
+        {
+            item.Drop(character);
+            item.body.SetTransform(character.SimPosition, 0.0f);
+        }
+
         public int FindLimbSlot(LimbSlot limbSlot)
         {
             for (int i = 0; i < items.Length; i++)
@@ -232,7 +238,7 @@ namespace Subsurface
                 else
                 {
                     draggingItem.body.SetTransform(character.SimPosition, 0.0f);
-                    draggingItem.Drop(character);
+                    DropItem(draggingItem);
                     //draggingItem = null;
                 }
             }                       

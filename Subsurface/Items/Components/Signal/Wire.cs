@@ -15,12 +15,12 @@ namespace Subsurface.Items.Components
 
         static Sprite wireSprite;
 
-        List<Vector2> nodes;
+        public List<Vector2> Nodes;
 
         Connection[] connections;
 
         private Vector2 newNodePos;
-
+        
         public Wire(Item item, XElement element)
             : base(item, element)
         {
@@ -30,7 +30,7 @@ namespace Subsurface.Items.Components
                 wireSprite.Depth = 0.85f;
             }
 
-            nodes = new List<Vector2>();
+            Nodes = new List<Vector2>();
 
             connections = new Connection[2];
         }
@@ -38,9 +38,9 @@ namespace Subsurface.Items.Components
         public override void Move(Vector2 amount)
         {
             amount = FarseerPhysics.ConvertUnits.ToDisplayUnits(amount);
-            for (int i = 0; i<nodes.Count; i++)
+            for (int i = 0; i<Nodes.Count; i++)
             {
-                nodes[i] += amount;
+                Nodes[i] += amount;
             }
         }
 
@@ -76,11 +76,11 @@ namespace Subsurface.Items.Components
 
                 if (i == 0)
                 {
-                    nodes.Insert(0, newConnection.Item.Position);
+                    Nodes.Insert(0, newConnection.Item.Position);
                 }
                 else
                 {
-                    nodes.Add(newConnection.Item.Position);
+                    Nodes.Add(newConnection.Item.Position);
                 }
 
 
@@ -97,8 +97,7 @@ namespace Subsurface.Items.Components
                 CleanNodes();
             }
 
-            //new Networking.NetworkEvent(item.ID, true);
-
+            Item.NewComponentEvent(this, true);
         }
 
         public override void Equip(Character character)
@@ -117,7 +116,7 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (nodes.Count == 0) return;
+            if (Nodes.Count == 0) return;
 
             item.FindHull();
 
@@ -153,9 +152,9 @@ namespace Subsurface.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (newNodePos!= Vector2.Zero && nodes.Count>0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+            if (newNodePos!= Vector2.Zero && Nodes.Count>0 && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
             {
-                nodes.Add(newNodePos);
+                Nodes.Add(newNodePos);
                 newNodePos = Vector2.Zero;
             }
 
@@ -166,9 +165,9 @@ namespace Subsurface.Items.Components
 
         public override void SecondaryUse(float deltaTime, Character character = null)
         {
-            if (nodes.Count > 1)
+            if (Nodes.Count > 1)
             {
-                nodes.RemoveAt(nodes.Count - 1);
+                Nodes.RemoveAt(Nodes.Count - 1);
                 item.NewComponentEvent(this, true);
             }
         }
@@ -182,7 +181,7 @@ namespace Subsurface.Items.Components
 
         private void ClearConnections()
         {
-            nodes.Clear();
+            Nodes.Clear();
 
             for (int i = 0; i < 2; i++)
             {
@@ -198,14 +197,14 @@ namespace Subsurface.Items.Components
 
         private void CleanNodes()
         {
-            for (int i = nodes.Count - 2; i > 0; i--)
+            for (int i = Nodes.Count - 2; i > 0; i--)
             {
-                if ((nodes[i - 1].X == nodes[i].X || nodes[i - 1].Y == nodes[i].Y) &&
-                    (nodes[i + 1].X == nodes[i].X || nodes[i + 1].Y == nodes[i].Y))
+                if ((Nodes[i - 1].X == Nodes[i].X || Nodes[i - 1].Y == Nodes[i].Y) &&
+                    (Nodes[i + 1].X == Nodes[i].X || Nodes[i + 1].Y == Nodes[i].Y))
                 {
-                    if (Vector2.Distance(nodes[i - 1], nodes[i]) == Vector2.Distance(nodes[i + 1], nodes[i]))
+                    if (Vector2.Distance(Nodes[i - 1], Nodes[i]) == Vector2.Distance(Nodes[i + 1], Nodes[i]))
                     {
-                        nodes.RemoveAt(i);
+                        Nodes.RemoveAt(i);
                     }
                 }
             }
@@ -214,12 +213,12 @@ namespace Subsurface.Items.Components
             do
             {
                 removed = false;
-                for (int i = nodes.Count - 2; i > 0; i--)
+                for (int i = Nodes.Count - 2; i > 0; i--)
                 {
-                    if ((nodes[i - 1].X == nodes[i].X && nodes[i + 1].X == nodes[i].X)
-                        || (nodes[i - 1].Y == nodes[i].Y && nodes[i + 1].Y == nodes[i].Y))
+                    if ((Nodes[i - 1].X == Nodes[i].X && Nodes[i + 1].X == Nodes[i].X)
+                        || (Nodes[i - 1].Y == Nodes[i].Y && Nodes[i + 1].Y == Nodes[i].Y))
                     {
-                        nodes.RemoveAt(i);
+                        Nodes.RemoveAt(i);
                         removed = true;
                     }
                 }
@@ -231,21 +230,21 @@ namespace Subsurface.Items.Components
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (nodes.Count == 0) return;
+            if (Nodes.Count == 0) return;
 
             //for (int i = 0; i < nodes.Count; i++)
             //{
             //    GUI.DrawRectangle(spriteBatch, new Rectangle((int)nodes[i].X, (int)-nodes[i].Y, 5, 5), Color.DarkGray, true, wireSprite.Depth - 0.01f);
             //}
 
-            for (int i = 1; i < nodes.Count; i++)
+            for (int i = 1; i < Nodes.Count; i++)
             {
-                DrawSection(spriteBatch, nodes[i], nodes[i - 1], i, Color.White);
+                DrawSection(spriteBatch, Nodes[i], Nodes[i - 1], i, Color.White);
             }
 
-            if (isActive && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+            if (isActive && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
             {
-                DrawSection(spriteBatch, nodes[nodes.Count - 1], newNodePos, nodes.Count, Color.White * 0.5f);
+                DrawSection(spriteBatch, Nodes[Nodes.Count - 1], newNodePos, Nodes.Count, Color.White * 0.5f);
                 //nodes.Add(newNodePos);
             }
 
@@ -269,13 +268,13 @@ namespace Subsurface.Items.Components
         {
             XElement componentElement = base.Save(parentElement);
 
-            if (nodes == null || nodes.Count == 0) return componentElement;
+            if (Nodes == null || Nodes.Count == 0) return componentElement;
 
-            string[] nodeCoords = new string[nodes.Count() * 2];
-            for (int i = 0; i < nodes.Count(); i++)
+            string[] nodeCoords = new string[Nodes.Count() * 2];
+            for (int i = 0; i < Nodes.Count(); i++)
             {
-                nodeCoords[i * 2] = nodes[i].X.ToString(CultureInfo.InvariantCulture);
-                nodeCoords[i * 2 + 1] = nodes[i].Y.ToString(CultureInfo.InvariantCulture);
+                nodeCoords[i * 2] = Nodes[i].X.ToString(CultureInfo.InvariantCulture);
+                nodeCoords[i * 2 + 1] = Nodes[i].Y.ToString(CultureInfo.InvariantCulture);
             }
 
             componentElement.Add(new XAttribute("nodes", string.Join(";", nodeCoords)));
@@ -307,28 +306,28 @@ namespace Subsurface.Items.Components
                 }
                 catch { y = 0.0f; }
 
-                nodes.Add(new Vector2(x, y));
+                Nodes.Add(new Vector2(x, y));
             }
 
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
-            message.Write(nodes.Count);
-            for (int i = 0; i < nodes.Count; i++)
+            message.Write(Nodes.Count);
+            for (int i = 0; i < Nodes.Count; i++)
             {
-                message.Write(nodes[i].X);
-                message.Write(nodes[i].Y);
+                message.Write(Nodes[i].X);
+                message.Write(Nodes[i].Y);
             }
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
         {
-            nodes.Clear();
+            Nodes.Clear();
             int nodeCount = message.ReadInt32();
             for (int i = 0; i < nodeCount; i++)
             {
-                nodes.Add(new Vector2(message.ReadFloat(), message.ReadFloat()));
+                Nodes.Add(new Vector2(message.ReadFloat(), message.ReadFloat()));
             }
         }
     }

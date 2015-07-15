@@ -13,6 +13,13 @@ namespace Subsurface
             this.container = container;
         }
 
+        protected override void DropItem(Item item)
+        {
+            item.Drop();
+            item.body.Enabled = true;
+            item.body.SetTransform(container.Item.SimPosition, 0.0f);
+        }
+
         public override int FindAllowedSlot(Item item)
         {
             for (int i = 0; i < capacity; i++)

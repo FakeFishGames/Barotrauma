@@ -86,9 +86,12 @@ namespace Subsurface
 
             foreach (XElement subElement in element.Elements())
             {
+                if (subElement.Name.ToString().ToLower() != "skill") continue;
+                string skillName = ToolBox.GetAttributeString(subElement, "name", "");
+                if (string.IsNullOrEmpty(name)) continue;
                 skills.Add(
-                    subElement.Name.ToString(),
-                    new Skill(subElement.Name.ToString(), ToolBox.GetAttributeInt(subElement, "level", 0)));
+                    skillName,
+                    new Skill(skillName, ToolBox.GetAttributeInt(subElement, "level", 0)));
             }
         }
         
@@ -115,7 +118,7 @@ namespace Subsurface
 
             foreach (KeyValuePair<string, Skill> skill in skills)
             {
-                jobElement.Add(new XElement(skill.Key, new XAttribute("level", skill.Value.Level)));
+                jobElement.Add(new XElement("skill", new XAttribute("name", skill.Value.Name), new XAttribute("level", skill.Value.Level)));
             }
             
             parentElement.Add(jobElement);
