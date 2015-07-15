@@ -34,45 +34,37 @@ namespace Subsurface.Items.Components
         {
             isActive = true;
         }
-
-        public override void OnMapLoaded()
-        {
-            PathFinder pathFinder = new PathFinder(WayPoint.WayPointList, false);
-            steeringPath = pathFinder.FindPath(
-                ConvertUnits.ToSimUnits(Level.Loaded.StartPosition), 
-                ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
-        }
-
+        
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
 
-            if (autoPilot || true)
+            
+
+            if (autoPilot)
             {
-                steeringPath.GetNode(Vector2.Zero, 5.0f);
+                if (steeringPath==null)
+                {
+                    PathFinder pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                    steeringPath = pathFinder.FindPath(
+                        ConvertUnits.ToSimUnits(Level.Loaded.StartPosition),
+                        ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+                }
+
+                steeringPath.GetNode(Vector2.Zero, 20.0f);
 
                 if (steeringPath.CurrentNode!=null)
                 {
-                    Vector2 targetSpeed = steeringPath.CurrentNode.Position;
+                    float prediction = 10.0f;
 
-                    float dist = targetSpeed.Length();
+                    Vector2 futurePosition = Submarine.Loaded.Speed * prediction;
+
+                    Vector2 targetSpeed = (steeringPath.CurrentNode.Position - futurePosition);
+
+                    //float dist = targetSpeed.Length();
                     targetSpeed = Vector2.Normalize(targetSpeed);
 
-                    if (dist<2000.0f)
-                    {
-                        targetSpeed = targetSpeed * Math.Max(dist / 2000.0f, 0.5f);
-                    
-                    }
-
-
-                    Vector2 currSpeed = (Submarine.Loaded.Speed  == Vector2.Zero) ? Vector2.Zero : Vector2.Normalize(Submarine.Loaded.Speed);
-
-                    //targetSpeed.X = (targetSpeed.X - currSpeed.X);
-                    //targetSpeed.Y = (targetSpeed.Y - currSpeed.Y);
-
-                    //TargetVelocity += targetSpeed;
-
-                    TargetVelocity += (targetSpeed-currSpeed);
+                    TargetVelocity = targetSpeed*100.0f;
                 }
             }
 
@@ -90,6 +82,13 @@ namespace Subsurface.Items.Components
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
+
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + width - 150, y + height - 30, 150, 30), "Autopilot"))
+            {
+                autoPilot = !autoPilot;
+
+                item.NewComponentEvent(this, true);
+            }
 
             GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X,velRect.Center.Y), 
@@ -113,10 +112,10 @@ namespace Subsurface.Items.Components
                 {
                     targetVelocity = PlayerInput.MousePosition - new Vector2(velRect.Center.X, velRect.Center.Y);
                     targetVelocity.Y = -targetVelocity.Y;
+
+                    item.NewComponentEvent(this, true);
                 }
             }
-
-            item.NewComponentEvent(this, true);
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
@@ -131,14 +130,19 @@ namespace Subsurface.Items.Components
         {
             message.Write(targetVelocity.X);
             message.Write(targetVelocity.Y);
+
+            message.Write(autoPilot);
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
         {
-            Vector2 newTargetVelocity = Vector2.Zero;
+            Vector2 newTargetVelocity   = Vector2.Zero;
+            bool newAutoPilot           = false;
+
             try
             {
                 newTargetVelocity = new Vector2(message.ReadFloat(), message.ReadFloat());
+                newAutoPilot = message.ReadBoolean();
             }
 
             catch
@@ -147,6 +151,7 @@ namespace Subsurface.Items.Components
             }
 
             TargetVelocity = newTargetVelocity;
+            autoPilot = newAutoPilot;
         }
     }
 }

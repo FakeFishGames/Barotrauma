@@ -3,7 +3,8 @@
     name="Railgun"
     focusonselected="true"
     offsetonselected="500"
-    linkable="true">
+    linkable="true"
+    pickdistance="150">
 
     <Sprite texture ="railgunbase.png"/>
 
@@ -12,6 +13,13 @@
             powerconsumption="500.0">
       <Sound file="railgun.ogg" type="OnUse"/>
     </Turret>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="power_in"/>
+      <input name="position_in"/>
+      <input name="trigger_in"/>
+    </ConnectionPanel>
   </Item>
 
   <Item
@@ -28,7 +36,13 @@
       <limbposition limb="RightHand" position="38,-125"/>
     </Controller>
 
-    <trigger x="-50" y="-87" width="200" height ="153"/>  
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="power_in"/>
+      <output name="position_out"/>
+      <output name="trigger_out"/>
+    </ConnectionPanel>
+
   </Item>
 
   <Item
@@ -54,7 +68,9 @@
 
     <Holdable holdpos="30,-15" handle1="0,20" handle2="0,-20"/>
     <Pickable slots="RightHand"/>
-    <Projectile launchimpulse="80.0"/>
+    <Projectile launchimpulse="80.0">
+      <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
+    </Projectile>
     
   </Item>
 </Items>

@@ -13,7 +13,7 @@ namespace Subsurface
             None = 0,
             Contained = 1,
             Equipped = 2,
-            Picked = 3
+            Picked = 4
         }
 
         string[] names;

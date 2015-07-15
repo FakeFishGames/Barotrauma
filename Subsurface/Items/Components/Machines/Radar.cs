@@ -51,10 +51,19 @@ namespace Subsurface.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            pingState = (pingState + deltaTime * 0.5f) % 1.0f;
-            
+            pingState = (pingState + deltaTime * 0.5f);
+            if (pingState>1.0f)
+            {
+                item.Use(deltaTime,null);
+                pingState = 0.0f;
+            }
 
-            angle = (angle + deltaTime) % MathHelper.TwoPi;
+            //angle = (angle + deltaTime) % MathHelper.TwoPi;
+        }
+
+        public override bool Use(float deltaTime, Character character = null)
+        {
+            return true;
         }
 
         public override void DrawHUD(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, Character character)

@@ -21,6 +21,9 @@ namespace Subsurface.Networking
 
         public GameServer()
         {
+            var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 170-120, 20, 150, 25), "End round", Alignment.TopLeft, GUI.style, inGameHUD);
+            endRoundButton.OnClicked = EndButtonHit;
+
             name = "Server";
 
             Config = new NetPeerConfiguration("subsurface");
@@ -49,13 +52,11 @@ namespace Subsurface.Networking
             updateInterval = new TimeSpan(0, 0, 0, 0, 30);
 
             DebugConsole.NewMessage("Server started", Color.Green);
-
         }
 
         public override void Update()
         {
-            // Server.ReadMessage() Returns new messages, that have not yet been read.
-            // If "inc" is null -> ReadMessage returned null -> Its null, so dont do this :)
+            if (gameStarted) inGameHUD.Update((float)Physics.step);
 
             NetIncomingMessage inc = Server.ReadMessage();
             if (inc != null)
@@ -82,6 +83,30 @@ namespace Subsurface.Networking
 
                 updateTimer = DateTime.Now + updateInterval;
             }
+        }
+
+        private void SparseUpdate()
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                bool isClient = false;
+                foreach (Client client in connectedClients)
+                {
+                    if (client.character != c) continue;
+                    isClient = true;
+                    break;
+                }
+
+                if (!isClient)
+                {
+                    c.LargeUpdateTimer = 0;
+                    new NetworkEvent(c.ID, false);
+                }
+            }
+
+            new NetworkEvent(Submarine.Loaded.ID, false);
+
+            sparseUpdateTimer = DateTime.Now + SparseUpdateInterval;
         }
 
         private void ReadMessage(NetIncomingMessage inc)
@@ -224,30 +249,6 @@ namespace Subsurface.Networking
             }
         }
 
-        private void SparseUpdate()
-        {
-            foreach (Character c in Character.CharacterList)
-            {
-                bool isClient = false;
-                foreach (Client client in connectedClients)
-                {
-                    if (client.character != c) continue;
-                    isClient = true;
-                    break;
-                }
-
-                if (!isClient)
-                {
-                    c.LargeUpdateTimer = 0;
-                    new NetworkEvent(c.ID, false);
-                }
-            }
-
-            new NetworkEvent(Submarine.Loaded.ID, false);
-
-            sparseUpdateTimer = DateTime.Now + SparseUpdateInterval;
-        }
-
         private void SendMessage(NetOutgoingMessage msg, NetDeliveryMethod deliveryMethod, NetConnection excludedConnection)
         {
             List<NetConnection> recipients = new List<NetConnection>();
@@ -296,7 +297,6 @@ namespace Subsurface.Networking
             
             Submarine selectedMap = Game1.NetLobbyScreen.SelectedMap as Submarine;
             
-
             //selectedMap.Load();
 
             Game1.GameSession = new GameSession(selectedMap, Game1.NetLobbyScreen.SelectedMode);
@@ -374,6 +374,13 @@ namespace Subsurface.Networking
             Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Game1.GameScreen.Select();
+
+            return true;
+        }
+
+        private bool EndButtonHit(GUIButton button, object obj)
+        {
+            Game1.GameSession.gameMode.End("The round has ended");
 
             return true;
         }

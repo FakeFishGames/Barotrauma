@@ -40,7 +40,6 @@ namespace Subsurface
         Vector2 speed;
 
         Vector2 targetPosition;
-        Vector2 targetSpeed;
 
         private Rectangle borders;
 
@@ -417,7 +416,7 @@ namespace Subsurface
 
             if (targetPosition != Vector2.Zero && Vector2.Distance(targetPosition, Position) > 5.0f)
             {
-                translateAmount += (targetPosition - Position) * 0.05f;
+                translateAmount += (targetPosition - Position) * 0.01f;
             }
             else
             {
@@ -583,6 +582,7 @@ namespace Subsurface
                 return;
             }
 
+            newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
 
             targetPosition = newTargetPosition;
             speed = newSpeed;
@@ -818,20 +818,16 @@ namespace Subsurface
             hullBody.GravityScale = 0.0f;
             hullBody.OnCollision += OnCollision;
             hullBody.OnSeparation += OnSeparation;
-            //body.IsSensor = true;
-
-            //body.SetTransform();
-
-            //HullBody hullBody = new HullBody();
-            //hullBody.body = body;
-            ////hullBody.shapeTexture = GUI.CreateRectangle(borders.Width, borders.Height);
-
-            //hullBodies = new List<HullBody>();
-            //hullBodies.Add(hullBody);
-
+            
             MapEntity.LinkAll();
-
-
+            
+            foreach (Item item in Item.itemList)
+            {
+                foreach (ItemComponent ic in item.components)
+                {
+                    ic.OnMapLoaded();
+                }
+            }
 
             ID = int.MaxValue-10;
 

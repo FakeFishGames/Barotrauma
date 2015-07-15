@@ -107,9 +107,10 @@ namespace Subsurface
 
         private void UpdateRect()
         {
+            
             bar.Rect = new Rectangle(
-                frame.Rect.X,
-                frame.Rect.Y,
+                bar.Rect.X,
+                bar.Rect.Y,
                 isHorizontal ? (int)(frame.Rect.Width * barSize) : frame.Rect.Width,
                 isHorizontal ? frame.Rect.Height : (int)(frame.Rect.Height * barSize));
 

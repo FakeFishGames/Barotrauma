@@ -129,7 +129,7 @@ namespace Subsurface.Items.Components
 
                 targetStructure.HighLightSection(sectionIndex);
 
-
+                targetStructure.AddDamage(sectionIndex, -structureFixAmount);
 
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)

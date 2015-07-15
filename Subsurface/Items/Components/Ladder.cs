@@ -10,11 +10,11 @@ namespace Subsurface.Items.Components
         {
         }
 
-        public override bool Pick(Character picker = null)
+        public override bool Select(Character character = null)
         {
-            if (picker == null) return false;
+            if (character == null) return false;
 
-            picker.AnimController.Anim = AnimController.Animation.Climbing;
+            character.AnimController.Anim = AnimController.Animation.Climbing;
             //picker.SelectedConstruction = item;
 
             return true;
