@@ -57,16 +57,16 @@ namespace Subsurface
 
             AmbientSoundManager.Update();
 
-            if (Game1.GameSession!=null && Game1.GameSession.Level != null)
-            {
-                Vector2 targetMovement = Vector2.Zero;
-                if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
-                if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
+            //if (Game1.GameSession!=null && Game1.GameSession.Level != null)
+            //{
+            //    Vector2 targetMovement = Vector2.Zero;
+            //    if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
+            //    if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
+            //    if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
+            //    if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
-                Game1.GameSession.Submarine.ApplyForce(targetMovement*100000.0f);
-            }
+            //    Game1.GameSession.Submarine.ApplyForce(targetMovement*100000.0f);
+            //}
 
             if (Game1.GameSession!=null) Game1.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);

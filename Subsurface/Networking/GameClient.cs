@@ -93,6 +93,8 @@ namespace Subsurface.Networking
             //update.Elapsed += new System.Timers.ElapsedEventHandler(Update);
 
             // Funtion that waits for connection approval info from server
+
+            reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[0]);
             CoroutineManager.StartCoroutine(WaitForStartingInfo());
             
             // Start the timer
@@ -106,11 +108,17 @@ namespace Subsurface.Networking
             return true;
         }
 
+        private bool SelectMainMenu(GUIButton button, object obj)
+        {
+            Disconnect();
+            Game1.NetworkMember = null;
+            Game1.MainMenuScreen.Select();
+            return true;
+        }
+
         // Before main looping starts, we loop here and wait for approval message
         private IEnumerable<Status> WaitForStartingInfo()
         {
-            reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to "+serverIP, new string[0]);
-
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;
             
@@ -162,7 +170,14 @@ namespace Subsurface.Networking
                         }
                         break;
                     case NetIncomingMessageType.StatusChanged:
-                        Debug.WriteLine((NetConnectionStatus)inc.ReadByte());
+                        NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
+                        Debug.WriteLine(connectionStatus);
+
+                        if (connectionStatus != NetConnectionStatus.Connected)
+                        {
+                            string denyMessage = inc.ReadString();
+                            DebugConsole.ThrowError(denyMessage);
+                        }
 
                         break;
                     default:
@@ -179,13 +194,15 @@ namespace Subsurface.Networking
 
             if (Client.ConnectionStatus != NetConnectionStatus.Connected)
             {
-                reconnectBox = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to server.", new string[] { "Retry", "Cancel" });
-                reconnectBox.Buttons[0].OnClicked += RetryConnection;
-                reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
+                var reconnect = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to server.", new string[] { "Retry", "Cancel" });
+                reconnect.Buttons[0].OnClicked += RetryConnection;
+                reconnect.Buttons[0].OnClicked += reconnect.Close;
+                reconnect.Buttons[1].OnClicked += SelectMainMenu;
+                reconnect.Buttons[1].OnClicked += reconnect.Close;
             }
             else
             {
-                Game1.NetLobbyScreen.Select();
+                if (Screen.Selected == Game1.MainMenuScreen) Game1.NetLobbyScreen.Select();
                 connected = true;
             }
 
@@ -195,20 +212,31 @@ namespace Subsurface.Networking
         public override void Update()
         {
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.K))
-            {
-                SendRandomData();
-            }
+            //if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.K))
+            //{
+            //    SendRandomData();
+            //}
+            //if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.L))
+            //{
+            //    ConnectToServer(serverIP);
+            //}
+
 
             if (gameStarted) inGameHUD.Update((float)Physics.step);
 
             if (!connected || updateTimer > DateTime.Now) return;
             
-            if (Client.ConnectionStatus == NetConnectionStatus.Disconnected)
+            if (Client.ConnectionStatus == NetConnectionStatus.Disconnected && reconnectBox==null)
             {
                 reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
-                
+                connected = false;
+                ConnectToServer(serverIP);
                 return;
+            }
+            else if (reconnectBox!=null)
+            {
+                reconnectBox.Close(null,null);
+                reconnectBox = null;
             }
 
             if (myCharacter != null)
@@ -368,8 +396,8 @@ namespace Subsurface.Networking
             Game1.NetLobbyScreen.Select();
 
             if (Game1.GameSession!=null) Game1.GameSession.EndShift("");
-            
-            DebugConsole.ThrowError(endMessage);
+
+            new GUIMessageBox("The round has ended", endMessage);
 
             myCharacter = null;
 

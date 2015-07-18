@@ -4,7 +4,7 @@
     linkable="true"
     pickdistance="150.0">
 
-    <Sprite texture ="doorframe.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5"/>
+    <Sprite texture ="door.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5"/>
 
     <Door>
       <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.4" origin="0.5,0.0"/>
@@ -12,7 +12,7 @@
 
     <AiTarget sightrange="5000.0"/>
   
-    <ConnectionPanel canbeselected = "true">
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -26,7 +26,7 @@
     linkable="true"
     pickdistance="150.0">
 
-    <Sprite texture ="doorframe.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5"/>
+    <Sprite texture ="door.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5"/>
 
     <Door window="0,-18,10,89">
       <Sprite texture ="door.png" sourcerect="56,0,19,208" depth="0.4" origin="0.5,0.0"/>
@@ -34,7 +34,7 @@
 
     <AiTarget sightrange="5000.0"/>
 
-    <ConnectionPanel canbeselected = "true">
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>

@@ -274,7 +274,7 @@ namespace Subsurface.Items.Components
         private void Draw(SpriteBatch spriteBatch, Item item, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, bool wireEquipped)
         {
 
-            spriteBatch.DrawString(GUI.font, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
+            spriteBatch.DrawString(GUI.Font, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)position.X-10, (int)position.Y-10, 20, 20), Color.White);
             
@@ -386,11 +386,11 @@ namespace Subsurface.Items.Components
                 }
             }
                             
-            spriteBatch.DrawString(GUI.font, item.Name, 
+            spriteBatch.DrawString(GUI.Font, item.Name, 
                 new Vector2(textX, start.Y-30), 
                 (mouseOn && !wireEquipped) ? Color.Gold : Color.White, 
                 MathHelper.PiOver2, 
-                GUI.font.MeasureString(item.Name)*0.5f, 
+                GUI.Font.MeasureString(item.Name)*0.5f, 
                 1.0f, SpriteEffects.None, 0.0f);
         }
 

@@ -74,7 +74,20 @@ namespace Subsurface
         //the name of the species (e.q. human)
         public readonly string SpeciesName;
 
-        public CharacterInfo Info;
+        private CharacterInfo info;
+
+        public CharacterInfo Info
+        {
+            get
+            { 
+                return info;
+            }
+            set 
+            {
+                info = value;
+                if (info != null) info.Character = this;
+            }
+        }
 
         protected float soundTimer;
         protected float soundInterval;
@@ -366,6 +379,17 @@ namespace Subsurface
                 }
             }
 
+            if (Info.PickedItemIDs.Any())
+            {
+                foreach (int id in Info.PickedItemIDs)
+                {
+                    Item item = FindEntityByID(id) as Item;
+                    if (item == null) continue;
+
+                    item.Pick(this);
+                }
+            }
+
             AnimController.FindHull();
 
             //if (info.ID >= 0)
@@ -525,17 +549,20 @@ namespace Subsurface
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);            
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-
-            Body body = Submarine.PickBody(AnimController.limbs[0].SimPosition, mouseSimPos);
-            Structure structure = null;
-            if (body != null) structure = body.UserData as Structure;
-            if (structure!=null)
+            if (Vector2.Distance(AnimController.limbs[0].SimPosition, mouseSimPos)>1.0f)
             {
-                if (!structure.CastShadow && moveCam)
+                Body body = Submarine.PickBody(AnimController.limbs[0].SimPosition, mouseSimPos);
+                Structure structure = null;
+                if (body != null) structure = body.UserData as Structure;
+                if (structure!=null)
                 {
-                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
+                    if (!structure.CastShadow && moveCam)
+                    {
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
+                    }
                 }
             }
+
 
             if (AnimController.onGround &&
                 !AnimController.InWater &&
@@ -664,14 +691,19 @@ namespace Subsurface
 
             if (IsNetworkPlayer)
             {
-                Vector2 namePos = new Vector2(Position.X, -Position.Y - 80.0f) - GUI.font.MeasureString(Info.Name) * 0.5f;
-                spriteBatch.DrawString(GUI.font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.font, Info.Name, namePos, Color.White);
+                Vector2 namePos = new Vector2(Position.X, -Position.Y - 80.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, Color.White);
+
+                if (Game1.DebugDraw)
+                {
+                    spriteBatch.DrawString(GUI.Font, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
+                }
             }
 
             Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
             pos.Y = -pos.Y;
-            spriteBatch.DrawString(GUI.font, ID.ToString(), pos, Color.White);
+
 
             if (this == Character.controlled) return;
 
@@ -714,18 +746,18 @@ namespace Subsurface
 
                 Vector2 textPos = startPos;
 
-                float stringWidth = GUI.font.MeasureString(closestItem.Prefab.Name).X;
+                float stringWidth = GUI.Font.MeasureString(closestItem.Prefab.Name).X;
                 textPos -= new Vector2(stringWidth / 2, 20);
-                spriteBatch.DrawString(GUI.font, closestItem.Prefab.Name, textPos, Color.Black);
-                spriteBatch.DrawString(GUI.font, closestItem.Prefab.Name, textPos + new Vector2(1, -1), Color.Orange);
+                spriteBatch.DrawString(GUI.Font, closestItem.Prefab.Name, textPos, Color.Black);
+                spriteBatch.DrawString(GUI.Font, closestItem.Prefab.Name, textPos + new Vector2(1, -1), Color.Orange);
                 
                 textPos.Y += 50.0f;
-                foreach (string text in closestItem.HighlightText)
+                foreach (ColoredText coloredText in closestItem.GetHUDTexts(Controlled))
                 {
-                    textPos.X = startPos.X - GUI.font.MeasureString(text).X / 2;
+                    textPos.X = startPos.X - GUI.Font.MeasureString(coloredText.text).X / 2;
 
-                    spriteBatch.DrawString(GUI.font, text, textPos, Color.Black);
-                    spriteBatch.DrawString(GUI.font, text, textPos + new Vector2(1, -1), Color.Orange);
+                    spriteBatch.DrawString(GUI.Font, coloredText.text, textPos, Color.Black);
+                    spriteBatch.DrawString(GUI.Font, coloredText.text, textPos + new Vector2(1, -1), coloredText.color);
 
                     textPos.Y += 25;
                 }                

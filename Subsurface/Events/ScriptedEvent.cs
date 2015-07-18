@@ -92,13 +92,11 @@ namespace Subsurface
         }
 
 
-        public static ScriptedEvent LoadRandom(string seed)
+        public static ScriptedEvent LoadRandom(Random rand)
         {
             XDocument doc = ToolBox.TryLoadXml(configFile);
             if (doc == null) return null;
-
-            Random rand = new Random(seed.GetHashCode());
-
+            
             int eventCount = doc.Root.Elements().Count();
             //int[] commonness = new int[eventCount];
             float[] eventProbability = new float[eventCount];

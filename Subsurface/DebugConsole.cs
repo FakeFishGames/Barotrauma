@@ -127,7 +127,7 @@ namespace Subsurface
             Vector2 messagePos = new Vector2(x + margin * 2, y + height - 70 - messages.Count()*20);
             foreach (ColoredText message in messages)
             {
-                spriteBatch.DrawString(GUI.font, message.text, messagePos, message.color); 
+                spriteBatch.DrawString(GUI.Font, message.text, messagePos, message.color); 
                 messagePos.Y += 20;
             }
 
@@ -210,7 +210,7 @@ namespace Subsurface
                     }
                     break;
                 case "generatelevel":
-                    Game1.Level = new Level("asdf", 500,500, 50);
+                    Game1.Level = new Level("asdf", 50.0f, 500,500, 50);
                     Game1.Level.Generate(100.0f);
                     break;
                 case "fowenabled":

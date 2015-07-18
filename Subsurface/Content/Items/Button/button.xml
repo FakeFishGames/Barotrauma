@@ -7,10 +7,10 @@
   <Sprite texture ="button.png" depth="0.8"/>
   
   <Controller userpos="0" direction ="None" canbepicked = "true">
-    <RequiredItem name="ID Card" type="Picked"/>
+    <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
   </Controller>
 
-  <ConnectionPanel canbeselected = "true">
+  <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
     <RequiredItem name="Screwdriver" type="Equipped"/>
     <output name="signal_out"/>
   </ConnectionPanel>

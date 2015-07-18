@@ -21,12 +21,4 @@
     difficulty="30"
     starttimemin="15" starttimemax="20"
     musictype="monster"/>
-
-  <MonsterEvent name="Under attack" description=""
-  characterfile="Content/Characters/Mantis/mantis.xml"
-  commonness="10"
-  difficulty="10"
-  minamount="2" maxamount="3"
-  starttimemin="15" starttimemax="20"
-  musictype="monster"/>
 </Randomevents>

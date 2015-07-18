@@ -23,6 +23,8 @@ namespace Subsurface
 
         protected Rectangle rect;
 
+        public bool CanBeFocused;
+
         protected Vector4 padding;
 
         protected Color color;
@@ -33,6 +35,12 @@ namespace Subsurface
         public List<GUIComponent> children;
 
         protected ComponentState state;
+
+        public virtual SpriteFont Font
+        {
+            get;
+            set;
+        }
 
         //protected float alpha;
                 
@@ -139,10 +147,12 @@ namespace Subsurface
 
             OutlineColor = Color.Transparent;
 
+            Font = GUI.Font;
+
             sprites = new List<Sprite>();
             children = new List<GUIComponent>();
 
-            
+            CanBeFocused = true;
 
             if (style!=null) style.Apply(this);
         }
@@ -196,13 +206,17 @@ namespace Subsurface
 
         public virtual void Update(float deltaTime)
         {
-            if (rect.Contains(PlayerInput.MousePosition))
+            if (CanBeFocused)
             {
-                MouseOn = this;
-            }
-            else
-            {
-                if (MouseOn == this) MouseOn = null;
+                if (rect.Contains(PlayerInput.MousePosition))
+                {
+                    MouseOn = this;
+                }
+                else
+                {
+                    if (MouseOn == this) MouseOn = null;
+                }
+
             }
 
             foreach (GUIComponent child in children)

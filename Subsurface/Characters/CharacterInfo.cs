@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Subsurface
@@ -9,11 +10,17 @@ namespace Subsurface
     {
         public string Name;
 
+        public Character Character;
+
         public readonly string File;
 
         public int HeadSpriteId;
 
         public Job Job;
+
+        private List<int> pickedItems;
+
+        private Vector2[] headSpriteRange;
 
         private Gender gender;
         public Gender Gender
@@ -23,6 +30,17 @@ namespace Subsurface
             {
                 if (gender == value) return;
                 gender = value;
+
+                int genderIndex = (this.gender == Gender.Female) ? 1 : 0;
+                if (headSpriteRange[genderIndex] != Vector2.Zero)
+                {
+                    HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1);
+                }
+                else
+                {
+                    HeadSpriteId = 0;
+                }
+
                 LoadHeadSprite();
             }
         }
@@ -31,10 +49,10 @@ namespace Subsurface
 
         public bool StartItemsGiven;
 
-        //public string GenderString()
-        //{
-        //    return gender.ToString();
-        //}
+        public List<int> PickedItemIDs
+        {
+            get { return pickedItems; }
+        }
 
         private Sprite headSprite;
         public Sprite HeadSprite
@@ -49,6 +67,10 @@ namespace Subsurface
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
         {
             this.File = file;
+
+            headSpriteRange = new Vector2[2];
+
+            pickedItems = new List<int>();
 
             //ID = -1;
 
@@ -69,19 +91,19 @@ namespace Subsurface
                     this.gender = gender;
                 }
             }
-
-            Vector2 headSpriteRange = ToolBox.GetAttributeVector2(doc.Root, "headid", Vector2.Zero);
-            if (headSpriteRange == Vector2.Zero)
+                       
+            headSpriteRange[0] = ToolBox.GetAttributeVector2(doc.Root, "headid", Vector2.Zero);
+            headSpriteRange[1] = headSpriteRange[0];
+            if (headSpriteRange[0] == Vector2.Zero)
             {
-                headSpriteRange = ToolBox.GetAttributeVector2(
-                    doc.Root,
-                    this.gender == Gender.Female ? "femaleheadid" : "maleheadid",
-                    Vector2.Zero);
+                headSpriteRange[0] = ToolBox.GetAttributeVector2(doc.Root, "maleheadid", Vector2.Zero);
+                headSpriteRange[1] = ToolBox.GetAttributeVector2(doc.Root, "femaleheadid", Vector2.Zero);
             }
 
-            if (headSpriteRange != Vector2.Zero)
+            int genderIndex = (this.gender == Gender.Female) ? 1 : 0;
+            if (headSpriteRange[genderIndex] != Vector2.Zero)
             {
-                HeadSpriteId = Rand.Range((int)headSpriteRange.X, (int)headSpriteRange.Y + 1);
+                HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1);
             }
 
             this.Job = (jobPrefab == null) ? Job.Random() : new Job(jobPrefab);            
@@ -167,17 +189,39 @@ namespace Subsurface
             return frame;
         }
 
+        public void UpdateCharacterItems()
+        {
+            pickedItems.Clear();
+            foreach (Item item in Character.Inventory.items)
+            {
+                if (item == null) continue;
+                pickedItems.Add(item.ID);
+            }
+        }
+
         public CharacterInfo(XElement element)
         {
             Name = ToolBox.GetAttributeString(element, "name", "unnamed");
 
             string genderStr = ToolBox.GetAttributeString(element, "gender", "male").ToLower();
-            gender = (genderStr == "male") ? Gender.Male : Gender.Female;
+            gender = (genderStr == "m") ? Gender.Male : Gender.Female;
 
             File            = ToolBox.GetAttributeString(element, "file", "");
             Salary          = ToolBox.GetAttributeInt(element, "salary", 1000);
             HeadSpriteId    = ToolBox.GetAttributeInt(element, "headspriteid", 1);
             StartItemsGiven = ToolBox.GetAttributeBool(element, "startitemsgiven", false);
+
+            pickedItems = new List<int>();
+
+            string pickedItemString = ToolBox.GetAttributeString(element, "items", "");
+            if (!string.IsNullOrEmpty(pickedItemString))
+            {
+                string[] itemIds = pickedItemString.Split(',');
+                foreach (string s in itemIds)
+                {
+                    pickedItems.Add(int.Parse(s));
+                }
+            }
 
             foreach (XElement subElement in element.Elements())
             {
@@ -195,10 +239,22 @@ namespace Subsurface
             charElement.Add(
                 new XAttribute("name", Name),
                 new XAttribute("file", File),
-                new XAttribute("gender", gender == Gender.Male ? "male" : "female"),
+                new XAttribute("gender", gender == Gender.Male ? "m" : "f"),
                 new XAttribute("salary", Salary),
                 new XAttribute("headspriteid", HeadSpriteId),
                 new XAttribute("startitemsgiven", StartItemsGiven));
+
+            if (Character!=null && Character.Inventory!=null)
+            {
+                UpdateCharacterItems();
+            }
+            
+            if (pickedItems.Count>0)
+            {
+                charElement.Add(new XAttribute("items", string.Join(",", pickedItems)));
+            }
+
+
 
             Job.Save(charElement);
 

@@ -15,6 +15,8 @@ namespace Subsurface
 
         private GUIListBox saveList;
 
+        private GUITextBox seedBox;
+
         private GUITextBox nameBox, ipBox;
 
         private Game1 game;
@@ -58,22 +60,29 @@ namespace Subsurface
             menuTabs[(int)Tabs.NewGame] = new GUIFrame(panelRect, GUI.style);
             //menuTabs[(int)Tabs.NewGame].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "New Game", null, null, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.NewGame]);
+            new GUITextBlock(new Rectangle(0, -20, 0, 30), "New Game", null, null, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.NewGame]);
 
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", null, null, Alignment.Left, GUI.style, menuTabs[(int)Tabs.NewGame]);
             mapList = new GUIListBox(new Rectangle(0, 60, 200, 360), GUI.style, menuTabs[(int)Tabs.NewGame]);
 
-            foreach (Submarine map in Submarine.SavedSubmarines)
+            foreach (Submarine sub in Submarine.SavedSubmarines)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    map.Name, 
+                    sub.Name, 
                     GUI.style,
                     Alignment.Left, Alignment.Left, mapList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                textBlock.UserData = map;
+                textBlock.UserData = sub;
             }
             if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
+
+            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 30, 100, 20),
+                "Map Seed: ", GUI.style, Alignment.Left, Alignment.TopLeft, menuTabs[(int)Tabs.NewGame]);
+
+            seedBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 60, 180, 20),
+                Alignment.TopLeft, GUI.style, menuTabs[(int)Tabs.NewGame]);
+            seedBox.Text = ToolBox.RandomSeed(8);
 
 
             button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",Alignment.BottomRight, GUI.style,  menuTabs[(int)Tabs.NewGame]);
@@ -102,7 +111,7 @@ namespace Subsurface
             string[] saveFiles = Directory.GetFiles(SaveUtil.SaveFolder, "*.save");
 
             //new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
-            saveList = new GUIListBox(new Rectangle(0, 60, 200, 400), Color.White, GUI.style, menuTabs[(int)Tabs.LoadGame]);
+            saveList = new GUIListBox(new Rectangle(0, 60, 200, 360), Color.White, GUI.style, menuTabs[(int)Tabs.LoadGame]);
 
             foreach (string saveFile in saveFiles)
             {
@@ -140,7 +149,7 @@ namespace Subsurface
 
             for (int i = 1; i < 4; i++ )
             {
-                button = new GUIButton(new Rectangle(0, 0, 100, 30), "Back", Alignment.TopLeft, GUI.style, menuTabs[i]);
+                button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.style, menuTabs[i]);
                 button.OnClicked = PreviousTab;
             }
 
@@ -170,13 +179,17 @@ namespace Subsurface
         public override void Update(double deltaTime)
         {
             menuTabs[selectedTab].Update((float)deltaTime);
+
+            Game1.TitleScreen.Position.Y = MathHelper.Lerp(Game1.TitleScreen.Position.Y, -870.0f, 0.1f);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            Game1.GameScreen.DrawMap(graphics, spriteBatch);
+            Game1.TitleScreen.Draw(spriteBatch, graphics, -1.0f, (float)deltaTime);
+
+            //Game1.GameScreen.DrawMap(graphics, spriteBatch);
             
             spriteBatch.Begin();
 
@@ -193,6 +206,7 @@ namespace Subsurface
             if (selectedMap == null) return false;
 
             Game1.GameSession = new GameSession(selectedMap, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
+            (Game1.GameSession.gameMode as SinglePlayerMode).GenerateMap(seedBox.Text);
 
             Game1.LobbyScreen.Select();
 

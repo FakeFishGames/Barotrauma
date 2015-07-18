@@ -30,6 +30,16 @@ namespace Subsurface
             set;
         }
 
+        public override SpriteFont Font
+        {
+            set
+            {
+                base.Font = value;
+                if (textBlock == null) return;
+                textBlock.Font = value;
+            }
+        }
+
         public override Color Color
         {
             get { return color; }
@@ -59,13 +69,12 @@ namespace Subsurface
                     String filtered = "";
                     foreach (char c in value)
                     {
-                        if (GUI.font.Characters.Contains(c))
-                            filtered += c;
+                        if (Font.Characters.Contains(c)) filtered += c;
                     }
 
                     textBlock.Text = filtered;
 
-                    if (GUI.font.MeasureString(textBlock.Text).X > rect.Width)
+                    if (Font.MeasureString(textBlock.Text).X > rect.Width)
                     {
                         //recursion to ensure that text cannot be larger than the box
                         Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);

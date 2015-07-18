@@ -12,7 +12,7 @@
     <Holdable aimpos="50,0" handle1="-17,0" handle2="8,0"/>
 
     <RepairTool structurefixamount="50.0" range="80" barrelpos="19,8">
-      <RequiredItems name="Welding Fuel Tank" type="Contained"/>
+      <RequiredItems name="Welding Fuel Tank" type="Contained" msg="Welding fuel required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-0.7"/>
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="10.0"/>
       
@@ -39,7 +39,7 @@
     <Holdable aimpos="50,0" handle1="-12,4"/>
 
     <RepairTool structurefixamount="-10.0" range="50" barrelpos="19,8">
-      <RequiredItems name="Oxygen Tank" type="Contained"/>
+      <RequiredItems name="Oxygen Tank" type="Contained" msg="Oxygen tank required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-0.7"/>
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-10.0"/>
 
@@ -85,7 +85,6 @@
     name="Wrench"
     Tags="smallitem"
     pickdistance="200">
-
 
     <Sprite texture ="wrench.png"/>
 

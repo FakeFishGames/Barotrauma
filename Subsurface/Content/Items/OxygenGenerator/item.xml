@@ -11,11 +11,11 @@
   
   <trigger/>
 
-  <ItemContainer capacity="5" canbeselected = "true">
+  <ItemContainer capacity="5" canbeselected = "true" msg="Insert oxygen tank to refill it">
     <Containable name="Oxygen Tank"/>
   </ItemContainer>
 
-  <ConnectionPanel canbeselected = "true">
+  <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
     <requireditem name="Screwdriver" type="Equipped"/>
     <input name="power_in"/>
   </ConnectionPanel>

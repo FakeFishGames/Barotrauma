@@ -120,24 +120,52 @@ namespace Subsurface.Networking
                     
                     DebugConsole.NewMessage("New player has joined the server", Color.White);
 
+                    
+                    Client existingClient = connectedClients.Find(c=> c.Connection == inc.SenderConnection);
+                    if (existingClient==null)
+                    {
+                        string version = "", name = "";
+                        try
+                        {
+                            version = inc.ReadString();
+                            name = inc.ReadString();
+                        }
+                        catch
+                        {
+                            inc.SenderConnection.Deny("Connection error - server failed to read your ConnectionApproval message");
+                            break;
+                        }
+
+                        if (version != Game1.Version.ToString())
+                        {
+                            inc.SenderConnection.Deny("Subsurface version " + Game1.Version + " required to connect to the server (Your version: " + version + ")");
+                            break;
+                        } 
+                        else if (connectedClients.Find(c => c.name.ToLower() == name.ToLower())!=null)
+                        {
+                            inc.SenderConnection.Deny("The name ''" + name + "'' is already in use. Please choose another name.");
+                            break;
+                        }
+
+                        int id = 1;
+                        while (connectedClients.Find(c=>c.ID==id)!=null)
+                        {
+                            id++;
+                        }
+                        Client newClient = new Client(name, id);
+                        newClient.Connection = inc.SenderConnection;
+                        newClient.version = version;
+
+                        connectedClients.Add(newClient);
+                        
+                        inc.SenderConnection.Approve();
+                    }
+                    else
+                    {
+                        inc.SenderConnection.Deny();
+                    }
                     //Character ch = new Character("Content/Characters/Human/human.xml");
 
-                    string version = inc.ReadString();
-                    string name = inc.ReadString();
-
-                    int id = 1;
-                    while (connectedClients.Find(c=>c.ID==id)!=null)
-                    {
-                        id++;
-                    }
-
-                    Client newClient = new Client(name, id);
-                    newClient.Connection = inc.SenderConnection;
-                    newClient.version = version;
-
-                    connectedClients.Add(newClient);
-                    
-                    inc.SenderConnection.Approve();
                     break;
                 case NetIncomingMessageType.StatusChanged:
                     Debug.WriteLine(inc.SenderConnection + " status changed. " + (NetConnectionStatus)inc.SenderConnection.Status);
@@ -151,7 +179,11 @@ namespace Subsurface.Networking
                         {
                             DisconnectClient(sender, sender.name+" was unable to connect to the server (nonmatching game version)", 
                                 "Subsurface version " + Game1.Version + " required to connect to the server (Your version: " + sender.version + ")");
-
+                        }
+                        else if (connectedClients.Find(x => x.name == sender.name && x != sender)!=null)
+                        {
+                            DisconnectClient(sender, sender.name + " was unable to connect to the server (name already in use)",
+                                "The name ''"+sender.name+"'' is already in use. Please choose another name.");
                         }
                         else
                         {
@@ -178,8 +210,7 @@ namespace Subsurface.Networking
                             if (myClient != null) outmsg.Write(myClient.name);
 
                             Server.SendMessage(outmsg, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered, 0);
-
-
+                            
                             //notify other clients about the new client
                             outmsg = Server.CreateMessage();
                             outmsg.Write((byte)PacketTypes.PlayerJoined);
@@ -200,8 +231,6 @@ namespace Subsurface.Networking
                         DisconnectClient(inc.SenderConnection);
                     }
                     
-
-
                     break;
                 case NetIncomingMessageType.Data:
 
@@ -380,7 +409,7 @@ namespace Subsurface.Networking
 
         private bool EndButtonHit(GUIButton button, object obj)
         {
-            Game1.GameSession.gameMode.End("The round has ended");
+            Game1.GameSession.gameMode.End("Server admin has ended the round");
 
             return true;
         }
@@ -454,14 +483,15 @@ namespace Subsurface.Networking
         public void KickPlayer(string playerName)
         {
             playerName = playerName.ToLower();
-            Client client = null;
             foreach (Client c in connectedClients)
             {
-                if (c.name.ToLower() != playerName) continue;
-                client = c;
+                if (c.name.ToLower() == playerName) KickClient(c);
                 break;               
             }
+        }
 
+        private void KickClient(Client client)
+        {
             if (client == null) return;
 
             DisconnectClient(client, client.name + " has been kicked from the server", "You have been kicked from the server");
@@ -526,9 +556,22 @@ namespace Subsurface.Networking
 
         private void ReadCharacterData(NetIncomingMessage message)
         {
-            string name         = message.ReadString();
-            Gender gender       = message.ReadBoolean() ? Gender.Male : Gender.Female;
-            int headSpriteId    = message.ReadInt32();
+            string name = "";
+            Gender gender = Gender.Male;
+            int headSpriteId = 0;
+
+            try
+            {
+                name         = message.ReadString();
+                gender       = message.ReadBoolean() ? Gender.Male : Gender.Female;
+                headSpriteId    = message.ReadInt32();
+            }
+            catch
+            {
+                name = "";
+                gender = Gender.Male;
+                headSpriteId = 0;
+            }
 
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();

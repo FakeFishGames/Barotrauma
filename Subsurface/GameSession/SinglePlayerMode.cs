@@ -22,8 +22,12 @@ namespace Subsurface
         //    get { return day; }
         //}
 
+        public Map map;
+
         bool crewDead;
         private float endTimer;
+
+        private bool savedOnStart;
 
         public SinglePlayerMode(GameModePreset preset)
             : base(preset)
@@ -36,6 +40,7 @@ namespace Subsurface
 
             hireManager.GenerateCharacters("Content/Characters/Human/human.xml", 10);
 
+            
             //day = 1;  
         }
 
@@ -43,6 +48,12 @@ namespace Subsurface
             : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"))
         {
             //day = ToolBox.GetAttributeInt(element,"day",1);
+
+            string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
+
+            GenerateMap(mapSeed);
+
+            map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
 
             foreach (XElement subElement in element.Elements())
             {
@@ -52,8 +63,23 @@ namespace Subsurface
             }
         }
 
+        public void GenerateMap(string seed)
+        {
+            map = new Map(seed.GetHashCode(), 500);
+        }
+
         public override void Start(TimeSpan duration)
         {
+            if (!savedOnStart)
+            {
+                SaveUtil.SaveGame(Game1.GameSession.SavePath);
+                savedOnStart = true;
+
+
+                //Game1.GameSession.submarine.Load();
+            }
+
+
             endTimer = 5.0f;
 
             crewManager.StartShift();
@@ -85,12 +111,12 @@ namespace Subsurface
 
             if (Level.Loaded.AtEndPosition)
             {
-                endShiftButton.Text = "Enter " + Game1.GameSession.map.SelectedLocation.Name;
+                endShiftButton.Text = "Enter " + map.SelectedLocation.Name;
                 endShiftButton.Draw(spriteBatch);
             }
             else if (Level.Loaded.AtStartPosition)
             {
-                endShiftButton.Text = "Enter " + Game1.GameSession.map.CurrentLocation.Name;
+                endShiftButton.Text = "Enter " + map.CurrentLocation.Name;
                 endShiftButton.Draw(spriteBatch);
             }
 
@@ -125,8 +151,10 @@ namespace Subsurface
             }  
         }
 
-        private bool EndShift(GUIButton button, object obj)
+        public override void End(string endMessage = "")
         {
+            base.End(endMessage);
+
             StringBuilder sb = new StringBuilder();
             List<Character> casualties = crewManager.characters.FindAll(c => c.IsDead);
 
@@ -157,9 +185,10 @@ namespace Subsurface
 
                 if (Level.Loaded.AtEndPosition)
                 {
-                    Game1.GameSession.map.MoveToNextLocation();
+                    map.MoveToNextLocation();
                 }
 
+                SaveUtil.SaveGame(Game1.GameSession.SavePath);
             }
 
             crewManager.EndShift();
@@ -168,16 +197,30 @@ namespace Subsurface
                 Character.CharacterList[i].Remove();
             }
 
+
+            //SaveUtil.SaveGame(Game1.GameSession.SavePath);
+
             Game1.GameSession.EndShift("");
 
+        }
+
+        private bool EndShift(GUIButton button, object obj)
+        {
+            End("");
             return true;
         }
 
         public void Save(XElement element)
         {
             //element.Add(new XAttribute("day", day));
+            XElement modeElement = new XElement("gamemode");
 
-            crewManager.Save(element);
+            modeElement.Add(new XAttribute("currentlocation", map.CurrentLocationIndex));
+            modeElement.Add(new XAttribute("mapseed", map.Seed));
+
+            crewManager.Save(modeElement);
+
+            element.Add(modeElement);
             
         }
     }

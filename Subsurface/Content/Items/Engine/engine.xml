@@ -12,7 +12,7 @@
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
     </Engine>
     
-		<ConnectionPanel canbeselected = "true">
+		<ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<input name="power_in"/>
 			<input name="set_force"/>
@@ -37,7 +37,7 @@
       <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
     </Radar>
 
-		<ConnectionPanel canbeselected = "true">
+		<ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<input name="velocity_in"/>
 			<output name="velocity_x_out"/>

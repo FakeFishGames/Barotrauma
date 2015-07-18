@@ -10,6 +10,9 @@ namespace Subsurface
 {
     class Map
     {
+        Vector2 difficultyIncrease = new Vector2(5.0f,10.0f);
+        Vector2 difficultyCutoff = new Vector2(80.0f, 100.0f);
+
         private List<Level> levels;
 
         private List<Location> locations;
@@ -31,11 +34,20 @@ namespace Subsurface
             get { return currentLocation; }
         }
 
+        public int CurrentLocationIndex
+        {
+            get { return locations.IndexOf(currentLocation); }
+        }
+
         public Location SelectedLocation
         {
             get { return selectedLocation; }
         }
 
+        public int Seed
+        {
+            get { return seed; }
+        }
 
         public Map(int seed, int size)
         {
@@ -53,9 +65,18 @@ namespace Subsurface
             iceCraters  = Game1.textureLoader.FromFile("Content/Map/iceCraters.png");
             iceCrack    = Game1.textureLoader.FromFile("Content/Map/iceCrack.png");
 
+
+            Rand.SetSyncedSeed(this.seed);
+
             GenerateLocations();
 
-            currentLocation = locations[locations.Count/2];
+            currentLocation = locations[locations.Count / 2];
+            GenerateDifficulties(currentLocation, new List<LocationConnection> (connections), 10.0f);
+
+            foreach (LocationConnection connection in connections)
+            {
+                connection.Level = Level.CreateRandom(connection);
+            }
         }
 
         private void GenerateLocations()
@@ -65,7 +86,7 @@ namespace Subsurface
             List<Vector2> sites = new List<Vector2>();
             for (int i = 0; i < 50; i++)
             {
-                sites.Add(new Vector2(Rand.Range(0.0f, size), Rand.Range(0.0f, size)));
+                sites.Add(new Vector2(Rand.Range(0.0f, size, false), Rand.Range(0.0f, size, false)));
             }
             
             List<GraphEdge> edges = voronoi.MakeVoronoiGraph(sites, size, size);
@@ -91,7 +112,7 @@ namespace Subsurface
 
                     Vector2[] points = new Vector2[] { edge.point1, edge.point2 };
 
-                    int positionIndex = Rand.Int(1);
+                    int positionIndex = Rand.Int(1,false);
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
@@ -100,9 +121,7 @@ namespace Subsurface
                     locations.Add(newLocations[i]);
                 }
                 int seed = (newLocations[0].GetHashCode() | newLocations[1].GetHashCode());
-                connections.Add(new LocationConnection(newLocations[0], newLocations[1], Level.CreateRandom(seed.ToString())));
-
-
+                connections.Add(new LocationConnection(newLocations[0], newLocations[1]));
             }
 
             float minDistance = 50.0f;
@@ -120,17 +139,22 @@ namespace Subsurface
 
                 foreach (LocationConnection connection2 in connections)
                 {
-                    if (connection == connection2) continue;
                     if (connection2.Locations[0] == connection.Locations[0]) connection2.Locations[0] = connection.Locations[1];
                     if (connection2.Locations[1] == connection.Locations[0]) connection2.Locations[1] = connection.Locations[1];
                 }
             }
 
+                foreach (LocationConnection connection in connections)
+                {
+                    connection.Locations[0].connections.Add(connection);
+                    connection.Locations[1].connections.Add(connection);
+                }
+
             for (int i = connections.Count - 1; i >= 0; i--)
             {
                 LocationConnection connection = connections[i];
 
-                for (int n = i-1; n >= 0; n--)
+                for (int n = i - 1; n >= 0; n--)
                 {
                     if (connection.Locations.Contains(connections[n].Locations[0])
                         && connection.Locations.Contains(connections[n].Locations[1]))
@@ -146,6 +170,31 @@ namespace Subsurface
                 Vector2 end = connection.Locations[1].MapPosition;
                 int generations = (int)(Math.Sqrt(Vector2.Distance(start, end) / 10.0f));
                 connection.CrackSegments = GenerateCrack(start, end, generations);
+            }
+
+        }
+
+        private void GenerateDifficulties(Location start, List<LocationConnection> locations, float currDifficulty)
+        {
+
+            if (start.Name.Contains("Sabbati"))
+            {
+                int a = 1;
+            }
+            //start.Difficulty = currDifficulty;
+            currDifficulty += Rand.Range(difficultyIncrease.X, difficultyIncrease.Y, false);
+            if (currDifficulty > Rand.Range(difficultyCutoff.X, difficultyCutoff.Y, false)) currDifficulty = 10.0f;
+            
+            foreach (LocationConnection connection in start.connections)
+            {
+                if (!locations.Contains(connection)) continue;
+
+                Location nextLocation = connection.OtherLocation(start);
+                locations.Remove(connection);
+
+                connection.Difficulty = currDifficulty;
+                
+                GenerateDifficulties(nextLocation, locations, currDifficulty);
             }
         }
 
@@ -170,7 +219,7 @@ namespace Subsurface
 
                     Vector2 normal = Vector2.Normalize(endSegment - startSegment);
                     normal = new Vector2(-normal.Y, normal.X);
-                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount);
+                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, false);
 
                     segments.Insert(i, new Vector2[] { startSegment, midPoint });
                     segments.Insert(i+1, new Vector2[] { midPoint, endSegment });
@@ -186,6 +235,16 @@ namespace Subsurface
         {
             currentLocation = selectedLocation;
             selectedLocation = null;
+        }
+
+        public void SetLocation(int index)
+        {
+            if (index < 0 || index >= locations.Count)
+            {
+                DebugConsole.ThrowError("Location index out of bounds");
+                return;
+            }
+            currentLocation = locations[index];
         }
 
         private Location highlightedLocation;
@@ -217,7 +276,7 @@ namespace Subsurface
 
             foreach (LocationConnection connection in connections)
             {
-                Color crackColor = Color.White;
+                Color crackColor = Color.Lerp(Color.LightGreen, Color.DarkRed, connection.Difficulty/100.0f);
 
                 if (highlightedLocation != currentLocation &&
                     connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation))
@@ -283,7 +342,7 @@ namespace Subsurface
                 pos.Y = (int)pos.Y;
                 if (highlightedLocation==location)
                 {
-                    spriteBatch.DrawString(GUI.font, location.Name, pos + new Vector2(-50, -20), Color.DarkRed);
+                    spriteBatch.DrawString(GUI.Font, location.Name, pos + new Vector2(-50, -20), Color.DarkRed);
                 }
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 4, (int)pos.Y - 4, 5 + 8, 5 + 8), Color.DarkRed, false);
             }
@@ -296,6 +355,8 @@ namespace Subsurface
     {
         private Location[] locations;
         private Level level;
+
+        public float Difficulty;
         
         public List<Vector2[]> CrackSegments;
 
@@ -307,12 +368,30 @@ namespace Subsurface
         public Level Level
         {
             get { return level; }
+            set { level = value; }
         }
-
-        public LocationConnection(Location location1, Location location2, Level level)
+        
+        public LocationConnection(Location location1, Location location2)
         {
             locations = new Location[] { location1, location2 };
-            this.level = level;
+            //location1.connections.Add(this);
+            //location2.connections.Add(this);
+        }
+
+        public Location OtherLocation(Location location)
+        {
+            if (locations[0] == location)
+            {
+                return locations[1];
+            }
+            else if (locations[1] == location)
+            {
+                return locations[0];
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

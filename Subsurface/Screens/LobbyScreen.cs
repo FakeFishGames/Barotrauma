@@ -243,7 +243,7 @@ namespace Subsurface
 
             if (selectedRightPanel == (int)PanelTab.Map)
             {
-                Game1.GameSession.map.Draw(spriteBatch, new Rectangle(
+                Game1.GameSession.Map.Draw(spriteBatch, new Rectangle(
                     rightPanel[selectedRightPanel].Rect.Right - 20 - 400, 
                     rightPanel[selectedRightPanel].Rect.Y + 20, 
                     400, 400));

@@ -7,7 +7,7 @@
   
   <Pump maxflow="500" PowerConsumption="300.0" MinVoltage="0.3"/>
 
-  <ConnectionPanel canbeselected = "true">
+  <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
     <requireditem name="Screwdriver" type="Equipped"/>
     <input name="power_in"/>
     <input name="toggle"/>

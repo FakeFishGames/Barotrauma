@@ -10,12 +10,12 @@
 
     <Reactor canbeselected = "true">
       <GuiFrame rect="0,0,0.8,0.8" alignment="Center" color="0.0,0.0,0.0,0.8"/>
-      <requireditem name="Fuel Rod" type="Contained"/>
+      <requireditem name="Fuel Rod" type="Contained" msg="Fuel required to run the engine"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Fuel Rod, Heat Absorber, Temperature Control Circuit" Condition="-0.1" />
       <sound file="reactor.ogg" type="OnActive" range="1000.0" volume="FissionRate"/>
     </Reactor>
 
-    <ConnectionPanel canbeselected = "true">
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_out"/>
     </ConnectionPanel>

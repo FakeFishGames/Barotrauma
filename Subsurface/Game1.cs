@@ -7,6 +7,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
 using Subsurface.Particles;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -42,6 +44,9 @@ namespace Subsurface
         public static TextureLoader textureLoader;
         
         public static World World;
+
+        public static TitleScreen TitleScreen;
+        private bool titleScreenOpen;
 
         //public static Random localRandom;
         //public static Random random;
@@ -82,7 +87,7 @@ namespace Subsurface
             graphicsWidth = 1280;
             graphicsHeight = 720;
 
-            //graphics.IsFullScreen = true;
+            //Graphics.IsFullScreen = true;
             Graphics.PreferredBackBufferWidth = graphicsWidth;
             Graphics.PreferredBackBufferHeight = graphicsHeight;
             Content.RootDirectory = "Content";
@@ -116,13 +121,6 @@ namespace Subsurface
 
             CurrGraphicsDevice = GraphicsDevice;
 
-            particleManager = new ParticleManager("Content/Particles/prefabs.xml", Cam);
-
-            GameMode.Init();
-            GUIComponent.Init(Window);
-            DebugConsole.Init(Window);
-
-            LocationType.Init("Content/Map/locationTypes.xml");
             //Event.Init("Content/randomevents.xml");
         }
 
@@ -141,31 +139,77 @@ namespace Subsurface
                         
             spriteBatch = new SpriteBatch(GraphicsDevice);
             textureLoader = new TextureLoader(GraphicsDevice);
-                                   
-            Hull.renderer = new WaterRenderer(GraphicsDevice);
 
-            GUI.font = Content.Load<SpriteFont>("SpriteFont1");
+            titleScreenOpen = true;
+            TitleScreen = new TitleScreen(GraphicsDevice);
+
+            CoroutineManager.StartCoroutine(Load());
+        }
+
+        private float loadState = 0.0f;
+        private IEnumerable<Status> Load()
+        {
+            GUI.Font = Content.Load<SpriteFont>("SpriteFont1");
+            GUI.SmallFont = Content.Load<SpriteFont>("SmallFont");
+
+            Hull.renderer = new WaterRenderer(GraphicsDevice);
+        loadState = 1.0f;
+        yield return Status.Running;
+
             GUI.LoadContent(GraphicsDevice);
+        loadState = 2.0f;
+        yield return Status.Running;
 
             MapEntityPrefab.Init();
+        loadState = 10.0f;
+        yield return Status.Running;
 
             JobPrefab.LoadAll("Content/Characters/Jobs.xml");
+        loadState = 15.0f;
+        yield return Status.Running;
 
             StructurePrefab.LoadAll("Content/Map/StructurePrefabs.xml");
+        loadState = 25.0f;
+        yield return Status.Running;
+
             ItemPrefab.LoadAll();
-                        
-            AmbientSoundManager.Init("Content/Sounds/Sounds.xml");
+        loadState = 40.0f;
+        yield return Status.Running;
+
+            Debug.WriteLine("sounds");
+            CoroutineManager.StartCoroutine(AmbientSoundManager.Init());
+        loadState = 70.0f;
+        yield return Status.Running;
 
             Submarine.Preload("Content/SavedMaps");
+        loadState = 80.0f;
+        yield return Status.Running;
+
             GameScreen          =   new GameScreen(Graphics.GraphicsDevice);
+        loadState = 90.0f;
+        yield return Status.Running;
+
             MainMenuScreen      =   new MainMenuScreen(this); 
             LobbyScreen         =   new LobbyScreen();
             NetLobbyScreen      =   new NetLobbyScreen();
             EditMapScreen       =   new EditMapScreen();
             EditCharacterScreen =   new EditCharacterScreen();
+        yield return Status.Running;
 
+            particleManager = new ParticleManager("Content/Particles/prefabs.xml", Cam);
+        yield return Status.Running;
 
-            MainMenuScreen.Select();            
+            GameMode.Init();
+            GUIComponent.Init(Window);
+            DebugConsole.Init(Window);
+        yield return Status.Running;
+
+            LocationType.Init("Content/Map/locationTypes.xml");
+            MainMenuScreen.Select();
+        yield return Status.Running;
+
+            loadState = 100.0f;
+        yield return Status.Success;
         }
 
         /// <summary>
@@ -188,25 +232,26 @@ namespace Subsurface
             base.Update(gameTime);
 
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
-
             PlayerInput.Update(deltaTime);
 
-
-            //if (PlayerInput.KeyDown(Keys.Escape)) Quit();
-
-            DebugConsole.Update(this, (float)deltaTime);
-
-            if (!DebugConsole.IsOpen || NetworkMember != null) Screen.Selected.Update(deltaTime);
-
-            GUI.Update((float)deltaTime);
-
-            if (NetworkMember != null)
+            if (loadState>=100.0f && !titleScreenOpen)
             {
-                NetworkMember.Update();
-            }
-            else
-            {
-                NetworkEvent.events.Clear();
+                //if (PlayerInput.KeyDown(Keys.Escape)) Quit();
+
+                DebugConsole.Update(this, (float)deltaTime);
+
+                if (!DebugConsole.IsOpen || NetworkMember != null) Screen.Selected.Update(deltaTime);
+
+                GUI.Update((float)deltaTime);
+
+                if (NetworkMember != null)
+                {
+                    NetworkMember.Update();
+                }
+                else
+                {
+                    NetworkEvent.events.Clear();
+                }
             }
 
             CoroutineManager.Update();
@@ -224,8 +269,18 @@ namespace Subsurface
 
             frameCounter.Update(deltaTime);
 
-            Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
-
+            if (titleScreenOpen)
+            {
+                TitleScreen.Draw(spriteBatch, GraphicsDevice, loadState, (float)deltaTime);
+                if (loadState>=100.0f && (PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
+                {
+                    titleScreenOpen = false;
+                }
+            }
+            else if (loadState>=100.0f)
+            {
+                Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
+            }
             //renderTimeElapsed = (int)renderTimer.Elapsed.Ticks;
             //renderTimer.Stop();
         }

@@ -60,7 +60,7 @@ namespace Subsurface
             pos = position;
             this.lifeTime = lifeTime;
 
-            size = GUI.font.MeasureString(text);
+            size = GUI.Font.MeasureString(text);
         }
     }
 
@@ -69,7 +69,8 @@ namespace Subsurface
         public static GUIStyle style;
 
         static Texture2D t;
-        public static SpriteFont font;
+        public static SpriteFont Font, SmallFont;
+
 
         private static GraphicsDevice graphicsDevice;
         
@@ -257,21 +258,21 @@ namespace Subsurface
             }
 
             DrawRectangle(sb, rect, color, true);
-            sb.DrawString(font, text, new Vector2(rect.X + 10, rect.Y + 10), Color.White);
+            sb.DrawString(Font, text, new Vector2(rect.X + 10, rect.Y + 10), Color.White);
 
             return clicked;
         }
 
         public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
-            spriteBatch.DrawString(font,
+            spriteBatch.DrawString(Font,
                 "FPS: " + (int)Game1.frameCounter.AverageFramesPerSecond
                 + " - Physics: " + Game1.World.UpdateTime
                 + " - bodies: " + Game1.World.BodyList.Count,
                 new Vector2(10, 10), Color.White);
 
             
-            spriteBatch.DrawString(font,
+            spriteBatch.DrawString(Font,
                 "Camera pos: " + Game1.GameScreen.Cam.Position,
                 new Vector2(10, 30), Color.White);
             
@@ -295,17 +296,27 @@ namespace Subsurface
             if (GUIMessageBox.messageBoxes.Count > 0)
             {
                 var messageBox = GUIMessageBox.messageBoxes.Peek();
-                if (messageBox != null) messageBox.Update(deltaTime);
+                if (messageBox != null)
+                {
+                    GUIComponent.MouseOn = messageBox;
+                    messageBox.Update(deltaTime);
+                }
             }
         }
 
-        public static void AddMessage(string message, Color color, float lifeTime = 3.0f)
+        public static void AddMessage(string message, Color color, float lifeTime = 3.0f, bool playSound = true)
         {
+            if (messages.Count>0 && messages[messages.Count-1].Text == message)
+            {
+                messages[messages.Count - 1].LifeTime = lifeTime;
+                return;
+            }
+
             Vector2 currPos = new Vector2(Game1.GraphicsWidth / 2.0f, Game1.GraphicsHeight * 0.7f);
             currPos.Y += messages.Count * 30;
 
             messages.Add(new GUIMessage(message, color, currPos, lifeTime));
-            PlayMessageSound();
+            if (playSound) PlayMessageSound();
         }
 
         public static void PlayMessageSound()
@@ -331,7 +342,7 @@ namespace Subsurface
 
                 msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime*20.0f);
 
-                spriteBatch.DrawString(font, msg.Text,
+                spriteBatch.DrawString(Font, msg.Text,
                     new Vector2((int)msg.Pos.X, (int)msg.Pos.Y), 
                     msg.Color * alpha, 0.0f,
                     new Vector2((int)(0.5f * msg.Size.X), (int)(0.5f * msg.Size.Y)), 1.0f, SpriteEffects.None, 0.0f);

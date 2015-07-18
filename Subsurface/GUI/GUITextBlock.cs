@@ -125,17 +125,12 @@ namespace Subsurface
         {
             if (text==null) return;
 
-
-
-
-
-
            Vector2 size = MeasureText();
             
             if (wrap && rect.Width>0)
             {
                 text = text.Replace("\n"," ");
-                text = ToolBox.WrapText(text, rect.Width);
+                text = ToolBox.WrapText(text, rect.Width, Font);
 
                 Vector2 newSize = MeasureText();
 
@@ -177,7 +172,7 @@ namespace Subsurface
             Vector2 size = Vector2.Zero;
             while (size == Vector2.Zero)
             {
-                try { size = GUI.font.MeasureString((text == "") ? " " : text); }
+                try { size = Font.MeasureString((text == "") ? " " : text); }
                 catch { text = text.Substring(0, text.Length - 1); }
             }
 
@@ -196,7 +191,7 @@ namespace Subsurface
 
             if (!string.IsNullOrEmpty(text))
             {
-                spriteBatch.DrawString(GUI.font,
+                spriteBatch.DrawString(Font,
                     text,
                     new Vector2(rect.X, rect.Y) + textPos,
                     textColor * (textColor.A / 255.0f),

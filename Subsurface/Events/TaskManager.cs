@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Subsurface
 {
@@ -61,8 +62,25 @@ namespace Subsurface
 
         private void CreateScriptedEvents(Level level)
         {
-            ScriptedEvent scriptedEvent = ScriptedEvent.LoadRandom(level.Seed);
-            AddTask(new ScriptedTask(scriptedEvent));
+            Random rand = new Random(level.Seed.GetHashCode());
+
+            float totalDifficulty = level.Difficulty;
+
+            int tries = 0;
+            do
+            {
+                ScriptedEvent scriptedEvent = ScriptedEvent.LoadRandom(rand);
+                if (scriptedEvent==null || scriptedEvent.Difficulty > totalDifficulty)
+                {
+                    tries++;
+                    continue;
+                }
+
+                AddTask(new ScriptedTask(scriptedEvent));
+                totalDifficulty -= scriptedEvent.Difficulty;
+                tries = 0;
+            } while (tries < 5);
+
         }
 
         public void TaskStarted(Task task)

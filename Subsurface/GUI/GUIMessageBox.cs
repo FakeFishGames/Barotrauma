@@ -50,6 +50,8 @@ namespace Subsurface
 
         public bool Close(GUIButton button, object obj)
         {
+            if (parent != null) parent.RemoveChild(this);
+
             messageBoxes.Dequeue();
             return true;
         }

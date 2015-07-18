@@ -133,8 +133,8 @@ namespace Subsurface.Items.Components
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.font, "Power: " + (int)(-currPowerConsumption), new Vector2(x + 30, y + 30), Color.White);
-            spriteBatch.DrawString(GUI.font, "Load: " + (int)powerLoad, new Vector2(x + 30, y + 100), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Power: " + (int)(-currPowerConsumption), new Vector2(x + 30, y + 30), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Load: " + (int)powerLoad, new Vector2(x + 30, y + 100), Color.White);
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
