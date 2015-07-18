@@ -336,8 +336,8 @@ namespace Subsurface
             Limb head = GetLimb(LimbType.Head);
             Limb tail = GetLimb(LimbType.Tail);
 
-            head.body.ApplyTorque(head.Mass * Dir * 0.1f);
-            tail.body.ApplyTorque(tail.Mass * -Dir * 0.1f);
+            if (head != null) head.body.ApplyTorque(head.Mass * Dir * 0.1f);
+            if (tail != null) tail.body.ApplyTorque(tail.Mass * -Dir * 0.1f);
         }
 
         public override void Flip()

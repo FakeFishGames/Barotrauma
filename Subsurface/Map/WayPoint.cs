@@ -54,7 +54,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            //if (!editing) return;
+            if (!editing && !Game1.DebugDraw) return;
 
             Point pos = new Point((int)Position.X, (int)Position.Y);
 

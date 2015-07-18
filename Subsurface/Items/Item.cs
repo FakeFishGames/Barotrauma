@@ -163,13 +163,13 @@ namespace Subsurface
             }
         }
 
-        List<string> highlightText;
+        //List<string> highlightText;
 
-        public List<string> HighlightText
-        {
-            get { return highlightText;}
+        //public List<string> HighlightText
+        //{
+        //    get { return highlightText;}
             
-        }
+        //}
 
         public Item(ItemPrefab itemPrefab, Vector2 position)
             : this(new Rectangle((int)position.X, (int)position.Y, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab)
@@ -223,7 +223,7 @@ namespace Subsurface
 
 
 
-            highlightText = new List<string>();
+            //highlightText = new List<string>();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -245,7 +245,7 @@ namespace Subsurface
                         if (ic == null) break;
 
                         components.Add(ic);
-                        if (!string.IsNullOrWhiteSpace(ic.Msg)) highlightText.Add(ic.Msg);
+                        //if (!string.IsNullOrWhiteSpace(ic.Msg)) highlightText.Add(ic.Msg);
 
                         break;
                 }
@@ -672,7 +672,6 @@ namespace Subsurface
             float closestDist = 0.0f, dist;
             Item closest = null;
 
-
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(position);
             Vector2 displayPickPos = ConvertUnits.ToDisplayUnits(pickPosition);
 
@@ -715,7 +714,7 @@ namespace Subsurface
                 if (Vector2.Distance(position, item.SimPosition) > item.prefab.PickDistance) continue;
 
                 dist = Vector2.Distance(pickPosition, item.SimPosition);
-                if (closest == null || dist < closestDist)
+                if ((closest == null || dist < closestDist) && Submarine.CheckVisibility(position, item.SimPosition)==null)
                 {
                     closest = item;
                     closestDist = dist;
@@ -749,7 +748,7 @@ namespace Subsurface
                 picker.SelectedConstruction = (picker.SelectedConstruction == this) ? null : this;
             }
 
-            if (!hasRequiredSkills)
+            if (!hasRequiredSkills && Character.Controlled==picker)
             {
                 GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);
             }
@@ -783,6 +782,25 @@ namespace Subsurface
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
                 ic.SecondaryUse(deltaTime, character);
             }
+        }
+
+        public List<ColoredText> GetHUDTexts(Character character)
+        {
+            List<ColoredText> texts = new List<ColoredText>();
+            
+            foreach (ItemComponent ic in components)
+            {
+                if (string.IsNullOrEmpty(ic.Msg)) continue;
+                if (!ic.CanBePicked && !ic.CanBeSelected) continue;
+               
+
+                Color color = Color.Red;
+                if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
+
+                texts.Add(new ColoredText(ic.Msg, color));
+            }
+
+            return texts;
         }
 
         public bool Combine(Item item)

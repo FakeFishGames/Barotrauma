@@ -110,6 +110,7 @@ namespace Subsurface
 
             chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, GUI.style, chatFrame);            
             textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, GUI.style, chatFrame);
+            textBox.Font = GUI.SmallFont;
             textBox.OnEnter = EnterChatMessage;
 
             //player info panel ------------------------------------------------------------
@@ -309,9 +310,6 @@ namespace Subsurface
         {
             base.Update(deltaTime);
             
-            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
-            Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
-
             Vector2 pos = new Vector2(
                 Submarine.Borders.X + Submarine.Borders.Width / 2,
                 Submarine.Borders.Y - Submarine.Borders.Height / 2);
@@ -324,6 +322,7 @@ namespace Subsurface
             pos += offset * 0.8f;
             
             Game1.GameScreen.Cam.TargetPos = pos;
+            Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
             menu.Update((float)deltaTime);
                         
@@ -353,10 +352,16 @@ namespace Subsurface
             float prevSize = chatBox.BarSize;
             float oldScroll = chatBox.BarScroll;
 
+            while (chatBox.CountChildren>20)
+            {
+                chatBox.RemoveChild(chatBox.children[1]);
+            }
+
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20),
                 message, 
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, color, 
                 Alignment.Left, GUI.style, null, true);
+            msg.Font = GUI.SmallFont;
 
             msg.Padding = new Vector4(20, 0, 0, 0);
             chatBox.AddChild(msg);
@@ -398,13 +403,12 @@ namespace Subsurface
                 Gender gender = (Gender)obj;
                 Game1.Client.CharacterInfo.Gender = gender;
                 Game1.Client.SendCharacterData();
-                UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+                
                 //CreatePreviewCharacter();
             }
-            catch
-            {
-                return false;
-            }
+            catch {}
+            
+            UpdatePreviewPlayer(Game1.Client.CharacterInfo);
             return true;
         }
 

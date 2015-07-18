@@ -31,16 +31,29 @@ namespace Subsurface
 
         private Level level;
 
-        public Map map;
-
         public Level Level
         {
             get { return level; }
         }
 
+        public Map Map
+        {
+            get 
+            {
+                SinglePlayerMode mode = (gameMode as SinglePlayerMode);
+                return (mode == null) ? null : mode.map;
+            }
+        }
+
+
         public Submarine Submarine
         {
             get { return submarine; }
+        }
+
+        public string SavePath
+        {
+            get { return savePath; }
         }
 
         public GameSession(Submarine submarine, GameModePreset gameModePreset)
@@ -56,8 +69,6 @@ namespace Subsurface
             savePath = SaveUtil.CreateSavePath(SaveUtil.SaveFolder);
 
             guiRoot = new GUIFrame(new Rectangle(0,0,Game1.GraphicsWidth,Game1.GraphicsWidth), Color.Transparent);
-
-            map = new Map(Rand.Int(), 500);
 
             //int width = 350, height = 100;
             //if (Game1.NetworkMember!=null)
@@ -118,13 +129,13 @@ namespace Subsurface
             StartShift(duration, level);
         }
 
-        public void StartShift(TimeSpan duration, Level level)
+        public void StartShift(TimeSpan duration, Level level, bool reloadSub = true)
         {
             Lights.LightManager.FowEnabled = (Game1.Server==null);
 
             this.level = level;
 
-            if (Submarine.Loaded != submarine) submarine.Load();
+            if (reloadSub || Submarine.Loaded != submarine) submarine.Load();
 
             if (gameMode!=null) gameMode.Start(duration);
 
@@ -147,8 +158,6 @@ namespace Subsurface
             else if (Game1.Client==null)
             {                
                 Game1.LobbyScreen.Select();
-
-                SaveUtil.SaveGame(savePath);
             }
             
             taskManager.EndShift();

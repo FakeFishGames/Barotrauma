@@ -393,6 +393,7 @@ namespace Subsurface
                 if (containedItem == null)
                 {
                     //if (addMessage && !String.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
+                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
                     return false;
                 }
             }
@@ -403,9 +404,7 @@ namespace Subsurface
         public bool HasRequiredItems(Character character, bool addMessage)
         {
             if (!requiredItems.Any()) return true;
-
-            
-                
+                       
             foreach (RelatedItem ri in requiredItems)
             {
                 if (!ri.Type.HasFlag(RelatedItem.RelationType.Equipped) && !ri.Type.HasFlag(RelatedItem.RelationType.Picked)) continue;
@@ -419,7 +418,11 @@ namespace Subsurface
                 {
                     if (character.Inventory.items.FirstOrDefault(x => x!=null && x.Condition>0.0f && ri.MatchesItem(x))!=null) hasItem = true;
                 }
-                if (!hasItem) return false;
+                if (!hasItem)
+                {
+                    if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
+                    return false;
+                }
             }
 
             return true;
@@ -484,7 +487,7 @@ namespace Subsurface
         {
             if (componentElement == null) return;
 
-            bool requiredItemsCleared = false;
+            
 
             foreach (XAttribute attribute in componentElement.Attributes())
             {
@@ -493,6 +496,9 @@ namespace Subsurface
                 
                 property.TrySetValue(attribute.Value);
             }
+
+            List<RelatedItem> prevRequiredItems = new List<RelatedItem>(requiredItems);
+            requiredItems.Clear();
 
             foreach (XElement subElement in componentElement.Elements())
             {
@@ -503,10 +509,11 @@ namespace Subsurface
                         
                         if (newRequiredItem == null) continue;
 
-                        if (!requiredItemsCleared)
+                        var prevRequiredItem = prevRequiredItems.Find(ri => ri.JoinedNames == newRequiredItem.JoinedNames);
+                        if (prevRequiredItem!=null)
                         {
-                            requiredItems.Clear();
-                            requiredItemsCleared = true;
+                            newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
+                            newRequiredItem.Msg = prevRequiredItem.Msg;
                         }
 
                         requiredItems.Add(newRequiredItem);

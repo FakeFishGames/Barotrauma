@@ -65,18 +65,21 @@ namespace Subsurface
         private static BackgroundMusic[] musicClips;
         private static float musicVolume;
         
-        public static void Init(string filePath)
+        public static IEnumerable<Status> Init()
         {
-            //Sound.Loop(music[0]);
-
             waterAmbience = Sound.Load("Content/Sounds/Water/WaterAmbience.ogg");
-
+            yield return Status.Running;
             flowSounds[0] = Sound.Load("Content/Sounds/Water/FlowSmall.ogg");
+            yield return Status.Running;
             flowSounds[1] = Sound.Load("Content/Sounds/Water/FlowMedium.ogg");
+            yield return Status.Running;
             flowSounds[2] = Sound.Load("Content/Sounds/Water/FlowLarge.ogg");
+            yield return Status.Running;
 
-            XDocument doc = ToolBox.TryLoadXml(filePath);
-            if (doc == null) return;
+            XDocument doc = ToolBox.TryLoadXml("Content/Sounds/Sounds.xml");
+            if (doc == null) yield return Status.Failure;
+
+            yield return Status.Running;
             
             var xDamageSounds = doc.Root.Elements("damagesound").ToList();
             
@@ -86,6 +89,8 @@ namespace Subsurface
                 int i = 0;
                 foreach (XElement element in xDamageSounds)
                 {
+                    yield return Status.Running;
+
                     Sound sound = Sound.Load(ToolBox.GetAttributeString(element, "file", ""));
                     if (sound == null) continue;
                     
@@ -122,12 +127,13 @@ namespace Subsurface
 
                     musicClips[i] = new BackgroundMusic(file, type, priority);
 
+                    yield return Status.Running;
+
                     i++;
                 }
             }
 
-            //Sound.StartStream("Content/Sounds/Music/Simplex.ogg", 0.3f);
-
+            yield return Status.Success;
         }
         
 

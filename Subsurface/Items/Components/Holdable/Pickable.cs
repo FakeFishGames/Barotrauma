@@ -37,16 +37,18 @@ namespace Subsurface.Items.Components
             if (picker == null) return false;
             if (picker.Inventory == null) return false;
 
-            this.picker = picker;
+            //this.picker = picker;
             
-            for (int i = item.linkedTo.Count - 1; i >= 0; i--)
-                item.linkedTo[i].RemoveLinked(item);
-            item.linkedTo.Clear();
+
 
             if (picker.Inventory.TryPutItem(item, allowedSlots))
             {
                 if (!picker.HasSelectedItem(item) && item.body!=null) item.body.Enabled = false;
                 this.picker = picker;
+
+                for (int i = item.linkedTo.Count - 1; i >= 0; i--)
+                    item.linkedTo[i].RemoveLinked(item);
+                item.linkedTo.Clear();
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 

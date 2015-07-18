@@ -82,7 +82,13 @@ namespace Subsurface
             get { return seed; }
         }
 
-        public Level(string seed, int width, int height, int siteInterval)
+        public float Difficulty
+        {
+            get;
+            private set;
+        }
+
+        public Level(string seed, float difficulty, int width, int height, int siteInterval)
         {
             if (shaftTexture == null) shaftTexture = Game1.textureLoader.FromFile("Content/Map/shaft.png");
 
@@ -90,7 +96,15 @@ namespace Subsurface
 
             this.siteInterval = siteInterval;
 
+            this.Difficulty = difficulty;
+
             borders = new Rectangle(0, 0, width, height);
+        }
+
+        public static Level CreateRandom(LocationConnection locationConnection)
+        {
+            int seed = locationConnection.Locations[0].GetHashCode() | locationConnection.Locations[1].GetHashCode();
+            return new Level(seed.ToString(), locationConnection.Difficulty, 100000, 40000, 2000);
         }
 
         public static Level CreateRandom(string seed = "")
@@ -99,7 +113,7 @@ namespace Subsurface
             {
                 seed = Rand.Range(0, int.MaxValue, false).ToString();
             }
-            return new Level(seed, 100000, 40000, 2000);
+            return new Level(seed, Rand.Range(30.0f,80.0f,false), 100000, 40000, 2000);
         }
 
         public void Generate(float minWidth, bool mirror=false)

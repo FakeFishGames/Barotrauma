@@ -67,7 +67,7 @@ namespace Subsurface
             }
 
 
-            DrawChildren(spriteBatch);        
+            DrawChildren(spriteBatch);
         }
 
     }

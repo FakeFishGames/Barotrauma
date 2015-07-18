@@ -38,7 +38,11 @@ namespace Subsurface.Items.Components
         public float Charge
         {
             get { return charge; }
-            set { charge = MathHelper.Clamp(value, 0.0f, capacity); }
+            set 
+            {
+                if (float.IsNaN(value)) return;
+                charge = MathHelper.Clamp(value, 0.0f, capacity); 
+            }
         }
 
 
@@ -49,12 +53,15 @@ namespace Subsurface.Items.Components
             set { capacity = Math.Max(value,1.0f); }
         }
 
-        //[HasDefaultValue(10.0f, false)]
-        //public float MaxInput
-        //{
-        //    get { return maxInput; }
-        //    set { maxInput = value; }
-        //}
+        public float RechargeSpeed
+        {
+            get { return rechargeSpeed; }
+            set
+            {
+                if (float.IsNaN(value)) return;
+                rechargeSpeed = MathHelper.Clamp(rechargeSpeed, 0.0f, maxRechargeSpeed);
+            }
+        }
 
         [HasDefaultValue(10.0f, false)]
         public float MaxRechargeSpeed
@@ -188,15 +195,37 @@ namespace Subsurface.Items.Components
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.font,
+            spriteBatch.DrawString(GUI.Font,
                 "Charge: " + (int)charge + "/" + (int)capacity + " (" + (int)((charge / capacity) * 100.0f) + " %)",
                 new Vector2(x + 30, y + 30), Color.White);
 
-            spriteBatch.DrawString(GUI.font, "Recharge rate: " + (rechargeSpeed / maxRechargeSpeed), new Vector2(x + 30, y + 100), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (rechargeSpeed / maxRechargeSpeed), new Vector2(x + 30, y + 100), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 50, y + 150, 40, 40), "+", true))
                 rechargeSpeed = Math.Min(rechargeSpeed + 10.0f, maxRechargeSpeed);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 150, 40, 40), "-", true))
                 rechargeSpeed = Math.Max(rechargeSpeed - 10.0f, 0.0f);
+        }
+
+        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
+        {
+            message.Write(rechargeSpeed);
+            message.Write(charge);
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        {
+            float newRechargeSpeed = 0.0f;
+            float newCharge = 0.0f;
+
+            try
+            {
+                newRechargeSpeed = message.ReadFloat();
+                newCharge = message.ReadFloat();
+            }
+            catch { }
+
+            RechargeSpeed = newRechargeSpeed;
+            Charge = newCharge;
         }
 
     }

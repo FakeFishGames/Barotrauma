@@ -42,7 +42,7 @@ namespace Subsurface
 
         Effect effect;
 
-        Vector2 wavePos;
+        public Vector2 wavePos;
 
         public WaterVertex[] vertices = new WaterVertex[DefaultBufferSize];
 
@@ -96,6 +96,11 @@ namespace Subsurface
 
             vertexBuffer.SetData(verts);
 
+            wavePos.X += 0.0001f;
+            wavePos.Y += 0.0001f;
+
+            effect.Parameters["xWavePos"].SetValue(wavePos);
+
             effect.CurrentTechnique = effect.Techniques["WaterShader"];
             effect.Parameters["xTexture"].SetValue(texture);
             effect.Parameters["xView"].SetValue(Matrix.Identity);
@@ -115,11 +120,7 @@ namespace Subsurface
 
             vertexBuffer.SetData(vertices);
 
-            wavePos.X += 0.0001f;
-            wavePos.Y += 0.0001f;
-
-            effect.Parameters["xBumpPos"].SetValue(cam.Position/Game1.GraphicsWidth/cam.Zoom);
-            effect.Parameters["xWavePos"].SetValue(wavePos);
+            effect.Parameters["xBumpPos"].SetValue(cam.Position / Game1.GraphicsWidth / cam.Zoom);
 
             effect.CurrentTechnique = effect.Techniques["EmptyShader"];
             effect.Parameters["xTexture"].SetValue(texture);

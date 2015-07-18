@@ -260,15 +260,15 @@ namespace Subsurface
 
             if (isHighLighted)
             {
-                Vector2 pos = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height + 20) - GUI.font.MeasureString(item.Name)*0.5f;
+                Vector2 pos = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height + 20) - GUI.Font.MeasureString(item.Name)*0.5f;
                 pos.X = (int)pos.X;
                 pos.Y = (int)pos.Y;
-                spriteBatch.DrawString(GUI.font, item.Name + " - "+item.ID, pos - new Vector2(1.0f,1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.font, item.Name + " - " + item.ID, pos, Color.White);
+                spriteBatch.DrawString(GUI.Font, item.Name + " - "+item.ID, pos - new Vector2(1.0f,1.0f), Color.Black);
+                spriteBatch.DrawString(GUI.Font, item.Name + " - " + item.ID, pos, Color.White);
             }
 
             if (item.Condition < 100.0f)
-                spriteBatch.DrawString(GUI.font, (int)item.Condition + " %", new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.Red);
+                spriteBatch.DrawString(GUI.Font, (int)item.Condition + " %", new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.Red);
         }
 
         public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)

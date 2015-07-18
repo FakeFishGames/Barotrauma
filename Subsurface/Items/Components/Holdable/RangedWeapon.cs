@@ -94,22 +94,16 @@ namespace Subsurface.Items.Components
                     projectile.body.ApplyTorque(projectile.body.Mass * Rand.Range(-10.0f, 10.0f));
 
                     //recoil
-                    item.body.ApplyLinearImpulse(
-                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -10.0f);
-
-                    if (Rand.Int(2) == 0)
-                    {
-                        item.Drop(character);
-                        item.body.ApplyTorque(projectile.body.Mass * Rand.Range(-10.0f, 10.0f));
-                    }
+                    //item.body.ApplyLinearImpulse(
+                    //    new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -10.0f);
                 }
                 else
                 {
                     projectileComponent.ignoredBodies = limbBodies;
 
                     //recoil
-                    item.body.ApplyLinearImpulse(
-                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * -item.body.Mass);
+                    //item.body.ApplyLinearImpulse(
+                    //    new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * -item.body.Mass);
                 }
 
                 item.RemoveContained(projectile);

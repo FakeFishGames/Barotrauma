@@ -20,6 +20,7 @@ namespace Subsurface
         private GUIFrame guiFrame;
         private GUIListBox listBox;
 
+
         public int Money
         {
             get { return money; }
@@ -143,7 +144,11 @@ namespace Subsurface
         {
             foreach (Character c in characters)
             {
-                if (!c.IsDead) continue;
+                if (!c.IsDead)
+                {
+                    c.Info.UpdateCharacterItems();
+                    continue;
+                }
 
                 CharacterInfo deadInfo = characterInfos.Find(x => c.Info == x);
                 if (deadInfo != null) characterInfos.Remove(deadInfo);
@@ -165,7 +170,7 @@ namespace Subsurface
             element.Add(new XAttribute("money", money));
             
             foreach (CharacterInfo ci in characterInfos)
-            {                
+            {
                 ci.Save(element);
             }
 

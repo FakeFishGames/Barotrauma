@@ -67,9 +67,17 @@ namespace Subsurface
 
         public Vector2 TargetMovement
         {
-            get { return (correctionMovement == Vector2.Zero) ? targetMovement : correctionMovement; }
+            get 
+            { 
+                return (correctionMovement == Vector2.Zero) ? targetMovement : correctionMovement; 
+            }
             set 
             {
+                if (float.IsNaN(value.X) || float.IsNaN(value.Y))
+                {
+                    targetMovement = Vector2.Zero;
+                    return;
+                }
                 targetMovement.X = MathHelper.Clamp(value.X, -3.0f, 3.0f);
                 targetMovement.Y = MathHelper.Clamp(value.Y, -3.0f, 3.0f);
             }
@@ -574,6 +582,7 @@ namespace Subsurface
                 else
                 {
                     correctionMovement = Vector2.Normalize(newMovement) * ((targetMovement == Vector2.Zero) ? 1.0f : targetMovement.Length());
+                    
                 }
             }
 

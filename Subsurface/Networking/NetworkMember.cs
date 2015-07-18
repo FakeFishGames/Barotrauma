@@ -59,6 +59,7 @@ namespace Subsurface.Networking
         public NetworkMember()
         {
             inGameHUD = new GUIFrame(new Rectangle(0,0,0,0), null, null);
+            inGameHUD.CanBeFocused = false;
 
             int width = 350, height = 100;
             chatBox = new GUIListBox(new Rectangle(
@@ -70,6 +71,7 @@ namespace Subsurface.Networking
             var textBox = new GUITextBox(
                 new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
                 Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, GUI.style, inGameHUD);
+            textBox.Font = GUI.SmallFont;
             textBox.OnEnter = EnterChatMessage;
         }
 
@@ -89,22 +91,27 @@ namespace Subsurface.Networking
         {
             Game1.NetLobbyScreen.NewChatMessage(message, messageColor[(int)messageType]);
 
+            while (chatBox.CountChildren > 20)
+            {
+                chatBox.RemoveChild(chatBox.children[1]);
+            }
+
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), message,
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, messageColor[(int)messageType],
                 Alignment.Left, null, null, true);
+            msg.Font = GUI.SmallFont;
 
             msg.Padding = new Vector4(20.0f, 0, 0, 0);
 
             //float prevScroll = chatBox.BarScroll;
 
-            //chatBox.AddChild(msg);
+            float prevSize = chatBox.BarSize;
+            float oldScroll = chatBox.BarScroll;
 
-            //while (chatBox.CountChildren > 20)
-            //{
-            //    chatBox.RemoveChild(chatBox.children[0]);
-            //}
+            msg.Padding = new Vector4(20, 0, 0, 0);
+            chatBox.AddChild(msg);
 
-            //if (prevScroll == 1.0f) chatBox.BarScroll = 1.0f;
+            if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
 
             GUI.PlayMessageSound();
         }

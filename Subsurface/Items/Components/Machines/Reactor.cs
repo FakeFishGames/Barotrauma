@@ -310,12 +310,12 @@ namespace Subsurface.Items.Components
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.font, "Temperature: " + (int)temperature + " C", new Vector2(x + 30, y + 30), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Temperature: " + (int)temperature + " C", new Vector2(x + 30, y + 30), Color.White);
             DrawGraph(tempGraph, spriteBatch, x + 30, y + 50, 10000.0f, xOffset);
 
             y += 130;
 
-            spriteBatch.DrawString(GUI.font, "Fission rate: " + (int)fissionRate + " %", new Vector2(x + 30, y + 30), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Fission rate: " + (int)fissionRate + " %", new Vector2(x + 30, y + 30), Color.White);
             DrawGraph(fissionRateGraph, spriteBatch, x + 30, y + 50, 100.0f, xOffset);
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 30, 40, 40), "+", true)) FissionRate += 1.0f;
@@ -323,7 +323,7 @@ namespace Subsurface.Items.Components
 
             y += 130;
 
-            spriteBatch.DrawString(GUI.font, "Cooling rate: " + (int)coolingRate + " %", new Vector2(x + 30, y + 30), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Cooling rate: " + (int)coolingRate + " %", new Vector2(x + 30, y + 30), Color.White);
             DrawGraph(coolingRateGraph, spriteBatch, x + 30, y + 50, 100.0f, xOffset);
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 30, 40, 40), "+", true)) CoolingRate += 1.0f;
@@ -331,10 +331,10 @@ namespace Subsurface.Items.Components
 
             y = y - 260;
 
-            spriteBatch.DrawString(GUI.font, "Autotemp: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 400, y + 30), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Autotemp: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 400, y + 30), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 60, 100, 40), ((autoTemp) ? "TURN OFF" : "TURN ON"))) autoTemp = !autoTemp;
 
-            spriteBatch.DrawString(GUI.font, "Max temperature: " + shutDownTemp, new Vector2(x + 400, y + 150), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Max temperature: " + shutDownTemp, new Vector2(x + 400, y + 150), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 180, 40, 40), "+", true)) shutDownTemp += 100.0f;
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 450, y + 180, 40, 40), "-", true)) shutDownTemp -= 100.0f;
 

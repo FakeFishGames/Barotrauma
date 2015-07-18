@@ -87,7 +87,7 @@ namespace Subsurface.Items.Components
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.font, "Force: " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Force: " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(GuiFrame.Rect.X + 280, GuiFrame.Rect.Y + 30, 40, 40), "+", true)) targetForce += 1.0f;
             if (GUI.DrawButton(spriteBatch, new Rectangle(GuiFrame.Rect.X + 280, GuiFrame.Rect.Y + 80, 40, 40), "-", true)) targetForce -= 1.0f;

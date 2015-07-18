@@ -30,7 +30,7 @@ namespace Subsurface
 
             CompressDirectory(tempPath, savePath, null);
 
-            Directory.Delete(tempPath, true);
+            //Directory.Delete(tempPath, true);
         }
 
         public static void LoadGame(string filePath)
@@ -42,7 +42,7 @@ namespace Subsurface
             Submarine selectedMap = Submarine.Load(tempPath +"\\map.gz");
             Game1.GameSession = new GameSession(selectedMap, filePath, tempPath + "\\gamesession.xml");
 
-            Directory.Delete(tempPath, true);
+            //Directory.Delete(tempPath, true);
         }
 
         public static string CreateSavePath(string saveFolder, string fileName="save")
@@ -61,7 +61,7 @@ namespace Subsurface
                 i++;
             }
 
-            return saveFolder + fileName + i;
+            return saveFolder + fileName + i + extension;
         }
 
         public static void CompressStringToFile(string fileName, string value)

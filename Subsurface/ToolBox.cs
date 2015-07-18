@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
-using System.IO.Compression;
 
 namespace Subsurface
 {
@@ -256,17 +256,17 @@ namespace Subsurface
                           .ToArray());
         }
         
-        public static string WrapText(string text, float lineWidth)
+        public static string WrapText(string text, float lineWidth, SpriteFont font)
         {
-            if (GUI.font.MeasureString(text).X < lineWidth) return text;
+            if (GUI.Font.MeasureString(text).X < lineWidth) return text;
 
             string[] words = text.Split(' ');
             StringBuilder wrappedText = new StringBuilder();
             float linewidth = 0f;
-            float spaceWidth = GUI.font.MeasureString(" ").X;
+            float spaceWidth = font.MeasureString(" ").X;
             for (int i = 0; i < words.Length; ++i)
             {
-                Vector2 size = GUI.font.MeasureString(words[i]);
+                Vector2 size = font.MeasureString(words[i]);
                 if (linewidth + size.X < lineWidth)
                 {
                     linewidth += size.X + spaceWidth;

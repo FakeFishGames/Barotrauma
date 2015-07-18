@@ -15,6 +15,8 @@ namespace Subsurface
 
         LocationType type;
 
+        public List<LocationConnection> connections;
+
         public string Name
         {
             get { return name; }
@@ -30,6 +32,8 @@ namespace Subsurface
             this.name = RandomName(LocationType.Random());
 
             this.mapPosition = mapPosition;
+
+            connections = new List<LocationConnection>();
         }
 
         public static Location CreateRandom(Vector2 position)

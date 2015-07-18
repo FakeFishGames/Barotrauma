@@ -20,12 +20,14 @@ namespace Subsurface
 
         RelationType type;
 
-        public readonly List<StatusEffect> statusEffects;
+        public List<StatusEffect> statusEffects;
 
         //public string[] Names
         //{
         //    get { return names; }
         //}
+
+        public string Msg;
 
         public RelationType Type
         {
@@ -95,13 +97,15 @@ namespace Subsurface
                 ri.type = RelationType.None;
             }
 
+            ri.Msg = ToolBox.GetAttributeString(element, "msg", "");
+
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLower() != "statuseffect") continue;
 
                 ri.statusEffects.Add(StatusEffect.Load(subElement));
             }
-
+            
             return ri;
         }
     }

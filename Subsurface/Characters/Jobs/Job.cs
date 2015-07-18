@@ -84,6 +84,7 @@ namespace Subsurface
             string name = ToolBox.GetAttributeString(element, "name", "").ToLower();
             prefab = JobPrefab.List.Find(jp => jp.Name.ToLower() == name);
 
+            skills = new Dictionary<string, Skill>();
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLower() != "skill") continue;

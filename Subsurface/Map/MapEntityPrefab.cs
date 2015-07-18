@@ -132,7 +132,7 @@ namespace Subsurface
         
         public void DrawListLine(SpriteBatch spriteBatch, Vector2 pos, Color color)
         {            
-            spriteBatch.DrawString(GUI.font, name, pos, color);
+            spriteBatch.DrawString(GUI.Font, name, pos, color);
         }
 
     }

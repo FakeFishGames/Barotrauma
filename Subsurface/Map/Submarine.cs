@@ -316,6 +316,8 @@ namespace Subsurface
 
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null)
         {
+
+
             float closestFraction = 1.0f;
             Body closestBody = null;
             Game1.World.RayCast((fixture, point, normal, fraction) =>
@@ -414,7 +416,7 @@ namespace Subsurface
             Vector2 translateAmount = speed * deltaTime;
             translateAmount += ConvertUnits.ToDisplayUnits(hullBody.Position) * collisionRigidness;
 
-            if (targetPosition != Vector2.Zero && Vector2.Distance(targetPosition, Position) > 5.0f)
+            if (targetPosition != Vector2.Zero && Vector2.Distance(targetPosition, Position) > 50.0f)
             {
                 translateAmount += (targetPosition - Position) * 0.01f;
             }
@@ -582,7 +584,7 @@ namespace Subsurface
                 return;
             }
 
-            newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
+            //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
 
             targetPosition = newTargetPosition;
             speed = newSpeed;
