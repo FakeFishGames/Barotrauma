@@ -714,7 +714,7 @@ namespace Subsurface
                 if (Vector2.Distance(position, item.SimPosition) > item.prefab.PickDistance) continue;
 
                 dist = Vector2.Distance(pickPosition, item.SimPosition);
-                if ((closest == null || dist < closestDist) && Submarine.CheckVisibility(position, item.SimPosition)==null)
+                if ((closest == null || dist < closestDist))
                 {
                     closest = item;
                     closestDist = dist;

@@ -143,6 +143,7 @@ namespace Subsurface.Items.Components
 
                 Connection recipient = Wires[i].OtherConnection(this);
                 if (recipient == null) continue;
+                if (recipient.item == this.item || recipient.item == sender) continue;
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {

@@ -141,9 +141,9 @@ namespace Subsurface.Items.Components
         {
             base.ReceiveSignal(signal, connection, sender, power);
 
-            if (connection.Name=="signal")
+            if (connection.Name == "signal")
             {
-                connection.SendSignal(signal, item, 0.0f);
+                connection.SendSignal(signal, sender, 0.0f);
             }
         }
 
