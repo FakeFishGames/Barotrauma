@@ -13,16 +13,54 @@ namespace Subsurface
 
     class CharacterInventory : Inventory
     {
+        private static Texture2D icons;
+
         private Character character;
 
         private static LimbSlot[] limbSlots = new LimbSlot[] { 
-            LimbSlot.Head, LimbSlot.Torso, LimbSlot.LeftHand, LimbSlot.RightHand, LimbSlot.Legs,
+            LimbSlot.Head, LimbSlot.Torso, LimbSlot.Legs, LimbSlot.LeftHand, LimbSlot.RightHand,
             LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any };
+
+        private Vector2[] slotPositions;
 
         public CharacterInventory(int capacity, Character character)
             : base(capacity)
         {
             this.character = character;
+
+            if (icons == null) icons = Game1.textureLoader.FromFile("Content/UI/inventoryIcons.png");
+
+            slotPositions = new Vector2[limbSlots.Length];
+
+
+            int rectWidth = 40, rectHeight = 40;
+            int spacing = 10;
+            for (int i = 0; i < slotPositions.Length; i++)
+            {
+                switch (i)
+                {
+                    //head, torso, legs
+                    case 0:
+                    case 1:
+                    case 2:
+                        slotPositions[i] = new Vector2(
+                            spacing, 
+                            Game1.GraphicsHeight - (spacing + rectHeight) * (3 - i));
+                        break;
+                    //lefthand, righthand
+                    case 3:
+                    case 4:
+                        slotPositions[i] = new Vector2(
+                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 3),
+                            Game1.GraphicsHeight - (spacing + rectHeight));
+                        break;
+                    default:
+                        slotPositions[i] = new Vector2(
+                            spacing * (4 + (i - 5)) + rectWidth * (3 + (i - 5)),
+                            Game1.GraphicsHeight - (spacing + rectHeight));
+                        break;
+                }
+            }
         }
 
         protected override void DropItem(Item item)
@@ -181,47 +219,38 @@ namespace Subsurface
             doubleClickedItem = null;
 
             int rectWidth = 40, rectHeight = 40;
-
-            int spacing = 10;
-
             Rectangle slotRect = new Rectangle(0, 0, rectWidth, rectHeight);
             Rectangle draggingItemSlot = slotRect;
 
             for (int i = 0; i < capacity; i++)
             {
-                int x, y;
-                switch (i)
-                {
-                    //head
-                    case 0:
-                    //legs
-                    case 4:
-                        x = spacing * 2 + rectWidth;
-                        y = Game1.GraphicsHeight - (spacing + rectHeight) * ((i == 0) ? 3 : 1);
-                        break;
-                    //lefthand
-                    case 2:
-                    //torso
-                    case 1:
-                    //righthand
-                    case 3:
-                        x = spacing;
-                        if (i == 1) x += (spacing + rectWidth);
-                        if (i == 3) x += (spacing + rectWidth) * 2;
-                        y = Game1.GraphicsHeight - (spacing + rectHeight) * 2;
-                        break;
-                    default:
-                        x = spacing * (4 + (i - 5)) + rectWidth * (3 + (i - 5));
-                        y = Game1.GraphicsHeight - (spacing + rectHeight);
-                        break;
-                }
+                slotRect.X = (int)slotPositions[i].X;
+                slotRect.Y = (int)slotPositions[i].Y;
 
-                slotRect.X = x;
-                slotRect.Y = y;
+                if (i==1) //head
+                {
+                    spriteBatch.Draw(icons, new Vector2(slotRect.Center.X, slotRect.Center.Y), 
+                        new Rectangle(0,0,56,128), Color.White*0.7f, 0.0f, 
+                        new Vector2(28.0f, 64.0f), Vector2.One, 
+                        SpriteEffects.None, 0.1f);
+                } 
+                else if (i==3 || i==4)
+                {
+                    spriteBatch.Draw(icons, new Vector2(slotRect.Center.X, slotRect.Center.Y),
+                        new Rectangle(92, 41*(4-i), 36, 40), Color.White * 0.7f, 0.0f,
+                        new Vector2(18.0f, 20.0f), Vector2.One,
+                        SpriteEffects.None, 0.1f);
+                }
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                slotRect.X = (int)slotPositions[i].X;
+                slotRect.Y = (int)slotPositions[i].Y;
+
 
                 UpdateSlot(spriteBatch, slotRect, i, items[i], false);
                 if (draggingItem!=null && draggingItem == items[i]) draggingItemSlot = slotRect;
-
             }
 
             if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition))

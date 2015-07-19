@@ -89,11 +89,22 @@ namespace Subsurface.Items.Components
 
             if (connections[0] != null && connections[1] != null)
             {
-                item.Drop(null, false);
+                //List<Vector2> prevNodes = new List<Vector2>(Nodes);
+
+
+                foreach (ItemComponent ic in item.components)
+                {
+                    if (ic == this) continue;
+                    ic.Drop(null);
+                }
+                if (item.container != null) item.container.RemoveContained(this.item);
+
+
                 item.body.Enabled = false;
 
                 isActive = false;
 
+                //Nodes = prevNodes;
                 CleanNodes();
             }
 
@@ -112,6 +123,13 @@ namespace Subsurface.Items.Components
             ClearConnections();
 
             isActive = false;
+        }
+
+        public override void Drop(Character dropper)
+        {
+            ClearConnections();
+
+            isActive = false;   
         }
 
         public override void Update(float deltaTime, Camera cam)
