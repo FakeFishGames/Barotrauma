@@ -25,9 +25,6 @@ namespace Subsurface
         //how close the character has to be to the item to pick it up
         private float pickDistance;
 
-
-        //public List<Sound> sounds;
-        
         //an area next to the construction
         //the construction can be Activated() by a character inside the area
         public List<Rectangle> Triggers;
@@ -144,40 +141,19 @@ namespace Subsurface
             name = ToolBox.GetAttributeString(element, "name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
             
-            //if (element.Attribute("sprite") != null)
-            //{
-            //    sprite = new Sprite(Path.GetDirectoryName(filePath) + "/" + element.Attribute("sprite").Value, new Vector2(0.5f, 0.5f));
-            //    sprite.Depth = 0.5f;
-            //}
-
-            //var initableProperties = GetProperties<Initable>();
-            //foreach (ObjectProperty initableProperty in initableProperties)
-            //{
-            //    object value = ToolBox.GetAttributeObject(element, initableProperty.Name.ToLower());
-            //    if (value == null)
-            //    {
-            //        foreach (var ini in initableProperty.Attributes.OfType<Initable>())
-            //        {
-            //            value = ini.defaultValue;
-            //            break;
-            //        }
-            //    }
-
-            //    initableProperty.TrySetValue(value);
-            //}
-
             pickDistance = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f));
             
-            isLinkable = ToolBox.GetAttributeBool(element, "linkable", false);
+            isLinkable          = ToolBox.GetAttributeBool(element, "linkable", false);
 
-            resizeHorizontal = ToolBox.GetAttributeBool(element, "resizehorizontal", false);
-            resizeVertical = ToolBox.GetAttributeBool(element, "resizevertical", false);
+            resizeHorizontal    = ToolBox.GetAttributeBool(element, "resizehorizontal", false);
+            resizeVertical      = ToolBox.GetAttributeBool(element, "resizevertical", false);
 
-            focusOnSelected = ToolBox.GetAttributeBool(element, "focusonselected", false);
+            focusOnSelected     = ToolBox.GetAttributeBool(element, "focusonselected", false);
 
-            offsetOnSelected = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
+            offsetOnSelected    = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
             
-            Triggers = new List<Rectangle>();
+            Triggers            = new List<Rectangle>();
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLower())
@@ -201,18 +177,6 @@ namespace Subsurface
                 }
             }
 
-            //sounds = new List<Sound>();
-            //var soundElements = element.Descendants();
-            //foreach (XElement soundElement in soundElements)
-            //{
-            //    if (soundElement.Name.ToString().ToLower() != "sound") continue;
-            //    string soundPath = ToolBox.GetAttributeString(soundElement, "path", "");
-            //    if (soundPath == "") continue;
-
-            //    Sound sound = Sound.Load(soundPath);
-            //    if (sound != null) sounds.Add(sound);
-            //}
-            
             list.Add(this);
         }
     }

@@ -29,8 +29,10 @@ namespace Subsurface.Networking
 
     class NetworkMember
     {
-        protected static Color[] messageColor = { Color.White, Color.Red, Color.LightBlue, Color.LightGreen };
+        public const int DefaultPort = 14242;
 
+        protected static Color[] messageColor = { Color.White, Color.Red, Color.LightBlue, Color.LightGreen };
+        
         protected string name;
 
         protected TimeSpan updateInterval;
@@ -38,6 +40,8 @@ namespace Subsurface.Networking
 
         protected GUIFrame inGameHUD;
         protected GUIListBox chatBox;
+
+        public int Port;
 
         protected bool gameStarted;
 

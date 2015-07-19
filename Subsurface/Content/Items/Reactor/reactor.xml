@@ -3,8 +3,20 @@
     name="Nuclear Reactor"
     type ="Reactor"
     linkable="true">
+    
     <trigger/>
 
+    <fixrequirement name="Mechanical repairs">
+      <skill name="Construction" level="40"/>
+      <item name="Welding Tool"/>
+      <item name="Wrench"/>
+    </fixrequirement>
+
+    <fixrequirement name="Electrical repairs">
+      <skill name="Electrical Engineering" level="40"/>
+      <item name="Wire"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
 
     <Sprite texture ="reactor.png"  depth="0.8"/>
 

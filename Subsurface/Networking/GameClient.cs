@@ -6,22 +6,20 @@ using System.Collections.Generic;
 
 namespace Subsurface.Networking
 {
-
-
     class GameClient : NetworkMember
     {
-        NetClient Client;
+        private NetClient client;
 
         private Character myCharacter;
         private CharacterInfo characterInfo;
 
-        GUIMessageBox reconnectBox;
+        private GUIMessageBox reconnectBox;
 
         private bool connected;
 
         private int myID;
 
-        List<Client> otherClients;
+        private List<Client> otherClients;
 
         private string serverIP;
                 
@@ -48,11 +46,28 @@ namespace Subsurface.Networking
             characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", name);
 
             otherClients = new List<Client>();
+
         }
 
         public void ConnectToServer(string hostIP)
         {
-            serverIP = hostIP;
+
+            string[] address = hostIP.Split(':');
+            if (address.Length==1)
+            {
+                serverIP = hostIP;
+                Port = DefaultPort;
+            }
+            else
+            {
+                serverIP = address[0];
+
+                if (!int.TryParse(address[1], out Port))
+                {
+                    DebugConsole.ThrowError("Invalid port: address[1]!");
+                    Port = DefaultPort;
+                }                
+            }
 
             myCharacter = Character.Controlled;
 
@@ -63,10 +78,10 @@ namespace Subsurface.Networking
             //Config.SimulatedMinimumLatency = 0.25f;
 
             // Create new client, with previously created configs
-            Client = new NetClient(Config);
+            client = new NetClient(Config);
                       
-            NetOutgoingMessage outmsg = Client.CreateMessage();                        
-            Client.Start();
+            NetOutgoingMessage outmsg = client.CreateMessage();                        
+            client.Start();
 
             outmsg.Write((byte)PacketTypes.Login);
             outmsg.Write(Game1.Version.ToString());
@@ -75,7 +90,7 @@ namespace Subsurface.Networking
             // Connect client, to ip previously requested from user 
             try
             {
-                Client.Connect(hostIP, 14242, outmsg);
+                client.Connect(serverIP, Port, outmsg);
             }
             catch (ArgumentNullException e)
             {
@@ -133,7 +148,7 @@ namespace Subsurface.Networking
 
                 NetIncomingMessage inc;
                 // If new messages arrived
-                if ((inc = Client.ReadMessage()) == null) continue;
+                if ((inc = client.ReadMessage()) == null) continue;
 
                 // Switch based on the message types
                 switch (inc.MessageType)
@@ -192,7 +207,7 @@ namespace Subsurface.Networking
                 reconnectBox = null;
             }
 
-            if (Client.ConnectionStatus != NetConnectionStatus.Connected)
+            if (client.ConnectionStatus != NetConnectionStatus.Connected)
             {
                 var reconnect = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to server.", new string[] { "Retry", "Cancel" });
                 reconnect.Buttons[0].OnClicked += RetryConnection;
@@ -226,7 +241,7 @@ namespace Subsurface.Networking
 
             if (!connected || updateTimer > DateTime.Now) return;
             
-            if (Client.ConnectionStatus == NetConnectionStatus.Disconnected && reconnectBox==null)
+            if (client.ConnectionStatus == NetConnectionStatus.Disconnected && reconnectBox==null)
             {
                 reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
                 connected = false;
@@ -255,13 +270,13 @@ namespace Subsurface.Networking
                           
             foreach (NetworkEvent networkEvent in NetworkEvent.events)
             {
-                NetOutgoingMessage message = Client.CreateMessage();
+                NetOutgoingMessage message = client.CreateMessage();
                 message.Write((byte)PacketTypes.NetworkEvent);
 
 
                 if (networkEvent.FillData(message))
                 {
-                    Client.SendMessage(message,
+                    client.SendMessage(message,
                         (networkEvent.IsImportant) ? NetDeliveryMethod.ReliableUnordered : NetDeliveryMethod.Unreliable);
                 }
             }
@@ -284,7 +299,7 @@ namespace Subsurface.Networking
             // Create new incoming message holder
             NetIncomingMessage inc;
             
-            while ((inc = Client.ReadMessage()) != null)
+            while ((inc = client.ReadMessage()) != null)
             {
                 if (inc.MessageType != NetIncomingMessageType.Data) continue;
                 
@@ -406,18 +421,18 @@ namespace Subsurface.Networking
 
         public override void Disconnect()
         {
-            NetOutgoingMessage msg = Client.CreateMessage();
+            NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)PacketTypes.PlayerLeft);
 
-            Client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-            Client.Shutdown("");
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            client.Shutdown("");
         }
 
         public void SendCharacterData()
         {
             if (characterInfo == null) return;
 
-            NetOutgoingMessage msg = Client.CreateMessage();
+            NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)PacketTypes.CharacterInfo);
             msg.Write(characterInfo.Name);
             msg.Write(characterInfo.Gender == Gender.Male);
@@ -431,7 +446,7 @@ namespace Subsurface.Networking
                 msg.Write(jobPreferences[i].Name);
             }
 
-            Client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         private Character ReadCharacterData(NetIncomingMessage inc)
@@ -486,12 +501,12 @@ namespace Subsurface.Networking
 
             type = (gameStarted && myCharacter != null && myCharacter.IsDead) ? ChatMessageType.Dead : ChatMessageType.Default;
 
-            NetOutgoingMessage msg = Client.CreateMessage();
+            NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)PacketTypes.Chatmessage);
             msg.Write((byte)type);
             msg.Write(message);
 
-            Client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         /// <summary>
@@ -500,7 +515,7 @@ namespace Subsurface.Networking
         /// </summary>
         public void SendRandomData()
         {
-            NetOutgoingMessage msg = Client.CreateMessage();
+            NetOutgoingMessage msg = client.CreateMessage();
             switch (Rand.Int(5))
             {
                 case 0:
@@ -531,7 +546,7 @@ namespace Subsurface.Networking
             }
 
 
-            Client.SendMessage(msg, (Rand.Int(2)==0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable);
+            client.SendMessage(msg, (Rand.Int(2)==0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable);
         }
 
     }

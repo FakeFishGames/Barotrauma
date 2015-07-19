@@ -150,7 +150,7 @@ namespace Subsurface
 
         public virtual void Apply(ActionType type, float deltaTime, Vector2 position, IPropertyObject target)
         {
-            if (!targetNames.Contains(target.Name)) return;
+            if (targetNames == null && !targetNames.Contains(target.Name)) return;
 
             List<IPropertyObject> targets = new List<IPropertyObject>();
             targets.Add(target);

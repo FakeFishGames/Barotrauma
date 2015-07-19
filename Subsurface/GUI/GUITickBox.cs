@@ -12,7 +12,18 @@ namespace Subsurface
         public delegate bool OnSelectedHandler(object obj);
         public OnSelectedHandler OnSelected;
 
-        bool selected;
+        private bool selected;
+
+        public bool Selected
+        {
+            get { return selected; }
+            set 
+            { 
+                if (value == selected) return;
+                selected = value;
+                state = (selected) ? ComponentState.Selected : ComponentState.None;
+            }
+        }
 
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
             : base(null)
@@ -20,8 +31,11 @@ namespace Subsurface
             if (parent != null)
                 parent.AddChild(this);
 
-            box = new GUIFrame(new Rectangle(rect.X, rect.Y, 30, 30), Color.LightGray, null, this);
-            text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, 30), label, Color.Transparent, Color.White, Alignment.Left | Alignment.CenterY, null, this);
+            box = new GUIFrame(rect, Color.DarkGray, null, this);
+            box.HoverColor = Color.Gray;
+            box.SelectedColor = Color.DarkGray;
+
+            text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, 30), label, Color.Transparent, Color.White, Alignment.TopLeft, null, this);
         }
 
         public override void Update(float deltaTime)
@@ -33,28 +47,31 @@ namespace Subsurface
                 box.State = ComponentState.Hover;
 
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
-                    box.State = ComponentState.Selected;
+                {
+                    box.State = ComponentState.Selected;                    
+                }
+
 
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    selected = !selected;
+                    Selected = !Selected;
                     if (OnSelected != null) OnSelected(this);
                 }
-
             }
             else
             {
                 box.State = ComponentState.None;
             }
+            
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
             DrawChildren(spriteBatch);
 
-            if (selected)
+            if (Selected)
             {
-                GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 5, box.Rect.Y + 5, box.Rect.Width - 10, box.Rect.Height - 10), Color.Green * (color.A / 255.0f), true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 2, box.Rect.Y + 2, box.Rect.Width - 4, box.Rect.Height - 4), Color.Green * 0.8f, true);
             }
         }
     }

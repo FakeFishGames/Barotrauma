@@ -57,7 +57,7 @@ namespace Subsurface.Items.Components
             isActive = true;
             reload = 1.0f;
             
-            bool failed = UseFailed(character);
+            bool failed = DoesUseFail(character);
 
             List<Body> limbBodies = new List<Body>();
             foreach (Limb l in character.AnimController.limbs)

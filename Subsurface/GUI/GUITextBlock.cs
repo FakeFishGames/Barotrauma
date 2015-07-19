@@ -54,6 +54,7 @@ namespace Subsurface
         public Color TextColor
         {
             get { return textColor; }
+            set { textColor = value; }
         }
 
         public Vector2 CaretPos
@@ -64,16 +65,12 @@ namespace Subsurface
         public GUITextBlock(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null, bool wrap = false)
             : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, wrap)
         {
-            //hoverColor = style.hoverColor;
-            //selectedColor = style.selectedColor;
         }
 
 
         public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false)
             : this (rect, text, null, null, alignment, textAlignment, style, parent, wrap)
         {
-            //hoverColor = style.hoverColor;
-            //selectedColor = style.selectedColor;
         }
 
         public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)

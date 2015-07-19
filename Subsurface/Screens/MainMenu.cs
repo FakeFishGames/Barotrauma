@@ -141,7 +141,7 @@ namespace Subsurface
 
             new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
             ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
-
+            
             GUIButton joinButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Join", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.JoinServer]);
             joinButton.OnClicked = JoinServer;
 
@@ -162,7 +162,7 @@ namespace Subsurface
             selectedTab = (int)obj;
             return true;
         }
-        
+
         private bool HostServerClicked(GUIButton button, object obj)
         {
             Game1.NetLobbyScreen.IsServer = true;

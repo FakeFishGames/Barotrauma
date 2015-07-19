@@ -17,6 +17,12 @@
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="10.0"/>
       
       <Fixable name="structure"/>
+
+      <RequiredSkill name="Construction" level="20"/>
+
+      <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
+        <Explosion range="5" damage="20" stun="10" force="5.0"/>
+      </StatusEffect>
     </RepairTool>
 
     <Pickable slots="Any,BothHands"/>
@@ -44,6 +50,12 @@
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-10.0"/>
 
       <Fixable name="structure"/>
+
+      <RequiredSkill name="Construction" level="30"/>
+
+      <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
+        <Explosion range="5" damage="20" stun="10" force="5.0"/>
+      </StatusEffect>
     </RepairTool>
 
     <Pickable slots="Any,RightHand,LeftHand"/>
