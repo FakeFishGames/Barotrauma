@@ -66,6 +66,7 @@
     <Compile Include="Characters\AI\SteeringPath.cs" />
     <Compile Include="CoroutineManager.cs" />
     <Compile Include="GUI\TitleScreen.cs" />
+    <Compile Include="Items\FixRequirement.cs" />
     <Compile Include="Map\LocationType.cs" />
     <Compile Include="Rand.cs" />
     <Compile Include="Events\PropertyTask.cs" />

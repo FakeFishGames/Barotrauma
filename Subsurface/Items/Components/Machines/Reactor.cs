@@ -308,7 +308,7 @@ namespace Subsurface.Items.Components
 
             float xOffset = (graphTimer / (float)updateGraphInterval);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
+            //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
             spriteBatch.DrawString(GUI.Font, "Temperature: " + (int)temperature + " C", new Vector2(x + 30, y + 30), Color.White);
             DrawGraph(tempGraph, spriteBatch, x + 30, y + 50, 10000.0f, xOffset);

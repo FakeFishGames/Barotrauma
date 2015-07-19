@@ -93,6 +93,9 @@ namespace Subsurface.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
+            if (!character.SecondaryKeyDown.State) return false;
+
+            if (DoesUseFail(character)) return false;
 
             isActive = true;
 

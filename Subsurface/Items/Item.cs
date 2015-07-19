@@ -17,7 +17,7 @@ namespace Subsurface
 
     public enum ActionType
     {
-        OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse
+        OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure
     }
 
     class Item : MapEntity, IDamageable, IPropertyObject
@@ -26,6 +26,7 @@ namespace Subsurface
         protected ItemPrefab prefab;
 
         private List<string> tags;
+
 
         public Hull CurrentHull;
 
@@ -47,6 +48,8 @@ namespace Subsurface
 
         public Item container;
         
+        public List<FixRequirement> FixRequirements;
+
         public override string Name
         {
             get { return prefab.Name; }
@@ -56,7 +59,6 @@ namespace Subsurface
         {
             get { return prefab.sprite; }
         }
-
 
         public float Condition
         {
@@ -68,6 +70,7 @@ namespace Subsurface
         {
             get { return condition; }
         }
+
 
         [Editable, HasDefaultValue("", true)]
         public string Tags
@@ -181,17 +184,13 @@ namespace Subsurface
         {
             prefab = itemPrefab;
 
-            linkedTo = new ObservableCollection<MapEntity>();
-            components = new List<ItemComponent>();
-
-            tags = new List<string>();
+            linkedTo        = new ObservableCollection<MapEntity>();
+            components      = new List<ItemComponent>();
+            FixRequirements = new List<FixRequirement>();
+            tags            = new List<string>();
                        
             rect = newRect;
-            //rect.X -= rect.Width / 2;
-            //rect.Y += rect.Height / 2;
-
-            //dir = 1.0f;
-
+            
             FindHull();
 
             condition = 100.0f;
@@ -210,20 +209,7 @@ namespace Subsurface
                 }
             }
 
-
             properties = ObjectProperty.InitProperties(this, element);
-
-            //foreach (XAttribute attribute in element.Attributes())
-            //{
-            //    ObjectProperty property = null;
-            //    if (!properties.TryGetValue(attribute.Name.ToString().ToLower(), out property)) continue;
-            //    if (property.Attributes.OfType<Initable>().Count() == 0) continue;
-            //    property.TrySetValue(attribute.Value);
-            //}
-
-
-
-            //highlightText = new List<string>();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -239,6 +225,9 @@ namespace Subsurface
                         aiTarget = new AITarget(this);
                         aiTarget.SightRange = ToolBox.GetAttributeFloat(subElement, "sightrange", 1000.0f);
                         aiTarget.SoundRange = ToolBox.GetAttributeFloat(subElement, "soundrange", 0.0f);
+                        break;
+                    case "fixrequirement":
+                        FixRequirements.Add(new FixRequirement(subElement));
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, prefab.ConfigFile);
@@ -638,16 +627,23 @@ namespace Subsurface
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (editingHUD==null || editingHUD.UserData as Item != this)
+            if (condition>0.0f)
             {
-                editingHUD = CreateEditingHUD(true);
+                if (editingHUD==null || editingHUD.UserData as Item != this)
+                {
+                    editingHUD = CreateEditingHUD(true);
+                }
+
+                editingHUD.Draw(spriteBatch);
+
+                foreach (ItemComponent ic in components)
+                {
+                    ic.DrawHUD(spriteBatch, character);
+                }
             }
-
-            editingHUD.Draw(spriteBatch);
-
-            foreach (ItemComponent ic in components)
+            else
             {
-                ic.DrawHUD(spriteBatch, character);
+                FixRequirement.DrawHud(spriteBatch, this, character);
             }
         }
         
@@ -730,9 +726,16 @@ namespace Subsurface
             bool hasRequiredSkills = true;
 
             bool picked = false, selected = false;
+
+            Skill requiredSkill = null;
+
             foreach (ItemComponent ic in components)
             {
-                if (!ic.HasRequiredSkills(picker)) hasRequiredSkills = false;
+                Skill tempRequiredSkill;
+                if (!ic.HasRequiredSkills(picker, out tempRequiredSkill)) hasRequiredSkills = false;
+
+                if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
+
                 if (!ic.HasRequiredItems(picker, picker == Character.Controlled) && !forcePick) continue;
                 if ((ic.CanBePicked && ic.Pick(picker)) || (ic.CanBeSelected && ic.Select(picker)))                     
                 {
@@ -751,6 +754,10 @@ namespace Subsurface
             if (!hasRequiredSkills && Character.Controlled==picker)
             {
                 GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);
+                if (requiredSkill != null)
+                {
+                    GUI.AddMessage("("+requiredSkill.Name+" level "+requiredSkill.Level+" required)", Color.Red, 5.0f);
+                }
             }
 
             if (container!=null) container.RemoveContained(this);

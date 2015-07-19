@@ -357,23 +357,38 @@ namespace Subsurface
 
         public bool HasRequiredSkills(Character character)
         {
+            Skill temp;
+            return HasRequiredSkills(character, out temp);
+        }
+
+        public bool HasRequiredSkills(Character character, out Skill insufficientSkill)
+        {
             foreach (Skill skill in requiredSkills)
             {
                 int characterLevel = character.GetSkillLevel(skill.Name);
-                if (characterLevel < skill.Level) return false;
+                if (characterLevel < skill.Level)
+                {
+                    insufficientSkill = skill;
+                    return false;
+                }
             }
-
+            insufficientSkill = null;
             return true;
         }
 
-        protected bool UseFailed(Character character)
+        protected bool DoesUseFail(Character character)
         {
             foreach (Skill skill in requiredSkills)
             {
                 int characterLevel = character.GetSkillLevel(skill.Name);
                 if (characterLevel > skill.Level) continue;
 
-                if (Rand.Int(characterLevel) - skill.Level < 0) return true;                
+                if (Rand.Int(characterLevel) - skill.Level < 0)
+                {
+                    item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+                    //Item.ApplyStatusEffects();
+                    return true;
+                }
             }
 
             return false;
