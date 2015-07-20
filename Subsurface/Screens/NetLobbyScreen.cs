@@ -486,10 +486,10 @@ namespace Subsurface
             }
             else
             {
-                if (map.Hash.MD5Hash != md5Hash)
+                if (map.Hash.Hash != md5Hash)
                 {
                     DebugConsole.ThrowError("Your version of the map file ''" + map.Name + "'' doesn't match the server's version!");
-                    DebugConsole.ThrowError("Your file: " + map.Name + "(MD5 hash : " + map.Hash.MD5Hash + ")");
+                    DebugConsole.ThrowError("Your file: " + map.Name + "(MD5 hash : " + map.Hash.Hash + ")");
                     DebugConsole.ThrowError("Server's file: " + mapName + "(MD5 hash : " + md5Hash + ")");
                     return false;
                 }
@@ -514,7 +514,7 @@ namespace Subsurface
             else
             {
                 msg.Write(Path.GetFileName(selectedMap.Name));
-                msg.Write(selectedMap.Hash.MD5Hash);
+                msg.Write(selectedMap.Hash.Hash);
             }
 
             msg.Write(modeList.SelectedIndex-1);

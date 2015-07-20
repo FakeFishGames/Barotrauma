@@ -124,11 +124,13 @@ namespace Subsurface.Networking
                     Client existingClient = connectedClients.Find(c=> c.Connection == inc.SenderConnection);
                     if (existingClient==null)
                     {
-                        string version = "", name = "";
+                        string version = "", packageName="", packageHash="", name = "";
                         try
                         {
-                            version = inc.ReadString();
-                            name = inc.ReadString();
+                            version     = inc.ReadString();
+                            packageName = inc.ReadString();
+                            packageHash = inc.ReadString();
+                            name        = inc.ReadString();
                         }
                         catch
                         {
@@ -139,6 +141,16 @@ namespace Subsurface.Networking
                         if (version != Game1.Version.ToString())
                         {
                             inc.SenderConnection.Deny("Subsurface version " + Game1.Version + " required to connect to the server (Your version: " + version + ")");
+                            break;
+                        } 
+                        else if (packageName != Game1.SelectedPackage.Name)
+                        {
+                            inc.SenderConnection.Deny("Your content package ("+packageName+") doesn't match the server's version (" + Game1.SelectedPackage.Name + ")");
+                            break;
+                        }
+                        else if (packageHash != Game1.SelectedPackage.MD5hash.Hash)
+                        {
+                            inc.SenderConnection.Deny("Your content package (MD5: " + packageHash + ") doesn't match the server's version (MD5: " + Game1.SelectedPackage.MD5hash.Hash + ")");
                             break;
                         } 
                         else if (connectedClients.Find(c => c.name.ToLower() == name.ToLower())!=null)
@@ -342,7 +354,7 @@ namespace Subsurface.Networking
 
                 if (client.characterInfo==null)
                 {
-                    client.characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", client.name);
+                    client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
                 }
                 characterInfos.Add(client.characterInfo);
 
@@ -362,7 +374,7 @@ namespace Subsurface.Networking
             if (myClient != null)
             {
                 WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
-                CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", myClient.name);
+                CharacterInfo ch = new CharacterInfo(Character.HumanConfigFile, myClient.name);
                 myClient.character = new Character(ch, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
             }
 
@@ -376,7 +388,7 @@ namespace Subsurface.Networking
             msg.Write(Game1.NetLobbyScreen.LevelSeed);
 
             msg.Write(Game1.NetLobbyScreen.SelectedMap.Name);
-            msg.Write(Game1.NetLobbyScreen.SelectedMap.Hash.MD5Hash);
+            msg.Write(Game1.NetLobbyScreen.SelectedMap.Hash.Hash);
                 
             msg.Write(Game1.NetLobbyScreen.GameDuration.TotalMinutes);
 
@@ -587,7 +599,7 @@ namespace Subsurface.Networking
             {
                 if (c.Connection != message.SenderConnection) continue;
 
-                c.characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", name, gender);
+                c.characterInfo = new CharacterInfo(Character.HumanConfigFile, name, gender);
                 c.characterInfo.HeadSpriteId = headSpriteId;
                 c.jobPreferences = jobPreferences;
                 break;

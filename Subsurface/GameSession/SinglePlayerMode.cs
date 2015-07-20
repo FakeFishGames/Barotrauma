@@ -38,7 +38,7 @@ namespace Subsurface
             endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.style);
             endShiftButton.OnClicked = EndShift;
 
-            hireManager.GenerateCharacters("Content/Characters/Human/human.xml", 10);
+            hireManager.GenerateCharacters(Character.HumanConfigFile, 10);
 
             
             //day = 1;  

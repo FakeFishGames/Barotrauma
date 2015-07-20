@@ -64,11 +64,12 @@
     <Compile Include="Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Characters\AI\SteeringManager.cs" />
     <Compile Include="Characters\AI\SteeringPath.cs" />
+    <Compile Include="ContentPackage.cs" />
     <Compile Include="CoroutineManager.cs" />
     <Compile Include="GUI\TitleScreen.cs" />
     <Compile Include="Items\FixRequirement.cs" />
     <Compile Include="Map\LocationType.cs" />
-    <Compile Include="Rand.cs" />
+    <Compile Include="Utils\Rand.cs" />
     <Compile Include="Events\PropertyTask.cs" />
     <Compile Include="Events\RepairTask.cs" />
     <Compile Include="GameSession\CrewManager.cs" />
@@ -142,7 +143,7 @@
     <Compile Include="Map\Md5Hash.cs" />
     <Compile Include="Map\Levels\Voronoi.cs" />
     <Compile Include="Map\Levels\VoronoiElements.cs" />
-    <Compile Include="MathUtils.cs" />
+    <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Physics\PhysicsBody.cs" />
     <Compile Include="Networking\NetworkEvent.cs" />
     <Compile Include="Networking\NetworkMember.cs" />
@@ -151,7 +152,7 @@
     <Compile Include="Particles\ParticlePrefab.cs" />
     <Compile Include="Physics\Physics.cs" />
     <Compile Include="Properties.cs" />
-    <Compile Include="SaveUtil.cs" />
+    <Compile Include="Utils\SaveUtil.cs" />
     <Compile Include="Screens\EditCharacterScreen.cs" />
     <Compile Include="EventInput\EventInput.cs" />
     <Compile Include="EventInput\KeyboardDispatcher.cs" />
@@ -199,8 +200,8 @@
     <Compile Include="Sounds\Sound.cs" />
     <Compile Include="Sounds\AmbientSoundManager.cs" />
     <Compile Include="Sprite.cs" />
-    <Compile Include="TextureLoader.cs" />
-    <Compile Include="ToolBox.cs" />
+    <Compile Include="Utils\TextureLoader.cs" />
+    <Compile Include="Utils\ToolBox.cs" />
     <Compile Include="Map\Hull.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -271,7 +272,7 @@
     <Content Include="Content\Characters\Human\torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Characters\Jobs.xml">
+    <Content Include="Content\Jobs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
@@ -287,13 +288,6 @@
     </Content>
     <Content Include="Content\Characters\Moloch\moloch.xml">
       <SubType>Designer</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Characters\shrimp.xml">
-      <SubType>Designer</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Characters\panzershrimp.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Scorpion\scorpion.png">
@@ -357,26 +351,26 @@
     <Content Include="Content\Items\Lockers\lockers.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Signal\and.png">
+    <Content Include="Content\Items\Electricity\and.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Signal\light.png">
+    <Content Include="Content\Items\Electricity\light.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Signal\lightsprite.png">
+    <Content Include="Content\Items\Electricity\lightsprite.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Signal\not.png">
+    <Content Include="Content\Items\Electricity\not.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Signal\or.png">
+    <Content Include="Content\Items\Electricity\or.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Signal\signalitems.xml">
+    <Content Include="Content\Items\Electricity\signalitems.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Content\Items\Signal\wire.png">
+    <Content Include="Content\Items\Electricity\wire.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Pump\pump.xml">
@@ -417,7 +411,7 @@
     <Content Include="Content\UI\textboxTexture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\battery.png">
+    <Content Include="Content\Items\Electricity\battery.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Button\button.png">
@@ -471,7 +465,7 @@
     <Content Include="Content\Items\idcard.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\junctionbox.png">
+    <Content Include="Content\Items\Electricity\junctionbox.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Ladder\item.xml">
@@ -492,13 +486,10 @@
     <Content Include="Content\Items\OxygenGenerator\item.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Diving\item.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\Items\Diving\oxygentank.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\poweritems.xml">
+    <Content Include="Content\Items\Electricity\poweritems.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Weapons\railgun.xml">

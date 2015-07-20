@@ -616,7 +616,7 @@ namespace Subsurface
             }
 
             hash = new Md5Hash(doc);
-            doc.Root.Add(new XAttribute("md5hash", hash.MD5Hash));
+            doc.Root.Add(new XAttribute("md5hash", hash.Hash));
 
             try
             {

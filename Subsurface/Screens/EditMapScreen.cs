@@ -117,7 +117,7 @@ namespace Subsurface
         {
             if (dummyCharacter != null) dummyCharacter.Remove();
 
-            dummyCharacter = new Character("Content/Characters/Human/human.xml", Vector2.Zero);
+            dummyCharacter = new Character(Character.HumanConfigFile, Vector2.Zero);
             Character.Controlled = dummyCharacter;
             Game1.World.ProcessChanges();
         }

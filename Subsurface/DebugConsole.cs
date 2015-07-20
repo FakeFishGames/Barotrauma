@@ -147,7 +147,7 @@ namespace Subsurface
                     if (commands[1].ToLower()=="human")
                     {
                         WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
-                        Character.Controlled = new Character("Content/Characters/Human/human.xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
+                        Character.Controlled = new Character(Character.HumanConfigFile, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
                         if (Game1.GameSession != null)
                         {
                             SinglePlayerMode mode = Game1.GameSession.gameMode as SinglePlayerMode;

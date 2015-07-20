@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -49,18 +50,21 @@ namespace Subsurface
             get { return stairDirection; }
         }
         
-        public static void LoadAll(string filePath)
-        {
-            XDocument doc = ToolBox.TryLoadXml(filePath);
-            if (doc == null) return;
+        public static void LoadAll(List<string> filePaths)
+        {            
+            foreach (string filePath in filePaths)
+            {
+                XDocument doc = ToolBox.TryLoadXml(filePath);
+                if (doc == null) return;
 
-            foreach (XElement el in doc.Root.Elements())
-            {        
-                StructurePrefab sp = Load(el);
+                foreach (XElement el in doc.Root.Elements())
+                {        
+                    StructurePrefab sp = Load(el);
 
-                Debug.WriteLine(sp.name);
+                    Debug.WriteLine(sp.name);
 
-                list.Add(sp);
+                    list.Add(sp);
+                }
             }
         }
 

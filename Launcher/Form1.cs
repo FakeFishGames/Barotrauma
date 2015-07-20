@@ -17,6 +17,7 @@ namespace Launcher
 {
     public partial class LauncherMain : Form
     {
+        public static string ContentPackageFolder = "Data/ContentPackages/";
         private const string configPath = "config.xml";
         private Subsurface.GameSettings settings;
 
@@ -40,6 +41,9 @@ namespace Launcher
         public LauncherMain()
         {
             InitializeComponent();
+
+            ContentPackage.LoadAll(LauncherMain.ContentPackageFolder);
+            contentPackageBox.DataSource = ContentPackage.list;
 
             supportedModes = new List<GraphicsMode>();
 
@@ -77,6 +81,15 @@ namespace Launcher
 
             fullscreenBox.DataBindings.Add("Checked", this, "FullscreenEnabled");
 
+            if (settings.SelectedContentPackage == null)
+            {
+                if (contentPackageBox.Items.Count > 0) contentPackageBox.SelectedItem = contentPackageBox.Items[0];
+            }
+            else
+            {
+                contentPackageBox.SelectedItem = settings.SelectedContentPackage;
+            }
+
             //resolutionBox.SelectedItem = selectedMode;
         }
         
@@ -94,6 +107,21 @@ namespace Launcher
 
             Process.Start(Directory.GetCurrentDirectory() + "/Subsurface.exe");
             Application.Exit();
+        }
+
+        private void packageManagerButton_Click(object sender, EventArgs e)
+        {
+            var packageManager = new PackageManager(settings.SelectedContentPackage);
+            packageManager.Show();
+        }
+
+        private void contentPackageBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (settings == null) return;
+
+            ComboBox comboBox = sender as ComboBox;
+            
+            settings.SelectedContentPackage = comboBox.SelectedItem as ContentPackage;
         }
     }
 
