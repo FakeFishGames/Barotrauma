@@ -400,6 +400,27 @@ namespace Subsurface
             CharacterList.Add(this);
         }
 
+        private static string humanConfigFile;
+        public static string HumanConfigFile
+        {
+            get 
+            {
+                if (string.IsNullOrEmpty(humanConfigFile))
+                {
+                    var characterFiles = Game1.SelectedPackage.GetFilesOfType(ContentType.Character);
+
+                    humanConfigFile = characterFiles.Find(c => c.EndsWith("human.xml"));
+                    if (humanConfigFile == null)
+                    {
+                        DebugConsole.ThrowError("Couldn't find a config file for humans from the selected content package!");
+                        DebugConsole.ThrowError("(The config file must end with ''human.xml'')");
+                        return "";
+                    }
+                }
+                return humanConfigFile; 
+            }
+        }
+
         public void GiveJobItems(WayPoint spawnPoint)
         {
             if (Info == null || Info.Job == null) return;

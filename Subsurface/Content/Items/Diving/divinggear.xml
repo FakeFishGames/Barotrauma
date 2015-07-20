@@ -1,6 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
+  name="Oxygen Tank"
+  Tags="smallitem"
+  pickdistance="150">
+
+    <Sprite texture ="oxygentank.png" depth="0.05"/>
+
+    <Body radius="6" height="22" density="5"/>
+
+    <Holdable holdpos="30,-15" handle1="0,5" handle2="0,-5"/>
+    <Pickable slots="RightHand,Any"/>
+  </Item>
+  
+  <Item
     name="Diving Mask"
     Tags="smallitem"
     pickdistance="200">

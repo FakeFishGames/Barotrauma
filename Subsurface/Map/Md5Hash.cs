@@ -5,16 +5,16 @@ using System.Xml.Linq;
 
 namespace Subsurface
 {
-    class Md5Hash
+    public class Md5Hash
     {
-        private string md5Hash;
+        private string hash;
         private string shortHash;
 
-        public string MD5Hash
+        public string Hash
         {
             get 
             {
-                return md5Hash;
+                return hash;
             }  
         }
 
@@ -28,30 +28,41 @@ namespace Subsurface
 
         public Md5Hash(string md5Hash)
         {
-            this.md5Hash = md5Hash;
+            this.hash = md5Hash;
 
             shortHash = GetShortHash(md5Hash);
+        }
+
+        public Md5Hash(byte[] bytes)
+        {
+            hash = CalculateHash(bytes);
+
+            shortHash = GetShortHash(hash);
         }
 
         public Md5Hash(XDocument doc)
         {
             string docString = Regex.Replace(doc.ToString(), @"\s+", "");
-            // step 1, calculate MD5 hash from input
 
-            MD5 md5 = MD5.Create();
             byte[] inputBytes = Encoding.ASCII.GetBytes(docString);
-            byte[] hash = md5.ComputeHash(inputBytes);
 
+            hash = CalculateHash(inputBytes);
+
+            shortHash = GetShortHash(hash);
+        }
+
+        private string CalculateHash(byte[] bytes)
+        {
+            MD5 md5 = MD5.Create();
+            byte[] byteHash = md5.ComputeHash(bytes);
             // step 2, convert byte array to hex string
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < hash.Length; i++)
+            for (int i = 0; i < byteHash.Length; i++)
             {
-                sb.Append(hash[i].ToString("X2"));
+                sb.Append(byteHash[i].ToString("X2"));
             }
 
-            md5Hash = sb.ToString();
-
-            shortHash = GetShortHash(md5Hash);
+            return sb.ToString();
         }
 
         private string GetShortHash(string fullHash)

@@ -104,17 +104,20 @@ namespace Subsurface
         }
 
 
-        public static void LoadAll(string filePath)
+        public static void LoadAll(List<string> filePaths)
         {
             List = new List<JobPrefab>();
 
-            XDocument doc = ToolBox.TryLoadXml(filePath);
-            if (doc == null) return;
-
-            foreach (XElement element in doc.Root.Elements())
+            foreach (string filePath in filePaths)
             {
-                JobPrefab job = new JobPrefab(element);
-                List.Add(job);
+                XDocument doc = ToolBox.TryLoadXml(filePath);
+                if (doc == null) return;
+
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    JobPrefab job = new JobPrefab(element);
+                    List.Add(job);
+                }
             }
         }
     }

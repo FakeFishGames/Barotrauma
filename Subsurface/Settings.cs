@@ -25,6 +25,12 @@ namespace Subsurface
             set;
         }
 
+        public ContentPackage SelectedContentPackage
+        {
+            get;
+            set;
+        }
+
         public GameSettings(string filePath)
         {
             Load(filePath);
@@ -45,7 +51,19 @@ namespace Subsurface
             {
                 GraphicsWidth = 1024;
                 GraphicsHeight = 768;
-                return;
+            }
+
+            foreach (XElement subElement in doc.Root.Elements())
+            {
+                switch (subElement.Name.ToString().ToLower())
+                {
+                    case "contentpackage":
+                        string path = ToolBox.GetAttributeString(subElement, "path", "");
+                        SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
+
+                        if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
+                        break;
+                }
             }
 
         }
@@ -78,6 +96,13 @@ namespace Subsurface
                 new XAttribute("width", GraphicsWidth),
                 new XAttribute("height", GraphicsHeight),
                 new XAttribute("fullscreen", FullScreenEnabled ? "true" : "false"));
+
+            if (SelectedContentPackage != null)
+            {
+                doc.Root.Add(new XElement("contentpackage", 
+                    new XAttribute("path", SelectedContentPackage.Path)));
+            }
+
 
             doc.Save(filePath);
         }

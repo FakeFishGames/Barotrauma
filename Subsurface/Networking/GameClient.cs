@@ -43,7 +43,7 @@ namespace Subsurface.Networking
         {
             name = newName;
 
-            characterInfo = new CharacterInfo("Content/Characters/Human/human.xml", name);
+            characterInfo = new CharacterInfo(Character.HumanConfigFile, name);
 
             otherClients = new List<Client>();
 
@@ -85,6 +85,8 @@ namespace Subsurface.Networking
 
             outmsg.Write((byte)PacketTypes.Login);
             outmsg.Write(Game1.Version.ToString());
+            outmsg.Write(Game1.SelectedPackage.Name);
+            outmsg.Write(Game1.SelectedPackage.MD5hash.Hash);
             outmsg.Write(name);
 
             // Connect client, to ip previously requested from user 
@@ -468,7 +470,7 @@ namespace Subsurface.Networking
                 return null;
             }
 
-            CharacterInfo ch = new CharacterInfo("Content/Characters/Human/human.xml", newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
+            CharacterInfo ch = new CharacterInfo(Character.HumanConfigFile, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
             ch.HeadSpriteId = headSpriteID;
 
             WayPoint closestWaypoint = null;

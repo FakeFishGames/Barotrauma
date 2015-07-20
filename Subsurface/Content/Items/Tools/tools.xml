@@ -7,26 +7,36 @@
 
     <Sprite texture ="weldingtool.png"  depth="0.04"/>
 
+    <!-- physics body -->
     <Body width="39" height="18" density="5"/>
 
+    <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
     <Holdable aimpos="50,0" handle1="-17,0" handle2="8,0"/>
 
     <RepairTool structurefixamount="50.0" range="80" barrelpos="19,8">
+      <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems name="Welding Fuel Tank" type="Contained" msg="Welding fuel required"/>
+
+      <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-0.7"/>
+
+      <!-- welding a door, it will get stuck after a while -->
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="10.0"/>
       
       <Fixable name="structure"/>
 
+      <!-- construction skill 20 required to use the item -->
       <RequiredSkill name="Construction" level="20"/>
 
+      <!-- if using the item fails (due to a insufficient skill level for example), the contained tank will break and an explosion will occurr -->
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
         <Explosion range="5" damage="20" stun="10" force="5.0"/>
       </StatusEffect>
     </RepairTool>
 
     <Pickable slots="Any,BothHands"/>
-
+    
+    <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->    
     <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygen Tank"/>

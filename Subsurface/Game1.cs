@@ -33,6 +33,11 @@ namespace Subsurface
         public static EditMapScreen         EditMapScreen;
         public static EditCharacterScreen   EditCharacterScreen;
 
+        public static ContentPackage SelectedPackage
+        {
+            get { return Config.SelectedContentPackage; }
+        }
+
         public static Level Level;
 
         public static GameSession GameSession;
@@ -167,15 +172,15 @@ namespace Subsurface
         loadState = 10.0f;
         yield return Status.Running;
 
-            JobPrefab.LoadAll("Content/Characters/Jobs.xml");
+            JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
         loadState = 15.0f;
         yield return Status.Running;
 
-            StructurePrefab.LoadAll("Content/Map/StructurePrefabs.xml");
+            StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
         loadState = 25.0f;
         yield return Status.Running;
 
-            ItemPrefab.LoadAll();
+            ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
         loadState = 40.0f;
         yield return Status.Running;
 

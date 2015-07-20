@@ -108,11 +108,11 @@ namespace Subsurface
 
         }
 
-        public static void LoadAll()
+        public static void LoadAll(List<string> filePaths)
         {
-            string[] files = Directory.GetFiles(contentFolder, "*.xml", SearchOption.AllDirectories);
+            //string[] files = Directory.GetFiles(contentFolder, "*.xml", SearchOption.AllDirectories);
 
-            foreach (string filePath in files)
+            foreach (string filePath in filePaths)
             {
                 XDocument doc = ToolBox.TryLoadXml(filePath);
                 if (doc == null) return;

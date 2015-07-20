@@ -108,7 +108,7 @@
     <Sprite texture ="light.png" depth="0.8"/>
 
     <LightComponent canbeselected = "true" color="1.0,0.0,0.0,1.0">
-      <sprite texture="Content/Items/Signal/lightsprite.png" origin="0.5,0.5"/>
+      <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
     </LightComponent>
 
     <Body width="16" height="16"/>
