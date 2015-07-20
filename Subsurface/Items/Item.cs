@@ -63,7 +63,18 @@ namespace Subsurface
         public float Condition
         {
             get { return condition; }
-            set { condition = MathHelper.Clamp(value, 0.0f, 100.0f); }
+            set 
+            {
+                float prev = condition;
+                condition = MathHelper.Clamp(value, 0.0f, 100.0f); 
+                if (condition==0.0f && prev>0.0f)
+                {
+                    foreach (FixRequirement req in FixRequirements)
+                    {
+                        req.Fixed = false;
+                    }
+                }
+            }
         }
 
         public float Health

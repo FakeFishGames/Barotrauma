@@ -90,7 +90,7 @@ namespace Subsurface
 
         public Level(string seed, float difficulty, int width, int height, int siteInterval)
         {
-            if (shaftTexture == null) shaftTexture = Game1.textureLoader.FromFile("Content/Map/shaft.png");
+            if (shaftTexture == null) shaftTexture = Game1.TextureLoader.FromFile("Content/Map/shaft.png");
 
             this.seed = seed;
 

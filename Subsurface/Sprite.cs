@@ -170,7 +170,7 @@ namespace Subsurface
             
             if (File.Exists(file))
             {
-                return Game1.textureLoader.FromFile(file);
+                return Game1.TextureLoader.FromFile(file);
             }
             else
             {

@@ -190,7 +190,9 @@
     <Compile Include="Screens\LobbyScreen.cs" />
     <Compile Include="Screens\MainMenu.cs" />
     <Compile Include="Screens\NetLobbyScreen.cs" />
+    <Compile Include="Screens\SettingsScreen.cs" />
     <Compile Include="Screens\Screen.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="Sounds\OggSound.cs" />
     <Compile Include="Sounds\SoundManager.cs" />
     <Compile Include="Sounds\OggStream.cs" />
