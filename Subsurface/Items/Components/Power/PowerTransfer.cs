@@ -51,7 +51,7 @@ namespace Subsurface.Items.Components
                     pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
                     pt.Item.SendSignal("",
                         "power", fullPower / Math.Max(fullLoad, 1.0f));
-                    
+                    if (-pt.currPowerConsumption > pt.powerLoad * 2.0f) pt.item.Condition = 0.0f;
                 }
                 else
                 {

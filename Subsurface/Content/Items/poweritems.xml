@@ -8,6 +8,12 @@
 		
 		<Sprite texture ="junctionbox.png" depth="0.8"/>
 
+    <fixrequirement name="Electrical repairs">
+      <skill name="Electrical Engineering" level="40"/>
+      <item name="Wire"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
+
     <PowerTransfer canbeselected = "true">
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
     </PowerTransfer>

@@ -21,9 +21,9 @@ namespace Subsurface
 
         public TitleScreen(GraphicsDevice graphics)
         {
-            backgroundTexture = Game1.textureLoader.FromFile("Content/UI/titleBackground.png");
-            monsterTexture = Game1.textureLoader.FromFile("Content/UI/titleMonster.png");
-            titleTexture = Game1.textureLoader.FromFile("Content/UI/titleText.png");
+            backgroundTexture = Game1.TextureLoader.FromFile("Content/UI/titleBackground.png");
+            monsterTexture = Game1.TextureLoader.FromFile("Content/UI/titleMonster.png");
+            titleTexture = Game1.TextureLoader.FromFile("Content/UI/titleText.png");
 
             renderTarget = new RenderTarget2D(graphics, Game1.GraphicsWidth, Game1.GraphicsHeight);
 

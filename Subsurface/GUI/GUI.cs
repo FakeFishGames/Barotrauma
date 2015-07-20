@@ -266,7 +266,7 @@ namespace Subsurface
         public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
             spriteBatch.DrawString(Font,
-                "FPS: " + (int)Game1.frameCounter.AverageFramesPerSecond
+                "FPS: " + (int)Game1.FrameCounter.AverageFramesPerSecond
                 + " - Physics: " + Game1.World.UpdateTime
                 + " - bodies: " + Game1.World.BodyList.Count,
                 new Vector2(10, 10), Color.White);

@@ -61,9 +61,9 @@ namespace Subsurface
 
             connections = new List<LocationConnection>();
 
-            iceTexture  = Game1.textureLoader.FromFile("Content/Map/iceSurface.png");
-            iceCraters  = Game1.textureLoader.FromFile("Content/Map/iceCraters.png");
-            iceCrack    = Game1.textureLoader.FromFile("Content/Map/iceCrack.png");
+            iceTexture  = Game1.TextureLoader.FromFile("Content/Map/iceSurface.png");
+            iceCraters  = Game1.TextureLoader.FromFile("Content/Map/iceCraters.png");
+            iceCrack    = Game1.TextureLoader.FromFile("Content/Map/iceCrack.png");
 
 
             Rand.SetSyncedSeed(this.seed);
@@ -176,11 +176,6 @@ namespace Subsurface
 
         private void GenerateDifficulties(Location start, List<LocationConnection> locations, float currDifficulty)
         {
-
-            if (start.Name.Contains("Sabbati"))
-            {
-                int a = 1;
-            }
             //start.Difficulty = currDifficulty;
             currDifficulty += Rand.Range(difficultyIncrease.X, difficultyIncrease.Y, false);
             if (currDifficulty > Rand.Range(difficultyCutoff.X, difficultyCutoff.Y, false)) currDifficulty = 10.0f;

@@ -68,7 +68,7 @@ namespace Subsurface
             effect.Parameters["xColor"].SetValue(new Vector4(0.75f, 0.8f, 0.9f, 1.0f));
             effect.Parameters["xBlurDistance"].SetValue(0.0005f);
 
-            effect.Parameters["xWaterBumpMap"].SetValue(Game1.textureLoader.FromFile("Content/waterbump.jpg"));
+            effect.Parameters["xWaterBumpMap"].SetValue(Game1.TextureLoader.FromFile("Content/waterbump.jpg"));
             effect.Parameters["xWaveWidth"].SetValue(0.1f);
             effect.Parameters["xWaveHeight"].SetValue(0.1f);
 

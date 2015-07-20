@@ -53,7 +53,8 @@ namespace Subsurface
                 GUIComponent component = reqFrame.children.Find(c => c.UserData as string == itemName);
                 
                 GUITextBlock text = component as GUITextBlock;
-                bool itemFound = (character.Inventory.items.FirstOrDefault(i => i !=null && i.Name == itemName) != null);
+                Item item = character.Inventory.items.FirstOrDefault(i => i !=null && i.Name == itemName);
+                bool itemFound = (item != null);
                
                 if (!itemFound) success = false;
                 
@@ -178,7 +179,7 @@ namespace Subsurface
                 CreateGUIFrame(item);
                 
             }
-UpdateGUIFrame(item, character);
+            UpdateGUIFrame(item, character);
             frame.Update((float)Physics.step);
             frame.Draw(spriteBatch);
         }

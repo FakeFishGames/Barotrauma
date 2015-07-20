@@ -22,7 +22,7 @@ namespace Subsurface
 
         public static GraphicsDevice CurrGraphicsDevice;
 
-        public static FrameCounter frameCounter;
+        public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
@@ -41,20 +41,21 @@ namespace Subsurface
 
         public static ParticleManager particleManager;
 
-        public static TextureLoader textureLoader;
+        public static TextureLoader TextureLoader;
         
         public static World World;
 
         public static TitleScreen TitleScreen;
         private bool titleScreenOpen;
 
+        public static GameSettings Config;
+
         //public static Random localRandom;
         //public static Random random;
 
         //private Stopwatch renderTimer;
         //public static int renderTimeElapsed;
-
-        
+                
         public Camera Cam
         {
             get { return GameScreen.Cam; }
@@ -83,11 +84,13 @@ namespace Subsurface
         public Game1()
         {
             Graphics = new GraphicsDeviceManager(this);
-            
-            graphicsWidth = 1280;
-            graphicsHeight = 720;
 
-            //Graphics.IsFullScreen = true;
+            Config = new GameSettings("config.xml");
+            
+            graphicsWidth = Config.GraphicsWidth;
+            graphicsHeight = Config.GraphicsHeight;
+
+            Graphics.IsFullScreen = Config.FullScreenEnabled;
             Graphics.PreferredBackBufferWidth = graphicsWidth;
             Graphics.PreferredBackBufferHeight = graphicsHeight;
             Content.RootDirectory = "Content";
@@ -95,7 +98,7 @@ namespace Subsurface
             //graphics.SynchronizeWithVerticalRetrace = false;
             //graphics.ApplyChanges();
 
-            frameCounter = new FrameCounter();
+            FrameCounter = new FrameCounter();
 
             //renderTimer = new Stopwatch();
 
@@ -138,7 +141,7 @@ namespace Subsurface
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
                         
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            textureLoader = new TextureLoader(GraphicsDevice);
+            TextureLoader = new TextureLoader(GraphicsDevice);
 
             titleScreenOpen = true;
             TitleScreen = new TitleScreen(GraphicsDevice);
@@ -267,7 +270,7 @@ namespace Subsurface
 
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
-            frameCounter.Update(deltaTime);
+            FrameCounter.Update(deltaTime);
 
             if (titleScreenOpen)
             {
