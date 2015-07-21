@@ -64,8 +64,7 @@ namespace Subsurface
             iceTexture  = Game1.TextureLoader.FromFile("Content/Map/iceSurface.png");
             iceCraters  = Game1.TextureLoader.FromFile("Content/Map/iceCraters.png");
             iceCrack    = Game1.TextureLoader.FromFile("Content/Map/iceCrack.png");
-
-
+            
             Rand.SetSyncedSeed(this.seed);
 
             GenerateLocations();

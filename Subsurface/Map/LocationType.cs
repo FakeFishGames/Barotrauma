@@ -47,7 +47,7 @@ namespace Subsurface
         {
             Debug.Assert(list.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
 
-            int randInt = Rand.Int(totalWeight);
+            int randInt = Rand.Int(totalWeight, false);
 
             foreach (LocationType type in list)
             {

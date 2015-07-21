@@ -48,7 +48,8 @@ namespace Subsurface
                         }
                         break;
                     case Physics.CollisionPlatform:
-                        if (IgnorePlatforms || stairs != null) return -1;
+                         Structure platform = fixture.Body.UserData as Structure;
+                        if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
                         break;
@@ -353,7 +354,7 @@ namespace Subsurface
 
             Limb head = GetLimb(LimbType.Head);
 
-            if (currentHull != null && currentHull.Volume < currentHull.FullVolume && !head.inWater)
+            if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f) && !head.inWater)
             {
                 surfaceLimiter = (ConvertUnits.ToDisplayUnits(head.SimPosition.Y)-surfaceY);
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
@@ -399,7 +400,7 @@ namespace Subsurface
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
 
             //dont try to move upwards if head is already out of water
-            if (surfaceLimiter > 1.0f)
+            if (surfaceLimiter > 1.0f && TargetMovement.Y > 0.0f)
             {
                 if (TargetMovement.X == 0.0f)
                 {

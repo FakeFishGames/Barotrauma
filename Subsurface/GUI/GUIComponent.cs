@@ -194,7 +194,25 @@ namespace Subsurface
 
         public virtual void Draw(SpriteBatch spriteBatch) 
         {
+            Color currColor = color;
+            if (state == ComponentState.Selected) currColor = selectedColor;
+            if (state == ComponentState.Hover) currColor = hoverColor;
 
+            GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
+
+            if (sprites != null)
+            {
+                foreach (Sprite sprite in sprites)
+                {
+                    Vector2 startPos = new Vector2(rect.X, rect.Y);
+                    Vector2 size = new Vector2(sprite.SourceRect.Width, sprite.SourceRect.Height);
+
+                    if (sprite.size.X == 0.0f) size.X = rect.Width;
+                    if (sprite.size.Y == 0.0f) size.Y = rect.Height;
+
+                    sprite.DrawTiled(spriteBatch, startPos, size, currColor * (currColor.A / 255.0f));
+                }
+            }
 
             //Color newColor = color;
             //if (state == ComponentState.Selected)   newColor = selectedColor;

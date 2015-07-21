@@ -19,7 +19,9 @@ namespace Subsurface
         public delegate string TextGetterHandler();
         public TextGetterHandler TextGetter;
 
-        private bool wrap;
+        public bool Wrap;
+
+
 
         public override Vector4 Padding
         {
@@ -111,7 +113,7 @@ namespace Subsurface
 
             //if (wrap)
             //{
-                this.wrap = wrap;
+                this.Wrap = wrap;
             //    this.text = ToolBox.WrapText(this.text, rect.Width);
             //}
 
@@ -124,19 +126,19 @@ namespace Subsurface
 
            Vector2 size = MeasureText();
             
-            if (wrap && rect.Width>0)
+            if (Wrap && rect.Width>0)
             {
-                text = text.Replace("\n"," ");
+                //text = text.Replace("\n"," ");
                 text = ToolBox.WrapText(text, rect.Width, Font);
 
                 Vector2 newSize = MeasureText();
 
-                Rectangle newRect = rect;
+                //Rectangle newRect = rect;
 
                 //newRect.Width += (int)(newSize.X-size.X);
-                newRect.Height += (int)(newSize.Y - size.Y);
+                //newRect.Height += (int)(newSize.Y - size.Y);
 
-                Rect = newRect;
+                //Rect = newRect;
                 size = newSize;
             }
          
@@ -183,6 +185,8 @@ namespace Subsurface
             if (state == ComponentState.Selected) currColor = selectedColor;
             
             GUI.DrawRectangle(spriteBatch, rect, currColor*(currColor.A/255.0f), true);
+
+            base.Draw(spriteBatch);
 
             if (TextGetter != null) text = TextGetter();
 

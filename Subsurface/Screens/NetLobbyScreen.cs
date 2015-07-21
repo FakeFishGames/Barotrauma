@@ -32,6 +32,7 @@ namespace Subsurface
         private float camAngle;
 
         public bool IsServer;
+        public string ServerName, ServerMessage;
 
         public Submarine SelectedMap
         {
@@ -42,6 +43,16 @@ namespace Subsurface
         public GameModePreset SelectedMode
         {
             get { return modeList.SelectedData as GameModePreset; }
+        }
+
+        //for guitextblock delegate
+        public string GetServerName()
+        {
+            return ServerName;
+        }
+        public string GetServerMessage()
+        {
+            return ServerMessage;
         }
 
         public TimeSpan GameDuration
@@ -145,8 +156,8 @@ namespace Subsurface
 
             textBox.Select();
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", GUI.style, infoFrame);
-            subList = new GUIListBox(new Rectangle(0, 60, 200, 200), Color.White, GUI.style, infoFrame);
+            new GUITextBlock(new Rectangle(0, 110, 0, 30), "Selected submarine:", GUI.style, infoFrame);
+            subList = new GUIListBox(new Rectangle(0, 140, 200, 200), Color.White, GUI.style, infoFrame);
             subList.OnSelected = SelectMap;
             subList.Enabled = (Game1.Server != null);
 
@@ -169,8 +180,8 @@ namespace Subsurface
                 return;
             }
 
-            new GUITextBlock(new Rectangle(220, 30, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
-            modeList = new GUIListBox(new Rectangle(220, 60, 200, 200), GUI.style, infoFrame);
+            new GUITextBlock(new Rectangle(220, 110, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
+            modeList = new GUIListBox(new Rectangle(220, 140, 200, 200), GUI.style, infoFrame);
             modeList.Enabled = (Game1.Server != null);
 
             foreach (GameModePreset mode in GameModePreset.list)
@@ -186,28 +197,38 @@ namespace Subsurface
                 textBlock.UserData = mode;
             }
 
-            GUITextBlock durationText = new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 30, 100, 20),
+            GUITextBlock durationText = new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 110, 100, 20),
                 "Game duration: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
             durationText.TextGetter = DurationText;
 
-            durationBar = new GUIScrollBar(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 60, 180, 20),
+            durationBar = new GUIScrollBar(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 140, 180, 20),
                 GUI.style, 0.1f, infoFrame);
             durationBar.BarSize = 0.1f;
             durationBar.Enabled = (Game1.Server != null);            
 
-            new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 100, 100, 20),
+            new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 180, 100, 20),
                 "Level Seed: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
 
-            seedBox = new GUITextBox(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 130, 180, 20),
+            seedBox = new GUITextBox(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 210, 180, 20),
                 Alignment.TopLeft, GUI.style, infoFrame);
             seedBox.OnEnter = SelectSeed;
             seedBox.Enabled = (Game1.Server != null);
             LevelSeed = ToolBox.RandomSeed(8);
 
+            var serverName = new GUITextBlock(new Rectangle(0, 0, 200, 30),
+                "Server: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
+            serverName.TextGetter = GetServerName;
+            
+            var serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70),null,null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
+            serverMessage.Enabled = false;
+            serverMessage.Wrap = true;
+
             if (IsServer && Game1.Server != null)
             {
-                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", GUI.style, infoFrame);
+                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.TopRight, GUI.style, infoFrame);
                 startButton.OnClicked = Game1.Server.StartGame;
+
+                serverMessage.Enabled = true;
 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
                 modeList.OnSelected = Game1.Server.UpdateNetLobby;
@@ -517,6 +538,8 @@ namespace Subsurface
                 msg.Write(selectedMap.Hash.Hash);
             }
 
+            msg.Write(ServerName);
+
             msg.Write(modeList.SelectedIndex-1);
             msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
@@ -538,7 +561,9 @@ namespace Subsurface
             string mapName = msg.ReadString();
             string md5Hash = msg.ReadString();
 
-            TrySelectMap(mapName, md5Hash);            
+            TrySelectMap(mapName, md5Hash);
+
+            ServerName = msg.ReadString();
 
             //mapList.Select(msg.ReadInt32());
             modeList.Select(msg.ReadInt32());

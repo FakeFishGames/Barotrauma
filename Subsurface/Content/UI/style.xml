@@ -47,11 +47,11 @@
   </GUIScrollBar>
 
   <GUITextBox
-    color="0.8, 0.8, 0.8, 1.0"
+    color="0.5, 0.5, 0.5, 1.0"
   
-    textcolor="0.0, 0.0, 0.0, 1.0"
+    textcolor="1.0, 1.0, 1.0, 1.0"
     outlinecolor="0.5, 0.57, 0.6, 1.0">
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
+    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
   </GUITextBox>
 
   <GUIMessageBox
