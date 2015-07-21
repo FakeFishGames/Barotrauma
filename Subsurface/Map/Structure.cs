@@ -208,7 +208,7 @@ namespace Subsurface
                     bodies = new List<Body>();
 
                     Body newBody = BodyFactory.CreateRectangle(Game1.World,
-                        ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) - Submarine.GridSize.X),
+                        ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X*3.0f),
                         ConvertUnits.ToSimUnits(10),
                         1.5f);
 
@@ -218,7 +218,6 @@ namespace Subsurface
                         (StairDirection == Direction.Right) ? -Submarine.GridSize.X*1.5f : Submarine.GridSize.X*1.5f,
                         - Submarine.GridSize.Y*2.0f);
 
-
                     newBody.Position = ConvertUnits.ToSimUnits(stairPos);
                     newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
                     newBody.Friction = 0.8f;
@@ -227,6 +226,25 @@ namespace Subsurface
 
                     newBody.UserData = this;
                     bodies.Add(newBody);
+
+                    //newBody = BodyFactory.CreateRectangle(Game1.World,
+                    //    ConvertUnits.ToSimUnits(Submarine.GridSize.X*2),
+                    //    ConvertUnits.ToSimUnits(10.0f),
+                    //    1.5f);
+
+                    //newBody.BodyType = BodyType.Static;
+                    ////newBody.IsSensor = true;
+
+                    //newBody.Position = ConvertUnits.ToSimUnits(
+                    //    new Vector2(Position.X + (rect.Width/2 + Submarine.GridSize.X) * ((StairDirection == Direction.Right) ? -1.0f : 1.0f), rect.Y + 5.0f));
+                    ////newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
+                    ////newBody.Friction = 0.8f;
+
+                    //newBody.CollisionCategories = Physics.CollisionStairs;
+
+                    //newBody.UserData = this;
+
+                    //bodies.Add(newBody);
 
                 }
             }

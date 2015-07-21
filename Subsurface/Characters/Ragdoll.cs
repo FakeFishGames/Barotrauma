@@ -268,11 +268,17 @@ namespace Subsurface
                 if (ignorePlatforms) return false;
 
                 //the collision is ignored if the lowest limb is under the platform
-                if (lowestLimb==null || lowestLimb.SimPosition.Y < f2.Body.Position.Y) return false; 
+                if (lowestLimb==null || lowestLimb.Position.Y < structure.Rect.Y) return false; 
             }
             else if (structure.StairDirection!=Direction.None)
             {
-                if (inWater || !(targetMovement.Y>Math.Abs(targetMovement.X/2.0f)) && lowestLimb.body.Position.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height) + 0.5f)
+                if (inWater || !(targetMovement.Y>Math.Abs(targetMovement.X/2.0f)) && lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)
+                {
+                    stairs = null;
+                    return false;
+                }
+
+                if (targetMovement.Y >= 0.0f && lowestLimb.SimPosition.Y > ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 8.0f))
                 {
                     stairs = null;
                     return false;

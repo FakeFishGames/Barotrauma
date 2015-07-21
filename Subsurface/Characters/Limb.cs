@@ -74,6 +74,11 @@ namespace Subsurface
             get { return doesFlip; }
         }
 
+        public Vector2 Position
+        {
+            get { return ConvertUnits.ToDisplayUnits(body.Position); }
+        }
+
         public Vector2 SimPosition
         {
             get { return body.Position; }

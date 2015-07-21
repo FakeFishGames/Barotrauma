@@ -44,7 +44,7 @@ namespace Subsurface
         private string RandomName(LocationType type)
         {
             string name = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
-            int nameFormatIndex = Rand.Int(type.NameFormats.Count);
+            int nameFormatIndex = Rand.Int(type.NameFormats.Count, false);
             return type.NameFormats[nameFormatIndex].Replace("[name]", name);
         }
     }

@@ -24,6 +24,12 @@ namespace Subsurface
         public delegate bool OnTextChangedHandler(GUITextBox textBox, string text);
         public OnTextChangedHandler OnTextChanged;
 
+        public bool Wrap
+        {
+            get { return textBlock.Wrap; }
+            set { textBlock.Wrap = value; }
+        }
+
         public bool Enabled
         {
             get;
@@ -74,9 +80,9 @@ namespace Subsurface
 
                     textBlock.Text = filtered;
 
-                    if (Font.MeasureString(textBlock.Text).X > rect.Width)
+                    if (!Wrap && Font.MeasureString(textBlock.Text).X > rect.Width)
                     {
-                        //recursion to ensure that text cannot be larger than the box
+                        //ensure that text cannot be larger than the box
                         Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
                     }
                 }
@@ -111,7 +117,7 @@ namespace Subsurface
             if (parent != null)
                 parent.AddChild(this);
 
-            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, null, this);
+            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
             textBlock.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
             if (style != null) style.Apply(textBlock, this);
 
@@ -121,6 +127,7 @@ namespace Subsurface
 
         public void Select()
         {
+            Selected = true;
             keyboardDispatcher.Subscriber = this;
             if (Clicked != null) Clicked(this);
         }
@@ -172,7 +179,7 @@ namespace Subsurface
             {
                 GUI.DrawLine(spriteBatch,
                     new Vector2((int)caretPos.X + 2, caretPos.Y + 3),
-                    new Vector2((int)caretPos.X + 2, caretPos.Y + rect.Height - 3),
+                    new Vector2((int)caretPos.X + 2, caretPos.Y + Font.MeasureString(Text).Y - 3),
                     textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
             }
 
