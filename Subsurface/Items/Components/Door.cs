@@ -250,8 +250,8 @@ namespace Subsurface.Items.Components
             linkedGap.Open = 1.0f;
             if (convexHull2 != null) convexHull2.Enabled = false;
         }
-        
-        public override void Draw(SpriteBatch spriteBatch)
+
+        public override void Draw(SpriteBatch spriteBatch, bool editing)
         {           
             Color color = (item.IsSelected) ? Color.Green : Color.White;
             color = color * (item.Condition / 100.0f);

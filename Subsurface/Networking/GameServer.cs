@@ -56,6 +56,11 @@ namespace Subsurface.Networking
 
         public override void Update()
         {
+            if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.K))
+            {
+                SendRandomData();
+            }
+
             if (gameStarted) inGameHUD.Update((float)Physics.step);
 
             NetIncomingMessage inc = Server.ReadMessage();
@@ -104,7 +109,7 @@ namespace Subsurface.Networking
                 }
             }
 
-            new NetworkEvent(Submarine.Loaded.ID, false);
+            if (gameStarted) new NetworkEvent(Submarine.Loaded.ID, false);
 
             sparseUpdateTimer = DateTime.Now + SparseUpdateInterval;
         }
@@ -534,8 +539,6 @@ namespace Subsurface.Networking
             return true;
         }
 
-
-
         public override void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server)
         {
             AddChatMessage(message, type);
@@ -699,6 +702,43 @@ namespace Subsurface.Networking
             }
 
             return preferredClient;
+        }
+
+        /// <summary>
+        /// sends some random data to the clients
+        /// use for debugging purposes
+        /// </summary>
+        public void SendRandomData()
+        {
+            NetOutgoingMessage msg = Server.CreateMessage();
+            switch (Rand.Int(5))
+            {
+                case 0:
+                    msg.Write((byte)PacketTypes.NetworkEvent);
+                    msg.Write((byte)Enum.GetNames(typeof(NetworkEventType)).Length);
+                    msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
+                    break;
+                case 1:
+                    msg.Write((byte)PacketTypes.NetworkEvent);
+                    msg.Write((byte)NetworkEventType.UpdateComponent);
+                    msg.Write((int)Item.itemList[Rand.Int(Item.itemList.Count)].ID);
+                    msg.Write(Rand.Int(8));
+                    break;
+                case 2:
+                    msg.Write((byte)Enum.GetNames(typeof(PacketTypes)).Length);
+                    break;
+                case 3:
+                    msg.Write((byte)PacketTypes.UpdateNetLobby);
+                    break;
+            }
+
+            int bitCount = Rand.Int(100);
+            for (int i = 0; i < bitCount; i++)
+            {
+                msg.Write((Rand.Int(2) == 0) ? true : false);
+            }
+            SendMessage(msg, (Rand.Int(2) == 0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable, null);
+
         }
 
         public override void Disconnect()

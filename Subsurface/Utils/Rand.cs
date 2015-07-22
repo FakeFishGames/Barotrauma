@@ -18,38 +18,19 @@ namespace Subsurface
 
         public static float Range(float minimum, float maximum, bool local = true)
         {
-            if (local)
-            {
-                return (float)localRandom.NextDouble() * (maximum - minimum) + minimum;
-            }
-            else
-            {
-                return (float)syncedRandom.NextDouble() * (maximum - minimum) + minimum;
-            }            
+            return (float)(local ? localRandom : syncedRandom).NextDouble() * (maximum - minimum) + minimum;
+       
         }
 
         public static int Range(int minimum, int maximum, bool local = true)
         {
-            if (local)
-            {
-                return localRandom.Next(maximum - minimum) + minimum;
-            }
-            else
-            {
-                return syncedRandom.Next(maximum - minimum) + minimum;
-            }
+            return (local ? localRandom : syncedRandom).Next(maximum - minimum) + minimum;
+            
         }
 
         public static int Int(int max = int.MaxValue, bool local = true)
         {
-            if (local)
-            {
-                return localRandom.Next(max);
-            }
-            else
-            {
-                return syncedRandom.Next(max);
-            }
+            return (local ? localRandom : syncedRandom).Next(max);            
         }
 
         public static Vector2 Vector(float length = 1.0f, bool local = true)

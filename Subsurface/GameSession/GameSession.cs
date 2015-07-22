@@ -131,7 +131,7 @@ namespace Subsurface
 
         public void StartShift(TimeSpan duration, Level level, bool reloadSub = true)
         {
-            Lights.LightManager.FowEnabled = (Game1.Server==null);
+            Game1.LightManager.FowEnabled = (Game1.Server==null);
 
             this.level = level;
 

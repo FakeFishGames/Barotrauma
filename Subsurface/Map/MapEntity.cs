@@ -37,6 +37,21 @@ namespace Subsurface
 
         protected bool isSelected;
 
+        private static bool disableSelect;
+        public static bool DisableSelect
+        {
+            get { return disableSelect; }
+            set { 
+                disableSelect = value; 
+                if (disableSelect==true)
+                {
+                    startMovingPos = Vector2.Zero;
+                    selectionSize = Vector2.Zero;
+                    selectionPos = Vector2.Zero;
+                }
+            }
+        }
+
         public bool MoveWithLevel
         {
             get;
@@ -174,6 +189,12 @@ namespace Subsurface
         {
             if (GUIComponent.MouseOn != null) return;
 
+            if (DisableSelect)
+            {
+                DisableSelect = false;
+                return;
+            }
+
             foreach (MapEntity e in mapEntityList)
             {
                 e.isHighlighted = false;
@@ -189,8 +210,7 @@ namespace Subsurface
 
             if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.Delete))
             {
-                foreach (MapEntity e in selectedList)
-                    e.Remove();
+                foreach (MapEntity e in selectedList) e.Remove();
                 selectedList.Clear();
             }
 
@@ -209,7 +229,7 @@ namespace Subsurface
                 e.isSelected = false;
             }
 
-            if (highLightedEntity!=null)
+            if (highLightedEntity != null)
                 highLightedEntity.isHighlighted = true;
 
             foreach (MapEntity e in selectedList)
@@ -269,7 +289,6 @@ namespace Subsurface
                             
                             foreach (MapEntity e2 in selectedList)
                             {
-                                Debug.WriteLine(e.ID+", "+e2.ID);
                                 if (e.ID == e2.ID) alreadySelected = true;
                             }
 
@@ -358,6 +377,18 @@ namespace Subsurface
             {
                 editingHUD = null;
             }
+        }
+
+        public static void SelectEntity(MapEntity entity)
+        {
+            foreach (MapEntity e in selectedList)
+            { 
+                e.isSelected = false;
+            }
+            selectedList.Clear();
+
+            entity.isSelected = true;
+            selectedList.Add(entity);
         }
         
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) {}

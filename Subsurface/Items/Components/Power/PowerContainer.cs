@@ -173,7 +173,7 @@ namespace Subsurface.Items.Components
             voltage = 0.0f;
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             base.Draw(spriteBatch);
 

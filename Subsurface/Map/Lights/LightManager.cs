@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Subsurface.Lights
 {
@@ -7,16 +8,126 @@ namespace Subsurface.Lights
     {
         public static Vector2 ViewPos;
 
-        public static bool FowEnabled = true;
+        public Color AmbientLight;
 
-        public static void DrawFow(GraphicsDevice graphics, Camera cam)
+        RenderTarget2D lightMap;
+
+        private static Texture2D alphaClearTexture;
+
+        private List<LightSource> lights;
+
+        public bool FowEnabled = true;
+
+        public bool LightingEnabled = true;
+
+        public RenderTarget2D LightMap
+        {
+            get { return lightMap; }
+        }
+
+        public LightManager(GraphicsDevice graphics)
+        {
+            lights = new List<LightSource>();
+
+            AmbientLight = new Color(80, 80, 80, 255);
+
+            var pp = graphics.PresentationParameters;
+
+            lightMap = new RenderTarget2D(graphics, Game1.GraphicsWidth, Game1.GraphicsHeight, false,
+                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
+                       RenderTargetUsage.DiscardContents);
+
+
+            if (alphaClearTexture==null)
+            {
+                alphaClearTexture = Game1.TextureLoader.FromFile("Content/Lights/alphaOne.png");
+            }
+        }
+
+        public void AddLight(LightSource light)
+        {
+            lights.Add(light);
+        }
+
+        public void RemoveLight(LightSource light)
+        {
+            lights.Remove(light);
+        }
+
+        public void DrawFow(GraphicsDevice graphics, Camera cam, Vector2 pos)
         {
             if (!FowEnabled) return;
             foreach (ConvexHull convexHull in ConvexHull.list)
             {
-                convexHull.DrawShadows(graphics, cam, ViewPos);
+                convexHull.DrawShadows(graphics, cam, pos);
             }
         }
+
+        public void DrawLightmap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
+        {
+            graphics.SetRenderTarget(lightMap);
+
+            //clear to some small ambient light
+            graphics.Clear(AmbientLight);
+            
+            foreach (LightSource light in lights)
+            {
+                //clear alpha to 1
+                ClearAlphaToOne(graphics, spriteBatch);
+
+                //draw all shadows
+                //write only to the alpha channel, which sets alpha to 0
+                //graphics.RasterizerState = RasterizerState.CullNone;
+                //graphics.BlendState = CustomBlendStates.WriteToAlpha;
+
+                //foreach (ConvexHull ch in ConvexHull.list)
+                //{
+                //    //draw shadow
+                //    ch.DrawShadows(graphics, cam,  light.Position);
+                //}
+
+                //draw the light shape
+                //where Alpha is 0, nothing will be written
+                spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
+                light.Draw(spriteBatch);
+                spriteBatch.End();
+            }
+            //clear alpha, to avoid messing stuff up later
+            ClearAlphaToOne(graphics, spriteBatch);
+            graphics.SetRenderTarget(null);
+        }
+
+        private void ClearAlphaToOne(GraphicsDevice graphics, SpriteBatch spriteBatch)
+        {
+            spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.WriteToAlpha);
+            spriteBatch.Draw(alphaClearTexture, new Rectangle(0, 0,graphics.Viewport.Width, graphics.Viewport.Height), Color.White);
+            spriteBatch.End();
+        }
+    }
+
+
+    class CustomBlendStates
+    {
+        static CustomBlendStates()
+        {
+            Multiplicative = new BlendState();
+            Multiplicative.ColorSourceBlend = Multiplicative.AlphaSourceBlend = Blend.Zero;
+            Multiplicative.ColorDestinationBlend = Multiplicative.AlphaDestinationBlend = Blend.SourceColor;
+            Multiplicative.ColorBlendFunction = Multiplicative.AlphaBlendFunction = BlendFunction.Add;
+
+            WriteToAlpha = new BlendState();
+            WriteToAlpha.ColorWriteChannels = ColorWriteChannels.Alpha;
+
+            MultiplyWithAlpha = new BlendState();
+            MultiplyWithAlpha.ColorDestinationBlend = MultiplyWithAlpha.AlphaDestinationBlend = Blend.One;
+            MultiplyWithAlpha.ColorSourceBlend = MultiplyWithAlpha.AlphaSourceBlend = Blend.DestinationAlpha;
+        }
+        public static BlendState Multiplicative { get; private set; }
+        public static BlendState WriteToAlpha { get; private set; }
+        public static BlendState MultiplyWithAlpha { get; private set; }
+
+
+
     }
 
 }

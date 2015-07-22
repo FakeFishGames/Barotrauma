@@ -61,7 +61,8 @@ namespace Subsurface.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
         {
-            if (connection.Name=="power_in") voltage = power;                
+            if (currPowerConsumption == 0.0f) voltage = 0.0f;
+            if (connection.Name == "power_in" || connection.Name == "power") voltage = power;                
         }
 
         public override void Update(float deltaTime, Camera cam)

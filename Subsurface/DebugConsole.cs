@@ -216,7 +216,12 @@ namespace Subsurface
                 case "fowenabled":
                 case "fow":
                 case "drawfow":
-                    Lights.LightManager.FowEnabled = !Lights.LightManager.FowEnabled;
+                    Game1.LightManager.FowEnabled = !Game1.LightManager.FowEnabled;
+                    break;
+                case "lighting":
+                case "lightingenabled":
+                case "light":
+                    Game1.LightManager.LightingEnabled = !Game1.LightManager.LightingEnabled;
                     break;
                 case "lobbyscreen":
                 case "lobby":

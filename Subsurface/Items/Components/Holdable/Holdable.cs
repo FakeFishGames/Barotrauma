@@ -81,6 +81,8 @@ namespace Subsurface.Items.Components
                 handlePos[i - 1] = ConvertUnits.ToSimUnits(handlePos[i - 1]);
             }
 
+            canBePicked = true;
+
             //holdAngle = ToolBox.GetAttributeFloat(element, "holdangle", 0.0f);
             //holdAngle = MathHelper.ToRadians(holdAngle);
         }
@@ -159,6 +161,8 @@ namespace Subsurface.Items.Components
             //    DebugConsole.ThrowError("Item " + item + " must have a physics body component to be attachable!");
             //    return false;
             //}
+
+            if (attached) return false;
 
             item.body = body;
             item.body.Enabled = true;

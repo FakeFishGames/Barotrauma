@@ -74,8 +74,8 @@ namespace Subsurface.Networking
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
             NetPeerConfiguration Config = new NetPeerConfiguration("subsurface");
             
-            //Config.SimulatedLoss = 0.2f;
-            //Config.SimulatedMinimumLatency = 0.25f;
+            Config.SimulatedLoss = 0.2f;
+            Config.SimulatedMinimumLatency = 0.25f;
 
             // Create new client, with previously created configs
             client = new NetClient(Config);
@@ -541,8 +541,8 @@ namespace Subsurface.Networking
                     break;
             }
 
-            int byteCount = Rand.Int(100);
-            for (int i = 0; i<byteCount; i++)
+            int bitCount = Rand.Int(100);
+            for (int i = 0; i<bitCount; i++)
             {
                 msg.Write((Rand.Int(2)==0) ? true : false);
             }

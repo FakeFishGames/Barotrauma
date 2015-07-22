@@ -293,7 +293,7 @@ namespace Subsurface
         /// <summary>a character has dropped the item</summary>
         public virtual void Drop(Character dropper)  { }
 
-        public virtual void Draw(SpriteBatch spriteBatch) { }
+        public virtual void Draw(SpriteBatch spriteBatch, bool editing = false) { }
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 

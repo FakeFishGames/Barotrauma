@@ -255,16 +255,28 @@ namespace Subsurface
 
             if (characterMode)
             {
-                if (dummyCharacter != null && dummyCharacter.SelectedConstruction != null)
+                if (dummyCharacter != null)                     
                 {
-                    if (dummyCharacter.SelectedConstruction == dummyCharacter.ClosestItem)
+                    foreach (Item item in dummyCharacter.SelectedItems)
                     {
-                        dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, dummyCharacter);
+                        if (item == null) continue;
+                        item.SetTransform(dummyCharacter.SimPosition, 0.0f);
+
+                        item.Update(cam, (float)deltaTime);
                     }
-                    else
+
+                    if (dummyCharacter.SelectedConstruction != null)
                     {
-                        dummyCharacter.SelectedConstruction = null;
+                        if (dummyCharacter.SelectedConstruction == dummyCharacter.ClosestItem)
+                        {
+                            dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, dummyCharacter);
+                        }
+                        else
+                        {
+                            dummyCharacter.SelectedConstruction = null;
+                        }
                     }
+
                 }
 
                 if (PlayerInput.GetMouseState.LeftButton != ButtonState.Pressed)
