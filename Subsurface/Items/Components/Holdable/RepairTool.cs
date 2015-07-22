@@ -173,8 +173,8 @@ namespace Subsurface.Items.Components
 
             //isActive = true;
         }
-        
-        public override void Draw(SpriteBatch spriteBatch)
+
+        public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (!isActive) return;
 

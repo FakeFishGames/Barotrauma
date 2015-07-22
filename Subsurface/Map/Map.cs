@@ -22,9 +22,9 @@ namespace Subsurface
         private int seed;
         private int size;
 
-        private Texture2D iceTexture;
-        private Texture2D iceCraters;
-        private Texture2D iceCrack;
+        private static Texture2D iceTexture;
+        private static Texture2D iceCraters;
+        private static Texture2D iceCrack;
 
         private Location currentLocation;
         private Location selectedLocation;
@@ -61,9 +61,9 @@ namespace Subsurface
 
             connections = new List<LocationConnection>();
 
-            iceTexture  = Game1.TextureLoader.FromFile("Content/Map/iceSurface.png");
-            iceCraters  = Game1.TextureLoader.FromFile("Content/Map/iceCraters.png");
-            iceCrack    = Game1.TextureLoader.FromFile("Content/Map/iceCrack.png");
+            if (iceTexture==null) iceTexture = Game1.TextureLoader.FromFile("Content/Map/iceSurface.png");
+            if (iceCraters == null) iceCraters = Game1.TextureLoader.FromFile("Content/Map/iceCraters.png");
+            if (iceCrack == null) iceCrack = Game1.TextureLoader.FromFile("Content/Map/iceCrack.png");
             
             Rand.SetSyncedSeed(this.seed);
 
@@ -151,14 +151,16 @@ namespace Subsurface
 
             for (int i = connections.Count - 1; i >= 0; i--)
             {
+                i = Math.Min(i, connections.Count - 1);
+
                 LocationConnection connection = connections[i];
 
-                for (int n = i - 1; n >= 0; n--)
+                for (int n = Math.Min(i - 1,connections.Count - 1); n >= 0; n--)
                 {
                     if (connection.Locations.Contains(connections[n].Locations[0])
                         && connection.Locations.Contains(connections[n].Locations[1]))
                     {
-                        connections.RemoveAt(i);
+                        connections.RemoveAt(n);                        
                     }
                 }
             }

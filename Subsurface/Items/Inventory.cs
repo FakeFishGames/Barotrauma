@@ -256,14 +256,14 @@ namespace Subsurface
 
             if (item == null) return;
 
-            item.sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.White);
+            item.sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
 
             if (isHighLighted)
             {
-                Vector2 pos = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height + 20) - GUI.Font.MeasureString(item.Name)*0.5f;
+                Vector2 pos = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height + 20) - GUI.Font.MeasureString(item.Name) * 0.5f;
                 pos.X = (int)pos.X;
                 pos.Y = (int)pos.Y;
-                spriteBatch.DrawString(GUI.Font, item.Name + " - "+item.ID, pos - new Vector2(1.0f,1.0f), Color.Black);
+                spriteBatch.DrawString(GUI.Font, item.Name + " - " + item.ID, pos - new Vector2(1.0f, 1.0f), Color.Black);
                 spriteBatch.DrawString(GUI.Font, item.Name + " - " + item.ID, pos, Color.White);
             }
 

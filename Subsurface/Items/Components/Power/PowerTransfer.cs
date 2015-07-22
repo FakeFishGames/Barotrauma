@@ -53,11 +53,6 @@ namespace Subsurface.Items.Components
                         "power", fullPower / Math.Max(fullLoad, 1.0f));
                     if (-pt.currPowerConsumption > pt.powerLoad * 2.0f) pt.item.Condition = 0.0f;
                 }
-                else
-                {
-                    
-                    //p.Power = fullPower;
-                }
             }
 
             

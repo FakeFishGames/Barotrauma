@@ -11,7 +11,7 @@ namespace Subsurface
 {
     class ItemPrefab : MapEntityPrefab
     {
-        static string contentFolder = "Content/Items/";
+        //static string contentFolder = "Content/Items/";
 
         string configFile;
 
@@ -53,6 +53,11 @@ namespace Subsurface
         public float OffsetOnSelected
         {
             get { return offsetOnSelected; }
+        }
+
+        public Vector2 Size
+        {
+            get { return size; }
         }
 
         public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)

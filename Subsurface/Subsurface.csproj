@@ -68,6 +68,7 @@
     <Compile Include="CoroutineManager.cs" />
     <Compile Include="GUI\TitleScreen.cs" />
     <Compile Include="Items\FixRequirement.cs" />
+    <Compile Include="Map\Lights\Light.cs" />
     <Compile Include="Map\LocationType.cs" />
     <Compile Include="Utils\Rand.cs" />
     <Compile Include="Events\PropertyTask.cs" />
@@ -272,6 +273,13 @@
     <Content Include="Content\Characters\Human\torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\Electricity\lamp.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Electricity\lights.xml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Jobs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
@@ -378,6 +386,12 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\Pump\pump.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Lights\alphaOne.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Lights\light.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Map\iceCrack.png">
@@ -679,6 +693,10 @@
     <None Include="Content\Items\Weapons\stunGrenade.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Lights\AlphaOne.dds" />
+    <None Include="Content\SmallFont.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Sounds\Damage\HitArmor1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -761,6 +779,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Damage\StructureCrunch3.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\SpriteFont1.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\step.ogg">

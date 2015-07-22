@@ -79,7 +79,7 @@ namespace Subsurface.Items.Components
                 ToolBox.GetAttributeVector2(element, "origin", Vector2.Zero));
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             barrelSprite.Draw(spriteBatch, new Vector2(item.Rect.X, -item.Rect.Y) + barrelPos, rotation + MathHelper.PiOver2, 1.0f);
         }

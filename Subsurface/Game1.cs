@@ -33,6 +33,8 @@ namespace Subsurface
         public static EditMapScreen         EditMapScreen;
         public static EditCharacterScreen   EditCharacterScreen;
 
+        public static Lights.LightManager LightManager;
+
         public static ContentPackage SelectedPackage
         {
             get { return Config.SelectedContentPackage; }
@@ -159,6 +161,8 @@ namespace Subsurface
         {
             GUI.Font = Content.Load<SpriteFont>("SpriteFont1");
             GUI.SmallFont = Content.Load<SpriteFont>("SmallFont");
+
+            LightManager = new Lights.LightManager(GraphicsDevice);
 
             Hull.renderer = new WaterRenderer(GraphicsDevice);
         loadState = 1.0f;

@@ -147,6 +147,14 @@ namespace Subsurface
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+
+
+            Game1.LightManager.DrawLightmap(graphics, spriteBatch, cam);
+
+
+
+
+
             //----------------------------------------------------------------------------------------
             //1. draw the characters and the parts of the map that are behind them
             //----------------------------------------------------------------------------------------
@@ -282,7 +290,17 @@ namespace Subsurface
 
             if (Game1.Level != null) Game1.Level.Render(graphics, cam);
 
-            LightManager.DrawFow(graphics,cam); 
+            if (Game1.LightManager.LightingEnabled)
+            {
+                //multiply scene with lightmap
+                spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
+                spriteBatch.Draw(Game1.LightManager.LightMap, Vector2.Zero, Color.White);
+                spriteBatch.End();
+            }
+
+
+            Game1.LightManager.DrawFow(graphics,cam,LightManager.ViewPos);
+
         }
     }
 }

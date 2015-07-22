@@ -82,6 +82,21 @@ namespace Subsurface
             get { return condition; }
         }
 
+        private Color spriteColor;
+        [Editable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
+        public string SpriteColor
+        {
+            get { return ToolBox.Vector4ToString(spriteColor.ToVector4()); }
+            set
+            {
+                spriteColor = new Color(ToolBox.ParseToVector4(value));
+            }
+        }
+
+        public Color Color
+        {
+            get { return spriteColor; }
+        }
 
         [Editable, HasDefaultValue("", true)]
         public string Tags
@@ -497,7 +512,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            Color color = (isSelected && editing) ? color = Color.Red : Color.White;
+            Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
             
             if (body==null)
@@ -506,10 +521,10 @@ namespace Subsurface
             }
             else if (body.Enabled)
             {
-                body.Draw(spriteBatch, prefab.sprite, color);                
+                body.Draw(spriteBatch, prefab.sprite, color);
             }
 
-            foreach (ItemComponent component in components) component.Draw(spriteBatch);
+            foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
             
             if (!editing || (body!=null && !body.Enabled))
             {
@@ -912,8 +927,16 @@ namespace Subsurface
             XElement element = new XElement("Item");
 
             element.Add(new XAttribute("name", prefab.Name),
-                new XAttribute("ID", ID),
-                new XAttribute("rect", rect.X + "," + rect.Y+","+rect.Width+","+rect.Height));
+                new XAttribute("ID", ID));
+
+            if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+            {
+                element.Add(new XAttribute("rect", rect.X + "," + rect.Y + "," + rect.Width + "," + rect.Height));
+            }
+            else
+            {
+                element.Add(new XAttribute("rect", rect.X + "," + rect.Y));
+            }
 
             if (linkedTo != null && linkedTo.Count>0)
             {
@@ -930,32 +953,6 @@ namespace Subsurface
 
             ObjectProperty.SaveProperties(this, element);
 
-            //var saveProperties = ObjectProperty.GetProperties<Saveable>(this);
-            //foreach (var property in saveProperties)
-            //{
-            //    object value = property.GetValue();
-            //    if (value == null) continue;
-
-            //    bool dontSave=false;
-            //    foreach (var ini in property.Attributes.OfType<Initable>())
-            //    {
-            //        if (ini.defaultValue==value)
-            //        {
-            //            dontSave = true;
-            //            break;
-            //        }
-            //    }
-
-            //    if (dontSave) continue;
-
-            //    element.Add(new XAttribute(property.Name.ToLower(), value));
-            //}
-
-            //if (tags.Count>0)
-            //{
-            //    element.Add(new XAttribute("tags",string.Join(", ",tags)));
-            //}
-            
             foreach (ItemComponent ic in components)
             {
                 ic.Save(element);
@@ -970,12 +967,22 @@ namespace Subsurface
         {
             string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
             string[] rectValues = rectString.Split(',');
+            Rectangle rect = Rectangle.Empty;
+            if (rectValues.Length==4)
+            {
+                rect = new Rectangle(
+                    int.Parse(rectValues[0]),
+                    int.Parse(rectValues[1]),
+                    int.Parse(rectValues[2]),
+                    int.Parse(rectValues[3]));
+            } else
+            {
+                rect = new Rectangle(
+                    int.Parse(rectValues[0]),
+                    int.Parse(rectValues[1]),
+                    0, 0);
+            }
 
-            Rectangle rect = new Rectangle(
-                int.Parse(rectValues[0]),
-                int.Parse(rectValues[1]),
-                int.Parse(rectValues[2]),
-                int.Parse(rectValues[3]));
 
             string name = element.Attribute("name").Value;
             
@@ -985,6 +992,12 @@ namespace Subsurface
                 if (ip == null) continue;
 
                 if (ip.Name != name) continue;
+
+                if (rect.Width==0 && rect.Height==0)
+                {
+                    rect.Width = (int)ip.Size.X;
+                    rect.Height = (int)ip.Size.Y;
+                }
 
                 Item item = new Item(rect, ip);
                 item.ID = int.Parse(element.Attribute("ID").Value);

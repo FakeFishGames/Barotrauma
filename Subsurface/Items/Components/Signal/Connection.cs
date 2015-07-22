@@ -339,29 +339,31 @@ namespace Subsurface.Items.Components
             int textX = (int)start.X;
             float connLength = 10.0f;
 
-            Color color = (wireEquipped) ? Color.Gray : Color.White;
+            float alpha = wireEquipped ? 0.5f : 1.0f;
+
+            //Color color = (wireEquipped) ? wireItem.Color * 0.5f : wireItem.Color;
 
             if (Math.Abs(end.X-start.X)<connLength*6.0f)
             {
                 wireVertical.DrawTiled(spriteBatch, 
-                    new Vector2(end.X - wireVertical.size.X / 2, end.Y + connLength), 
-                    new Vector2(wireVertical.size.X, (float)Math.Abs(end.Y - start.Y)), color);
+                    new Vector2(end.X - wireVertical.size.X / 2, end.Y + connLength),
+                    new Vector2(wireVertical.size.X, (float)Math.Abs(end.Y - start.Y)), wireItem.Color * alpha);
                 textX = (int)end.X;
-                connector.Draw(spriteBatch, end, color);                
+                connector.Draw(spriteBatch, end, Color.White*alpha);                
             }
             else
             {
                 Vector2 pos = new Vector2(start.X, end.Y + wireCorner.size.Y) - wireVertical.size / 2;
                 Vector2 size = new Vector2(wireVertical.size.X, (float)Math.Abs((end.Y + wireCorner.size.Y) - start.Y));
-                wireVertical.DrawTiled(spriteBatch, pos, size, color);
+                wireVertical.DrawTiled(spriteBatch, pos, size, wireItem.Color * alpha);
 
                 Rectangle rect = new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
                 if (!wireEquipped && rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
 
                 float dir = (end.X > start.X) ? -1.0f : 1.0f;
 
-                wireCorner.Draw(spriteBatch, 
-                    new Vector2(start.X, end.Y), color, 0.0f, 1.0f,
+                wireCorner.Draw(spriteBatch,
+                    new Vector2(start.X, end.Y), wireItem.Color * alpha, 0.0f, 1.0f,
                     (end.X > start.X) ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
 
                 float wireStartX = start.X - wireCorner.size.X / 2 * dir;
@@ -370,11 +372,11 @@ namespace Subsurface.Items.Components
                 pos = new Vector2(Math.Min(wireStartX,wireEndX), end.Y - wireVertical.size.Y / 2);
                 size = new Vector2(Math.Abs(wireStartX - wireEndX), wireHorizontal.size.Y);
 
-                wireHorizontal.DrawTiled(spriteBatch, pos, size, color);
+                wireHorizontal.DrawTiled(spriteBatch, pos, size, wireItem.Color * alpha);
                 rect = new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
                 if (!wireEquipped && rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
 
-                connector.Draw(spriteBatch, end, color, -MathHelper.PiOver2*dir);
+                connector.Draw(spriteBatch, end, Color.White*alpha, -MathHelper.PiOver2 * dir);
             }
 
             if (draggingConnected == null && !wireEquipped)

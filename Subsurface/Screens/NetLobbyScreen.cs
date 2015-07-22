@@ -148,7 +148,7 @@ namespace Subsurface
 
         public override void Select()
         {
-            Lights.LightManager.FowEnabled = false;
+            Game1.LightManager.FowEnabled = false;
 
             infoFrame.ClearChildren();
             
@@ -215,21 +215,23 @@ namespace Subsurface
             seedBox.Enabled = (Game1.Server != null);
             LevelSeed = ToolBox.RandomSeed(8);
 
-            var serverName = new GUITextBlock(new Rectangle(0, 0, 200, 30),
-                "Server: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
+            var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
             serverName.TextGetter = GetServerName;
+            serverName.Enabled = Game1.Server != null;
+            serverName.OnTextChanged = ChangeServerName;
+            ServerName = "Server";
             
             var serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70),null,null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
-            serverMessage.Enabled = false;
+            serverMessage.Enabled = Game1.Server != null;
             serverMessage.Wrap = true;
+            serverMessage.TextGetter = GetServerMessage;
+            serverMessage.OnTextChanged = UpdateServerMessage;
 
             if (IsServer && Game1.Server != null)
             {
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.TopRight, GUI.style, infoFrame);
                 startButton.OnClicked = Game1.Server.StartGame;
-
-                serverMessage.Enabled = true;
-
+                
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
                 modeList.OnSelected = Game1.Server.UpdateNetLobby;
                 durationBar.OnMoved = Game1.Server.UpdateNetLobby;
@@ -297,6 +299,24 @@ namespace Subsurface
             if (Submarine.Loaded != null && sub.FilePath == Submarine.Loaded.FilePath) return true;
 
             sub.Load();
+
+            return true;
+        }
+
+        public bool ChangeServerName(GUITextBox textBox, string text)
+        {
+            if (Game1.Server == null) return false;
+            ServerName = text;
+            Game1.Server.UpdateNetLobby(null);
+
+            return true;
+        }
+
+        public bool UpdateServerMessage(GUITextBox textBox, string text)
+        {
+            if (Game1.Server == null) return false;
+            ServerMessage = text;
+            Game1.Server.UpdateNetLobby(null);
 
             return true;
         }
@@ -539,6 +559,7 @@ namespace Subsurface
             }
 
             msg.Write(ServerName);
+            msg.Write(ServerMessage);
 
             msg.Write(modeList.SelectedIndex-1);
             msg.Write(durationBar.BarScroll);
@@ -558,50 +579,80 @@ namespace Subsurface
 
         public void ReadData(NetIncomingMessage msg)
         {
-            string mapName = msg.ReadString();
-            string md5Hash = msg.ReadString();
+            string mapName="", md5Hash="";
+            
+            int modeIndex = 0;
+            float durationScroll = 0.0f;
+            string levelSeed = "";
+
+            try
+            {
+                mapName = msg.ReadString();
+                md5Hash  = msg.ReadString();
+
+                ServerName = msg.ReadString();
+                ServerMessage = msg.ReadString();
+
+                modeIndex = msg.ReadInt32();
+
+                durationScroll = msg.ReadFloat();
+
+                levelSeed = msg.ReadString();
+            }
+
+            catch
+            {
+                return;
+            }
 
             TrySelectMap(mapName, md5Hash);
 
-            ServerName = msg.ReadString();
+            modeList.Select(modeIndex);
 
-            //mapList.Select(msg.ReadInt32());
-            modeList.Select(msg.ReadInt32());
+            durationBar.BarScroll = durationScroll;
 
-            durationBar.BarScroll = msg.ReadFloat();
+            LevelSeed = levelSeed;
 
-            LevelSeed = msg.ReadString();
-
-            int playerCount = msg.ReadInt32();
-            for (int i = 0; i < playerCount; i++)
+            try
             {
-                int clientID = msg.ReadInt32();
-                string jobName = msg.ReadString();
-                
-                Client client = null;
-                GUITextBlock textBlock = null;
-                foreach (GUIComponent child in playerList.children)
+                int playerCount = msg.ReadInt32();            
+            
+                for (int i = 0; i < playerCount; i++)
                 {
-                    Client tempClient = child.UserData as Client;
-                    if (tempClient == null || tempClient.ID != clientID) continue;
-
-                    client = tempClient;
-                    textBlock = child as GUITextBlock;
-                    break;
-                }
-                if (client == null) continue;
+                    int clientID = msg.ReadInt32();
+                    string jobName = msg.ReadString();
                 
-                client.assignedJob = JobPrefab.List.Find(jp => jp.Name == jobName);
+                    Client client = null;
+                    GUITextBlock textBlock = null;
+                    foreach (GUIComponent child in playerList.children)
+                    {
+                        Client tempClient = child.UserData as Client;
+                        if (tempClient == null || tempClient.ID != clientID) continue;
+
+                        client = tempClient;
+                        textBlock = child as GUITextBlock;
+                        break;
+                    }
+                    if (client == null) continue;
+                
+                    client.assignedJob = JobPrefab.List.Find(jp => jp.Name == jobName);
                                 
-                textBlock.Text = client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")");
+                    textBlock.Text = client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")");
 
-                if (clientID == Game1.Client.ID)
-                {
-                    Game1.Client.CharacterInfo.Job = new Job(client.assignedJob);
-                    Game1.Client.CharacterInfo.Name = client.name;
-                    UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+                    if (clientID == Game1.Client.ID)
+                    {
+                        Game1.Client.CharacterInfo.Job = new Job(client.assignedJob);
+                        Game1.Client.CharacterInfo.Name = client.name;
+                        UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+                    }
                 }
             }
+
+            catch
+            {
+                return;
+            }
+
         }
 
     }

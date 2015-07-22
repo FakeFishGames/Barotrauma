@@ -25,9 +25,7 @@ namespace Subsurface
         //is it possible to stretch the entity horizontally/vertically
         protected bool resizeHorizontal;
         protected bool resizeVertical;
-
-
-
+                
         //which prefab has been selected for placing
         protected static MapEntityPrefab selected;
 
@@ -46,7 +44,15 @@ namespace Subsurface
             get { return isLinkable; }
         }
 
+        public bool ResizeHorizontal
+        {
+            get { return resizeHorizontal; }
+        }
 
+        public bool ResizeVertical
+        {
+            get { return resizeVertical; }
+        }
 
         public static void Init()
         {

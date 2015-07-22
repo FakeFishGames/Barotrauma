@@ -24,6 +24,12 @@ namespace Subsurface
         public delegate bool OnTextChangedHandler(GUITextBox textBox, string text);
         public OnTextChangedHandler OnTextChanged;
 
+        public GUITextBlock.TextGetterHandler TextGetter
+        {
+            get { return textBlock.TextGetter; }
+            set { textBlock.TextGetter = value; }
+        }
+
         public bool Wrap
         {
             get { return textBlock.Wrap; }
@@ -171,15 +177,14 @@ namespace Subsurface
         public override void Draw(SpriteBatch spriteBatch)
         {
             DrawChildren(spriteBatch);
-
-
+            
             Vector2 caretPos = textBlock.CaretPos;
 
             if (caretVisible && Selected)
             {
                 GUI.DrawLine(spriteBatch,
                     new Vector2((int)caretPos.X + 2, caretPos.Y + 3),
-                    new Vector2((int)caretPos.X + 2, caretPos.Y + Font.MeasureString(Text).Y - 3),
+                    new Vector2((int)caretPos.X + 2, caretPos.Y + Font.MeasureString("I").Y - 3),
                     textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
             }
 

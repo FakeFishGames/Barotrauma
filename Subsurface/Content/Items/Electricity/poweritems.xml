@@ -21,7 +21,10 @@
 		<ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<output name="power"/>
-      <output name="signal"/>
+      <output name="signal_0"/>
+      <output name="signal_1"/>
+      <output name="signal_2"/>
+      <output name="signal_3"/>
     </ConnectionPanel>
 
 	</Item>

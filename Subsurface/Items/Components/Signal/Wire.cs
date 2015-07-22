@@ -20,7 +20,9 @@ namespace Subsurface.Items.Components
         Connection[] connections;
 
         private Vector2 newNodePos;
-        
+
+        private static int? selectedNodeIndex;
+                
         public Wire(Item item, XElement element)
             : base(item, element)
         {
@@ -34,14 +36,14 @@ namespace Subsurface.Items.Components
 
             connections = new Connection[2];
         }
-
+        
         public override void Move(Vector2 amount)
         {
             amount = FarseerPhysics.ConvertUnits.ToDisplayUnits(amount);
-            for (int i = 0; i<Nodes.Count; i++)
-            {
-                Nodes[i] += amount;
-            }
+            //for (int i = 0; i<Nodes.Count; i++)
+            //{
+            //    Nodes[i] += amount;
+            //}
         }
 
         public Connection OtherConnection(Connection connection)
@@ -151,7 +153,7 @@ namespace Subsurface.Items.Components
                 position.Y += item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
             }
 
-            newNodePos = position;
+            newNodePos = RoundNode(item.Position, item.CurrentHull);
 
             //if (Vector2.Distance(position, nodes[nodes.Count - 1]) > nodeDistance*10)
             //{
@@ -170,14 +172,13 @@ namespace Subsurface.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
+            if (character == Character.Controlled && character.SelectedConstruction != null) return false;
+
             if (newNodePos!= Vector2.Zero && Nodes.Count>0 && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
             {
                 Nodes.Add(newNodePos);
                 newNodePos = Vector2.Zero;
             }
-
-
-
             return true;
         }
 
@@ -213,6 +214,23 @@ namespace Subsurface.Items.Components
             }
         }
 
+        private Vector2 RoundNode(Vector2 position, Hull hull)
+        {
+            position.X = MathUtils.Round(position.X, nodeDistance);
+            if (hull == null)
+            {
+                position.Y = MathUtils.Round(position.Y, nodeDistance);
+            }
+            else
+            {
+                position.Y -= hull.Rect.Y - hull.Rect.Height;
+                position.Y = Math.Max(MathUtils.Round(position.Y, nodeDistance), heightFromFloor);
+                position.Y += hull.Rect.Y -hull.Rect.Height;
+            }
+
+            return position;
+        }
+
         private void CleanNodes()
         {
             for (int i = Nodes.Count - 2; i > 0; i--)
@@ -246,7 +264,7 @@ namespace Subsurface.Items.Components
         }
 
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing)
         {
             if (Nodes.Count == 0) return;
 
@@ -257,14 +275,62 @@ namespace Subsurface.Items.Components
 
             for (int i = 1; i < Nodes.Count; i++)
             {
-                DrawSection(spriteBatch, Nodes[i], Nodes[i - 1], i, Color.White);
+                DrawSection(spriteBatch, Nodes[i], Nodes[i - 1], i, item.Color);
             }
 
             if (isActive && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
             {
-                DrawSection(spriteBatch, Nodes[Nodes.Count - 1], newNodePos, Nodes.Count, Color.White * 0.5f);
+                DrawSection(spriteBatch, Nodes[Nodes.Count - 1], newNodePos, Nodes.Count, item.Color * 0.5f);
                 //nodes.Add(newNodePos);
             }
+
+            if (!editing) return;
+
+            for (int i = 1; i < Nodes.Count; i++)
+            {
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 3, (int)-Nodes[i].Y -3, 6, 6), Color.Red, true, 0.0f);
+
+                if (Vector2.Distance(Game1.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) < 20.0f)
+                {
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 10, (int)-Nodes[i].Y - 10, 20, 20), Color.Red, false, 0.0f);
+
+                    if (selectedNodeIndex==null && selectedNodeIndex>0 && selectedNodeIndex<Nodes.Count-1)
+                    {
+                        if ( PlayerInput.LeftButtonDown())
+                        {
+                            MapEntity.SelectEntity(item);
+                            selectedNodeIndex = i;
+                        }
+                        else
+                        {
+                            Nodes.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+            } 
+            if (PlayerInput.LeftButtonDown())
+            {
+
+                if (selectedNodeIndex!=null && item.IsSelected)
+                {
+                    MapEntity.DisableSelect = true;
+                    Nodes[(int)selectedNodeIndex] = Game1.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+
+                    Vector2 pos = Nodes[(int)selectedNodeIndex];
+
+
+                    Nodes[(int)selectedNodeIndex] = RoundNode(Nodes[(int)selectedNodeIndex], Hull.FindHull(Nodes[(int)selectedNodeIndex]));
+                    MapEntity.SelectEntity(item);
+                }
+            }
+            else
+            {
+                //if (selectedNodeIndex != null) MapEntity.SelectEntity(item); ;
+selectedNodeIndex = null;
+            }
+
+
 
         }
 
