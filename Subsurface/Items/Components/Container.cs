@@ -123,7 +123,7 @@ namespace Subsurface.Items.Components
         {
             foreach (Item contained in inventory.items)
             {
-                if (contained == null) continue;
+                if (contained == null || contained.Condition<=0.0f) continue;
 
                 if (contained.body!=null) contained.body.Enabled = false;
 

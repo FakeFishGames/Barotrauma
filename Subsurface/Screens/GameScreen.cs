@@ -148,21 +148,17 @@ namespace Subsurface
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
 
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
 
             Game1.LightManager.DrawLightmap(graphics, spriteBatch, cam);
-
-
-
-
+            sw.Stop();
+            System.Diagnostics.Debug.WriteLine(sw.ElapsedMilliseconds+" - "+sw.ElapsedTicks);
 
             //----------------------------------------------------------------------------------------
-            //1. draw the characters and the parts of the map that are behind them
+            //1. draw the background, characters and the parts of the submarine that are behind them
             //----------------------------------------------------------------------------------------
 
-            //cam.UpdateTransform();
-
-            //----------------------------------------------------------------------------------------
-            //draw the map and characters to a rendertarget
             graphics.SetRenderTarget(renderTarget);
             graphics.Clear(new Color(11, 18, 26, 255));
 
@@ -263,10 +259,18 @@ namespace Subsurface
 
             Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
 
+            if (Game1.LightManager.LightingEnabled)
+            {
+                //multiply scene with lightmap
+                spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
+                spriteBatch.Draw(Game1.LightManager.LightMap, Vector2.Zero, Color.White);
+                spriteBatch.End();
+            }
+
             //----------------------------------------------------------------------------------------
             //3. draw the sections of the map that are on top of the water
             //----------------------------------------------------------------------------------------
-
+            
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend, SamplerState.LinearWrap,
                 null, null, null,
@@ -287,17 +291,10 @@ namespace Subsurface
                 Game1.GameSession.Level.Render(graphics, cam);
                 Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
             }
-
-            if (Game1.Level != null) Game1.Level.Render(graphics, cam);
-
-            if (Game1.LightManager.LightingEnabled)
+            else if (Game1.Level != null)
             {
-                //multiply scene with lightmap
-                spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
-                spriteBatch.Draw(Game1.LightManager.LightMap, Vector2.Zero, Color.White);
-                spriteBatch.End();
+                Game1.Level.Render(graphics, cam);
             }
-
 
             Game1.LightManager.DrawFow(graphics,cam,LightManager.ViewPos);
 

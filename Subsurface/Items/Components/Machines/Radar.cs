@@ -54,7 +54,7 @@ namespace Subsurface.Items.Components
             pingState = (pingState + deltaTime * 0.5f);
             if (pingState>1.0f)
             {
-                item.Use(deltaTime,null);
+                item.Use(deltaTime, null);
                 pingState = 0.0f;
             }
 
@@ -63,7 +63,7 @@ namespace Subsurface.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            return true;
+            return (pingState > 1.0f);
         }
 
         public override void DrawHUD(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, Character character)
@@ -87,7 +87,7 @@ namespace Subsurface.Items.Components
             //lineEnd += new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Math.Min(width, height) / 2.0f;
             //GUI.DrawLine(spriteBatch, GuiFrame.Center, lineEnd, Color.Green);
 
-            if (!isActive || Level.Loaded == null) return;
+            if (!isActive) return;
 
             if (pingCircle!=null)
             {
@@ -97,35 +97,43 @@ namespace Subsurface.Items.Components
 
             float scale = 0.015f;
 
-            List<Vector2[]> edges = Level.Loaded.GetCellEdges(-Level.Loaded.Position, 7);
-            Vector2 offset = Vector2.Zero;
-
-            for (int i = 0; i < edges.Count; i++)
+            if (Level.Loaded != null)
             {
-                GUI.DrawLine(spriteBatch,
-                    center + (edges[i][0] - offset) * scale,
-                    center + (edges[i][1] - offset) * scale, Color.White);
-            }
+                List<Vector2[]> edges = Level.Loaded.GetCellEdges(-Level.Loaded.Position, 7);
+                Vector2 offset = Vector2.Zero;
 
-            scale = ConvertUnits.ToDisplayUnits(scale);
-            for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
-            {
-                Vector2 start = Submarine.Loaded.HullVertices[i] * scale;
-                start.Y = -start.Y;
-                Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * scale;
-                end.Y = -end.Y;
+                for (int i = 0; i < edges.Count; i++)
+                {
+                    GUI.DrawLine(spriteBatch,
+                        center + (edges[i][0] - offset) * scale,
+                        center + (edges[i][1] - offset) * scale, Color.White);
+                }
 
-                GUI.DrawLine(spriteBatch, center + start, center + end, Color.White);
+                scale = ConvertUnits.ToDisplayUnits(scale);
+                for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
+                {
+                    Vector2 start = Submarine.Loaded.HullVertices[i] * scale;
+                    start.Y = -start.Y;
+                    Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * scale;
+                    end.Y = -end.Y;
+
+                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.White);
+                }
             }
 
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null) continue;
 
-                if (c.SimPosition!=Vector2.Zero && c.SimPosition.Length() < 7*Level.GridCellWidth)
+                if (c.SimPosition != Vector2.Zero && c.SimPosition.Length() < 7 * Level.GridCellWidth)
                 {
-                    int width = (int)c.Mass/5;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)c.Position.X - width / 2, (int)c.Position.Y - width / 2, width, width), Color.White);
+                    int width = (int)Math.Min(c.Mass / 5, 30);
+
+                    Vector2 pos = c.Position * scale;
+                    pos.Y = -pos.Y;
+                    pos += center;
+
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - width / 2, (int)pos.Y - width / 2, width, width), Color.White, true);
                 }
             }
 

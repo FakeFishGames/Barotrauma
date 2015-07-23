@@ -213,6 +213,12 @@ namespace Subsurface
                     Game1.Level = new Level("asdf", 50.0f, 500,500, 50);
                     Game1.Level.Generate(100.0f);
                     break;
+                case "fixitems":
+                    foreach (Item it in Item.itemList)
+                    {
+                        it.Condition = 100.0f;
+                    }
+                    break;
                 case "fowenabled":
                 case "fow":
                 case "drawfow":
@@ -221,7 +227,15 @@ namespace Subsurface
                 case "lighting":
                 case "lightingenabled":
                 case "light":
+                case "lights":
                     Game1.LightManager.LightingEnabled = !Game1.LightManager.LightingEnabled;
+                    break;
+                case "oxygen":
+                case "air":
+                    foreach (Hull hull in Hull.hullList)
+                    {
+                        hull.OxygenPercentage = 100.0f;
+                    }
                     break;
                 case "lobbyscreen":
                 case "lobby":
@@ -266,8 +280,9 @@ namespace Subsurface
         }
 
         public static void ThrowError(string error, Exception e = null)
-        {
-            if (e!=null) error += " {"+e.Message+"}";
+        {            
+            if (e != null) error += " {" + e.Message + "}";
+            System.Diagnostics.Debug.WriteLine(error);
             NewMessage(error, Color.Red);
             isOpen = true;
         }

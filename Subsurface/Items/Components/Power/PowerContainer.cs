@@ -138,7 +138,7 @@ namespace Subsurface.Items.Components
                     return;
                 }
 
-                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, maxRechargeSpeed*rechargeSpeed, 0.05f);
+                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
                 charge += currPowerConsumption*voltage / 3600.0f;
             }
             //provide power to the grid

@@ -67,24 +67,32 @@ namespace Subsurface.Lights
         {
             graphics.SetRenderTarget(lightMap);
 
+            Rectangle viewRect = cam.WorldView;
+            viewRect.Y -= cam.WorldView.Height;
+
             //clear to some small ambient light
             graphics.Clear(AmbientLight);
             
             foreach (LightSource light in lights)
             {
+                if (light.Color.A < 0.01f || light.Range < 0.01f) continue;
+
+
+                if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
+
                 //clear alpha to 1
                 ClearAlphaToOne(graphics, spriteBatch);
 
                 //draw all shadows
                 //write only to the alpha channel, which sets alpha to 0
-                //graphics.RasterizerState = RasterizerState.CullNone;
-                //graphics.BlendState = CustomBlendStates.WriteToAlpha;
+                graphics.RasterizerState = RasterizerState.CullNone;
+                graphics.BlendState = CustomBlendStates.WriteToAlpha;
 
-                //foreach (ConvexHull ch in ConvexHull.list)
-                //{
-                //    //draw shadow
-                //    ch.DrawShadows(graphics, cam,  light.Position);
-                //}
+                foreach (ConvexHull ch in ConvexHull.list)
+                {
+                    //draw shadow
+                    ch.DrawShadows(graphics, cam, light.Position, false);
+                }
 
                 //draw the light shape
                 //where Alpha is 0, nothing will be written

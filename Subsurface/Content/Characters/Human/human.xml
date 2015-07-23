@@ -1,87 +1,87 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,4" femaleheadid="1,2" drowningtime="30">
+<character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,4" femaleheadid="1,4" drowningtime="30">
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
   
-  <ragdoll headposition="150" torsoposition="110" 
-           stepsize="35.0, 10.0">
+  <ragdoll headposition="156" torsoposition="120" 
+           stepsize="42.0, 12.0">
     
     <!-- head -->
     <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="3.0">
-      <sprite texture="Content/Characters/Human/[GENDER]head[HEADID].png" sourcerect="1,1,37,38" depth="0.12" origin="0.5,0.5"/>
+      <sprite texture="Content/Characters/Human/[GENDER]head[HEADID].png" sourcerect="1,1,37,38" depth="0.04" origin="0.5,0.5"/>
     </limb>
     <!-- body -->
-    <limb id = "1" width="26" height="30" mass = "20" type="Torso" attackpriority="3" impacttolerance="5.0">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="32,0,36,39" depth="0.045" origin="0.5,0.5"/>
+    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3" impacttolerance="5.0">
+      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="0,0,29,58" depth="0.05" origin="0.5,0.6"/>
     </limb>
-    <limb id = "12" width="26" height="30" mass = "20" type="Waist" impacttolerance="5.0">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="35,30,37,31" depth="0.05" origin="0.5,0.5"/>
+    <limb id = "12" radius="13" mass = "20" type="Waist" impacttolerance="5.0">
+      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,0,32,29" depth="0.045" origin="0.5,0.5"/>
     </limb>
     
   
     <!-- left arm -->
-    <limb id = "2" width="12" height="30" mass="3" type="LeftArm">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="0,0,16,34" depth="0.15" origin="0.5,0.5"/>
+    <limb id = "2" radius="8" height="20" mass="3" type="LeftArm">
+      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="30,2,17,39" depth="0.15" origin="0.5,0.5"/>
     </limb>
-    <limb id = "3" width="12" height="30" mass="3" type="LeftHand" pullpos="0.0,-15.0">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="16,0,16,49" depth="0.16" origin="0.5,0.5"/>
+    <limb id = "3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0.0,-15.0">
+      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="49,2,13,47" depth="0.16" origin="0.5,0.5"/>
     </limb>
 
     <!-- right arm -->
-    <limb id = "4" width="12" height="30" mass="3" type="RightArm">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="0,0,16,34" origin="0.5,0.5"/>
+    <limb id = "4" radius="8" height="20" mass="3" type="RightArm">
+      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="30,2,17,39" depth="0.01" origin="0.5,0.5"/>
     </limb>
-    <limb id = "5" width="12" height="30" mass ="3" type="RightHand" pullpos="0.0,-15.0">
-      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="16,0,16,49" origin="0.5,0.5"/>
+    <limb id = "5" radius="6" height="26" mass ="3" type="RightHand" pullpos="0.0,-15.0">
+      <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="49,2,13,47" origin="0.5,0.5"/>
     </limb>
 
     <!-- left leg -->
-    <limb id = "6" width="12" height="30" mass = "8" type="LeftThigh">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,0,24,47" depth="0.16" origin="0.5,0.5"/>
+    <limb id = "6" radius="10" height="30" mass = "8" type="LeftThigh">
+      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" depth="0.15" origin="0.5,0.5"/>
     </limb>
-    <limb id = "7" width="12" height="30" mass = "5" type="LeftLeg">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="24,1,18,39" depth="0.15" origin="0.5,0.5"/>
+    <limb id = "7" radius="6" height="39" mass = "5" type="LeftLeg">
+      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" depth="0.16" origin="0.5,0.5"/>
     </limb>
-    <limb id = "8" width="6" height="16" mass = "2" type ="LeftFoot" flip="true" pullpos="-3.0,0.0">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="43,4,15,26" depth="0.14" origin="0.5,0.5"/>
+    <limb id = "8" radius="5" height="13" mass = "2" type ="LeftFoot" flip="true" pullpos="-5.0,0.0">
+      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="35,53,16,25" depth="0.14" origin="0.5,0.5"/>
       <sound file ="Content/step.ogg"/>
     </limb>
   
     <!-- right leg -->
-    <limb id = "9" width="12" height="30" mass = "8" type="RightThigh">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="1,1,24,47" depth="0.12" origin="0.5,0.5"/>
+    <limb id = "9" radius="10" height="30" mass = "8" type="RightThigh">
+      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" depth="0.11" origin="0.5,0.5"/>
     </limb>
-    <limb id = "10" width="12" height="30" mass = "5" type="RightLeg">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="24,1,18,39" depth="0.11" origin="0.5,0.5"/>
+    <limb id = "10" radius="6" height="39" mass = "5" type="RightLeg">
+      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" depth="0.12" origin="0.5,0.5"/>
     </limb>
-    <limb id = "11" width="6" height="16" mass = "2" type ="RightFoot" flip="true" pullpos="-3.0,0.0">
-      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="43,4,15,26" depth="0.1" origin="0.5,0.5"/>
+    <limb id = "11" radius="5" height="13" mass = "2" type ="RightFoot" flip="true" pullpos="-5.0,0.0">
+      <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="35,53,16,25" depth="0.1" origin="0.5,0.5"/>
       <sound file ="Content/step.ogg"/>
     </limb>
   
   
 
     <!-- head to body -->
-    <joint limb1="0" limb1anchor="0,-13" limb2="1" limb2anchor="0,10" lowerlimit="-90" upperlimit="45"/>
-    <joint limb1="1" limb1anchor="0,-10" limb2="12" limb2anchor="0,10" lowerlimit="-40" upperlimit="40"/>   
+    <joint limb1="0" limb1anchor="0,-13" limb2="1" limb2anchor="-1,20" lowerlimit="-90" upperlimit="45"/>
+    <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,7" lowerlimit="-10" upperlimit="10"/>   
     
     
     <!-- body to left arm -->
-    <joint limb1="1" limb1anchor="-5,0" limb2="2" limb2anchor="0,10"/>
-    <joint limb1="2" limb1anchor="2,-14" limb2="3" limb2anchor="0,19" lowerlimit="0" upperlimit="170"/>
+    <joint limb1="1" limb1anchor="-3,14" limb2="2" limb2anchor="0,12"/>
+    <joint limb1="2" limb1anchor="0,-16" limb2="3" limb2anchor="-2,19" lowerlimit="0" upperlimit="170"/>
     <!-- body to right arm -->
-    <joint limb1="1" limb1anchor="-5,0" limb2="4" limb2anchor="0,10"/>
-    <joint limb1="4" limb1anchor="2,-14" limb2="5" limb2anchor="0,19" lowerlimit="0" upperlimit="170"/>
+    <joint limb1="1" limb1anchor="-3,14" limb2="4" limb2anchor="0,12"/>
+    <joint limb1="4" limb1anchor="0,-16" limb2="5" limb2anchor="-2,19" lowerlimit="0" upperlimit="170"/>
 
     <!-- body to left leg -->
-    <joint limb1="12" limb1anchor="0,-10" limb2="6" limb2anchor="0,14" lowerlimit="-30" upperlimit="140"/>
-    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,14" lowerlimit="-170" upperlimit="0"/>
-    <joint limb1="7" limb1anchor="0,-17" limb2="8" limb2anchor="5,9" lowerlimit="70" upperlimit="135"/>
+    <joint limb1="12" limb1anchor="0,-1" limb2="6" limb2anchor="0,14" lowerlimit="-30" upperlimit="140"/>
+    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="-170" upperlimit="0"/>
+    <joint limb1="7" limb1anchor="-3,-21" limb2="8" limb2anchor="5,7" lowerlimit="10" upperlimit="135"/>
   
     <!-- body to right leg -->
-    <joint limb1="12" limb1anchor="0,-10" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="140"/>
-    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,14" lowerlimit="-170" upperlimit="0"/>
-    <joint limb1="10" limb1anchor="0,-17" limb2="11" limb2anchor="5,9" lowerlimit="70" upperlimit="135"/>
+    <joint limb1="12" limb1anchor="0,-1" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="140"/>
+    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-170" upperlimit="0"/>
+    <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="10" upperlimit="135"/>
   
   </ragdoll>
 </character>

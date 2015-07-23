@@ -31,7 +31,9 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
 
     <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
       <requireditem name="Wrench" type="Equipped"/>
