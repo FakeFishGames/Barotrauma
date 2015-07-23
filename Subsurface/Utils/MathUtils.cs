@@ -152,6 +152,26 @@ namespace Subsurface
             return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
         }
 
+        public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
+        {
+            Vector2 circleDistance = new Vector2(Math.Abs(circlePos.X - rect.Center.X), Math.Abs(circlePos.Y -rect.Center.Y));
+
+
+
+            if (circleDistance.X > (rect.Width / 2 + radius)) { return false; }
+            if (circleDistance.Y > (rect.Height / 2 + radius)) { return false; }
+
+            if (circleDistance.X <= (rect.Width / 2)) { return true; }
+            if (circleDistance.Y <= (rect.Height / 2)) { return true; }
+
+            float distSqX = circleDistance.X - rect.Width / 2;
+            float distSqY = circleDistance.Y - rect.Height / 2;
+
+            float cornerDistanceSq = distSqX * distSqX + distSqY * distSqY;
+
+            return (cornerDistanceSq <= (radius * radius));
+        }
+
         /// <summary>
         /// divide a convex hull into triangles
         /// </summary>

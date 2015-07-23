@@ -3,12 +3,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Lights;
 using System;
+using System.IO;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
 {
     class LightComponent : Powered
     {
+        static Sound[] sparkSounds;
+
         private Color lightColor;
 
         //private Sprite sprite;
@@ -19,7 +22,7 @@ namespace Subsurface.Items.Components
 
         float lightBrightness;
 
-        [HasDefaultValue(100.0f, true)]
+        [Editable, HasDefaultValue(100.0f, true)]
         public float Range
         {
             get { return range; }
@@ -47,6 +50,16 @@ namespace Subsurface.Items.Components
         public LightComponent(Item item, XElement element)
             : base (item, element)
         {
+            if (sparkSounds==null)
+            {
+                sparkSounds = new Sound[4];
+                string dir = Path.GetDirectoryName(item.Prefab.ConfigFile)+"\\";
+                for (int i = 0; i<4; i++)
+                {
+                    sparkSounds[i] = Sound.Load(dir+"zap"+(i+1)+".ogg");
+                }
+            }
+
             //foreach (XElement subElement in element.Elements())
             //{
             //    if (subElement.Name.ToString().ToLower() != "sprite") continue;
@@ -79,8 +92,9 @@ namespace Subsurface.Items.Components
                 currPowerConsumption = powerConsumption;                
             }
 
-            if (voltage < Rand.Range(0.0f, minVoltage))
+            if (Rand.Range(0.0f, 1.0f)<0.05f && voltage < Rand.Range(0.0f, minVoltage))
             {
+                if (voltage>0.1f) sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 400.0f, item.Position);
                 lightBrightness = 0.0f;
             }
             else

@@ -162,7 +162,7 @@ namespace Subsurface.Items.Components
             //    return false;
             //}
 
-            if (attached) return false;
+            //if (attached) return false;
 
             item.body = body;
             item.body.Enabled = true;
@@ -172,11 +172,13 @@ namespace Subsurface.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (!attachable || item.body==null) return false;
+            if (!attachable || item.body==null) return true;
 
             item.Drop();
             item.body.Enabled = false;
             item.body = null;
+
+            attached = true;
 
             return true;
         }

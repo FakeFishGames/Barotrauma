@@ -164,10 +164,19 @@ namespace Subsurface
             float walkCycleSpeed = head.LinearVelocity.X * 0.08f;
             if (stairs != null)
             {
-                if (TargetMovement!=Vector2.Zero && TargetMovement.Length()>3.0f)
+                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -2.0f, 2.0f), TargetMovement.Y) ;
+
+                if ((TargetMovement.X>0.0f && stairs.StairDirection == Direction.Right) ||
+                    TargetMovement.X < 0.0f && stairs.StairDirection == Direction.Left)
                 {
-                    TargetMovement /= TargetMovement.Length() / 3.0f;
+                    TargetMovement *= 1.35f;
                 }
+                else                    
+                {
+
+                    TargetMovement /= 1.2f;
+                }
+
                 walkCycleSpeed *= 1.5f;
             }
 
@@ -211,12 +220,12 @@ namespace Subsurface
                     torso.pullJoint.Enabled = true;
                     torso.pullJoint.WorldAnchorB =
                         MathUtils.SmoothStep(torso.SimPosition,
-                        new Vector2(footMid + movement.X * 0.35f, colliderPos.Y + TorsoPosition - Math.Abs(walkPosX * 0.05f)), getUpSpeed);
+                        new Vector2(footMid + movement.X * 0.35f, colliderPos.Y + TorsoPosition), getUpSpeed);
 
                     head.pullJoint.Enabled = true;
                     head.pullJoint.WorldAnchorB =
                         MathUtils.SmoothStep(head.SimPosition,
-                        new Vector2(footMid + movement.X * 0.4f, colliderPos.Y + HeadPosition - Math.Abs(walkPosX * 0.05f)), getUpSpeed);
+                        new Vector2(footMid + movement.X * 0.4f, colliderPos.Y + HeadPosition), getUpSpeed);
                 }
 
 
@@ -224,46 +233,47 @@ namespace Subsurface
                 if (TargetMovement.X != 0.0f)
                 {
                     //progress the walking animation
-                    walkPos -= (walkCycleSpeed / runningModifier);
+                    walkPos -= (walkCycleSpeed / runningModifier)*0.8f;
 
                     MoveLimb(leftFoot,
                         colliderPos + new Vector2(
                             stepSize.X,
                             (stepSize.Y > 0.0f) ? stepSize.Y : -0.15f),
-                        10.0f, true);
+                        15.0f, true);
 
                     MoveLimb(rightFoot,
                         colliderPos + new Vector2(
                             -stepSize.X,
                             (-stepSize.Y > 0.0f) ? -stepSize.Y : -0.15f),
-                        10.0f, true);
+                        15.0f, true);
 
                     if (Math.Sign(stepSize.X) == Math.Sign(Dir))
                     {
-                        leftFoot.body.SmoothRotate(leftLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.3f, 20.0f * runningModifier);
+                        leftFoot.body.SmoothRotate(leftLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
                     }
                     else if (Math.Sign(-stepSize.X) == Math.Sign(Dir))
                     {
-                        rightFoot.body.SmoothRotate(rightLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.3f, 20 * runningModifier);
+                        rightFoot.body.SmoothRotate(rightLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20 * runningModifier);
                     }
 
                     if (walkPosY > 0.0f)
                     {
-                        GetLimb(LimbType.LeftThigh).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * -2.0f);
+                        GetLimb(LimbType.LeftThigh).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * -5.0f);
                     }
                     else
                     {
-                        GetLimb(LimbType.RightThigh).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * -2.0f);
+                        GetLimb(LimbType.RightThigh).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * -5.0f);
                     }
 
                     //calculate the positions of hands
                     handPos = torso.SimPosition;
-                    handPos.X = -walkPosX * 0.25f;
+                    handPos.X = -walkPosX * 0.1f * runningModifier;
 
-                    float lowerY = -0.4f / runningModifier;
-                    handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * 0.1)) * runningModifier;
+                    float lowerY = -0.6f + runningModifier/3.5f;
+                    
+                    handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * 0.1)) / runningModifier;
 
-                    Vector2 posAdditon = new Vector2(movement.X*0.05f, 0.0f);
+                    Vector2 posAdditon = new Vector2(movement.X*0.07f, 0.0f);
                     if (stairs!=null)
                     {
                         if ((stairs.StairDirection == Direction.Right && movement.X < 0.0f) ||
@@ -273,7 +283,7 @@ namespace Subsurface
                         }
                         else
                         {
-                            posAdditon.Y += 0.1f;
+                           posAdditon.Y += 0.1f;
                         }
                     }
 
@@ -318,17 +328,30 @@ namespace Subsurface
                     leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
                     rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
 
-                    handPos = torso.SimPosition;
-                    handPos.X += movement.X;
-                    handPos.Y -= 0.4f;
+                    
+                    
+
+                    //handPos = torso.SimPosition;
+                    //handPos.X += movement.X;
+                    //handPos.Y -= 0.4f;
                     if (!rightHand.Disabled)
                     {
-                        MoveLimb(rightHand, handPos, 1.5f, true);
+                        // MoveLimb(rightHand, handPos, 0.05f, true);
+                        //rightHand.body.ApplyLinearImpulse((handPos - rightHand.Position));
+                        rightHand.body.SmoothRotate(0.0f, 5.0f);
+
+                        var rightArm = GetLimb(LimbType.RightArm);
+                        rightArm.body.SmoothRotate(0.0f, 20.0f);
                     }
 
                     if (!leftHand.Disabled)
                     {
-                        MoveLimb(leftHand, handPos, 1.5f, true);
+                        //MoveLimb(leftHand, handPos, 0.05f, true);
+                        //leftHand.body.ApplyLinearImpulse((handPos - leftHand.Position));
+                        leftHand.body.SmoothRotate(0.0f, 5.0f);
+
+                        var leftArm = GetLimb(LimbType.LeftArm);
+                        leftArm.body.SmoothRotate(0.0f, 20.0f);
                     }
                 }
             }
@@ -554,7 +577,7 @@ namespace Subsurface
 
             handPos = new Vector2(
                 ladderSimPos.X,
-                head.SimPosition.Y + 0.3f + movement.Y * 0.1f - ladderSimPos.Y);
+                head.SimPosition.Y + 0.5f + movement.Y * 0.1f - ladderSimPos.Y);
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
@@ -570,32 +593,34 @@ namespace Subsurface
             rightHand.body.ApplyTorque(Dir * 2.0f);
 
             footPos = new Vector2(
-                handPos.X + Dir*0.1f,
+                handPos.X - Dir*0.05f,
                 head.SimPosition.Y - stepHeight * 2.7f - ladderSimPos.Y);
+
+            //if (movement.Y < 0) footPos.Y += 0.05f;
 
             MoveLimb(leftFoot,
                 new Vector2(footPos.X,
                 MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight + ladderSimPos.Y),
-                7.5f, true);
+                15.5f, true);
 
             MoveLimb(rightFoot,
                 new Vector2(footPos.X,
                 MathUtils.Round(footPos.Y, stepHeight * 2.0f) + ladderSimPos.Y),
-                7.5f, true);
+                15.5f, true);
 
             //apply torque to the legs to make the knees bend
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
 
-            leftLeg.body.ApplyTorque(Dir * -3.0f);
-            rightLeg.body.ApplyTorque(Dir * -3.0f);
+            leftLeg.body.ApplyTorque(Dir * -8.0f);
+            rightLeg.body.ApplyTorque(Dir * -8.0f);
 
             //apply forces to the head and the torso to move the character up/down
             float movementFactor = (handPos.Y / stepHeight) * (float)Math.PI;
             movementFactor = 0.8f + (float)Math.Abs(Math.Sin(movementFactor));
 
-            Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.5f) * movementFactor;
-            torso.body.ApplyForce(climbForce * 65.0f * torso.Mass);
+            Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.4f) * movementFactor;
+            torso.body.ApplyForce(climbForce * 40.0f * torso.Mass);
             head.body.SmoothRotate(0.0f);
 
             Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.First();
@@ -607,8 +632,8 @@ namespace Subsurface
             //   - reached the top or bottom of the ladder
             if (Math.Abs(torso.LinearVelocity.Y) > 5.0f ||
                 TargetMovement.X != 0.0f ||
-                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition*2.0f) ||
-                (TargetMovement.Y > 0.0f && -handPos.Y < ConvertUnits.ToSimUnits(10.0f)))
+                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition*1.5f) ||
+                (TargetMovement.Y > 0.0f && handPos.Y > 0.3f))
             {
                 Anim = Animation.None;
                 character.SelectedConstruction = null;

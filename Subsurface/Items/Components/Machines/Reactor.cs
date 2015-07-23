@@ -112,7 +112,7 @@ namespace Subsurface.Items.Components
             
             fissionRate = Math.Min(fissionRate, AvailableFuel);
             
-            float heat = 100 * fissionRate;
+            float heat = 100 * fissionRate * (AvailableFuel/2000.0f);
             float heatDissipation = 50 * coolingRate + ExtraCooling;
 
             float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 1000.0f;
@@ -125,14 +125,14 @@ namespace Subsurface.Items.Components
             }
             else if (temperature==0.0f)
             {
-                if (powerUpTask==null || powerUpTask.IsFinished)
+                if (powerUpTask == null || powerUpTask.IsFinished)
                 {
                     powerUpTask = new PropertyTask(item, IsRunning, 50.0f, "Power up the reactor");
-                }  
+                }
             }
 
 
-            item.Condition -= temperature*deltaTime*0.00005f;
+            item.Condition -= temperature * deltaTime * 0.00005f;
 
             if (temperature > shutDownTemp)
             {
@@ -360,13 +360,13 @@ namespace Subsurface.Items.Components
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.White);
 
-            Vector2 prevPoint = new Vector2(x, y + height - (graph[1] + (graph[0] - graph[1]) * xOffset) * yScale);
+            Vector2 prevPoint = new Vector2(x + width, y + height - (graph[1] + (graph[0] - graph[1]) * xOffset) * yScale);
 
-            float currX = x + ((xOffset - 1.0f) * lineWidth);
+            float currX = x + width - ((xOffset - 1.0f) * lineWidth);
 
             for (int i = 1; i < graph.Count - 1; i++)
             {
-                currX += lineWidth;
+                currX -= lineWidth;
 
                 Vector2 newPoint = new Vector2(currX, y + height - graph[i] * yScale);
 
@@ -375,7 +375,7 @@ namespace Subsurface.Items.Components
                 prevPoint = newPoint;
             }
 
-            Vector2 lastPoint = new Vector2(x + width,
+            Vector2 lastPoint = new Vector2(x,
                 y + height - (graph[graph.Count - 1] + (graph[graph.Count - 2] - graph[graph.Count - 1]) * xOffset) * yScale);
 
             GUI.DrawLine(spriteBatch, prevPoint, lastPoint, Color.Red);

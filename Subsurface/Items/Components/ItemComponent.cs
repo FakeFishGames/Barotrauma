@@ -396,18 +396,18 @@ namespace Subsurface
 
         public bool HasRequiredContainedItems(bool addMessage)
         {
-            if (!requiredItems.Any()) return true;
+            List<RelatedItem> requiredContained = requiredItems.FindAll(ri=> ri.Type == RelatedItem.RelationType.Contained);
+
+            if (!requiredContained.Any()) return true;
 
             Item[] containedItems = item.ContainedItems;
             if (containedItems == null || !containedItems.Any()) return false;
 
-            foreach (RelatedItem ri in requiredItems)
+            foreach (RelatedItem ri in requiredContained)
             {
-                if (ri.Type != RelatedItem.RelationType.Contained) continue;
                 Item containedItem = Array.Find(containedItems, x => x != null && x.Condition > 0.0f && ri.MatchesItem(x));
                 if (containedItem == null)
                 {
-                    //if (addMessage && !String.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
                     if (addMessage && !string.IsNullOrEmpty(ri.Msg)) GUI.AddMessage(ri.Msg, Color.Red);
                     return false;
                 }
