@@ -172,6 +172,13 @@ namespace Subsurface
             }
         }
 
+        public float Bleeding
+        {
+            get { return bleeding; }
+            set { bleeding = value; }
+        }
+
+
         //public float Blood
         //{
         //    get { return blood; }
@@ -575,7 +582,7 @@ namespace Subsurface
                 Body body = Submarine.PickBody(AnimController.limbs[0].SimPosition, mouseSimPos);
                 Structure structure = null;
                 if (body != null) structure = body.UserData as Structure;
-                if (structure!=null)
+                if (structure != null)
                 {
                     if (!structure.CastShadow && moveCam)
                     {

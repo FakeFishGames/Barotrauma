@@ -312,7 +312,17 @@ namespace Subsurface
         private void CalculateImpact(Fixture f1, Fixture f2, Contact contact)
         {
             Vector2 normal = contact.Manifold.LocalNormal;
-            float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
+
+            Vector2 avgVelocity = Vector2.Zero;
+            foreach (Limb limb in limbs)
+            {
+                avgVelocity += limb.LinearVelocity;
+            }
+
+            avgVelocity = avgVelocity / limbs.Count();
+    
+
+            float impact = Vector2.Dot((f1.Body.LinearVelocity + avgVelocity)/2.0f, -normal);
                         
             Limb l = (Limb)f1.Body.UserData;
 

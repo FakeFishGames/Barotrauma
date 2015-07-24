@@ -10,14 +10,18 @@ namespace Subsurface.Items.Components
         //negative values mean that the item is providing power to connected items
         protected float currPowerConsumption;
 
-        //the amount of power available for the item through connected items
+        //current voltage of the item (load / power)
         protected float voltage;
 
-        //the amount of power required for the item to work
+        //the minimum voltage required for the item to work
         protected float minVoltage;
 
         //the maximum amount of power the item can draw from connected items
         protected float powerConsumption;
+
+        private bool powerOnSoundPlayed;
+
+        private static Sound powerOnSound;
 
         [Editable, HasDefaultValue(0.5f, true)]
         public float MinVoltage
@@ -68,14 +72,28 @@ namespace Subsurface.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (currPowerConsumption == 0.0f) return;
-            if (voltage > minVoltage) ApplyStatusEffects(ActionType.OnActive, deltaTime);
+            if (voltage > minVoltage)
+            {
+                if (!powerOnSoundPlayed)
+                {
+                    powerOnSound.Play(1.0f, 600.0f, item.Position);
+                    powerOnSoundPlayed = true;
+                }
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);
+            }
+            else if (voltage < 0.1f)            
+            {
+                powerOnSoundPlayed = false;
+            }
         }
 
         public Powered(Item item, XElement element)
             : base(item, element)
         {
-            //minVoltage = ToolBox.GetAttributeFloat(element, "minvoltage", 10.0f);
-            //powerConsumption = ToolBox.GetAttributeFloat(element, "powerconsumption", 15.0f);
+            if (powerOnSound==null)
+            {
+                powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg");
+            }
         }
     }
 }

@@ -90,6 +90,13 @@ namespace Subsurface
             set { canBeSelected = value; }
         }
 
+        [HasDefaultValue(false, false)]
+        public bool DeleteOnUse
+        {
+            get;
+            set;
+        }
+
         public Item Item
         {
             get { return item; }

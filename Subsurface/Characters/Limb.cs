@@ -184,7 +184,7 @@ namespace Subsurface
                 body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionMisc;
             }
 
-            impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 20.0f);
+            impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 8.0f);
 
             body.UserData = this;
 
