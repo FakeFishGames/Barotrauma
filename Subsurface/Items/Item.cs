@@ -796,6 +796,8 @@ namespace Subsurface
         {
             if (condition == 0.0f) return;
 
+            bool remove = false;
+
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
@@ -804,8 +806,12 @@ namespace Subsurface
                     ic.PlaySound(ActionType.OnUse, 1.0f, Position);
 
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
+
+                    if (ic.DeleteOnUse) remove = true;
                 }
             }
+
+            if (remove) Remove();
         }
 
         public void SecondaryUse(float deltaTime, Character character = null)

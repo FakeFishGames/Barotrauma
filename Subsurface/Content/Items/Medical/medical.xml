@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Syringe"
+    Tags="smallitem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="0,0,24,5"/>
+
+    <Body width="24" height="5"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+
+    <Holdable RemoveOnUse="true">
+      <StatusEffect type="OnUse" target="This, Character" Condition="-100.0" health="30.0" disabledeltatime="true"/>
+    </Holdable>
+  </Item>
+
+  <Item
+    name="Bandage"
+    Tags="smallitem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="0,14,14,18"/>
+
+    <Body width="9" height="15"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+
+    <Holdable RemoveOnUse="true">
+      <StatusEffect type="OnUse" target="This, Character" Condition="-100.0" bleeding="-10.0" disabledeltatime="true"/>
+    </Holdable>
+  </Item>
+
+</Items>
+
+  
+
+
