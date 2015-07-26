@@ -159,8 +159,10 @@ namespace Subsurface
         private float loadState = 0.0f;
         private IEnumerable<Status> Load()
         {
-            GUI.Font = Content.Load<SpriteFont>("SpriteFont1");
-            GUI.SmallFont = Content.Load<SpriteFont>("SmallFont");
+            GUI.Font        = ToolBox.TryLoadFont("SpriteFont1", Content);
+            GUI.SmallFont   = ToolBox.TryLoadFont("SmallFont", Content);
+
+            sw = new Stopwatch();
 
             LightManager = new Lights.LightManager(GraphicsDevice);
 
@@ -246,7 +248,7 @@ namespace Subsurface
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
             PlayerInput.Update(deltaTime);
 
-            if (loadState>=100.0f && !titleScreenOpen)
+            if (loadState >= 100.0f && !titleScreenOpen)
             {
                 //if (PlayerInput.KeyDown(Keys.Escape)) Quit();
 
@@ -289,13 +291,20 @@ namespace Subsurface
                     titleScreenOpen = false;
                 }
             }
-            else if (loadState>=100.0f)
+            else if (loadState >= 100.0f)
             {
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
             }
             //renderTimeElapsed = (int)renderTimer.Elapsed.Ticks;
             //renderTimer.Stop();
+            if (sw.Elapsed.TotalSeconds < Physics.step)
+            {
+                System.Threading.Thread.Sleep((int)((Physics.step - sw.Elapsed.TotalSeconds)*1000.0));
+            }
+            sw.Restart();
         }
+
+        Stopwatch sw;
 
         protected override void OnExiting(object sender, EventArgs args)
         {

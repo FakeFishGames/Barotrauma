@@ -29,6 +29,21 @@ namespace Subsurface
             return doc;
         }
 
+        public static SpriteFont TryLoadFont(string file, Microsoft.Xna.Framework.Content.ContentManager contentManager)
+        {
+            SpriteFont font = null;
+            try
+            {
+                font = contentManager.Load<SpriteFont>(file);
+            }
+            catch
+            {
+                DebugConsole.ThrowError("Loading font ''"+file+"'' failed");
+            }
+
+            return font;
+        }
+
         public static object GetAttributeObject(XElement element, string name)
         {            
             if (element.Attribute(name) == null) return null;

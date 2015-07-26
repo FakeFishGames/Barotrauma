@@ -9,7 +9,7 @@ namespace Subsurface
 {
     class LobbyScreen : Screen
     {
-        enum PanelTab { Crew = 0, Map = 1, Hire = 2 }
+        enum PanelTab { Crew = 0, Map = 1, CurrentLocation = 2 }
 
         GUIFrame leftPanel;
         GUIFrame[] rightPanel;
@@ -52,8 +52,8 @@ namespace Subsurface
             button.UserData = PanelTab.Crew;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 140, 100, 30), "Hire", null, Alignment.Left, GUI.style, leftPanel);
-            button.UserData = PanelTab.Hire;
+            button = new GUIButton(new Rectangle(0, 140, 100, 30), "Location", null, Alignment.Left, GUI.style, leftPanel);
+            button.UserData = PanelTab.CurrentLocation;
             button.OnClicked = SelectRightPanel;
    
             //---------------------------------------------------------------
@@ -87,11 +87,15 @@ namespace Subsurface
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.Hire] = new GUIFrame(panelRect, GUI.style);
+            rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(panelRect, GUI.style);
             //rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
 
-            hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.style, Alignment.Left, rightPanel[(int)PanelTab.Hire]);            
-            hireList.OnSelected = HireCharacter;
+
+            //new GUITextBlock(new Rectangle(0, 0, 200, 25), "Location: ", Color.Transparent, Color.White, Alignment.Left, GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
+
+
+            //hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.style, Alignment.Left, rightPanel[(int)PanelTab.CurrentLocation]);            
+            //hireList.OnSelected = HireCharacter;
         }
 
         public override void Select()
@@ -104,6 +108,45 @@ namespace Subsurface
 
             UpdateCharacterLists();            
         }
+
+        private void UpdateLocationTab(Location location)
+        {
+            rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(rightPanel[(int)PanelTab.CurrentLocation].Rect, GUI.style);
+            rightPanel[(int)PanelTab.CurrentLocation].UserData = location;
+            //rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
+            
+            new GUITextBlock(new Rectangle(0, 0, 200, 25), 
+                "Location: "+location.Name, GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
+            new GUITextBlock(new Rectangle(0, 0, 200, 25),
+                "("+location.Type+")", GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
+            
+            if (location.HireManager != null)
+            {
+                hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.style, Alignment.Left, rightPanel[(int)PanelTab.CurrentLocation]);
+                hireList.OnSelected = HireCharacter;
+
+                hireList.ClearChildren();
+                foreach (CharacterInfo c in location.HireManager.availableCharacters)
+                {
+                    //GUIFrame frame = new GUIFrame(
+                    //    new Rectangle(0, 0, 0, 25), Color.Transparent, null, hireList);
+                    //frame.UserData = c;
+                    //frame.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
+
+                    GUITextBlock textBlock = new GUITextBlock(
+                        new Rectangle(0, 0, 0, 25),
+                        c.Name + " (" + c.Job.Name + ")", GUI.style, hireList);
+                    textBlock.UserData = c;
+
+                    textBlock = new GUITextBlock(
+                        new Rectangle(0, 0, 0, 25),
+                        c.Salary.ToString(),
+                        null, null,
+                        Alignment.TopRight, GUI.style, textBlock);
+                }
+            }
+        }
+
 
         public override void Deselect()
         {
@@ -192,25 +235,6 @@ namespace Subsurface
                 textBlock.UserData = c;
             }
 
-            hireList.ClearChildren();
-            foreach (CharacterInfo c in gameMode.hireManager.availableCharacters)
-            {
-                //GUIFrame frame = new GUIFrame(
-                //    new Rectangle(0, 0, 0, 25), Color.Transparent, null, hireList);
-                //frame.UserData = c;
-                //frame.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
-
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    c.Name + " (" + c.Job.Name + ")", GUI.style, hireList);
-                textBlock.UserData = c;
-
-                textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    c.Salary.ToString(),
-                    null, null,
-                    Alignment.TopRight, GUI.style, textBlock);
-            }
         }
 
         public override void Update(double deltaTime)
@@ -225,8 +249,7 @@ namespace Subsurface
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
 
-            if (characterList.CountChildren != gameMode.crewManager.characterInfos.Count
-                || hireList.CountChildren != gameMode.hireManager.availableCharacters.Count)
+            if (characterList.CountChildren != gameMode.crewManager.characterInfos.Count)
             {
                 UpdateCharacterLists();
             }
@@ -247,7 +270,12 @@ namespace Subsurface
                     rightPanel[selectedRightPanel].Rect.Right - 20 - 400, 
                     rightPanel[selectedRightPanel].Rect.Y + 20, 
                     400, 400));
-            }            
+            }
+     
+            if (rightPanel[(int)selectedRightPanel].UserData as Location != Game1.GameSession.Map.CurrentLocation)
+            {
+                UpdateLocationTab(Game1.GameSession.Map.CurrentLocation);
+            }
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -350,7 +378,7 @@ namespace Subsurface
             CharacterInfo characterInfo = selection as CharacterInfo;
             if (characterInfo == null) return false;
 
-            gameMode.TryHireCharacter(characterInfo);
+            gameMode.TryHireCharacter(Game1.GameSession.Map.CurrentLocation.HireManager, characterInfo);
 
             return false;
         }

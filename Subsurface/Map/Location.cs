@@ -9,13 +9,15 @@ namespace Subsurface
 
     class Location
     {
-        string name;
+        private string name;
 
-        Vector2 mapPosition;
+        private Vector2 mapPosition;
 
-        LocationType type;
+        private LocationType type;
 
-        public List<LocationConnection> connections;
+        private HireManager hireManager;
+
+        public List<LocationConnection> Connections;
 
         public string Name
         {
@@ -27,13 +29,32 @@ namespace Subsurface
             get { return mapPosition; }
         }
 
+        
+        public LocationType Type
+        {
+            get { return type; }
+        }
+
+        public HireManager HireManager
+        {
+            get { return hireManager; }
+        }
+
         public Location(Vector2 mapPosition)
         {
-            this.name = RandomName(LocationType.Random());
+            this.type = LocationType.Random();
+
+            this.name = RandomName(type);
 
             this.mapPosition = mapPosition;
 
-            connections = new List<LocationConnection>();
+            if (type.HasHireableCharacters)
+            {
+                hireManager = new HireManager();
+                hireManager.GenerateCharacters(Character.HumanConfigFile, 10);
+            }
+
+            Connections = new List<LocationConnection>();
         }
 
         public static Location CreateRandom(Vector2 position)
