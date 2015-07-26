@@ -81,6 +81,11 @@ namespace Subsurface
             }
         }
 
+        public static JobPrefab Random()
+        {
+            return List[Rand.Int(List.Count)];
+        }
+
         private void LoadSkills(XElement element)
         {
             foreach (XElement subElement in element.Elements())

@@ -13,17 +13,23 @@ namespace Subsurface
         //sum of the commonness-values of each location type
         private static int totalWeight;
 
-        string name;
+        private string name;
 
         private int commonness;
 
-        List<string> nameFormats;
+        private List<string> nameFormats;
 
+        public bool HasHireableCharacters
+        {
+            get;
+            private set;
+        }
+        
         public string Name
         {
             get { return name; }
         }
-
+        
         public List<string> NameFormats
         {
             get { return nameFormats; }
@@ -35,6 +41,8 @@ namespace Subsurface
 
             commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
             totalWeight += commonness;
+
+            HasHireableCharacters = ToolBox.GetAttributeBool(element, "hireablecharacters", false);
 
             nameFormats = new List<string>();
             foreach (XAttribute nameFormat in element.Element("nameformats").Attributes())

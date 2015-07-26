@@ -10,8 +10,10 @@ namespace Subsurface
 {
     class SinglePlayerMode : GameMode
     {
+        private const int StartCharacterAmount = 3;
+
         public readonly CrewManager crewManager;
-        public readonly HireManager hireManager;
+        //public readonly HireManager hireManager;
 
         private GUIButton endShiftButton;
 
@@ -29,23 +31,26 @@ namespace Subsurface
 
         private bool savedOnStart;
 
-        public SinglePlayerMode(GameModePreset preset)
+        public SinglePlayerMode(GameModePreset preset, bool generateCrew=true)
             : base(preset)
         {
             crewManager = new CrewManager();
-            hireManager = new HireManager();
 
             endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.style);
             endShiftButton.OnClicked = EndShift;
 
-            hireManager.GenerateCharacters(Character.HumanConfigFile, 10);
-
+            for (int i = 0; i < StartCharacterAmount; i++)
+            {
+                CharacterInfo characterInfo =
+                    new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.Random());
+                crewManager.characterInfos.Add(characterInfo);
+            }
             
             //day = 1;  
         }
 
         public SinglePlayerMode(XElement element)
-            : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"))
+            : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"), false)
         {
             //day = ToolBox.GetAttributeInt(element,"day",1);
 
@@ -85,7 +90,7 @@ namespace Subsurface
             crewManager.StartShift();
         }
 
-        public bool TryHireCharacter(CharacterInfo characterInfo)
+        public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
         {
             if (crewManager.Money < characterInfo.Salary) return false;
 

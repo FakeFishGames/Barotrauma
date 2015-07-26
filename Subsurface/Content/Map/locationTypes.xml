@@ -9,7 +9,8 @@
   </None>
 
   <City
-    commonness="3">
+    commonness="3"
+    hireablecharacters="true">
     <nameformats
       f0="The City of [name]"
       f1="[name] City"
@@ -18,7 +19,8 @@
   </City>
 
   <Military
-    commonness="1">
+    commonness="1"
+    hireablecharacters="true">
     <nameformats
       f0="[name] Outpost"
       f1="[name] Facility"
@@ -27,7 +29,8 @@
   </Military>
 
   <Research
-    commonness="1">
+    commonness="1"
+    hireablecharacters="true">
     <nameformats
       f0="[name] Research Facility"
       f1="[name] Research Center"

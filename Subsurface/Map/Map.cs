@@ -145,8 +145,8 @@ namespace Subsurface
 
                 foreach (LocationConnection connection in connections)
                 {
-                    connection.Locations[0].connections.Add(connection);
-                    connection.Locations[1].connections.Add(connection);
+                    connection.Locations[0].Connections.Add(connection);
+                    connection.Locations[1].Connections.Add(connection);
                 }
 
             for (int i = connections.Count - 1; i >= 0; i--)
@@ -181,7 +181,7 @@ namespace Subsurface
             currDifficulty += Rand.Range(difficultyIncrease.X, difficultyIncrease.Y, false);
             if (currDifficulty > Rand.Range(difficultyCutoff.X, difficultyCutoff.Y, false)) currDifficulty = 10.0f;
             
-            foreach (LocationConnection connection in start.connections)
+            foreach (LocationConnection connection in start.Connections)
             {
                 if (!locations.Contains(connection)) continue;
 

@@ -15,6 +15,7 @@ namespace Subsurface
 
         public void GenerateCharacters(string file, int amount)
         {
+            
             for (int i = 0 ; i<amount ; i++)
             {
                 availableCharacters.Add(new CharacterInfo(file));
