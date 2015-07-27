@@ -76,13 +76,11 @@ namespace Subsurface.Lights
             foreach (LightSource light in lights)
             {
                 if (light.Color.A < 0.01f || light.Range < 0.01f) continue;
-
-
-                if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
-
                 //clear alpha to 1
-                ClearAlphaToOne(graphics, spriteBatch);
-
+                ClearAlphaToOne(graphics, spriteBatch);   
+             
+                if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
+                
                 //draw all shadows
                 //write only to the alpha channel, which sets alpha to 0
                 graphics.RasterizerState = RasterizerState.CullNone;

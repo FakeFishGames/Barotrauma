@@ -57,5 +57,10 @@ namespace Subsurface.Lights
             float scale = range / ((float)lightTexture.Width / 2.0f);
             spriteBatch.Draw(lightTexture, new Vector2(Position.X, -Position.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
         }
+
+        public void Remove()
+        {
+            Game1.LightManager.RemoveLight(this);
+        }
     }
 }

@@ -147,13 +147,7 @@ namespace Subsurface
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-
             Game1.LightManager.DrawLightmap(graphics, spriteBatch, cam);
-            sw.Stop();
-            System.Diagnostics.Debug.WriteLine(sw.ElapsedMilliseconds+" - "+sw.ElapsedTicks);
 
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
@@ -277,6 +271,8 @@ namespace Subsurface
                 cam.Transform);
 
             Submarine.DrawFront(spriteBatch);
+
+            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
 
             if (Game1.GameSession != null && Game1.GameSession.Level != null)
             {

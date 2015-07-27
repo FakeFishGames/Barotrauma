@@ -284,8 +284,12 @@ namespace Subsurface.Networking
             }
                     
             NetworkEvent.events.Clear();
-            
-            CheckServerMessages();
+
+            try
+            {
+                CheckServerMessages();
+            }
+            catch { }
 
             // Update current time
             updateTimer = DateTime.Now + updateInterval;

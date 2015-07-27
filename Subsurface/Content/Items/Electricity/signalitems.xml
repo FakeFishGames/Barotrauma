@@ -7,7 +7,8 @@
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    canbepicked="true">
+    canbepicked="true"
+    price="10">
 
     <Sprite texture ="wire.png" depth="0.55"/>
 
@@ -23,7 +24,8 @@
     name="And Component"
     Tags="smallitem"
     pickdistance="150"
-    linkable="true">
+    linkable="true"
+    price="10">
 
     <Sprite texture ="and.png"  depth="0.8"/>
 
@@ -52,7 +54,8 @@
     name="Or Component"
     Tags="smallitem"
     pickdistance="150"
-    linkable="true">
+    linkable="true"
+    price="10">
 
     <Sprite texture ="or.png" depth="0.8"/>
 
@@ -79,7 +82,8 @@
     name="Not Component"
     Tags="smallitem"
     pickdistance="150"
-    linkable="true">
+    linkable="true"
+    price="10">
 
     <Sprite texture ="not.png" depth="0.8"/>
 
@@ -105,7 +109,8 @@
     name="Light Component"
     Tags="smallitem"
     pickdistance="150"
-    linkable="true">
+    linkable="true"
+    price="10">
 
     <Sprite texture ="light.png" depth="0.8"/>
 
@@ -133,7 +138,8 @@
     name="Oxygen Detector"
     Tags="smallitem"
     pickdistance="150"
-    linkable="true">
+    linkable="true"
+    price="10">
 
     <Sprite texture ="light.png" depth="0.8"/>
 
@@ -157,7 +163,8 @@
     name="RegEx Find Component"
     Tags="smallitem"
     pickdistance="150"
-    linkable="true">
+    linkable="true"
+    price="10">
 
     <Sprite texture ="light.png" depth="0.8"/>
 

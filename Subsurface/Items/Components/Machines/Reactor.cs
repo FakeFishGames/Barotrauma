@@ -123,7 +123,7 @@ namespace Subsurface.Items.Components
                 MeltDown();
                 return;
             }
-            else if (temperature==0.0f)
+            else if (temperature == 0.0f)
             {
                 if (powerUpTask == null || powerUpTask.IsFinished)
                 {

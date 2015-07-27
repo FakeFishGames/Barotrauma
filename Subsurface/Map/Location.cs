@@ -29,6 +29,7 @@ namespace Subsurface
             get { return mapPosition; }
         }
 
+        public bool Discovered;
         
         public LocationType Type
         {

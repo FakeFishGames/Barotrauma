@@ -83,6 +83,12 @@ namespace Subsurface.Items.Components
                 light.Position = ConvertUnits.ToDisplayUnits(item.body.Position);
             }
 
+            if (item.container!= null)
+            {
+                light.Color = Color.Transparent;
+                return;
+            }
+
             if (powerConsumption == 0.0f)
             {
                 voltage = 1.0f;
@@ -92,9 +98,9 @@ namespace Subsurface.Items.Components
                 currPowerConsumption = powerConsumption;                
             }
 
-            if (Rand.Range(0.0f, 1.0f)<0.05f && voltage < Rand.Range(0.0f, minVoltage))
+            if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
             {
-                if (voltage>0.1f) sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 400.0f, item.Position);
+                if (voltage > 0.1f) sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 400.0f, item.Position);
                 lightBrightness = 0.0f;
             }
             else
@@ -115,6 +121,13 @@ namespace Subsurface.Items.Components
             {
                 light.Color = Color.Transparent;
             }   
+        }
+
+        public override void Remove()
+        {
+            base.Remove();
+
+            light.Remove();
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)

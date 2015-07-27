@@ -10,50 +10,58 @@ namespace Subsurface
 {
     class SinglePlayerMode : GameMode
     {
-        private const int StartCharacterAmount = 3;
+        //private const int StartCharacterAmount = 3;
 
         public readonly CrewManager crewManager;
         //public readonly HireManager hireManager;
 
         private GUIButton endShiftButton;
 
-        //private int day;
-
-        //public int Day
-        //{
-        //    get { return day; }
-        //}
-
+        public readonly CargoManager CargoManager;
+        
         public Map map;
 
-        bool crewDead;
+        private bool crewDead;
         private float endTimer;
 
         private bool savedOnStart;
 
-        public SinglePlayerMode(GameModePreset preset, bool generateCrew=true)
+        public SinglePlayerMode(GameModePreset preset)
             : base(preset)
         {
             crewManager = new CrewManager();
 
+            CargoManager = new CargoManager();
+
             endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.style);
             endShiftButton.OnClicked = EndShift;
 
-            for (int i = 0; i < StartCharacterAmount; i++)
+            for (int i = 0; i < 3; i++)
             {
+                JobPrefab jobPrefab = null;
+                switch (i)
+                {
+                    case 0:
+                        jobPrefab = JobPrefab.List.Find(jp => jp.Name == "Captain");
+                        break;
+                    case 1:
+                        jobPrefab = JobPrefab.List.Find(jp => jp.Name == "Engineer");
+                        break;
+                    case 2:
+                        jobPrefab = JobPrefab.List.Find(jp => jp.Name == "Mechanic");
+                        break;
+                }
+
                 CharacterInfo characterInfo =
-                    new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.Random());
+                    new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab);
                 crewManager.characterInfos.Add(characterInfo);
             }
-            
-            //day = 1;  
+  
         }
 
         public SinglePlayerMode(XElement element)
-            : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"), false)
+            : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"))
         {
-            //day = ToolBox.GetAttributeInt(element,"day",1);
-
             string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
 
             GenerateMap(mapSeed);
@@ -75,15 +83,13 @@ namespace Subsurface
 
         public override void Start(TimeSpan duration)
         {
+            CargoManager.CreateItems();
+
             if (!savedOnStart)
             {
                 SaveUtil.SaveGame(Game1.GameSession.SavePath);
                 savedOnStart = true;
-
-
-                //Game1.GameSession.submarine.Load();
             }
-
 
             endTimer = 5.0f;
 

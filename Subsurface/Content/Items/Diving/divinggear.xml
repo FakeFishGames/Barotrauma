@@ -3,7 +3,8 @@
   <Item
   name="Oxygen Tank"
   Tags="smallitem"
-  pickdistance="150">
+  pickdistance="150"
+  price="50">
 
     <Sprite texture ="oxygentank.png" depth="0.05"/>
 
@@ -16,7 +17,8 @@
   <Item
     name="Diving Mask"
     Tags="smallitem"
-    pickdistance="200">
+    pickdistance="200"
+    price="50">
 
     <Sprite texture ="DivingMask.png" depth="0.4"/>
   
@@ -37,7 +39,8 @@
 
   <Item
     name="Diving Suit"
-    pickdistance="200">
+    pickdistance="200"
+    price="200">
 
     <Sprite texture ="DivingSuit.png" sourcerect="82,15,46,113" depth="0.4"/>
 
