@@ -65,6 +65,8 @@ namespace Subsurface
             get { return condition; }
             set 
             {
+                if (float.IsNaN(value)) return;
+
                 float prev = condition;
                 condition = MathHelper.Clamp(value, 0.0f, 100.0f); 
                 if (condition==0.0f && prev>0.0f)
@@ -1063,6 +1065,8 @@ namespace Subsurface
 
         public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
+            message.Write(condition);
+
             switch (type)
             {
                 case NetworkEventType.DropItem:
@@ -1077,6 +1081,8 @@ namespace Subsurface
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
+            Condition = message.ReadFloat();
+
             switch (type)
             {
                 case NetworkEventType.DropItem:
@@ -1096,7 +1102,7 @@ namespace Subsurface
             base.Remove();
             
             //sprite.Remove();
-            if (body!=null) body.Remove();
+            if (body != null) body.Remove();
 
             foreach (ItemComponent ic in components)
             {

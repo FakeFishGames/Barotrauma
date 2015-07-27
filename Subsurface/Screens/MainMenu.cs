@@ -43,6 +43,7 @@ namespace Subsurface
             button = new GUIButton(new Rectangle(0, 60, 0, 30), "Load Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.LoadGame;
             button.OnClicked = SelectTab;
+            //button.Enabled = false;
 
             button = new GUIButton(new Rectangle(0, 120, 0, 30), "Join Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.JoinServer;

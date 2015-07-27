@@ -156,6 +156,8 @@ namespace Subsurface
             focusOnSelected     = ToolBox.GetAttributeBool(element, "focusonselected", false);
 
             offsetOnSelected    = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
+
+            price = ToolBox.GetAttributeInt(element, "price", 0);
             
             Triggers            = new List<Rectangle>();
 

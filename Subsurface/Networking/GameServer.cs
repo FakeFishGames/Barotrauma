@@ -56,10 +56,10 @@ namespace Subsurface.Networking
 
         public override void Update()
         {
-            if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.K))
-            {
-                SendRandomData();
-            }
+            //if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.K))
+            //{
+            //    SendRandomData();
+            //}
 
             if (gameStarted) inGameHUD.Update((float)Physics.step);
 

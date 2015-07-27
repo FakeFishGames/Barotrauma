@@ -280,7 +280,10 @@ namespace Subsurface
                         Debug.WriteLine("clicked");
                         selected = child;
                         if (OnSelected != null)
-                            OnSelected(child.UserData);
+                        {
+                            if (!OnSelected(child.UserData)) selected = null;
+                        }
+
                     }
                 }
                 else

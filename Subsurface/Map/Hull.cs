@@ -32,15 +32,15 @@ namespace Subsurface
         
         public readonly Dictionary<string, PropertyDescriptor> properties;
 
-        float lethalPressure;
+        private float lethalPressure;
 
-        float surface;
-        float volume;
-        float pressure;
+        private float surface;
+        private float volume;
+        private float pressure;
 
-        float oxygen;
+        private float oxygen;
 
-        bool update;
+        private bool update;
 
         float[] waveY; //displacement from the surface of the water
         float[] waveVel; //velocity of the point

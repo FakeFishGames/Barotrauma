@@ -22,7 +22,7 @@ namespace Subsurface
         private int seed;
         private int size;
 
-        private static Texture2D iceTexture;
+        private static Sprite iceTexture;
         private static Texture2D iceCraters;
         private static Texture2D iceCrack;
 
@@ -61,7 +61,7 @@ namespace Subsurface
 
             connections = new List<LocationConnection>();
 
-            if (iceTexture==null) iceTexture = Game1.TextureLoader.FromFile("Content/Map/iceSurface.png");
+            if (iceTexture==null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
             if (iceCraters == null) iceCraters = Game1.TextureLoader.FromFile("Content/Map/iceCraters.png");
             if (iceCrack == null) iceCrack = Game1.TextureLoader.FromFile("Content/Map/iceCrack.png");
             
@@ -244,14 +244,18 @@ namespace Subsurface
         }
 
         private Location highlightedLocation;
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect)
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect, float scale = 1.0f)
         {
             //GUI.DrawRectangle(spriteBatch, rect, Color.DarkBlue, true);
 
-            spriteBatch.Draw(iceTexture, rect, Color.White);
+            Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
+            Vector2 offset = -currentLocation.MapPosition;
 
-            Vector2 rectCorner = new Vector2(rect.X, rect.Y);
-            Vector2 scale = new Vector2((float)rect.Width/ size, (float)rect.Height/size);
+            iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), offset, Color.White);
+
+            //spriteBatch.Draw(iceTexture, offset, rect, null, null, 0f, null, Color.White, SpriteEffects.None, 0.0f);
+
+            //Vector2 scale = new Vector2((float)rect.Width/ size, (float)rect.Height/size);
 
             float maxDist = 20.0f;
             float closestDist = 0.0f;
@@ -259,9 +263,11 @@ namespace Subsurface
             for (int i = 0; i < locations.Count;i++ )
             {
                 Location location = locations[i];
-                Vector2 pos = rectCorner + location.MapPosition * scale;
+                Vector2 pos = rectCenter + (location.MapPosition+offset) * scale;
 
-                float dist = Vector2.Distance(PlayerInput.MousePosition, new Vector2(pos.X, pos.Y));
+                if (!rect.Contains(pos)) continue;
+
+                float dist = Vector2.Distance(PlayerInput.MousePosition, pos);
                 if (dist < maxDist && (highlightedLocation == null || dist < closestDist))
                 {
                     closestDist = dist;
@@ -272,7 +278,7 @@ namespace Subsurface
 
             foreach (LocationConnection connection in connections)
             {
-                Color crackColor = Color.Lerp(Color.LightGreen, Color.DarkRed, connection.Difficulty/100.0f);
+                Color crackColor = Color.White * Math.Max(connection.Difficulty/100.0f, 0.5f);
 
                 if (highlightedLocation != currentLocation &&
                     connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation))
@@ -297,32 +303,42 @@ namespace Subsurface
 
                 foreach (Vector2[] segment in connection.CrackSegments)
                 {
-                    Vector2 start = segment[0] * scale + rectCorner;
-                    Vector2 end = segment[1] * scale + rectCorner;
+                    Vector2 start = rectCenter + (segment[0] + offset) * scale;
+                    Vector2 end = rectCenter + (segment[1] + offset) * scale;
+                    
+                    if (!rect.Contains(start) || !rect.Contains(end)) continue;
+
                     float dist = Vector2.Distance(start, end);
 
-                    //spriteBatch.Draw(iceCrack,
-                    //    new Rectangle((int)((start.X + end.X) / 2.0f), (int)((start.Y + end.Y) / 2.0f), (int)dist, 30),
-                    //    new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(start - end),
-                    //    new Vector2(dist / 2, 30), SpriteEffects.None, 0.01f);
-                    GUI.DrawLine(spriteBatch,
-                        segment[0] * scale + rectCorner,
-                        segment[1] * scale + rectCorner, crackColor);
+                    spriteBatch.Draw(iceCrack,
+                        new Rectangle((int)start.X, (int)start.Y, (int)dist+2, 30),
+                        new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(end -start),
+                        new Vector2(0, 30), SpriteEffects.None, 0.01f);
                 }
             }
 
             for (int i = 0; i < locations.Count; i++)
             {
                 Location location = locations[i];
-                Vector2 pos = rectCorner  + location.MapPosition * scale;
+                Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
+                
+                if (!rect.Contains(pos)) continue;
 
-                int imgIndex = i % 16;
-                int xCell = imgIndex % 4;
-                int yCell = (int)Math.Floor(imgIndex / 4.0f);
-                spriteBatch.Draw(iceCraters, pos, 
-                    new Rectangle(xCell * 64, yCell * 64, 64, 64), 
-                    Color.White, i, 
-                    new Vector2(32, 32), 0.5f*scale, SpriteEffects.None, 0.0f);
+                Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation))==null ? Color.White : Color.Green;
+
+                color *= (location.Discovered) ? 0.8f : 0.4f;
+
+                if (location == currentLocation) color = Color.Orange;
+
+                location.Type.Sprite.Draw(spriteBatch, pos, color);
+
+                //int imgIndex = i % 16;
+                //int xCell = imgIndex % 4;
+                //int yCell = (int)Math.Floor(imgIndex / 4.0f);
+                //spriteBatch.Draw(iceCraters, pos, 
+                //    new Rectangle(xCell * 64, yCell * 64, 64, 64), 
+                //    Color.White, i, 
+                //    new Vector2(32, 32), 0.5f*scale, SpriteEffects.None, 0.0f);
 
             }
 
@@ -333,14 +349,13 @@ namespace Subsurface
                 
                 if (location == null) continue;
 
-                Vector2 pos = rectCorner + location.MapPosition * scale;
+                Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
                 pos.X = (int)pos.X;
                 pos.Y = (int)pos.Y;
-                if (highlightedLocation==location)
+                if (highlightedLocation == location)
                 {
-                    spriteBatch.DrawString(GUI.Font, location.Name, pos + new Vector2(-50, -20), Color.DarkRed);
+                    spriteBatch.DrawString(GUI.Font, location.Name, pos + new Vector2(0, 50), Color.DarkRed, 0.0f, GUI.Font.MeasureString(location.Name)/2.0f, 1.0f, SpriteEffects.None, 0.0f);
                 }
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 4, (int)pos.Y - 4, 5 + 8, 5 + 8), Color.DarkRed, false);
             }
 
         }

@@ -9,7 +9,7 @@ namespace Subsurface
 {
     class LobbyScreen : Screen
     {
-        enum PanelTab { Crew = 0, Map = 1, CurrentLocation = 2 }
+        enum PanelTab { Crew = 0, Map = 1, CurrentLocation = 2, Store = 3 }
 
         GUIFrame leftPanel;
         GUIFrame[] rightPanel;
@@ -21,11 +21,35 @@ namespace Subsurface
         GUIListBox characterList;
         GUIListBox hireList;
 
+        GUIListBox selectedItemList;
+
         SinglePlayerMode gameMode;
 
         GUIFrame previewFrame;
 
+        GUIButton buyButton;
+
         Level selectedLevel;
+
+        private string SelectedItemCost()
+        {
+            return selectedItemCost.ToString();
+        }
+
+        private int selectedItemCost
+        {
+            get
+            {
+                int cost = 0;
+                foreach (GUIComponent child in selectedItemList.children)
+                {
+                    MapEntityPrefab ep = child.UserData as MapEntityPrefab;
+                    if (ep == null) continue;
+                    cost += ep.Price;
+                }
+                return cost;
+            }
+        }
 
         public LobbyScreen()
         {
@@ -44,16 +68,20 @@ namespace Subsurface
                 "", Color.Transparent, Color.White, Alignment.Left, GUI.style, leftPanel);
             moneyText.TextGetter = GetMoney;
             
-            GUIButton button = new GUIButton(new Rectangle(0, 60, 100, 30), "Map", null, Alignment.Left, GUI.style, leftPanel);
+            GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.Left, GUI.style, leftPanel);
             button.UserData = PanelTab.Map;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 100, 100, 30), "Crew", null, Alignment.Left, GUI.style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 110, 100, 30), "Crew", null, Alignment.Left, GUI.style, leftPanel);
             button.UserData = PanelTab.Crew;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 140, 100, 30), "Location", null, Alignment.Left, GUI.style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 150, 100, 30), "Hire", null, Alignment.Left, GUI.style, leftPanel);
             button.UserData = PanelTab.CurrentLocation;
+            button.OnClicked = SelectRightPanel;
+
+            button = new GUIButton(new Rectangle(0, 190, 100, 30), "Store", null, Alignment.Left, GUI.style, leftPanel);
+            button.UserData = PanelTab.Store;
             button.OnClicked = SelectRightPanel;
    
             //---------------------------------------------------------------
@@ -65,7 +93,7 @@ namespace Subsurface
                 Game1.GraphicsWidth - panelRect.Width - 120,
                 Game1.GraphicsHeight - 80);
 
-            rightPanel = new GUIFrame[3];
+            rightPanel = new GUIFrame[4];
 
             rightPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.style);
             //rightPanel[(int)PanelTab.Crew].Padding = GUI.style.smallPadding;
@@ -88,14 +116,28 @@ namespace Subsurface
             //---------------------------------------
 
             rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(panelRect, GUI.style);
-            //rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
 
+            //---------------------------------------
 
-            //new GUITextBlock(new Rectangle(0, 0, 200, 25), "Location: ", Color.Transparent, Color.White, Alignment.Left, GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
+            rightPanel[(int)PanelTab.Store] = new GUIFrame(panelRect, GUI.style);
 
+            selectedItemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, GUI.style, rightPanel[(int)PanelTab.Store]);
 
-            //hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.style, Alignment.Left, rightPanel[(int)PanelTab.CurrentLocation]);            
-            //hireList.OnSelected = HireCharacter;
+            var costText = new GUITextBlock(new Rectangle(0, 0, 200, 25), "Cost: ", Color.Transparent, Color.White, Alignment.BottomLeft, GUI.style, rightPanel[(int)PanelTab.Store]);
+            costText.TextGetter = SelectedItemCost;
+
+            buyButton = new GUIButton(new Rectangle(15, 0, 100, 25), "Buy", Alignment.Bottom, GUI.style, rightPanel[(int)PanelTab.Store]);
+            buyButton.OnClicked = BuyItems;
+
+            GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, Alignment.TopRight, GUI.style, rightPanel[(int)PanelTab.Store]);
+            itemList.OnSelected = SelectItem;
+
+            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+            {
+                if (ep.Price == 0) continue;
+
+                CreateItemFrame(ep, itemList);
+            }
         }
 
         public override void Select()
@@ -117,22 +159,17 @@ namespace Subsurface
             
             new GUITextBlock(new Rectangle(0, 0, 200, 25), 
                 "Location: "+location.Name, GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
-            new GUITextBlock(new Rectangle(0, 0, 200, 25),
-                "("+location.Type+")", GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
+            new GUITextBlock(new Rectangle(0, 20, 200, 25),
+                "("+location.Type.Name+")", GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
             
             if (location.HireManager != null)
             {
-                hireList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.style, Alignment.Left, rightPanel[(int)PanelTab.CurrentLocation]);
-                hireList.OnSelected = HireCharacter;
+                hireList = new GUIListBox(new Rectangle(0, 60, 300, 0), GUI.style, Alignment.Left, rightPanel[(int)PanelTab.CurrentLocation]);
+                hireList.OnSelected = SelectCharacter;
 
                 hireList.ClearChildren();
                 foreach (CharacterInfo c in location.HireManager.availableCharacters)
                 {
-                    //GUIFrame frame = new GUIFrame(
-                    //    new Rectangle(0, 0, 0, 25), Color.Transparent, null, hireList);
-                    //frame.UserData = c;
-                    //frame.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
-
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
                         c.Name + " (" + c.Job.Name + ")", GUI.style, hireList);
@@ -151,58 +188,7 @@ namespace Subsurface
         public override void Deselect()
         {
             base.Deselect();
-
-            //if (previewPlatform != null)
-            //{
-            //    Game1.World.RemoveBody(previewPlatform);
-            //    previewPlatform = null;
-            //}
-
-            //if (previewHull != null)
-            //{
-            //    previewHull.Remove();
-            //    previewHull = null;
-            //}
-
-            //if (previewCharacter != null)
-            //{
-            //    previewCharacter.Remove();
-            //    previewCharacter = null;
-            //}
         }
-
-        //private void CreatePreviewCharacter()
-        //{
-        //    if (previewCharacter != null) previewCharacter.Remove();
-
-        //    Vector2 pos = new Vector2(1000.0f, 1000.0f);
-
-        //    previewCharacter = new Character(characterList.SelectedData as CharacterInfo, pos);
-
-        //    previewCharacter.AnimController.IsStanding = true;
-
-        //    if (previewPlatform == null)
-        //    {
-        //        Body platform = BodyFactory.CreateRectangle(Game1.World, 3.0f, 1.0f, 5.0f);
-        //        platform.SetTransform(new Vector2(pos.X, pos.Y - 3.5f), 0.0f);
-        //        platform.IsStatic = true;
-        //    }
-
-        //    if (previewHull == null)
-        //    {
-        //        pos = ConvertUnits.ToDisplayUnits(pos);
-        //        previewHull = new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 500));
-        //    }
-
-        //    Physics.Alpha = 1.0f;
-
-        //    for (int i = 0; i < 500; i++)
-        //    {
-        //        previewCharacter.AnimController.Update((float)Physics.step);
-        //        previewCharacter.AnimController.UpdateAnim((float)Physics.step);
-        //        Game1.World.Step((float)Physics.step);
-        //    }
-        //}
 
         public void SelectLocation(Location location, LocationConnection connection)
         {
@@ -227,14 +213,82 @@ namespace Subsurface
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    c.Name + " ("+c.Job.Name+")", GUI.style, 
+                    c.Name + " (" + c.Job.Name + ")", GUI.style, 
                     Alignment.Left, 
                     Alignment.Left,
                     characterList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = c;
             }
+        }
 
+        private void CreateItemFrame(MapEntityPrefab ep, GUIListBox listBox)
+        {
+            Color color = ((listBox.CountChildren % 2) == 0) ? Color.Transparent : Color.White * 0.1f;
+
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, listBox);
+            frame.UserData = ep;
+            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            frame.Color = color;
+            frame.HoverColor = Color.Gold * 0.2f;
+            frame.SelectedColor = Color.Gold * 0.5f;
+
+            GUITextBlock textBlock = new GUITextBlock(
+                new Rectangle(40, 0, 0, 25),
+                ep.Name,
+                Color.Transparent, Color.White,
+                Alignment.Left, Alignment.Left,
+                null, frame);
+            textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+
+            textBlock = new GUITextBlock(
+                new Rectangle(0, 0, 0, 25),
+                ep.Price.ToString(),
+                null, null,
+                Alignment.TopRight, GUI.style, textBlock);
+
+            if (ep.sprite != null)
+            {
+                GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.Left, frame);
+                img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
+            }
+        }
+
+        private bool SelectItem(object obj)
+        {
+            MapEntityPrefab prefab = obj as MapEntityPrefab;
+
+            if (prefab == null) return false;
+
+            CreateItemFrame(prefab, selectedItemList);
+
+            buyButton.Enabled = gameMode.crewManager.Money >= selectedItemCost;
+
+            return false;
+        }
+
+        private bool BuyItems(GUIButton button, object obj)
+        {
+            int cost =  selectedItemCost;
+
+            if (gameMode.crewManager.Money < cost) return false;
+
+            gameMode.crewManager.Money -= cost;
+
+            for (int i = selectedItemList.children.Count-1; i>=0; i--)
+            {
+                GUIComponent child = selectedItemList.children[i];
+
+                MapEntityPrefab ep = child.UserData as MapEntityPrefab;
+                if (ep == null) continue;
+
+                gameMode.CargoManager.AddItem(ep);
+                
+                selectedItemList.RemoveChild(child);
+            }
+
+
+            return false;
         }
 
         public override void Update(double deltaTime)
@@ -267,9 +321,10 @@ namespace Subsurface
             if (selectedRightPanel == (int)PanelTab.Map)
             {
                 Game1.GameSession.Map.Draw(spriteBatch, new Rectangle(
-                    rightPanel[selectedRightPanel].Rect.Right - 20 - 400, 
-                    rightPanel[selectedRightPanel].Rect.Y + 20, 
-                    400, 400));
+                    rightPanel[selectedRightPanel].Rect.X + 20, 
+                    rightPanel[selectedRightPanel].Rect.Y + 20,
+                    rightPanel[selectedRightPanel].Rect.Width - 40, 
+                    rightPanel[selectedRightPanel].Rect.Height - 150), 3.0f);
             }
      
             if (rightPanel[(int)selectedRightPanel].UserData as Location != Game1.GameSession.Map.CurrentLocation)
@@ -281,37 +336,6 @@ namespace Subsurface
 
             spriteBatch.End();
 
-            if (characterList.SelectedData != null && selectedRightPanel == (int)PanelTab.Crew)
-            {
-                if (previewFrame==null || previewFrame.UserData != characterList.UserData)
-                {
-                    CharacterInfo previewCharacter = (characterList.SelectedData as CharacterInfo);
-
-                    GUIFrame frameRoot = new GUIFrame(new Rectangle(350, 30, 300, 500),
-                            new Color(0.0f, 0.0f, 0.0f, 0.8f),
-                            Alignment.Top, GUI.style, rightPanel[selectedRightPanel]);
-                    frameRoot.Padding = new Vector4(20.0f,20.0f,20.0f,20.0f);
-
-                    previewFrame = previewCharacter.CreateInfoFrame(frameRoot);
-                    previewFrame.UserData = previewCharacter;
-                }
-                //if (previewCharacter != null)
-                //{
-                //    Vector2 position = new Vector2(characterList.Rect.Right + 100, characterList.Rect.Y + 25.0f);
-
-                //    Vector2 pos = previewCharacter.Position;
-                //    pos.Y = -pos.Y;
-                //    Matrix transform = Matrix.CreateTranslation(new Vector3(-pos + position, 0.0f));
-
-                //    spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, transform);
-                //    previewCharacter.Draw(spriteBatch);
-                //    spriteBatch.End();
-                //}
-                //else
-                //{
-                //    CreatePreviewCharacter();
-                //}
-            }
         }
 
         public bool SelectRightPanel(GUIButton button, object selection)
@@ -320,42 +344,7 @@ namespace Subsurface
             catch { return false; }
             return true;
         }
-
-        //private void CreatePreviewCharacter()
-        //{
-        //    if (Game1.Client.Character != null) Game1.Client.Character.Remove();
-
-        //    Vector2 pos = new Vector2(1000.0f, 1000.0f);
-
-        //    Character character = new Character(Game1.Client.CharacterInfo, pos);
-
-        //    Game1.Client.Character = character;
-
-        //    character.animController.isStanding = true;
-
-        //    if (previewPlatform == null)
-        //    {
-        //        Body platform = BodyFactory.CreateRectangle(Game1.world, 3.0f, 1.0f, 5.0f);
-        //        platform.SetTransform(new Vector2(pos.X, pos.Y - 2.5f), 0.0f);
-        //        platform.IsStatic = true;
-        //    }
-
-        //    if (previewPlatform == null)
-        //    {
-        //        pos = ConvertUnits.ToDisplayUnits(pos);
-        //        new Hull(new Rectangle((int)pos.X - 100, (int)pos.Y + 100, 200, 200));
-        //    }
-
-        //    Physics.Alpha = 1.0f;
-
-        //    for (int i = 0; i < 500; i++)
-        //    {
-        //        character.animController.Update((float)Physics.step);
-        //        character.animController.UpdateAnim((float)Physics.step);
-        //        Game1.world.Step((float)Physics.step);
-        //    }
-        //}
-
+        
         private string GetMoney()
         {
             return "Money: " + ((Game1.GameSession == null) ? "" : gameMode.crewManager.Money.ToString());
@@ -368,17 +357,38 @@ namespace Subsurface
 
             if (Character.Controlled != null && characterInfo == Character.Controlled.Info) return false;
 
-            //CreatePreviewCharacter();
+            if (previewFrame == null || previewFrame.UserData != characterInfo)
+            {
+                previewFrame = new GUIFrame(new Rectangle(350, 60, 300, 300),
+                        new Color(0.0f, 0.0f, 0.0f, 0.8f),
+                        Alignment.Top, GUI.style, rightPanel[selectedRightPanel]);
+                previewFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+                previewFrame.UserData = characterInfo;
+                
+                characterInfo.CreateInfoFrame(previewFrame);                
+            }
+
+            if (selectedRightPanel == (int)PanelTab.CurrentLocation)
+            {
+                GUIButton hireButton = new GUIButton(new Rectangle(0,0, 100, 20), "Hire", Alignment.BottomCenter, GUI.style, previewFrame);
+                hireButton.UserData = characterInfo;
+                hireButton.OnClicked = HireCharacter;
+            }
 
             return false;
         }
 
-        private bool HireCharacter(object selection)
+        private bool HireCharacter(GUIButton button, object selection)
         {
             CharacterInfo characterInfo = selection as CharacterInfo;
             if (characterInfo == null) return false;
 
-            gameMode.TryHireCharacter(Game1.GameSession.Map.CurrentLocation.HireManager, characterInfo);
+            if (gameMode.TryHireCharacter(Game1.GameSession.Map.CurrentLocation.HireManager, characterInfo))
+            {
+                UpdateLocationTab(Game1.GameSession.Map.CurrentLocation);
+            }
+
+
 
             return false;
         }

@@ -20,7 +20,7 @@ namespace Subsurface
             //Constructor = constructor;
 
 
-            Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset) });
+            Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset)});
 
             IsSinglePlayer = isSinglePlayer;
 

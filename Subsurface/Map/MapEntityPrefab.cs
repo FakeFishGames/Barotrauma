@@ -29,6 +29,8 @@ namespace Subsurface
         //which prefab has been selected for placing
         protected static MapEntityPrefab selected;
 
+        protected int price;
+
         public string Name
         {
             get { return name; }
@@ -52,6 +54,11 @@ namespace Subsurface
         public bool ResizeVertical
         {
             get { return resizeVertical; }
+        }
+
+        public int Price
+        {
+            get { return price; }
         }
 
         public static void Init()

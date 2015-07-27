@@ -320,17 +320,17 @@ namespace Subsurface
             }
 
             avgVelocity = avgVelocity / limbs.Count();
-    
 
-            float impact = Vector2.Dot((f1.Body.LinearVelocity + avgVelocity)/2.0f, -normal);
-                        
+
+            float impact = Vector2.Dot((f1.Body.LinearVelocity + avgVelocity) / 2.0f, -normal);
+
             Limb l = (Limb)f1.Body.UserData;
 
-            if (impact > 1.0f && l.HitSound != null && l.soundTimer<=0.0f) l.HitSound.Play(Math.Min(impact / 5.0f, 1.0f), impact*100.0f, l.body.FarseerBody);
+            if (impact > 1.0f && l.HitSound != null && l.soundTimer <= 0.0f) l.HitSound.Play(Math.Min(impact / 5.0f, 1.0f), impact * 100.0f, l.body.FarseerBody);
 
             if (impact > l.impactTolerance)
             {
-                character.Health -= (impact-l.impactTolerance*0.1f);
+                character.Health -= (impact - l.impactTolerance * 0.1f);
                 strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
             }
         }

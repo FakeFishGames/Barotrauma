@@ -66,6 +66,7 @@
     <Compile Include="Characters\AI\SteeringPath.cs" />
     <Compile Include="ContentPackage.cs" />
     <Compile Include="CoroutineManager.cs" />
+    <Compile Include="GameSession\CargoManager.cs" />
     <Compile Include="GUI\TitleScreen.cs" />
     <Compile Include="Items\FixRequirement.cs" />
     <Compile Include="Map\Lights\Light.cs" />
@@ -410,6 +411,12 @@
     <Content Include="Content\Lights\penumbra.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Map\beaconSymbol.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Map\citySymbol.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Map\iceCrack.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -420,6 +427,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Map\locationNames.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Map\militarySymbol.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Map\researchSymbol.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Map\shaft.png">

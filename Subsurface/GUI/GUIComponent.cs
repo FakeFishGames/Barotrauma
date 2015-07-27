@@ -298,9 +298,9 @@ namespace Subsurface
 
         public virtual void DrawChildren(SpriteBatch spriteBatch)
         {
-            foreach (GUIComponent child in children)
+            for (int i = 0; i < children.Count; i++ )
             {
-                child.Draw(spriteBatch);
+                children[i].Draw(spriteBatch);
             }
         }
 

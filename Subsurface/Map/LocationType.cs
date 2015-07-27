@@ -19,6 +19,8 @@ namespace Subsurface
 
         private List<string> nameFormats;
 
+        private Sprite sprite;
+
         public bool HasHireableCharacters
         {
             get;
@@ -35,6 +37,11 @@ namespace Subsurface
             get { return nameFormats; }
         }
 
+        public Sprite Sprite
+        {
+            get { return sprite; }
+        }
+
         private LocationType(XElement element)
         {
             name = element.Name.ToString();
@@ -49,6 +56,10 @@ namespace Subsurface
             {
                 nameFormats.Add(nameFormat.Value.ToString());
             }
+
+            string spritePath = ToolBox.GetAttributeString(element, "symbol", "Content/Map/beaconSymbol.png");
+            sprite = new Sprite(spritePath, null, new Microsoft.Xna.Framework.Vector2(-32, -32));
+
         }
 
         public static LocationType Random()

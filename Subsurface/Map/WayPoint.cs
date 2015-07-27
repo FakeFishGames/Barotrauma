@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace Subsurface
 {
-    public enum SpawnType { None, Human, Enemy };
+    public enum SpawnType { None, Human, Enemy, Cargo };
     class WayPoint : MapEntity
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
@@ -52,6 +52,7 @@ namespace Subsurface
             WayPointList.Add(this);
         }
 
+
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (!editing && !Game1.DebugDraw) return;
@@ -59,7 +60,7 @@ namespace Subsurface
             Point pos = new Point((int)Position.X, (int)Position.Y);
 
             Color clr = (isSelected) ? Color.Red : Color.LightGreen;
-            GUI.DrawRectangle(spriteBatch, new Rectangle(pos.X, -pos.Y, rect.Width, rect.Height), clr, true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(pos.X - rect.Width / 2, -pos.Y - rect.Height / 2, rect.Width, rect.Height), clr, true);
 
             foreach (MapEntity e in linkedTo)
             {
@@ -102,7 +103,7 @@ namespace Subsurface
 
             spawnType += (int)button.UserData;
 
-            if (spawnType > SpawnType.Enemy) spawnType = SpawnType.None;
+            if (spawnType > SpawnType.Cargo) spawnType = SpawnType.None;
             if (spawnType < SpawnType.None) spawnType = SpawnType.Enemy;
 
             spawnTypeText.Text = spawnType.ToString();

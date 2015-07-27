@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -13,9 +14,7 @@ namespace Subsurface
         public Character Character;
 
         public readonly string File;
-
-        public int HeadSpriteId;
-
+        
         public Job Job;
 
         private List<int> pickedItems;
@@ -23,6 +22,28 @@ namespace Subsurface
         private Vector2[] headSpriteRange;
 
         private Gender gender;
+
+        public int Salary;
+
+        public int HeadSpriteId;
+        private Sprite headSprite;
+
+        public bool StartItemsGiven;
+
+        public List<int> PickedItemIDs
+        {
+            get { return pickedItems; }
+        }
+
+        public Sprite HeadSprite
+        {
+            get
+            {
+                if (headSprite == null) LoadHeadSprite();
+                return headSprite;
+            }
+        }
+
         public Gender Gender
         {
             get { return gender; }
@@ -45,25 +66,6 @@ namespace Subsurface
             }
         }
 
-        public int Salary;
-
-        public bool StartItemsGiven;
-
-        public List<int> PickedItemIDs
-        {
-            get { return pickedItems; }
-        }
-
-        private Sprite headSprite;
-        public Sprite HeadSprite
-        {
-            get
-            {
-                if (headSprite == null) LoadHeadSprite();
-                return headSprite;
-            }
-        }
-
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
         {
             this.File = file;
@@ -76,8 +78,6 @@ namespace Subsurface
 
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null) return;
-
-            Salary = 500;
 
             if (ToolBox.GetAttributeBool(doc.Root, "genders", false))
             {
@@ -131,6 +131,8 @@ namespace Subsurface
                     this.Name += ToolBox.GetRandomLine(lastNamePath);
                 }
             }
+            
+            Salary = CalculateSalary();
         }
 
         private void LoadHeadSprite()
@@ -232,6 +234,20 @@ namespace Subsurface
             }
         }
 
+        private int CalculateSalary()
+        {
+            if (Name == null || Job == null) return 0;
+
+            int salary = Math.Abs(Name.GetHashCode()) % 100;
+
+            foreach (Skill skill in Job.Skills)
+            {
+                salary += skill.Level * 10;
+            }
+
+            return salary;
+        }
+
         public virtual XElement Save(XElement parentElement)
         {
             XElement charElement = new XElement("character");
@@ -244,17 +260,15 @@ namespace Subsurface
                 new XAttribute("headspriteid", HeadSpriteId),
                 new XAttribute("startitemsgiven", StartItemsGiven));
 
-            if (Character!=null && Character.Inventory!=null)
+            if (Character != null && Character.Inventory != null)
             {
                 UpdateCharacterItems();
             }
-            
-            if (pickedItems.Count>0)
+
+            if (pickedItems.Count > 0)
             {
                 charElement.Add(new XAttribute("items", string.Join(",", pickedItems)));
             }
-
-
 
             Job.Save(charElement);
 

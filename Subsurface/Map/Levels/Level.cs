@@ -300,6 +300,7 @@ namespace Subsurface
                 for (int n = -1; n < 2; n += 2)
                 {
                     int cellIndex = FindCellIndex(new Vector2(tunnelStart.X + minWidth * 0.5f * n, tunnelStart.Y), 3);
+
                     foreach (GraphEdge ge in cells[cellIndex].edges)
                     {
                         if (ge.point1.Y > cells[cellIndex].Center.Y) ge.point1.Y = borders.Height + shaftHeight;
