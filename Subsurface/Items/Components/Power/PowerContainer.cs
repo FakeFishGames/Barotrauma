@@ -7,9 +7,9 @@ namespace Subsurface.Items.Components
 {
     class PowerContainer : Powered
     {
+        //[power/min]        
         float capacity;
 
-        //[power/min]
         float charge;
 
         //how fast the battery can be recharged
@@ -20,12 +20,6 @@ namespace Subsurface.Items.Components
         float rechargeSpeed;
 
         float maxOutput;
-
-        //public override float Charge
-        //{
-        //    get { return charge; }
-        //    set { Math.Max(Math.Min(charge = value, capacity), 0.0f); }
-        //}
 
         [Editable, HasDefaultValue(10.0f, true)]
         public float MaxOutPut
@@ -46,13 +40,14 @@ namespace Subsurface.Items.Components
         }
 
 
-        [HasDefaultValue(10.0f, false)]
+        [HasDefaultValue(10.0f, false), Editable]
         public float Capacity
         {
             get { return capacity; }
             set { capacity = Math.Max(value,1.0f); }
         }
 
+        [HasDefaultValue(10.0f, false), Editable]
         public float RechargeSpeed
         {
             get { return rechargeSpeed; }
@@ -63,7 +58,7 @@ namespace Subsurface.Items.Components
             }
         }
 
-        [HasDefaultValue(10.0f, false)]
+        [HasDefaultValue(10.0f, false), Editable]
         public float MaxRechargeSpeed
         {
             get { return maxRechargeSpeed; }

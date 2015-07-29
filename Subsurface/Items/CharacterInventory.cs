@@ -125,6 +125,8 @@ namespace Subsurface
                 }
             }
 
+            if (allowedSlots.HasFlag(LimbSlot.BothHands)) TryPutItem(item, 3, createNetworkEvent);
+
             return false;
         }
 

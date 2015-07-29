@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -148,26 +149,26 @@ namespace Subsurface
         //    if (this.type == type) Apply(deltaTime, character, item);
         //}
 
-        public virtual void Apply(ActionType type, float deltaTime, Vector2 position, IPropertyObject target)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IPropertyObject target)
         {
-            if (targetNames == null && !targetNames.Contains(target.Name)) return;
+            if (targetNames != null && !targetNames.Contains(target.Name)) return;
 
             List<IPropertyObject> targets = new List<IPropertyObject>();
             targets.Add(target);
 
-            if (this.type == type) Apply(deltaTime, position, targets);
+            if (this.type == type) Apply(deltaTime, entity, targets);
         }
 
-        public virtual void Apply(ActionType type, float deltaTime, Vector2 position, List<IPropertyObject> targets)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<IPropertyObject> targets)
         {
-            if (this.type == type) Apply(deltaTime, position, targets);
+            if (this.type == type) Apply(deltaTime, entity, targets);
         }
-        
-        protected virtual void Apply(float deltaTime, Vector2 position, List<IPropertyObject> targets)
-        {
-            if (explosion != null) explosion.Explode(position);
 
-            if (sound != null) sound.Play(1.0f, 1000.0f, position);
+        protected virtual void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
+        {
+            if (explosion != null) explosion.Explode(entity.SimPosition);
+
+            if (sound != null) sound.Play(1.0f, 1000.0f, ConvertUnits.ToDisplayUnits(entity.SimPosition));
 
             for (int i = 0; i < propertyNames.Count(); i++)
             {

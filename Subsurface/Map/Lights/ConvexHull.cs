@@ -8,7 +8,7 @@ namespace Subsurface.Lights
     class ConvexHull
     {
         public static List<ConvexHull> list = new List<ConvexHull>();
-        static BasicEffect fowEffect;
+        static BasicEffect losEffect;
         static BasicEffect shadowEffect;
         
         private VertexPositionColor[] vertices;
@@ -87,14 +87,14 @@ namespace Subsurface.Lights
         //    }
         //}
 
-        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, bool fow = true)
+        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, bool los = true)
         {
             if (!Enabled) return;
 
-            if (fowEffect == null)
+            if (losEffect == null)
             {
-                fowEffect = new BasicEffect(graphicsDevice);
-                fowEffect.VertexColorEnabled = true;
+                losEffect = new BasicEffect(graphicsDevice);
+                losEffect.VertexColorEnabled = true;
             }
             if (shadowEffect==null)
             {
@@ -140,7 +140,7 @@ namespace Subsurface.Lights
 
             VertexPositionTexture[] penumbraVertices = new VertexPositionTexture[6];
 
-            if (fow)
+            if (los)
             {
                 for (int n = 0; n < 4; n+=3)
                 {
@@ -162,26 +162,18 @@ namespace Subsurface.Lights
                         vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) - normal * 20.0f);
                         vertexDir.Normalize();
                         penumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000;
-
-                        if (i==0)
-                        {
-                            //penumbraVertices[n].Position -= normal*2.0f;
-                        }
-
-                        if (fow)
+                        
+                        if (los)
                         {
                             penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
                         }
                         else
                         {
-                            penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(1.0f, 0.0f):Vector2.Zero;
+                            penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(1.0f, 0.0f) : Vector2.Zero;
                         }
-
-
-                        //penumbraVertices[i+1].Color = Color.Black;
                     }
 
-                    if (n>0)
+                    if (n > 0)
                     {
                         var temp = penumbraVertices[4];
                         penumbraVertices[4] = penumbraVertices[5];
@@ -210,12 +202,12 @@ namespace Subsurface.Lights
 
                 //one vertex on the hull
                 shadowVertices[svCount] = new VertexPositionColor();
-                shadowVertices[svCount].Color = fow ? Color.Black : Color.Transparent;
+                shadowVertices[svCount].Color = los ? Color.Black : Color.Transparent;
                 shadowVertices[svCount].Position = vertexPos;
 
                 //one extruded by the light direction
                 shadowVertices[svCount + 1] = new VertexPositionColor();
-                shadowVertices[svCount + 1].Color = fow ? Color.Black : Color.Transparent;
+                shadowVertices[svCount + 1].Color = los ? Color.Black : Color.Transparent;
                 Vector3 L2P = vertexPos - new Vector3(lightSourcePos, 0);
                 L2P.Normalize();
                 shadowVertices[svCount + 1].Position = new Vector3(lightSourcePos, 0) + L2P * 9000;
@@ -224,13 +216,13 @@ namespace Subsurface.Lights
                 currentIndex = (currentIndex + 1) % primitiveCount;
             }
 
-            fowEffect.World = cam.ShaderTransform
+            losEffect.World = cam.ShaderTransform
                 * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
-            fowEffect.CurrentTechnique.Passes[0].Apply();
+            losEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount * 2 - 2);
 
-            if (fow)
+            if (los)
             {
                 shadowEffect.World = cam.ShaderTransform
                     * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;

@@ -38,9 +38,9 @@ namespace Subsurface
         //List<Body> bodies;
         private List<VoronoiCell> cells;
 
-        private BasicEffect basicEffect;
+        private static BasicEffect basicEffect;
 
-        private VertexPositionColor[] vertices;
+        private VertexPositionTexture[] vertices;
         private VertexBuffer vertexBuffer;
 
         private Vector2 startPosition;
@@ -49,6 +49,8 @@ namespace Subsurface
         private Rectangle borders;
 
         private List<Body> bodies = new List<Body>();
+
+        private List<Vector2> positionsOfInterest;
 
         public Vector2 StartPosition
         {
@@ -77,6 +79,11 @@ namespace Subsurface
             get { return ConvertUnits.ToDisplayUnits(cells[0].body.Position); }
         }
 
+        public List<Vector2> PositionsOfInterest
+        {
+            get { return positionsOfInterest; }
+        }
+
         public string Seed
         {
             get { return seed; }
@@ -92,11 +99,23 @@ namespace Subsurface
         {
             if (shaftTexture == null) shaftTexture = Game1.TextureLoader.FromFile("Content/Map/shaft.png");
 
+            if (basicEffect==null)
+            {
+                
+                basicEffect = new BasicEffect(Game1.CurrGraphicsDevice);
+                basicEffect.VertexColorEnabled = false;
+
+                basicEffect.TextureEnabled = true;
+                basicEffect.Texture = Game1.TextureLoader.FromFile("Content/Map/iceSurface.png");
+            }
+
             this.seed = seed;
 
             this.siteInterval = siteInterval;
 
             this.Difficulty = difficulty;
+
+            positionsOfInterest = new List<Vector2>();
 
             borders = new Rectangle(0, 0, width, height);
         }
@@ -237,7 +256,7 @@ namespace Subsurface
             endPosition = pathCells[pathCells.Count - 1].Center;
 
             //generate a couple of random paths
-            for (int i = 0; i < rand.Next() % 3; i++)
+            for (int i = 0; i <= rand.Next() % 3; i++)
             {
                 //pathBorders = new Rectangle(
                 //borders.X + siteInterval * 2, borders.Y - siteInterval * 2,
@@ -252,10 +271,14 @@ namespace Subsurface
 
                 Vector2 end = new Vector2(x, y);
 
-                pathCells.AddRange
-                (
-                    GeneratePath(rand, new List<Vector2> { start, end }, cells, pathBorders, 0.0f, 0.8f, mirror)
-                );
+                var newPathCells = GeneratePath(rand, new List<Vector2> { start, end }, cells, pathBorders, 0.0f, 0.8f, mirror);
+
+                for (int n = 1; n < newPathCells.Count; n += 3)
+                {
+                    positionsOfInterest.Add(newPathCells[n].Center);
+                }                
+
+                pathCells.AddRange(newPathCells);
             }
 
             Debug.WriteLine("path: " + sw2.ElapsedMilliseconds + " ms");
@@ -329,12 +352,8 @@ namespace Subsurface
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
 
-            vertexBuffer = new VertexBuffer(Game1.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-
+            vertexBuffer = new VertexBuffer(Game1.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             vertexBuffer.SetData(vertices);
-
-            basicEffect = new BasicEffect(Game1.CurrGraphicsDevice);
-            basicEffect.VertexColorEnabled = true;
 
             if (mirror)
             {
@@ -555,7 +574,7 @@ int currentTargetIndex = 1;
 
         private void GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells)
         {
-            List<VertexPositionColor> verticeList = new List<VertexPositionColor>();
+            List<VertexPositionTexture> verticeList = new List<VertexPositionTexture>();
             //bodies = new List<Body>();
 
             List<Vector2> tempVertices = new List<Vector2>();
@@ -593,7 +612,7 @@ int currentTargetIndex = 1;
                 {
                     foreach (Vector2 vertex in triangles[i])
                     {
-                        verticeList.Add(new VertexPositionColor(new Vector3(vertex, 0.0f), new Color(n*30, (n * 60) % 255, (n * 90) % 255) * 0.5f));
+                        verticeList.Add(new VertexPositionTexture(new Vector3(vertex, 0.0f), vertex/1000.0f));
                     }
                 }
 
@@ -775,31 +794,31 @@ int currentTargetIndex = 1;
         Vector2 observerPosition;
         public void SetObserverPosition(Vector2 position)
         {
-            observerPosition = position - this.Position;
-            int gridPosX = (int)Math.Floor(observerPosition.X / GridCellWidth);
-            int gridPosY = (int)Math.Floor(observerPosition.Y / GridCellWidth);
-            int searchOffset = 2;
+            //observerPosition = position - this.Position;
+            //int gridPosX = (int)Math.Floor(observerPosition.X / GridCellWidth);
+            //int gridPosY = (int)Math.Floor(observerPosition.Y / GridCellWidth);
+            //int searchOffset = 2;
 
-            int startX = Math.Max(gridPosX - searchOffset, 0);
-            int endX = Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1);
+            //int startX = Math.Max(gridPosX - searchOffset, 0);
+            //int endX = Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1);
 
-            int startY = Math.Max(gridPosY - searchOffset, 0);
-            int endY = Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1);
+            //int startY = Math.Max(gridPosY - searchOffset, 0);
+            //int endY = Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1);
 
-            for (int x = 0; x < cellGrid.GetLength(0); x++)
-            {
-                for (int y = 0; y < cellGrid.GetLength(1); y++)
-                {
-                    for (int i = 0; i < cellGrid[x, y].Count; i++)
-                    {
-                        //foreach (Body b in cellGrid[x, y][i].bodies)
-                        //{
-                        if (cellGrid[x, y][i].body == null) continue;
-                        cellGrid[x, y][i].body.Enabled = true;// (x >= startX && x <= endX && y >= startY && y <= endY);
-                        //}
-                    }
-                }
-            }
+            //for (int x = 0; x < cellGrid.GetLength(0); x++)
+            //{
+            //    for (int y = 0; y < cellGrid.GetLength(1); y++)
+            //    {
+            //        for (int i = 0; i < cellGrid[x, y].Count; i++)
+            //        {
+            //            //foreach (Body b in cellGrid[x, y][i].bodies)
+            //            //{
+            //            if (cellGrid[x, y][i].body == null) continue;
+            //            cellGrid[x, y][i].body.Enabled = true;// (x >= startX && x <= endX && y >= startY && y <= endY);
+            //            //}
+            //        }
+            //    }
+            //}
         }
 
 
@@ -897,11 +916,12 @@ int currentTargetIndex = 1;
 
             basicEffect.World = Matrix.CreateTranslation(new Vector3(Position, 0.0f)) * cam.ShaderTransform
                 * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
-
-
+            
             basicEffect.CurrentTechnique.Passes[0].Apply();
 
-            graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, vertices, 0, (int)Math.Floor(vertices.Length / 3.0f));
+            graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+
+            graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, (int)Math.Floor(vertices.Length / 3.0f));
         }
 
         private void Unload()

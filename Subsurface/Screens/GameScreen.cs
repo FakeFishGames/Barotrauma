@@ -38,8 +38,6 @@ namespace Subsurface
         {
             base.Select();
 
-            //if (Game1.gameSession == null) Game1.gameSession = new GameSession("",false, TimeSpan.Zero);
-
             foreach (MapEntity entity in MapEntity.mapEntityList)
                 entity.IsHighlighted = false;
         }
@@ -73,10 +71,9 @@ namespace Subsurface
 
             Character.UpdateAll(cam, (float)deltaTime);
 
-            Game1.particleManager.Update((float)deltaTime);
+            Game1.ParticleManager.Update((float)deltaTime);
 
             StatusEffect.UpdateAll((float)deltaTime);
-            //Physics.updated = false;
 
             cam.MoveCamera((float)deltaTime);
 
@@ -108,23 +105,14 @@ namespace Subsurface
 
         }
 
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             //if (!Physics.updated) return;
 
             DrawMap(graphics, spriteBatch);
 
-            //----------------------------------------------------------------------------------------
-            //2. draw the HUD on top of everything
-            //----------------------------------------------------------------------------------------
-            
             spriteBatch.Begin();
             if (Game1.GameSession != null) Game1.GameSession.Draw(spriteBatch);
-
-            //EventManager.DrawInfo(spriteBatch);
 
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
             {
@@ -215,7 +203,7 @@ namespace Subsurface
                 BlendState.AlphaBlend,
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-            Game1.particleManager.Draw(spriteBatch, true);
+            Game1.ParticleManager.Draw(spriteBatch, true);
 
             spriteBatch.End();
 
@@ -233,7 +221,7 @@ namespace Subsurface
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
 
-            Game1.particleManager.Draw(spriteBatch, false);
+            Game1.ParticleManager.Draw(spriteBatch, false);
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
@@ -253,6 +241,12 @@ namespace Subsurface
 
             Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
 
+            if (Game1.GameSession != null && Game1.GameSession.Level != null)
+            {
+                Game1.GameSession.Level.Render(graphics, cam);
+                Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
+            }
+
             if (Game1.LightManager.LightingEnabled)
             {
                 //multiply scene with lightmap
@@ -264,7 +258,7 @@ namespace Subsurface
             //----------------------------------------------------------------------------------------
             //3. draw the sections of the map that are on top of the water
             //----------------------------------------------------------------------------------------
-            
+
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend, SamplerState.LinearWrap,
                 null, null, null,
@@ -279,20 +273,10 @@ namespace Subsurface
                 Game1.GameSession.Level.Draw(spriteBatch);
                 //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
             }
-            
+
             spriteBatch.End();
 
-            if (Game1.GameSession != null && Game1.GameSession.Level != null)
-            {
-                Game1.GameSession.Level.Render(graphics, cam);
-                Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
-            }
-            else if (Game1.Level != null)
-            {
-                Game1.Level.Render(graphics, cam);
-            }
-
-            Game1.LightManager.DrawFow(graphics,cam,LightManager.ViewPos);
+            Game1.LightManager.DrawLOS(graphics, cam, LightManager.ViewPos);
 
         }
     }

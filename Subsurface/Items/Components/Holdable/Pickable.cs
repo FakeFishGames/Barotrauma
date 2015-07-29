@@ -37,10 +37,6 @@ namespace Subsurface.Items.Components
             if (picker == null) return false;
             if (picker.Inventory == null) return false;
 
-            //this.picker = picker;
-            
-
-
             if (picker.Inventory.TryPutItem(item, allowedSlots))
             {
                 if (!picker.HasSelectedItem(item) && item.body!=null) item.body.Enabled = false;

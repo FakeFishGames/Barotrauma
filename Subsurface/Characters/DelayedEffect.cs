@@ -12,7 +12,7 @@ namespace Subsurface
 
         private float timer;
 
-        private Vector2 position;
+        private Entity entity;
 
         private List<IPropertyObject> targets;
         
@@ -27,12 +27,12 @@ namespace Subsurface
             delay = ToolBox.GetAttributeFloat(element, "delay", 1.0f);
         }
 
-        public override void Apply(ActionType type, float deltaTime, Vector2 position, List<IPropertyObject> targets)
+        public override void Apply(ActionType type, float deltaTime, Entity entity, List<IPropertyObject> targets)
         {
             if (this.type != type) return;
             
             timer = delay;
-            this.position = position;
+            this.entity = entity;
 
             this.targets = targets;
 
@@ -45,7 +45,7 @@ namespace Subsurface
 
             if (timer > 0.0f) return;
 
-            base.Apply(1.0f, position, targets);
+            base.Apply(1.0f, entity, targets);
             List.Remove(this);
         }
 

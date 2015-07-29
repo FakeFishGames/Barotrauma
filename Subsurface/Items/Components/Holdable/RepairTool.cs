@@ -151,7 +151,7 @@ namespace Subsurface.Items.Components
                 foreach (StatusEffect effect in statusEffects)
                 {
                     //if (Array.IndexOf(effect.TargetNames, targetItem.Name) == -1) continue;
-                    effect.Apply(ActionType.OnUse, deltaTime, item.SimPosition, targetItem.AllPropertyObjects);
+                    effect.Apply(ActionType.OnUse, deltaTime, item, targetItem.AllPropertyObjects);
                     //targetItem.ApplyStatusEffect(effect, ActionType.OnUse, deltaTime);
                 }
                 //ApplyStatusEffects(ActionType.OnUse, 1.0f, null, targ);
@@ -182,7 +182,7 @@ namespace Subsurface.Items.Components
                 (float)Math.Cos(item.body.Rotation),
                 (float)Math.Sin(item.body.Rotation)) *item.body.Dir * 5.0f;
 
-            Game1.particleManager.CreateParticle("weld", TransformedBarrelPos, particleSpeed);
+            Game1.ParticleManager.CreateParticle("weld", TransformedBarrelPos, particleSpeed);
 
             //Vector2 startPos = ConvertUnits.ToDisplayUnits(item.body.Position);
             //Vector2 endPos = ConvertUnits.ToDisplayUnits(pickedPosition);

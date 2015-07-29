@@ -8,6 +8,7 @@ using FarseerPhysics.Factories;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Subsurface.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.IO;

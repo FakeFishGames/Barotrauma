@@ -9,6 +9,7 @@ using Subsurface.Networking;
 using Subsurface.Particles;
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
 
 namespace Subsurface
 {
@@ -46,7 +47,7 @@ namespace Subsurface
 
         public static NetworkMember NetworkMember;
 
-        public static ParticleManager particleManager;
+        public static ParticleManager ParticleManager;
 
         public static TextureLoader TextureLoader;
         
@@ -210,7 +211,7 @@ namespace Subsurface
             EditCharacterScreen =   new EditCharacterScreen();
         yield return Status.Running;
 
-            particleManager = new ParticleManager("Content/Particles/prefabs.xml", Cam);
+            ParticleManager = new ParticleManager("Content/Particles/prefabs.xml", Cam);
         yield return Status.Running;
 
             GameMode.Init();
@@ -250,11 +251,11 @@ namespace Subsurface
 
             if (loadState >= 100.0f && !titleScreenOpen)
             {
-                //if (PlayerInput.KeyDown(Keys.Escape)) Quit();
+                if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
                 DebugConsole.Update(this, (float)deltaTime);
 
-                if (!DebugConsole.IsOpen || NetworkMember != null) Screen.Selected.Update(deltaTime);
+                if ((!DebugConsole.IsOpen && !GUI.PauseMenuOpen) || NetworkMember != null) Screen.Selected.Update(deltaTime);
 
                 GUI.Update((float)deltaTime);
 

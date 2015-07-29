@@ -371,8 +371,6 @@ namespace Subsurface
             if (Game1.Client==null)
                 SetDamage(sectionIndex, sections[sectionIndex].damage + damage);
 
-
-
         }
 
         public int FindSectionIndex(Vector2 pos)
@@ -408,9 +406,9 @@ namespace Subsurface
             int i = FindSectionIndex(ConvertUnits.ToDisplayUnits(position));
             if (i == -1) return new AttackResult(0.0f, 0.0f);
             
-            Game1.particleManager.CreateParticle("dustcloud", ConvertUnits.ToSimUnits(SectionPosition(i)), 0.0f, 0.0f);
+            Game1.ParticleManager.CreateParticle("dustcloud", ConvertUnits.ToSimUnits(SectionPosition(i)), 0.0f, 0.0f);
 
-            if (playSound)
+            if (playSound && !SectionHasHole(i))
             {
                 DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
                 AmbientSoundManager.PlayDamageSound(damageSoundType, amount, position);

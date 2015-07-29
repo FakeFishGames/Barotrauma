@@ -210,7 +210,6 @@ namespace Subsurface
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
 
-
             if (torso!=null)
             {
                 colliderLimb = torso;
@@ -223,7 +222,7 @@ namespace Subsurface
                 colliderLimb = head;
                 colliderHeight = HeadPosition;
 
-                colliderLimb.body.SmoothRotate(HeadAngle*Dir, 100.0f);
+                if (onGround) colliderLimb.body.SmoothRotate(HeadAngle*Dir, 100.0f);
             }
             
             Vector2 colliderPos = colliderLimb.SimPosition;
@@ -269,17 +268,18 @@ namespace Subsurface
                 onFloorTimer -= deltaTime;
             }
 
+            if (!onGround) return;
+
             if (closestFraction == 1) //raycast didn't hit anything
-                floorY = (currentHull == null || onGround) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
+                floorY = (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
             else
                 floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-            
-            if (Math.Abs(colliderPos.Y - floorY)<colliderHeight*1.2f && onGround)
+
+
+            if (Math.Abs(colliderPos.Y - floorY) < colliderHeight * 1.2f)
             {
                 colliderLimb.Move(new Vector2(colliderPos.X + movement.X * 0.2f, floorY + colliderHeight), 5.0f);
             }
-
-            //colliderLimb.body.SetTransform(Vector2.Zero, colliderLimb.Rotation);
 
             float walkCycleSpeed = head.LinearVelocity.X * 0.05f;
 

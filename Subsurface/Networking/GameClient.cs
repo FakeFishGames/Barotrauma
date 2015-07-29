@@ -161,6 +161,10 @@ namespace Subsurface.Networking
                         if (packetType == (byte)PacketTypes.LoggedIn)
                         {
                             myID = inc.ReadInt32();
+                            if (inc.ReadBoolean())
+                            {
+                                new GUIMessageBox("Please wait", "A round is already running. You will have to wait for a new round to start.");
+                            }
 
                             Game1.NetLobbyScreen.ClearPlayers();
 

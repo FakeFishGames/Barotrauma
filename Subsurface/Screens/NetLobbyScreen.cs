@@ -148,12 +148,10 @@ namespace Subsurface
 
         public override void Select()
         {
-            Game1.LightManager.FowEnabled = false;
+            Game1.LightManager.LosEnabled = false;
 
             infoFrame.ClearChildren();
             
-            if (IsServer && Game1.Server == null) Game1.NetworkMember = new GameServer();
-
             textBox.Select();
 
             new GUITextBlock(new Rectangle(0, 110, 0, 30), "Selected submarine:", GUI.style, infoFrame);
@@ -219,9 +217,9 @@ namespace Subsurface
             serverName.TextGetter = GetServerName;
             serverName.Enabled = Game1.Server != null;
             serverName.OnTextChanged = ChangeServerName;
-            ServerName = "Server";
-            
-            var serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70),null,null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
+            ServerName = (Game1.Server==null) ? "Server" : Game1.Server.Name;
+
+            var serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
             serverMessage.Enabled = Game1.Server != null;
             serverMessage.Wrap = true;
             serverMessage.TextGetter = GetServerMessage;
@@ -264,14 +262,14 @@ namespace Subsurface
 
                 new GUITextBlock(new Rectangle(x, 150, 200, 30), "Job preferences:", GUI.style, playerFrame);
 
-                jobList = new GUIListBox(new Rectangle(x, 180, 200, 0), GUI.style, playerFrame);
+                jobList = new GUIListBox(new Rectangle(x, 180, 150, 0), GUI.style, playerFrame);
 
                 foreach (JobPrefab job in JobPrefab.List)
                 {
                     GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, jobList);
                     jobText.UserData = job;
 
-                    GUIButton upButton = new GUIButton(new Rectangle(jobText.Rect.Width - 40, 0, 20, 20), "u", GUI.style, jobText);
+                    GUIButton upButton = new GUIButton(new Rectangle(jobText.Rect.Width - 45, 0, 20, 20), "u", GUI.style, jobText);
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
@@ -639,11 +637,14 @@ namespace Subsurface
                                 
                     textBlock.Text = client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")");
 
-                    if (clientID == Game1.Client.ID)
+                    if (client.assignedJob==null || jobName != client.assignedJob.Name)
                     {
-                        Game1.Client.CharacterInfo.Job = new Job(client.assignedJob);
-                        Game1.Client.CharacterInfo.Name = client.name;
-                        UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+                        if (clientID == Game1.Client.ID)
+                        {
+                            Game1.Client.CharacterInfo.Job = new Job(client.assignedJob);
+                            Game1.Client.CharacterInfo.Name = client.name;
+                            UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+                        }
                     }
                 }
             }

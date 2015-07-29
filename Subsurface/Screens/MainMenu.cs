@@ -8,7 +8,7 @@ namespace Subsurface
 {
     class MainMenuScreen : Screen
     {
-        enum Tabs { Main = 0, NewGame = 1, LoadGame = 2, JoinServer = 3 }
+        public enum Tabs { Main = 0, NewGame = 1, LoadGame = 2, JoinServer = 3, HostServer = 4 }
 
         private GUIFrame[] menuTabs;
         private GUIListBox mapList;
@@ -18,6 +18,8 @@ namespace Subsurface
         private GUITextBox seedBox;
 
         private GUITextBox nameBox, ipBox;
+
+        private GUITextBox serverNameBox, portBox;
 
         private Game1 game;
 
@@ -50,7 +52,8 @@ namespace Subsurface
             button.OnClicked = SelectTab;
 
             button = new GUIButton(new Rectangle(0, 180, 0, 30), "Host Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
-            button.OnClicked = HostServerClicked;
+            button.UserData = (int)Tabs.HostServer;
+            button.OnClicked = SelectTab;
             //button.Enabled = false;
 
             button = new GUIButton(new Rectangle(0, 240, 0, 30), "Quit", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
@@ -86,7 +89,7 @@ namespace Subsurface
             seedBox.Text = ToolBox.RandomSeed(8);
 
 
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",Alignment.BottomRight, GUI.style,  menuTabs[(int)Tabs.NewGame]);
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.style,  menuTabs[(int)Tabs.NewGame]);
             button.OnClicked = StartGame;
 
             //----------------------------------------------------------------------
@@ -94,7 +97,7 @@ namespace Subsurface
             menuTabs[(int)Tabs.LoadGame] = new GUIFrame(panelRect, GUI.style);
             //menuTabs[(int)Tabs.LoadGame].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Load Game", Color.Transparent, Color.Black, Alignment.CenterX, null, menuTabs[(int)Tabs.LoadGame]);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Load Game", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.LoadGame]);
 
             if (!Directory.Exists(SaveUtil.SaveFolder))
             {
@@ -148,6 +151,22 @@ namespace Subsurface
 
             //----------------------------------------------------------------------
 
+            menuTabs[(int)Tabs.HostServer] = new GUIFrame(panelRect, GUI.style);
+            //menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
+
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Host Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer]);
+
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Name:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer]);
+            serverNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.HostServer]);
+
+            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server port:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer]);
+            portBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.HostServer]);
+            portBox.Text = NetworkMember.DefaultPort.ToString();
+
+            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.HostServer]);
+            hostButton.OnClicked = HostServerClicked;
+
+            //----------------------------------------------------------------------
             for (int i = 1; i < 4; i++ )
             {
                 button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.style, menuTabs[i]);
@@ -158,14 +177,28 @@ namespace Subsurface
 
         }
 
-        private bool SelectTab(GUIButton button, object obj)
+        public bool SelectTab(GUIButton button, object obj)
         {
             selectedTab = (int)obj;
+
+            this.Select();
             return true;
         }
 
         private bool HostServerClicked(GUIButton button, object obj)
         {
+            string name = serverNameBox.Text;
+            if (string.IsNullOrEmpty(name)) name = "Server";
+
+            int port;
+            if (!int.TryParse(portBox.Text, out port))
+            {
+                DebugConsole.ThrowError("ERROR: "+portBox.Text+" is not a valid port. Using the default port "+NetworkMember.DefaultPort);
+                port = NetworkMember.DefaultPort;
+            }
+
+            Game1.NetworkMember = new GameServer(name, port);
+            
             Game1.NetLobbyScreen.IsServer = true;
             Game1.NetLobbyScreen.Select();
             return true;

@@ -17,7 +17,7 @@ namespace Subsurface
 
     public enum ActionType
     {
-        OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure
+        OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure, OnBroken
     }
 
     class Item : MapEntity, IDamageable, IPropertyObject
@@ -69,8 +69,9 @@ namespace Subsurface
 
                 float prev = condition;
                 condition = MathHelper.Clamp(value, 0.0f, 100.0f); 
-                if (condition==0.0f && prev>0.0f)
+                if (condition == 0.0f && prev>0.0f)
                 {
+                    ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                     foreach (FixRequirement req in FixRequirements)
                     {
                         req.Fixed = false;
@@ -369,7 +370,7 @@ namespace Subsurface
 
         public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null)
         {
-            if (condition == 0.0f) return;
+            if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
 
             bool hasTargets = (effect.TargetNames == null);
 
@@ -424,7 +425,7 @@ namespace Subsurface
                 //    //container.ApplyStatusEffect(effect, type, deltaTime, container);
                 //}
 
-                effect.Apply(type, deltaTime, SimPosition, targets);
+                effect.Apply(type, deltaTime, this, targets);
             }       
         }
 
@@ -446,7 +447,7 @@ namespace Subsurface
                 {
                     ic.Update(deltaTime, cam);
                     
-                    ic.PlaySound(ActionType.OnActive, 1.0f, Position, true);
+                    ic.PlaySound(ActionType.OnActive, Position, true);
                     ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
                 }
                 else
@@ -596,8 +597,8 @@ namespace Subsurface
                     requiredItemCount += ic.requiredItems.Count;                    
                 }
             }
-             
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 110 + (editableProperties.Count()+requiredItemCount) * 30), Color.Black * 0.5f);
+
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, 110 + (editableProperties.Count() + requiredItemCount) * 30), Color.Black * 0.5f);
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
             
@@ -662,6 +663,7 @@ namespace Subsurface
                     editingHUD = CreateEditingHUD(true);
                 }
 
+                editingHUD.Update((float)Physics.step);
                 editingHUD.Draw(spriteBatch);
 
                 foreach (ItemComponent ic in components)
@@ -764,7 +766,7 @@ namespace Subsurface
 
                 if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
-                if (!ic.HasRequiredItems(picker, picker == Character.Controlled) && !forcePick) continue;
+                if (!forcePick && !ic.HasRequiredItems(picker, picker == Character.Controlled)) continue;
                 if ((ic.CanBePicked && ic.Pick(picker)) || (ic.CanBeSelected && ic.Select(picker)))                     
                 {
                     picked = true;
@@ -805,7 +807,7 @@ namespace Subsurface
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
                 if (ic.Use(deltaTime, character))
                 {
-                    ic.PlaySound(ActionType.OnUse, 1.0f, Position);
+                    ic.PlaySound(ActionType.OnUse, Position);
 
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
 
@@ -902,14 +904,19 @@ namespace Subsurface
 
             object prevValue = objectProperty.GetValue();
             
+            textBox.Selected = false;
+            
             if (objectProperty.TrySetValue(text))
             {
                 textBox.Text = text;
+
+                new NetworkEvent(NetworkEventType.UpdateProperty, ID, true, objectProperty.Name);
+
                 return true;
             }
             else
             {
-                if (prevValue!=null)
+                if (prevValue != null)
                 {
                     textBox.Text = prevValue.ToString();
                 }
@@ -1076,6 +1083,42 @@ namespace Subsurface
                     message.Write((int)data);
                     components[(int)data].FillNetworkData(type, message);
                     break;
+                case NetworkEventType.UpdateProperty:                                       
+                    var allProperties = GetProperties<InGameEditable>();
+
+                    ObjectProperty objectProperty = allProperties.Find(op => op.Name == (string)data);
+                    if (objectProperty != null)
+                    {
+                        message.Write((string)data);
+                        object value = objectProperty.GetValue();
+                        if (value is string)
+                        {
+                            message.Write((byte)0);
+                            message.Write((string)value);
+                        }
+                        else if (value is float)
+                        {
+                            message.Write((byte)1);
+                            message.Write((float)value);
+                        }
+                        else if (value is int)
+                        {
+                            message.Write((byte)2);
+                            message.Write((int)value);
+                        }
+                        else if (value is bool)
+                        {
+                            message.Write((byte)3);
+                            message.Write((bool)value);
+                        }
+                        else
+                        {
+                            message.Write((byte)200);
+                        }                        
+                    }
+
+                    
+                    break;
             }
         }
 
@@ -1093,6 +1136,47 @@ namespace Subsurface
                     int componentIndex = message.ReadInt32();
                     if (componentIndex < 0 || componentIndex > components.Count - 1) return;
                     components[componentIndex].ReadNetworkData(type, message);
+                    break;
+                case NetworkEventType.UpdateProperty:
+                    string propertyName = "";
+
+                    try
+                    {
+                        propertyName = message.ReadString();
+                    }
+                    catch
+                    {
+                        return;
+                    }
+
+                    var allProperties = GetProperties<InGameEditable>();
+                    ObjectProperty property = allProperties.Find(op => op.Name == propertyName);
+                    if (property == null) return;
+
+                    try
+                    {
+                        switch (message.ReadByte())
+                        {
+                            case 0:
+                                property.TrySetValue(message.ReadString());
+                                break;                            
+                            case 1:
+                                property.TrySetValue(message.ReadFloat());
+                                break;
+                            case 2:
+                                property.TrySetValue(message.ReadInt32());
+                                break;
+                            case 3:
+                                property.TrySetValue(message.ReadBoolean());
+                                break;
+                        }
+                    }
+
+                    catch
+                    {
+                        return;
+                    }
+
                     break;
             }
         }

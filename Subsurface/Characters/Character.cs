@@ -392,11 +392,6 @@ namespace Subsurface
 
             AnimController.FindHull();
 
-            //if (info.ID >= 0)
-            //{
-            //    ID = info.ID;
-            //}
-
             CharacterList.Add(this);
         }
 
@@ -764,7 +759,7 @@ namespace Subsurface
 
             if (Controlled.Inventory != null) Controlled.Inventory.Draw(spriteBatch);
 
-            if (closestItem!=null)
+            if (closestItem != null && selectedConstruction==null)
             {
                 Color color = Color.Orange;
 
@@ -882,12 +877,12 @@ namespace Subsurface
             
             for (int i = 0; i < 10; i++)
             {
-                Particle p = Game1.particleManager.CreateParticle("waterblood",
+                Particle p = Game1.ParticleManager.CreateParticle("waterblood",
                     torso.SimPosition + new Vector2(Rand.Range(-0.5f, 0.5f), Rand.Range(-0.5f, 0.5f)),
                     Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
-                Game1.particleManager.CreateParticle("bubbles",
+                Game1.ParticleManager.CreateParticle("bubbles",
                     torso.SimPosition,
                     new Vector2(Rand.Range(-0.5f, 0.5f), Rand.Range(-1.0f,0.5f)));
             }
@@ -1047,6 +1042,7 @@ namespace Subsurface
                 if (Game1.Client != null && controlled == this)
                 {
                     Game1.Client.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
+                    Game1.LightManager.LosEnabled = false;
                 }
                 return;
             }

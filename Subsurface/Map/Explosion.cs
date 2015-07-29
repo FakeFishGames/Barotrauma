@@ -1,5 +1,6 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using Subsurface.Lights;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -8,29 +9,34 @@ namespace Subsurface
 {
     class Explosion
     {
-        Vector2 position;
+        private Vector2 position;
 
+        private float range;
+        private float damage;
+        private float structureDamage;
+        private float stun;
 
-        float range;
-        float damage;
-        float structureDamage;
-        float stun;
+        private float force;
 
-        float force;
+        private LightSource light;
 
-        public Explosion(Vector2 position, float range, float damage, float structureDamage, float stun=0.0f, float force=0.0f)
+        public float CameraShake;
+
+        public Explosion(Vector2 position, float range, float damage, float structureDamage, float stun = 0.0f, float force = 0.0f)
         {
             this.position = position;
-            this.range = Math.Max(range,1.0f);
+            this.range = Math.Max(range, 1.0f);
             this.damage = damage;
             this.structureDamage = structureDamage;
             this.stun = stun;
             this.force = force;
+
+            CameraShake = range*10.0f;
         }
 
         public Explosion(XElement element)
         {
-            range = Math.Max(ToolBox.GetAttributeFloat(element, "range", 1.0f),1.0f);
+            range = Math.Max(ToolBox.GetAttributeFloat(element, "range", 1.0f), 1.0f);
             damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
             structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
             stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
@@ -43,18 +49,25 @@ namespace Subsurface
             Explode(position);
         }
 
-        public void Explode(Vector2 position)
+        public void Explode(Vector2 simPosition)
         {
-            for (int i = 0; i<range*10; i++)
+            for (int i = 0; i < range * 10; i++)
             {
-                Game1.particleManager.CreateParticle("explosionfire", position,
+                Game1.ParticleManager.CreateParticle("explosionfire", simPosition,
                     Rand.Vector(Rand.Range(3.0f, 4.0f)), 0.0f);
             }
 
-            Vector2 displayPosition = ConvertUnits.ToDisplayUnits(position);
+
+            Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
             float displayRange = ConvertUnits.ToDisplayUnits(range);
 
-            if (structureDamage>0.0f)
+            light = new LightSource(displayPosition, displayRange, Color.LightYellow);
+            CoroutineManager.StartCoroutine(DimLight());
+
+            float cameraDist = Vector2.Distance(Game1.GameScreen.Cam.Position, displayPosition)/2.0f;
+            Game1.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist)/displayRange, 0.0f);
+            
+            if (structureDamage > 0.0f)
             {
                 List<Structure> structureList = new List<Structure>();
             
@@ -84,7 +97,7 @@ namespace Subsurface
 
             foreach (Character c in Character.CharacterList)
             {
-                float dist = Vector2.Distance(c.SimPosition, position);
+                float dist = Vector2.Distance(c.SimPosition, simPosition);
 
                 if (dist > range) continue;
 
@@ -92,16 +105,36 @@ namespace Subsurface
                                 
                 foreach (Limb limb in c.AnimController.limbs)
                 {
-                    distFactor = 1.0f - Vector2.Distance(limb.SimPosition, position)/range;
+                    distFactor = 1.0f - Vector2.Distance(limb.SimPosition, simPosition)/range;
 
                     c.AddDamage(limb.SimPosition, DamageType.None, damage / c.AnimController.limbs.Length * distFactor, 0.0f, stun * distFactor);
                     
                     if (force>0.0f)
                     {
-                        limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.SimPosition-position)*distFactor*force);
+                        limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.SimPosition - simPosition) * distFactor * force);
                     }
                 }
             }
+        }
+
+        private IEnumerable<Status> DimLight()
+        {
+            float currBrightness= 1.0f;
+            float startRange = light.Range;
+
+            while (light.Color.A > 0.0f)
+            {
+                light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, currBrightness);
+                light.Range = startRange * currBrightness;
+
+                currBrightness -= 0.1f;
+
+                yield return Status.Running;
+            }
+
+            light.Remove();
+            
+            yield return Status.Success;
         }
     }
 }
