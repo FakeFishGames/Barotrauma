@@ -1,0 +1,37 @@
+﻿<Items>
+  <Item
+    name="Oxygen Generator"
+    linkable="true">
+
+
+    <Sprite texture ="battery.png" depth="0.8"/>
+
+    <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
+      <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="2.0"/>
+      <sound file="oxygengenerator.ogg" type="OnActive" range="2000.0" volume="PowerConsumption" volumemultiplier="0.001f"/>
+    </OxygenGenerator>
+  
+    <trigger/>
+
+    <ItemContainer capacity="5" canbeselected = "true" msg="Insert oxygen tank to refill it">
+      <Containable name="Oxygen Tank"/>
+    </ItemContainer>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power_in"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Vent"
+    linkable="true">
+
+    <Sprite texture ="vent.png" depth="0.8"/>
+
+    <Vent>
+      <sound file="ventilation.ogg" type="OnActive" range="600.0" volume="OxygenFlow" volumemultiplier="0.001f"/>
+    </Vent>
+
+  </Item>
+</Items>

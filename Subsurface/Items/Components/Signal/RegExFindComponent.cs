@@ -28,7 +28,7 @@ namespace Subsurface.Items.Components
         {
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0.0f)
         {
             switch (connection.Name)
             {

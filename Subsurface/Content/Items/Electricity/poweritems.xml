@@ -43,7 +43,6 @@
 		<ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<input name="power_in"/>
-		</ConnectionPanel>
-		
+		</ConnectionPanel>		
 	</Item>
 </Items>

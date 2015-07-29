@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -15,55 +15,6 @@ namespace Subsurface
         BottomRight = (Bottom | Right), BottomLeft = (Bottom | Left), BottomCenter = (CenterX | Bottom)
     }
     
-
-    class GUIMessage
-    {
-        ColoredText coloredText;
-        Vector2 pos;
-
-        float lifeTime;
-
-        Vector2 size;
-
-
-        public string Text
-        {
-            get { return coloredText.text; }
-        }
-
-        public Color Color
-        {
-            get { return coloredText.color; }
-        }
-
-        public Vector2 Pos
-        {
-            get { return pos; }
-            set { pos = value; }
-        }
-
-        public Vector2 Size
-        {
-            get { return size; }
-        }
-
-
-        public float LifeTime
-        {
-            get { return lifeTime; }
-            set { lifeTime = value; }
-        }
-        
-        public GUIMessage(string text, Color color, Vector2 position, float lifeTime)
-        {
-            coloredText = new ColoredText(text, color);
-            pos = position;
-            this.lifeTime = lifeTime;
-
-            size = GUI.Font.MeasureString(text);
-        }
-    }
-
     class GUI
     {
         public static GUIStyle style;
@@ -71,15 +22,19 @@ namespace Subsurface
         static Texture2D t;
         public static SpriteFont Font, SmallFont;
 
-
-        private static GraphicsDevice graphicsDevice;
-        
+        private static GraphicsDevice graphicsDevice;        
 
         private static List<GUIMessage> messages = new List<GUIMessage>();
 
-
         private static Sound[] sounds;
 
+        private static bool pauseMenuOpen;
+        private static GUIFrame pauseMenu;
+
+        public static bool PauseMenuOpen
+        {
+            get { return pauseMenuOpen; }
+        }
 
         public static void LoadContent(GraphicsDevice graphics)
         {
@@ -94,6 +49,51 @@ namespace Subsurface
                 new Color[] { Color.White });// fill the texture with white
             
             style = new GUIStyle("Content/UI/style.xml");
+        }
+
+        public static void TogglePauseMenu()
+        {
+            if (Screen.Selected == Game1.MainMenuScreen) return;
+
+            TogglePauseMenu(null, null);
+
+            if (pauseMenuOpen)
+            {
+                pauseMenu = new GUIFrame(new Rectangle(0,0,200,300), null, Alignment.Center, style);
+
+                int y = 0;
+                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, GUI.style, pauseMenu);
+                button.OnClicked = TogglePauseMenu;
+
+                y += 60;
+                
+                if (Screen.Selected == Game1.GameScreen)
+                {
+                    SinglePlayerMode spMode = Game1.GameSession.gameMode as SinglePlayerMode;
+                    if (spMode!=null)
+                    {
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, GUI.style, pauseMenu);
+                        button.OnClicked += TogglePauseMenu;
+                        button.OnClicked += Game1.GameSession.LoadPrevious;
+
+                        y += 60;
+                    }
+                }
+
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, GUI.style, pauseMenu);
+                
+                button.UserData = (int)MainMenuScreen.Tabs.Main;
+                button.OnClicked += Game1.MainMenuScreen.SelectTab;
+                button.OnClicked += TogglePauseMenu;
+            }
+
+        }
+
+        private static bool TogglePauseMenu(GUIButton button, object obj)
+        {
+            pauseMenuOpen = !pauseMenuOpen;
+
+            return true;
         }
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f)
@@ -266,15 +266,18 @@ namespace Subsurface
         public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
             spriteBatch.DrawString(Font,
-                "FPS: " + (int)Game1.FrameCounter.AverageFramesPerSecond
-                + " - Physics: " + Game1.World.UpdateTime
-                + " - bodies: " + Game1.World.BodyList.Count,
+                "FPS: " + (int)Game1.FrameCounter.AverageFramesPerSecond,
                 new Vector2(10, 10), Color.White);
 
-            
-            spriteBatch.DrawString(Font,
-                "Camera pos: " + Game1.GameScreen.Cam.Position,
-                new Vector2(10, 30), Color.White);
+            if (Game1.DebugDraw)
+            {
+                spriteBatch.DrawString(Font,
+                    "Physics: " + Game1.World.UpdateTime
+                    + " - bodies: " + Game1.World.BodyList.Count 
+                    + "Camera pos: " + Game1.GameScreen.Cam.Position,
+                    new Vector2(10, 30), Color.White);
+            }
+
             
             if (Character.Controlled != null && cam!=null) Character.Controlled.DrawHud(spriteBatch, cam);
             if (Game1.NetworkMember != null) Game1.NetworkMember.Draw(spriteBatch);
@@ -287,6 +290,11 @@ namespace Subsurface
                 if (messageBox != null) messageBox.Draw(spriteBatch);
             }
 
+            if (pauseMenuOpen)
+            {
+                pauseMenu.Update(1.0f);
+                pauseMenu.Draw(spriteBatch);
+            }
             
             DebugConsole.Draw(spriteBatch);
         }

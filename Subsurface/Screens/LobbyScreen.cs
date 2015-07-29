@@ -21,7 +21,7 @@ namespace Subsurface
         GUIListBox characterList;
         GUIListBox hireList;
 
-        GUIListBox selectedItemList;
+        GUIListBox selectedItemList, itemList;
 
         SinglePlayerMode gameMode;
 
@@ -31,9 +31,9 @@ namespace Subsurface
 
         Level selectedLevel;
 
-        private string SelectedItemCost()
+        private string CostTextGetter()
         {
-            return selectedItemCost.ToString();
+            return "Cost: "+selectedItemCost.ToString();
         }
 
         private int selectedItemCost
@@ -55,7 +55,7 @@ namespace Subsurface
         {
             Rectangle panelRect = new Rectangle(
                 40, 40,
-                (int)(Game1.GraphicsWidth * 0.3f) - 60,
+                180,
                 Game1.GraphicsHeight - 80);
 
             leftPanel = new GUIFrame(panelRect, GUI.style);
@@ -122,14 +122,15 @@ namespace Subsurface
             rightPanel[(int)PanelTab.Store] = new GUIFrame(panelRect, GUI.style);
 
             selectedItemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, GUI.style, rightPanel[(int)PanelTab.Store]);
+            selectedItemList.OnSelected = DeselectItem;
 
-            var costText = new GUITextBlock(new Rectangle(0, 0, 200, 25), "Cost: ", Color.Transparent, Color.White, Alignment.BottomLeft, GUI.style, rightPanel[(int)PanelTab.Store]);
-            costText.TextGetter = SelectedItemCost;
+            var costText = new GUITextBlock(new Rectangle(0, 0, 200, 25), "Cost: ", GUI.style, Alignment.BottomLeft, Alignment.TopLeft, rightPanel[(int)PanelTab.Store]);
+            costText.TextGetter = CostTextGetter;
 
-            buyButton = new GUIButton(new Rectangle(15, 0, 100, 25), "Buy", Alignment.Bottom, GUI.style, rightPanel[(int)PanelTab.Store]);
+            buyButton = new GUIButton(new Rectangle(150, 0, 100, 25), "Buy", Alignment.Bottom, GUI.style, rightPanel[(int)PanelTab.Store]);
             buyButton.OnClicked = BuyItems;
 
-            GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, Alignment.TopRight, GUI.style, rightPanel[(int)PanelTab.Store]);
+            itemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, Alignment.TopRight, GUI.style, rightPanel[(int)PanelTab.Store]);
             itemList.OnSelected = SelectItem;
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)
@@ -196,10 +197,22 @@ namespace Subsurface
 
             if (locationPanel != null) rightPanel[(int)PanelTab.Map].RemoveChild(locationPanel);
 
-            locationPanel = new GUIFrame(new Rectangle(0, 0, rightPanel[(int)PanelTab.Map].Rect.Width / 2 - 40, 190), Color.Transparent, null, rightPanel[(int)PanelTab.Map]);
+            locationPanel = new GUIFrame(new Rectangle(0, 0, 200, 190), Color.Transparent, Alignment.TopRight, null, rightPanel[(int)PanelTab.Map]);
             locationPanel.UserData = "selectedlocation";
 
-            new GUITextBlock(new Rectangle(0,0,100,20), location.Name, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
+            new GUITextBlock(new Rectangle(0,0,0,0), location.Name, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
+
+            if (Game1.GameSession.Map.SelectedConnection != null && Game1.GameSession.Map.SelectedConnection.Quest != null)
+            {
+                var quest = Game1.GameSession.Map.SelectedConnection.Quest;
+
+                new GUITextBlock(new Rectangle(0, 40, 0, 20), "Quest: "+quest.Name, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
+                
+                new GUITextBlock(new Rectangle(0, 60, 0, 20), "Reward: " + quest.Reward, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
+                
+                new GUITextBlock(new Rectangle(0, 80, 0, 0), quest.Description, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel, true);
+
+            }
 
             startButton.Enabled = true;
 
@@ -257,12 +270,21 @@ namespace Subsurface
         private bool SelectItem(object obj)
         {
             MapEntityPrefab prefab = obj as MapEntityPrefab;
-
             if (prefab == null) return false;
 
             CreateItemFrame(prefab, selectedItemList);
 
             buyButton.Enabled = gameMode.crewManager.Money >= selectedItemCost;
+
+            return false;
+        }
+
+        private bool DeselectItem(object obj)
+        {
+            MapEntityPrefab prefab = obj as MapEntityPrefab;
+            if (prefab == null) return false;
+
+            selectedItemList.RemoveChild(selectedItemList.children.Find(c => c.UserData == obj));
 
             return false;
         }
@@ -323,8 +345,8 @@ namespace Subsurface
                 Game1.GameSession.Map.Draw(spriteBatch, new Rectangle(
                     rightPanel[selectedRightPanel].Rect.X + 20, 
                     rightPanel[selectedRightPanel].Rect.Y + 20,
-                    rightPanel[selectedRightPanel].Rect.Width - 40, 
-                    rightPanel[selectedRightPanel].Rect.Height - 150), 3.0f);
+                    rightPanel[selectedRightPanel].Rect.Width - 250, 
+                    rightPanel[selectedRightPanel].Rect.Height - 40), 3.0f);
             }
      
             if (rightPanel[(int)selectedRightPanel].UserData as Location != Game1.GameSession.Map.CurrentLocation)

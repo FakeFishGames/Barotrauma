@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Xml.Linq;
@@ -16,6 +18,16 @@ namespace Subsurface.Items.Components
 
         Hull hull1, hull2;
 
+        private float FlowPercentage
+        {
+            get { return flowPercentage; }
+            set 
+            {
+                if (float.IsNaN(flowPercentage)) return;
+                flowPercentage = MathHelper.Clamp(value,-100.0f,100.0f); 
+            }
+        }
+
         [HasDefaultValue(100.0f, false)]
         public float MaxFlow
         {
@@ -26,7 +38,7 @@ namespace Subsurface.Items.Components
         public Pump(Item item, XElement element)
             : base(item, element)
         {
-            //maxFlow = ToolBox.GetAttributeFloat(element, "maxflow", 100.0f);
+            flowPercentage = 100.0f;
 
             item.linkedTo.CollectionChanged += delegate(object sender, NotifyCollectionChangedEventArgs e)
             { GetHulls(); };
@@ -34,7 +46,7 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            currPowerConsumption = powerConsumption;
+            currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
 
             if (voltage < minVoltage) return;
 
@@ -56,52 +68,17 @@ namespace Subsurface.Items.Components
             }
 
             hull1.Volume += deltaVolume;
-            if (hull2 != null) hull2.Volume -= deltaVolume; 
+            if (hull1.Volume > hull1.FullVolume) hull1.Pressure += 0.5f;
+
+            if (hull2 != null)
+            {
+                hull2.Volume -= deltaVolume;
+                if (hull2.Volume > hull1.FullVolume) hull2.Pressure += 0.5f;
+            }
 
             voltage = 0.0f;
         }
-
-        //public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        //{
-        //    int width = 300, height = 200;
-        //    int x = Game1.GraphicsWidth / 2 - width / 2;
-        //    int y = Game1.GraphicsHeight / 2 - height / 2;
-
-        //    GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
-
-        //    spriteBatch.DrawString(GUI.font, "Pumping direction: " + ((flowIn) ? "in" : "out"), new Vector2(x + 30, y + 30), Color.White);
-        //    if (GUI.DrawButton(spriteBatch, new Rectangle(x + 30, y + 50, 80, 40), "TOGGLE")) flowIn = !flowIn;
-
-        //    if (GUI.DrawButton(spriteBatch, new Rectangle(x + 30, y + 150, 100, 40), (isActive) ? "TURN OFF" : "TURN ON")) IsActive = !isActive;
-
-        //}
-
-        //public override bool Pick(Character activator = null)
-        //{
-        //    //isActive = !isActive;
-
-        //    hull1 = null;
-        //    hull2 = null;
-
-        //    foreach (MapEntity e in item.linkedTo)
-        //    {
-        //        Hull hull = e as Hull;
-        //        if (hull == null) continue;
-
-        //        if (hull1 == null)
-        //        {
-        //            hull1 = hull;
-        //        }
-        //        else if (hull2 == null && hull != hull1)
-        //        {
-        //            hull2 = hull;
-        //            break;
-        //        }  
-        //    }
-
-        //    return true;
-        //}
-
+        
         private void GetHulls()
         {
             hull1 = null;
@@ -124,34 +101,33 @@ namespace Subsurface.Items.Components
             }
         }
 
-        //public override void OnMapLoaded()
-        //{
-        //    hull1 = null;
-        //    hull2 = null;
+        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        {
+            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
+            int x = GuiFrame.Rect.X;
+            int y = GuiFrame.Rect.Y;
 
-        //    foreach (MapEntity e in item.linkedTo)
-        //    {
-        //        Hull hull = e as Hull;
-        //        if (hull == null) continue;
+            GuiFrame.Draw(spriteBatch);
 
-        //        if (hull1 == null)
-        //        {
-        //            hull1 = hull;
-        //        }
-        //        else if (hull2 == null && hull != hull1)
-        //        {
-        //            hull2 = hull;
-        //            break;
-        //        }
-        //    }
-        //}
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 100, 40), ((isActive) ? "TURN OFF" : "TURN ON")))
+            {
+                targetLevel = null;
+                isActive = !isActive;
+            }
+            
+            spriteBatch.DrawString(GUI.Font, "Flow percentage: " + (int)flowPercentage + " %", new Vector2(x + 20, y + 80), Color.White);
+
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "+", true)) FlowPercentage += 1.0f;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "-", true)) FlowPercentage -= 1.0f;
+
+
+            item.NewComponentEvent(this, true);
+        }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
             base.ReceiveSignal(signal, connection, sender, power);
-
-            isActive = true;
-
+            
             if (connection.Name == "toggle")
             {
                 isActive = !isActive;
@@ -176,8 +152,6 @@ namespace Subsurface.Items.Components
                     targetLevel = MathHelper.Clamp(tempTarget, 0.0f, 100.0f);
                 }
             }
-
-
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
@@ -193,13 +167,13 @@ namespace Subsurface.Items.Components
 
             try
             {
-                newFlow = MathHelper.Clamp(message.ReadFloat(), -100.0f, 100.0f);
+                newFlow = message.ReadFloat();
                 newActive = message.ReadBoolean();
             }
 
             catch { return; }
 
-            flowPercentage = newFlow;
+            FlowPercentage = newFlow;
             isActive = newActive;
         }
     }

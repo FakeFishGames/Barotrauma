@@ -26,6 +26,9 @@
 
   <damagesound file="Content/Sounds/Damage/implode.ogg" damagerange="0.0,100.0" damagesoundtype="Implode"/>
 
+  <damagesound file="Content/Sounds/Damage/implode.ogg" damagerange="0.0,100.0" damagesoundtype="Implode"/>
+  
+
   <music file="Content\Sounds\Music\Simplex.ogg" type="default"/>
   <music file="Content\Sounds\Music\Enter The Maze.ogg" type="repair" priorityrange="40,100"/>
   <music file="Content\Sounds\Music\Unseen Horrors.ogg" type="monster" priorityrange="40,100"/>

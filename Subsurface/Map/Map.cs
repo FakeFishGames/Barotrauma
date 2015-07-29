@@ -19,7 +19,7 @@ namespace Subsurface
 
         private List<LocationConnection> connections;
         
-        private int seed;
+        private string seed;
         private int size;
 
         private static Sprite iceTexture;
@@ -28,6 +28,8 @@ namespace Subsurface
 
         private Location currentLocation;
         private Location selectedLocation;
+
+        private LocationConnection selectedConnection;
 
         public Location CurrentLocation
         {
@@ -44,12 +46,17 @@ namespace Subsurface
             get { return selectedLocation; }
         }
 
-        public int Seed
+        public LocationConnection SelectedConnection
+        {
+            get { return selectedConnection; }
+        }
+
+        public string Seed
         {
             get { return seed; }
         }
 
-        public Map(int seed, int size)
+        public Map(string seed, int size)
         {
             this.seed = seed;
 
@@ -65,7 +72,7 @@ namespace Subsurface
             if (iceCraters == null) iceCraters = Game1.TextureLoader.FromFile("Content/Map/iceCraters.png");
             if (iceCrack == null) iceCrack = Game1.TextureLoader.FromFile("Content/Map/iceCrack.png");
             
-            Rand.SetSyncedSeed(this.seed);
+            Rand.SetSyncedSeed(this.seed.GetHashCode());
 
             GenerateLocations();
 
@@ -288,9 +295,9 @@ namespace Subsurface
                     if (PlayerInput.LeftButtonClicked()&&
                         selectedLocation != highlightedLocation && highlightedLocation != null)
                     {
-                        //currentLocation = highlightedLocation;
-                        Game1.LobbyScreen.SelectLocation(highlightedLocation, connection);
-                        selectedLocation = highlightedLocation;                        
+                        selectedConnection = connection;
+                        selectedLocation = highlightedLocation;    
+                        Game1.LobbyScreen.SelectLocation(highlightedLocation, connection);                    
                     } 
                 }
 
@@ -368,14 +375,34 @@ namespace Subsurface
         private Level level;
 
         public float Difficulty;
-        
+
         public List<Vector2[]> CrackSegments;
+
+        private int questsCompleted;
+
+        private Quest quest;
+        public Quest Quest
+        {
+            get 
+            {         
+                if (quest==null || quest.Completed)
+                {
+                    if (quest !=null && quest.Completed) questsCompleted++;
+                    Random rand = new Random(GetHashCode() + questsCompleted);
+                    quest = Quest.LoadRandom(rand);
+                }
+
+                return quest;
+            }
+        }
+
+
 
         public Location[] Locations
         {
             get { return locations; }
         }
-
+        
         public Level Level
         {
             get { return level; }
@@ -385,8 +412,8 @@ namespace Subsurface
         public LocationConnection(Location location1, Location location2)
         {
             locations = new Location[] { location1, location2 };
-            //location1.connections.Add(this);
-            //location2.connections.Add(this);
+
+            questsCompleted = 0;
         }
 
         public Location OtherLocation(Location location)

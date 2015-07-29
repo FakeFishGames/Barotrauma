@@ -12,12 +12,33 @@ namespace Subsurface.Items.Components
 {
     class Steering : ItemComponent
     {
-        Vector2 currVelocity;
-        Vector2 targetVelocity;
+        private Vector2 currVelocity;
+        private Vector2 targetVelocity;
 
-        bool autoPilot;
+        private bool autoPilot;
 
-        SteeringPath steeringPath;
+        private SteeringPath steeringPath;
+
+        private static PathFinder pathFinder;
+
+        bool AutoPilot
+        {
+            get { return autoPilot; }
+            set
+            {
+                if (value == autoPilot) return;
+
+                autoPilot = value;
+
+                if (autoPilot)
+                {
+                    if (pathFinder==null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                    steeringPath = pathFinder.FindPath(
+                        ConvertUnits.ToSimUnits(Level.Loaded.Position),
+                        ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+                }
+            }
+        }
 
         private Vector2 TargetVelocity
         {
@@ -43,18 +64,16 @@ namespace Subsurface.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
-
-            
-
+                     
             if (autoPilot)
             {
-                if (steeringPath==null)
-                {
-                    PathFinder pathFinder = new PathFinder(WayPoint.WayPointList, false);
-                    steeringPath = pathFinder.FindPath(
-                        ConvertUnits.ToSimUnits(Level.Loaded.StartPosition),
-                        ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
-                }
+                //if (steeringPath==null)
+                //{
+                //    PathFinder pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                //    steeringPath = pathFinder.FindPath(
+                //        ConvertUnits.ToSimUnits(Level.Loaded.StartPosition),
+                //        ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+                //}
 
                 steeringPath.GetNode(Vector2.Zero, 20.0f);
 
@@ -90,7 +109,7 @@ namespace Subsurface.Items.Components
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + width - 150, y + height - 30, 150, 30), "Autopilot"))
             {
-                autoPilot = !autoPilot;
+                AutoPilot = !AutoPilot;
 
                 item.NewComponentEvent(this, true);
             }
@@ -156,7 +175,7 @@ namespace Subsurface.Items.Components
             }
 
             TargetVelocity = newTargetVelocity;
-            autoPilot = newAutoPilot;
+            AutoPilot = newAutoPilot;
         }
     }
 }

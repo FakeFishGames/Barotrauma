@@ -10,6 +10,7 @@
 
     <Engine minvoltage="0.5" powerperforce="10.0" maxforce="500" canbeselected = "true">
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+      <sound file="engine.ogg" type="OnActive" range="3000.0" volume="CurrentVolume"/>
     </Engine>
     
 		<ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">

@@ -18,6 +18,12 @@ namespace Subsurface
         private Vector2 position;
         private float rotation;
 
+        public float Shake;
+        private Vector2 shakePosition;
+        private Vector2 shakeTargetPosition;
+
+
+
         //the area of the world inside the camera view
         private Rectangle worldView;
 
@@ -151,10 +157,10 @@ namespace Subsurface
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
-                if (Keyboard.GetState().IsKeyDown(Keys.Left))   moveCam.X -= moveSpeed;
-                if (Keyboard.GetState().IsKeyDown(Keys.Right))  moveCam.X += moveSpeed;                
-                if (Keyboard.GetState().IsKeyDown(Keys.Down))   moveCam.Y -= moveSpeed;
-                if (Keyboard.GetState().IsKeyDown(Keys.Up))     moveCam.Y += moveSpeed;
+                if (Keyboard.GetState().IsKeyDown(Keys.A))  moveCam.X -= moveSpeed;
+                if (Keyboard.GetState().IsKeyDown(Keys.D))  moveCam.X += moveSpeed;                
+                if (Keyboard.GetState().IsKeyDown(Keys.S))  moveCam.Y -= moveSpeed;
+                if (Keyboard.GetState().IsKeyDown(Keys.W))  moveCam.Y += moveSpeed;
 
                 Zoom = MathHelper.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f, 0.1f, 2.0f);
             }
@@ -177,7 +183,11 @@ namespace Subsurface
                 moveCam = (targetPos + offset - position) / MoveSmoothness;
             }
 
-            Translate(moveCam*deltaTime*60.0f);
+            shakeTargetPosition = Rand.Vector(Shake);            
+            shakePosition = Vector2.Lerp(shakePosition, shakeTargetPosition, 0.5f);
+            Shake = MathHelper.Lerp(Shake, 0.0f, 0.03f);
+
+            Translate((moveCam+shakePosition)*deltaTime*60.0f);
         }
         
         public Vector2 Position

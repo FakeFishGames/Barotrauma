@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Quests>
+  <SalvageQuest 
+    name="Salvaging an artifact" 
+    description="Researchers have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
+    reward="1000"
+    successmessage="You have successfully retrieved the artifact."
+    itemname="Skyholder Artifact">    
+  </SalvageQuest>
+</Quests>

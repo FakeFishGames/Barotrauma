@@ -520,7 +520,7 @@ namespace Subsurface
                     {
 
                         //create a splash particle
-                        Subsurface.Particles.Particle splash = Game1.particleManager.CreateParticle("watersplash",
+                        Subsurface.Particles.Particle splash = Game1.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.SimPosition.X, ConvertUnits.ToSimUnits(limbHull.Surface)),
                             new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 0.1f)),
                             0.0f);
@@ -530,7 +530,7 @@ namespace Subsurface
                                 limbHull.Rect.Y,
                                 limbHull.Rect.Y - limbHull.Rect.Height));
 
-                        Game1.particleManager.CreateParticle("bubbles",
+                        Game1.ParticleManager.CreateParticle("bubbles",
                             new Vector2(limb.SimPosition.X, ConvertUnits.ToSimUnits(limbHull.Surface)),                            
                             limb.LinearVelocity*0.001f,
                             0.0f);

@@ -14,47 +14,47 @@
     </limb>
 
     
-    <limb id = "1" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.025" origin="0.5,0.5"/>
+    <limb id = "1" width="50" height="440" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="865,7,117,448" depth="0.025" origin="0.5,0.5"/>
     </limb>
-    <limb id = "2" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.026" origin="0.5,0.5"/>
+    <limb id = "2" width="40" height="274" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="739,734,82,287" depth="0.026" origin="0.5,0.5"/>
     </limb>
-    <limb id = "3" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.027" origin="0.5,0.5"/>
-    </limb>
-
-    <limb id = "4" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.025" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "5" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.026" origin="0.5,0.5"/>
-    </limb>
-    <limb id = "6" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.027" origin="0.5,0.5"/>
+    <limb id = "3" width="77" height="540" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="867,474,101,550" depth="0.025" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "7" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.025" origin="0.5,0.5"/>
+    <limb id = "4" width="50" height="440" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="865,7,117,448" depth="0.025" origin="0.5,0.5"/>
     </limb>
-    <limb id = "8" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.026" origin="0.5,0.5"/>
+    <limb id = "5" width="40" height="274" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="739,734,82,287" depth="0.026" origin="0.5,0.5"/>
     </limb>
-    <limb id = "9" width="51" height="435" flip="true">
-      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="643,10,51,217" depth="0.028" origin="0.5,0.5"/>
+    <limb id = "6" width="77" height="540" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="867,474,101,550" depth="0.025" origin="0.5,0.5"/>
     </limb>
 
-    <joint limb1="0" limb1anchor="112,77" limb2="1" limb2anchor="0,-100" lowerlimit="-180" upperlimit="-90"/>
-    <joint limb1="1" limb1anchor="0,100" limb2="2" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="2" limb1anchor="0,100" limb2="3" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <limb id = "7" width="50" height="440" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="865,7,117,448" depth="0.025" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "8" width="40" height="274" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="739,734,82,287" depth="0.026" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "9" width="77" height="540" flip="true">
+      <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="867,474,101,550" depth="0.025" origin="0.5,0.5"/>
+    </limb>
 
-    <joint limb1="0" limb1anchor="0,0" limb2="4" limb2anchor="0,-100" lowerlimit="-180" upperlimit="-90"/>
-    <joint limb1="4" limb1anchor="0,100" limb2="5" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="5" limb1anchor="0,100" limb2="6" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="0" limb1anchor="112,77" limb2="1" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
+    <joint limb1="1" limb1anchor="0,190" limb2="2" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="2" limb1anchor="0,100" limb2="3" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
 
-    <joint limb1="0" limb1anchor="-53,-164" limb2="7" limb2anchor="0,-100" lowerlimit="-180" upperlimit="-90"/>
-    <joint limb1="7" limb1anchor="0,100" limb2="8" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="8" limb1anchor="0,100" limb2="9" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="0" limb1anchor="0,0" limb2="4" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
+    <joint limb1="4" limb1anchor="0,190" limb2="5" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="5" limb1anchor="0,100" limb2="6" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
+
+    <joint limb1="0" limb1anchor="-53,-164" limb2="7" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
+    <joint limb1="7" limb1anchor="0,190" limb2="8" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="8" limb1anchor="0,100" limb2="9" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
 
   </ragdoll>
 

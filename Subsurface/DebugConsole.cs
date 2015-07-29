@@ -163,10 +163,10 @@ namespace Subsurface
                     }
 
                     break;
-                case "startserver":
-                    if (Game1.Server==null)
-                        Game1.NetworkMember = new GameServer();
-                    break;
+                //case "startserver":
+                //    if (Game1.Server==null)
+                //        Game1.NetworkMember = new GameServer();
+                //    break;
                 case "kick":
                     if (Game1.Server == null) break;
                     Game1.Server.KickPlayer(commands[1]);
@@ -219,10 +219,13 @@ namespace Subsurface
                         it.Condition = 100.0f;
                     }
                     break;
-                case "fowenabled":
-                case "fow":
-                case "drawfow":
-                    Game1.LightManager.FowEnabled = !Game1.LightManager.FowEnabled;
+                case "shake":
+                    Game1.GameScreen.Cam.Shake = 10.0f;
+                    break;
+                case "losenabled":
+                case "los":
+                case "drawlos":
+                    Game1.LightManager.LosEnabled = !Game1.LightManager.LosEnabled;
                     break;
                 case "lighting":
                 case "lightingenabled":

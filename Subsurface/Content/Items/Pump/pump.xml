@@ -4,8 +4,11 @@
   pickdistance="200">
 
   <Sprite texture ="pump.png" depth="0.08"/>
-  
-  <Pump maxflow="500" PowerConsumption="300.0" MinVoltage="0.3"/>
+
+  <Pump canbeselected = "true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
+    <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+    <sound file="pump.ogg" type="OnActive" range="800.0" volume="PowerConsumption" volumemultiplier="0.003"/>
+  </Pump>
 
   <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
     <requireditem name="Screwdriver" type="Equipped"/>

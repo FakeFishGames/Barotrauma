@@ -7,11 +7,10 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
-using Subsurface.Items.Components;
 using System.IO;
 using System.Globalization;
 
-namespace Subsurface
+namespace Subsurface.Items.Components
 {
     class ItemSound
     {
@@ -19,6 +18,8 @@ namespace Subsurface
         public readonly ActionType Type;
 
         public string VolumeProperty;
+
+        public float VolumeMultiplier;
 
         public readonly float Range;
         
@@ -207,10 +208,10 @@ namespace Subsurface
 
                         guiFrame = new GUIFrame(
                             new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W), 
-                            new Color(color.X, color.Y, color.Z, color.W), alignment);                        
+                            new Color(color.X, color.Y, color.Z, color.W), alignment, GUI.style);
                         //guiFrame.Alpha = color.W;
 
-                    break;
+                        break;
                     case "sound":
                         string filePath = ToolBox.GetAttributeString(subElement, "file", "");
                         if (filePath=="") continue;
@@ -236,6 +237,7 @@ namespace Subsurface
                         float range = ToolBox.GetAttributeFloat(subElement, "range", 800.0f);
                         ItemSound itemSound = new ItemSound(sound, type, range);
                         itemSound.VolumeProperty = ToolBox.GetAttributeString(subElement, "volume", "");
+                        itemSound.VolumeMultiplier = ToolBox.GetAttributeFloat(subElement, "volumemultiplier", 1.0f);
                         sounds.Add(itemSound);
                         break;
                 }
@@ -245,7 +247,7 @@ namespace Subsurface
 
         private ItemSound loopingSound;
         private int loopingSoundIndex;
-        public void PlaySound(ActionType type, float volume, Vector2 position, bool loop=false)
+        public void PlaySound(ActionType type, Vector2 position, bool loop=false)
         {
             ItemSound itemSound = null;
             if (!loop || !Sounds.SoundManager.IsPlaying(loopingSoundIndex))
@@ -254,19 +256,9 @@ namespace Subsurface
                 if (matchingSounds.Count == 0) return;
 
                 int index = Rand.Int(matchingSounds.Count);
-                itemSound = sounds[index];
+                itemSound = matchingSounds[index];
 
-                if (itemSound.VolumeProperty != "")
-                {
-                    ObjectProperty op = null;
-                    if (properties.TryGetValue(itemSound.VolumeProperty.ToLower(), out op))
-                    {
-                        float newVolume = 0.0f;
-                        float.TryParse(op.GetValue().ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out newVolume);
-                        volume = MathHelper.Clamp(newVolume, 0.0f, 1.0f);
-                    }
 
-                }
 
                 if (loop) loopingSound = itemSound;
             }
@@ -274,14 +266,31 @@ namespace Subsurface
 
             if (loop)
             {
-                //if (loopingSound != null && loopingSound.volumeProperty != "") volume = float.Parse(properties[loopingSound.volumeProperty].GetValue().ToString());
-                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, volume, position, loopingSound.Range);
+                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
             }
             else
             {
-                
-                itemSound.Sound.Play(volume, itemSound.Range, position);  
+
+                itemSound.Sound.Play(GetSoundVolume(itemSound), itemSound.Range, position);  
             } 
+        }
+
+        private float GetSoundVolume(ItemSound sound)
+        {
+            if (sound.VolumeProperty == "") return 1.0f;
+            
+            ObjectProperty op = null;
+            if (properties.TryGetValue(sound.VolumeProperty.ToLower(), out op))
+            {
+                float newVolume = 0.0f;
+                float.TryParse(op.GetValue().ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out newVolume);
+
+                newVolume *= sound.VolumeMultiplier;
+
+                return MathHelper.Clamp(newVolume, 0.0f, 1.0f);
+            }
+
+            return 0.0f;            
         }
 
         public virtual void Move(Vector2 amount) { }
@@ -347,7 +356,17 @@ namespace Subsurface
             return false;
         }
 
-        public virtual void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0.0f) { }
+        public virtual void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0.0f) 
+        {
+        
+            switch (connection.Name)
+            {
+                case "activate":
+                case "use":
+                    item.Use(1.0f);
+                    break;
+            }
+        }
 
         public virtual bool Combine(Item item) 
         {
@@ -459,12 +478,12 @@ namespace Subsurface
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Vector2 position, IPropertyObject target)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, IPropertyObject target)
         {
             foreach (StatusEffect effect in statusEffects)
             {
                 if (effect.type != type) continue;
-                effect.Apply(type, deltaTime, position, target);
+                effect.Apply(type, deltaTime, item, target);
             }
         }
 
@@ -569,7 +588,7 @@ namespace Subsurface
             ConstructorInfo constructor;
             try
             {
-                if (!t.IsSubclassOf(typeof(ItemComponent))) return null;
+                if (t!=typeof(ItemComponent) && !t.IsSubclassOf(typeof(ItemComponent))) return null;
                 constructor = t.GetConstructor(new Type[] { typeof(Item), typeof(XElement) });
                 if (constructor == null)
                 {

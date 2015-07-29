@@ -19,16 +19,16 @@ namespace Subsurface.Networking
 
         Client myClient;
 
-        public GameServer()
+        public GameServer(string name, int port)
         {
-            var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 170-120, 20, 150, 25), "End round", Alignment.TopLeft, GUI.style, inGameHUD);
+            var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.style, inGameHUD);
             endRoundButton.OnClicked = EndButtonHit;
 
-            name = "Server";
+            this.name = name;
 
             Config = new NetPeerConfiguration("subsurface");
 
-            Config.Port = 14242;
+            Config.Port = port;
             
             //Config.SimulatedLoss = 0.2f;
             //Config.SimulatedMinimumLatency = 0.25f;
@@ -214,6 +214,8 @@ namespace Subsurface.Networking
                             outmsg.Write((byte)PacketTypes.LoggedIn);
 
                             outmsg.Write(sender.ID);
+
+                            outmsg.Write(gameStarted);
 
                             //notify the client about other clients already logged in
                             outmsg.Write((myClient == null) ? connectedClients.Count - 1 : connectedClients.Count);

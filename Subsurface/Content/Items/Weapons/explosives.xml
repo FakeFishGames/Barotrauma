@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="C-4 Block"
+    Tags="smallitem,explosive"
+    pickdistance="150"
+    price="50">
+
+    <Sprite texture="explosives.png"  depth="0.8" sourcerect="0,0,16,7"/>
+
+    <Body width="16" height="7"/>
+
+    <Pickable slots="Any">
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
+        <Explosion range="10.0" structuredamage="600" damage="100" stun="5" force="20.0"/>
+      </StatusEffect>
+    </Pickable>
+  </Item>
+
+  <Item
+    name="Detonator"
+    Tags="smallitem"
+    pickdistance="150"
+    price="50">
+
+    <Sprite texture="explosives.png"  depth="0.8" sourcerect="0,7,16,9"/>
+
+    <Body width="16" height="9"/>
+
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Pickable>
+
+    <ItemContainer capacity="1" itempos="0,0" hideitems="false">
+      <Containable name="explosive"/>
+    </ItemContainer>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="activate">
+        <StatusEffect type="OnUse" target="Contained" Condition="-100.0"/>        
+      </input>
+    </ConnectionPanel>
+  </Item>
+</Items>

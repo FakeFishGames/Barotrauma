@@ -16,7 +16,7 @@ namespace Subsurface.Lights
 
         private List<LightSource> lights;
 
-        public bool FowEnabled = true;
+        public bool LosEnabled = true;
 
         public bool LightingEnabled = true;
 
@@ -54,9 +54,9 @@ namespace Subsurface.Lights
             lights.Remove(light);
         }
 
-        public void DrawFow(GraphicsDevice graphics, Camera cam, Vector2 pos)
+        public void DrawLOS(GraphicsDevice graphics, Camera cam, Vector2 pos)
         {
-            if (!FowEnabled) return;
+            if (!LosEnabled) return;
             foreach (ConvexHull convexHull in ConvexHull.list)
             {
                 convexHull.DrawShadows(graphics, cam, pos);

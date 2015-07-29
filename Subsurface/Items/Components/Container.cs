@@ -132,8 +132,8 @@ namespace Subsurface.Items.Components
 
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
-                    if (effect.Targets.HasFlag(StatusEffect.TargetType.This)) effect.Apply(ActionType.OnContaining, deltaTime, item.SimPosition, item.AllPropertyObjects);
-                    if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) effect.Apply(ActionType.OnContaining, deltaTime, item.SimPosition, contained.AllPropertyObjects);
+                    if (effect.Targets.HasFlag(StatusEffect.TargetType.This)) effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
+                    if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
                 }
 
                 contained.ApplyStatusEffects(ActionType.OnContained, deltaTime);

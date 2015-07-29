@@ -3,10 +3,10 @@
 
   <sound file="Content/Characters/Crawler/attack.ogg" state="Attack" range="500"/>
 
-  <ragdoll headposition="80" headangle="-70" 
+  <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 
            swimspeed="2.0" walkspeed="0.5"
-           stepsize ="30.0,10.0" 
+           stepsize ="30.0,20.0" 
            stepoffset="30.0,0.0"
            legtorque="10"
            footrotation ="180.0"

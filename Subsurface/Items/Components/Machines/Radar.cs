@@ -96,6 +96,7 @@ namespace Subsurface.Items.Components
 
 
             float scale = 0.015f;
+            float displayScale = ConvertUnits.ToDisplayUnits(scale);
 
             if (Level.Loaded != null)
             {
@@ -109,12 +110,11 @@ namespace Subsurface.Items.Components
                         center + (edges[i][1] - offset) * scale, Color.White);
                 }
 
-                scale = ConvertUnits.ToDisplayUnits(scale);
                 for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
                 {
-                    Vector2 start = Submarine.Loaded.HullVertices[i] * scale;
+                    Vector2 start = Submarine.Loaded.HullVertices[i] * displayScale;
                     start.Y = -start.Y;
-                    Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * scale;
+                    Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * displayScale;
                     end.Y = -end.Y;
 
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.White);
@@ -127,7 +127,7 @@ namespace Subsurface.Items.Components
 
                 if (c.SimPosition != Vector2.Zero && c.SimPosition.Length() < 7 * Level.GridCellWidth)
                 {
-                    int width = (int)Math.Min(c.Mass / 5, 30);
+                    int width = (int)MathHelper.Clamp(c.Mass / 20, 1, 10);
 
                     Vector2 pos = c.Position * scale;
                     pos.Y = -pos.Y;
@@ -141,6 +141,74 @@ namespace Subsurface.Items.Components
             {
                 screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width/screenOverlay.size.X);
             }
+
+            //if (Level.Loaded != null)
+            //{
+
+            //    for (int i = 0; i < 2; i++)
+            //    {
+            //        Vector2 targetPos = (i == 0) ? Level.Loaded.StartPosition : Level.Loaded.EndPosition;
+            //        targetPos += Level.Loaded.Position;
+
+            //        float dist = targetPos.Length();
+
+            //        targetPos.Y = -targetPos.Y;
+            //        Vector2 markerPos = Vector2.Normalize(targetPos) * (rect.Width * 0.55f);
+            //        markerPos += center;
+
+            //        GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen);
+
+            //        string label;
+            //        if (Game1.GameSession.Map!=null)
+            //        {
+            //            label = (i == 0) ? Game1.GameSession.Map.CurrentLocation.Name : Game1.GameSession.Map.SelectedLocation.Name;
+            //        }
+            //        else
+            //        {
+            //            label = (i == 0) ? "Start" : "End";
+            //        }
+
+            //        spriteBatch.DrawString(GUI.SmallFont, label, new Vector2(markerPos.X + 10, markerPos.Y), Color.LightGreen);
+            //        spriteBatch.DrawString(GUI.SmallFont, (int)(dist / 80.0f) + " m", new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);
+            //    }
+
+                DrawMarker(spriteBatch, 
+                    (Game1.GameSession.Map == null) ? "Start" : Game1.GameSession.Map.CurrentLocation.Name,
+                    Level.Loaded.StartPosition + Level.Loaded.Position, center, (rect.Width * 0.55f));
+
+                DrawMarker(spriteBatch,
+                    (Game1.GameSession.Map == null) ? "End" : Game1.GameSession.Map.SelectedLocation.Name,
+                    Level.Loaded.EndPosition + Level.Loaded.Position, center, (rect.Width * 0.55f));
+
+            if (Game1.GameSession.Map != null && Game1.GameSession.Map.SelectedConnection.Quest!=null)
+            {
+                var quest = Game1.GameSession.Map.SelectedConnection.Quest;
+
+                if (!string.IsNullOrWhiteSpace(quest.RadarLabel))
+                {
+                    DrawMarker(spriteBatch,
+                        quest.RadarLabel,
+                        quest.RadarPosition, center, (rect.Width * 0.55f));
+                }
+
+
+            }
+        }
+
+        private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, Vector2 center, float radius)
+        {
+            //position += Level.Loaded.Position;
+
+            float dist = position.Length();
+
+            position.Y = -position.Y;
+            Vector2 markerPos = center + Vector2.Normalize(position) * radius;
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen);
+
+            spriteBatch.DrawString(GUI.SmallFont, label, new Vector2(markerPos.X + 10, markerPos.Y), Color.LightGreen);
+            spriteBatch.DrawString(GUI.SmallFont, (int)(dist / 80.0f) + " m", new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);
+                
         }
 
         private void UpdateRendertarget()

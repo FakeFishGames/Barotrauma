@@ -42,7 +42,6 @@
       <output name="position_out"/>
       <output name="trigger_out"/>
     </ConnectionPanel>
-
   </Item>
 
   <Item
@@ -66,8 +65,8 @@
 
     <Body radius="14" height="63" density="15"/>
 
-    <Holdable holdpos="30,-15" handle1="0,20" handle2="0,-20"/>
-    <Pickable slots="RightHand"/>
+    <Holdable slots="BothHands" holdpos="30,-15" handle1="0,20" handle2="0,-20"/>
+    
     <Projectile launchimpulse="80.0">
       <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
     </Projectile>

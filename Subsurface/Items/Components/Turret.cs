@@ -51,7 +51,7 @@ namespace Subsurface.Items.Components
             set { reloadTime = value; }
         }
 
-        [HasDefaultValue("0.0,0.0", true)]
+        [HasDefaultValue("0.0,0.0", true), Editable]
         public string RotationLimits
         {
             get

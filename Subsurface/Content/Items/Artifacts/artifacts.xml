@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Skyholder Artifact"
+    pickdistance="150"
+    price="100">
+
+    <Sprite texture="artifact.png" depth="0.8"/>
+
+    <Body width="36" height="60" density="5"/>
+
+    <Holdable slots="BothHands" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
+  </Item>
+</Items>

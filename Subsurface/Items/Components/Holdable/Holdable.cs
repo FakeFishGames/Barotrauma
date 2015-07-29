@@ -4,12 +4,12 @@ using Microsoft.Xna.Framework;
 
 namespace Subsurface.Items.Components
 {
-    class Holdable : ItemComponent
+    class Holdable : Pickable
     {
         //the position(s) in the item that the character grabs
         protected Vector2[] handlePos;
         
-        protected Character picker;
+        //protected Character picker;
 
         //the distance from the holding characters elbow to center of the physics body of the item
         protected Vector2 holdPos;
@@ -154,6 +154,8 @@ namespace Subsurface.Items.Components
 
         public override bool Pick(Character picker)
         {
+            if (!base.Pick(picker)) return false;
+
             if (!attachable) return false;
 
             //if (item.body==null)

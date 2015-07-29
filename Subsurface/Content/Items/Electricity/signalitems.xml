@@ -14,9 +14,8 @@
 
     <Body radius="15"/>
   
-    <Holdable handle1="0,0"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
-    <Pickable slots="Any,RightHand,LeftHand"/>
     <Wire/>
   </Item>
 
@@ -33,13 +32,11 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
 
-    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
-      <requireditem name="Wrench" type="Equipped"/>
-    </Pickable>
     
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
@@ -63,11 +60,10 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
-
-    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+    <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
-    </Pickable>
+    </Holdable>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
@@ -91,11 +87,10 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
-
-    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+    <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
-    </Pickable>
+    </Holdable>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
@@ -120,11 +115,9 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
-
-    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+    <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
-    </Pickable>
+    </Holdable>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
@@ -147,14 +140,40 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
-
-    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+    <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
-    </Pickable>
+    </Holdable>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Signal Check Component"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true"
+    price="10">
+
+    <Sprite texture ="light.png" depth="0.8"/>
+
+    <SignalCheckComponent canbeselected = "true"/>
+
+    <Body width="16" height="16"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in"/>
+      <input name="set_output"/>
+      <input name="set_targetsignal"/>
       <output name="signal_out"/>
     </ConnectionPanel>
   </Item>
@@ -172,11 +191,10 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"/>
-
-    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
+    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"
+              slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
       <requireditem name="Wrench" type="Equipped"/>
-    </Pickable>
+    </Holdable>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>

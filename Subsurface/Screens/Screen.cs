@@ -17,7 +17,7 @@ namespace Subsurface
 
         public virtual void Select()
         {
-            if (selected != null) selected.Deselect();
+            if (selected != null && selected!=this) selected.Deselect();
             selected = this;
         }
 

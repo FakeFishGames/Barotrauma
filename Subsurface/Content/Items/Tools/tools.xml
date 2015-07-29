@@ -11,7 +11,8 @@
     <Body width="39" height="18" density="5"/>
 
     <!-- the character will hold the item 50 pixels in front of him, with his hands at the handle1 and handle2 positions -->
-    <Holdable aimpos="50,0" handle1="-17,0" handle2="8,0"/>
+    <Holdable slots="Any,BothHands"
+              aimpos="50,0" handle1="-17,0" handle2="8,0"/>
 
     <RepairTool structurefixamount="50.0" range="80" barrelpos="19,8">
       <!-- the item must contain a welding fuel tank for it to work -->
@@ -34,8 +35,6 @@
       </StatusEffect>
     </RepairTool>
 
-    <Pickable slots="Any,BothHands"/>
-    
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->    
     <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
       <Containable name="Welding Fuel Tank"/>
@@ -52,7 +51,8 @@
 
     <Body width="39" height="18" density="5"/>
 
-    <Holdable aimpos="50,0" handle1="-12,4"/>
+    <Holdable slots="Any,RightHand,LeftHand" 
+              aimpos="50,0" handle1="-12,4"/>
 
     <RepairTool structurefixamount="-10.0" range="50" barrelpos="19,8">
       <RequiredItems name="Oxygen Tank" type="Contained" msg="Oxygen tank required"/>
@@ -67,8 +67,6 @@
         <Explosion range="5" damage="20" stun="10" force="5.0"/>
       </StatusEffect>
     </RepairTool>
-
-    <Pickable slots="Any,RightHand,LeftHand"/>
 
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
       <Containable name="Welding Fuel Tank"/>
@@ -85,8 +83,8 @@
 
     <Body radius="6" height="22" density="5"/>
 
-    <Holdable holdpos="30,-15" handle1="0,5" handle2="0,-5"/>
-    <Pickable slots="RightHand,Any"/>
+    <Holdable slots="RightHand,Any" 
+              holdpos="30,-15" handle1="0,5" handle2="0,-5"/>
   </Item>
 
   <Item
@@ -98,9 +96,9 @@
 
     <Body width="30" height="8" density="20"/>
 
-    <Holdable holdangle="30" handle1="0,0"/>
+    <Holdable slots="Any,RightHand,LeftHand" 
+              holdangle="30" handle1="0,0"/>
 
-    <Pickable slots="Any,RightHand,LeftHand"/>
   </Item>
 
   <Item
@@ -112,9 +110,9 @@
 
     <Body width="30" height="8" density="20"/>
 
-    <Holdable holdangle="30" handle1="0,0"/>
+    <Holdable slots="Any,RightHand,LeftHand" 
+              holdangle="30" handle1="0,0"/>
 
-    <Pickable slots="Any,RightHand,LeftHand"/>
   </Item>
 
 </Items>

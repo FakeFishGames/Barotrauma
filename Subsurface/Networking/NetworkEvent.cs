@@ -10,7 +10,8 @@ namespace Subsurface.Networking
         UpdateComponent = 2,
         DropItem = 3,
         InventoryUpdate = 4,
-        PickItem = 5
+        PickItem = 5,
+        UpdateProperty = 6
     }
 
     class NetworkEvent

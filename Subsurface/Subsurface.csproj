@@ -66,8 +66,12 @@
     <Compile Include="Characters\AI\SteeringPath.cs" />
     <Compile Include="ContentPackage.cs" />
     <Compile Include="CoroutineManager.cs" />
+    <Compile Include="Events\Quests\Quest.cs" />
+    <Compile Include="Events\Quests\SalvageQuest.cs" />
     <Compile Include="GameSession\CargoManager.cs" />
+    <Compile Include="GUI\GUIMessage.cs" />
     <Compile Include="GUI\TitleScreen.cs" />
+    <Compile Include="Items\Components\Signal\SignalCheckComponent.cs" />
     <Compile Include="Items\FixRequirement.cs" />
     <Compile Include="Map\Lights\Light.cs" />
     <Compile Include="Map\LocationType.cs" />
@@ -160,7 +164,6 @@
     <Compile Include="EventInput\KeyboardDispatcher.cs" />
     <Compile Include="Screens\EditMapScreen.cs" />
     <Compile Include="Events\ScriptedEvent.cs" />
-    <Compile Include="Events\EventManager.cs" />
     <Compile Include="Events\MonsterEvent.cs" />
     <Compile Include="Screens\GameScreen.cs" />
     <Compile Include="GUI\GUIButton.cs" />
@@ -280,6 +283,12 @@
     <Content Include="Content\Characters\Human\torso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\Artifacts\artifact.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Artifacts\artifacts.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Items\Electricity\lamp.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -293,6 +302,13 @@
     </Content>
     <Content Include="Content\Items\Medical\med.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Weapons\explosives.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Weapons\explosives.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Jobs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -526,7 +542,7 @@
     <Content Include="Content\Items\OxygenGenerator\battery.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\OxygenGenerator\item.xml">
+    <Content Include="Content\Items\OxygenGenerator\oxygengenerator.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Diving\oxygentank.png">
@@ -569,11 +585,7 @@
     <Content Include="Content\Items\Tools\wrench.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Vent\item.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Content\Items\Vent\vent.png">
+    <Content Include="Content\Items\OxygenGenerator\vent.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Tools\tools.xml">
@@ -645,6 +657,9 @@
     <Content Include="Content\randomevents.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Content\Quests.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Icon.ico" />
     <Content Include="OpenAL32.dll">
@@ -719,7 +734,22 @@
     <None Include="Content\Items\Electricity\zap4.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Items\Engine\engine.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Items\Engine\radarPing.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\OxygenGenerator\oxygengenerator.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\OxygenGenerator\ventilation.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Pump\pump.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Reactor\explosion.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Reactor\reactor.ogg">

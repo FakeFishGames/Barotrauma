@@ -50,7 +50,11 @@ namespace Subsurface.Items.Components
             : base(item, element)
         {
             isActive = true;
+        }
 
+        public float CurrentVolume
+        {
+            get { return Math.Abs((force / 100.0f) * (voltage / minVoltage)); }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -68,7 +72,7 @@ namespace Subsurface.Items.Components
 
                 for (int i = 0; i < 5; i++)
                 {
-                    Game1.particleManager.CreateParticle("bubbles", item.SimPosition,
+                    Game1.ParticleManager.CreateParticle("bubbles", item.SimPosition,
                         -currForce/500.0f + new Vector2(Rand.Range(-1.0f, 1.0f), Rand.Range(-0.5f, 0.5f)));
                 }
             }

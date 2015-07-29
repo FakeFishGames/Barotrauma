@@ -101,6 +101,8 @@ namespace Subsurface.Items.Components
 
             meltDownTemp = 9000.0f;
 
+            shutDownTemp = 500.0f;
+
             powerPerTemp = 1.0f;
 
             isActive = true;
@@ -227,39 +229,14 @@ namespace Subsurface.Items.Components
  
             new RepairTask(item, 60.0f, "Reactor meltdown!");
             item.Condition = 0.0f;
-            fissionRate = 0.0f;
-            coolingRate = 0.0f;
+            //fissionRate = 0.0f;
+            //coolingRate = 0.0f;
 
-            new Explosion(item.SimPosition, 6.0f, 500.0f, 600.0f, 10.0f, 2.0f).Explode();
+            //PlaySound(ActionType.OnFailure, item.Position);
+            //item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, null);
 
-            //List<Structure> structureList = new List<Structure>();
-
-            //float dist = 600.0f;
-            //foreach (MapEntity entity in MapEntity.mapEntityList)
-            //{
-            //    Structure structure = entity as Structure;
-            //    if (structure == null) continue;
-
-            //    if (structure.HasBody && Vector2.Distance(structure.Position, item.Position)<dist*3.0f)
-            //    {
-            //        structureList.Add(structure);
-            //    }
-            //}
-
-            //foreach (Structure structure in structureList)
-            //{
-            //    for (int i = 0; i < structure.SectionCount; i++)
-            //    {
-            //        float damage = dist - Vector2.Distance(structure.SectionPosition(i), item.Position);
-            //        if (damage > 0.0f) structure.AddDamage(i, damage);
-            //    }
-            //}
-
-            //if (item.currentHull!=null)
-            //{
-            //    item.currentHull.WaveVel[item.currentHull.GetWaveIndex(item.SimPosition)] = 100.0f;
-            //}
-
+            //new Explosion(item.SimPosition, 6.0f, 500.0f, 600.0f, 10.0f, 2.0f).Explode();
+            
             if (item.ContainedItems!=null)
             {
                 foreach (Item containedItem in item.ContainedItems)
@@ -274,11 +251,7 @@ namespace Subsurface.Items.Components
 
         public override bool Pick(Character picker)
         {
-            if (picker == null) return false;
-
-            //picker.SelectedConstruction = (picker.SelectedConstruction==item) ? null : item;
-            
-            return true;
+            return (picker != null);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
@@ -331,10 +304,10 @@ namespace Subsurface.Items.Components
 
             y = y - 260;
 
-            spriteBatch.DrawString(GUI.Font, "Autotemp: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 400, y + 30), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 400, y + 30), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 60, 100, 40), ((autoTemp) ? "TURN OFF" : "TURN ON"))) autoTemp = !autoTemp;
 
-            spriteBatch.DrawString(GUI.Font, "Max temperature: " + shutDownTemp, new Vector2(x + 400, y + 150), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Shutdown Temperature: " + shutDownTemp, new Vector2(x + 400, y + 150), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 180, 40, 40), "+", true)) shutDownTemp += 100.0f;
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 450, y + 180, 40, 40), "-", true)) shutDownTemp -= 100.0f;
 
@@ -378,7 +351,7 @@ namespace Subsurface.Items.Components
             Vector2 lastPoint = new Vector2(x,
                 y + height - (graph[graph.Count - 1] + (graph[graph.Count - 2] - graph[graph.Count - 1]) * xOffset) * yScale);
 
-            GUI.DrawLine(spriteBatch, prevPoint, lastPoint, Color.Red);
+            GUI.DrawLine(spriteBatch, prevPoint, lastPoint, Color.White);
         }
 
         public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message)

@@ -26,6 +26,8 @@ namespace Subsurface.Items.Components
         
         private static Item draggingConnected;
 
+        private List<StatusEffect> effects;
+
         int[] wireId;
 
         public List<Connection> Recipients
@@ -67,21 +69,31 @@ namespace Subsurface.Items.Components
             IsOutput = (element.Name.ToString() == "output");
             Name = ToolBox.GetAttributeString(element, "name", (IsOutput) ? "output" : "input");
 
+            effects = new List<StatusEffect>();
+
             wireId = new int[MaxLinked];
 
             foreach (XElement subElement in element.Elements())
             {
-                int index = -1;
-
-                for (int i = 0; i < MaxLinked; i++)
+                switch (subElement.Name.ToString().ToLower())
                 {
-                    if (wireId[i]<1) index = i;
+                    case "link":
+                        int index = -1;
+                        for (int i = 0; i < MaxLinked; i++)
+                        {
+                            if (wireId[i]<1) index = i;
+                        }
+                        if (index == -1) break;
+
+                        wireId[index] = ToolBox.GetAttributeInt(subElement, "w", -1);
+
+                        break;
+
+                    case "statuseffect":
+                        effects.Add(StatusEffect.Load(subElement));
+                        break;
                 }
-                if (index == -1) break;
-
-                wireId[index] = ToolBox.GetAttributeInt(subElement, "w", -1);
             }
-
         }
 
         public int FindEmptyIndex()
@@ -148,6 +160,13 @@ namespace Subsurface.Items.Components
                 foreach (ItemComponent ic in recipient.item.components)
                 {
                     ic.ReceiveSignal(signal, recipient, sender, power);
+                }
+
+                foreach (StatusEffect effect in recipient.effects)
+                {
+
+                    //effect.Apply(ActionType.OnUse, 1.0f, recipient.item, recipient.item);
+                    recipient.item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
                 }
             }
         }

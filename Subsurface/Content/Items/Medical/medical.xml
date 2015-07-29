@@ -1,17 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-    name="Syringe"
+    name="Medical Syringe"
     Tags="smallitem"
     pickdistance="150">
 
-    <Sprite texture ="med.png" sourcerect="0,0,24,5"/>
+    <Sprite texture ="med.png" sourcerect="0,0,24,5" depth="0.6"/>
 
     <Body width="24" height="5"/>
 
-    <Pickable slots="Any,RightHand,LeftHand"/>
-
-    <Holdable RemoveOnUse="true">
+    <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
       <StatusEffect type="OnUse" target="This, Character" Condition="-100.0" health="30.0" disabledeltatime="true"/>
     </Holdable>
   </Item>
@@ -21,13 +19,11 @@
     Tags="smallitem"
     pickdistance="150">
 
-    <Sprite texture ="med.png" sourcerect="0,14,14,18"/>
+    <Sprite texture ="med.png" sourcerect="0,14,14,18" depth="0.6"/>
 
     <Body width="9" height="15"/>
 
-    <Pickable slots="Any,RightHand,LeftHand"/>
-
-    <Holdable RemoveOnUse="true">
+    <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
       <StatusEffect type="OnUse" target="This, Character" Condition="-100.0" bleeding="-10.0" disabledeltatime="true"/>
     </Holdable>
   </Item>
