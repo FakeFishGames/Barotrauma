@@ -8,7 +8,7 @@
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="2.0"/>
-      <sound file="oxygengenerator.ogg" type="OnActive" range="2000.0" volume="PowerConsumption" volumemultiplier="0.001f"/>
+      <sound file="oxygengenerator.ogg" type="OnActive" range="2000.0" volume="CurrPowerConsumption" volumemultiplier="0.001f"/>
     </OxygenGenerator>
   
     <trigger/>
@@ -27,7 +27,7 @@
     name="Vent"
     linkable="true">
 
-    <Sprite texture ="vent.png" depth="0.8"/>
+    <Sprite texture ="vent.png" depth="0.85"/>
 
     <Vent>
       <sound file="ventilation.ogg" type="OnActive" range="600.0" volume="OxygenFlow" volumemultiplier="0.001f"/>

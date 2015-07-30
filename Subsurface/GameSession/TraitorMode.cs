@@ -25,6 +25,8 @@ namespace Subsurface
 
         public override void Update(float deltaTime)
         {
+            if (Game1.Server == null) return;
+
             base.Update(deltaTime);
 
             if (!isRunning) return;

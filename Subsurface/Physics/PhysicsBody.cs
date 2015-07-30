@@ -285,7 +285,7 @@ namespace Subsurface
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color)
+        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null)
         {
             if (!body.Enabled) return;
 
@@ -296,7 +296,7 @@ namespace Subsurface
 
             drawRotation = Physics.Interpolate(prevRotation, body.Rotation);
 
-            sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), color, -drawRotation, 1.0f, spriteEffect);
+            sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), color, -drawRotation, 1.0f, spriteEffect, depth);
 
             //prevPosition = body.Position;
             //prevRotation = body.Rotation;

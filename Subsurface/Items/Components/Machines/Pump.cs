@@ -14,10 +14,9 @@ namespace Subsurface.Items.Components
 
         float? targetLevel;
 
-        //bool flowIn;
-
         Hull hull1, hull2;
 
+        [HasDefaultValue(0.0f, true)]
         private float FlowPercentage
         {
             get { return flowPercentage; }
@@ -38,14 +37,20 @@ namespace Subsurface.Items.Components
         public Pump(Item item, XElement element)
             : base(item, element)
         {
-            flowPercentage = 100.0f;
-
             item.linkedTo.CollectionChanged += delegate(object sender, NotifyCollectionChangedEventArgs e)
             { GetHulls(); };
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (targetLevel != null)
+            {
+                float hullPercentage = 0.0f;
+                if (hull1 != null) hullPercentage = (hull1.Volume / hull1.FullVolume) * 100.0f;
+                flowPercentage = ((float)targetLevel - hullPercentage);
+            }
+
+
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
 
             if (voltage < minVoltage) return;
@@ -56,16 +61,9 @@ namespace Subsurface.Items.Components
             //flowPercentage = maxFlow * powerFactor;
 
             float deltaVolume = 0.0f;
-            if (targetLevel!=null)
-            {
-                float hullPercentage = 0.0f;
-                if (hull1 != null) hullPercentage = (hull1.Volume / hull1.FullVolume)*100.0f;
-                deltaVolume = ((float)targetLevel - hullPercentage)/100.0f * maxFlow * powerFactor;
-            }
-            else
-            {
+
                 deltaVolume = (flowPercentage/100.0f) * maxFlow * powerFactor;
-            }
+            
 
             hull1.Volume += deltaVolume;
             if (hull1.Volume > hull1.FullVolume) hull1.Pressure += 0.5f;
@@ -113,6 +111,7 @@ namespace Subsurface.Items.Components
             {
                 targetLevel = null;
                 isActive = !isActive;
+                if (!isActive) currPowerConsumption = 0.0f;
             }
             
             spriteBatch.DrawString(GUI.Font, "Flow percentage: " + (int)flowPercentage + " %", new Vector2(x + 20, y + 80), Color.White);
@@ -134,7 +133,7 @@ namespace Subsurface.Items.Components
             }
             else if (connection.Name == "set_active")
             {
-                isActive = (signal != "0");
+                isActive = (signal != "0");                
             }
             else if (connection.Name == "set_speed")
             {
@@ -152,6 +151,8 @@ namespace Subsurface.Items.Components
                     targetLevel = MathHelper.Clamp(tempTarget, 0.0f, 100.0f);
                 }
             }
+
+            if (!isActive) currPowerConsumption = 0.0f;
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)

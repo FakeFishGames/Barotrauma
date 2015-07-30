@@ -23,7 +23,7 @@
     <limb id = "2" radius="8" height="20" mass="3" type="LeftArm">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="30,2,17,39" depth="0.15" origin="0.5,0.5"/>
     </limb>
-    <limb id = "3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0.0,-15.0">
+    <limb id = "3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0.0,-18.0">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="49,2,13,47" depth="0.16" origin="0.5,0.5"/>
     </limb>
 
@@ -31,7 +31,7 @@
     <limb id = "4" radius="8" height="20" mass="3" type="RightArm">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="30,2,17,39" depth="0.01" origin="0.5,0.5"/>
     </limb>
-    <limb id = "5" radius="6" height="26" mass ="3" type="RightHand" pullpos="0.0,-15.0">
+    <limb id = "5" radius="6" height="26" mass ="3" type="RightHand" pullpos="0.0,-18.0">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="49,2,13,47" origin="0.5,0.5"/>
     </limb>
 
@@ -75,12 +75,12 @@
 
     <!-- body to left leg -->
     <joint limb1="12" limb1anchor="0,-1" limb2="6" limb2anchor="0,14" lowerlimit="-30" upperlimit="140"/>
-    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="-170" upperlimit="0"/>
+    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="-140" upperlimit="0"/>
     <joint limb1="7" limb1anchor="-3,-21" limb2="8" limb2anchor="5,7" lowerlimit="20" upperlimit="90"/>
   
     <!-- body to right leg -->
     <joint limb1="12" limb1anchor="0,-1" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="140"/>
-    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-170" upperlimit="0"/>
+    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-140" upperlimit="0"/>
     <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="20" upperlimit="90"/>
   
   </ragdoll>

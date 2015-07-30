@@ -105,7 +105,7 @@ namespace Launcher
         {
             SaveSettings(configPath);
 
-            Process.Start(Directory.GetCurrentDirectory() + "/Subsurface.exe");
+            Process.Start(new ProcessStartInfo(Directory.GetCurrentDirectory() + "//"+settings.SelectedContentPackage.GetFilesOfType(ContentType.Executable)[0]));
             Application.Exit();
         }
 

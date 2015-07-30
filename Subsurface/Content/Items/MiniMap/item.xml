@@ -2,7 +2,7 @@
   name="MiniMap"
   linkable="true">
 
-  <Sprite texture ="reactor.png" depth="0.8"/>
+  <Sprite texture ="fabricator.png" depth="0.8"/>
 
   <trigger/>
 

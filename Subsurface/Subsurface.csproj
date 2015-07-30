@@ -67,10 +67,13 @@
     <Compile Include="ContentPackage.cs" />
     <Compile Include="CoroutineManager.cs" />
     <Compile Include="Events\Quests\Quest.cs" />
+    <Compile Include="Events\Quests\MonsterQuest.cs" />
     <Compile Include="Events\Quests\SalvageQuest.cs" />
     <Compile Include="GameSession\CargoManager.cs" />
+    <Compile Include="GameSession\QuestMode.cs" />
     <Compile Include="GUI\GUIMessage.cs" />
     <Compile Include="GUI\TitleScreen.cs" />
+    <Compile Include="Items\Components\Label.cs" />
     <Compile Include="Items\Components\Signal\SignalCheckComponent.cs" />
     <Compile Include="Items\FixRequirement.cs" />
     <Compile Include="Map\Lights\Light.cs" />
@@ -296,11 +299,20 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\Electricity\monitor.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Electricity\monitors.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Items\Medical\medical.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\Medical\med.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\MiniMap\fabricator.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Weapons\explosives.png">

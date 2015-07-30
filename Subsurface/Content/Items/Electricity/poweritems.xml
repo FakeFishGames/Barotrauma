@@ -2,7 +2,6 @@
 <Items>
 	<Item
 		name="Junction Box"
-		type="JunctionBox"
 		linkable="true"
 		pickdistance="150">
 		

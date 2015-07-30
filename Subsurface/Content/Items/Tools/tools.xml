@@ -5,7 +5,7 @@
     Tags="smallitem"
     pickdistance="200">
 
-    <Sprite texture ="weldingtool.png"  depth="0.04"/>
+    <Sprite texture ="weldingtool.png"  depth="0.5"/>
 
     <!-- physics body -->
     <Body width="39" height="18" density="5"/>
@@ -47,7 +47,7 @@
     Tags="smallitem"
     pickdistance="200">
 
-    <Sprite texture ="plasmacutter.png"  depth="0.04"/>
+    <Sprite texture ="plasmacutter.png"  depth="0.5"/>
 
     <Body width="39" height="18" density="5"/>
 
@@ -79,7 +79,7 @@
     Tags="smallitem"
     pickdistance="150">
 
-    <Sprite texture ="fueltank.png" depth="0.05"/>
+    <Sprite texture ="fueltank.png" depth="0.5"/>
 
     <Body radius="6" height="22" density="5"/>
 
@@ -92,7 +92,7 @@
     Tags="smallitem"
     pickdistance="200">
 
-    <Sprite texture ="screwdriver.png"/>
+    <Sprite texture ="screwdriver.png" depth="0.5"/>
 
     <Body width="30" height="8" density="20"/>
 
@@ -106,7 +106,7 @@
     Tags="smallitem"
     pickdistance="200">
 
-    <Sprite texture ="wrench.png"/>
+    <Sprite texture ="wrench.png" depth="0.5"/>
 
     <Body width="30" height="8" density="20"/>
 

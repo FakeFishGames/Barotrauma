@@ -67,7 +67,7 @@ namespace Subsurface
 
                 y += 60;
                 
-                if (Screen.Selected == Game1.GameScreen)
+                if (Screen.Selected == Game1.GameScreen && Game1.GameSession !=null)
                 {
                     SinglePlayerMode spMode = Game1.GameSession.gameMode as SinglePlayerMode;
                     if (spMode!=null)

@@ -83,7 +83,8 @@ namespace Subsurface.Items.Components
                 light.Position = ConvertUnits.ToDisplayUnits(item.body.Position);
             }
 
-            if (item.container!= null)
+            Pickable pickable = item.GetComponent<Pickable>();
+            if (item.container!= null || (pickable!=null && pickable.Picker!=null))
             {
                 light.Color = Color.Transparent;
                 return;

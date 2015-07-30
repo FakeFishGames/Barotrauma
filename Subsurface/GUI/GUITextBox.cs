@@ -36,6 +36,12 @@ namespace Subsurface
             set { textBlock.Wrap = value; }
         }
 
+        public bool LimitText
+        {
+            get { return textBlock.LimitText; }
+            set { textBlock.LimitText = value; }
+        }
+
         public bool Enabled
         {
             get;
@@ -187,9 +193,7 @@ namespace Subsurface
                     new Vector2((int)caretPos.X + 2, caretPos.Y + Font.MeasureString("I").Y - 3),
                     textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
             }
-
         }
-
 
         public void ReceiveTextInput(char inputChar)
         {

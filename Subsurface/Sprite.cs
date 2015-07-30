@@ -185,9 +185,9 @@ namespace Subsurface
             spriteBatch.Draw(texture, pos + offset, sourceRect, Color.White, rotation + rotate, origin, scale, spriteEffect, depth);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None)
+        public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
-            spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth);
+            spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth==null ? this.depth : (float)depth);
             
         }
         

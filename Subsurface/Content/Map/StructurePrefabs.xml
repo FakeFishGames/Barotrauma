@@ -5,10 +5,10 @@
   <smallhorizontalback sprite="Content/Map/testroom.png" sourcerect="0,64,896,32" depth ="0.4" 
   width = "128" height ="32" resizehorizontal="true"/>
 
-  <leftwall sprite="Content/Map/testroom.png" sourcerect="688,352,32,496" depth ="0.05" castshadow="true"
-  width = "32" height ="64" resizevertical="true" body="true" health="500"/>
+  <leftwall sprite="Content/Map/testroom.png" sourcerect="688,368,32,496" depth ="0.05" castshadow="true"
+  width = "32" height ="64" resizevertical="true" fliphorizontal="true" body="true" health="500"/>
 
-  <rightwall sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="688,352,32,496" depth ="0.05" castshadow="true"
+  <rightwall sprite="Content/Map/testroom.png" sourcerect="688,368,32,496" depth ="0.05" castshadow="true"
   width = "32" height ="64" resizevertical="true" body="true" health="500"/>
 
   <topwall sprite="Content/Map/testroom.png" sourcerect="144,464,496,32" depth ="0.05" castshadow="true"

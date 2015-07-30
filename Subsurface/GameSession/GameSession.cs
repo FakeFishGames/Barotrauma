@@ -19,7 +19,7 @@ namespace Subsurface
         //protected DateTime endTime;
 
         public readonly GameMode gameMode;
-
+        
         private GUIFrame guiRoot;
 
         //private GUIListBox chatBox;
@@ -28,6 +28,16 @@ namespace Subsurface
         private string savePath;
 
         private Submarine submarine;
+
+
+        public Quest Quest
+        {
+            get
+            {
+                if (gameMode != null) return gameMode.Quest;
+                return null;
+            }
+        }
 
         private Level level;
 
@@ -100,7 +110,7 @@ namespace Subsurface
         public void StartShift(TimeSpan duration, Level level, bool reloadSub = true)
         {
             Game1.LightManager.LosEnabled = (Game1.Server==null);
-
+                        
             this.level = level;
 
             if (reloadSub || Submarine.Loaded != submarine) submarine.Load();
@@ -111,15 +121,18 @@ namespace Subsurface
                 submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
             }
 
+            if (Quest!=null) Quest.Start(Level.Loaded);
+
             if (gameMode!=null) gameMode.Start(duration);
-
-
-
+            
             taskManager.StartShift(level);
         }
 
         public void EndShift(string endMessage)
         {
+
+            if (Quest != null) Quest.End();
+
             if (Game1.Server!=null)
             {                
                 Game1.Server.EndGame(endMessage);

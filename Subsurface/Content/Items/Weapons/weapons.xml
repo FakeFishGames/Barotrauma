@@ -19,7 +19,7 @@
     name="Harpoon Gun"
     pickdistance="200" >
   
-    <Sprite texture ="harpoongun.png" depth="0.04"/>
+    <Sprite texture ="harpoongun.png" depth="0.5"/>
 
     <Body width="90" height="30" density="10"/>
 

@@ -45,10 +45,7 @@ namespace Subsurface
         //public readonly bool IsSinglePlayer;
 
         private GUIProgressBar timerBar;
-
-
-
-
+        
         protected bool isRunning;
 
         //protected string name;
@@ -56,6 +53,11 @@ namespace Subsurface
         protected GameModePreset preset;
 
         private string endMessage;
+
+        public virtual Quest Quest
+        {
+            get { return null; }
+        }
 
         public DateTime StartTime
         {
@@ -143,13 +145,10 @@ namespace Subsurface
         public static void Init()
         {
             new GameModePreset("Single Player", typeof(SinglePlayerMode), true);
+
             new GameModePreset("SandBox", typeof(GameMode), false);
             new GameModePreset("Traitor", typeof(TraitorMode), false);
-
-
-            //new SinglePlayerMode("Single Player", true);
-            //new GameMode("Sandbox");
-            //new TraitorMode("Traitor");
+            new GameModePreset("Quest", typeof(QuestMode), false);
         }
     }
 }

@@ -388,8 +388,12 @@ namespace Subsurface
                 if (quest==null || quest.Completed)
                 {
                     if (quest !=null && quest.Completed) questsCompleted++;
-                    Random rand = new Random(GetHashCode() + questsCompleted);
-                    quest = Quest.LoadRandom(rand);
+
+                    int seed = (int)locations[0].MapPosition.X + (int)locations[0].MapPosition.Y * 100;
+                    seed += (int)locations[1].MapPosition.X*10000 + (int)locations[1].MapPosition.Y * 1000000;
+
+                    Random rand = new Random(seed + questsCompleted);
+                    quest = Quest.LoadRandom(locations, rand);
                 }
 
                 return quest;

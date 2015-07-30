@@ -715,8 +715,7 @@ namespace Subsurface
                     Rectangle transformedTrigger = item.TransformTrigger(trigger);
                     
                     if (!Submarine.RectContains(transformedTrigger, displayPos))continue;
-                    
-                    
+                                        
                     Vector2 triggerCenter =
                         new Vector2(
                             transformedTrigger.X + transformedTrigger.Width / 2.0f,
@@ -735,9 +734,10 @@ namespace Subsurface
                     }
                 }
                 
-
                 if (item.prefab.PickDistance == 0.0f) continue;  
                 if (Vector2.Distance(position, item.SimPosition) > item.prefab.PickDistance) continue;
+
+                if (Submarine.CheckVisibility(position, item.SimPosition)!=null) continue;
 
                 dist = Vector2.Distance(pickPosition, item.SimPosition);
                 if ((closest == null || dist < closestDist))

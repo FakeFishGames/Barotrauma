@@ -1,6 +1,7 @@
 ﻿using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Subsurface.Items.Components
 {
@@ -8,6 +9,10 @@ namespace Subsurface.Items.Components
     {
         //the position(s) in the item that the character grabs
         protected Vector2[] handlePos;
+
+        private List<RelatedItem> prevRequiredItems;
+
+        string prevMsg;
         
         //protected Character picker;
 
@@ -83,28 +88,19 @@ namespace Subsurface.Items.Components
 
             canBePicked = true;
 
+            if (attachable)
+            {
+                prevRequiredItems = new List<RelatedItem>(requiredItems);
+                prevMsg = Msg;
+
+                requiredItems.Clear();
+                Msg = "";
+            }
+
+
             //holdAngle = ToolBox.GetAttributeFloat(element, "holdangle", 0.0f);
             //holdAngle = MathHelper.ToRadians(holdAngle);
         }
-
-        //public override void Equip(Character picker)
-        //{
-        //    if (picker == null) return;
-        //    if (picker.Inventory == null) return;
-
-        //    this.picker = picker;
-
-        //    for (int i = item.linkedTo.Count - 1; i >= 0; i--)
-        //        item.linkedTo[i].RemoveLinked((MapEntity)item);
-        //    item.linkedTo.Clear();
-
-        //    System.Diagnostics.Debug.WriteLine("picked item");
-
-        //    //this.picker = picker;
-        //    picker.SelectedItem = item;
-
-        //    isActive = true;
-        //}
 
         public override void Drop(Character dropper)
         {
@@ -147,27 +143,31 @@ namespace Subsurface.Items.Components
             if (picker == null) return;
 
             picker.DeselectItem(item);
-
+            
             item.body.Enabled = false;
             isActive = false;
         }
 
         public override bool Pick(Character picker)
         {
-            if (!base.Pick(picker)) return false;
+            if (!attachable)
+            {
+                return base.Pick(picker);
+            }
 
-            if (!attachable) return false;
+            if (!base.Pick(picker))
+            {
+                return false;
+            }
+            else
+            {
+                requiredItems.Clear();
+                Msg = "";
+            }
 
-            //if (item.body==null)
-            //{
-            //    DebugConsole.ThrowError("Item " + item + " must have a physics body component to be attachable!");
-            //    return false;
-            //}
-
-            //if (attached) return false;
-
-            item.body = body;
-            item.body.Enabled = true;
+            attached = false;
+            if (body!=null) item.body = body;
+            //item.body.Enabled = true;
 
             return true;
         }
@@ -180,6 +180,9 @@ namespace Subsurface.Items.Components
             item.body.Enabled = false;
             item.body = null;
 
+            requiredItems = new List<RelatedItem>(prevRequiredItems);
+            Msg = prevMsg;
+
             attached = true;
 
             return true;
@@ -191,15 +194,7 @@ namespace Subsurface.Items.Components
         }
 
         public override void Update(float deltaTime, Camera cam)
-        {
-            //if (picker == null)// || picker.animController.selectedItem != item)
-            //{
-            //    System.Diagnostics.Debug.WriteLine("drop");
-            //    //picker = null;
-            //    isActive = false;
-            //    return;
-            //}
-                        
+        {         
             if (!item.body.Enabled) return;
             if (!picker.HasSelectedItem(item)) isActive = false;
 
@@ -208,6 +203,8 @@ namespace Subsurface.Items.Components
             if (item.body.Dir != picker.AnimController.Dir) Flip(item);
 
             AnimController ac = picker.AnimController;
+
+            item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;
 
             ac.HoldItem(deltaTime, cam, item, handlePos, holdPos, aimPos, holdAngle);
         }    
@@ -221,7 +218,17 @@ namespace Subsurface.Items.Components
 
         public override void OnMapLoaded()
         {
-            if (attached) Use(1.0f);
+            //prevRequiredItems = new List<RelatedItem>(requiredItems);
+
+            if (attached)
+            {
+                Use(1.0f);
+            }
+            else
+            {                
+                requiredItems.Clear();
+                Msg = "";
+            }
         }
     }
 }

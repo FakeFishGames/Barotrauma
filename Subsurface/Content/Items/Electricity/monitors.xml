@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Item
+  name="Monitor"
+  linkable="true"
+  pickdistance="150">
+  
+  <Sprite texture ="monitor.png" depth="0.85"/>
+
+  <Body width="16" height="16"/>
+
+  <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]"
+            aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+    <requireditem name="Wrench" type="Equipped"/>
+  </Holdable>
+
+  <Label canbeselected = "true">
+    <GuiFrame rect="0,0,0.4,0.4" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+  </Label>
+</Item>

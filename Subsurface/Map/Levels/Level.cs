@@ -48,7 +48,7 @@ namespace Subsurface
 
         private Rectangle borders;
 
-        private List<Body> bodies = new List<Body>();
+        private List<Body> bodies;
 
         private List<Vector2> positionsOfInterest;
 
@@ -150,6 +150,8 @@ namespace Subsurface
             Voronoi voronoi = new Voronoi(1.0);
 
             List<Vector2> sites = new List<Vector2>();
+
+            bodies = new List<Body>();
 
             Random rand = new Random(seed.GetHashCode());
 
@@ -273,7 +275,7 @@ namespace Subsurface
 
                 var newPathCells = GeneratePath(rand, new List<Vector2> { start, end }, cells, pathBorders, 0.0f, 0.8f, mirror);
 
-                for (int n = 1; n < newPathCells.Count; n += 3)
+                for (int n = 0; n < newPathCells.Count-5; n += 3)
                 {
                     positionsOfInterest.Add(newPathCells[n].Center);
                 }                
@@ -681,9 +683,11 @@ int currentTargetIndex = 1;
             //    cell.body.SetTransform(cell.body.Position + simAmount, cell.body.Rotation);
             //}
 
-
+            int i = 0;
             foreach (Body body in bodies)
             {
+                System.Diagnostics.Debug.WriteLine(i);
+                i++;
                 body.SetTransform(body.Position + simAmount, body.Rotation);
             }
 
@@ -942,6 +946,9 @@ int currentTargetIndex = 1;
             vertices = null;
 
             cells = null;
+
+            bodies.Clear();
+            bodies = null;
 
             vertexBuffer.Dispose();
             vertexBuffer = null;
