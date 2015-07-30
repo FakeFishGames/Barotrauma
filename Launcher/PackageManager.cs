@@ -18,6 +18,8 @@ namespace Launcher
         private ContentPackage selectedPackage;
 
         private List<ListBox> fileBoxes;
+        private List<TextBox> singleFileBoxes;
+        
         private List<Button> fileButtons;
 
         public PackageManager(ContentPackage _selectedPackage)
@@ -34,6 +36,8 @@ namespace Launcher
 
             fileBoxes   = new List<ListBox>();
             fileButtons = new List<Button>();
+
+            singleFileBoxes = new List<TextBox>();
 
             fileBoxes.Add(itemList);
             itemList.Tag        = ContentType.Item;
@@ -62,6 +66,10 @@ namespace Launcher
             jobFolder.Tag       = ContentType.Jobs;
             fileButtons.Add(jobButton);
             fileButtons.Add(jobFolder);
+
+            singleFileBoxes.Add(exeBox);
+            exeBox.Tag = ContentType.Executable;
+            exeButton.Tag = ContentType.Executable;
 
             foreach (Button fileButton in fileButtons)
             {
@@ -150,6 +158,28 @@ namespace Launcher
             }
         }
 
+        private void fileList_KeyPress(object sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode != Keys.Delete) return;
+
+            ListBox listBox = sender as ListBox;
+
+            ContentType type = (listBox.Tag is ContentType) ? (ContentType)listBox.Tag : ContentType.None;
+            Debug.Assert(type != ContentType.None, "ContentType of a button tag was ContentType.None");
+
+            List<ContentFile> selectedFiles = new List<ContentFile>();
+
+            foreach (ContentFile item in listBox.SelectedItems)
+            {
+                selectedFiles.Add(item);
+            }
+
+            foreach (ContentFile file in selectedFiles)
+            {
+                RemoveFile(listBox, file);
+            }
+        }
+
         private void AddFile(ContentType type, string path)
         {
             ListBox selectedBox = null;
@@ -161,10 +191,17 @@ namespace Launcher
                 break;
             }
 
-            ContentFile newPackage = selectedPackage.AddFile(GetRelativePath(path, Directory.GetCurrentDirectory()), type);
+            ContentFile newFile = selectedPackage.AddFile(GetRelativePath(path, Directory.GetCurrentDirectory()), type);
 
-            if (newPackage!=null) selectedBox.Items.Add(newPackage);
-                
+            if (newFile!=null && selectedBox!=null) selectedBox.Items.Add(newFile);                
+        }
+
+        private void RemoveFile(ListBox listBox, ContentFile file)
+        {
+            if (file == null) return;
+
+            if (listBox != null) listBox.Items.Remove(file);
+            selectedPackage.RemoveFile(file);
         }
 
         private void addFolderButton_Click(object sender, EventArgs e)
@@ -223,6 +260,39 @@ namespace Launcher
 
             this.Close();
         }
-        
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Button button = sender as Button;
+
+            ContentType type = (button.Tag is ContentType) ? (ContentType)button.Tag : ContentType.None;
+            Debug.Assert(type != ContentType.None, "ContentType of a button tag was ContentType.None");
+
+            TextBox selectedBox = null;
+            foreach (TextBox fileBox in singleFileBoxes)
+            {
+                if (type != ((fileBox.Tag is ContentType) ? (ContentType)fileBox.Tag : ContentType.None)) continue;
+
+                selectedBox = fileBox;
+                break;
+            }
+
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = (type == ContentType.Executable) ? "Executable (*.exe)|*.exe" : "XML files (*.xml)|*.xml;*.XML";
+            ofd.Multiselect = false;
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                var existingFile = selectedPackage.files.Find(f => f.type == type);
+
+                if (existingFile!=null)
+                {
+                    RemoveFile(null, existingFile);
+                }
+
+                AddFile(type, ofd.FileName);
+                selectedBox.Text = GetRelativePath(ofd.FileName, Directory.GetCurrentDirectory());
+            }
+        }     
     }
 }

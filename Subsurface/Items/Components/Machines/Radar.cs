@@ -9,17 +9,13 @@ using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
 {
-    class Radar : ItemComponent
+    class Radar : Powered
     {
-        float range;
+        private float range;
 
-        float angle;
+        private float pingState;
 
-        float pingState;
-
-        //RenderTarget2D renderTarget;
-
-        Sprite pingCircle, screenOverlay;
+        private Sprite pingCircle, screenOverlay;
 
         [HasDefaultValue(0.0f, false)]
         public float Range
@@ -51,14 +47,21 @@ namespace Subsurface.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            pingState = (pingState + deltaTime * 0.5f);
-            if (pingState>1.0f)
+            if (voltage>=minVoltage)
             {
-                item.Use(deltaTime, null);
+                pingState = (pingState + deltaTime * 0.5f);
+                if (pingState>1.0f)
+                {
+                    item.Use(deltaTime, null);
+                    pingState = 0.0f;
+                }
+            }
+            else
+            {
                 pingState = 0.0f;
             }
 
-            //angle = (angle + deltaTime) % MathHelper.TwoPi;
+            
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -74,10 +77,14 @@ namespace Subsurface.Items.Components
             
             GuiFrame.Draw(spriteBatch);
 
+            if (voltage < minVoltage) return;
+
             if (GUI.DrawButton(spriteBatch, new Rectangle(x+20, y+20, 200, 30), "Activate Radar")) isActive = !isActive;
 
             int radius = GuiFrame.Rect.Height / 2 - 10;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
+
+            voltage = 0.0f;
         }
 
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
@@ -94,9 +101,10 @@ namespace Subsurface.Items.Components
                 pingCircle.Draw(spriteBatch, center, Color.White * (1.0f-pingState), 0.0f, (rect.Width/pingCircle.size.X)*pingState);
             }
 
-
-            float scale = 0.015f;
-            float displayScale = ConvertUnits.ToDisplayUnits(scale);
+            float radius = pingCircle.size.X / 2.0f;
+            
+            float simScale = 1.5f;
+            float displayScale = 0.015f;
 
             if (Level.Loaded != null)
             {
@@ -106,15 +114,15 @@ namespace Subsurface.Items.Components
                 for (int i = 0; i < edges.Count; i++)
                 {
                     GUI.DrawLine(spriteBatch,
-                        center + (edges[i][0] - offset) * scale,
-                        center + (edges[i][1] - offset) * scale, Color.White);
+                        center + (edges[i][0] - offset) * displayScale,
+                        center + (edges[i][1] - offset) * displayScale, Color.White);
                 }
 
                 for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
                 {
-                    Vector2 start = Submarine.Loaded.HullVertices[i] * displayScale;
+                    Vector2 start = Submarine.Loaded.HullVertices[i] * simScale;
                     start.Y = -start.Y;
-                    Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * displayScale;
+                    Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * simScale;
                     end.Y = -end.Y;
 
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.White);
@@ -125,11 +133,11 @@ namespace Subsurface.Items.Components
             {
                 if (c.AnimController.CurrentHull != null) continue;
 
-                if (c.SimPosition != Vector2.Zero && c.SimPosition.Length() < 7 * Level.GridCellWidth)
+                Vector2 pos = c.Position * displayScale;
+                if (c.SimPosition != Vector2.Zero && pos.Length() < radius)
                 {
                     int width = (int)MathHelper.Clamp(c.Mass / 20, 1, 10);
 
-                    Vector2 pos = c.Position * scale;
                     pos.Y = -pos.Y;
                     pos += center;
 
@@ -174,35 +182,38 @@ namespace Subsurface.Items.Components
 
                 DrawMarker(spriteBatch, 
                     (Game1.GameSession.Map == null) ? "Start" : Game1.GameSession.Map.CurrentLocation.Name,
-                    Level.Loaded.StartPosition + Level.Loaded.Position, center, (rect.Width * 0.55f));
+                    (Level.Loaded.StartPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
 
                 DrawMarker(spriteBatch,
                     (Game1.GameSession.Map == null) ? "End" : Game1.GameSession.Map.SelectedLocation.Name,
-                    Level.Loaded.EndPosition + Level.Loaded.Position, center, (rect.Width * 0.55f));
+                    (Level.Loaded.EndPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
 
-            if (Game1.GameSession.Map != null && Game1.GameSession.Map.SelectedConnection.Quest!=null)
+            if (Game1.GameSession.Quest != null)
             {
-                var quest = Game1.GameSession.Map.SelectedConnection.Quest;
+                var quest = Game1.GameSession.Quest;
 
                 if (!string.IsNullOrWhiteSpace(quest.RadarLabel))
                 {
                     DrawMarker(spriteBatch,
                         quest.RadarLabel,
-                        quest.RadarPosition, center, (rect.Width * 0.55f));
+                        quest.RadarPosition, displayScale, center, (rect.Width * 0.55f));
                 }
 
 
             }
         }
 
-        private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, Vector2 center, float radius)
+        private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, float scale, Vector2 center, float radius)
         {
             //position += Level.Loaded.Position;
 
             float dist = position.Length();
 
+            position *= scale;
             position.Y = -position.Y;
-            Vector2 markerPos = center + Vector2.Normalize(position) * radius;
+            
+            Vector2 markerPos = (dist*scale>radius) ? Vector2.Normalize(position) * radius : position;
+            markerPos += center;
 
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen);
 
@@ -211,9 +222,5 @@ namespace Subsurface.Items.Components
                 
         }
 
-        private void UpdateRendertarget()
-        {
-
-        }
     }
 }

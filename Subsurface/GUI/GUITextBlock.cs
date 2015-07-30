@@ -43,6 +43,12 @@ namespace Subsurface
             }
         }
 
+        public bool LimitText
+        {
+            get;
+            set;
+        }
+
         public Vector2 TextPos
         {
             get { return textPos; }
@@ -124,14 +130,14 @@ namespace Subsurface
         {
             if (text==null) return;
 
-           Vector2 size = MeasureText();
+           Vector2 size = MeasureText(text);
             
             if (Wrap && rect.Width>0)
             {
                 //text = text.Replace("\n"," ");
                 text = ToolBox.WrapText(text, rect.Width, Font);
 
-                Vector2 newSize = MeasureText();
+                Vector2 newSize = MeasureText(text);
 
                 //Rectangle newRect = rect;
 
@@ -140,6 +146,12 @@ namespace Subsurface
 
                 //Rect = newRect;
                 size = newSize;
+            }
+
+            if (LimitText && text.Length>1 && size.Y > rect.Height)
+            {
+                string[] lines = text.Split('\n');
+                text = string.Join("\n", lines, 0, lines.Length-1);
             }
          
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
@@ -163,10 +175,20 @@ namespace Subsurface
             textPos.X = (int)textPos.X;
             textPos.Y = (int)textPos.Y;
 
-            caretPos = new Vector2(rect.X + size.X, rect.Y) + textPos - origin;
+            if (text.Contains("\n"))
+            {
+                string[] lines = text.Split('\n');
+                Vector2 lastLineSize = MeasureText(lines[lines.Length-1]);
+                caretPos = new Vector2(rect.X + lastLineSize.X, rect.Y + size.Y - lastLineSize.Y) + textPos - origin;
+            }
+            else
+            {
+                caretPos = new Vector2(rect.X + size.X, rect.Y) + textPos - origin;
+            }
+
         }
 
-        private Vector2 MeasureText()
+        private Vector2 MeasureText(string text)
         {
             Vector2 size = Vector2.Zero;
             while (size == Vector2.Zero)

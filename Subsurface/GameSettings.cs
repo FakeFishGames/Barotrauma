@@ -70,15 +70,7 @@ namespace Subsurface
 
         public void Save(string filePath)
         {
-            XDocument doc = null;
-            try
-            {
-                doc = XDocument.Load(filePath);
-            }
-            catch
-            {
-                doc = new XDocument();
-            }
+            XDocument doc = new XDocument();            
 
             if (doc.Root == null)
             {

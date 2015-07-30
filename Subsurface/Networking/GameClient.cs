@@ -335,7 +335,7 @@ namespace Subsurface.Networking
                         TimeSpan duration = new TimeSpan(0,(int)durationMinutes,0);
 
                         //int gameModeIndex = inc.ReadInt32();
-                        Game1.GameSession = new GameSession(Submarine.Loaded);
+                        Game1.GameSession = new GameSession(Submarine.Loaded, Game1.NetLobbyScreen.SelectedMode);
                         Game1.GameSession.StartShift(duration, levelSeed);
 
                         //myCharacter = ReadCharacterData(inc);

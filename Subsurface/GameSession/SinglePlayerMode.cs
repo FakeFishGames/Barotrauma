@@ -18,8 +18,6 @@ namespace Subsurface
         private GUIButton endShiftButton;
 
         public readonly CargoManager CargoManager;
-
-        private Quest quest;
         
         public Map map;
 
@@ -27,6 +25,14 @@ namespace Subsurface
         private float endTimer;
 
         private bool savedOnStart;
+
+        public override Quest Quest
+        {
+            get
+            {
+                return map.SelectedConnection.Quest;
+            }
+        }
 
         public int Money
         {
@@ -92,8 +98,6 @@ namespace Subsurface
         public override void Start(TimeSpan duration)
         {
             CargoManager.CreateItems();
-
-            Game1.GameSession.Map.SelectedConnection.Quest.Start(Level.Loaded);
 
             if (!savedOnStart)
             {
@@ -175,8 +179,6 @@ namespace Subsurface
         public override void End(string endMessage = "")
         {
             base.End(endMessage);
-
-            quest.End();
 
             StringBuilder sb = new StringBuilder();
             List<Character> casualties = crewManager.characters.FindAll(c => c.IsDead);

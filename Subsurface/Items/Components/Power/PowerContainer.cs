@@ -39,12 +39,11 @@ namespace Subsurface.Items.Components
             }
         }
 
-
         [HasDefaultValue(10.0f, false), Editable]
         public float Capacity
         {
             get { return capacity; }
-            set { capacity = Math.Max(value,1.0f); }
+            set { capacity = Math.Max(value, 1.0f); }
         }
 
         [HasDefaultValue(10.0f, false), Editable]
@@ -54,7 +53,7 @@ namespace Subsurface.Items.Components
             set
             {
                 if (float.IsNaN(value)) return;
-                rechargeSpeed = MathHelper.Clamp(rechargeSpeed, 0.0f, maxRechargeSpeed);
+                rechargeSpeed = MathHelper.Clamp(value, 0.0f, maxRechargeSpeed);
             }
         }
 
@@ -196,9 +195,16 @@ namespace Subsurface.Items.Components
 
             spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (rechargeSpeed / maxRechargeSpeed), new Vector2(x + 30, y + 100), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 50, y + 150, 40, 40), "+", true))
-                rechargeSpeed = Math.Min(rechargeSpeed + 10.0f, maxRechargeSpeed);
+            {
+                item.NewComponentEvent(this, true);
+               rechargeSpeed = Math.Min(rechargeSpeed + 10.0f, maxRechargeSpeed);
+            }
+
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 150, 40, 40), "-", true))
+            {
                 rechargeSpeed = Math.Max(rechargeSpeed - 10.0f, 0.0f);
+                item.NewComponentEvent(this, true);
+            }
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)

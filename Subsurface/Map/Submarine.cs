@@ -343,12 +343,16 @@ namespace Subsurface
             return closestBody;
         }
         
+        /// <summary>
+        /// check visibility between two points (in sim units)
+        /// </summary>
+        /// <returns>a physics body that was between the points (or null)</returns>
         public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd)
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
 
-            if (Vector2.Distance(rayStart,rayEnd)<0.01f)
+            if (Vector2.Distance(rayStart, rayEnd) < 0.01f)
             {
                 closestFraction = 0.01f;
                 return null;

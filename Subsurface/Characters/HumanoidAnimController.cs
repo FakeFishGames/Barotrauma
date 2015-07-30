@@ -463,19 +463,19 @@ namespace Subsurface
             MoveLimb(leftFoot, footPos + transformedFootPos, 2.5f);
             MoveLimb(rightFoot, footPos - transformedFootPos, 2.5f);
 
-            float legCorrection = MathUtils.GetShortestAngle(leftLeg.Rotation, torso.body.Rotation);
+            //float legCorrection = MathUtils.GetShortestAngle(leftLeg.Rotation, torso.body.Rotation);
 
-            leftLeg.body.ApplyTorque(legCorrection);
+            //leftLeg.body.ApplyTorque(legCorrection);
 
-            legCorrection = MathUtils.GetShortestAngle(rightLeg.Rotation, torso.body.Rotation);
+            //legCorrection = MathUtils.GetShortestAngle(rightLeg.Rotation, torso.body.Rotation);
 
-            rightLeg.body.ApplyTorque(legCorrection);
-            //Vector2 feetExtendForce = new Vector2(
-            //    (float)-Math.Sin(torso.body.Rotation), 
-            //    (float)Math.Cos(torso.body.Rotation));
+            //rightLeg.body.ApplyTorque(legCorrection);
+            Vector2 feetExtendForce = new Vector2(
+                (float)-Math.Sin(torso.body.Rotation),
+                (float)Math.Cos(torso.body.Rotation));
 
-            //leftFoot.body.ApplyForce(feetExtendForce);
-            //rightFoot.body.ApplyForce(feetExtendForce);
+            leftFoot.body.ApplyForce(feetExtendForce);
+            rightFoot.body.ApplyForce(feetExtendForce);
             
             leftFoot.body.ApplyTorque(leftFoot.body.Mass * -Dir);
             rightFoot.body.ApplyTorque(rightFoot.body.Mass * -Dir);
@@ -486,7 +486,7 @@ namespace Subsurface
             //if (!leftHand.Disabled) leftHand.body.ApplyTorque(leftHand.body.Mass * Dir);
             
             //at the surface, not moving sideways -> hands just float around
-            if (!headInWater && TargetMovement.X == 0.0f)
+            if (!headInWater && TargetMovement.X == 0.0f && TargetMovement.Y>0)
             {
                 handPos.X = handPos.X + Dir * 0.6f;
 
@@ -700,7 +700,7 @@ namespace Subsurface
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
             }
             
-            Vector2 shoulderPos = head.SimPosition + (torso.SimPosition - head.SimPosition) *0.9f;
+            Vector2 shoulderPos = limbJoints[2].WorldAnchorA;
             Vector2 transformedHoldPos = shoulderPos;
 
             if (itemPos == Vector2.Zero)
@@ -754,10 +754,10 @@ namespace Subsurface
                 Limb arm = (i == 0) ? rightArm : leftArm;
 
                 //hand length
-                float a = 24.0f;
+                float a = 37.0f;
 
                 //arm length
-                float b = 34.0f;
+                float b = 28.0f;
 
                 //distance from shoulder to holdpos
                 float c = ConvertUnits.ToDisplayUnits(Vector2.Distance(transformedHoldPos + transformedHandlePos[i], shoulderPos));

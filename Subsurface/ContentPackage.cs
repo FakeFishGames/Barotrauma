@@ -9,7 +9,7 @@ namespace Subsurface
 {
     public enum ContentType
     {
-        None, Jobs, Item, Character, Structure
+        None, Jobs, Item, Character, Structure, Executable
     }
 
     public class ContentPackage
@@ -86,6 +86,11 @@ namespace Subsurface
             files.Add(cf);
 
             return cf;
+        }
+
+        public void RemoveFile(ContentFile file)
+        {
+            files.Remove(file);
         }
 
         public void Save(string filePath)

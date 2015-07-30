@@ -96,7 +96,7 @@ namespace Subsurface
 
         public string DurationText()
         {
-            return "Game duration: "+GameDuration+" min";
+            return "Game duration: " + GameDuration + " min";
         }
                 
         public NetLobbyScreen()
@@ -153,6 +153,9 @@ namespace Subsurface
             infoFrame.ClearChildren();
             
             textBox.Select();
+
+            Character.Controlled = null;
+            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             new GUITextBlock(new Rectangle(0, 110, 0, 30), "Selected submarine:", GUI.style, infoFrame);
             subList = new GUIListBox(new Rectangle(0, 140, 200, 200), Color.White, GUI.style, infoFrame);

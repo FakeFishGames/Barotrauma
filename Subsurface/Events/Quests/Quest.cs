@@ -67,7 +67,7 @@ namespace Subsurface
             failureMessage = ToolBox.GetAttributeString(element, "failuremessage", "");
         }
 
-        public static Quest LoadRandom(Random rand)
+        public static Quest LoadRandom(Location[] locations, Random rand)
         {
             XDocument doc = ToolBox.TryLoadXml(configFile);
             if (doc == null) return null;
@@ -116,7 +116,11 @@ namespace Subsurface
                     ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
                     object instance = constructor.Invoke(new object[] { element });
 
-                    return (Quest)instance;
+                    Quest quest = (Quest)instance;
+                    quest.description = quest.description.Replace("[location1]", locations[0].Name);
+                    quest.description = quest.description.Replace("[location2]", locations[1].Name);
+
+                    return quest;
                 }
 
                 randomNumber -= eventProbability[i];

@@ -345,7 +345,7 @@ namespace Subsurface
                 Game1.GameSession.Map.Draw(spriteBatch, new Rectangle(
                     rightPanel[selectedRightPanel].Rect.X + 20, 
                     rightPanel[selectedRightPanel].Rect.Y + 20,
-                    rightPanel[selectedRightPanel].Rect.Width - 250, 
+                    rightPanel[selectedRightPanel].Rect.Width - 280, 
                     rightPanel[selectedRightPanel].Rect.Height - 40), 3.0f);
             }
      

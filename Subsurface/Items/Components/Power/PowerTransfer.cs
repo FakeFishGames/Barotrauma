@@ -139,6 +139,7 @@ namespace Subsurface.Items.Components
             {
                 connection.SendSignal(signal, sender, 0.0f);
             }
-        }        
+        }
+
     }
 }

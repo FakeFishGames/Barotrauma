@@ -46,7 +46,7 @@ namespace Subsurface
         {
             Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count)];
 
-            item = new Item(itemPrefab, position+level.Position);
+            item = new Item(itemPrefab, position + level.Position);
             //item.MoveWithLevel = true;
         }
 

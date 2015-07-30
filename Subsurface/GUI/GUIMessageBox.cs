@@ -21,8 +21,14 @@ namespace Subsurface
             this.Buttons[0].OnClicked = Close;
         }
 
-        public GUIMessageBox(string header, string text, string[] buttons, Alignment textAlignment = Alignment.TopLeft)
-            : base(new Rectangle(0,0, DefaultWidth, DefaultHeight),
+        public GUIMessageBox(string header, string text, int width, int height)
+            : this(header, text, new string[] { "OK" }, width, height)
+        {
+            this.Buttons[0].OnClicked = Close;
+        }
+        
+        public GUIMessageBox(string header, string text, string[] buttons, int width=DefaultWidth, int height=DefaultHeight, Alignment textAlignment = Alignment.TopLeft)
+            : base(new Rectangle(0,0, width, height),
                 null, Alignment.Center, GUI.style, null)
         {
             //Padding = GUI.style.smallPadding;
@@ -34,7 +40,7 @@ namespace Subsurface
             //}
 
             new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, GUI.style, this, true);
-            new GUITextBlock(new Rectangle(0, 30, 0, DefaultHeight - 70), text, Color.Transparent, Color.White, textAlignment, GUI.style, this, true);
+            new GUITextBlock(new Rectangle(0, 30, 0, height - 70), text, Color.Transparent, Color.White, textAlignment, GUI.style, this, true);
 
             int x = 0;
             this.Buttons = new GUIButton[buttons.Length];
