@@ -13,14 +13,6 @@ namespace Subsurface
 
         Item item;
 
-        public override string RadarLabel
-        {
-            get
-            {
-                return "Infrasonic signal";
-            }
-        }
-
         public override Vector2 RadarPosition
         {
             get
@@ -52,8 +44,11 @@ namespace Subsurface
 
         public override void End()
         {
-            if (item.CurrentHull == null) return;
-
+            if (item.CurrentHull == null)
+            {
+                new GUIMessageBox("Quest failed", failureMessage);
+                return;
+            }
             item.Remove();
 
             GiveReward();

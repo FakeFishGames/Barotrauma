@@ -61,7 +61,7 @@ namespace Subsurface.Items.Components
             if (connection == connections[1]) connections[1] = null;
         }
 
-        public void Connect(Connection newConnection, bool addNode = true)
+        public void Connect(Connection newConnection, bool addNode = true, bool loading = false)
         {
             for (int i = 0; i < 2; i++)
             {
@@ -84,7 +84,6 @@ namespace Subsurface.Items.Components
                 {
                     Nodes.Add(newConnection.Item.Position);
                 }
-
 
                 break;
             }
@@ -110,7 +109,7 @@ namespace Subsurface.Items.Components
                 CleanNodes();
             }
 
-            Item.NewComponentEvent(this, true);
+            if (!loading) Item.NewComponentEvent(this, true);
         }
 
         public override void Equip(Character character)

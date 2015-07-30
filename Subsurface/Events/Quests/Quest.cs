@@ -20,8 +20,10 @@ namespace Subsurface
 
         protected bool completed;
 
-        private string successMessage;
-        private string failureMessage;
+        protected string successMessage;
+        protected string failureMessage;
+
+        protected string radarLabel;
 
         private int reward;
 
@@ -47,7 +49,7 @@ namespace Subsurface
 
         public virtual string RadarLabel
         {
-            get { return ""; }
+            get { return radarLabel; }
         }
 
         public virtual Vector2 RadarPosition
@@ -65,6 +67,8 @@ namespace Subsurface
 
             successMessage = ToolBox.GetAttributeString(element, "successmessage", "");
             failureMessage = ToolBox.GetAttributeString(element, "failuremessage", "");
+
+            radarLabel = ToolBox.GetAttributeString(element, "radarlabel", "");
         }
 
         public static Quest LoadRandom(Location[] locations, Random rand)

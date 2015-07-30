@@ -1184,7 +1184,7 @@ namespace Subsurface
         public override void Remove()
         {
             base.Remove();
-            
+
             //sprite.Remove();
             if (body != null) body.Remove();
 
@@ -1194,6 +1194,14 @@ namespace Subsurface
             }
 
             itemList.Remove(this);
+
+            foreach (Item it in itemList)
+            {
+                if (it.linkedTo.Contains(this))
+                {
+                    it.linkedTo.Remove(this);
+                }
+            }                        
         }
         
     }

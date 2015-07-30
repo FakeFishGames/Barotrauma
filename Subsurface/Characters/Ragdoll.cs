@@ -320,9 +320,10 @@ namespace Subsurface
             }
 
             avgVelocity = avgVelocity / limbs.Count();
-
-
+            
             float impact = Vector2.Dot((f1.Body.LinearVelocity + avgVelocity) / 2.0f, -normal);
+
+            if (Game1.Server != null) impact = impact / 2.0f;
 
             Limb l = (Limb)f1.Body.UserData;
 
@@ -335,10 +336,8 @@ namespace Subsurface
             }
         }
 
-
         public virtual void Draw(SpriteBatch spriteBatch)
-        {
-            
+        {            
             foreach (Limb limb in limbs)
             {
                 limb.Draw(spriteBatch);

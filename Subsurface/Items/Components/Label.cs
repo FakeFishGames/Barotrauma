@@ -24,8 +24,6 @@ namespace Subsurface.Items.Components
             }
         }
 
-
-
         public Label(Item item, XElement element)
             : base(item, element)
         {

@@ -38,7 +38,7 @@ namespace Subsurface
 
         public double LastNetworkUpdate;
 
-        public float LargeUpdateTimer;
+        public int LargeUpdateTimer;
 
         public readonly Dictionary<string, ObjectProperty> Properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
@@ -898,6 +898,19 @@ namespace Subsurface
         {
             if (isDead) return;
 
+            //if the game is run by a client, characters are only killed when the server says so
+            if (Game1.Client != null)
+            {
+                if (networkMessage)
+                {
+                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true);
+                }
+                else
+                {
+                    return;
+                }
+            }
+
             isDead = true;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
@@ -921,20 +934,6 @@ namespace Subsurface
             {
                 joint.MotorEnabled = false;
                 joint.MaxMotorTorque = 0.0f;
-            }
-
-
-            //if the game is run by a client, characters are only killed when the server says so
-            if (Game1.Client != null)
-            {
-                if (networkMessage)
-                {
-                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true);
-                }
-                else
-                {
-                    return;
-                }
             }
 
             if (Game1.Server != null)
@@ -999,6 +998,7 @@ namespace Subsurface
                 }
 
                 message.Write(AnimController.StunTimer);
+                message.Write((byte)health);
 
                 LargeUpdateTimer = 5;
             }
@@ -1021,18 +1021,23 @@ namespace Subsurface
         {
             if (type == NetworkEventType.PickItem)
             {
-                int itemId = message.ReadInt32();
+                int itemId = -1;
+
+                try
+                {
+                    itemId = message.ReadInt32();
+                }
+                catch
+                {
+                    return;
+                }
+
                 Item item = FindEntityByID(itemId) as Item;
                 if (item != null)
                 {
                     Debug.WriteLine("pickitem "+itemId );
                     item.Pick(this);
                 }
-                else
-                {
-                }
-                
-                //DebugConsole.ThrowError("pickitem");
 
                 return;
             } 
@@ -1088,21 +1093,25 @@ namespace Subsurface
             {
                 foreach (Limb limb in AnimController.limbs)
                 {
-                    Vector2 pos = Vector2.Zero;
-                    pos.X = message.ReadFloat();
-                    pos.Y = message.ReadFloat();
+                    Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
+                    float rotation = 0.0f, angularVel = 0.0f;
 
-                    Vector2 vel = Vector2.Zero;
-                    vel.X = message.ReadFloat();
-                    vel.Y = message.ReadFloat();
+                    try
+                    {
+                        pos.X = message.ReadFloat();
+                        pos.Y = message.ReadFloat();
 
-                    float rotation = message.ReadFloat();
-                    float angularVel = message.ReadFloat();                    
+                        vel.X = message.ReadFloat();
+                        vel.Y = message.ReadFloat();
 
-                    //if (vel != Vector2.Zero && vel.Length() > 100.0f) { }
+                        rotation = message.ReadFloat();
+                        angularVel = message.ReadFloat();
+                    }
+                    catch
+                    {
+                        return;
+                    }
 
-                    //if (pos != Vector2.Zero && pos.Length() > 100.0f) { }
-                    
                     if (limb.body != null)
                     {
                         limb.body.TargetVelocity = vel;
@@ -1113,15 +1122,31 @@ namespace Subsurface
 
                 }
 
-                AnimController.StunTimer = message.ReadFloat();
+                float newStunTimer = 0.0f, newHealth = 0.0f;
+
+                try
+                {
+                    newStunTimer = message.ReadFloat();
+                    newHealth = message.ReadByte();
+                }
+                catch { return; }
+
+                AnimController.StunTimer = newStunTimer;
+                Health = newHealth;
 
                 LargeUpdateTimer = 1;
             }
             else
             {
                 Vector2 pos = Vector2.Zero;
-                pos.X = message.ReadFloat();
-                pos.Y = message.ReadFloat();
+                try
+                {
+                    pos.X = message.ReadFloat();
+                    pos.Y = message.ReadFloat();
+                }
+
+                catch { return; }
+
 
                 Limb torso = AnimController.GetLimb(LimbType.Torso);
                 torso.body.TargetPosition = pos;

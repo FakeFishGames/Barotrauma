@@ -204,7 +204,7 @@ namespace Subsurface.Items.Components
 
             AnimController ac = picker.AnimController;
 
-            item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;
+            //item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;
 
             ac.HoldItem(deltaTime, cam, item, handlePos, holdPos, aimPos, holdAngle);
         }    

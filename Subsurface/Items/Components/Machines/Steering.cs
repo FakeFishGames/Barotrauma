@@ -47,7 +47,6 @@ namespace Subsurface.Items.Components
             {
                 if (float.IsNaN(value.X) || float.IsNaN(value.Y))
                 {
-                    targetVelocity = Vector2.Zero;
                     return;
                 }
                 targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);

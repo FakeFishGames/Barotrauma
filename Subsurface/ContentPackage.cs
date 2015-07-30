@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 
@@ -120,17 +121,36 @@ namespace Subsurface
         {
             StringBuilder sb = new StringBuilder();
 
+            List<byte[]> hashes = new List<byte[]>();
+
+            //foreach (ContentFile file in files)
+            //{
+            //    if (file.path.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
+            //    {
+            //        XDocument doc = ToolBox.TryLoadXml(file.path);
+            //        sb.Append(doc.ToString());
+            //    }          
+            //}
+            var md5 = MD5.Create();
             foreach (ContentFile file in files)
             {
-                XDocument doc = ToolBox.TryLoadXml(file.path);
-
-                sb.Append(doc.ToString());            
+                using (var stream = File.OpenRead(file.path))
+                {
+                    hashes.Add(md5.ComputeHash(stream));
+                }                
             }
-            string str = sb.ToString();
-            byte[] bytes = new byte[str.Length * sizeof(char)];
-            System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
 
-            md5Hash = new Md5Hash(bytes);
+
+
+            //string str = sb.ToString();
+            byte[] bytes = new byte[hashes.Count()*16];
+            for (int i = 0; i < hashes.Count; i++ )
+            {
+                hashes[i].CopyTo(bytes, i*16);
+            }
+                //System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+
+                md5Hash = new Md5Hash(bytes);
         }
 
         public List<string> GetFilesOfType(ContentType type)
