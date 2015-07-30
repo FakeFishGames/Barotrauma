@@ -42,6 +42,14 @@ namespace Subsurface
             set;
         }
 
+        public string ToolTip
+        {
+            get;
+            set;
+        }
+
+        private GUITextBlock toolTipBlock;
+
         //protected float alpha;
                 
         public GUIComponent Parent
@@ -220,6 +228,20 @@ namespace Subsurface
 
             //GUI.DrawRectangle(spriteBatch, rect, newColor*alpha, true);
             //DrawChildren(spriteBatch);
+        }
+
+        public void DrawToolTip(SpriteBatch spriteBatch)
+        {
+            int width = 200;
+            if (toolTipBlock==null || (string)toolTipBlock.userData != ToolTip)
+            {
+                string wrappedText = ToolBox.WrapText(ToolTip, width, GUI.SmallFont);
+                toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, wrappedText.Split('\n').Length*15), ToolTip, GUI.style, null, true);
+                toolTipBlock.userData = ToolTip;
+            }
+
+            toolTipBlock.rect = new Rectangle((int)PlayerInput.MousePosition.X, (int)PlayerInput.MousePosition.Y, toolTipBlock.rect.Width, toolTipBlock.rect.Height);
+            toolTipBlock.Draw(spriteBatch);
         }
 
         public virtual void Update(float deltaTime)

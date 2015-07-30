@@ -16,14 +16,6 @@ namespace Subsurface
 
         Character monster;
 
-        public override string RadarLabel
-        {
-            get
-            {
-                return monster.SpeciesName;
-            }
-        }
-
         public override Vector2 RadarPosition
         {
             get
@@ -35,7 +27,6 @@ namespace Subsurface
         public MonsterQuest(XElement element)
             : base(element)
         {
-            //monsterName = ToolBox.GetAttributeString(element, "monstername", "");
             monsterFile = ToolBox.GetAttributeString(element, "monsterfile", "");
         }
 
@@ -48,7 +39,11 @@ namespace Subsurface
 
         public override void End()
         {
-            if (!monster.IsDead) return;
+            if (!monster.IsDead)
+            {
+                new GUIMessageBox("Quest failed", failureMessage);
+                return;
+            }
             
             GiveReward();
 

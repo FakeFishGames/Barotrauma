@@ -91,6 +91,11 @@ namespace Subsurface.Items.Components
             }
         }
 
+        public override void Remove()
+        {
+            base.Remove();
+        }
+
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
             foreach (Connection c in connections)

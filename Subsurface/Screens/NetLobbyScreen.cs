@@ -34,6 +34,8 @@ namespace Subsurface
         public bool IsServer;
         public string ServerName, ServerMessage;
 
+        private GUITextBox serverMessage;
+
         public Submarine SelectedMap
         {
             get { return subList.SelectedData as Submarine; }
@@ -101,10 +103,12 @@ namespace Subsurface
                 
         public NetLobbyScreen()
         {
-            Rectangle panelRect = new Rectangle(
-                40, 40, Game1.GraphicsWidth - 80, Game1.GraphicsHeight - 80);
+            int width = Math.Min(Game1.GraphicsWidth - 80, 1500);
+            int height = Math.Min(Game1.GraphicsHeight - 80, 800);
 
-            menu = new GUIFrame(panelRect, Color.Transparent);
+            Rectangle panelRect = new Rectangle(0,0,width,height);
+
+            menu = new GUIFrame(panelRect, Color.Transparent, Alignment.Center);
             //menu.Padding = GUI.style.smallPadding;
 
             //server info panel ------------------------------------------------------------
@@ -139,28 +143,15 @@ namespace Subsurface
                 GUI.style, menu);
 
             playerList = new GUIListBox(new Rectangle(0,0,0,0), null, GUI.style, playerListFrame);
-        }
 
-        public override void Deselect()
-        {
-            textBox.Deselect();
-        }
+            //submarine list ------------------------------------------------------------------
 
-        public override void Select()
-        {
-            Game1.LightManager.LosEnabled = false;
+            int columnWidth = infoFrame.Rect.Width / 3 - 30;
+            int columnX = 0;
 
-            infoFrame.ClearChildren();
-            
-            textBox.Select();
-
-            Character.Controlled = null;
-            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
-
-            new GUITextBlock(new Rectangle(0, 110, 0, 30), "Selected submarine:", GUI.style, infoFrame);
-            subList = new GUIListBox(new Rectangle(0, 140, 200, 200), Color.White, GUI.style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Selected submarine:", GUI.style, infoFrame);
+            subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, 200), Color.White, GUI.style, infoFrame);
             subList.OnSelected = SelectMap;
-            subList.Enabled = (Game1.Server != null);
 
             if (Submarine.SavedSubmarines.Count > 0)
             {
@@ -181,10 +172,13 @@ namespace Subsurface
                 return;
             }
 
-            new GUITextBlock(new Rectangle(220, 110, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
-            modeList = new GUIListBox(new Rectangle(220, 140, 200, 200), GUI.style, infoFrame);
-            modeList.Enabled = (Game1.Server != null);
+            columnX += columnWidth + 20;
 
+            //gamemode ------------------------------------------------------------------
+
+            new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
+            modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, 200), GUI.style, infoFrame);
+            
             foreach (GameModePreset mode in GameModePreset.list)
             {
                 if (mode.IsSinglePlayer) continue;
@@ -198,40 +192,72 @@ namespace Subsurface
                 textBlock.UserData = mode;
             }
 
-            GUITextBlock durationText = new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 110, 100, 20),
+            columnX += columnWidth + 20;
+
+            //duration ------------------------------------------------------------------
+            
+            GUITextBlock durationText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 20),
                 "Game duration: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
             durationText.TextGetter = DurationText;
 
-            durationBar = new GUIScrollBar(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 140, 180, 20),
+            durationBar = new GUIScrollBar(new Rectangle(columnX, 150, columnWidth, 20),
                 GUI.style, 0.1f, infoFrame);
             durationBar.BarSize = 0.1f;
-            durationBar.Enabled = (Game1.Server != null);            
 
-            new GUITextBlock(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 180, 100, 20),
+            //seed ------------------------------------------------------------------
+            
+            new GUITextBlock(new Rectangle(columnX, 190, columnWidth, 20),
                 "Level Seed: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
 
-            seedBox = new GUITextBox(new Rectangle((int)(modeList.Rect.Right + 20 - 80), 210, 180, 20),
+            seedBox = new GUITextBox(new Rectangle(columnX, 220, columnWidth, 20),
                 Alignment.TopLeft, GUI.style, infoFrame);
-            seedBox.OnEnter = SelectSeed;
-            seedBox.Enabled = (Game1.Server != null);
+            seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
 
+            //server info ------------------------------------------------------------------
+            
             var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
             serverName.TextGetter = GetServerName;
             serverName.Enabled = Game1.Server != null;
             serverName.OnTextChanged = ChangeServerName;
-            ServerName = (Game1.Server==null) ? "Server" : Game1.Server.Name;
 
-            var serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
-            serverMessage.Enabled = Game1.Server != null;
+
+            serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
             serverMessage.Wrap = true;
             serverMessage.TextGetter = GetServerMessage;
             serverMessage.OnTextChanged = UpdateServerMessage;
+        }
+
+        public override void Deselect()
+        {
+            textBox.Deselect();
+        }
+
+        public override void Select()
+        {
+            Game1.LightManager.LosEnabled = false;
+
+            //infoFrame.ClearChildren();
+            
+            textBox.Select();
+
+            Character.Controlled = null;
+            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+            
+            subList.Enabled         = Game1.Server != null;
+            modeList.Enabled        = Game1.Server != null;
+            durationBar.Enabled     = Game1.Server != null;                      
+            seedBox.Enabled         = Game1.Server != null;                       
+            serverMessage.Enabled   = Game1.Server != null;
+            ServerName = (Game1.Server==null) ? "Server" : Game1.Server.Name;
+
+            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
 
             if (IsServer && Game1.Server != null)
             {
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.TopRight, GUI.style, infoFrame);
                 startButton.OnClicked = Game1.Server.StartGame;
+                startButton.UserData = "startButton";
                 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
                 modeList.OnSelected = Game1.Server.UpdateNetLobby;
@@ -243,6 +269,8 @@ namespace Subsurface
             else
             {
                 int x = playerFrame.Rect.Width / 2;
+
+                playerFrame.ClearChildren();
 
                 new GUITextBlock(new Rectangle(x, 0, 200, 30), "Name: ", GUI.style, playerFrame);
 
@@ -462,7 +490,7 @@ namespace Subsurface
             }
 
             //textBox.Text = LevelSeed;
-            textBox.Selected = false;
+            //textBox.Selected = false;
 
             if (Game1.Server != null) Game1.Server.UpdateNetLobby(null);
 

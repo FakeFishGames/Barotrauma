@@ -297,6 +297,9 @@ namespace Subsurface
             }
             
             DebugConsole.Draw(spriteBatch);
+
+
+            if (GUIComponent.MouseOn != null && !string.IsNullOrWhiteSpace(GUIComponent.MouseOn.ToolTip)) GUIComponent.MouseOn.DrawToolTip(spriteBatch);
         }
 
         public static void Update(float deltaTime)

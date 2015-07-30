@@ -196,6 +196,8 @@ namespace Subsurface
         loadState = 70.0f;
         yield return Status.Running;
 
+            GameMode.Init();
+
             Submarine.Preload("Content/SavedMaps");
         loadState = 80.0f;
         yield return Status.Running;
@@ -214,7 +216,6 @@ namespace Subsurface
             ParticleManager = new ParticleManager("Content/Particles/prefabs.xml", Cam);
         yield return Status.Running;
 
-            GameMode.Init();
             GUIComponent.Init(Window);
             DebugConsole.Init(Window);
         yield return Status.Running;

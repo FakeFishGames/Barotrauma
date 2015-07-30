@@ -246,12 +246,12 @@ namespace Subsurface
                     break;
                 case "savemap":
                     if (commands.Length < 2) break;
-                    Submarine.SaveCurrent("Content/SavedMaps/" + commands[1]);
+                    Submarine.SaveCurrent("Content/SavedMaps/" + string.Join(" ", commands.Skip(1)));
                     NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":
                     if (commands.Length < 2) break;
-                    Submarine.Load("Content/SavedMaps/" + commands[1]);
+                    Submarine.Load("Content/SavedMaps/" + string.Join(" ", commands.Skip(1)));
                     break;
                 case "savegame":
                     SaveUtil.SaveGame(SaveUtil.SaveFolder+"save");

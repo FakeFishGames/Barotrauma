@@ -59,9 +59,7 @@ namespace Subsurface.Items.Components
             else
             {
                 pingState = 0.0f;
-            }
-
-            
+            }            
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -84,7 +82,7 @@ namespace Subsurface.Items.Components
             int radius = GuiFrame.Rect.Height / 2 - 10;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
 
-            voltage = 0.0f;
+            //voltage = 0.0f;
         }
 
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
@@ -198,8 +196,6 @@ namespace Subsurface.Items.Components
                         quest.RadarLabel,
                         quest.RadarPosition, displayScale, center, (rect.Width * 0.55f));
                 }
-
-
             }
         }
 
@@ -218,8 +214,7 @@ namespace Subsurface.Items.Components
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen);
 
             spriteBatch.DrawString(GUI.SmallFont, label, new Vector2(markerPos.X + 10, markerPos.Y), Color.LightGreen);
-            spriteBatch.DrawString(GUI.SmallFont, (int)(dist / 80.0f) + " m", new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);
-                
+            spriteBatch.DrawString(GUI.SmallFont, (int)(dist / 80.0f) + " m", new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);                
         }
 
     }

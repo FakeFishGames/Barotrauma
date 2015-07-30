@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -40,6 +41,13 @@ namespace Subsurface
             shortHash = GetShortHash(hash);
         }
 
+        public Md5Hash(FileStream fileStream)
+        {
+            hash = CalculateHash(fileStream);
+
+            shortHash = GetShortHash(hash);
+        }
+
         public Md5Hash(XDocument doc)
         {
             string docString = Regex.Replace(doc.ToString(), @"\s+", "");
@@ -49,6 +57,20 @@ namespace Subsurface
             hash = CalculateHash(inputBytes);
 
             shortHash = GetShortHash(hash);
+        }
+
+        private string CalculateHash(FileStream stream)
+        {
+            MD5 md5 = MD5.Create();
+            byte[] byteHash = md5.ComputeHash(stream);
+            // step 2, convert byte array to hex string
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < byteHash.Length; i++)
+            {
+                sb.Append(byteHash[i].ToString("X2"));
+            }
+
+            return sb.ToString();
         }
 
         private string CalculateHash(byte[] bytes)

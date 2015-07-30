@@ -5,7 +5,9 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="1000"
-    successmessage="You have successfully retrieved the artifact."
+    radarlabel="Infrasonic signal"
+    failuremessage="fail"
+    successmessage="The artifact has been succesfully retrived"
     itemname="Skyholder Artifact">    
   </SalvageQuest>
 
@@ -14,7 +16,9 @@
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
     commonness="10"
     reward="1000"
-    successmessage="You have successfully killed the Moloch."
+    radarlabel="Moloch"
+    failuremessage="fail"
+    successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/Moloch/moloch.xml">
   </MonsterQuest>
 
@@ -23,7 +27,9 @@
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 800 credits has been promised to those who kill the creature."
     commonness="10"
     reward="800"
-    successmessage="You have successfully killed the Tiger Thresher."
+    radarlabel="Tiger Thresher"
+    failuremessage="fail"
+    successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/TigerThresher/tigerthresher.xml">
   </MonsterQuest>
 
@@ -32,6 +38,7 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1000"
+    radarlabel="Infrasonic signal"
     failuremessage="It turns out the signal picked up by [location1] was emitted by a Moloch."
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for killing the Moloch."
     monsterfile="Content/Characters/Moloch/moloch.xml">

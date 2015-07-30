@@ -459,7 +459,7 @@ namespace Subsurface.Items.Components
                 if (Wires[i]!=null)
                 {
                     Wires[i].Item.body.Enabled = false;
-                    Wires[i].Connect(this, false);
+                    Wires[i].Connect(this, false, true);
                 }
             }
 

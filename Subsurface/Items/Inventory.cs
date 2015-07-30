@@ -287,10 +287,19 @@ namespace Subsurface
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            int itemId = message.ReadInt32();
-            if (itemId == -1) return;
+            int itemId=-1, slotIndex = -1;
 
-            int slotIndex = message.ReadInt32();
+            try
+            {
+                itemId = message.ReadInt32();
+                slotIndex = message.ReadInt32();
+            }
+            catch
+            {
+                return;
+            }
+
+            if (itemId == -1) return;
 
             Item item = FindEntityByID(itemId) as Item;
             if (item == null) return;

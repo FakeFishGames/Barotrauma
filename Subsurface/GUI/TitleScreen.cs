@@ -81,7 +81,17 @@ namespace Subsurface
                 titlePos, null,
                 Color.White * Math.Min((state - 3.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), scale, SpriteEffects.None, 0.0f);
 
-            string loadText = (loadState<100.0f) ? "Loading... "+(int)loadState+" %" : "Press any key to continue";
+            string loadText = "";
+            if (loadState == 100.0f)
+            {
+                loadText = "Press any key to continue";
+
+            }
+            else if (loadState > 0.0f)
+            {
+                loadText = "Loading... " + (int)loadState + " %";
+            }
+
             spriteBatch.DrawString(GUI.Font, loadText, new Vector2(Game1.GraphicsWidth/2.0f - 50.0f, Game1.GraphicsHeight*0.8f), Color.White);
             
             spriteBatch.End();

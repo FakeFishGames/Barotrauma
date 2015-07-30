@@ -111,9 +111,10 @@ namespace Subsurface
             if (parent != null)
                 parent.AddChild(this);
 
+            scrollBarHidden = true;
 
             scrollBar = new GUIScrollBar(
-                new Rectangle(this.rect.X + this.rect.Width, this.rect.Y, 20, this.rect.Height), color, 1.0f, style);
+                new Rectangle(this.rect.X + this.rect.Width-20, this.rect.Y, 20, this.rect.Height), color, 1.0f, style);
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
             if (style != null) style.Apply(frame, this);
@@ -214,14 +215,15 @@ namespace Subsurface
 
         private void ShowScrollBar()
         {
+            if (scrollBarHidden) Rect = new Rectangle(rect.X, rect.Y, rect.Width - scrollBar.Rect.Width, rect.Height);
             scrollBarHidden = false;
-            Rect = new Rectangle(rect.X, rect.Y, rect.Width - scrollBar.Rect.Width, rect.Height);
+            
         }
 
         private void HideScrollBar()
         {
+            if (!scrollBarHidden) Rect = new Rectangle(rect.X, rect.Y, rect.Width + scrollBar.Rect.Width, rect.Height);
             scrollBarHidden = true;
-            Rect = new Rectangle(rect.X, rect.Y, rect.Width + scrollBar.Rect.Width, rect.Height);
         }
 
         public override void Draw(SpriteBatch spriteBatch)

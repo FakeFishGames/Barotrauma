@@ -162,12 +162,13 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server port:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer]);
             portBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.HostServer]);
             portBox.Text = NetworkMember.DefaultPort.ToString();
+            portBox.ToolTip = "Server port";
 
             GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.HostServer]);
             hostButton.OnClicked = HostServerClicked;
 
             //----------------------------------------------------------------------
-            for (int i = 1; i < 4; i++ )
+            for (int i = 1; i < 5; i++ )
             {
                 button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.style, menuTabs[i]);
                 button.OnClicked = PreviousTab;
