@@ -3,7 +3,8 @@
   <Item
     name="Welding Tool"
     Tags="smallitem"
-    pickdistance="200">
+    pickdistance="200"
+    price="100">
 
     <Sprite texture ="weldingtool.png"  depth="0.5"/>
 
@@ -45,7 +46,8 @@
   <Item
     name="Plasma Cutter"
     Tags="smallitem"
-    pickdistance="200">
+    pickdistance="200"
+    price="100">
 
     <Sprite texture ="plasmacutter.png"  depth="0.5"/>
 
@@ -77,7 +79,8 @@
   <Item
     name="Welding Fuel Tank"
     Tags="smallitem"
-    pickdistance="150">
+    pickdistance="150"
+    price="50">
 
     <Sprite texture ="fueltank.png" depth="0.5"/>
 
@@ -90,7 +93,8 @@
   <Item
     name="Screwdriver"
     Tags="smallitem"
-    pickdistance="200">
+    pickdistance="200"
+    price="10">
 
     <Sprite texture ="screwdriver.png" depth="0.5"/>
 
@@ -104,7 +108,8 @@
   <Item
     name="Wrench"
     Tags="smallitem"
-    pickdistance="200">
+    pickdistance="200"
+    price="10">
 
     <Sprite texture ="wrench.png" depth="0.5"/>
 

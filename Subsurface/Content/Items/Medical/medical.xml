@@ -3,7 +3,8 @@
   <Item
     name="Medical Syringe"
     Tags="smallitem"
-    pickdistance="150">
+    pickdistance="150"
+    price="50">
 
     <Sprite texture ="med.png" sourcerect="0,0,24,5" depth="0.6"/>
 
@@ -17,7 +18,8 @@
   <Item
     name="Bandage"
     Tags="smallitem"
-    pickdistance="150">
+    pickdistance="150"
+    price="20">
 
     <Sprite texture ="med.png" sourcerect="0,14,14,18" depth="0.6"/>
 

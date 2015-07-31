@@ -2,8 +2,7 @@
 <Items>
   <Item
     name="Skyholder Artifact"
-    pickdistance="150"
-    price="100">
+    pickdistance="150">
 
     <Sprite texture="artifact.png" depth="0.8"/>
 

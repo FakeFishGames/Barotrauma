@@ -4,7 +4,7 @@
     name="C-4 Block"
     Tags="smallitem,explosive"
     pickdistance="150"
-    price="50">
+    price="100">
 
     <Sprite texture="explosives.png"  depth="0.8" sourcerect="0,0,16,7"/>
 

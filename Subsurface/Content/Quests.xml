@@ -6,7 +6,7 @@
     commonness="10"
     reward="1000"
     radarlabel="Infrasonic signal"
-    failuremessage="fail"
+    failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrived"
     itemname="Skyholder Artifact">    
   </SalvageQuest>
@@ -17,7 +17,6 @@
     commonness="10"
     reward="1000"
     radarlabel="Moloch"
-    failuremessage="fail"
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/Moloch/moloch.xml">
   </MonsterQuest>
@@ -28,7 +27,6 @@
     commonness="10"
     reward="800"
     radarlabel="Tiger Thresher"
-    failuremessage="fail"
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/TigerThresher/tigerthresher.xml">
   </MonsterQuest>
@@ -39,7 +37,6 @@
     commonness="5"
     reward="1000"
     radarlabel="Infrasonic signal"
-    failuremessage="It turns out the signal picked up by [location1] was emitted by a Moloch."
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for killing the Moloch."
     monsterfile="Content/Characters/Moloch/moloch.xml">
   </MonsterQuest>

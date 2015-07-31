@@ -3,7 +3,8 @@
 <Items>
   <Item
     name="Spear"
-    pickdistance="200">
+    pickdistance="200"
+    price="50">
 
     <Sprite texture ="spear.png" depth="0.55"/>
 
@@ -17,7 +18,8 @@
   
   <Item
     name="Harpoon Gun"
-    pickdistance="200" >
+    pickdistance="200"
+    price="500">
   
     <Sprite texture ="harpoongun.png" depth="0.5"/>
 
@@ -39,7 +41,9 @@
 
   <Item
     name="Stun Grenade"
-    pickdistance="200" >
+    pickdistance="200"
+    price="200"
+    tags="smallitem">
 
     <Sprite texture ="stungrenade.png" depth="0.04"/>
 
