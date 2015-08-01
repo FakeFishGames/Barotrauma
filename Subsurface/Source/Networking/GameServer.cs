@@ -439,11 +439,9 @@ namespace Subsurface.Networking
 
         public void EndGame(string endMessage)
         {
-            Submarine.Unload();
-                      
-            gameStarted = false;
 
-            if (connectedClients.Count>0)
+
+            if (connectedClients.Count > 0)
             {
                 NetOutgoingMessage msg = server.CreateMessage();
                 msg.Write((byte)PacketTypes.EndGame);
@@ -460,6 +458,10 @@ namespace Subsurface.Networking
                     client.inGame = false;
                 }
             }
+
+            Submarine.Unload();
+                      
+            gameStarted = false;
 
             Game1.NetLobbyScreen.Select();
 
@@ -565,12 +567,12 @@ namespace Subsurface.Networking
                 }
                 if (recipients.Count>0)
                 {
-                    server.SendMessage(msg, recipients, NetDeliveryMethod.ReliableUnordered, 0);
+                    server.SendMessage(msg, recipients, NetDeliveryMethod.Unreliable, 0);
                 }                
             }
             else
             {
-                server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);
+                server.SendMessage(msg, server.Connections, NetDeliveryMethod.Unreliable, 0);
             }
             
         }

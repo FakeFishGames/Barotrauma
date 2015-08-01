@@ -269,9 +269,11 @@ namespace Subsurface.Items.Components
         }
 
 
+        bool valueChanged = false;
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             isActive = true;
+
 
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
@@ -291,27 +293,59 @@ namespace Subsurface.Items.Components
             spriteBatch.DrawString(GUI.Font, "Fission rate: " + (int)fissionRate + " %", new Vector2(x + 30, y + 30), Color.White);
             DrawGraph(fissionRateGraph, spriteBatch, x + 30, y + 50, 100.0f, xOffset);
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 30, 40, 40), "+", true)) FissionRate += 1.0f;
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 80, 40, 40), "-", true)) FissionRate -= 1.0f;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 30, 40, 40), "+", true))
+            {
+                valueChanged = true;
+                FissionRate += 1.0f;
+            }
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 80, 40, 40), "-", true))
+            {
+                valueChanged = true;
+                FissionRate -= 1.0f;
+            }
 
             y += 130;
 
             spriteBatch.DrawString(GUI.Font, "Cooling rate: " + (int)coolingRate + " %", new Vector2(x + 30, y + 30), Color.White);
             DrawGraph(coolingRateGraph, spriteBatch, x + 30, y + 50, 100.0f, xOffset);
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 30, 40, 40), "+", true)) CoolingRate += 1.0f;
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 80, 40, 40), "-", true)) CoolingRate -= 1.0f;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 30, 40, 40), "+", true))
+            {
+                valueChanged = true;
+                CoolingRate += 1.0f;
+            }
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 280, y + 80, 40, 40), "-", true))
+            {
+                valueChanged = true;
+                CoolingRate -= 1.0f;
+            }
 
             y = y - 260;
 
             spriteBatch.DrawString(GUI.Font, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 400, y + 30), Color.White);
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 60, 100, 40), ((autoTemp) ? "TURN OFF" : "TURN ON"))) autoTemp = !autoTemp;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 60, 100, 40), ((autoTemp) ? "TURN OFF" : "TURN ON")))
+            {
+                valueChanged = true;
+                autoTemp = !autoTemp;
+            }
 
             spriteBatch.DrawString(GUI.Font, "Shutdown Temperature: " + shutDownTemp, new Vector2(x + 400, y + 150), Color.White);
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 180, 40, 40), "+", true)) shutDownTemp += 100.0f;
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 450, y + 180, 40, 40), "-", true)) shutDownTemp -= 100.0f;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 180, 40, 40), "+", true))
+            {
+                valueChanged = true;
+                shutDownTemp += 100.0f;
+            }
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 450, y + 180, 40, 40), "-", true))
+            {
+                valueChanged = true;
+                shutDownTemp -= 100.0f;
+            }
 
-            item.NewComponentEvent(this, true);
+            if (valueChanged)
+            {
+                item.NewComponentEvent(this, true);
+                valueChanged = false;
+            }
         }
 
         static void UpdateGraph<T>(IList<T> graph, T newValue)

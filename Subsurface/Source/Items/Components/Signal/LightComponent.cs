@@ -38,7 +38,12 @@ namespace Subsurface.Items.Components
             get { return ToolBox.Vector4ToString(lightColor.ToVector4()); }
             set
             {
-                lightColor = new Color(ToolBox.ParseToVector4(value));
+                Vector4 newColor = ToolBox.ParseToVector4(value);
+                newColor.X = MathHelper.Clamp(newColor.X, 0.0f, 1.0f);
+                newColor.Y = MathHelper.Clamp(newColor.Y, 0.0f, 1.0f);
+                newColor.Z = MathHelper.Clamp(newColor.Z, 0.0f, 1.0f);
+                newColor.W = MathHelper.Clamp(newColor.W, 0.0f, 1.0f);
+                lightColor = new Color(newColor);
             }
         }
 

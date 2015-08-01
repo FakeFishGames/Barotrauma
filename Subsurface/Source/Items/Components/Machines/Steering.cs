@@ -21,6 +21,9 @@ namespace Subsurface.Items.Components
 
         private static PathFinder pathFinder;
 
+        private float networkUpdateTimer;
+        private bool valueChanged;
+
         bool AutoPilot
         {
             get { return autoPilot; }
@@ -90,6 +93,16 @@ namespace Subsurface.Items.Components
                     TargetVelocity = targetSpeed*100.0f;
                 }
             }
+            else if (valueChanged)
+            {
+                networkUpdateTimer -= deltaTime;
+                if (networkUpdateTimer<=0.0f)
+                {
+                    item.NewComponentEvent(this, true);
+                    networkUpdateTimer = 1.0f;
+                    valueChanged = false;
+                }
+            }
 
             item.SendSignal(targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out");
             item.SendSignal((-targetVelocity.Y).ToString(CultureInfo.InvariantCulture), "velocity_y_out");
@@ -136,7 +149,7 @@ namespace Subsurface.Items.Components
                     targetVelocity = PlayerInput.MousePosition - new Vector2(velRect.Center.X, velRect.Center.Y);
                     targetVelocity.Y = -targetVelocity.Y;
 
-                    item.NewComponentEvent(this, true);
+                    valueChanged = true;
                 }
             }
         }

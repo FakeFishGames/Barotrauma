@@ -18,7 +18,7 @@
       <item name="Screwdriver"/>
     </fixrequirement>
 
-    <Sprite texture ="reactor.png"  depth="0.8"/>
+    <Sprite texture = "reactor.png"  depth="0.8"/>
 
     <Reactor canbeselected = "true">
       <GuiFrame rect="0,0,0.6,0.7" alignment="Center" color="0.0,0.0,0.0,0.8"/>
