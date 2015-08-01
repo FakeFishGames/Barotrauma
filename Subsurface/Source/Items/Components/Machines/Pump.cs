@@ -112,15 +112,24 @@ namespace Subsurface.Items.Components
                 targetLevel = null;
                 isActive = !isActive;
                 if (!isActive) currPowerConsumption = 0.0f;
+                item.NewComponentEvent(this, true);
             }
             
             spriteBatch.DrawString(GUI.Font, "Flow percentage: " + (int)flowPercentage + " %", new Vector2(x + 20, y + 80), Color.White);
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "+", true)) FlowPercentage += 1.0f;
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "-", true)) FlowPercentage -= 1.0f;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "+", true))
+            {
+                FlowPercentage += 1.0f;
+                item.NewComponentEvent(this, true);
+            }
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "-", true))
+            {
+                FlowPercentage -= 1.0f;
+                item.NewComponentEvent(this, true);
+            }
 
 
-            item.NewComponentEvent(this, true);
+            
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)

@@ -500,6 +500,8 @@ namespace Subsurface.Networking
             character.ID = ID;
             character.Inventory.ID = inventoryID;
 
+            character.IsNetworkPlayer = true;
+
             character.GiveJobItems(closestWaypoint);
 
             return character;
@@ -516,7 +518,7 @@ namespace Subsurface.Networking
             msg.Write((byte)type);
             msg.Write(message);
 
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            client.SendMessage(msg, NetDeliveryMethod.Unreliable);
         }
 
         /// <summary>

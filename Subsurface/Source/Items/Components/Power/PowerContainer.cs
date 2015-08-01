@@ -195,9 +195,9 @@ namespace Subsurface.Items.Components
 
             spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (rechargeSpeed / maxRechargeSpeed), new Vector2(x + 30, y + 100), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 50, y + 150, 40, 40), "+", true))
-            {
-                item.NewComponentEvent(this, true);
+            {                
                rechargeSpeed = Math.Min(rechargeSpeed + 10.0f, maxRechargeSpeed);
+               item.NewComponentEvent(this, true);
             }
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 150, 40, 40), "-", true))
