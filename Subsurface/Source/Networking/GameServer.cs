@@ -58,12 +58,9 @@ namespace Subsurface.Networking
             DebugConsole.NewMessage("Server started", Color.Green);
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
-            //if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.K))
-            //{
-            //    SendRandomData();
-            //}
+            base.Update(deltaTime);
 
             if (gameStarted) inGameHUD.Update((float)Physics.step);
 
@@ -208,7 +205,7 @@ namespace Subsurface.Networking
                         }
                         else
                         {
-                            AssignJobs();
+                            //AssignJobs();
 
                             Game1.NetLobbyScreen.AddPlayer(sender);
 
@@ -346,6 +343,8 @@ namespace Subsurface.Networking
         {
             int seed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(seed);
+
+            AssignJobs();
             
             Submarine selectedMap = Game1.NetLobbyScreen.SelectedMap as Submarine;
             
@@ -369,9 +368,12 @@ namespace Subsurface.Networking
                 }
                 characterInfos.Add(client.characterInfo);
 
+                client.characterInfo.Job = new Job(client.assignedJob);
+
                 //client.character = new Character(client.characterInfo, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition, true);
             }
 
+            List<Character> crew = new List<Character>();
             WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
 
             for (int i = 0; i < connectedClients.Count; i++ )
@@ -379,6 +381,8 @@ namespace Subsurface.Networking
                 connectedClients[i].character = new Character(
                     connectedClients[i].characterInfo, assignedWayPoints[i], true);
                 connectedClients[i].character.GiveJobItems(assignedWayPoints[i]);
+
+                crew.Add(connectedClients[i].character);
             }
 
             //todo: fix
@@ -426,6 +430,9 @@ namespace Subsurface.Networking
             Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Game1.GameScreen.Select();
+
+
+            CreateCrewFrame(crew);
 
             return true;
         }
@@ -685,7 +692,7 @@ namespace Subsurface.Networking
                 }
             }
 
-            UpdateNetLobby(null);
+            //UpdateNetLobby(null);
 
         }
 

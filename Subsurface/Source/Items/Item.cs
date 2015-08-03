@@ -134,6 +134,11 @@ namespace Subsurface
             get { return prefab; }
         }
 
+        public string ConfigFile
+        {
+            get { return prefab.ConfigFile; }
+        }
+
         //which type of inventory slots (head, torso, any, etc) the item can be placed in
         public LimbSlot AllowedSlots
         {
@@ -443,12 +448,22 @@ namespace Subsurface
         {             
             foreach (ItemComponent ic in components)
             {
-                if (!ic.IsActive) continue;
+                if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;
+
+                if (!ic.WasUsed) ic.StopSounds(ActionType.OnUse);
+                ic.WasUsed = false;
+                
+
+                if (!ic.IsActive)
+                {
+                    ic.StopSounds(ActionType.OnActive);
+                    continue;
+                }
                 if (condition > 0.0f)
                 {
                     ic.Update(deltaTime, cam);
                     
-                    ic.PlaySound(ActionType.OnActive, Position, true);
+                    ic.PlaySound(ActionType.OnActive, Position);
                     ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
                 }
                 else
@@ -461,7 +476,6 @@ namespace Subsurface
             if (body == null) return;
 
             if (body.LinearVelocity.Length()>0.001f) FindHull();
-
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.Position);
 
@@ -618,7 +632,6 @@ namespace Subsurface
                 {
                     foreach (RelatedItem relatedItem in ic.requiredItems)
                     {
-
                         new GUITextBlock(new Rectangle(0, y, 100, 20), ic.Name + ": " + relatedItem.Type.ToString() + " required", GUI.style, editingHUD);
                         GUITextBox namesBox = new GUITextBox(new Rectangle(0, y, 200, 20), Alignment.Right, GUI.style, editingHUD);
 
@@ -809,6 +822,8 @@ namespace Subsurface
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
                 if (ic.Use(deltaTime, character))
                 {
+                    ic.WasUsed = true;
+
                     ic.PlaySound(ActionType.OnUse, Position);
 
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);

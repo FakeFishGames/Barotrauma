@@ -22,12 +22,16 @@ namespace Subsurface.Items.Components
         public float VolumeMultiplier;
 
         public readonly float Range;
+
+        public readonly bool Loop;
         
-        public ItemSound(Sound sound, ActionType type, float range)
+        public ItemSound(Sound sound, ActionType type, float range, bool loop = true)
         {
             this.Sound = sound;
             this.Type = type;
             this.Range = range;
+
+            this.Loop = loop;
         }
     }
 
@@ -47,6 +51,8 @@ namespace Subsurface.Items.Components
         protected bool canBePicked;
         protected bool canBeSelected;
 
+        public bool WasUsed;
+
         public List<StatusEffect> statusEffects;
         
         protected bool updated;
@@ -58,6 +64,8 @@ namespace Subsurface.Items.Components
         private List<ItemSound> sounds;
 
         private GUIFrame guiFrame;
+
+        public ItemComponent Parent;
 
         public readonly Dictionary<string, ObjectProperty> properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
@@ -217,9 +225,6 @@ namespace Subsurface.Items.Components
                         if (filePath=="") continue;
                         if (!filePath.Contains("\\")) filePath = Path.GetDirectoryName(item.Prefab.ConfigFile)+"\\"+filePath;
 
-                        //int index = item.Prefab.sounds.FindIndex(x => x.FilePath == filePath);
-
-
                         ActionType type;
 
                         try
@@ -240,6 +245,13 @@ namespace Subsurface.Items.Components
                         itemSound.VolumeMultiplier = ToolBox.GetAttributeFloat(subElement, "volumemultiplier", 1.0f);
                         sounds.Add(itemSound);
                         break;
+                    default:
+                        ItemComponent ic = ItemComponent.Load(subElement, item, item.ConfigFile, false);                        
+                        if (ic == null) break;
+
+                        ic.Parent = this;
+                        item.components.Add(ic);
+                        break;
                 }
                 
             }        
@@ -247,32 +259,50 @@ namespace Subsurface.Items.Components
 
         private ItemSound loopingSound;
         private int loopingSoundIndex;
-        public void PlaySound(ActionType type, Vector2 position, bool loop=false)
+        public void PlaySound(ActionType type, Vector2 position)
         {
             ItemSound itemSound = null;
-            if (!loop || !Sounds.SoundManager.IsPlaying(loopingSoundIndex))
+            if (!Sounds.SoundManager.IsPlaying(loopingSoundIndex))
             {
                 List<ItemSound> matchingSounds = sounds.FindAll(x => x.Type == type);
                 if (matchingSounds.Count == 0) return;
 
                 int index = Rand.Int(matchingSounds.Count);
                 itemSound = matchingSounds[index];
-
-
-
-                if (loop) loopingSound = itemSound;
             }
-                        
 
-            if (loop)
+
+            if (loopingSound!=null)
             {
                 loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
             }
-            else
+            else if (itemSound!=null)
             {
-
-                itemSound.Sound.Play(GetSoundVolume(itemSound), itemSound.Range, position);  
+                if (itemSound.Loop)
+                {
+                    loopingSound = itemSound;
+                }
+                else
+                {
+                    itemSound.Sound.Play(GetSoundVolume(itemSound), itemSound.Range, position); 
+                } 
             } 
+        }
+
+        public void StopSounds(ActionType type)
+        {
+            if (loopingSoundIndex <= 0) return;
+
+            if (loopingSound == null) return;
+
+            if (loopingSound.Type != type) return;
+
+            if (Sounds.SoundManager.IsPlaying(loopingSoundIndex))
+            {
+                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSound = null;
+                loopingSoundIndex = -1;
+            }
         }
 
         private float GetSoundVolume(ItemSound sound)
@@ -326,13 +356,7 @@ namespace Subsurface.Items.Components
         //called when isActive is true and condition == 0.0f
         public virtual void UpdateBroken(float deltaTime, Camera cam) 
         {
-            if (loopingSoundIndex <= 0) return;
-            
-            if (Sounds.SoundManager.IsPlaying(loopingSoundIndex))
-            {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
-            }
-            
+            StopSounds(ActionType.OnActive);          
         }
 
         //called when the item is equipped and left mouse button is pressed
@@ -565,30 +589,30 @@ namespace Subsurface.Items.Components
 
         public virtual void OnMapLoaded() { }
         
-        public static ItemComponent Load(XElement element, Item item, string file)
+        public static ItemComponent Load(XElement element, Item item, string file, bool errorMessages = true)
         {
             Type t;
             string type = element.Name.ToString().ToLower();
             try
             {
-                // Get the type of a specified class.
-                t = Type.GetType("Subsurface.Items.Components." + type + ", Subsurface", true, true);
+                // Get the type of a specified class.                
+                t = Type.GetType("Subsurface.Items.Components." + type + ", Subsurface", false, true);
                 if (t == null)
                 {
-                    DebugConsole.ThrowError("Could not find the component ''" + type + "'' (" + file + ")");
+                    if (errorMessages) DebugConsole.ThrowError("Could not find the component ''" + type + "'' (" + file + ")");
                     return null;
                 }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Could not find the component ''" + type + "'' (" + file + ")", e);
+                if (errorMessages) DebugConsole.ThrowError("Could not find the component ''" + type + "'' (" + file + ")", e);
                 return null;
             }
 
             ConstructorInfo constructor;
             try
             {
-                if (t!=typeof(ItemComponent) && !t.IsSubclassOf(typeof(ItemComponent))) return null;
+                if (t != typeof(ItemComponent) && !t.IsSubclassOf(typeof(ItemComponent))) return null;
                 constructor = t.GetConstructor(new Type[] { typeof(Item), typeof(XElement) });
                 if (constructor == null)
                 {

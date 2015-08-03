@@ -35,8 +35,12 @@ namespace Subsurface.Particles
         {
             name = element.Name.ToString();
 
-            string spritePath = ToolBox.GetAttributeString(element, "sprite", "");
-            sprite = new Sprite(spritePath, new Vector2(0.5f,0.5f));
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLower() != "sprite") continue;
+
+                sprite = new Sprite(subElement);
+            }
 
             angularVelocityMin = ToolBox.GetAttributeFloat(element, "angularvelocitymin", 0.0f);
             angularVelocityMax = ToolBox.GetAttributeFloat(element, "angularvelocitymax", 0.0f);

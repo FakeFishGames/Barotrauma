@@ -82,7 +82,14 @@ namespace Subsurface.Particles
             color = prefab.startColor;
             alpha = prefab.startAlpha;
             
-            velocityChange = prefab.velocityChange;            
+            velocityChange = prefab.velocityChange;
+
+            if (prefab.rotateToDirection)
+            {
+                this.rotation = MathUtils.VectorToAngle(new Vector2(velocity.X, -velocity.Y));
+
+                prevRotation = rotation;
+            }
         }
 
         public bool Update(float deltaTime)
@@ -93,7 +100,10 @@ namespace Subsurface.Particles
 
             if (prefab.rotateToDirection)
             {
-                rotation = MathUtils.VectorToAngle(velocity);
+                if (velocityChange != Vector2.Zero || angularVelocity != 0.0f)
+                {
+                    rotation = MathUtils.VectorToAngle(new Vector2(velocity.X, -velocity.Y));
+                }
             }
             else
             {
@@ -153,15 +163,17 @@ namespace Subsurface.Particles
             drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
 
 
-            spriteBatch.Draw(
-                prefab.sprite.Texture, 
-                drawPosition, 
-                null, 
-                color*alpha, 
-                drawRotation, 
-                prefab.sprite.origin, 
-                size,
-                SpriteEffects.None, prefab.sprite.Depth);
+            prefab.sprite.Draw(spriteBatch, drawPosition, color*alpha, drawRotation, size.X, SpriteEffects.None, prefab.sprite.Depth);
+
+            //spriteBatch.Draw(
+            //    prefab.sprite.Texture, 
+            //    drawPosition, 
+            //    null, 
+            //    color*alpha, 
+            //    drawRotation, 
+            //    prefab.sprite.origin, 
+            //    size,
+            //    SpriteEffects.None, prefab.sprite.Depth);
 
             prevPosition = position;
             prevRotation = rotation;

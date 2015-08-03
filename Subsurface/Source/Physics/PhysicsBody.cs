@@ -285,17 +285,22 @@ namespace Subsurface
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null)
+        public void UpdateDrawPosition()
         {
-            if (!body.Enabled) return;
-
-            SpriteEffects spriteEffect = (dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-
             drawPosition = Physics.Interpolate(prevPosition, body.Position);
             drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
 
             drawRotation = Physics.Interpolate(prevRotation, body.Rotation);
+        }
 
+        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null)
+        {
+            if (!body.Enabled) return;
+
+            UpdateDrawPosition();
+
+            SpriteEffects spriteEffect = (dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            
             sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), color, -drawRotation, 1.0f, spriteEffect, depth);
 
             //prevPosition = body.Position;

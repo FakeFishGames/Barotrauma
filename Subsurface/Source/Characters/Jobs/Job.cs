@@ -56,6 +56,11 @@ namespace Subsurface
             get { return prefab.ItemNames; }
         }
 
+        public List<bool> EquipSpawnItem
+        {
+            get { return prefab.EquipItem; }
+        }
+
         public List<Skill> Skills
         {
             get { return skills.Values.ToList(); }

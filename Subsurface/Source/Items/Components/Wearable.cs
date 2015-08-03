@@ -5,9 +5,21 @@ using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
 {
+    class WearableSprite
+    {
+        public Sprite Sprite;
+        public bool HideLimb;
+
+        public WearableSprite(Sprite sprite, bool hideLimb)
+        {
+            Sprite = sprite;
+            HideLimb = hideLimb;
+        }
+    }
+
     class Wearable : Pickable
     {
-        Sprite[] sprite;
+        WearableSprite[] wearableSprite;
         LimbType[] limbType;
         Limb[] limb;
 
@@ -18,7 +30,7 @@ namespace Subsurface.Items.Components
 
             var sprites = element.Elements().Where(x => x.Name.ToString() == "sprite").ToList();
             int spriteCount = sprites.Count();
-            sprite = new Sprite[spriteCount];
+            wearableSprite = new WearableSprite[spriteCount];
             limbType = new LimbType[spriteCount];
             limb = new Limb[spriteCount];
 
@@ -40,7 +52,8 @@ namespace Subsurface.Items.Components
                 string spritePath = subElement.Attribute("texture").Value;
                 spritePath = Path.GetDirectoryName( item.Prefab.ConfigFile)+"\\"+spritePath;
 
-                sprite[i] = new Sprite(subElement, "", spritePath);
+                var sprite = new Sprite(subElement, "", spritePath);
+                wearableSprite[i] = new WearableSprite(sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false));
                 //sprite[i].origin = new Vector2(sourceRect.Width / 2.0f, sourceRect.Height / 2.0f);
 
                 limbType[i] = (LimbType)Enum.Parse(typeof(LimbType),
@@ -53,7 +66,7 @@ namespace Subsurface.Items.Components
         public override void Equip(Character character)
         {
             picker = character;
-            for (int i = 0; i < sprite.Length; i++ )
+            for (int i = 0; i < wearableSprite.Length; i++ )
             {
                 Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
@@ -64,7 +77,7 @@ namespace Subsurface.Items.Components
                     equipLimb.WearingItem.Unequip(character);
                 }
 
-                sprite[i].Depth = equipLimb.sprite.Depth - 0.001f;
+                //sprite[i].Depth = equipLimb.sprite.Depth - 0.001f;
 
                 item.body.Enabled = false;
 
@@ -72,7 +85,7 @@ namespace Subsurface.Items.Components
 
                 limb[i] = equipLimb;
                 equipLimb.WearingItem = item;
-                equipLimb.WearingItemSprite = sprite[i];
+                equipLimb.WearingItemSprite = wearableSprite[i];
             }
         }
 
@@ -89,7 +102,7 @@ namespace Subsurface.Items.Components
         public override void Unequip(Character character)
         {
             if (picker == null) return;
-            for (int i = 0; i < sprite.Length; i++)
+            for (int i = 0; i < wearableSprite.Length; i++)
             {
                 Limb equipLimb = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;

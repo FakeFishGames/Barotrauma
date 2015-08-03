@@ -213,7 +213,7 @@ namespace Subsurface
             EditCharacterScreen =   new EditCharacterScreen();
         yield return Status.Running;
 
-            ParticleManager = new ParticleManager("Content/Particles/prefabs.xml", Cam);
+            ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", Cam);
         yield return Status.Running;
 
             GUIComponent.Init(Window);
@@ -262,7 +262,7 @@ namespace Subsurface
 
                 if (NetworkMember != null)
                 {
-                    NetworkMember.Update();
+                    NetworkMember.Update((float)deltaTime);
                 }
                 else
                 {
@@ -298,8 +298,6 @@ namespace Subsurface
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
             }
 
-            //renderTimeElapsed = (int)renderTimer.Elapsed.Ticks;
-            //renderTimer.Stop();
             if (sw.Elapsed.TotalSeconds < Physics.step)
             {
                 System.Threading.Thread.Sleep((int)((Physics.step - sw.Elapsed.TotalSeconds)*1000.0));

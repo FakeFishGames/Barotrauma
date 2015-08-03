@@ -5,6 +5,7 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Subsurface.Items.Components;
 
 namespace Subsurface
 {
@@ -60,7 +61,7 @@ namespace Subsurface
         private Direction dir;
 
         private Item wearingItem;
-        private Sprite wearingItemSprite;
+        private WearableSprite wearingItemSprite;
 
         private Vector2 animTargetPos;
 
@@ -154,7 +155,7 @@ namespace Subsurface
             set { wearingItem = value; }
         }
 
-        public Sprite WearingItemSprite
+        public WearableSprite WearingItemSprite
         {
             get { return wearingItemSprite; }
             set { wearingItemSprite = value; }
@@ -184,7 +185,7 @@ namespace Subsurface
                 body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionMisc;
             }
 
-            impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 8.0f);
+            impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 10.0f);
 
             body.UserData = this;
 
@@ -398,16 +399,28 @@ namespace Subsurface
             Color color = Color.White;// new Color(1.0f, 1.0f - damage / maxHealth, 1.0f - damage / maxHealth);
 
             body.Dir = Dir;
-            body.Draw(spriteBatch, sprite, color);
+
+            if (wearingItem == null || !wearingItemSprite.HideLimb)
+            {
+                body.Draw(spriteBatch, sprite, color);
+            }
+            else
+            {
+                body.UpdateDrawPosition();
+            }
             
             if (wearingItem != null)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-                wearingItemSprite.Draw(spriteBatch,
+
+                Vector2 origin = wearingItemSprite.Sprite.Origin;
+                if (body.Dir == -1.0f) origin.X = wearingItemSprite.Sprite.SourceRect.Width - origin.X;
+
+                wearingItemSprite.Sprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color,
+                    color, origin,
                     -body.DrawRotation,
-                    1.0f, spriteEffect);
+                    1.0f, spriteEffect, sprite.Depth - 0.000001f);
             }
 
             if (!Game1.DebugDraw) return;

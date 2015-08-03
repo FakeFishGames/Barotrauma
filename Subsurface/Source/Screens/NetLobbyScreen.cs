@@ -221,7 +221,6 @@ namespace Subsurface
             serverName.Enabled = Game1.Server != null;
             serverName.OnTextChanged = ChangeServerName;
 
-
             serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
             serverMessage.Wrap = true;
             serverMessage.TextGetter = GetServerMessage;
@@ -266,10 +265,10 @@ namespace Subsurface
                 if (subList.CountChildren > 0) subList.Select(0);
                 if (GameModePreset.list.Count > 0) modeList.Select(0);                
             }
-            else
+            else if (playerFrame.children.Count==0)
             {
                 int x = playerFrame.Rect.Width / 2;
-
+                
                 playerFrame.ClearChildren();
 
                 new GUITextBlock(new Rectangle(x, 0, 200, 30), "Name: ", GUI.style, playerFrame);
@@ -312,7 +311,6 @@ namespace Subsurface
                 UpdateJobPreferences(jobList);
 
                 UpdatePreviewPlayer(Game1.Client.CharacterInfo);
-
             }
 
             base.Select();
@@ -594,13 +592,13 @@ namespace Subsurface
             msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
-            msg.Write(playerList.CountChildren - 1);
-            for (int i = 1; i < playerList.CountChildren; i++)
-            {
-                Client client = playerList.children[i].UserData as Client;
-                msg.Write(client.ID);
-                msg.Write(client.assignedJob==null ? "" : client.assignedJob.Name);
-            }
+            //msg.Write(playerList.CountChildren - 1);
+            //for (int i = 1; i < playerList.CountChildren; i++)
+            //{
+            //    Client client = playerList.children[i].UserData as Client;
+            //    msg.Write(client.ID);
+            //    msg.Write(client.assignedJob==null ? "" : client.assignedJob.Name);
+            //}
 
         }
 
@@ -642,48 +640,48 @@ namespace Subsurface
 
             LevelSeed = levelSeed;
 
-            try
-            {
-                int playerCount = msg.ReadInt32();            
+            //try
+            //{
+            //    int playerCount = msg.ReadInt32();            
             
-                for (int i = 0; i < playerCount; i++)
-                {
-                    int clientID = msg.ReadInt32();
-                    string jobName = msg.ReadString();
+            //    for (int i = 0; i < playerCount; i++)
+            //    {
+            //        int clientID = msg.ReadInt32();
+            //        string jobName = msg.ReadString();
                 
-                    Client client = null;
-                    GUITextBlock textBlock = null;
-                    foreach (GUIComponent child in playerList.children)
-                    {
-                        Client tempClient = child.UserData as Client;
-                        if (tempClient == null || tempClient.ID != clientID) continue;
+            //        Client client = null;
+            //        GUITextBlock textBlock = null;
+            //        foreach (GUIComponent child in playerList.children)
+            //        {
+            //            Client tempClient = child.UserData as Client;
+            //            if (tempClient == null || tempClient.ID != clientID) continue;
 
-                        client = tempClient;
-                        textBlock = child as GUITextBlock;
-                        break;
-                    }
-                    if (client == null) continue;
+            //            client = tempClient;
+            //            textBlock = child as GUITextBlock;
+            //            break;
+            //        }
+            //        if (client == null) continue;
                 
-                    client.assignedJob = JobPrefab.List.Find(jp => jp.Name == jobName);
+            //        client.assignedJob = JobPrefab.List.Find(jp => jp.Name == jobName);
                                 
-                    textBlock.Text = client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")");
+            //        textBlock.Text = client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")");
 
-                    if (client.assignedJob==null || jobName != client.assignedJob.Name)
-                    {
-                        if (clientID == Game1.Client.ID)
-                        {
-                            Game1.Client.CharacterInfo.Job = new Job(client.assignedJob);
-                            Game1.Client.CharacterInfo.Name = client.name;
-                            UpdatePreviewPlayer(Game1.Client.CharacterInfo);
-                        }
-                    }
-                }
-            }
+            //        if (client.assignedJob==null || jobName != client.assignedJob.Name)
+            //        {
+            //            if (clientID == Game1.Client.ID)
+            //            {
+            //                Game1.Client.CharacterInfo.Job = new Job(client.assignedJob);
+            //                Game1.Client.CharacterInfo.Name = client.name;
+            //                UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+            //            }
+            //        }
+            //    }
+            //}
 
-            catch
-            {
-                return;
-            }
+            //catch
+            //{
+            //    return;
+            //}
 
         }
 
