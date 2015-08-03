@@ -22,6 +22,8 @@ namespace Subsurface.Items.Components
 
         float lightBrightness;
 
+        private float flicker;
+
         [Editable, HasDefaultValue(100.0f, true)]
         public float Range
         {
@@ -29,6 +31,16 @@ namespace Subsurface.Items.Components
             set
             {
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+            }
+        }
+        
+        [HasDefaultValue(0.0f, false)]
+        public float Flicker
+        {
+            get { return flicker; }
+            set
+            {
+                flicker = MathHelper.Clamp(value, 0.0f, 1.0f);
             }
         }
 
@@ -61,7 +73,7 @@ namespace Subsurface.Items.Components
                 string dir = Path.GetDirectoryName(item.Prefab.ConfigFile)+"\\";
                 for (int i = 0; i<4; i++)
                 {
-                    sparkSounds[i] = Sound.Load(dir+"zap"+(i+1)+".ogg");
+                    sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap"+(i+1)+".ogg");
                 }
             }
 
@@ -89,7 +101,7 @@ namespace Subsurface.Items.Components
             }
 
             Pickable pickable = item.GetComponent<Pickable>();
-            if (item.container!= null || (pickable!=null && pickable.Picker!=null))
+            if (item.container!= null)
             {
                 light.Color = Color.Transparent;
                 return;
@@ -114,7 +126,7 @@ namespace Subsurface.Items.Components
                 lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(voltage, 1.0f), 0.1f);
             }
 
-            light.Color = lightColor * lightBrightness;
+            light.Color = lightColor * lightBrightness * (1.0f-Rand.Range(0.0f,Flicker));
 
             light.Range = range * (float)Math.Sqrt(lightBrightness);
 

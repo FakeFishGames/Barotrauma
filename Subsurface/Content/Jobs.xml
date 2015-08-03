@@ -2,6 +2,10 @@
 <Jobs>
   <Captain description="The Commanding Officer with authority over the entire crew." minnumber="1" maxnumber="1">
     <Item name="ID Card"/>
+    <Item name="Captain's Cap" equip="true"/>
+    <Item name="Captain's Jacket" equip="true"/>
+    <Item name="Captain's Trousers" equip="true"/>
+    
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Construction" level="10,20"/>

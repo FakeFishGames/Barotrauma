@@ -27,13 +27,9 @@
 
     <Body width="16" height="9"/>
 
-    <Holdable aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
-
-    <Pickable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
-      <requireditem name="Wrench" type="Equipped"/>
-    </Pickable>
 
     <ItemContainer capacity="1" itempos="0,0" hideitems="false">
       <Containable name="explosive"/>

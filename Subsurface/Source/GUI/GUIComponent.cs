@@ -339,6 +339,16 @@ namespace Subsurface
             if (children.Contains(child)) children.Remove(child);            
         }
 
+        public GUIComponent FindChild(object userData)
+        {
+            foreach (GUIComponent child in children)
+            {
+                if (child.userData == userData) return child;
+            }
+
+            return null;
+        }
+
         public virtual void ClearChildren()
         {
             children.Clear();

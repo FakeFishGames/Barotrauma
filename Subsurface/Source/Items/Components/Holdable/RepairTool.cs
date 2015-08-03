@@ -19,6 +19,8 @@ namespace Subsurface.Items.Components
 
         Vector2 barrelPos;
 
+        private string particles;
+
         float structureFixAmount, limbFixAmount;
 
         [HasDefaultValue(0.0f, false)]
@@ -40,6 +42,13 @@ namespace Subsurface.Items.Components
         {
             get { return limbFixAmount; }
             set { limbFixAmount = value; }
+        }
+
+        [HasDefaultValue("", false)]
+        public string Particles
+        {
+            get { return particles; }
+            set { particles = value; }
         }
 
         [HasDefaultValue("0.0,0.0", false)]
@@ -178,12 +187,17 @@ namespace Subsurface.Items.Components
         {
             if (!isActive) return;
 
-            Vector2 particleSpeed =  new Vector2(
-                (float)Math.Cos(item.body.Rotation),
-                (float)Math.Sin(item.body.Rotation)) *item.body.Dir * 5.0f;
+            //Vector2 particleSpeed =  new Vector2(
+            //    (float)Math.Cos(item.body.Rotation),
+            //    (float)Math.Sin(item.body.Rotation)) *item.body.Dir * 0.1f;
 
-            Game1.ParticleManager.CreateParticle("weld", TransformedBarrelPos, particleSpeed);
 
+            if (!string.IsNullOrWhiteSpace(particles))
+            {
+                Game1.ParticleManager.CreateParticle(particles, TransformedBarrelPos, 
+                    -item.body.Rotation + ((item.body.Dir>0.0f) ? 0.0f : MathHelper.Pi), 0.0f);
+            }
+            
             //Vector2 startPos = ConvertUnits.ToDisplayUnits(item.body.Position);
             //Vector2 endPos = ConvertUnits.ToDisplayUnits(pickedPosition);
             //endPos = new Vector2(endPos.X + Game1.localRandom.Next(-2, 2), endPos.Y + Game1.localRandom.Next(-2, 2));

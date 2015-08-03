@@ -172,13 +172,9 @@ namespace Subsurface
                 }
 
                 return sourceIndex;
-            }
-
-            
+            }           
 
             return SoundManager.Loop(this, sourceIndex, position, volume, volume);
-            
-            //return UpdatePosition(newIndex, position, range, volume);
 
         }
 

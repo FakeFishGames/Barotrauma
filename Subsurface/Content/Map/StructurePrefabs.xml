@@ -5,6 +5,40 @@
   <smallhorizontalback sprite="Content/Map/testroom.png" sourcerect="0,64,896,32" depth ="0.4" 
   width = "128" height ="32" resizehorizontal="true"/>
 
+  <largeverticalback sprite="Content/Map/testroom.png" sourcerect="0,96,64,448" depth ="0.4"
+    width = "64" height ="128" resizevertical="true"/>
+  <largeverticalback2 sprite="Content/Map/testroom.png" sourcerect="64,96,64,448" depth ="0.4"
+    width = "64" height ="128" resizevertical="true"/>
+
+  <smallverticalback sprite="Content/Map/testroom.png" sourcerect="128,96,32,352" depth ="0.85"
+    width = "32" height ="128" resizevertical="true"/>
+  <smallverticalback2 sprite="Content/Map/testroom.png" sourcerect="160,96,32,352" depth ="0.85"
+    width = "32" height ="128" resizevertical="true"/>
+
+  <engineeringLabel sprite="Content/Map/testroom.png" sourcerect="464,336,153,16" depth ="0.99"
+    width = "153" height ="16"/>
+
+  <commandLabel sprite="Content/Map/testroom.png" sourcerect="464,352,128,16" depth ="0.99"
+    width = "128" height ="16"/>
+
+  <airlockLabel sprite="Content/Map/testroom.png" sourcerect="464,368,199,16" depth ="0.99"
+    width = "99" height ="16"/>
+  
+  <cabinsLabel sprite="Content/Map/testroom.png" sourcerect="464,384,83,16" depth ="0.99"
+    width = "83" height ="16"/>
+
+  <arrowUp sprite="Content/Map/testroom.png" sourcerect="592,367,16,16" depth ="0.99"
+    width = "16" height ="16"/>
+
+  <arrowDown sprite="Content/Map/testroom.png" sourcerect="608,367,16,16" depth ="0.99"
+    width = "16" height ="16"/>
+
+  <arrowLeft sprite="Content/Map/testroom.png" sourcerect="592,383,16,16" depth ="0.99"
+  width = "16" height ="16"/>
+
+  <arrowRight sprite="Content/Map/testroom.png" sourcerect="608,383,16,16" depth ="0.99"
+    width = "16" height ="16"/>
+
   <leftwall sprite="Content/Map/testroom.png" sourcerect="688,368,32,496" depth ="0.05" castshadow="true"
   width = "32" height ="64" resizevertical="true" fliphorizontal="true" body="true" health="500"/>
 
@@ -31,16 +65,6 @@
 
   <platform sprite="Content/Map/testroom.png" sourcerect="896,64,128,32" depth ="0.9"
   width = "64" height ="32" resizehorizontal="true" body="true" platform="true"/>
-
-  <largeverticalback sprite="Content/Map/testroom.png" sourcerect="0,96,64,448" depth ="0.4" 
-  width = "64" height ="128" resizevertical="true"/>
-  <largeverticalback2 sprite="Content/Map/testroom.png" sourcerect="64,96,64,448" depth ="0.4" 
-  width = "64" height ="128" resizevertical="true"/>
-
-  <smallverticalback sprite="Content/Map/testroom.png" sourcerect="128,96,32,352" depth ="0.85" 
-  width = "32" height ="128" resizevertical="true"/>
-  <smallverticalback2 sprite="Content/Map/testroom.png" sourcerect="160,96,32,352" depth ="0.85" 
-  width = "32" height ="128" resizevertical="true"/>
 
   <roughbgwall sprite="Content/Map/testroom.png" sourcerect="200,104,240,240" depth = "1.0"
   width="64" height="64" resizehorizontal="true" resizevertical="true"/>

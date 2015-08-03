@@ -7,14 +7,14 @@
            stepsize="42.0, 12.0">
     
     <!-- head -->
-    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="3.0">
+    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="4.0">
       <sprite texture="Content/Characters/Human/[GENDER]head[HEADID].png" sourcerect="1,1,37,38" depth="0.04" origin="0.5,0.5"/>
     </limb>
     <!-- body -->
-    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3" impacttolerance="5.0">
+    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3" impacttolerance="6.0">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="0,0,29,58" depth="0.05" origin="0.5,0.6"/>
     </limb>
-    <limb id = "12" radius="13" mass = "20" type="Waist" impacttolerance="5.0">
+    <limb id = "12" radius="13" mass = "20" type="Waist" impacttolerance="6.0">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,0,32,29" depth="0.045" origin="0.5,0.5"/>
     </limb>
     

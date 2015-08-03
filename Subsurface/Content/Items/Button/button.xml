@@ -6,8 +6,10 @@
   price="10">
 
   <Sprite texture ="button.png" depth="0.8"/>
-  
-  <Controller userpos="0" direction ="None" canbepicked = "true">
+
+  <Body width="32" height="32"/>
+
+  <Controller userpos="0" direction ="None" canbepicked = "true" msg="Open [E]">
     <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
   </Controller>
 
@@ -15,5 +17,10 @@
     <RequiredItem name="Screwdriver" type="Equipped"/>
     <output name="signal_out"/>
   </ConnectionPanel>
+
+  <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]"
+            aimpos="35,-10" handle1="0,0" attachable="true" attachedbydefault="true" aimable="true">
+    <requireditem name="Wrench" type="Equipped"/>
+  </Holdable>
  
 </Item>

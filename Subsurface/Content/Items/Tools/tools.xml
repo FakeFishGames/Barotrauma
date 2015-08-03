@@ -15,9 +15,11 @@
     <Holdable slots="Any,BothHands"
               aimpos="50,0" handle1="-17,0" handle2="8,0"/>
 
-    <RepairTool structurefixamount="50.0" range="80" barrelpos="19,8">
+    <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="weld">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems name="Welding Fuel Tank" type="Contained" msg="Welding fuel required"/>
+
+      <sound file="weldingTool.ogg" type="OnUse" range="500.0"/>
 
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-0.7"/>
@@ -34,6 +36,10 @@
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
         <Explosion range="5" damage="20" stun="10" force="5.0"/>
       </StatusEffect>
+
+      <LightComponent color="1.0,0.9,0.7,1.0" Flicker="0.5">
+        <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
+      </LightComponent>
     </RepairTool>
 
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->    
@@ -56,10 +62,12 @@
     <Holdable slots="Any,RightHand,LeftHand" 
               aimpos="50,0" handle1="-12,4"/>
 
-    <RepairTool structurefixamount="-10.0" range="50" barrelpos="19,8">
+    <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="plasma">
       <RequiredItems name="Oxygen Tank" type="Contained" msg="Oxygen tank required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-0.7"/>
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-10.0"/>
+
+      <sound file="plasmaCutter.ogg" type="OnUse" range="500.0"/>
 
       <Fixable name="structure"/>
 
@@ -68,6 +76,10 @@
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
         <Explosion range="5" damage="20" stun="10" force="5.0"/>
       </StatusEffect>
+
+      <LightComponent color="1.0,1.0,1.0,1.0" Flicker="0.5">
+        <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
+      </LightComponent>
     </RepairTool>
 
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">

@@ -238,7 +238,7 @@ namespace Subsurface
             }
 
             float startDepth = 0.1f;
-            float increment = 0.0001f;
+            float increment = 0.001f;
 
             foreach (Character otherCharacter in Character.CharacterList)
             {
@@ -248,7 +248,7 @@ namespace Subsurface
 
             foreach (Limb limb in limbs)
             {
-                limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.00001f;
+                limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
             }
         }
           

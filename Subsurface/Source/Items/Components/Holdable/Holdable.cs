@@ -14,8 +14,6 @@ namespace Subsurface.Items.Components
 
         string prevMsg;
         
-        //protected Character picker;
-
         //the distance from the holding characters elbow to center of the physics body of the item
         protected Vector2 holdPos;
 
@@ -23,8 +21,7 @@ namespace Subsurface.Items.Components
 
         protected bool aimable;
 
-        private bool attachable;
-        private bool attached;
+        private bool attachable, attached, attachedByDefault;
         private PhysicsBody body;
 
         //the angle in which the character holds the item
@@ -49,6 +46,13 @@ namespace Subsurface.Items.Components
         {
             get { return attachable; }
             set { attachable = value; }
+        }
+
+        [HasDefaultValue(false, false)]
+        public bool AttachedByDefault
+        {
+            get { return attachedByDefault; }
+            set { attachedByDefault = value; }
         }
 
         [HasDefaultValue("0.0,0.0", false)]
@@ -96,6 +100,8 @@ namespace Subsurface.Items.Components
                 requiredItems.Clear();
                 Msg = "";
             }
+
+            if (attachedByDefault) Use(1.0f);
 
 
             //holdAngle = ToolBox.GetAttributeFloat(element, "holdangle", 0.0f);

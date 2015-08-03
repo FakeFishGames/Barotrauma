@@ -44,6 +44,7 @@ namespace Subsurface.Networking
             name = newName;
 
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name);
+            characterInfo.Job = null;
 
             otherClients = new List<Client>();
 
@@ -121,6 +122,7 @@ namespace Subsurface.Networking
 
         private bool RetryConnection(GUIButton button, object obj)
         {
+            if (client != null) client.Shutdown("Disconnecting");
             ConnectToServer(serverIP);
             return true;
         }
@@ -175,6 +177,7 @@ namespace Subsurface.Networking
                                 Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
 
                                 Game1.NetLobbyScreen.AddPlayer(otherClient);
+                                otherClients.Add(otherClient);
                             }
 
                             //add the name of own client to the lobby screen
@@ -230,20 +233,9 @@ namespace Subsurface.Networking
             yield return Status.Success;
         }
 
-        public override void Update()
+        public override void Update(float deltaTime)
         {
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            //if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.K))
-            //{
-            //    SendRandomData();
-            //}
-            //if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.L))
-            //{
-            //    ConnectToServer(serverIP);
-            //}
-
-
-            if (gameStarted) inGameHUD.Update((float)Physics.step);
+            base.Update(deltaTime);
 
             if (!connected || updateTimer > DateTime.Now) return;
             
@@ -341,17 +333,15 @@ namespace Subsurface.Networking
                         //myCharacter = ReadCharacterData(inc);
                         //Character.Controlled = myCharacter;                       
 
+                        List<Character> crew = new List<Character>();
+
                         int count = inc.ReadInt32();
                         for (int n = 0; n < count; n++)
                         {
                             int id = inc.ReadInt32();
-                            Character newCharacter = ReadCharacterData(inc);
+                            Character newCharacter = ReadCharacterData(inc, id == myID);
 
-                            if (id == myID)
-                            {
-                                myCharacter = newCharacter;
-                                Character.Controlled = myCharacter;   
-                            }
+                            crew.Add(newCharacter);
                         }
 
                         gameStarted = true;
@@ -359,6 +349,8 @@ namespace Subsurface.Networking
                         Game1.GameScreen.Select();
 
                         AddChatMessage("Press TAB to chat", ChatMessageType.Server);
+
+                        CreateCrewFrame(crew);
 
                         break;
                     case (byte)PacketTypes.EndGame:
@@ -370,6 +362,7 @@ namespace Subsurface.Networking
                         Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
 
                         Game1.NetLobbyScreen.AddPlayer(otherClient);
+                        otherClients.Add(otherClient);
 
                         AddChatMessage(otherClient.name + " has joined the server", ChatMessageType.Server);
 
@@ -459,7 +452,7 @@ namespace Subsurface.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        private Character ReadCharacterData(NetIncomingMessage inc)
+        private Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter)
         {
             string newName      = inc.ReadString();
             int ID              = inc.ReadInt32();
@@ -494,15 +487,19 @@ namespace Subsurface.Networking
             }
 
             Character character = (closestWaypoint == null) ?
-                new Character(ch, position) :
-                new Character(ch, closestWaypoint);
+                new Character(ch, position, true) :
+                new Character(ch, closestWaypoint, true);
 
             character.ID = ID;
             character.Inventory.ID = inventoryID;
-
-            character.IsNetworkPlayer = true;
-
+            
             character.GiveJobItems(closestWaypoint);
+
+            if (isMyCharacter)
+            {
+                myCharacter = character;
+                Character.Controlled = character;   
+            }
 
             return character;
         }

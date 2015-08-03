@@ -418,10 +418,12 @@ namespace Subsurface
 
         public void GiveJobItems(WayPoint spawnPoint)
         {
-            if (Info == null || Info.Job == null) return;
-            
-            foreach (string itemName in Info.Job.SpawnItemNames)
+            if (info == null || info.Job == null) return;
+
+            for (int i = 0; i < info.Job.SpawnItemNames.Count; i++ )
             {
+                string itemName = info.Job.SpawnItemNames[i];
+
                 ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
                 if (itemPrefab == null)
                 {
@@ -431,14 +433,18 @@ namespace Subsurface
 
                 Item item = new Item(itemPrefab, Position);
                 inventory.TryPutItem(item, item.AllowedSlots, false);
-                
-                if (item.Prefab.Name == "ID Card" && spawnPoint!=null)
+
+                if (info.Job.EquipSpawnItem[i])
+                {
+                    item.Equip(this);
+                }
+
+                if (item.Prefab.Name == "ID Card" && spawnPoint != null)
                 {
                     foreach (string s in spawnPoint.IdCardTags)
                     {
-                        
                         item.AddTag(s);
-                    }                    
+                    }
                 }
             }            
         }
@@ -476,8 +482,7 @@ namespace Subsurface
                 if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
                 
                 if (actionKeyDown.State) selectedItems[i].Use(deltaTime, this);
-                if (secondaryKeyDown.State && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
-                
+                if (secondaryKeyDown.State && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
             }
 
             if (selectedConstruction != null)
@@ -906,6 +911,8 @@ namespace Subsurface
                 }
             }
 
+            health = 0.0f;
+
             isDead = true;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
@@ -914,7 +921,6 @@ namespace Subsurface
             {
                 if (selectedItems[i] != null) selectedItems[i].Drop(this);            
             }
-
                 
             aiTarget.Remove();
             aiTarget = null;

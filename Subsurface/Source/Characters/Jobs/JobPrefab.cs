@@ -28,6 +28,7 @@ namespace Subsurface
         
         //names of the items the character spawns with
         public List<string> ItemNames;
+        public List<bool> EquipItem;
 
         public Dictionary<string, Vector2> Skills;
 
@@ -63,6 +64,7 @@ namespace Subsurface
             AllowAlways = ToolBox.GetAttributeBool(element, "allowalways", false);
 
             ItemNames = new List<string>();
+            EquipItem = new List<bool>();
 
             Skills = new Dictionary<string, Vector2>();
 
@@ -72,7 +74,12 @@ namespace Subsurface
                 {
                     case "item":
                         string itemName = ToolBox.GetAttributeString(subElement, "name", "");
-                        if (!string.IsNullOrEmpty(itemName)) ItemNames.Add(itemName);
+                        bool equipItem = ToolBox.GetAttributeBool(subElement, "equip", false);
+                        if (!string.IsNullOrEmpty(itemName))
+                        {
+                            ItemNames.Add(itemName);
+                            EquipItem.Add(equipItem);
+                        }
                         break;
                     case "skills":
                         LoadSkills(subElement);

@@ -172,21 +172,26 @@ namespace Subsurface
             int x = 0, y = 0;
             new GUITextBlock(new Rectangle(x+80, y, 200, 20), Name, GUI.style, frame);
             y += 20;
-            new GUITextBlock(new Rectangle(x+80, y, 200, 20), Job.Name, GUI.style, frame);
-            y += 30;
 
-            var skills = Job.Skills;
-            skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
-
-            new GUITextBlock(new Rectangle(x, y, 200, 20), "Skills:", GUI.style, frame);
-            y += 20;
-            foreach (Skill skill in skills)
+            if (Job!=null)
             {
-                Color textColor = Color.White * (0.5f + skill.Level/200.0f);
-                new GUITextBlock(new Rectangle(x+20, y, 200, 20), skill.Name, Color.Transparent, textColor, Alignment.Left, GUI.style, frame);
-                new GUITextBlock(new Rectangle(x + 20, y, 200, 20), skill.Level.ToString(), Color.Transparent, textColor, Alignment.Right, GUI.style, frame);
+                new GUITextBlock(new Rectangle(x+80, y, 200, 20), Job.Name, GUI.style, frame);
+                y += 30;
+
+                var skills = Job.Skills;
+                skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
+
+                new GUITextBlock(new Rectangle(x, y, 200, 20), "Skills:", GUI.style, frame);
                 y += 20;
+                foreach (Skill skill in skills)
+                {
+                    Color textColor = Color.White * (0.5f + skill.Level/200.0f);
+                    new GUITextBlock(new Rectangle(x+20, y, 200, 20), skill.Name, Color.Transparent, textColor, Alignment.Left, GUI.style, frame);
+                    new GUITextBlock(new Rectangle(x + 20, y, 200, 20), skill.Level.ToString(), Color.Transparent, textColor, Alignment.Right, GUI.style, frame);
+                    y += 20;
+                }
             }
+
 
             return frame;
         }

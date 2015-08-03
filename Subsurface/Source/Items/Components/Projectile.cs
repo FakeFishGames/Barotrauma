@@ -136,26 +136,7 @@ namespace Subsurface.Items.Components
 
         private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            //doesn't collide with items
-            //if (f2.Body.UserData is Item) return false;
-
             if (ignoredBodies.Contains(f2.Body)) return false;
-
-            //Structure structure = f1.Body.UserData as Structure;
-            //if (structure!=null && (structure.IsPlatform || structure.StairDirection != Direction.None)) return false;
-
-            //Vector2 force = f1.Body.LinearVelocity * f1.Body.Mass;
-            //float forceLength = force.Length();
-
-            //if (forceLength > 20.0f)
-            //{
-            //    force = force / forceLength * 20.0f;
-            //}
-
-            //f2.Body.ApplyLinearImpulse(force);
-            //f1.Body.ApplyLinearImpulse(-f1.Body.LinearVelocity * f1.Body.Mass);
-
-            //float damage = f1.Body.LinearVelocity.Length();
 
             AttackResult attackResult = new AttackResult(0.0f, 0.0f);
             if (attack!=null)
@@ -193,6 +174,11 @@ namespace Subsurface.Items.Components
                     (float)Math.Sin(item.body.Rotation));
 
                 if (Vector2.Dot(f1.Body.LinearVelocity, normal)<0 ) return StickToTarget(f2.Body, dir);
+            }
+
+            foreach (Item contained in item.ContainedItems)
+            {
+                contained.Condition = 0.0f;
             }
 
             return true;
