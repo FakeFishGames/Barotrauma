@@ -51,7 +51,7 @@
 
     <Sprite texture ="railgunloader.png" depth =" 0.8"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="5" itempos="54,-61" iteminterval="40,0" itemrotation="-90" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="5" itempos="54,-61" iteminterval="40,0" itemrotation="90" canbeselected = "true">
       <Containable name="Railgun Shell"/>
     </ItemContainer>
       

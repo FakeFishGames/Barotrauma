@@ -29,6 +29,9 @@ namespace Subsurface.Networking
 
             config = new NetPeerConfiguration("subsurface");
 
+            //config.SimulatedLoss = 0.2f;
+            //config.SimulatedMinimumLatency = 0.25f;
+
             config.Port = port;
 
             config.EnableUPnP = true;
@@ -531,6 +534,8 @@ namespace Subsurface.Networking
 
         public void NewTraitor(Client traitor, Client target)
         {
+            new GUIMessageBox("New traitor", traitor.name + " is the traitor and the target is " + target+".");
+
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.Traitor);
             msg.Write(target.name);

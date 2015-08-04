@@ -25,7 +25,7 @@
       <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-0.7"/>
 
       <!-- welding a door, it will get stuck after a while -->
-      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="10.0"/>
+      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="20.0" Condition="3.0"/>
       
       <Fixable name="structure"/>
 
@@ -65,7 +65,7 @@
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="plasma">
       <RequiredItems name="Oxygen Tank" type="Contained" msg="Oxygen tank required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-0.7"/>
-      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-10.0"/>
+      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-20.0" Condition="-3.0"/>
 
       <sound file="plasmaCutter.ogg" type="OnUse" range="500.0"/>
 

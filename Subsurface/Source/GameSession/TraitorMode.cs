@@ -64,7 +64,7 @@ namespace Subsurface
                 if (target.character.IsDead)
                 {
                     string endMessage = traitor.character.Info.Name + " was a traitor! ";
-                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "his" : "her";
+                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
                     endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was succesful.";
                     End(endMessage);
                 }
