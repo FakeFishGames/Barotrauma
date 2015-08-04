@@ -4,16 +4,16 @@ www.undertowgames.com/subsurface
 Copyright © Undertow Games 2015
 
 Controls:
-WASD		-	move
-Shift		-	run
-E			-	use/activate items and devices
-Right click	-	aim with equipped item
-Left click	-	use equipped item
-Tab			-	select/deselect the chat box in multiplayer mode
-F3			-	open/close console
+WASD			-	move
+Shift			-	run
+E				-	use/activate items and devices
+Right click		-	aim with equipped item
+Left click		-	use equipped item
+Tab				-	select/deselect the chat box in multiplayer mode
+F3				-	open/close console
 
 See the wiki for more detailed info and instructions:
-http://subsurface.wikia.com/wiki/Subsurface_Wiki
+http://subsurface.gamepedia.com
 
 ------------------------------------------------------------------------
 
