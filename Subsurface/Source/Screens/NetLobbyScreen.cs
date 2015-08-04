@@ -149,7 +149,7 @@ namespace Subsurface
             int columnX = 0;
 
             new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Selected submarine:", GUI.style, infoFrame);
-            subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, 200), Color.White, GUI.style, infoFrame);
+            subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), Color.White, GUI.style, infoFrame);
             subList.OnSelected = SelectMap;
 
             if (Submarine.SavedSubmarines.Count > 0)
@@ -176,7 +176,7 @@ namespace Subsurface
             //gamemode ------------------------------------------------------------------
 
             new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
-            modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, 200), GUI.style, infoFrame);
+            modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), GUI.style, infoFrame);
             
             foreach (GameModePreset mode in GameModePreset.list)
             {
@@ -297,11 +297,11 @@ namespace Subsurface
                     GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
                     jobText.UserData = job;
 
-                    GUIButton upButton = new GUIButton(new Rectangle(0, 0, 20, 20), "u", GUI.style, jobText);
+                    GUIButton upButton = new GUIButton(new Rectangle(0, 0, 15, 15), "u", GUI.style, jobText);
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
-                    GUIButton downButton = new GUIButton(new Rectangle(25, 0, 20, 20), "d", GUI.style, jobText);
+                    GUIButton downButton = new GUIButton(new Rectangle(25, 0, 15, 15), "d", GUI.style, jobText);
                     downButton.UserData = 1;
                     downButton.OnClicked += ChangeJobPreference;
                 }

@@ -252,7 +252,14 @@ namespace Subsurface
                     break;
                 case "savemap":
                     if (commands.Length < 2) break;
-                    Submarine.SaveCurrent("Content/SavedMaps/" + string.Join(" ", commands.Skip(1))+".gz");
+
+                    string fileName = string.Join(" ", commands.Skip(1));
+                    if (fileName.Contains("../"))
+                    {
+                        DebugConsole.ThrowError("Illegal symbols in filename (../)");
+                        return;
+                    }
+                    Submarine.SaveCurrent("Content/SavedMaps/" + fileName +".gz");
                     NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":

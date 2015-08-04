@@ -1,0 +1,33 @@
+
+---------------------------------------------------------------------------------------------------------
+v0.1.1
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- player names are shown
+	- assigning jobs and selecting job preferences works now (jobs are assigned when the round starts)	
+	- a menu that shows the crew members and their jobs and skills
+	- reduced lag spikes
+	- fixed a bug that caused disconnected players to stay in the player list
+	- server admin can see which player is the traitor
+
+Items:
+	- plasma cutter / welding tool bugfixes and some light & sound effects
+	- stun grenades, detonators and c4 blocks work now
+	- captain's uniform
+	- items can be placed inside railgun shells (explosives for example)
+	- buttons can be attached and detached
+	- on-screen message when trying to use a button without the right ID card
+	- wire sprites don't overlap and "flicker" on top of each other anymore
+	- trying to set the color of a lightcomponent to an invalid value doesn't crash the game anymore
+
+Submarine:
+	- some signs on the walls of Aegir to make navigation a bit easier
+	- moved the railgun and changed the rotation limits to increase it's area of effect while preventing
+	shooting at the windows
+	- fixed waypoint selection bug in submarine editor
+	- the ".gz" extension is automatically added when saving a map
+
+Other:
+	- decreased fall/impact damage
+	- dead characters can be looted
