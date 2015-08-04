@@ -74,20 +74,25 @@ namespace Subsurface.Items.Components
         public override void Load(XElement element)
         {
             base.Load(element);
-
-            connections.Clear();
+                        
+            List<Connection> loadedConnections = new List<Connection>();
 
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
                     case "input":
-                        connections.Add(new Connection(subElement, item));
+                        loadedConnections.Add(new Connection(subElement, item));
                         break;
                     case "output":
-                        connections.Add(new Connection(subElement, item));
+                        loadedConnections.Add(new Connection(subElement, item));
                         break;
                 }
+            }
+            
+            for (int i = 0; i<loadedConnections.Count && i<connections.Count; i++)
+            {
+                loadedConnections[i].wireId.CopyTo(connections[i].wireId, 0);
             }
         }
 

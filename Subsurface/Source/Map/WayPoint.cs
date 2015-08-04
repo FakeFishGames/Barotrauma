@@ -73,7 +73,7 @@ namespace Subsurface
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD==null)
+            if (editingHUD == null || editingHUD.UserData != this)
             {
                 editingHUD = CreateEditingHUD();
             }

@@ -436,7 +436,7 @@ namespace Subsurface
 
             float dragCoefficient = 0.00001f;
 
-            float speedLength = speed.Length();
+            float speedLength = (speed == Vector2.Zero) ? 0.0f : speed.Length();
             float drag = speedLength * speedLength * dragCoefficient * mass;
 
             if (speed != Vector2.Zero)

@@ -194,6 +194,11 @@ namespace Subsurface
         {
             spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
         }
+
+        public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
+        {
+            spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
+        }
         
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Color color)
         {

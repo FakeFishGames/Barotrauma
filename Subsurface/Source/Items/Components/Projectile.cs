@@ -179,6 +179,10 @@ namespace Subsurface.Items.Components
             foreach (Item contained in item.ContainedItems)
             {
                 contained.Condition = 0.0f;
+                if (contained.body!=null)
+                {
+                    contained.body.SetTransform(item.SimPosition, contained.body.Rotation);
+                }
             }
 
             return true;

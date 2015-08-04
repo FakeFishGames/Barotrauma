@@ -124,7 +124,7 @@ namespace Subsurface.Items.Components
             Body targetBody = Submarine.PickBody(TransformedBarrelPos, targetPosition, ignoredBodies);
             pickedPosition = Submarine.LastPickedPosition;
 
-            if (targetBody==null || targetBody.UserData==null) return true;
+            if (targetBody == null || targetBody.UserData == null) return true;
 
             //ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
 

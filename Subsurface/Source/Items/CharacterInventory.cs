@@ -19,7 +19,8 @@ namespace Subsurface
 
         private static LimbSlot[] limbSlots = new LimbSlot[] { 
             LimbSlot.Head, LimbSlot.Torso, LimbSlot.Legs, LimbSlot.LeftHand, LimbSlot.RightHand,
-            LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any };
+            LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any,
+            LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any};
 
         private Vector2[] slotPositions;
 
@@ -52,12 +53,12 @@ namespace Subsurface
                     case 4:
                         slotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 3),
-                            Game1.GraphicsHeight - (spacing + rectHeight));
+                            Game1.GraphicsHeight - (spacing + rectHeight)*3);
                         break;
                     default:
                         slotPositions[i] = new Vector2(
-                            spacing * (4 + (i - 5)) + rectWidth * (3 + (i - 5)),
-                            Game1.GraphicsHeight - (spacing + rectHeight));
+                            spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 3)%5),
+                            Game1.GraphicsHeight - (spacing + rectHeight) * ((i>9) ? 2 : 1));
                         break;
                 }
             }
@@ -212,7 +213,7 @@ namespace Subsurface
             
         }
          
-        public override void Draw(SpriteBatch spriteBatch)
+        public void DrawOwn(SpriteBatch spriteBatch)
         {
             if (doubleClickedItem!=null &&  doubleClickedItem.inventory!=this)
             {
@@ -251,7 +252,7 @@ namespace Subsurface
                 slotRect.Y = (int)slotPositions[i].Y;
 
 
-                UpdateSlot(spriteBatch, slotRect, i, items[i], false);
+                UpdateSlot(spriteBatch, slotRect, i, items[i], i>4);
                 if (draggingItem!=null && draggingItem == items[i]) draggingItemSlot = slotRect;
             }
 

@@ -258,7 +258,6 @@ namespace Subsurface.Networking
                 {
                     Character.Controlled = null;
                     Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
-                    Game1.GameScreen.Cam.Zoom = 1.0f;
                 }
                 else
                 {

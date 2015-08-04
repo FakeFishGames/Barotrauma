@@ -161,9 +161,8 @@ namespace Subsurface.Particles
             float drawRotation = Physics.Interpolate(prevRotation, rotation);
 
             drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
-
-
-            prefab.sprite.Draw(spriteBatch, drawPosition, color*alpha, drawRotation, size.X, SpriteEffects.None, prefab.sprite.Depth);
+            
+            prefab.sprite.Draw(spriteBatch, drawPosition, color*alpha, prefab.sprite.origin, drawRotation, size, SpriteEffects.None, prefab.sprite.Depth);
 
             //spriteBatch.Draw(
             //    prefab.sprite.Texture, 
