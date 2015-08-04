@@ -23,7 +23,7 @@ namespace Subsurface
 
         private GUITextBox textBox, seedBox;
 
-        GUIFrame previewPlayer;
+        //GUIFrame previewPlayer;
 
         private GUIScrollBar durationBar;
 
@@ -40,7 +40,6 @@ namespace Subsurface
         {
             get { return subList.SelectedData as Submarine; }
         }
-
 
         public GameModePreset SelectedMode
         {
@@ -113,13 +112,13 @@ namespace Subsurface
 
             //server info panel ------------------------------------------------------------
 
-            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.6f), (int)(panelRect.Height * 0.6f)), GUI.style, menu);
+            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.7f), (int)(panelRect.Height * 0.6f)), GUI.style, menu);
             //infoFrame.Padding = GUI.style.smallPadding;
             
             //chatbox ----------------------------------------------------------------------
             GUIFrame chatFrame = new GUIFrame(
                 new Rectangle(0, (int)(panelRect.Height * 0.6f + 20),
-                    (int)(panelRect.Width * 0.6f),
+                    (int)(panelRect.Width * 0.7f),
                     (int)(panelRect.Height * 0.4f - 20)),
                 GUI.style, menu);
 
@@ -131,15 +130,15 @@ namespace Subsurface
             //player info panel ------------------------------------------------------------
 
             playerFrame = new GUIFrame(
-                new Rectangle((int)(panelRect.Width * 0.6f + 20), 0,
-                    (int)(panelRect.Width * 0.4f - 20), (int)(panelRect.Height * 0.6f)),
+                new Rectangle((int)(panelRect.Width * 0.7f + 20), 0,
+                    (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.6f)),
                 GUI.style, menu);
 
             //player list ------------------------------------------------------------------
 
             GUIFrame playerListFrame = new GUIFrame(
-                new Rectangle((int)(panelRect.Width * 0.6f + 20), (int)(panelRect.Height * 0.6f + 20),
-                    (int)(panelRect.Width * 0.4f - 20), (int)(panelRect.Height * 0.4f - 20)),
+                new Rectangle((int)(panelRect.Width * 0.7f + 20), (int)(panelRect.Height * 0.6f + 20),
+                    (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.4f - 20)),
                 GUI.style, menu);
 
             playerList = new GUIListBox(new Rectangle(0,0,0,0), null, GUI.style, playerListFrame);
@@ -266,49 +265,50 @@ namespace Subsurface
                 if (GameModePreset.list.Count > 0) modeList.Select(0);                
             }
             else if (playerFrame.children.Count==0)
-            {
-                int x = playerFrame.Rect.Width / 2;
-                
+            {                
                 playerFrame.ClearChildren();
 
-                new GUITextBlock(new Rectangle(x, 0, 200, 30), "Name: ", GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(60, 0, 200, 30), "Name: ", GUI.style, playerFrame);
 
-                GUITextBox playerName = new GUITextBox(new Rectangle(x, 30, 0, 20),
+                GUITextBox playerName = new GUITextBox(new Rectangle(60, 30, 0, 20),
                     Alignment.TopLeft, GUI.style, playerFrame);
                 playerName.Text = Game1.Client.CharacterInfo.Name;
                 playerName.OnEnter += ChangeCharacterName;
 
-                new GUITextBlock(new Rectangle(x, 70, 200, 30), "Gender: ", GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(0, 70, 200, 30), "Gender: ", GUI.style, playerFrame);
 
-                GUIButton maleButton = new GUIButton(new Rectangle(x, 100, 70, 20), "Male", 
+                GUIButton maleButton = new GUIButton(new Rectangle(0, 100, 70, 20), "Male", 
                     Alignment.TopLeft, GUI.style,playerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
-                GUIButton femaleButton = new GUIButton(new Rectangle(x+90, 100, 70, 20), "Female",
+                GUIButton femaleButton = new GUIButton(new Rectangle(90, 100, 70, 20), "Female",
                     Alignment.TopLeft, GUI.style, playerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-                new GUITextBlock(new Rectangle(x, 150, 200, 30), "Job preferences:", GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.style, playerFrame);
 
-                jobList = new GUIListBox(new Rectangle(x, 180, 150, 0), GUI.style, playerFrame);
+                jobList = new GUIListBox(new Rectangle(0, 180, 180, 0), GUI.style, playerFrame);
+                jobList.Enabled = false;
 
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, jobList);
+                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
                     jobText.UserData = job;
 
-                    GUIButton upButton = new GUIButton(new Rectangle(jobText.Rect.Width - 45, 0, 20, 20), "u", GUI.style, jobText);
+                    GUIButton upButton = new GUIButton(new Rectangle(0, 0, 20, 20), "u", GUI.style, jobText);
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
-                    GUIButton downButton = new GUIButton(new Rectangle(jobText.Rect.Width - 20, 0, 20, 20), "d", GUI.style, jobText);
+                    GUIButton downButton = new GUIButton(new Rectangle(25, 0, 20, 20), "d", GUI.style, jobText);
                     downButton.UserData = 1;
                     downButton.OnClicked += ChangeJobPreference;
                 }
 
                 UpdateJobPreferences(jobList);
+
+                //UpdatePreviewPlayer(Game1.Client.CharacterInfo);
 
                 UpdatePreviewPlayer(Game1.Client.CharacterInfo);
             }
@@ -407,7 +407,7 @@ namespace Subsurface
 
             menu.Draw(spriteBatch);
 
-            if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
+            //if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -455,13 +455,11 @@ namespace Subsurface
 
         private void UpdatePreviewPlayer(CharacterInfo characterInfo)
         {
-            previewPlayer = new GUIFrame(
-                new Rectangle(playerFrame.Rect.X + 20, playerFrame.Rect.Y + 20, 230, 300), 
-                new Color(0.0f, 0.0f, 0.0f, 0.8f), GUI.style);
-            previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            characterInfo.CreateInfoFrame(previewPlayer);
+            GUIComponent existing = playerFrame.FindChild("playerhead");
+            if (existing != null) playerFrame.RemoveChild(existing);
 
-            previewPlayer.UserData = characterInfo;
+            GUIImage image = new GUIImage(new Rectangle(0, 0, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, playerFrame);
+            image.UserData = "playerhead";
         }
 
         private bool SwitchGender(GUIButton button, object obj)

@@ -97,6 +97,7 @@ namespace Subsurface.Networking
             crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
             GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 200, 300), Color.White * 0.7f, GUI.style, crewFrame);
+            crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             crewList.OnSelected = SelectCharacter;
 
             foreach (Character character in crew)
