@@ -550,9 +550,7 @@ namespace Subsurface.Items.Components
 
         public virtual void Load(XElement componentElement)
         {
-            if (componentElement == null) return;
-
-            
+            if (componentElement == null) return;            
 
             foreach (XAttribute attribute in componentElement.Attributes())
             {

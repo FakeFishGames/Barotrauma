@@ -11,8 +11,8 @@
     <Body width="16" height="7"/>
 
     <Pickable slots="Any">
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
-        <Explosion range="10.0" structuredamage="600" damage="100" stun="5" force="20.0"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
+        <Explosion range="5.0" structuredamage="300" damage="200" stun="5" force="20.0"/>
       </StatusEffect>
     </Pickable>
   </Item>

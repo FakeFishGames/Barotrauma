@@ -5,7 +5,7 @@
 	Tags="smallitem"
 	pickdistance="150">
 
-	<Sprite texture ="idcard.png"/>
+	<Sprite texture ="idcard.png" depth="0.5f"/>
 
 	<Body width="16" height="16" density="10"/>
 

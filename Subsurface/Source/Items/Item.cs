@@ -450,13 +450,21 @@ namespace Subsurface
             {
                 if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;
 
-                if (!ic.WasUsed) ic.StopSounds(ActionType.OnUse);
-                ic.WasUsed = false;
+                //if (!ic.WasUsed)
+                //{
+                //    if (ic.Name == "RepairTool" && ic.IsActive)
+                //    {
+                //        System.Diagnostics.Debug.WriteLine("stop sounds");
+                //    }
+                //    ic.StopSounds(ActionType.OnUse);
+                //}
+                //ic.WasUsed = false;
                 
 
                 if (!ic.IsActive)
                 {
                     ic.StopSounds(ActionType.OnActive);
+                    ic.StopSounds(ActionType.OnUse);
                     continue;
                 }
                 if (condition > 0.0f)

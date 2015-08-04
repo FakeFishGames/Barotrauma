@@ -51,7 +51,7 @@
 
     <Sprite texture ="railgunloader.png" depth =" 0.8"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="5" itempos="54,-61" iteminterval="40,0" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="5" itempos="54,-61" iteminterval="40,0" itemrotation="-90" canbeselected = "true">
       <Containable name="Railgun Shell"/>
     </ItemContainer>
       
@@ -63,14 +63,17 @@
 
     <Sprite texture ="railgunshell.png" depth ="0.5"/>
 
-    <Body radius="9" height="67"/>
+    <Body width="87" height="18"/>
 
     <Holdable slots="BothHands" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
     
     <Projectile launchimpulse="80.0">
       <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
     </Projectile>
-    
+
+    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
+      <Containable name="smallitem"/>
+    </ItemContainer>    
   </Item>
 </Items>
 

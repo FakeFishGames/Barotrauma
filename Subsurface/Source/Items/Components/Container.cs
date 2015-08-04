@@ -58,8 +58,8 @@ namespace Subsurface.Items.Components
         [HasDefaultValue(0.0f, false)]
         public float ItemRotation
         {
-            get { return itemRotation; }
-            set { itemRotation = value; }
+            get { return MathHelper.ToDegrees(itemRotation); }
+            set { itemRotation = MathHelper.ToRadians(value); }
         }
         private float itemRotation;
 

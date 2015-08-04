@@ -183,6 +183,17 @@ namespace Subsurface.Items.Components
             if (!attachable || item.body==null) return true;
 
             item.Drop();
+
+            var containedItems = item.ContainedItems;
+            if (containedItems!=null)
+            {
+                foreach (Item contained in containedItems)
+                {
+                    if (contained.body == null) continue;
+                    contained.SetTransform(item.SimPosition, contained.body.Rotation);
+                }
+            }
+
             item.body.Enabled = false;
             item.body = null;
 

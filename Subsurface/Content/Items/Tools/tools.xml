@@ -77,7 +77,7 @@
         <Explosion range="5" damage="20" stun="10" force="5.0"/>
       </StatusEffect>
 
-      <LightComponent color="1.0,1.0,1.0,1.0" Flicker="0.5">
+      <LightComponent color="0.1,0.8,1.0,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
       </LightComponent>
     </RepairTool>

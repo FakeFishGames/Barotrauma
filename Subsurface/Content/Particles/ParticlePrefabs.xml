@@ -87,10 +87,10 @@
 
   <weld
     startsizemin="0.9,0.9" startsizemax="1.1,1.1"
-    sizechangemin="-0.1,-0.1" sizechangemax="0.1,0.1"
+    sizechangemin="-4.0,-0.1" sizechangemax="-4.0,-0.5"
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
-    colorchange="0.0, 0.0, -1.0, -5.0"
-    lifetime="0.5"
+    colorchange="0.0, 0.0, 0.0, -4.0"
+    lifetime="0.25"
     inwater="false"
     velocitychange="0.0, 0.0">
     <sprite texture="Content/Particles/flames.png" sourcerect="0,0,128,64" origin="0.15,0.5"/>
@@ -98,10 +98,10 @@
 
   <plasma
     startsizemin="0.9,0.9" startsizemax="1.1,1.1"
-    sizechangemin="-0.1,-0.1" sizechangemax="0.1,0.1"
+    sizechangemin="-4.0,-0.5" sizechangemax="-4.0,-0.5"
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
-    colorchange="0.0, 0.0, -1.0, -5.0"
-    lifetime="0.5"
+    colorchange="0.0, 0.0, 0.0, -4.0"
+    lifetime="0.25"
     inwater="false"
     velocitychange="0.0, 0.0">
     <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.15,0.5"/>

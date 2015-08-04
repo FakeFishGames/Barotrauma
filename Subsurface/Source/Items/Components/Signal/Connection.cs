@@ -28,7 +28,7 @@ namespace Subsurface.Items.Components
 
         private List<StatusEffect> effects;
 
-        int[] wireId;
+        public readonly int[] wireId;
 
         public List<Connection> Recipients
         {
@@ -463,7 +463,7 @@ namespace Subsurface.Items.Components
                 }
             }
 
-            wireId = null;
+            //wireId = null;
         }
 
     }

@@ -34,7 +34,7 @@ namespace Subsurface
 
         public readonly bool IsNetworkPlayer;
 
-        private Inventory inventory;
+        private CharacterInventory inventory;
 
         public double LastNetworkUpdate;
 
@@ -66,6 +66,7 @@ namespace Subsurface
         protected float maxHealth;
 
         protected Item closestItem;
+        private Character closestCharacter, selectedCharacter;
 
         protected bool isDead;
         
@@ -93,7 +94,6 @@ namespace Subsurface
         protected float soundInterval;
 
         private float bleeding;
-        //private float blood;
                 
         private Sound[] sounds;
         private float[] soundRange;
@@ -113,7 +113,7 @@ namespace Subsurface
             get { return AnimController.Mass; }
         }
 
-        public Inventory Inventory
+        public CharacterInventory Inventory
         {
             get { return inventory; }
         }
@@ -301,11 +301,11 @@ namespace Subsurface
 
         public Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
         {
-            selectKeyHit = new Key(false);
-            actionKeyDown = new Key(true);
-            actionKeyHit = new Key(false);
-            secondaryKeyHit = new Key(false);
-            secondaryKeyDown = new Key(true);
+            selectKeyHit        = new Key(false);
+            actionKeyDown       = new Key(true);
+            actionKeyHit        = new Key(false);
+            secondaryKeyHit     = new Key(false);
+            secondaryKeyDown    = new Key(true);
 
             selectedItems = new Item[2];
 
@@ -330,7 +330,7 @@ namespace Subsurface
             {
                 AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
                 AnimController.TargetDir = Direction.Right;
-                inventory = new CharacterInventory(10, this);
+                inventory = new CharacterInventory(15, this);
             }
             else
             {
@@ -432,11 +432,15 @@ namespace Subsurface
                 }
 
                 Item item = new Item(itemPrefab, Position);
-                inventory.TryPutItem(item, item.AllowedSlots, false);
 
                 if (info.Job.EquipSpawnItem[i])
                 {
-                    item.Equip(this);
+                    inventory.TryPutItem(item, 
+                        item.AllowedSlots.HasFlag(LimbSlot.Any) ? item.AllowedSlots & ~LimbSlot.Any : item.AllowedSlots, false);
+                }
+                else
+                {
+                    inventory.TryPutItem(item, item.AllowedSlots, false);
                 }
 
                 if (item.Prefab.Name == "ID Card" && spawnPoint != null)
@@ -460,8 +464,7 @@ namespace Subsurface
 
             //find the closest item if selectkey has been hit, or if the character is being
             //controlled by the player (in order to highlight it)
-            //closestItem = null;
-            if (controlled==this)
+            if (controlled == this)
             {
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cam.ScreenToWorld(PlayerInput.MousePosition));
                 closestItem = FindClosestItem(mouseSimPos);
@@ -473,6 +476,13 @@ namespace Subsurface
                     {
                         new NetworkEvent(NetworkEventType.PickItem, ID, true, closestItem.ID);
                     }
+                }
+
+                closestCharacter = FindClosestCharacter(mouseSimPos);
+                if (closestCharacter != selectedCharacter) selectedCharacter = null;
+                if (closestCharacter!=null)
+                {
+                    if (selectKeyHit.State) selectedCharacter = (selectedCharacter==null) ? closestCharacter : null;
                 }
             }
 
@@ -507,6 +517,31 @@ namespace Subsurface
             Vector2 pos = (torso.body.TargetPosition != Vector2.Zero) ? torso.body.TargetPosition : torso.SimPosition;
 
             return Item.FindPickable(pos, selectedConstruction == null ? mouseSimPos : selectedConstruction.SimPosition, null, selectedItems);
+        }
+
+        private Character FindClosestCharacter(Vector2 mouseSimPos, float maxDist = 150.0f)
+        {
+            Character closestCharacter = null;
+            float closestDist = 0.0f;
+
+            maxDist = ConvertUnits.ToSimUnits(maxDist);
+            
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c == this) continue;
+
+                if (Vector2.Distance(SimPosition, c.SimPosition) > maxDist) continue;
+
+                float dist = Vector2.Distance(mouseSimPos, c.SimPosition);
+                if (dist < maxDist && closestCharacter==null || dist<closestDist)
+                {
+                    closestCharacter = c;
+                    closestDist = dist;
+                    continue;
+                }
+            }
+
+            return closestCharacter;
         }
 
         /// <summary>
@@ -743,10 +778,10 @@ namespace Subsurface
         private static GUIProgressBar drowningBar, healthBar;
         public void DrawHud(SpriteBatch spriteBatch, Camera cam)
         {
-            if (drowningBar==null)
+            if (drowningBar == null)
             {
                 int width = 100, height = 20;
-                drowningBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight/2, width, height), Color.Blue, 1.0f);
+                drowningBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight / 2, width, height), Color.Blue, 1.0f);
 
                 healthBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight / 2 + 30, width, height), Color.Red, 1.0f);
             }
@@ -757,11 +792,26 @@ namespace Subsurface
             healthBar.BarSize = health / maxHealth;
             if (healthBar.BarSize < 1.0f) healthBar.Draw(spriteBatch);
 
-            if (Controlled.Inventory != null) Controlled.Inventory.Draw(spriteBatch);
+            if (Controlled.Inventory != null) Controlled.Inventory.DrawOwn(spriteBatch);
 
-            if (closestItem != null && selectedConstruction==null)
+            Color color = Color.Orange;
+
+            if (closestCharacter != null && closestCharacter.isDead)
             {
-                Color color = Color.Orange;
+                Vector2 startPos = Position + (closestCharacter.Position - Position) * 0.7f;
+                startPos = cam.WorldToScreen(startPos);
+
+                Vector2 textPos = startPos;
+
+                float stringWidth = GUI.Font.MeasureString(closestCharacter.Info.Name).X;
+                textPos -= new Vector2(stringWidth / 2, 20);
+                spriteBatch.DrawString(GUI.Font, closestCharacter.Info.Name, textPos, Color.Black);
+                spriteBatch.DrawString(GUI.Font, closestCharacter.Info.Name, textPos + new Vector2(1, -1), Color.Orange);
+
+                if (selectedCharacter==closestCharacter) closestCharacter.inventory.Draw(spriteBatch);
+            }
+            else if (closestItem != null && selectedConstruction==null)
+            {
 
                 Vector2 startPos = Position + (closestItem.Position - Position) * 0.7f;
                 startPos = cam.WorldToScreen(startPos);
@@ -782,7 +832,7 @@ namespace Subsurface
                     spriteBatch.DrawString(GUI.Font, coloredText.text, textPos + new Vector2(1, -1), coloredText.color);
 
                     textPos.Y += 25;
-                }                
+                }               
             }
             
         }

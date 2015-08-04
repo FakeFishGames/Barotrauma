@@ -274,12 +274,12 @@ namespace Subsurface.Items.Components
 
             for (int i = 1; i < Nodes.Count; i++)
             {
-                DrawSection(spriteBatch, Nodes[i], Nodes[i - 1], i, item.Color);
+                DrawSection(spriteBatch, Nodes[i], Nodes[i - 1], item.Color);
             }
 
             if (isActive && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
             {
-                DrawSection(spriteBatch, Nodes[Nodes.Count - 1], newNodePos, Nodes.Count, item.Color * 0.5f);
+                DrawSection(spriteBatch, Nodes[Nodes.Count - 1], newNodePos, item.Color * 0.5f);
                 //nodes.Add(newNodePos);
             }
 
@@ -333,7 +333,7 @@ selectedNodeIndex = null;
 
         }
 
-        private void DrawSection(SpriteBatch spriteBatch, Vector2 start, Vector2 end, int i, Color color)
+        private void DrawSection(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color)
         {
             start.Y = -start.Y;
             end.Y = -end.Y;
@@ -344,7 +344,7 @@ selectedNodeIndex = null;
                 new Vector2(0.0f, wireSprite.size.Y / 2.0f),
                 new Vector2((Vector2.Distance(start, end)) / wireSprite.Texture.Width, 0.3f),
                 SpriteEffects.None,
-                wireSprite.Depth + 0.1f + i * 0.00001f);
+                wireSprite.Depth + ((item.ID % 100) * 0.00001f));
         }
 
         public override XElement Save(XElement parentElement)
