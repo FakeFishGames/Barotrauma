@@ -33,6 +33,8 @@ namespace Subsurface.Networking
     {
         public const int DefaultPort = 14242;
 
+        public static string MasterServerUrl = Game1.Config.MasterServerUrl;
+
         protected static Color[] messageColor = { Color.White, Color.Red, Color.LightBlue, Color.LightGreen };
         
         protected string name;
@@ -223,6 +225,15 @@ namespace Subsurface.Networking
         }
 
         public virtual void Disconnect() { }
+
+        public static int ByteToPlayerCount(byte byteVal, out int maxPlayers)
+        {
+            maxPlayers = (byteVal >> 4)+1;
+
+            int playerCount = byteVal & (byte)((1 << 4) - 1);
+
+            return playerCount;
+        }
 
     }
 

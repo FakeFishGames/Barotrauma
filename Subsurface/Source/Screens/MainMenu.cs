@@ -9,7 +9,7 @@ namespace Subsurface
 {
     class MainMenuScreen : Screen
     {
-        public enum Tabs { Main = 0, NewGame = 1, LoadGame = 2, JoinServer = 3, HostServer = 4 }
+        public enum Tabs { Main = 0, NewGame = 1, LoadGame = 2, HostServer = 3 }
 
         private GUIFrame[] menuTabs;
         private GUIListBox mapList;
@@ -49,8 +49,8 @@ namespace Subsurface
             //button.Enabled = false;
 
             button = new GUIButton(new Rectangle(0, 120, 0, 30), "Join Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
-            button.UserData = (int)Tabs.JoinServer;
-            button.OnClicked = SelectTab;
+            //button.UserData = (int)Tabs.JoinServer;
+            button.OnClicked = JoinServerClicked;
 
             button = new GUIButton(new Rectangle(0, 180, 0, 30), "Host Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.HostServer;
@@ -143,19 +143,22 @@ namespace Subsurface
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tabs.JoinServer] = new GUIFrame(panelRect, GUI.style);
-            //menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
+            //menuTabs[(int)Tabs.JoinServer] = new GUIFrame(panelRect, GUI.style);
+            ////menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Join Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
+            //new GUITextBlock(new Rectangle(0, 0, 0, 30), "Join Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
-            clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
+            //new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
+            //clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
 
-            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
-            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
-            
-            GUIButton joinButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Join", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.JoinServer]);
-            joinButton.OnClicked = JoinServer;
+            //new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
+            //ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
+
+            //GUIButton joinButton = new GUIButton(new Rectangle(0, 200, 200, 30), "Join", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.JoinServer]);
+            //joinButton.OnClicked = JoinServer;
+
+            //GUIButton serverListButton = new GUIButton(new Rectangle(0, 0, 230, 30), "Server List", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.JoinServer]);
+            //serverListButton.OnClicked = ServerListClicked;
 
             //----------------------------------------------------------------------
 
@@ -176,7 +179,7 @@ namespace Subsurface
             hostButton.OnClicked = HostServerClicked;
 
             //----------------------------------------------------------------------
-            for (int i = 1; i < 5; i++ )
+            for (int i = 1; i < 4; i++ )
             {
                 button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.style, menuTabs[i]);
                 button.OnClicked = PreviousTab;
@@ -196,16 +199,28 @@ namespace Subsurface
             return true;
         }
 
+        private bool JoinServerClicked(GUIButton button, object obj)
+        {            
+            Game1.ServerListScreen.Select();
+            return true;
+        }
+
         private bool HostServerClicked(GUIButton button, object obj)
         {
             string name = serverNameBox.Text;
-            if (string.IsNullOrEmpty(name)) name = "Server";
+            if (string.IsNullOrEmpty(name))
+            {
+                serverNameBox.Flash();
+                return false;
+            }
 
             int port;
-            if (!int.TryParse(portBox.Text, out port))
+            if (!int.TryParse(portBox.Text, out port) || port < 0 || port > 65535)
             {
-                DebugConsole.ThrowError("ERROR: " + portBox.Text + " is not a valid port. Using the default port " + NetworkMember.DefaultPort);
-                port = NetworkMember.DefaultPort;
+                portBox.Text = NetworkMember.DefaultPort.ToString();
+                portBox.Flash();
+
+                return false;
             }
 
             Game1.NetworkMember = new GameServer(name, port);

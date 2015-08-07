@@ -38,7 +38,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Windows\Release\</OutputPath>
@@ -78,6 +78,7 @@
     <Compile Include="Source\Items\FixRequirement.cs" />
     <Compile Include="Source\Map\Lights\Light.cs" />
     <Compile Include="Source\Map\LocationType.cs" />
+    <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Utils\Rand.cs" />
     <Compile Include="Source\Events\PropertyTask.cs" />
     <Compile Include="Source\Events\RepairTask.cs" />
@@ -228,6 +229,9 @@
       <HintPath>.\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="RestSharp">
+      <HintPath>..\packages\RestSharp.105.1.0\lib\net4\RestSharp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
@@ -899,6 +903,7 @@
     <None Include="Content\Sounds\Water\WaterAmbience.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\SavedMaps\" />

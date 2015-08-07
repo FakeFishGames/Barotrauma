@@ -30,7 +30,10 @@ namespace Subsurface
         public static GameScreen            GameScreen;
         public static MainMenuScreen        MainMenuScreen;
         public static LobbyScreen           LobbyScreen;
+
         public static NetLobbyScreen        NetLobbyScreen;
+        public static ServerListScreen      ServerListScreen;
+
         public static EditMapScreen         EditMapScreen;
         public static EditCharacterScreen   EditCharacterScreen;
 
@@ -208,9 +211,13 @@ namespace Subsurface
 
             MainMenuScreen      =   new MainMenuScreen(this); 
             LobbyScreen         =   new LobbyScreen();
+
             NetLobbyScreen      =   new NetLobbyScreen();
+            ServerListScreen    =   new ServerListScreen();
+
             EditMapScreen       =   new EditMapScreen();
             EditCharacterScreen =   new EditCharacterScreen();
+
         yield return Status.Running;
 
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", Cam);
@@ -298,9 +305,10 @@ namespace Subsurface
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
             }
 
-            if (sw.Elapsed.TotalSeconds < Physics.step)
+            double elapsed =sw.Elapsed.TotalSeconds;
+            if (elapsed < Physics.step)
             {
-                System.Threading.Thread.Sleep((int)((Physics.step - sw.Elapsed.TotalSeconds)*1000.0));
+                System.Threading.Thread.Sleep((int)((Physics.step - elapsed) * 1000.0));
             }
             sw.Restart();
         }

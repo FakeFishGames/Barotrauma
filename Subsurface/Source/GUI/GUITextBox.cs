@@ -152,6 +152,7 @@ namespace Subsurface
         MouseState previousMouse;
         public override void Update(float deltaTime)
         {
+            if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
 
             caretTimer += deltaTime;
@@ -178,6 +179,8 @@ namespace Subsurface
                     
                 }
             }
+
+            textBlock.Update(deltaTime);
         }
 
         public override void Draw(SpriteBatch spriteBatch)

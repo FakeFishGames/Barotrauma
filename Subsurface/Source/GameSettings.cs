@@ -31,6 +31,12 @@ namespace Subsurface
             set;
         }
 
+        public string MasterServerUrl
+        {
+            get;
+            private set;
+        }
+
         public GameSettings(string filePath)
         {
             Load(filePath);
@@ -52,6 +58,9 @@ namespace Subsurface
                 GraphicsWidth = 1024;
                 GraphicsHeight = 768;
             }
+
+
+            MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 
             foreach (XElement subElement in doc.Root.Elements())
             {

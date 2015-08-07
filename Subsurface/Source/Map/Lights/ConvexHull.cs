@@ -17,26 +17,43 @@ namespace Subsurface.Lights
 
         bool[] backFacing;
         VertexPositionColor[] shadowVertices;
+
+        private Rectangle boundingBox;
         
         public bool Enabled
         {
             get;
             set;
         }
-        
+
+        public Rectangle BoundingBox
+        {
+            get { return boundingBox; }
+        }
+                
         public ConvexHull(Vector2[] points, Color color)
         {
             int vertexCount = points.Length;
             vertices = new VertexPositionColor[vertexCount + 1];
             Vector2 center = Vector2.Zero;
 
+            float? minX = null, minY = null, maxX = null, maxY = null;
+
             for (int i = 0; i < vertexCount; i++)
             {
                 vertices[i] = new VertexPositionColor(new Vector3(points[i], 0), color);
                 center += points[i];
+
+                if (minX == null || points[i].X < minX) minX = points[i].X;
+                if (minY == null || points[i].Y < minY) minY = points[i].Y;
+
+                if (maxX == null || points[i].X > maxX) maxX = points[i].X;
+                if (maxY == null || points[i].Y > minY) maxY = points[i].Y;
             }
             center /= points.Length;
             vertices[vertexCount] = new VertexPositionColor(new Vector3(center, 0), color);
+
+            boundingBox = new Rectangle((int)minX, (int)minY, (int)(maxX-minX), (int)(maxY-minY));
 
             primitiveCount = points.Length;
             indices = new short[primitiveCount * 3];

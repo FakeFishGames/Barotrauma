@@ -9,6 +9,8 @@ namespace Subsurface
 {
     abstract class GUIComponent
     {
+        const float FlashDuration = 1.5f;
+
         public static GUIComponent MouseOn;
         
         protected static KeyboardDispatcher keyboardDispatcher;
@@ -35,6 +37,8 @@ namespace Subsurface
         public List<GUIComponent> children;
 
         protected ComponentState state;
+
+        protected float flashTimer;
 
         public virtual SpriteFont Font
         {
@@ -200,11 +204,29 @@ namespace Subsurface
             return false;
         }
 
+        public void Flash()
+        {
+            flashTimer = FlashDuration;
+
+            foreach (GUIComponent child in children)
+            {
+                child.Flash();
+            }
+        }
+
         public virtual void Draw(SpriteBatch spriteBatch) 
         {
             Color currColor = color;
             if (state == ComponentState.Selected) currColor = selectedColor;
             if (state == ComponentState.Hover) currColor = hoverColor;
+
+            if (flashTimer>0.0f)
+            {
+                Color flashColor = Color.Red * (flashTimer / FlashDuration)*0.8f;
+
+                GUI.DrawRectangle(spriteBatch, 
+                    new Rectangle(rect.X-5,rect.Y-5,rect.Width+10,rect.Height+10), flashColor, true);
+            }
 
             GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
@@ -246,6 +268,8 @@ namespace Subsurface
 
         public virtual void Update(float deltaTime)
         {
+            if (flashTimer>0.0f) flashTimer -= deltaTime;
+
             if (CanBeFocused)
             {
                 if (rect.Contains(PlayerInput.MousePosition))

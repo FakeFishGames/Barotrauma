@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Subsurface.Lights
 {
@@ -56,15 +57,28 @@ namespace Subsurface.Lights
 
         public void DrawLOS(GraphicsDevice graphics, Camera cam, Vector2 pos)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
+
             if (!LosEnabled) return;
             foreach (ConvexHull convexHull in ConvexHull.list)
             {
+                if (!camView.Intersects(convexHull.BoundingBox)) continue;
+
                 convexHull.DrawShadows(graphics, cam, pos);
             }
+
+            long elapsed = sw.ElapsedTicks;
+            Debug.WriteLine("los: "+elapsed);
         }
 
         public void DrawLightmap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             graphics.SetRenderTarget(lightMap);
 
             Rectangle viewRect = cam.WorldView;
@@ -88,6 +102,7 @@ namespace Subsurface.Lights
 
                 foreach (ConvexHull ch in ConvexHull.list)
                 {
+                    if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, ch.BoundingBox)) continue;
                     //draw shadow
                     ch.DrawShadows(graphics, cam, light.Position, false);
                 }
@@ -101,6 +116,10 @@ namespace Subsurface.Lights
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);
             graphics.SetRenderTarget(null);
+
+
+            long elapsed = sw.ElapsedTicks;
+            Debug.WriteLine("lights: " + elapsed);
         }
 
         private void ClearAlphaToOne(GraphicsDevice graphics, SpriteBatch spriteBatch)
