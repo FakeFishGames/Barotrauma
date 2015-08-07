@@ -752,9 +752,14 @@ namespace Subsurface
 
         public void DrawFront(SpriteBatch spriteBatch)
         {
+            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
+            pos.Y = -pos.Y;
+            
+            if (this == Character.controlled) return;
+
             if (IsNetworkPlayer)
             {
-                Vector2 namePos = new Vector2(Position.X, -Position.Y - 80.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 80.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
                 spriteBatch.DrawString(GUI.Font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
                 spriteBatch.DrawString(GUI.Font, Info.Name, namePos, Color.White);
 
@@ -763,11 +768,6 @@ namespace Subsurface
                     spriteBatch.DrawString(GUI.Font, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
                 }
             }
-
-            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
-            pos.Y = -pos.Y;
-            
-            if (this == Character.controlled) return;
 
             Vector2 healthBarPos = new Vector2(Position.X - 50, -Position.Y - 50.0f);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);

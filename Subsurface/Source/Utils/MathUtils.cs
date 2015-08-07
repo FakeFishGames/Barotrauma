@@ -155,9 +155,7 @@ namespace Subsurface
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
         {
             Vector2 circleDistance = new Vector2(Math.Abs(circlePos.X - rect.Center.X), Math.Abs(circlePos.Y -rect.Center.Y));
-
-
-
+            
             if (circleDistance.X > (rect.Width / 2 + radius)) { return false; }
             if (circleDistance.Y > (rect.Height / 2 + radius)) { return false; }
 

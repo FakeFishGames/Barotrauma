@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using RestSharp;
 
 namespace Subsurface.Networking
 {
@@ -17,6 +18,11 @@ namespace Subsurface.Networking
         
         private TimeSpan SparseUpdateInterval = new TimeSpan(0, 0, 0, 1);
         private DateTime sparseUpdateTimer;
+
+        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 40);
+        private DateTime refreshMasterTimer;
+
+        private bool registeredToMaster;
 
         private Client myClient;
 
@@ -33,6 +39,7 @@ namespace Subsurface.Networking
             //config.SimulatedMinimumLatency = 0.25f;
 
             config.Port = port;
+            Port = port;
 
             config.EnableUPnP = true;
 
@@ -44,7 +51,7 @@ namespace Subsurface.Networking
             {
                 server = new NetServer(config);    
                 server.Start();
-
+                
                 // attempt to forward port
                 server.UPnP.ForwardPort(port, "subsurface");
 
@@ -55,10 +62,67 @@ namespace Subsurface.Networking
                 DebugConsole.ThrowError("Couldn't start the server", e);
             }
 
+            RegisterToMasterServer();
             
             updateInterval = new TimeSpan(0, 0, 0, 0, 30);
 
             DebugConsole.NewMessage("Server started", Color.Green);
+        }
+
+        private void RegisterToMasterServer()
+        {
+            var client = new RestClient(NetworkMember.MasterServerUrl);
+            
+            var request = new RestRequest("masterserver.php", Method.GET);            
+            request.AddParameter("action", "addserver");
+            request.AddParameter("servername", name);
+            request.AddParameter("serverport", Port);
+            request.AddParameter("playercount", PlayerCountToByte(connectedClients.Count, config.MaximumConnections));
+
+            // execute the request
+            RestResponse response = (RestResponse)client.Execute(request);
+
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
+                return;
+            }
+
+            if (response!=null && !string.IsNullOrWhiteSpace(response.Content))
+            {
+                DebugConsole.ThrowError("Error while connecting to master server (" +response.Content+")");
+                return;
+            }
+
+            registeredToMaster = true;
+            refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+        }
+
+        private void RefreshMaster()
+        {
+            var client = new RestClient(NetworkMember.MasterServerUrl);
+
+            var request = new RestRequest("masterserver.php", Method.GET);
+            request.AddParameter("action", "refreshserver");
+            request.AddParameter("gamestarted", gameStarted ? 1 : 0);
+            request.AddParameter("playercount", PlayerCountToByte(connectedClients.Count, config.MaximumConnections));
+            
+            System.Diagnostics.Debug.WriteLine("refreshing master");
+
+            var sw = new Stopwatch();
+            sw.Start();
+
+            RestResponse response = (RestResponse)client.Execute(request);
+
+            sw.Stop();
+            System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
+
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
+            }
+
+
         }
 
         public override void Update(float deltaTime)
@@ -91,6 +155,13 @@ namespace Subsurface.Networking
                 }
 
                 updateTimer = DateTime.Now + updateInterval;
+            }
+
+            if (registeredToMaster && refreshMasterTimer < DateTime.Now)
+            {
+                RefreshMaster();
+
+                refreshMasterTimer = DateTime.Now + refreshMasterInterval;
             }
         }
 
@@ -722,6 +793,16 @@ namespace Subsurface.Networking
             }
 
             return preferredClient;
+        }
+
+
+        private byte PlayerCountToByte(int playerCount, int maxPlayers)
+        {
+            byte byteVal = (byte)playerCount;
+
+            byteVal |= (byte)((maxPlayers-1) << 4);
+
+            return byteVal;
         }
 
         /// <summary>

@@ -145,7 +145,7 @@ namespace Subsurface
 
             //submarine list ------------------------------------------------------------------
 
-            int columnWidth = infoFrame.Rect.Width / 3 - 30;
+            int columnWidth = infoFrame.Rect.Width / 5 - 30;
             int columnX = 0;
 
             new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Selected submarine:", GUI.style, infoFrame);
@@ -177,7 +177,8 @@ namespace Subsurface
 
             new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
             modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), GUI.style, infoFrame);
-            
+
+
             foreach (GameModePreset mode in GameModePreset.list)
             {
                 if (mode.IsSinglePlayer) continue;
@@ -191,7 +192,18 @@ namespace Subsurface
                 textBlock.UserData = mode;
             }
 
-            columnX += columnWidth + 20;
+            columnX += columnWidth;
+
+            //gamemode description ------------------------------------------------------------------
+            
+
+            var modeDescription = new GUITextBlock(
+                new Rectangle(columnX, 150, (int)(columnWidth * 1.5f), infoFrame.Rect.Height - 150 - 80), 
+                "", Color.Black*0.3f, Color.White, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame, true);
+
+            modeList.UserData = modeDescription;
+
+            columnX += modeDescription.Rect.Width + 40;
 
             //duration ------------------------------------------------------------------
             
@@ -249,16 +261,18 @@ namespace Subsurface
             serverMessage.Enabled   = Game1.Server != null;
             ServerName = (Game1.Server==null) ? "Server" : Game1.Server.Name;
 
+            modeList.OnSelected += SelectMode;
+
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
 
             if (IsServer && Game1.Server != null)
             {
-                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.TopRight, GUI.style, infoFrame);
+                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomRight, GUI.style, infoFrame);
                 startButton.OnClicked = Game1.Server.StartGame;
                 startButton.UserData = "startButton";
                 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
-                modeList.OnSelected = Game1.Server.UpdateNetLobby;
+                modeList.OnSelected += Game1.Server.UpdateNetLobby;                
                 durationBar.OnMoved = Game1.Server.UpdateNetLobby;
 
                 if (subList.CountChildren > 0) subList.Select(0);
@@ -412,7 +426,6 @@ namespace Subsurface
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             spriteBatch.End();
-
         }
 
         public void NewChatMessage(string message, Color color)
@@ -477,6 +490,21 @@ namespace Subsurface
             UpdatePreviewPlayer(Game1.Client.CharacterInfo);
             return true;
         }
+
+        private bool SelectMode(object obj)
+        {
+            GameModePreset modePreset = obj as GameModePreset;
+            if (modePreset == null) return false;
+
+            GUITextBlock description = modeList.UserData as GUITextBlock;
+
+            description.Text = modePreset.Description;
+
+            //if (Game1.Server != null) Game1.Server.UpdateNetLobby(null);
+
+            return true;
+        }
+
 
         private bool SelectSeed(GUITextBox textBox, string seed)
         {
