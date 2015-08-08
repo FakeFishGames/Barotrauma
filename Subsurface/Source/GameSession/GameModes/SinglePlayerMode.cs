@@ -12,14 +12,14 @@ namespace Subsurface
     {
         //private const int StartCharacterAmount = 3;
 
-        public readonly CrewManager crewManager;
+        public readonly CrewManager CrewManager;
         //public readonly HireManager hireManager;
 
         private GUIButton endShiftButton;
 
         public readonly CargoManager CargoManager;
         
-        public Map map;
+        public Map Map;
 
         private bool crewDead;
         private float endTimer;
@@ -30,20 +30,20 @@ namespace Subsurface
         {
             get
             {
-                return map.SelectedConnection.Quest;
+                return Map.SelectedConnection.Quest;
             }
         }
 
         public int Money
         {
-            get { return crewManager.Money; }
-            set { crewManager.Money = value; }
+            get { return CrewManager.Money; }
+            set { CrewManager.Money = value; }
         }
 
         public SinglePlayerMode(GameModePreset preset)
             : base(preset)
         {
-            crewManager = new CrewManager();
+            CrewManager = new CrewManager();
 
             CargoManager = new CargoManager();
 
@@ -68,7 +68,7 @@ namespace Subsurface
 
                 CharacterInfo characterInfo =
                     new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab);
-                crewManager.characterInfos.Add(characterInfo);
+                CrewManager.characterInfos.Add(characterInfo);
             }
   
         }
@@ -80,19 +80,19 @@ namespace Subsurface
 
             GenerateMap(mapSeed);
 
-            map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
+            Map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
 
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLower() != "crew") continue;
                 
-                crewManager = new CrewManager(subElement);                
+                CrewManager = new CrewManager(subElement);                
             }
         }
 
         public void GenerateMap(string seed)
         {
-            map = new Map(seed, 500);
+            Map = new Map(seed, 500);
         }
 
         public override void Start(TimeSpan duration)
@@ -107,24 +107,24 @@ namespace Subsurface
 
             endTimer = 5.0f;
 
-            crewManager.StartShift();
+            CrewManager.StartShift();
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
         {
-            if (crewManager.Money < characterInfo.Salary) return false;
+            if (CrewManager.Money < characterInfo.Salary) return false;
 
             hireManager.availableCharacters.Remove(characterInfo);
-            crewManager.characterInfos.Add(characterInfo);
+            CrewManager.characterInfos.Add(characterInfo);
 
-            crewManager.Money -= characterInfo.Salary;
+            CrewManager.Money -= characterInfo.Salary;
 
             return true;
         }
 
         public string GetMoney()
         {
-            return ("Money: " + crewManager.Money);
+            return "Money: " + CrewManager.Money;
         }
 
 
@@ -132,16 +132,16 @@ namespace Subsurface
         {
             base.Draw(spriteBatch);
 
-            crewManager.Draw(spriteBatch);
+            CrewManager.Draw(spriteBatch);
 
             if (Level.Loaded.AtEndPosition)
             {
-                endShiftButton.Text = "Enter " + map.SelectedLocation.Name;
+                endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;
                 endShiftButton.Draw(spriteBatch);
             }
             else if (Level.Loaded.AtStartPosition)
             {
-                endShiftButton.Text = "Enter " + map.CurrentLocation.Name;
+                endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
                 endShiftButton.Draw(spriteBatch);
             }
 
@@ -157,13 +157,13 @@ namespace Subsurface
         {
             base.Update(deltaTime);
 
-            crewManager.Update(deltaTime);
+            CrewManager.Update(deltaTime);
 
             endShiftButton.Update(deltaTime);
 
             if (!crewDead)
             {
-                if (crewManager.characters.Find(c => !c.IsDead) == null)
+                if (CrewManager.characters.Find(c => !c.IsDead) == null)
                 {
                     crewDead = true;
                 }  
@@ -185,9 +185,9 @@ namespace Subsurface
 
 
             StringBuilder sb = new StringBuilder();
-            List<Character> casualties = crewManager.characters.FindAll(c => c.IsDead);
+            List<Character> casualties = CrewManager.characters.FindAll(c => c.IsDead);
 
-            if (casualties.Count == crewManager.characters.Count)
+            if (casualties.Count == CrewManager.characters.Count)
             {
                 sb.Append("Your entire crew has died!");
 
@@ -214,13 +214,13 @@ namespace Subsurface
 
                 if (Level.Loaded.AtEndPosition)
                 {
-                    map.MoveToNextLocation();
+                    Map.MoveToNextLocation();
                 }
 
                 SaveUtil.SaveGame(Game1.GameSession.SaveFile);
             }
 
-            crewManager.EndShift();
+            CrewManager.EndShift();
             for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
             {
                 Character.CharacterList[i].Remove();
@@ -241,10 +241,10 @@ namespace Subsurface
             //element.Add(new XAttribute("day", day));
             XElement modeElement = new XElement("gamemode");
 
-            modeElement.Add(new XAttribute("currentlocation", map.CurrentLocationIndex));
-            modeElement.Add(new XAttribute("mapseed", map.Seed));
+            modeElement.Add(new XAttribute("currentlocation", Map.CurrentLocationIndex));
+            modeElement.Add(new XAttribute("mapseed", Map.Seed));
 
-            crewManager.Save(modeElement);
+            CrewManager.Save(modeElement);
 
             element.Add(modeElement);
             

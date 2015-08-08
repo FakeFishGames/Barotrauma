@@ -230,7 +230,7 @@ namespace Subsurface
         private void UpdateCharacterLists()
         {
             characterList.ClearChildren();
-            foreach (CharacterInfo c in gameMode.crewManager.characterInfos)
+            foreach (CharacterInfo c in gameMode.CrewManager.characterInfos)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
@@ -282,7 +282,7 @@ namespace Subsurface
 
             CreateItemFrame(prefab, selectedItemList);
 
-            buyButton.Enabled = gameMode.crewManager.Money >= selectedItemCost;
+            buyButton.Enabled = gameMode.CrewManager.Money >= selectedItemCost;
 
             return false;
         }
@@ -301,9 +301,9 @@ namespace Subsurface
         {
             int cost =  selectedItemCost;
 
-            if (gameMode.crewManager.Money < cost) return false;
+            if (gameMode.CrewManager.Money < cost) return false;
 
-            gameMode.crewManager.Money -= cost;
+            gameMode.CrewManager.Money -= cost;
 
             for (int i = selectedItemList.children.Count-1; i>=0; i--)
             {
@@ -336,7 +336,7 @@ namespace Subsurface
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
 
-            if (characterList.CountChildren != gameMode.crewManager.characterInfos.Count)
+            if (characterList.CountChildren != gameMode.CrewManager.characterInfos.Count)
             {
                 UpdateCharacterLists();
             }
@@ -380,7 +380,7 @@ namespace Subsurface
         
         private string GetMoney()
         {
-            return "Money: " + ((Game1.GameSession == null) ? "" : gameMode.crewManager.Money.ToString());
+            return "Money: " + ((Game1.GameSession == null) ? "" : gameMode.CrewManager.Money.ToString());
         }
 
         private bool SelectCharacter(object selection)
