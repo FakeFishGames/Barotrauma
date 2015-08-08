@@ -158,8 +158,8 @@ namespace Subsurface
                         {
                             SinglePlayerMode mode = Game1.GameSession.gameMode as SinglePlayerMode;
                             if (mode == null) break;
-                            mode.crewManager.AddCharacter(Character.Controlled);
-                            mode.crewManager.SelectCharacter(Character.Controlled);
+                            mode.CrewManager.AddCharacter(Character.Controlled);
+                            mode.CrewManager.SelectCharacter(Character.Controlled);
                         }
                     }
                     else

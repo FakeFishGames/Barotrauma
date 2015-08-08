@@ -6,39 +6,9 @@ using System.Reflection;
 
 namespace Subsurface
 {
-    class GameModePreset
-    {
-        public static List<GameModePreset> list = new List<GameModePreset>();
-
-        public ConstructorInfo Constructor;
-        public string Name;
-        public bool IsSinglePlayer;
-
-        public string Description;
-
-        public GameModePreset(string name, Type type, bool isSinglePlayer = false)
-        {
-            this.Name = name;
-            //Constructor = constructor;
-
-
-            Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset)});
-
-            IsSinglePlayer = isSinglePlayer;
-
-            list.Add(this);
-        }
-
-        public GameMode Instantiate()
-        {
-            object[] lobject = new object[] { this };
-            return(GameMode)Constructor.Invoke(lobject);            
-        }
-    }
-
     class GameMode
     {
-        public static List<GameModePreset> presetList = new List<GameModePreset>();
+        public static List<GameModePreset> PresetList = new List<GameModePreset>();
 
         TimeSpan duration;
         protected DateTime startTime;
@@ -94,9 +64,6 @@ namespace Subsurface
         public GameMode(GameModePreset preset)
         {
             this.preset = preset;
-
-
-            //list.Add(this);
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)

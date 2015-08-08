@@ -51,7 +51,7 @@ namespace Subsurface
             get 
             {
                 SinglePlayerMode mode = (gameMode as SinglePlayerMode);
-                return (mode == null) ? null : mode.map;
+                return (mode == null) ? null : mode.Map;
             }
         }
                 
@@ -151,7 +151,7 @@ namespace Subsurface
         {
             SinglePlayerMode singlePlayerMode = gameMode as SinglePlayerMode;
             if (singlePlayerMode == null) return;
-            singlePlayerMode.crewManager.KillCharacter(character);
+            singlePlayerMode.CrewManager.KillCharacter(character);
         }
 
         public bool LoadPrevious(GUIButton button, object obj)
