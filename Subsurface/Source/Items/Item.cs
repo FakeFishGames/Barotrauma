@@ -121,6 +121,11 @@ namespace Subsurface
             }
         }
 
+        public AITarget AiTarget
+        {
+            get { return aiTarget; }
+        }
+
         public bool Updated
         {
             set 

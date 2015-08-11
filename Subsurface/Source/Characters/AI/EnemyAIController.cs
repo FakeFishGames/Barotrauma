@@ -48,7 +48,7 @@ namespace Subsurface
         //the limb selected for the current attack
         private Limb attackingLimb;
         
-        private AITarget selectedTarget;
+        private AITarget selectedAiTarget;
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
         
@@ -81,6 +81,15 @@ namespace Subsurface
 
             state = AiState.None;
         }
+
+        public override void SelectTarget(IDamageable target)
+        {
+            targetEntity = target;
+            selectedAiTarget = target.AiTarget;
+            selectedTargetMemory = FindTargetMemory(target.AiTarget);
+
+            targetValue = 100.0f;
+        }
         
         public override void Update(float deltaTime)
         {
@@ -98,7 +107,7 @@ namespace Subsurface
                 UpdateTargets(Character);
                 updateTargetsTimer = UpdateTargetsInterval;
 
-                if (selectedTarget == null)
+                if (selectedAiTarget == null)
                 {
                     state = AiState.None;
                 }
@@ -146,7 +155,7 @@ namespace Subsurface
         private void UpdateAttack(float deltaTime)
         {
 
-            if (selectedTarget == null) 
+            if (selectedAiTarget == null) 
             {
                 state = AiState.None;
                 return;
@@ -154,7 +163,7 @@ namespace Subsurface
             
             selectedTargetMemory.Priority -= deltaTime;
             
-            Vector2 attackPosition = selectedTarget.Position;
+            Vector2 attackPosition = selectedAiTarget.Position;
             if (wallAttackPos != Vector2.Zero) attackPosition = wallAttackPos;
 
             if (coolDownTimer>0.0f)
@@ -201,7 +210,7 @@ namespace Subsurface
 
             //System.Diagnostics.Debug.WriteLine("cooldown");
 
-            if (selectedTarget.Entity is Hull ||
+            if (selectedAiTarget.Entity is Hull ||
                 Vector2.Distance(attackPosition, Character.AnimController.limbs[0].SimPosition) < ConvertUnits.ToSimUnits(500.0f))
             {
                 steeringManager.SteeringSeek(attackPosition, -0.8f);
@@ -219,7 +228,7 @@ namespace Subsurface
             targetEntity = null;
             //check if there's a wall between the target and the character   
             Vector2 rayStart = Character.AnimController.limbs[0].SimPosition;
-            Vector2 rayEnd = selectedTarget.Position;
+            Vector2 rayEnd = selectedAiTarget.Position;
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
 
             if (Submarine.LastPickedFraction == 1.0f || closestBody == null)
@@ -272,7 +281,7 @@ namespace Subsurface
                     }                     
                     else
                     {
-                        damageTarget = selectedTarget.Entity as IDamageable;
+                        damageTarget = selectedAiTarget.Entity as IDamageable;
                     }
                     
                     attackTimer += deltaTime*0.05f;
@@ -323,14 +332,14 @@ namespace Subsurface
         {
             if (distanceAccumulator<5.0f && Rand.Range(1,3, false)==1)
             {
-                selectedTarget = null;
+                selectedAiTarget = null;
                 character.AnimController.TargetMovement = -character.AnimController.TargetMovement;
                 state = AiState.None;
                 return;
             }
             distanceAccumulator = 0.0f;
 
-            selectedTarget = null;
+            selectedAiTarget = null;
             selectedTargetMemory = null;
             targetValue = 0.0f;
 
@@ -409,13 +418,13 @@ namespace Subsurface
 
 
                     //float newTargetValue = valueModifier/dist;
-                    if (selectedTarget == null || Math.Abs(valueModifier) > Math.Abs(targetValue))
+                    if (selectedAiTarget == null || Math.Abs(valueModifier) > Math.Abs(targetValue))
                     {
-                        selectedTarget = target;
+                        selectedAiTarget = target;
                         selectedTargetMemory = targetMemory;
 
                         targetValue = valueModifier;
-                        Debug.WriteLine(selectedTarget.Entity+": "+targetValue);
+                        Debug.WriteLine(selectedAiTarget.Entity+": "+targetValue);
                     }
                 }
             }

@@ -38,26 +38,29 @@ namespace Subsurface
             menuTabs[(int)Tabs.Main] = new GUIFrame(panelRect, GUI.style);
             //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
-            GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "New Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button.OnClicked = TutorialButtonClicked;
+
+            button = new GUIButton(new Rectangle(0, 70, 0, 30), "New Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.NewGame;
             button.OnClicked = SelectTab;
             //button.Enabled = false;
 
-            button = new GUIButton(new Rectangle(0, 60, 0, 30), "Load Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 130, 0, 30), "Load Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.LoadGame;
             button.OnClicked = SelectTab;
             //button.Enabled = false;
 
-            button = new GUIButton(new Rectangle(0, 120, 0, 30), "Join Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 200, 0, 30), "Join Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             //button.UserData = (int)Tabs.JoinServer;
             button.OnClicked = JoinServerClicked;
 
-            button = new GUIButton(new Rectangle(0, 180, 0, 30), "Host Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 260, 0, 30), "Host Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.HostServer;
             button.OnClicked = SelectTab;
             //button.Enabled = false;
 
-            button = new GUIButton(new Rectangle(0, 240, 0, 30), "Quit", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 330, 0, 30), "Quit", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.OnClicked = QuitClicked;
 
             //----------------------------------------------------------------------
@@ -105,62 +108,6 @@ namespace Subsurface
             menuTabs[(int)Tabs.LoadGame] = new GUIFrame(panelRect, GUI.style);
             //menuTabs[(int)Tabs.LoadGame].Padding = GUI.style.smallPadding;
 
-            //new GUITextBlock(new Rectangle(0, 0, 0, 30), "Load Game", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.LoadGame]);
-
-            ////if (!Directory.Exists(SaveUtil.SaveFolder))
-            ////{
-            ////    DebugConsole.ThrowError("Save folder ''"+SaveUtil.SaveFolder+" not found! Attempting to create a new folder");
-            ////    try
-            ////    {
-            ////        Directory.CreateDirectory(SaveUtil.SaveFolder);
-            ////    }
-            ////    catch (Exception e)
-            ////    {
-            ////        DebugConsole.ThrowError("Failed to create the folder ''"+SaveUtil.SaveFolder+"''!", e);
-            ////    }
-            ////}
-
-            //string[] saveFiles = SaveUtil.GetSaveFiles();//Directory.GetFiles(SaveUtil.SaveFolder, "*.save");
-
-            ////new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected map:", Color.Transparent, Color.Black, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
-            //saveList = new GUIListBox(new Rectangle(0, 60, 200, 360), Color.White, GUI.style, menuTabs[(int)Tabs.LoadGame]);
-
-            //foreach (string saveFile in saveFiles)
-            //{
-            //    GUITextBlock textBlock = new GUITextBlock(
-            //        new Rectangle(0, 0, 0, 25),
-            //        saveFile,
-            //        GUI.style,
-            //        Alignment.Left,
-            //        Alignment.Left,
-            //        saveList);
-            //    textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-            //    textBlock.UserData = saveFile;
-            //}
-
-            //button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",Alignment.Right | Alignment.Bottom, GUI.style, menuTabs[(int)Tabs.LoadGame]);
-            //button.OnClicked = LoadGame;
-
-            //----------------------------------------------------------------------
-
-            //menuTabs[(int)Tabs.JoinServer] = new GUIFrame(panelRect, GUI.style);
-            ////menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
-
-            //new GUITextBlock(new Rectangle(0, 0, 0, 30), "Join Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
-
-            //new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
-            //clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
-
-            //new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.JoinServer]);
-            //ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.JoinServer]);
-
-            //GUIButton joinButton = new GUIButton(new Rectangle(0, 200, 200, 30), "Join", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.JoinServer]);
-            //joinButton.OnClicked = JoinServer;
-
-            //GUIButton serverListButton = new GUIButton(new Rectangle(0, 0, 230, 30), "Server List", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.JoinServer]);
-            //serverListButton.OnClicked = ServerListClicked;
-
-            //----------------------------------------------------------------------
 
             menuTabs[(int)Tabs.HostServer] = new GUIFrame(panelRect, GUI.style);
             //menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
@@ -196,6 +143,13 @@ namespace Subsurface
             if (selectedTab == (int)Tabs.LoadGame) UpdateLoadScreen();
 
             this.Select();
+            return true;
+        }
+
+        private bool TutorialButtonClicked(GUIButton button, object obj)
+        {
+            TutorialMode.Start();
+
             return true;
         }
 

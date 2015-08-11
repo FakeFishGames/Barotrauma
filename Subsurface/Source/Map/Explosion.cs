@@ -117,7 +117,7 @@ namespace Subsurface
             }
         }
 
-        private IEnumerable<Status> DimLight()
+        private IEnumerable<object> DimLight()
         {
             float currBrightness= 1.0f;
             float startRange = light.Range;

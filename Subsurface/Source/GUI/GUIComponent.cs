@@ -38,6 +38,7 @@ namespace Subsurface
 
         protected ComponentState state;
 
+        protected Color flashColor;
         protected float flashTimer;
 
         public virtual SpriteFont Font
@@ -204,9 +205,10 @@ namespace Subsurface
             return false;
         }
 
-        public void Flash()
+        public void Flash(Color? color = null)
         {
             flashTimer = FlashDuration;
+            flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;
 
             foreach (GUIComponent child in children)
             {
@@ -222,10 +224,9 @@ namespace Subsurface
 
             if (flashTimer>0.0f)
             {
-                Color flashColor = Color.Red * (flashTimer / FlashDuration)*0.8f;
-
                 GUI.DrawRectangle(spriteBatch, 
-                    new Rectangle(rect.X-5,rect.Y-5,rect.Width+10,rect.Height+10), flashColor, true);
+                    new Rectangle(rect.X-5,rect.Y-5,rect.Width+10,rect.Height+10), 
+                    flashColor * (flashTimer / FlashDuration), true);
             }
 
             GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);

@@ -135,7 +135,7 @@ namespace Subsurface.Items.Components
         {
             base.ReceiveSignal(signal, connection, sender, power);
 
-            if (connection.Name == "signal")
+            if (connection.Name.Length>5 && connection.Name.Substring(0, 6).ToLower() == "signal")
             {
                 connection.SendSignal(signal, sender, 0.0f);
             }

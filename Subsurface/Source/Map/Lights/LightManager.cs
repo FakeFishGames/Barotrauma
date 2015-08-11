@@ -57,9 +57,6 @@ namespace Subsurface.Lights
 
         public void DrawLOS(GraphicsDevice graphics, Camera cam, Vector2 pos)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
             Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
 
             if (!LosEnabled) return;
@@ -70,15 +67,10 @@ namespace Subsurface.Lights
                 convexHull.DrawShadows(graphics, cam, pos);
             }
 
-            long elapsed = sw.ElapsedTicks;
-            Debug.WriteLine("los: "+elapsed);
         }
 
         public void DrawLightmap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
             graphics.SetRenderTarget(lightMap);
 
             Rectangle viewRect = cam.WorldView;
@@ -116,10 +108,6 @@ namespace Subsurface.Lights
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);
             graphics.SetRenderTarget(null);
-
-
-            long elapsed = sw.ElapsedTicks;
-            Debug.WriteLine("lights: " + elapsed);
         }
 
         private void ClearAlphaToOne(GraphicsDevice graphics, SpriteBatch spriteBatch)

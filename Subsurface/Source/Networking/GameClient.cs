@@ -136,7 +136,7 @@ namespace Subsurface.Networking
         }
 
         // Before main looping starts, we loop here and wait for approval message
-        private IEnumerable<Status> WaitForStartingInfo()
+        private IEnumerable<object> WaitForStartingInfo()
         {
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;

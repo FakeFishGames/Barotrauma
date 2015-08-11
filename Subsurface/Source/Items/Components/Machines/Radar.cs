@@ -148,43 +148,16 @@ namespace Subsurface.Items.Components
                 screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width/screenOverlay.size.X);
             }
 
-            //if (Level.Loaded != null)
-            //{
+            if (Game1.GameSession == null) return;
 
-            //    for (int i = 0; i < 2; i++)
-            //    {
-            //        Vector2 targetPos = (i == 0) ? Level.Loaded.StartPosition : Level.Loaded.EndPosition;
-            //        targetPos += Level.Loaded.Position;
 
-            //        float dist = targetPos.Length();
+            DrawMarker(spriteBatch,
+                (Game1.GameSession.Map == null) ? "Start" : Game1.GameSession.Map.CurrentLocation.Name,
+                (Level.Loaded.StartPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
 
-            //        targetPos.Y = -targetPos.Y;
-            //        Vector2 markerPos = Vector2.Normalize(targetPos) * (rect.Width * 0.55f);
-            //        markerPos += center;
-
-            //        GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen);
-
-            //        string label;
-            //        if (Game1.GameSession.Map!=null)
-            //        {
-            //            label = (i == 0) ? Game1.GameSession.Map.CurrentLocation.Name : Game1.GameSession.Map.SelectedLocation.Name;
-            //        }
-            //        else
-            //        {
-            //            label = (i == 0) ? "Start" : "End";
-            //        }
-
-            //        spriteBatch.DrawString(GUI.SmallFont, label, new Vector2(markerPos.X + 10, markerPos.Y), Color.LightGreen);
-            //        spriteBatch.DrawString(GUI.SmallFont, (int)(dist / 80.0f) + " m", new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);
-            //    }
-
-                DrawMarker(spriteBatch, 
-                    (Game1.GameSession.Map == null) ? "Start" : Game1.GameSession.Map.CurrentLocation.Name,
-                    (Level.Loaded.StartPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
-
-                DrawMarker(spriteBatch,
-                    (Game1.GameSession.Map == null) ? "End" : Game1.GameSession.Map.SelectedLocation.Name,
-                    (Level.Loaded.EndPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
+            DrawMarker(spriteBatch,
+                (Game1.GameSession.Map == null) ? "End" : Game1.GameSession.Map.SelectedLocation.Name,
+                (Level.Loaded.EndPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
 
             if (Game1.GameSession.Quest != null)
             {

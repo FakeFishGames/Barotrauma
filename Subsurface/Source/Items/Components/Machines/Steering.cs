@@ -57,6 +57,11 @@ namespace Subsurface.Items.Components
             }
         }
 
+        public Vector2 CurrTargetVelocity
+        {
+            get { return targetVelocity; }
+        }
+
         public Steering(Item item, XElement element)
             : base(item, element)
         {

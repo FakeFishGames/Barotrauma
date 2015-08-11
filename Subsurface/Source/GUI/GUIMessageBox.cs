@@ -5,7 +5,7 @@ namespace Subsurface
 {
     class GUIMessageBox : GUIFrame
     {
-        public static Queue<GUIMessageBox> messageBoxes = new Queue<GUIMessageBox>();
+        public static Queue<GUIMessageBox> MessageBoxes = new Queue<GUIMessageBox>();
 
         const int DefaultWidth=400, DefaultHeight=200;
 
@@ -51,14 +51,14 @@ namespace Subsurface
                 x += this.Buttons[i].Rect.Width + 20;
             }
 
-            messageBoxes.Enqueue(this);
+            MessageBoxes.Enqueue(this);
         }
 
         public bool Close(GUIButton button, object obj)
         {
             if (parent != null) parent.RemoveChild(this);
 
-            messageBoxes.Dequeue();
+            MessageBoxes.Dequeue();
             return true;
         }
     }

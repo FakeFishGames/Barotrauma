@@ -132,21 +132,6 @@ namespace Subsurface.Items.Components
             Wires[index] = wire;
         }
 
-        //public bool AddLink(Item connectedItem, Connection otherConnection)
-        //{
-        //    if (linked.Contains(connectedItem)) return false;
-
-        //    for (int i = 0; i<MaxLinked; i++)
-        //    {
-        //        if (linked[i]!=null) continue;
-
-        //        linked[i] = connectedItem;
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
-
         public void SendSignal(string signal, Item sender, float power)
         {
             for (int i = 0; i<MaxLinked; i++)
@@ -159,7 +144,7 @@ namespace Subsurface.Items.Components
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {
-                    ic.ReceiveSignal(signal, recipient, sender, power);
+                    ic.ReceiveSignal(signal, recipient, this.item, power);
                 }
 
                 foreach (StatusEffect effect in recipient.effects)
