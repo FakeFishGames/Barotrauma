@@ -98,6 +98,10 @@ namespace Subsurface
             get { return prefab.MaxHealth; }
         }
 
+        public AITarget AiTarget
+        {
+            get { return null;}
+        }
         
         public override void Move(Vector2 amount)
         {

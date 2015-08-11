@@ -67,7 +67,7 @@ namespace Subsurface
 
         private static Sound startDrone;
         
-        public static IEnumerable<Status> Init()
+        public static IEnumerable<object> Init()
         {
 
 

@@ -161,7 +161,7 @@ namespace Subsurface
         }
 
         private float loadState = 0.0f;
-        private IEnumerable<Status> Load()
+        private IEnumerable<object> Load()
         {
             GUI.Font        = ToolBox.TryLoadFont("SpriteFont1", Content);
             GUI.SmallFont   = ToolBox.TryLoadFont("SmallFont", Content);
@@ -199,7 +199,7 @@ namespace Subsurface
         loadState = 70.0f;
         yield return Status.Running;
 
-            GameMode.Init();
+            GameModePreset.Init();
 
             Submarine.Preload("Content/SavedMaps");
         loadState = 80.0f;
@@ -277,7 +277,7 @@ namespace Subsurface
                 }
             }
 
-            CoroutineManager.Update();
+            CoroutineManager.Update((float)deltaTime);
         }
 
 

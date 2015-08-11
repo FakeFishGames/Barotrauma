@@ -14,6 +14,11 @@ namespace Subsurface
             get;
         }
 
+        AITarget AiTarget
+        {
+            get;
+        }
+
         AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound=true);
     }
 }

@@ -88,9 +88,19 @@ namespace Subsurface.Items.Components
             return (temperature > 0.0f);
         }
 
+        public bool AutoTemp
+        {
+            get { return autoTemp; }
+        }
+
         public float ExtraCooling { get; set; }
 
         public float AvailableFuel { get; set; }
+
+        public float ShutDownTemp
+        {
+            get { return shutDownTemp; }
+        }
 
         public Reactor(Item item, XElement element)
             : base(item, element)

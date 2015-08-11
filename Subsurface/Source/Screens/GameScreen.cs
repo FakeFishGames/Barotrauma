@@ -112,7 +112,6 @@ namespace Subsurface
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
-            if (Game1.GameSession != null) Game1.GameSession.Draw(spriteBatch);
 
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
             {
@@ -125,6 +124,8 @@ namespace Subsurface
                     Character.Controlled.SelectedConstruction = null;
                 }
             }
+
+            if (Game1.GameSession != null) Game1.GameSession.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         

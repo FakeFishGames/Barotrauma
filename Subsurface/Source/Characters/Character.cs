@@ -123,6 +123,11 @@ namespace Subsurface
             get { return cursorPosition; }
         }
 
+        public AITarget AiTarget
+        {
+            get { return aiTarget; }
+        }
+
         public float SoundRange
         {
             get { return aiTarget.SoundRange; }
@@ -262,6 +267,11 @@ namespace Subsurface
         public Key SecondaryKeyDown
         {
             get { return secondaryKeyDown; }
+        }
+
+        public AIController AIController
+        {
+            get { return aiController; }
         }
 
         public bool IsDead

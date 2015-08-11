@@ -311,9 +311,9 @@ namespace Subsurface
 
             DrawMessages(spriteBatch, (float)deltaTime);
 
-            if (GUIMessageBox.messageBoxes.Count>0)
+            if (GUIMessageBox.MessageBoxes.Count>0)
             {
-                var messageBox = GUIMessageBox.messageBoxes.Peek();
+                var messageBox = GUIMessageBox.MessageBoxes.Peek();
                 if (messageBox != null) messageBox.Draw(spriteBatch);
             }
 
@@ -331,9 +331,9 @@ namespace Subsurface
 
         public static void Update(float deltaTime)
         {
-            if (GUIMessageBox.messageBoxes.Count > 0)
+            if (GUIMessageBox.MessageBoxes.Count > 0)
             {
-                var messageBox = GUIMessageBox.messageBoxes.Peek();
+                var messageBox = GUIMessageBox.MessageBoxes.Peek();
                 if (messageBox != null)
                 {
                     GUIComponent.MouseOn = messageBox;

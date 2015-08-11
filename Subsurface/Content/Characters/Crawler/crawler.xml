@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <character name ="crawler" humanoid="false">
+  <sound file="Content/Characters/Crawler/attack1.ogg" state="Attack" range="500"/>
+  <sound file="Content/Characters/Crawler/attack2.ogg" state="Attack" range="500"/>
 
-  <sound file="Content/Characters/Crawler/attack.ogg" state="Attack" range="500"/>
+  <sound file="Content/Characters/Crawler/idle1.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
   <ragdoll headposition="50" headangle="-70" 
            waveamplitude="50.0" wavelength="2500" 

@@ -121,6 +121,8 @@ namespace Subsurface
 
             UpdateScrollBarSize();
 
+            children.Clear();
+
             enabled = true;
 
             scrollBarEnabled = true;
