@@ -54,13 +54,14 @@ namespace Subsurface
         {
             XDocument doc = ToolBox.TryLoadXml(filePath);
 
+            Path = filePath;
+
             if (doc==null)
             {
                 DebugConsole.ThrowError("Couldn't load content package ''"+filePath+"''!");
                 return;
             }
 
-            Path = filePath;
 
             name = ToolBox.GetAttributeString(doc.Root, "name", "");
             
@@ -78,7 +79,7 @@ namespace Subsurface
 
         public static ContentPackage CreatePackage(string name)
         {
-            ContentPackage newPackage = new ContentPackage();
+            ContentPackage newPackage = new ContentPackage("Content/Data/"+name);
             newPackage.name = name;
             list.Add(newPackage);
 

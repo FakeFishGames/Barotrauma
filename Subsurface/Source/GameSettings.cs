@@ -45,22 +45,29 @@ namespace Subsurface
         public void Load(string filePath)
         {
             XDocument doc = ToolBox.TryLoadXml(filePath);
-            try
+
+            if (doc == null)
             {
-                XElement graphicsMode = doc.Root.Element("graphicsmode");
-                GraphicsWidth = int.Parse(graphicsMode.Attribute("width").Value);
-                GraphicsHeight = int.Parse(graphicsMode.Attribute("height").Value);
-                
-                FullScreenEnabled = graphicsMode.Attribute("fullscreen").Value == "true";
-            }
-            catch
-            {
+                DebugConsole.ThrowError("No config file found");
+
                 GraphicsWidth = 1024;
-                GraphicsHeight = 768;
+                GraphicsHeight = 678;
+
+                MasterServerUrl = "";
+
+                SelectedContentPackage = new ContentPackage("");
+
+                return;
             }
 
+            XElement graphicsMode = doc.Root.Element("graphicsmode");
+            GraphicsWidth = int.Parse(graphicsMode.Attribute("width").Value);
+            GraphicsHeight = int.Parse(graphicsMode.Attribute("height").Value);
+                
+            FullScreenEnabled = graphicsMode.Attribute("fullscreen").Value == "true";
 
             MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
+
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -73,8 +80,7 @@ namespace Subsurface
                         if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
                         break;
                 }
-            }
-
+            }   
         }
 
         public void Save(string filePath)
