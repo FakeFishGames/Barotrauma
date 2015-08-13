@@ -76,9 +76,10 @@ namespace Subsurface
         }
 
 
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false)
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, SpriteFont font =null)
             : this (rect, text, null, null, alignment, textAlignment, style, parent, wrap)
         {
+            this.Font = font == null ? GUI.Font : font;
         }
 
         public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)

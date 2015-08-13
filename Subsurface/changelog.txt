@@ -1,3 +1,19 @@
+---------------------------------------------------------------------------------------------------------
+v0.1.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- a "lobby screen" showing a list of servers that are currently running
+	- password protected servers
+	- traitor rounds end when the traitor dies/disconnects or if the submarine reaches the end of the level
+
+Items:
+	- fixed the crashing when firing the railgun or activating a detonator
+
+Other:
+	- optimized lightning and "line of sight" rendering
+	- an unfinished tutorial which can currently only be accessed by entering "tutorial" into the 
+	debug console
 
 ---------------------------------------------------------------------------------------------------------
 v0.1.1

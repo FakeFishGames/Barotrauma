@@ -50,9 +50,8 @@ namespace Subsurface.Networking
 
         }
 
-        public void ConnectToServer(string hostIP)
+        public void ConnectToServer(string hostIP, string password = "")
         {
-
             string[] address = hostIP.Split(':');
             if (address.Length==1)
             {
@@ -65,7 +64,7 @@ namespace Subsurface.Networking
 
                 if (!int.TryParse(address[1], out Port))
                 {
-                    DebugConsole.ThrowError("Invalid port: address[1]!");
+                    DebugConsole.ThrowError("Invalid port: "+address[1]+"!");
                     Port = DefaultPort;
                 }                
             }
@@ -85,6 +84,7 @@ namespace Subsurface.Networking
             client.Start();
 
             outmsg.Write((byte)PacketTypes.Login);
+            outmsg.Write(password);
             outmsg.Write(Game1.Version.ToString());
             outmsg.Write(Game1.SelectedPackage.Name);
             outmsg.Write(Game1.SelectedPackage.MD5hash.Hash);

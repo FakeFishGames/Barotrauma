@@ -144,11 +144,11 @@ namespace Subsurface
                     //PutItem(item, i, false, false);
                     combined = true;
                 }
-                else if (items[i].Combine(item))
-                {
-                    //PutItem(items[i], i, false, false);
-                    combined = true;
-                }
+                //else if (items[i].Combine(item))
+                //{
+                //    //PutItem(items[i], i, false, false);
+                //    combined = true;
+                //}
 
                 if (!combined) return false;                
 

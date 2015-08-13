@@ -34,7 +34,7 @@ namespace Subsurface
         {
             get { return pickedItems; }
         }
-
+        
         public Sprite HeadSprite
         {
             get
@@ -156,7 +156,7 @@ namespace Subsurface
                 break;
             }
         }
-
+        
         public GUIFrame CreateInfoFrame(Rectangle rect)
         {
             GUIFrame frame = new GUIFrame(rect, Color.Transparent);

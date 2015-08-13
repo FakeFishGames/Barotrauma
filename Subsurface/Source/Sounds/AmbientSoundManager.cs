@@ -155,7 +155,7 @@ namespace Subsurface
 
             if (startDrone!=null)
             {
-                if (!SoundManager.IsPlaying(startDrone.AlBufferId))
+                if (!startDrone.IsPlaying)
                 {
                     startDrone.Remove();
                     startDrone = null;

@@ -30,16 +30,7 @@ namespace Subsurface
             base.Update(deltaTime);
 
             if (!isRunning) return;
-
-            if (DateTime.Now >= endTime)
-            {
-                string endMessage = traitor.character.Info.Name + " was a traitor! ";
-                endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was unsuccesful.";
-                End(endMessage);
-                return;
-            }
-            
+       
 
             if (traitor==null || target ==null)
             {
@@ -68,6 +59,35 @@ namespace Subsurface
                     endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was succesful.";
                     End(endMessage);
                 }
+                else if (traitor.character.IsDead)
+                {
+                    string endMessage = traitor.character.Info.Name + " was a traitor! ";
+                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
+                    endMessage += " task was to assassinate " + target.character.Info.Name + ". ";
+                    endMessage += "The task was unsuccessful - the has submarine reached its destination.";
+                    End(endMessage);
+                    return;
+                }
+                else if (Level.Loaded.AtEndPosition)
+                {
+                    string endMessage = traitor.character.Info.Name + " was a traitor! ";
+                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
+                    endMessage += " task was to assassinate " + target.character.Info.Name + ", but ";
+                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "he" : "she";
+                    endMessage += " got " + ((traitor.character.Info.Gender == Gender.Male) ? "himself" : "herself");
+                    endMessage += " killed before completing it.";
+                    End(endMessage);
+                    return;
+                }
+                else if (DateTime.Now >= endTime)
+                {
+                    string endMessage = traitor.character.Info.Name + " was a traitor! ";
+                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
+                    endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was unsuccesful.";
+                    End(endMessage);
+                    return;
+                }    
+
             }
         }
     }

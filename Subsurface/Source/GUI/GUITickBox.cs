@@ -25,6 +25,12 @@ namespace Subsurface
             }
         }
 
+        public bool Enabled
+        {
+            get;
+            set;
+        }
+
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
             : base(null)
         {
@@ -36,11 +42,15 @@ namespace Subsurface
             box.SelectedColor = Color.DarkGray;
 
             text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, 30), label, Color.Transparent, Color.White, Alignment.TopLeft, null, this);
+
+            Enabled = true;
         }
 
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
+
+            if (!Enabled) return;
 
             if (box.Rect.Contains(PlayerInput.GetMouseState.Position))
             {

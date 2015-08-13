@@ -165,6 +165,7 @@ namespace Subsurface
         {
             GUI.Font        = ToolBox.TryLoadFont("SpriteFont1", Content);
             GUI.SmallFont   = ToolBox.TryLoadFont("SmallFont", Content);
+            GUI.LargeFont = ToolBox.TryLoadFont("LargeFont", Content);
 
             sw = new Stopwatch();
 

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file contains an xml description of a font, and will be read by the XNA
+Framework Content Pipeline. Follow the comments to customize the appearance
+of the font in your game, and to change the characters which are available to draw
+with.
+-->
+<XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
+  <Asset Type="Graphics:FontDescription">
+
+    <FontName>Verdana</FontName>
+
+    <Size>16</Size>
+
+    <Spacing>0</Spacing>
+
+    <UseKerning>true</UseKerning>
+
+    <Style>Bold</Style>
+
+    <DefaultCharacter>_</DefaultCharacter>
+    
+    <!--
+    CharacterRegions control what letters are available in the font. Every
+    character from Start to End will be built and made available for drawing. The
+    default range is from 32, (ASCII space), to 126, ('~'), covering the basic Latin
+    character set. The characters are ordered according to the Unicode standard.
+    See the documentation for more information.
+    -->
+    <CharacterRegions>
+      <CharacterRegion>
+        <Start>&#32;</Start>
+        <End>&#126;</End>
+      </CharacterRegion>
+
+      <CharacterRegion>
+        <Start>&#192;</Start>
+        <End>&#601;</End>
+      </CharacterRegion>   
+    </CharacterRegions>
+  </Asset>
+</XnaContent>

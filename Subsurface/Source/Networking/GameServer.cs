@@ -22,16 +22,22 @@ namespace Subsurface.Networking
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 40);
         private DateTime refreshMasterTimer;
 
+        private bool masterServerResponded;
+
         private bool registeredToMaster;
+
+        private string password;
 
         private Client myClient;
 
-        public GameServer(string name, int port)
+        public GameServer(string name, int port, bool isPublic = false, string password="")
         {
             var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.style, inGameHUD);
             endRoundButton.OnClicked = EndButtonHit;
 
             this.name = name;
+
+            this.password = password;
 
             config = new NetPeerConfiguration("subsurface");
 
@@ -62,7 +68,11 @@ namespace Subsurface.Networking
                 DebugConsole.ThrowError("Couldn't start the server", e);
             }
 
-            RegisterToMasterServer();
+            if (isPublic)
+            {
+                RegisterToMasterServer();
+            }
+
             
             updateInterval = new TimeSpan(0, 0, 0, 0, 30);
 
@@ -78,6 +88,7 @@ namespace Subsurface.Networking
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
             request.AddParameter("playercount", PlayerCountToByte(connectedClients.Count, config.MaximumConnections));
+            request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
 
             // execute the request
             RestResponse response = (RestResponse)client.Execute(request);
@@ -98,7 +109,7 @@ namespace Subsurface.Networking
             refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
 
-        private void RefreshMaster()
+        private IEnumerable<object> RefreshMaster()
         {
             var client = new RestClient(NetworkMember.MasterServerUrl);
 
@@ -112,17 +123,49 @@ namespace Subsurface.Networking
             var sw = new Stopwatch();
             sw.Start();
 
-            RestResponse response = (RestResponse)client.Execute(request);
+            masterServerResponded = false;
+            var restRequestHandle = client.ExecuteAsync(request, response => MasterServerCallBack(response));
 
-            sw.Stop();
-            System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
-
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            while (!masterServerResponded)
             {
-                DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
+                if (DateTime.Now > timeOut)
+                {
+                    restRequestHandle.Abort();
+                    DebugConsole.ThrowError("Couldn't connect to master server (request timed out)");
+                    registeredToMaster = false;
+                }
+            System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
+                
+                yield return Status.Running;
             }
 
 
+
+            yield return Status.Success;
+
+
+
+
+        }
+
+        private void MasterServerCallBack(IRestResponse response)
+        {
+            masterServerResponded = true;
+
+            if (response.ErrorException != null)
+            {
+                DebugConsole.ThrowError("Error while connecting to master server", response.ErrorException);
+                registeredToMaster = false;
+                return;
+            }
+
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                DebugConsole.ThrowError("Error while connecting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")");
+                registeredToMaster = false;
+                return;
+            }
         }
 
         public override void Update(float deltaTime)
@@ -159,7 +202,7 @@ namespace Subsurface.Networking
 
             if (registeredToMaster && refreshMasterTimer < DateTime.Now)
             {
-                RefreshMaster();
+                CoroutineManager.StartCoroutine(RefreshMaster());
 
                 refreshMasterTimer = DateTime.Now + refreshMasterInterval;
             }
@@ -204,9 +247,10 @@ namespace Subsurface.Networking
                     Client existingClient = connectedClients.Find(c=> c.Connection == inc.SenderConnection);
                     if (existingClient==null)
                     {
-                        string version = "", packageName="", packageHash="", name = "";
+                        string userPassword = "", version = "", packageName="", packageHash="", name = "";
                         try
                         {
+                            userPassword    = inc.ReadString();
                             version     = inc.ReadString();
                             packageName = inc.ReadString();
                             packageHash = inc.ReadString();
@@ -218,7 +262,12 @@ namespace Subsurface.Networking
                             break;
                         }
 
-                        if (version != Game1.Version.ToString())
+                        if (userPassword != password)
+                        {
+                            inc.SenderConnection.Deny("Wrong password!");
+                            break;
+                        }
+                        else if (version != Game1.Version.ToString())
                         {
                             inc.SenderConnection.Deny("Subsurface version " + Game1.Version + " required to connect to the server (Your version: " + version + ")");
                             break;

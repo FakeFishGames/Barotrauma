@@ -178,7 +178,7 @@ namespace Subsurface
             get
             {
                 ItemContainer c = GetComponent<ItemContainer>();
-                return (c == null) ? null : c.inventory.items;
+                return (c == null) ? null : Array.FindAll(c.inventory.items, i=>i!=null);
             }
         }
 

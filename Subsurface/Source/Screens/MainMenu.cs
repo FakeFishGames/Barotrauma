@@ -18,9 +18,8 @@ namespace Subsurface
 
         private GUITextBox saveNameBox, seedBox;
 
-        private GUITextBox clientNameBox, ipBox;
-
-        private GUITextBox serverNameBox, portBox;
+        private GUITextBox serverNameBox, portBox, passwordBox;
+        private GUITickBox isPublicBox;
 
         private Game1 game;
 
@@ -38,10 +37,10 @@ namespace Subsurface
             menuTabs[(int)Tabs.Main] = new GUIFrame(panelRect, GUI.style);
             //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
-            GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
-            button.OnClicked = TutorialButtonClicked;
+            //GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            //button.OnClicked = TutorialButtonClicked;
 
-            button = new GUIButton(new Rectangle(0, 70, 0, 30), "New Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            GUIButton button = new GUIButton(new Rectangle(0, 70, 0, 30), "New Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.NewGame;
             button.OnClicked = SelectTab;
             //button.Enabled = false;
@@ -112,15 +111,20 @@ namespace Subsurface
             menuTabs[(int)Tabs.HostServer] = new GUIFrame(panelRect, GUI.style);
             //menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Host Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer]);
+            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Host Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer], false, GUI.LargeFont);
 
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Server Name:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer]);
-            serverNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.HostServer]);
+            serverNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), null, null, Alignment.CenterX, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.HostServer]);
 
             new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server port:", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer]);
-            portBox = new GUITextBox(new Rectangle(0, 130, 200, 30), Color.White, Color.Black, Alignment.CenterX, Alignment.CenterX, null, menuTabs[(int)Tabs.HostServer]);
+            portBox = new GUITextBox(new Rectangle(0, 130, 200, 30), null, null, Alignment.CenterX, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.HostServer]);
             portBox.Text = NetworkMember.DefaultPort.ToString();
             portBox.ToolTip = "Server port";
+
+            isPublicBox = new GUITickBox(new Rectangle(portBox.Rect.X - menuTabs[(int)Tabs.HostServer].Rect.X, 200, 20, 20), "Public server", Alignment.TopLeft, menuTabs[(int)Tabs.HostServer]);
+
+            new GUITextBlock(new Rectangle(0, 240, 0, 30), "Password (optional):", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer]);
+            passwordBox = new GUITextBox(new Rectangle(0, 270, 200, 30), null, null, Alignment.CenterX, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.HostServer]);
 
             GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.HostServer]);
             hostButton.OnClicked = HostServerClicked;
@@ -177,7 +181,7 @@ namespace Subsurface
                 return false;
             }
 
-            Game1.NetworkMember = new GameServer(name, port);
+            Game1.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text);
             
             Game1.NetLobbyScreen.IsServer = true;
             Game1.NetLobbyScreen.Select();
@@ -194,7 +198,7 @@ namespace Subsurface
         {
             menuTabs[(int)Tabs.LoadGame].ClearChildren();
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Load Game", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.LoadGame]);
+            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Load Game", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.LoadGame], false, GUI.LargeFont);
 
             string[] saveFiles = SaveUtil.GetSaveFiles();
 
@@ -376,26 +380,5 @@ namespace Subsurface
             return true;
         }
 
-
-        private bool JoinServer(GUIButton button, object obj)
-        {
-            if (string.IsNullOrEmpty(clientNameBox.Text)) return false;
-            if (string.IsNullOrEmpty(ipBox.Text)) return false;
-
-            Game1.NetworkMember = new GameClient(clientNameBox.Text);
-            Game1.Client.ConnectToServer(ipBox.Text);
-
-            return true;
-            //{
-            //    Game1.NetLobbyScreen.Select();
-            //    return true;
-            //}
-            //else
-            //{
-            //    Game1.NetworkMember = null;
-            //    return false;
-            //}
-        }
-        
     }
 }
