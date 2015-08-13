@@ -246,6 +246,9 @@ namespace Subsurface
                         hull.OxygenPercentage = 100.0f;
                     }
                     break;
+                case "tutorial":
+                    TutorialMode.Start();
+                    break;
                 case "lobbyscreen":
                 case "lobby":
                     Game1.LobbyScreen.Select();

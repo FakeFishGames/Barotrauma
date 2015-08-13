@@ -27,6 +27,14 @@ namespace Subsurface
 
         private bool enabled;
 
+        public GUIComponent Selected
+        {
+            get
+            {
+                return selected;
+            }
+        }
+
         public object SelectedData
         {
             get 

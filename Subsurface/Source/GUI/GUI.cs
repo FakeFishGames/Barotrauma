@@ -20,7 +20,7 @@ namespace Subsurface
         public static GUIStyle style;
 
         static Texture2D t;
-        public static SpriteFont Font, SmallFont;
+        public static SpriteFont Font, SmallFont, LargeFont;
 
         private static GraphicsDevice graphicsDevice;        
 

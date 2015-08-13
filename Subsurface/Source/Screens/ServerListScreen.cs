@@ -14,6 +14,9 @@ namespace Subsurface
 {
     class ServerListScreen : Screen
     {
+        //how often the client is allowed to refresh servers
+        private TimeSpan AllowedRefreshInterval = new TimeSpan(0,0,3);
+
         private GUIFrame menu;
 
         private GUIListBox serverList;
@@ -21,6 +24,15 @@ namespace Subsurface
         private GUIButton joinButton;
 
         private GUITextBox clientNameBox, ipBox;
+
+        //private RestRequestAsyncHandle restRequestHandle;
+        private bool masterServerResponded;
+
+        private int[] columnX;
+
+        //a timer for 
+        private DateTime refreshDisableTimer;
+        private bool waitingForRefresh;
 
         public ServerListScreen()
         {
@@ -30,37 +42,56 @@ namespace Subsurface
             Rectangle panelRect = new Rectangle(0, 0, width, height);
 
             menu = new GUIFrame(panelRect, null, Alignment.Center, GUI.style);
-            
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Join Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menu);
+
+            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Join Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
 
             new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", GUI.style, menu);
             clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), GUI.style, menu);
 
             new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.style, menu);
             ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), GUI.style, menu);
+
+
+
+
+
             
             int middleX = (int)(width * 0.4f);
 
             serverList = new GUIListBox(new Rectangle(middleX,60,0,(int)(height*0.7f)), GUI.style, menu);
             serverList.OnSelected = SelectServer;
 
-            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Name", GUI.style, menu);
-            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Players", GUI.style, Alignment.TopLeft, Alignment.TopCenter, menu);
-            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Game running", GUI.style, Alignment.TopLeft, Alignment.TopRight, menu);
+            float[] columnRelativeX = new float[] { 0.15f, 0.55f, 0.15f, 0.15f };
+            columnX = new int[columnRelativeX.Length];
+            for (int n = 0; n < columnX.Length; n++)
+            {
+                columnX[n] = (int)(columnRelativeX[n] * serverList.Rect.Width);
+                if (n > 0) columnX[n] += columnX[n - 1];
+            }
+
+            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Password", GUI.style, menu);
+
+            new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), "Name", GUI.style, menu);
+            new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), "Players", GUI.style, menu);
+            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Running", GUI.style, menu);
 
             joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, GUI.style, menu);
             joinButton.OnClicked = RefreshServers;
 
             joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, GUI.style, menu);
             joinButton.OnClicked = JoinServer;
-            //joinButton.Enabled = false;
+            
+
+            refreshDisableTimer = DateTime.Now;
         }
 
         public override void Select()
         {
             base.Select();
 
-            UpdateServerList();
+
+            //RefreshServers(null, null);
+            //UpdateServerList();
         }
 
         private bool SelectServer(object obj)
@@ -75,16 +106,39 @@ namespace Subsurface
 
         private bool RefreshServers(GUIButton button, object obj)
         {
-            UpdateServerList();
+            if (waitingForRefresh) return false;
+            serverList.ClearChildren();
+
+            new GUITextBlock(new Rectangle(0, 0, 0, 20), "Refreshing server list...", GUI.style, serverList);
+            
+            CoroutineManager.StartCoroutine(WaitForRefresh());
 
             return true;
         }
 
-        private void UpdateServerList()
+        private IEnumerable<object> WaitForRefresh()
+        {
+            waitingForRefresh = true;
+            if (refreshDisableTimer > DateTime.Now)
+            {
+                yield return new WaitForSeconds((float)(refreshDisableTimer - DateTime.Now).TotalSeconds);
+            }
+
+            //CoroutineManager.StartCoroutine(UpdateServerList());
+            CoroutineManager.StartCoroutine(SendMasterServerRequest());
+
+            waitingForRefresh = false;
+
+            refreshDisableTimer = DateTime.Now + AllowedRefreshInterval;
+
+            yield return Status.Success;
+        }
+
+        private void UpdateServerList(string masterServerData)
         {
             serverList.ClearChildren();
-
-            string masterServerData = GetMasterServerData();
+            
+            //string masterServerData = GetMasterServerData();
 
             if (string.IsNullOrWhiteSpace(masterServerData))
             {
@@ -96,6 +150,7 @@ namespace Subsurface
             if (masterServerData.Substring(0,5).ToLower()=="error")
             {
                 DebugConsole.ThrowError("Error while connecting to master server ("+masterServerData+")!");
+
                 return;
             }
 
@@ -112,23 +167,33 @@ namespace Subsurface
                 string gameStarted = (arguments.Length > 3) ? arguments[3] : "";
                 string playerCountStr = (arguments.Length > 4) ? arguments[4] : "";
 
+                string hasPassWordStr = (arguments.Length > 5) ? arguments[5] : "";
+
                 var serverFrame = new GUIFrame(new Rectangle(0,0,0,20), (i%2 == 0) ? Color.Transparent : Color.White*0.2f, null, serverList);
                 serverFrame.UserData = IP+":"+port;
                 serverFrame.HoverColor = Color.Gold * 0.2f;
                 serverFrame.SelectedColor = Color.Gold * 0.5f;
 
-                var nameText = new GUITextBlock(new Rectangle(0,0,0,0), serverName, GUI.style, serverFrame);
+                var passwordBox = new GUITickBox(new Rectangle(columnX[0]/2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
+                passwordBox.Selected = hasPassWordStr == "1";
+                passwordBox.Enabled = false;
+                passwordBox.UserData = "password";
+
+                var nameText = new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, GUI.style, serverFrame);
 
                 int playerCount, maxPlayers;
                 playerCount = GameClient.ByteToPlayerCount((byte)int.Parse(playerCountStr), out maxPlayers);
 
-                var playerCountText = new GUITextBlock(new Rectangle(0, 0, 0, 0), playerCount+"/"+maxPlayers, GUI.style, Alignment.Left, Alignment.TopCenter, serverFrame);
-                var gameStartedText = new GUITextBlock(new Rectangle(0, 0, 0, 0), gameStarted=="1" ? "Yes" : "No", GUI.style, Alignment.Left, Alignment.TopRight, serverFrame);
+                var playerCountText = new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, GUI.style, serverFrame);
+
+                var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2])/ 2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
+                gameStartedBox.Selected = gameStarted == "1";
+                gameStartedBox.Enabled = false;
             
             }
         }
 
-        private string GetMasterServerData()
+        private IEnumerable<object> SendMasterServerRequest()
         {
             RestClient client = null;
             try
@@ -137,9 +202,10 @@ namespace Subsurface
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error while connecting to master server", e);
-                return "";
+                DebugConsole.ThrowError("Error while connecting to master server", e);                
             }
+
+            if (client == null) yield return Status.Success;
 
 
             var request = new RestRequest("masterserver.php", Method.GET);
@@ -154,17 +220,44 @@ namespace Subsurface
             //request.AddFile(path);
 
             // execute the request
-            RestResponse response = (RestResponse)client.Execute(request);
+            masterServerResponded = false;
+            var restRequestHandle = client.ExecuteAsync(request, response => MasterServerCallBack(response));
 
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 8);
+            while (!masterServerResponded)
+            {
+                if (DateTime.Now > timeOut)
+                { 
+                    serverList.ClearChildren();
+                    restRequestHandle.Abort();
+                    DebugConsole.ThrowError("Couldn't connect to master server (request timed out)");
+                }
+                yield return Status.Running;
+            }
+
+            yield return Status.Success;
+
+        }
+
+        private void MasterServerCallBack(IRestResponse response)
+        {
+            masterServerResponded = true;
+
+            if (response.ErrorException!=null)
+            {
+                serverList.ClearChildren();  
+                DebugConsole.ThrowError("Error while connecting to master server", response.ErrorException);
+                return;
+            }
 
             if (response.StatusCode!= System.Net.HttpStatusCode.OK)
             {
+                serverList.ClearChildren();  
                 DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
-                return "";
+                return;
             }
 
-            return response.Content; // raw content as string
-
+            UpdateServerList(response.Content);
         }
 
         private bool JoinServer(GUIButton button, object obj)
@@ -183,10 +276,39 @@ namespace Subsurface
                 return false;
             }
 
-            Game1.NetworkMember = new GameClient(clientNameBox.Text);
-            Game1.Client.ConnectToServer(ip);
+            CoroutineManager.StartCoroutine(JoinServer(ip));
+
 
             return true;
+        }
+
+        private IEnumerable<object> JoinServer(string ip)
+        {
+            string selectedPassword = "";
+
+            if ((serverList.Selected.GetChild("password") as GUITickBox).Selected)
+            {
+                var msgBox = new GUIMessageBox("Password required", "");
+                var passwordBox = new GUITextBox(new Rectangle(0,0,150,20), Alignment.BottomCenter, GUI.style, msgBox);
+                passwordBox.UserData = "password";
+
+                var okButton = msgBox.GetChild<GUIButton>();                
+
+                while (GUIMessageBox.MessageBoxes.Contains(msgBox))
+                {
+                    okButton.Enabled = !string.IsNullOrWhiteSpace(passwordBox.Text);
+                    yield return Status.Running;
+                }
+
+                selectedPassword = passwordBox.Text;
+            }
+
+            Game1.NetworkMember = new GameClient(clientNameBox.Text);
+            Game1.Client.ConnectToServer(ip, selectedPassword);
+
+            Game1.NetLobbyScreen.Select();
+
+            yield return Status.Success;
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -208,6 +330,8 @@ namespace Subsurface
 
         public override void Update(double deltaTime)
         {
+
+
             menu.Update((float)deltaTime);
 
             GUI.Update((float)deltaTime);
