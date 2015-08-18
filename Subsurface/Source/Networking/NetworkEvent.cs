@@ -113,6 +113,8 @@ namespace Subsurface.Networking
                 return false;
             }
 
+            System.Diagnostics.Debug.WriteLine("Networkevent entity: "+e.ToString());
+
             //System.Diagnostics.Debug.WriteLine("new message: " + eventType +" - "+e);
 
             e.ReadNetworkData(eventType, message);

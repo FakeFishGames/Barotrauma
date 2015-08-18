@@ -17,7 +17,9 @@ namespace Subsurface
 
         public static float Round(float value, float div)
         {
-            return (float)Math.Floor(value / div) * div;
+            return (value < 0.0f) ? 
+                (float)Math.Ceiling(value / div) * div : 
+                (float)Math.Floor(value / div) * div;
         }
 
         public static float VectorToAngle(Vector2 vector)

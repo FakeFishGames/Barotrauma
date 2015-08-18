@@ -61,6 +61,11 @@ namespace Subsurface
             get { return prefab.sprite; }
         }
 
+        public float PickDistance
+        {
+            get { return prefab.PickDistance; }
+        }
+
         public float Condition
         {
             get { return condition; }

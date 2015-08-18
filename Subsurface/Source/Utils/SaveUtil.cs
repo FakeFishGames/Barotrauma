@@ -55,11 +55,16 @@ namespace Subsurface
             {
                 DebugConsole.ThrowError("Error saving gamesession", e);
             }
-            //Game1.GameSession.crewManager.Save(directory+"\\crew.xml");
+            
+            try
+            {
+                CompressDirectory(tempPath, fileName+".save", null);
+            }
 
-            CompressDirectory(tempPath, fileName+".save", null);
-
-            //Directory.Delete(tempPath, true);
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error compressing save file", e);
+            }
         }
 
         public static void LoadGame(string fileName)

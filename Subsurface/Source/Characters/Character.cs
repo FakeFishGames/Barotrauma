@@ -426,6 +426,11 @@ namespace Subsurface
             }
         }
 
+        public override string ToString()
+        {
+            return (info != null && !string.IsNullOrWhiteSpace(info.Name)) ? info.Name : SpeciesName;
+        }
+
         public void GiveJobItems(WayPoint spawnPoint)
         {
             if (info == null || info.Job == null) return;
@@ -1032,14 +1037,17 @@ namespace Subsurface
             message.Write(NetTime.Now);
 
             // Write byte = move direction
-            message.Write(AnimController.TargetMovement.X);
-            message.Write(AnimController.TargetMovement.Y);
+            message.WriteRangedSingle(AnimController.TargetMovement.X, -10.0f, 10.0f, 8);
+            message.WriteRangedSingle(AnimController.TargetMovement.Y, -10.0f, 10.0f, 8);
 
             message.Write(AnimController.TargetDir==Direction.Right);
 
-            message.Write(cursorPosition.X);
-            message.Write(cursorPosition.Y);
-            
+            if (aiController!=null)
+            {
+                message.WriteRangedSingle(cursorPosition.X, -1000.0f, 1000.0f, 16);
+                message.WriteRangedSingle(cursorPosition.Y, -1000.0f, 1000.0f, 16);
+            }
+                        
             message.Write(LargeUpdateTimer <= 0);
 
             if (LargeUpdateTimer<=0)
@@ -1053,29 +1061,28 @@ namespace Subsurface
                     message.Write(limb.body.LinearVelocity.X);
                     message.Write(limb.body.LinearVelocity.Y);
 
-                    message.Write(limb.body.Rotation);
+                    message.Write(MathUtils.AngleToByte(limb.body.Rotation));
                     message.Write(limb.body.AngularVelocity);
                     i++;
                 }
 
-                message.Write(AnimController.StunTimer);
+                message.WriteRangedSingle(AnimController.StunTimer, 0.0f, 60.0f, 8);
                 message.Write((byte)health);
 
-                LargeUpdateTimer = 5;
+                if (aiController != null) aiController.FillNetworkData(message);
+
+                LargeUpdateTimer = 10;
             }
             else
             {
                 Limb torso = AnimController.GetLimb(LimbType.Torso);
+                if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
+
                 message.Write(torso.body.Position.X);
                 message.Write(torso.body.Position.Y);
 
                 LargeUpdateTimer = Math.Max(0, LargeUpdateTimer-1);
-            }
-
-
-
-            if (aiController != null) aiController.FillNetworkData(message);
-            
+            }            
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
@@ -1127,10 +1134,19 @@ namespace Subsurface
             
                 sendingTime         = message.ReadDouble();
 
-                targetMovement      = new Vector2 (message.ReadFloat(), message.ReadFloat());
+                targetMovement = new Vector2(message.ReadRangedSingle(-10.0f, 10.0f, 8), message.ReadRangedSingle(-10.0f, 10.0f, 8));
+                targetMovement.X = MathUtils.Round(targetMovement.X, 0.1f);
+                targetMovement.Y = MathUtils.Round(targetMovement.Y, 0.1f);
+
                 targetDir           = message.ReadBoolean();
 
-                cursorPos           = new Vector2(message.ReadFloat(), message.ReadFloat());
+                if (aiController!=null)
+                {
+                    cursorPos = new Vector2(
+                        message.ReadRangedSingle(-1000.0f, 1000.0f, 16), 
+                        message.ReadRangedSingle(-1000.0f, 1000.0f, 16));
+                }
+
             }
 
             catch
@@ -1165,7 +1181,7 @@ namespace Subsurface
                         vel.X = message.ReadFloat();
                         vel.Y = message.ReadFloat();
 
-                        rotation = message.ReadFloat();
+                        rotation = MathUtils.ByteToAngle(message.ReadByte());
                         angularVel = message.ReadFloat();
                     }
                     catch
@@ -1187,7 +1203,7 @@ namespace Subsurface
 
                 try
                 {
-                    newStunTimer = message.ReadFloat();
+                    newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
                     newHealth = message.ReadByte();
                 }
                 catch { return; }
@@ -1196,6 +1212,8 @@ namespace Subsurface
                 Health = newHealth;
 
                 LargeUpdateTimer = 1;
+
+                if (aiController != null) aiController.ReadNetworkData(message);
             }
             else
             {
@@ -1210,12 +1228,11 @@ namespace Subsurface
 
 
                 Limb torso = AnimController.GetLimb(LimbType.Torso);
+                if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
                 torso.body.TargetPosition = pos;
 
                 LargeUpdateTimer = 0;
             }
-
-            if (aiController != null) aiController.ReadNetworkData(message);
 
             LastNetworkUpdate = sendingTime;
             

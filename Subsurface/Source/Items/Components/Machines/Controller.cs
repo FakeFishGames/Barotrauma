@@ -66,7 +66,9 @@ namespace Subsurface.Items.Components
         {
             this.cam = cam;
 
-            if (character == null || character.SelectedConstruction != item)
+            if (character == null 
+                || character.SelectedConstruction != item
+                || Vector2.Distance(character.SimPosition, item.SimPosition) > item.PickDistance * 1.5f)
             {
                 if (character != null)
                 {

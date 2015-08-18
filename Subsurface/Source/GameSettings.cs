@@ -52,6 +52,21 @@ namespace Subsurface
                 GraphicsHeight = int.Parse(graphicsMode.Attribute("height").Value);
                 
                 FullScreenEnabled = graphicsMode.Attribute("fullscreen").Value == "true";
+
+                MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
+
+                foreach (XElement subElement in doc.Root.Elements())
+                {
+                    switch (subElement.Name.ToString().ToLower())
+                    {
+                        case "contentpackage":
+                            string path = ToolBox.GetAttributeString(subElement, "path", "");
+                            SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
+
+                            if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
+                            break;
+                    }
+                }
             }
             catch
             {
@@ -60,20 +75,7 @@ namespace Subsurface
             }
 
 
-            MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 
-            foreach (XElement subElement in doc.Root.Elements())
-            {
-                switch (subElement.Name.ToString().ToLower())
-                {
-                    case "contentpackage":
-                        string path = ToolBox.GetAttributeString(subElement, "path", "");
-                        SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
-
-                        if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
-                        break;
-                }
-            }
 
         }
 
@@ -85,6 +87,8 @@ namespace Subsurface
             {
                 doc.Add(new XElement("config"));
             }
+
+            doc.Root.Add(new XAttribute("masterserverurl", MasterServerUrl));
 
             XElement gMode = doc.Root.Element("graphicsmode");
             if (gMode == null)
