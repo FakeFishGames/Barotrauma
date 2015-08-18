@@ -51,11 +51,6 @@ namespace Subsurface
             new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.style, menu);
             ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), GUI.style, menu);
 
-
-
-
-
-            
             int middleX = (int)(width * 0.4f);
 
             serverList = new GUIListBox(new Rectangle(middleX,60,0,(int)(height*0.7f)), GUI.style, menu);
@@ -80,6 +75,10 @@ namespace Subsurface
 
             joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, GUI.style, menu);
             joinButton.OnClicked = JoinServer;
+
+            GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.style, menu);
+            button.UserData = 0;
+            button.OnClicked = Game1.MainMenuScreen.SelectTab;
             
 
             refreshDisableTimer = DateTime.Now;
@@ -286,7 +285,7 @@ namespace Subsurface
         {
             string selectedPassword = "";
 
-            if ((serverList.Selected.GetChild("password") as GUITickBox).Selected)
+            if (serverList.Selected!=null && (serverList.Selected.GetChild("password") as GUITickBox).Selected)
             {
                 var msgBox = new GUIMessageBox("Password required", "");
                 var passwordBox = new GUITextBox(new Rectangle(0,0,150,20), Alignment.BottomCenter, GUI.style, msgBox);

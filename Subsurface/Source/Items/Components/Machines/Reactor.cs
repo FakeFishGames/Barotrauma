@@ -239,24 +239,15 @@ namespace Subsurface.Items.Components
  
             new RepairTask(item, 60.0f, "Reactor meltdown!");
             item.Condition = 0.0f;
-            //fissionRate = 0.0f;
-            //coolingRate = 0.0f;
 
-            //PlaySound(ActionType.OnFailure, item.Position);
-            //item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, null);
-
-            //new Explosion(item.SimPosition, 6.0f, 500.0f, 600.0f, 10.0f, 2.0f).Explode();
+            var containedItems = item.ContainedItems;
+            if (containedItems == null) return;
             
-            if (item.ContainedItems!=null)
+            foreach (Item containedItem in item.ContainedItems)
             {
-                foreach (Item containedItem in item.ContainedItems)
-                {
-                    if (containedItem == null) continue;
-                    containedItem.Condition = 0.0f;
-                }
+                if (containedItem == null) continue;
+                containedItem.Condition = 0.0f;
             }
-
-
         }
 
         public override bool Pick(Character picker)

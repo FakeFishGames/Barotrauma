@@ -173,16 +173,19 @@ namespace Subsurface.Items.Components
                     (float)Math.Cos(item.body.Rotation), 
                     (float)Math.Sin(item.body.Rotation));
 
-                if (Vector2.Dot(f1.Body.LinearVelocity, normal)<0 ) return StickToTarget(f2.Body, dir);
+                if (Vector2.Dot(f1.Body.LinearVelocity, normal) < 0.0f) return StickToTarget(f2.Body, dir);
             }
 
-            foreach (Item contained in item.ContainedItems)
+
+            var containedItems = item.ContainedItems;
+            if (containedItems == null) return true;
+            foreach (Item contained in containedItems)
             {
-                contained.Condition = 0.0f;
                 if (contained.body != null)
                 {
-                    contained.body.SetTransform(item.SimPosition, contained.body.Rotation);
+                    contained.SetTransform(item.SimPosition, contained.body.Rotation);
                 }
+                contained.Condition = 0.0f;
             }
 
             return true;

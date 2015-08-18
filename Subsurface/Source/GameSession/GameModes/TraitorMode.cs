@@ -63,8 +63,10 @@ namespace Subsurface
                 {
                     string endMessage = traitor.character.Info.Name + " was a traitor! ";
                     endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
-                    endMessage += " task was to assassinate " + target.character.Info.Name + ". ";
-                    endMessage += "The task was unsuccessful - the has submarine reached its destination.";
+                    endMessage += " task was to assassinate " + target.character.Info.Name + ", but ";
+                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "he" : "she";
+                    endMessage += " got " + ((traitor.character.Info.Gender == Gender.Male) ? "himself" : "herself");
+                    endMessage += " killed before completing it.";
                     End(endMessage);
                     return;
                 }
@@ -72,10 +74,8 @@ namespace Subsurface
                 {
                     string endMessage = traitor.character.Info.Name + " was a traitor! ";
                     endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
-                    endMessage += " task was to assassinate " + target.character.Info.Name + ", but ";
-                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "he" : "she";
-                    endMessage += " got " + ((traitor.character.Info.Gender == Gender.Male) ? "himself" : "herself");
-                    endMessage += " killed before completing it.";
+                    endMessage += " task was to assassinate " + target.character.Info.Name + ". ";
+                    endMessage += "The task was unsuccessful - the has submarine reached its destination.";
                     End(endMessage);
                     return;
                 }

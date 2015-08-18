@@ -96,28 +96,25 @@ namespace Launcher
                 fileButton.Enabled = (selectedPackage != null);
             }
 
-            if (selectedPackage == null)
+
+            foreach (ListBox fileBox in fileBoxes)
             {
-                foreach (ListBox fileBox in fileBoxes)
+                fileBox.Items.Clear();
+            }
+
+
+            foreach (ListBox fileBox in fileBoxes)
+            {
+                ContentType type = (fileBox.Tag is ContentType) ? (ContentType)fileBox.Tag : ContentType.None;
+
+                foreach (ContentFile file in selectedPackage.files)
                 {
-                    fileBox.Items.Clear();
+                    if (file.type != type) continue;
+
+                    fileBox.Items.Add(file);
                 }
             }
-            else
-            {
-
-                foreach (ListBox fileBox in fileBoxes)
-                {
-                    ContentType type = (fileBox.Tag is ContentType) ? (ContentType)fileBox.Tag : ContentType.None;
-
-                    foreach (ContentFile file in selectedPackage.files)
-                    {
-                        if (file.type != type) continue;
-
-                        fileBox.Items.Add(file);
-                    }
-                }
-            }
+            
         }
 
         private void newPackage_Click(object sender, EventArgs e)

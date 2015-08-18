@@ -269,7 +269,7 @@ namespace Subsurface
             {
                 UpdateCharacterItems();
             }
-
+            
             if (pickedItems.Count > 0)
             {
                 charElement.Add(new XAttribute("items", string.Join(",", pickedItems)));

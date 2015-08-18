@@ -74,8 +74,8 @@ namespace Subsurface.Networking
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
             NetPeerConfiguration Config = new NetPeerConfiguration("subsurface");
             
-            //Config.SimulatedLoss = 0.2f;
-            //Config.SimulatedMinimumLatency = 0.25f;
+            Config.SimulatedLoss = 0.2f;
+            Config.SimulatedMinimumLatency = 0.5f;
 
             // Create new client, with previously created configs
             client = new NetClient(Config);
@@ -141,7 +141,7 @@ namespace Subsurface.Networking
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;
             
-            DateTime timeOut = DateTime.Now + new TimeSpan(0,0,5);
+            DateTime timeOut = DateTime.Now + new TimeSpan(0,0,15);
 
             // Loop untill we are approved
             while (!CanStart)
@@ -421,6 +421,26 @@ namespace Subsurface.Networking
             gameStarted = false;
         }
 
+        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        {
+            base.Draw(spriteBatch);
+
+            if (!Game1.DebugDraw) return;
+
+            int width = 200, height = 300;
+            int x = Game1.GraphicsWidth - width, y = (int)(Game1.GraphicsHeight * 0.3f);
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
+            spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
+
+            spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + client.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Received packets: " + client.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
+
+            spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + client.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + client.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
+            
+        }
+
         public override void Disconnect()
         {
             NetOutgoingMessage msg = client.CreateMessage();
@@ -514,7 +534,7 @@ namespace Subsurface.Networking
             msg.Write((byte)type);
             msg.Write(message);
 
-            client.SendMessage(msg, NetDeliveryMethod.Unreliable);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         /// <summary>
