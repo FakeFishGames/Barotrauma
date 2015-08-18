@@ -309,9 +309,11 @@ namespace Subsurface
                 jobList = new GUIListBox(new Rectangle(0, 180, 180, 0), GUI.style, playerFrame);
                 jobList.Enabled = false;
 
+
+                int i = 1;
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
+                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), i+". "+job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
                     jobText.UserData = job;
 
                     GUIButton upButton = new GUIButton(new Rectangle(0, 0, 15, 15), "u", GUI.style, jobText);
@@ -560,13 +562,17 @@ namespace Subsurface
         private void UpdateJobPreferences(GUIListBox listBox)
         {
             listBox.Deselect();
-            for (int i = 1; i < listBox.children.Count; i++)
+            for (int i = 0; i < listBox.children.Count; i++)
             {
                 float a = (float)(i - 1) / 3.0f;
                 a = Math.Min(a, 3);
                 Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
 
                 listBox.children[i].Color = color;
+                listBox.children[i].HoverColor = color;
+                listBox.children[i].SelectedColor = color;
+
+                (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
             }
 
             Game1.Client.SendCharacterData();

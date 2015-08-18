@@ -74,8 +74,8 @@ namespace Subsurface.Networking
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
             NetPeerConfiguration Config = new NetPeerConfiguration("subsurface");
             
-            Config.SimulatedLoss = 0.2f;
-            Config.SimulatedMinimumLatency = 0.5f;
+            //Config.SimulatedLoss = 0.2f;
+            //Config.SimulatedMinimumLatency = 0.5f;
 
             // Create new client, with previously created configs
             client = new NetClient(Config);
@@ -111,8 +111,11 @@ namespace Subsurface.Networking
             //update.Elapsed += new System.Timers.ElapsedEventHandler(Update);
 
             // Funtion that waits for connection approval info from server
+            if (reconnectBox==null)
+            {
+                reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[0]);                
+            }
 
-            reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[0]);
             CoroutineManager.StartCoroutine(WaitForStartingInfo());
             
             // Start the timer
@@ -239,14 +242,19 @@ namespace Subsurface.Networking
 
             if (!connected || updateTimer > DateTime.Now) return;
             
-            if (client.ConnectionStatus == NetConnectionStatus.Disconnected && reconnectBox==null)
+            if (client.ConnectionStatus == NetConnectionStatus.Disconnected)
             {
-                reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
-                connected = false;
-                ConnectToServer(serverIP);
+                if (reconnectBox==null)
+                {
+                    reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
+                    connected = false;
+                    ConnectToServer(serverIP);
+                }
+
                 return;
             }
-            else if (reconnectBox!=null)
+
+            if (reconnectBox!=null)
             {
                 reconnectBox.Close(null,null);
                 reconnectBox = null;

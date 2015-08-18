@@ -30,7 +30,7 @@ namespace Subsurface.Networking
 
         private Client myClient;
 
-        public GameServer(string name, int port, bool isPublic = false, string password="")
+        public GameServer(string name, int port, bool isPublic = false, string password="", bool attemptUPnP = false, int maxPlayers = 10)
         {
             var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.style, inGameHUD);
             endRoundButton.OnClicked = EndButtonHit;
@@ -41,26 +41,30 @@ namespace Subsurface.Networking
             
             config = new NetPeerConfiguration("subsurface");
 
-            config.SimulatedLoss = 0.2f;
-            config.SimulatedMinimumLatency = 0.5f;
+            //config.SimulatedLoss = 0.2f;
+            //config.SimulatedMinimumLatency = 0.5f;
             
             config.Port = port;
             Port = port;
 
-            config.EnableUPnP = true;
+            if (attemptUPnP)
+            {
+                config.EnableUPnP = true;
+            }
 
-            config.MaximumConnections = 10;
-            
+            config.MaximumConnections = maxPlayers;
+                        
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
                         
             try
             {
                 server = new NetServer(config);    
                 server.Start();
-                
-                // attempt to forward port
-                server.UPnP.ForwardPort(port, "subsurface");
 
+                if (attemptUPnP)
+                {
+                    server.UPnP.ForwardPort(port, "subsurface");
+                }
             }
 
             catch (Exception e)
@@ -126,7 +130,7 @@ namespace Subsurface.Networking
             masterServerResponded = false;
             var restRequestHandle = client.ExecuteAsync(request, response => MasterServerCallBack(response));
 
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 15);
             while (!masterServerResponded)
             {
                 if (DateTime.Now > timeOut)
@@ -220,9 +224,9 @@ namespace Subsurface.Networking
                     break;
                 }
 
-                if (!isClient)
+                if (!isClient && (c.SimPosition==Vector2.Zero || c.SimPosition.Length() < 300.0f))
                 {
-                    //c.LargeUpdateTimer = 0;
+                    c.LargeUpdateTimer -= 2;
                     new NetworkEvent(c.ID, false);
                 }
             }
