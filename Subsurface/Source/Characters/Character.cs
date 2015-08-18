@@ -634,7 +634,6 @@ namespace Subsurface
                 }
             }
 
-
             if (AnimController.onGround &&
                 !AnimController.InWater &&
                 AnimController.Anim != AnimController.Animation.UsingConstruction)
@@ -1037,15 +1036,15 @@ namespace Subsurface
             message.Write(NetTime.Now);
 
             // Write byte = move direction
-            message.WriteRangedSingle(AnimController.TargetMovement.X, -10.0f, 10.0f, 8);
-            message.WriteRangedSingle(AnimController.TargetMovement.Y, -10.0f, 10.0f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 8);
 
             message.Write(AnimController.TargetDir==Direction.Right);
 
-            if (aiController!=null)
+            if (aiController==null)
             {
-                message.WriteRangedSingle(cursorPosition.X, -1000.0f, 1000.0f, 16);
-                message.WriteRangedSingle(cursorPosition.Y, -1000.0f, 1000.0f, 16);
+                message.Write(cursorPosition.X);
+                message.Write(cursorPosition.Y);
             }
                         
             message.Write(LargeUpdateTimer <= 0);
@@ -1061,12 +1060,12 @@ namespace Subsurface
                     message.Write(limb.body.LinearVelocity.X);
                     message.Write(limb.body.LinearVelocity.Y);
 
-                    message.Write(MathUtils.AngleToByte(limb.body.Rotation));
+                    message.Write(limb.body.Rotation);
                     message.Write(limb.body.AngularVelocity);
                     i++;
                 }
 
-                message.WriteRangedSingle(AnimController.StunTimer, 0.0f, 60.0f, 8);
+                message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
                 message.Write((byte)health);
 
                 if (aiController != null) aiController.FillNetworkData(message);
@@ -1140,13 +1139,12 @@ namespace Subsurface
 
                 targetDir           = message.ReadBoolean();
 
-                if (aiController!=null)
+                if (aiController==null)
                 {
                     cursorPos = new Vector2(
-                        message.ReadRangedSingle(-1000.0f, 1000.0f, 16), 
-                        message.ReadRangedSingle(-1000.0f, 1000.0f, 16));
+                        message.ReadFloat(), 
+                        message.ReadFloat());
                 }
-
             }
 
             catch
@@ -1181,7 +1179,7 @@ namespace Subsurface
                         vel.X = message.ReadFloat();
                         vel.Y = message.ReadFloat();
 
-                        rotation = MathUtils.ByteToAngle(message.ReadByte());
+                        rotation = message.ReadFloat();
                         angularVel = message.ReadFloat();
                     }
                     catch

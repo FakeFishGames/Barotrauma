@@ -80,6 +80,8 @@ namespace Subsurface
             : this (rect, text, null, null, alignment, textAlignment, style, parent, wrap)
         {
             this.Font = font == null ? GUI.Font : font;
+
+            SetTextPos();
         }
 
         public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)

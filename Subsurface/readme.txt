@@ -17,6 +17,31 @@ http://subsurface.gamepedia.com
 
 ------------------------------------------------------------------------
 
+Port forwarding:
+You may try to forward ports on your router using UPnP (Universal Plug and 
+Play) port forwarding by selecting "Attempt UPnP port forwarding" in the
+"Host Server" menu. 
+
+However, UPnP isn't supported by all routers, so you may need to setup port 
+forwards manually. The exact steps for forwarding a port depend on your
+router's model, but you may you may be able to find a port forwarding 
+guide for your particular router/application on portforward.com or by 
+practicing your google-fu skills.
+
+These are the values that you should use when forwarding a port to your
+Subsurface server:
+
+Service/Application: subsurface
+External Port: The port you have selected for your server (14242 by default)
+Internal Port: The port you have selected for your server (14242 by default)
+Protocol: UDP
+
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Credits:
+------------------------------------------------------------------------
+
 Programming, graphics, sounds, game design - Joonas Rikkonen ("Regalis")
 Graphics - James Bear ("Moonsaber99")
 

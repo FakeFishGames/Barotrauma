@@ -482,9 +482,9 @@ namespace Subsurface
             }
 
             message.Write(MathUtils.AngleToByte(steeringManager.WanderAngle));
-            message.WriteRangedSingle(Math.Max(updateTargetsTimer,0.0f), 0.0f, UpdateTargetsInterval, 8);
-            message.WriteRangedSingle(Math.Max(raycastTimer,0.0f), 0.0f, RaycastInterval, 8);
-            message.WriteRangedSingle(Math.Max(coolDownTimer, 0.0f), 0.0f, attackCoolDown*2.0f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(updateTargetsTimer,0.0f, UpdateTargetsInterval), 0.0f, UpdateTargetsInterval, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(raycastTimer, 0.0f, RaycastInterval), 0.0f, RaycastInterval, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(coolDownTimer, 0.0f, attackCoolDown * 2.0f), 0.0f, attackCoolDown * 2.0f, 8);
 
             message.Write(targetEntity==null ? -1 : (targetEntity as Entity).ID);
         }

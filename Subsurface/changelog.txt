@@ -1,5 +1,19 @@
 
 ---------------------------------------------------------------------------------------------------------
+v0.1.3.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- some major opimization to networked messages (less lag)
+	- option to disable UPnP port forwarding (which may have prevented some from hosting a server)
+	- a new round can't be started if a submarine hasn't been selected (which used to crash the game)
+	- maximum number of players can be changed
+	- fixed a bug in the net lobby screen that disabled the start button when the chat box was scrolled
+	to a specific position
+	- a window that displays some network statistics when hosting a server (can be activated by entering
+	"debugview" to the debug console)
+	
+---------------------------------------------------------------------------------------------------------
 v0.1.3.1
 ---------------------------------------------------------------------------------------------------------
 

@@ -13,7 +13,7 @@
     </Skills>
   </Captain>
 
-  <Engineer>
+  <Engineer minnumber="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="30,40"/>
@@ -24,7 +24,7 @@
     <Item name="Screwdriver"/>
   </Engineer>
 
-  <Mechanic>
+  <Mechanic minnumber="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="50,60"/>
