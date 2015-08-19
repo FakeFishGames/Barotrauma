@@ -158,7 +158,7 @@ namespace Subsurface
             caretTimer += deltaTime;
             caretVisible = ((caretTimer*1000.0f) % 1000) < 500;
             
-            if (rect.Contains(PlayerInput.GetMouseState.Position))
+            if (rect.Contains(PlayerInput.MousePosition))
             {
                 state = ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked()) Select();                

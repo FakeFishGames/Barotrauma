@@ -109,7 +109,12 @@ namespace Subsurface
             {
                 pass.Apply();
 
-                graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verts, 0, verts.Length / 3, WaterVertex.VertexDeclaration);
+#if WINDOWS
+    graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verts, 0, verts.Length / 3, WaterVertex.VertexDeclaration);            
+#endif
+#if LINUX
+				//graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verts, 0, verts.Length / 3, WaterVertex.VertexDeclaration, );  
+#endif
             }
         }
 
@@ -130,7 +135,9 @@ namespace Subsurface
             {
                 pass.Apply();
 
-                graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length / 3, WaterVertex.VertexDeclaration);
+#if WINDOWS
+				graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length / 3, WaterVertex.VertexDeclaration);
+#endif
             }
         }
 

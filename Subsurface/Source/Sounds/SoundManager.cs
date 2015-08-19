@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
-using OpenTK.Audio;
+#if WINDOWS
 using OpenTK.Audio.OpenAL;
+#endif
+using OpenTK.Audio;
+
 using System;
 
 namespace Subsurface.Sounds
@@ -34,14 +37,14 @@ namespace Subsurface.Sounds
 
             for (int i = 0 ; i < DefaultSourceCount; i++)
             {
-                alSources.Add(AL.GenSource());
+                alSources.Add(OpenTK.Audio.OpenAL.AL.GenSource());
             }
 
             if (ALHelper.Efx.IsInitialized)
             {
                 lowpassFilterId = ALHelper.Efx.GenFilter();
                 //alFilters.Add(alFilterId);
-                ALHelper.Efx.Filter(lowpassFilterId, EfxFilteri.FilterType, (int)EfxFilterType.Lowpass);
+                ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilteri.FilterType, (int)OpenTK.Audio.OpenAL.EfxFilterType.Lowpass);
                                 
                 //LowPassHFGain = 1;
             }
@@ -129,29 +132,29 @@ namespace Subsurface.Sounds
             for (int i = 1; i < DefaultSourceCount; i++)
             {
                 //find a source that's free to use (not playing or paused)
-                if (AL.GetSourceState(alSources[i]) == ALSourceState.Playing
-                    || AL.GetSourceState(alSources[i]) == ALSourceState.Paused) continue;
+                if (OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) == OpenTK.Audio.OpenAL.ALSourceState.Playing
+                    || OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) == OpenTK.Audio.OpenAL.ALSourceState.Paused) continue;
 
                 //if (position!=Vector2.Zero)
                 //    position /= 1000.0f;
 
                 alBuffers[i] = sound.AlBufferId;
-                AL.Source(alSources[i], ALSourceb.Looping, false);
+                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourceb.Looping, false);
 
                 position /= 1000.0f;
 
                 //System.Diagnostics.Debug.WriteLine("updatesoundpos: "+offset);
-                AL.Source(alSources[i], ALSourcef.Gain, volume);
-                AL.Source(alSources[i], ALSource3f.Position, position.X, position.Y, 0.0f);
+                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcef.Gain, volume);
+                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
 
-                AL.Source(alSources[i], ALSourcei.Buffer, sound.AlBufferId);
+                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcei.Buffer, sound.AlBufferId);
 
-                ALHelper.Efx.Filter(lowpassFilterId, EfxFilterf.LowpassGainHF, lowPassHfGain = Math.Min(lowPassGain, overrideLowPassGain));
+                ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain = Math.Min(lowPassGain, overrideLowPassGain));
                 ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
                 ALHelper.Check();
 
                 //AL.Source(alSources[i], ALSource3f.Position, position.X, position.Y, 0.0f);
-                AL.SourcePlay(alSources[i]);
+                OpenTK.Audio.OpenAL.AL.SourcePlay(alSources[i]);
 
                 //sound.sourceIndex = i;
 
@@ -261,10 +264,10 @@ namespace Subsurface.Sounds
                     for (int i = 0; i < DefaultSourceCount; i++)
                     {
                         //find a source that's free to use (not playing or paused)
-                        if (AL.GetSourceState(alSources[i]) != ALSourceState.Playing
-                            && AL.GetSourceState(alSources[i])!= ALSourceState.Paused) continue;
+                        if (OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) != OpenTK.Audio.OpenAL.ALSourceState.Playing
+                            && OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i])!= OpenTK.Audio.OpenAL.ALSourceState.Paused) continue;
 
-                        ALHelper.Efx.Filter(lowpassFilterId, EfxFilterf.LowpassGainHF, lowPassHfGain = value);                        
+                        ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain = value);                        
                         ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
                         ALHelper.Check();
                     }
@@ -293,10 +296,10 @@ namespace Subsurface.Sounds
             position/= 1000.0f;
             
             //System.Diagnostics.Debug.WriteLine("updatesoundpos: "+offset);
-            AL.Source(alSources[sourceIndex], ALSourcef.Gain, baseVolume);
-            AL.Source(alSources[sourceIndex], ALSource3f.Position, position.X, position.Y, 0.0f);
+            OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourcef.Gain, baseVolume);
+            OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
 
-            ALHelper.Efx.Filter(lowpassFilterId, EfxFilterf.LowpassGainHF, lowPassHfGain = Math.Min(lowPassGain, overrideLowPassGain));
+            ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain = Math.Min(lowPassGain, overrideLowPassGain));
             ALHelper.Efx.BindFilterToSource(alSources[sourceIndex], lowpassFilterId);
             ALHelper.Check();
         }
@@ -328,7 +331,7 @@ namespace Subsurface.Sounds
             { 
                 if (alBuffers[i] == bufferId)
                 {
-                    AL.Source(alSources[i], ALSourcei.Buffer, 0);
+                    OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcei.Buffer, 0);
                 }
             }
 
@@ -343,11 +346,11 @@ namespace Subsurface.Sounds
 
             for (int i = 0; i < DefaultSourceCount; i++)
             {
-                var state = AL.GetSourceState(alSources[i]);
-                if (state == ALSourceState.Playing || state == ALSourceState.Paused)
+                var state = OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]);
+                if (state == OpenTK.Audio.OpenAL.ALSourceState.Playing || state == OpenTK.Audio.OpenAL.ALSourceState.Paused)
                     Stop(i);
 
-                AL.DeleteSource(alSources[i]);
+                OpenTK.Audio.OpenAL.AL.DeleteSource(alSources[i]);
                 
                 ALHelper.Check();
             }

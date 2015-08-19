@@ -60,7 +60,7 @@ namespace Subsurface
         
         public override void Draw(SpriteBatch spriteBatch)
         {
-            if (rect.Contains(PlayerInput.GetMouseState.Position) && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
+            if (rect.Contains(PlayerInput.MousePosition) && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
             {
                 state = ComponentState.Hover;
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
