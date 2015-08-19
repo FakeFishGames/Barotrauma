@@ -22,6 +22,8 @@ namespace Subsurface
 
             Game1.GameSession.StartShift(TimeSpan.Zero, "tutorial");
 
+            Game1.GameSession.taskManager.Tasks.Clear();
+
             Game1.GameScreen.Select();
         }
 
@@ -184,7 +186,7 @@ namespace Subsurface
                 + " going into the to the power connection - that's why the monitor isn't working."
                 + " You should find a piece of wire to connect it. Try searching some of the cabinets scattered around the sub.");
 
-            while (Character.Controlled.Inventory.items.FirstOrDefault(i => i!=null && i.GetComponent<Wire>()!=null)==null)
+            while (!HasItem("Wire"))
             {
                 yield return Status.Running;
             }
@@ -280,31 +282,158 @@ namespace Subsurface
             var moloch = new Character("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 15.0f);
             moloch.PlaySound(AIController.AiState.Attack);
 
-            //moloch.AIController.
-
             infoBox = CreateInfoFrame("Uh-oh... Something enormous just appeared on the radar.");
 
-            Structure window = null;
+            List<Structure> windows = new List<Structure>();
             foreach (Structure s in Structure.wallList)
             {
-                if (s.CastShadow) continue;
+                if (s.CastShadow || !s.HasBody) continue;
 
-                if (window == null || s.Rect.Right > window.Rect.Right) window = s;
+                if (s.Rect.Right > steering.Item.Position.X) windows.Add(s);
             }
 
             bool broken = false;
             do
             {
-                moloch.AIController.SelectTarget(steering.Item);
-                for (int i = 0; i < window.SectionCount; i++)
+                moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
+                Vector2 steeringDir = windows[0].Position - moloch.Position;
+                if (steeringDir != Vector2.Zero) steeringDir = Vector2.Normalize(steeringDir);
+
+                foreach (Limb limb in moloch.AnimController.limbs)
                 {
-                    if (!window.SectionHasHole(i)) continue;
-                    broken = true;
-                    break;
+                    limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X, limb.LinearVelocity.Y + steeringDir.Y*0.01f);
                 }
+
+                moloch.AIController.Steering = steeringDir;
+
+                foreach (Structure window in windows)
+                {
+                    for (int i = 0; i < window.SectionCount; i++)
+                    {
+                        if (!window.SectionHasHole(i)) continue;
+                        broken = true;
+                        break;
+                    }
+                    if (broken) break;
+                }
+
 
                 yield return new WaitForSeconds(1.0f);
             } while (!broken);
+
+            yield return new WaitForSeconds(1.0f);
+            
+
+            var capacitor1 = Item.itemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
+            var capacitor2 = Item.itemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
+            CoroutineManager.StartCoroutine(KeepEnemyAway(moloch, new PowerContainer[] { capacitor1, capacitor2 }));
+
+
+            infoBox = CreateInfoFrame("The hull has been breached! Close all the doors to the command room to stop the water from flooding the entire sub!");
+
+
+            Door commandDoor1 = Item.itemList.Find(i => i.HasTag("commanddoor1")).GetComponent<Door>();
+            Door commandDoor2 = Item.itemList.Find(i => i.HasTag("commanddoor2")).GetComponent<Door>();
+            Door commandDoor3 = Item.itemList.Find(i => i.HasTag("commanddoor3")).GetComponent<Door>();
+
+            while (commandDoor1.IsOpen && (commandDoor2.IsOpen || commandDoor3.IsOpen))
+            {
+                yield return Status.Running;
+            }
+
+            infoBox = CreateInfoFrame("Great! You should find yourself an diving mask or a diving suit, in case the creature causes more damage. "+
+                "There are some in the room next to the airlock.");
+
+            while (!HasItem("Diving Mask") && !HasItem("Diving Suit"))
+            {
+                yield return Status.Running; 
+            }
+
+            if (HasItem("Diving Mask"))
+            {
+                infoBox = CreateInfoFrame("The diving mask will let you breathe underwater, but it won't protect from the water pressure outside the sub. "+
+                    "It should be fine for the situation at hand, but you still need to find an oxygen tank and drag it into the same slot as the mask." +
+                    "You should grab one or two.");
+            }
+            else if (HasItem("Diving Suit"))
+            {
+                infoBox = CreateInfoFrame("In addition to letting you breathe underwater, the suit will protect you from the water pressure outside the sub " +
+                    "(unlike the diving mask). However, you still need to drag an oxygen tank into the same slot as the suit to supply oxygen. "+ 
+                    "You should grab one or two.");
+            }
+
+            while (!HasItem("Oxygen Tank"))
+            {
+                yield return Status.Running;
+            }
+
+            yield return new WaitForSeconds(5.0f);
+
+            infoBox = CreateInfoFrame("Now it's time to stop the creature attacking the submarine. Head to the railgun room at the upper right corner of the sub.");
+
+            var railGun = Item.itemList.Find(i => i.GetComponent<Turret>()!=null);
+
+            while (Vector2.Distance(Character.Controlled.Position, railGun.Position)>500)
+            {
+                yield return new WaitForSeconds(1.0f);
+            }
+
+            infoBox = CreateInfoFrame("The railgun requires a large power surge to fire. The reactor can't provide a surge large enough, so we need to use the "
+                +" supercapacitors in the railgun room. The capacitors need to be charged first; select them and crank up the recharge rate.");
+
+            while (capacitor1.RechargeSpeed<0.5f && capacitor2.RechargeSpeed<0.5f)
+            {
+                yield return new WaitForSeconds(1.0f);
+            }
+
+            infoBox = CreateInfoFrame("The capacitors consume large amounts of power when they're being charged at a high rate. "+
+                "Be cautious to overload the electrical grid or the reactor. They also take some time to recharge, so now is a good "+
+                "time to head to the room below to load some shells into the railgun.");
+
+
+            var loader = Item.itemList.Find(i => i.Name == "Railgun Loader").GetComponent<ItemContainer>();
+
+            while (Math.Abs(Character.Controlled.Position.Y - loader.Item.Position.Y)>50)
+            {
+                yield return Status.Running;
+            }
+
+            infoBox = CreateInfoFrame("Grab one of the shells. You can load it by selecting the railgun loader and dragging the shell to. "
+                +"one of the free slots.");
+
+            while (loader.Item.ContainedItems.FirstOrDefault(i => i != null) != null)
+            {
+                capacitor1.Charge += 1.0f;
+                capacitor2.Charge += 1.0f;
+                yield return Status.Running;
+            }
+
+
+            yield return Status.Success;
+        }
+
+        private bool HasItem(string itemName)
+        {
+            if (Character.Controlled == null) return false;
+            return Character.Controlled.Inventory.items.FirstOrDefault(i => i != null && i.Name == itemName)!=null;
+        }
+
+        /// <summary>
+        /// keeps the enemy away from the sub until the capacitors are loaded
+        /// </summary>
+        private IEnumerable<object> KeepEnemyAway(Character enemy, PowerContainer[] capacitors)
+        {
+            do
+            {
+                Vector2 targetPos = Character.Controlled.Position + new Vector2(0.0f, 3000.0f);
+
+                Vector2 steering = targetPos - enemy.Position;
+                if (steering != Vector2.Zero) steering = Vector2.Normalize(steering);
+
+                enemy.AIController.Steering = steering*2.0f;
+
+                yield return Status.Running;
+            } while (capacitors.FirstOrDefault(c => c.Charge > 0.4f) == null);
 
             yield return Status.Success;
         }

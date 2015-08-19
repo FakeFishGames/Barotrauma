@@ -48,10 +48,7 @@ namespace Subsurface.Items.Components
             get { return targetVelocity;}
             set 
             {
-                if (float.IsNaN(value.X) || float.IsNaN(value.Y))
-                {
-                    return;
-                }
+                if (!MathUtils.IsValid(value)) return;
                 targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
                 targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
             }

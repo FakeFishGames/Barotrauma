@@ -3,6 +3,7 @@ using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using Subsurface.Items.Components;
 
 namespace Subsurface
 {
@@ -542,7 +543,7 @@ namespace Subsurface
 
         void UpdateClimbing()
         {
-            if (character.SelectedConstruction == null)
+            if (character.SelectedConstruction == null || character.SelectedConstruction.GetComponent<Ladder>()==null)
             {
                 Anim = Animation.None;
                 return;
@@ -623,7 +624,12 @@ namespace Subsurface
             torso.body.ApplyForce(climbForce * 40.0f * torso.Mass);
             head.body.SmoothRotate(0.0f);
 
-            Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.First();
+            Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.FirstOrDefault();
+            if (trigger == null)
+            {
+                character.SelectedConstruction = null;
+                return;
+            }
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
             //stop climbing if:

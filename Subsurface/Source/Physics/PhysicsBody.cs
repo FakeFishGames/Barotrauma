@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
 using System.Collections.Generic;
+using System;
 
 namespace Subsurface
 {
@@ -48,6 +49,7 @@ namespace Subsurface
             get { return targetPosition; }
             set
             {
+                if (float.IsNaN(value.X) || float.IsNaN(value.Y)) return;
                 targetPosition.X = MathHelper.Clamp(value.X, -10000.0f, 10000.0f);
                 targetPosition.Y = MathHelper.Clamp(value.Y, -10000.0f, 10000.0f);
             }
@@ -57,7 +59,8 @@ namespace Subsurface
         {
             get { return targetVelocity; }
             set 
-            { 
+            {
+                if (float.IsNaN(value.X) || float.IsNaN(value.Y)) return;
                 targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
                 targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f); 
             }
@@ -68,7 +71,7 @@ namespace Subsurface
             get { return targetRotation; }
             set 
             {
-                if (float.IsNaN(value) || float.IsInfinity(value) || float.IsNegativeInfinity(value)) return;
+                if (float.IsNaN(value) || float.IsInfinity(value)) return;
                 targetRotation = value; 
             }
         }
@@ -76,7 +79,11 @@ namespace Subsurface
         public float TargetAngularVelocity
         {
             get { return targetAngularVelocity; }
-            set { targetAngularVelocity = value; }
+            set 
+            {
+                if (float.IsNaN(value) || float.IsInfinity(value)) return;
+                targetAngularVelocity = value; 
+            }
         }
 
         public Vector2 DrawPosition
@@ -356,13 +363,37 @@ namespace Subsurface
 
         public void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            targetPosition.X = message.ReadFloat();
-            targetPosition.Y = message.ReadFloat();
-            targetVelocity.X = message.ReadFloat();
-            targetVelocity.Y = message.ReadFloat();
+            Vector2 newTargetPos = Vector2.Zero;
+            Vector2 newTargetVel = Vector2.Zero;
 
-            targetRotation = message.ReadFloat();
-            targetAngularVelocity = message.ReadFloat();
+            float newTargetRotation = 0.0f, newTargetAngularVel = 0.0f;
+            try
+            {
+                newTargetPos = new Vector2(message.ReadFloat(),message.ReadFloat());
+                newTargetVel = new Vector2(message.ReadFloat(),message.ReadFloat());
+
+                newTargetRotation = message.ReadFloat();
+                newTargetAngularVel = message.ReadFloat();
+            }
+
+            catch (Exception e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("invalid network message", e);
+#endif
+                return;
+            }
+
+            if (!MathUtils.IsValid(newTargetPos) || !MathUtils.IsValid(newTargetVel) ||
+                !MathUtils.IsValid(newTargetRotation) || !MathUtils.IsValid(newTargetAngularVel)) return;
+
+            targetPosition = newTargetPos;
+            targetVelocity = newTargetVel;
+
+            targetRotation = newTargetRotation;
+            targetAngularVelocity = newTargetAngularVel;
+
+
         }
     }
 }

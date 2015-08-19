@@ -72,13 +72,18 @@ namespace Subsurface.Networking
             myCharacter = Character.Controlled;
 
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
-            NetPeerConfiguration Config = new NetPeerConfiguration("subsurface");
-            
-            //Config.SimulatedLoss = 0.2f;
-            //Config.SimulatedMinimumLatency = 0.5f;
+            NetPeerConfiguration config = new NetPeerConfiguration("subsurface");
+
+#if DEBUG
+            config.SimulatedLoss = 0.2f;
+            config.SimulatedMinimumLatency = 0.3f;
+#endif 
+
+            config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
+                | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
 
             // Create new client, with previously created configs
-            client = new NetClient(Config);
+            client = new NetClient(config);
                       
             NetOutgoingMessage outmsg = client.CreateMessage();                        
             client.Start();
@@ -267,9 +272,19 @@ namespace Subsurface.Networking
                     Character.Controlled = null;
                     Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
                 }
-                else
+                else if (gameStarted)
                 {
-                    if (gameStarted) new NetworkEvent(myCharacter.ID, true);
+                    Vector2 charMovement = myCharacter.AnimController.TargetMovement;
+                    if ((charMovement==Vector2.Zero || charMovement.Length()<0.001f) && 
+                        !myCharacter.ActionKeyDown.State && !myCharacter.SecondaryKeyDown.State)
+                    {
+                        new NetworkEvent(NetworkEventType.NotMoving, myCharacter.ID, true);
+                        
+                    }
+                    else
+                    {
+                        new NetworkEvent(myCharacter.ID, true);
+                    }
                 }
             }
                           

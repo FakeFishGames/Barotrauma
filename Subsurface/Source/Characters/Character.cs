@@ -1024,6 +1024,10 @@ namespace Subsurface
             {
                 return;
             }
+            else if (type== NetworkEventType.NotMoving)
+            {
+                return;
+            }
 
 
             //if (type == Networking.NetworkEventType.KeyHit)
@@ -1057,11 +1061,11 @@ namespace Subsurface
                     message.Write(limb.body.Position.X);
                     message.Write(limb.body.Position.Y);
 
-                    message.Write(limb.body.LinearVelocity.X);
-                    message.Write(limb.body.LinearVelocity.Y);
+                    //message.Write(limb.body.LinearVelocity.X);
+                    //message.Write(limb.body.LinearVelocity.Y);
 
                     message.Write(limb.body.Rotation);
-                    message.Write(limb.body.AngularVelocity);
+                    //message.WriteRangedSingle(MathHelper.Clamp(limb.body.AngularVelocity, -10.0f, 10.0f), -10.0f, 10.0f, 8);
                     i++;
                 }
 
@@ -1116,6 +1120,13 @@ namespace Subsurface
                     Game1.Client.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
                     Game1.LightManager.LosEnabled = false;
                 }
+                return;
+            }
+            else if (type == NetworkEventType.NotMoving)
+            {
+                AnimController.TargetMovement = Vector2.Zero;
+                actionKeyDown.State = false;
+                secondaryKeyDown.State = false;
                 return;
             }
 
@@ -1176,11 +1187,11 @@ namespace Subsurface
                         pos.X = message.ReadFloat();
                         pos.Y = message.ReadFloat();
 
-                        vel.X = message.ReadFloat();
-                        vel.Y = message.ReadFloat();
+                        //vel.X = message.ReadFloat();
+                        //vel.Y = message.ReadFloat();
 
                         rotation = message.ReadFloat();
-                        angularVel = message.ReadFloat();
+                        //angularVel = message.ReadFloat();
                     }
                     catch
                     {
@@ -1189,10 +1200,10 @@ namespace Subsurface
 
                     if (limb.body != null)
                     {
-                        limb.body.TargetVelocity = vel;
+                        limb.body.TargetVelocity = limb.body.LinearVelocity;
                         limb.body.TargetPosition = pos;// +vel * (float)(deltaTime / 60.0);
                         limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
-                        limb.body.TargetAngularVelocity = angularVel;
+                        limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
                     }
 
                 }

@@ -30,7 +30,7 @@ namespace Subsurface.Networking
 
         private Client myClient;
 
-        public GameServer(string name, int port, bool isPublic = false, string password="", bool attemptUPnP = false, int maxPlayers = 10)
+        public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.style, inGameHUD);
             endRoundButton.OnClicked = EndButtonHit;
@@ -41,8 +41,10 @@ namespace Subsurface.Networking
             
             config = new NetPeerConfiguration("subsurface");
 
-            //config.SimulatedLoss = 0.2f;
-            //config.SimulatedMinimumLatency = 0.5f;
+#if DEBUG
+            config.SimulatedLoss = 0.2f;
+            config.SimulatedMinimumLatency = 0.3f;
+#endif 
             
             config.Port = port;
             Port = port;
@@ -53,6 +55,9 @@ namespace Subsurface.Networking
             }
 
             config.MaximumConnections = maxPlayers;
+
+            config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
+                | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
                         
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
                         
@@ -457,6 +462,31 @@ namespace Subsurface.Networking
             {
                 //System.Diagnostics.Debug.WriteLine("networkevent "+networkEvent.ID);
 
+                List<NetConnection> recipients = new List<NetConnection>();
+
+                if (!networkEvent.IsImportant)
+                {
+                    Entity e = Entity.FindEntityByID(networkEvent.ID);
+                    foreach (Client c in connectedClients)
+                    {
+                        if (c.character==null) continue;
+                        if (Vector2.Distance(e.SimPosition, c.character.SimPosition) > 2000.0f) continue;
+
+                        recipients.Add(c.Connection);
+                    }
+                }
+                else
+                {
+                    foreach (Client c in connectedClients)
+                    {
+                        if (c.character == null) continue;
+
+                        recipients.Add(c.Connection);
+                    }
+                }
+
+                if (recipients.Count == 0) return;
+
                 NetOutgoingMessage message = server.CreateMessage();
                 message.Write((byte)PacketTypes.NetworkEvent);
                 //if (!networkEvent.IsClient) continue;
@@ -467,7 +497,7 @@ namespace Subsurface.Networking
 
                 if (server.ConnectionsCount>0)
                 {
-                    server.SendMessage(message, server.Connections, 
+                    server.SendMessage(message, recipients, 
                         (networkEvent.IsImportant) ? NetDeliveryMethod.Unreliable : NetDeliveryMethod.ReliableUnordered, 0);  
                 }
                             
@@ -703,8 +733,7 @@ namespace Subsurface.Networking
 
             spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + server.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
             spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + server.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
-
-
+            
             y += 110;
             foreach (Client c in connectedClients)
             {

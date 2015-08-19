@@ -68,19 +68,31 @@ namespace Subsurface.Items.Components
         public float FissionRate
         {
             get { return fissionRate; }
-            set { fissionRate = MathHelper.Clamp(value, 0.0f, 100.0f); }
+            set 
+            {
+                if (!MathUtils.IsValid(value)) return;
+                fissionRate = MathHelper.Clamp(value, 0.0f, 100.0f); 
+            }
         }
 
         public float CoolingRate
         {
             get { return coolingRate; }
-            set { coolingRate = MathHelper.Clamp(value, 0.0f, 100.0f); }
+            set 
+            {
+                if (!MathUtils.IsValid(value)) return;
+                coolingRate = MathHelper.Clamp(value, 0.0f, 100.0f); 
+            }
         }
 
         public float Temperature
         {
             get { return temperature; }
-            set { temperature = MathHelper.Clamp(value, 0.0f, 10000.0f); }
+            set 
+            {
+                if (!MathUtils.IsValid(value)) return;
+                temperature = MathHelper.Clamp(value, 0.0f, 10000.0f); 
+            }
         }
 
         public bool IsRunning()
@@ -100,6 +112,7 @@ namespace Subsurface.Items.Components
         public float ShutDownTemp
         {
             get { return shutDownTemp; }
+            private set { shutDownTemp = MathHelper.Clamp(value, 0.0f, 10000.0f); }
         }
 
         public Reactor(Item item, XElement element)
@@ -334,12 +347,12 @@ namespace Subsurface.Items.Components
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 400, y + 180, 40, 40), "+", true))
             {
                 valueChanged = true;
-                shutDownTemp += 100.0f;
+                ShutDownTemp += 100.0f;
             }
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 450, y + 180, 40, 40), "-", true))
             {
                 valueChanged = true;
-                shutDownTemp -= 100.0f;
+                ShutDownTemp -= 100.0f;
             }
 
             if (valueChanged)
@@ -392,11 +405,11 @@ namespace Subsurface.Items.Components
         public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message)
         {
             message.Write(autoTemp);
-            message.Write(temperature);
-            message.Write(shutDownTemp);
+            message.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
+            message.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 16);
 
-            message.Write(coolingRate);
-            message.Write(fissionRate);
+            message.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
+            message.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
@@ -408,18 +421,24 @@ namespace Subsurface.Items.Components
             try
             {
                 newAutoTemp = message.ReadBoolean();
-                newTemperature = message.ReadFloat();
-                newShutDownTemp = message.ReadFloat();
+                newTemperature = message.ReadRangedSingle(0.0f, 10000.0f, 16);
+                newShutDownTemp = message.ReadRangedSingle(0.0f, 10000.0f, 16);
 
-                newCoolingRate = message.ReadFloat();
-                newFissionRate = message.ReadFloat();
+                newCoolingRate = message.ReadRangedSingle(0.0f, 100.0f, 8);
+                newFissionRate = message.ReadRangedSingle(0.0f, 100.0f, 8);
             }
 
-            catch { return; }
+            catch (Exception e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("invalid network message", e);
+#endif
+                return; 
+            }
 
             autoTemp = newAutoTemp;
             Temperature = newTemperature;
-            shutDownTemp = newShutDownTemp;
+            ShutDownTemp = newShutDownTemp;
 
             CoolingRate = newCoolingRate;
             FissionRate = newFissionRate;

@@ -505,7 +505,7 @@ namespace Subsurface
 
         private void Translate(Vector2 amount)
         {
-            if (amount == Vector2.Zero || ! amount.IsValid()) return;
+            if (amount == Vector2.Zero || !amount.IsValid()) return;
 
             Level.Loaded.Move(-amount);
         }
@@ -587,8 +587,11 @@ namespace Subsurface
                 newSpeed = new Vector2(message.ReadFloat(), message.ReadFloat());
             }
 
-            catch
+            catch (Exception e)
             {
+#if DEBUG
+                DebugConsole.ThrowError("invalid network message", e);
+#endif
                 return;
             }
 
