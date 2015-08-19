@@ -82,11 +82,10 @@ namespace Subsurface
             state = AiState.None;
         }
 
-        public override void SelectTarget(IDamageable target)
+        public override void SelectTarget(AITarget target)
         {
-            targetEntity = target;
-            selectedAiTarget = target.AiTarget;
-            selectedTargetMemory = FindTargetMemory(target.AiTarget);
+            selectedAiTarget = target;
+            selectedTargetMemory = FindTargetMemory(target);
 
             targetValue = 100.0f;
         }

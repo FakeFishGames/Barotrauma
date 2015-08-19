@@ -45,6 +45,11 @@ namespace Subsurface
             get { return Vector2.Zero; }
         }
 
+        public AITarget AiTarget
+        {
+            get { return aiTarget; }
+        }
+
         public Entity()
         {
             //give  an unique ID

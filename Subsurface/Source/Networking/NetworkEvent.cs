@@ -11,14 +11,15 @@ namespace Subsurface.Networking
         DropItem = 3,
         InventoryUpdate = 4,
         PickItem = 5,
-        UpdateProperty = 6
+        UpdateProperty = 6,
+        NotMoving = 7
     }
 
     class NetworkEvent
     {
         public static List<NetworkEvent> events = new List<NetworkEvent>();
 
-        private static bool[] isImportant = { false, true, false, true, true, true };
+        private static bool[] isImportant = { false, true, false, true, true, true, true, false };
 
         private int id;
 

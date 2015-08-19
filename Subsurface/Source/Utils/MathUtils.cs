@@ -27,6 +27,18 @@ namespace Subsurface
             return (float)Math.Atan2(vector.Y, vector.X);
         }
 
+        public static bool IsValid(float value)
+        {
+            return (!float.IsInfinity(value) && !float.IsInfinity(value));
+        }
+
+        public static bool IsValid(Vector2 vector)
+        {
+            return (!float.IsInfinity(vector.X) && !float.IsInfinity(vector.Y) && !float.IsNaN(vector.X) && !float.IsNaN(vector.Y));
+        }
+
+
+
         public static float CurveAngle(float from, float to, float step)
         {
 
