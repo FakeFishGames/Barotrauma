@@ -274,7 +274,7 @@ namespace Subsurface
 
             bool clicked = false;
 
-            if (rect.Contains(PlayerInput.GetMouseState.Position))
+            if (rect.Contains(PlayerInput.MousePosition))
             {
                 clicked = (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
 

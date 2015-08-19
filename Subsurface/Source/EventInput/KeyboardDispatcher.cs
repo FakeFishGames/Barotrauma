@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
+#if WINDOWS
 using System.Windows;
+#endif
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -42,12 +44,14 @@ namespace EventInput
                 //ctrl-v
                 if (e.Character == 0x16)
                 {
+#if WINDOWS
                     //XNA runs in Multiple Thread Apartment state, which cannot recieve clipboard
                     Thread thread = new Thread(PasteThread);
                     thread.SetApartmentState(ApartmentState.STA);
                     thread.Start();
                     thread.Join();
                     _subscriber.ReceiveTextInput(_pasteResult);
+#endif
                 }
                 else
                 {
@@ -74,6 +78,7 @@ namespace EventInput
             }
         }
 
+#if WINDOWS
         //Thread has to be in Single Thread Apartment state in order to receive clipboard
         string _pasteResult = "";
         [STAThread]
@@ -81,5 +86,7 @@ namespace EventInput
         {
             _pasteResult = Clipboard.ContainsText() ? Clipboard.GetText() : "";
         }
+#endif
+
     }
 }

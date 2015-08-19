@@ -739,7 +739,6 @@ namespace Subsurface.Networking
             {
                 spriteBatch.DrawString(GUI.SmallFont, c.name + ":", new Vector2(x + 10, y), Color.White);
                 spriteBatch.DrawString(GUI.SmallFont, "- avg roundtrip " + c.Connection.AverageRoundtripTime+" s", new Vector2(x + 20, y + 15), Color.White);
-                spriteBatch.DrawString(GUI.SmallFont, "- current MTU " + c.Connection.CurrentMTU, new Vector2(x + 20, y + 30), Color.White);
                 y += 50;
             
             }
