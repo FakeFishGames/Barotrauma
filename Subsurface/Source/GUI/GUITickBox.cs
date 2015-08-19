@@ -56,7 +56,7 @@ namespace Subsurface
 
             if (!Enabled) return;
 
-            if (box.Rect.Contains(PlayerInput.GetMouseState.Position))
+            if (box.Rect.Contains(PlayerInput.MousePosition))
             {
 
 

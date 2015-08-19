@@ -155,14 +155,14 @@ namespace Subsurface
             int moveAmount;
             if (isHorizontal)
             {
-                moveAmount = PlayerInput.GetMouseState.Position.X - PlayerInput.GetOldMouseState.Position.X;
+                moveAmount = (int)PlayerInput.MouseSpeed.X;
                 newX = Math.Min(Math.Max(newX + moveAmount, 0), frame.Rect.Width - bar.Rect.Width);
 
                 barScroll = (float)newX / ((float)frame.Rect.Width - (float)bar.Rect.Width);
             }
             else
             {
-                moveAmount = PlayerInput.GetMouseState.Position.Y - PlayerInput.GetOldMouseState.Position.Y;
+                moveAmount = (int)PlayerInput.MouseSpeed.Y;
                 newY = Math.Min(Math.Max(newY+moveAmount, 0), frame.Rect.Height - bar.Rect.Height);
 
                 barScroll = (float)newY / ((float)frame.Rect.Height - (float)bar.Rect.Height);

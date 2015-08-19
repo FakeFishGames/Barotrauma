@@ -284,7 +284,7 @@ namespace Subsurface
                         if (CheckSelected() != selected.UserData) selected = null;
                     }
                 }
-                else if (enabled && (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.GetMouseState.Position))
+                else if (enabled && (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())

@@ -146,7 +146,7 @@ namespace Subsurface
             graphics.Clear(new Color(11, 18, 26, 255));
 
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearWrap);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
 
             Vector2 backgroundPos = cam.Position;
             if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;

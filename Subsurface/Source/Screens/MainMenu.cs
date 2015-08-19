@@ -191,7 +191,7 @@ namespace Subsurface
             int currMaxPlayers = 10;
 
             int.TryParse(maxPlayersBox.Text, out currMaxPlayers);
-            currMaxPlayers = MathHelper.Clamp(currMaxPlayers+(int)button.UserData, 1, 10);
+            currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers+(int)button.UserData, 1, 10);
 
             maxPlayersBox.Text = currMaxPlayers.ToString();
 
