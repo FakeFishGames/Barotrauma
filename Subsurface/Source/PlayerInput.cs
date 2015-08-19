@@ -69,7 +69,12 @@ namespace Subsurface
 
         public static Vector2 MousePosition
         {
+#if WINDOWS
             get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
+#endif
+#if LINUX
+            get { return new Vector2(mouseState.Y, mouseState.X); }
+#endif
         }
 
         public static MouseState GetMouseState
@@ -85,8 +90,12 @@ namespace Subsurface
         {
             get 
             { 
-                Point speed = mouseState.Position - oldMouseState.Position; 
-                return new Vector2(speed.X, speed.Y); 
+#if WINDOWS
+				return mouseState.Position - oldMouseState.Position; 
+#endif
+#if LINUX
+				return MousePosition - new Vector2(oldMouseState.X, oldMouseState.Y); 
+#endif
             }
         }
 

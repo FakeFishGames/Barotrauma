@@ -10,6 +10,7 @@ using Subsurface.Particles;
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
+using System.Xml;
 
 namespace Subsurface
 {
@@ -119,8 +120,8 @@ namespace Subsurface
             //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
 
             World = new World(new Vector2(0, -9.82f));
-            Settings.VelocityIterations = 2;
-            Settings.PositionIterations = 1;
+            FarseerPhysics.Settings.VelocityIterations = 2;
+            FarseerPhysics.Settings.PositionIterations = 1;
         }
 
         /// <summary>
