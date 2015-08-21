@@ -142,7 +142,7 @@ namespace Launcher
 
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "XML files (*.xml)|*.xml;*.XML";
-            //ofd.RestoreDirectory?
+            ofd.RestoreDirectory = true;
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
@@ -253,7 +253,7 @@ namespace Launcher
 
         private void okButton_Click(object sender, EventArgs e)
         {
-            if (selectedPackage!=null) selectedPackage.Save(LauncherMain.ContentPackageFolder);
+            if (selectedPackage!=null) selectedPackage.Save(ContentPackage.Folder);
 
             this.Close();
         }

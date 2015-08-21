@@ -119,7 +119,6 @@ namespace Subsurface.Items.Components
                 (int)doorSprite.size.X,
                 (int)doorSprite.size.Y);
 
-
             body = new PhysicsBody(BodyFactory.CreateRectangle(Game1.World,
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),

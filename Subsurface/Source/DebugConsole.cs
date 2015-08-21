@@ -136,11 +136,13 @@ namespace Subsurface
 
         public static void ExecuteCommand(string command, Game1 game)
         {
+#if !DEBUG
             if (Game1.Client!=null)
             {
                 ThrowError("Console commands are disabled in multiplayer mode");
                 return;
             }
+#endif
 
             if (command == "") return;
             string[] commands = command.Split(' ');

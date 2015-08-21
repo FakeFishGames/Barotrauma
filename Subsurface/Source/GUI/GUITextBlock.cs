@@ -120,11 +120,7 @@ namespace Subsurface
             if (parent != null)
                 parent.AddChild(this);
 
-            //if (wrap)
-            //{
-                this.Wrap = wrap;
-            //    this.text = ToolBox.WrapText(this.text, rect.Width);
-            //}
+            this.Wrap = wrap;
 
             SetTextPos();
         }
@@ -138,7 +134,7 @@ namespace Subsurface
             if (Wrap && rect.Width>0)
             {
                 //text = text.Replace("\n"," ");
-                text = ToolBox.WrapText(text, rect.Width, Font);
+                text = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font);
 
                 Vector2 newSize = MeasureText(text);
 

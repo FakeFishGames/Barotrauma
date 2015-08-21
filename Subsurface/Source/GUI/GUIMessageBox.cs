@@ -15,6 +15,12 @@ namespace Subsurface
         //GUIFrame frame;
         public GUIButton[] Buttons;
 
+        public string Text
+        {
+            get { return (children[1] as GUITextBlock).Text; }
+            set { (children[1] as GUITextBlock).Text = value; }
+        }
+
         public GUIMessageBox(string header, string text)
             : this(header, text, new string[] {"OK"})
         {

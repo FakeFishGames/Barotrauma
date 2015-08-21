@@ -50,7 +50,7 @@ namespace Subsurface
         private string name;
 
 
-        private double lastNetworkUpdate;
+        private float lastNetworkUpdate;
 
 
         //properties ----------------------------------------------------
@@ -564,7 +564,7 @@ namespace Subsurface
 
         public override void FillNetworkData(Networking.NetworkEventType type, NetOutgoingMessage message, object data)
         {
-            message.Write(NetTime.Now);
+            message.Write((float)NetTime.Now);
             message.Write(Position.X);
             message.Write(Position.Y);
 
@@ -575,11 +575,11 @@ namespace Subsurface
 
         public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message)
         {
-            double sendingTime;
+            float sendingTime;
             Vector2 newTargetPosition, newSpeed;
             try
             {
-                sendingTime = message.ReadDouble();
+                sendingTime = message.ReadFloat();
 
                 if (sendingTime <= lastNetworkUpdate) return;
 
@@ -595,7 +595,7 @@ namespace Subsurface
                 return;
             }
 
-            if (!speed.IsValid() || targetPosition.IsValid()) return;
+            if (!newSpeed.IsValid() || !newTargetPosition.IsValid()) return;
 
             //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
 

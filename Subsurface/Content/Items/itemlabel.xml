@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<Item
+	name="Label"
+	resizehorizontal="true"
+  resizevertical="true">
+
+  <Sprite texture ="blank.png" depth="0.85"/>
+
+  <ItemLabel/>
+</Item>
+	
+
+

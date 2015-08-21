@@ -9,6 +9,8 @@ namespace Subsurface.Items.Components
 
         private string expression;
 
+        private string receivedSignal;
+
         [InGameEditable, HasDefaultValue("1", true)]
         public string Output
         {
@@ -26,6 +28,27 @@ namespace Subsurface.Items.Components
         public RegExFindComponent(Item item, XElement element)
             : base(item, element)
         {
+            isActive = true;
+        }
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            if (string.IsNullOrWhiteSpace(expression)) return;
+
+            bool success = false;
+            try
+            {
+                Regex regex = new Regex(@expression);
+                Match match = regex.Match(receivedSignal);
+                success = match.Success;
+            }
+            catch
+            {
+                item.SendSignal("ERROR", "signal_out");
+                return;
+            }
+
+            item.SendSignal(success ? output : "0", "signal_out");
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0.0f)
@@ -33,22 +56,7 @@ namespace Subsurface.Items.Components
             switch (connection.Name)
             {
                 case "signal_in":
-                    if (string.IsNullOrWhiteSpace(expression)) return;
-
-                    bool success = false;
-                    try
-                    {
-                        Regex regex = new Regex(@expression);
-                        Match match = regex.Match(signal);
-                        success = match.Success;
-                    }
-                    catch
-                    {
-                        item.SendSignal("ERROR", "signal_out");
-                        return;
-                    }
-
-                    item.SendSignal(success ? output : "0", "signal_out");
+                    receivedSignal = signal;
 
                     break;
                 case "set_output":

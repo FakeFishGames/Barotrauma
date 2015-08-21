@@ -102,6 +102,7 @@
             this.itemList.Name = "itemList";
             this.itemList.Size = new System.Drawing.Size(255, 134);
             this.itemList.TabIndex = 8;
+            this.itemList.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.fileList_KeyPress);
             // 
             // itemButton
             // 
@@ -161,6 +162,7 @@
             this.structureList.Name = "structureList";
             this.structureList.Size = new System.Drawing.Size(255, 121);
             this.structureList.TabIndex = 8;
+            this.structureList.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.fileList_KeyPress);
             // 
             // structureButton
             // 
@@ -189,6 +191,7 @@
             this.jobList.Name = "jobList";
             this.jobList.Size = new System.Drawing.Size(255, 134);
             this.jobList.TabIndex = 11;
+            this.jobList.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.fileList_KeyPress);
             // 
             // label4
             // 

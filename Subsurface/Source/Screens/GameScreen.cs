@@ -75,11 +75,12 @@ namespace Subsurface
 
             StatusEffect.UpdateAll((float)deltaTime);
 
-            cam.MoveCamera((float)deltaTime);
 
             Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 4);
             while (Physics.accumulator >= Physics.step)
             {
+                cam.MoveCamera((float)Physics.step);
+
                 foreach (PhysicsBody pb in PhysicsBody.list)
                 {
                     pb.SetPrevTransform(pb.Position, pb.Rotation);

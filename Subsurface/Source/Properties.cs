@@ -11,6 +11,12 @@ namespace Subsurface
     [AttributeUsage(AttributeTargets.Property)]
     public class Editable : System.Attribute
     {
+        public int MaxLength;
+
+        public Editable(int maxLength = 20)
+        {
+            MaxLength = maxLength;
+        }
     }
 
     [AttributeUsage(AttributeTargets.Property)]

@@ -301,8 +301,16 @@ namespace Subsurface
                 spriteBatch.DrawString(Font,
                     "Physics: " + Game1.World.UpdateTime
                     + " - bodies: " + Game1.World.BodyList.Count 
-                    + "Camera pos: " + Game1.GameScreen.Cam.Position,
+                    + " Camera pos: " + Game1.GameScreen.Cam.Position,
                     new Vector2(10, 30), Color.White);
+
+                if (Submarine.Loaded!=null)
+                {
+                    spriteBatch.DrawString(Font,
+                        "Sub pos: " + Submarine.Loaded.Position,
+                        new Vector2(10, 50), Color.White);
+                }
+
             }
 
             

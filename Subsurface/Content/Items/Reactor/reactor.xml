@@ -34,6 +34,8 @@
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_out"/>
+      <output name="temperature_out"/>
+      <input name="shutdown"/>
     </ConnectionPanel>
 
     <ItemContainer capacity="5">
