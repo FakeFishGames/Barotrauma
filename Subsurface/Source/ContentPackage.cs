@@ -15,6 +15,9 @@ namespace Subsurface
 
     public class ContentPackage
     {
+
+        public static string Folder = "Data/ContentPackages/";
+
         public static List<ContentPackage> list = new List<ContentPackage>();
 
 
@@ -80,6 +83,7 @@ namespace Subsurface
         {
             ContentPackage newPackage = new ContentPackage();
             newPackage.name = name;
+            newPackage.Path = Folder + name;
             list.Add(newPackage);
 
             return newPackage;

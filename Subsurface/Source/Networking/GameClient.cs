@@ -377,7 +377,7 @@ namespace Subsurface.Networking
                         break;
                     case (byte)PacketTypes.EndGame:
                         string endMessage = inc.ReadString();
-                        EndGame(endMessage);
+                        CoroutineManager.StartCoroutine(EndGame(endMessage));
                         break;
                     case (byte)PacketTypes.PlayerJoined:
 
@@ -429,19 +429,48 @@ namespace Subsurface.Networking
             }
         }
 
-        public void EndGame(string endMessage)
+        public IEnumerable<object> EndGame(string endMessage)
         {
+            gameStarted = false;
+            
+            var messageBox = new GUIMessageBox("The round has ended", endMessage);
+
+            Character.Controlled = null;
+            Game1.LightManager.LosEnabled = false;
+
+            float endPreviewLength = 10.0f;
+
+            DateTime endTime = DateTime.Now + new TimeSpan(0,0,0,0,(int)(1000.0f*endPreviewLength));
+            float secondsLeft = endPreviewLength;
+
+            do
+            {
+                secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
+
+                float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
+                Vector2 offset = (new Vector2(
+                    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+                    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+
+                Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
+                //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
+
+                messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
+                yield return Status.Running;
+            } while (secondsLeft > 0.0f);
+
+            messageBox.Text = endMessage;
+
             Submarine.Unload();
 
             Game1.NetLobbyScreen.Select();
 
             if (Game1.GameSession!=null) Game1.GameSession.EndShift("");
 
-            new GUIMessageBox("The round has ended", endMessage);
-
             myCharacter = null;
 
-            gameStarted = false;
+            yield return Status.Success;
+
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)

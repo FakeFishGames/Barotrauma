@@ -76,7 +76,9 @@
     <Compile Include="Source\GUI\GUIMessage.cs" />
     <Compile Include="Source\GUI\TitleScreen.cs" />
     <Compile Include="Source\Items\Components\Label.cs" />
+    <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="Source\Items\Components\Signal\SignalCheckComponent.cs" />
+    <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\FixRequirement.cs" />
     <Compile Include="Source\Map\Lights\Light.cs" />
     <Compile Include="Source\Map\LocationType.cs" />
@@ -301,6 +303,9 @@
     <Content Include="Content\Items\Artifacts\artifacts.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\blank.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Items\Clothes\captainLegs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -308,6 +313,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Electricity\lamp.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Electricity\wifi.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Electricity\regex.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Electricity\lights.xml">
@@ -318,6 +329,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Electricity\monitors.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\itemlabel.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Medical\medical.xml">
@@ -557,7 +571,7 @@
     <Content Include="Content\Items\Electricity\junctionbox.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Ladder\item.xml">
+    <Content Include="Content\Items\Ladder\ladder.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Ladder\ladder.png">

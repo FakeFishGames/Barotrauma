@@ -149,13 +149,7 @@ namespace Subsurface.Networking
                 yield return Status.Running;
             }
 
-
-
             yield return Status.Success;
-
-
-
-
         }
 
         private void MasterServerCallBack(IRestResponse response)
@@ -617,9 +611,10 @@ namespace Subsurface.Networking
             return true;
         }
 
-        public void EndGame(string endMessage)
+        public IEnumerable<object> EndGame(string endMessage)
         {
 
+            gameStarted = false;
 
             if (connectedClients.Count > 0)
             {
@@ -639,13 +634,34 @@ namespace Subsurface.Networking
                 }
             }
 
+            float endPreviewLength = 10.0f;
+
+            DateTime endTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, (int)(1000.0f * endPreviewLength));
+            float secondsLeft = endPreviewLength;
+
+            do
+            {
+                secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
+
+                float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
+                Vector2 offset = (new Vector2(
+                    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+                    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+
+                Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
+                //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
+
+                yield return Status.Running;
+            } while (secondsLeft > 0.0f);
+
             Submarine.Unload();
-                      
-            gameStarted = false;
 
             Game1.NetLobbyScreen.Select();
 
             DebugConsole.ThrowError(endMessage);
+
+            yield return Status.Success;
+
         }
 
         private void DisconnectClient(NetConnection senderConnection)

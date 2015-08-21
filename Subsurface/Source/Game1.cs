@@ -265,7 +265,7 @@ namespace Subsurface
 
                 DebugConsole.Update(this, (float)deltaTime);
 
-                if ((!DebugConsole.IsOpen && !GUI.PauseMenuOpen) || NetworkMember != null) Screen.Selected.Update(deltaTime);
+                if ((!DebugConsole.IsOpen && !GUI.PauseMenuOpen) || (NetworkMember != null && NetworkMember.GameStarted)) Screen.Selected.Update(deltaTime);
 
                 GUI.Update((float)deltaTime);
 

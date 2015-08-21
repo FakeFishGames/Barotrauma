@@ -29,16 +29,14 @@ namespace Subsurface
 
         public static bool IsValid(float value)
         {
-            return (!float.IsInfinity(value) && !float.IsInfinity(value));
+            return (!float.IsInfinity(value) && !float.IsNaN(value));
         }
 
         public static bool IsValid(Vector2 vector)
         {
-            return (!float.IsInfinity(vector.X) && !float.IsInfinity(vector.Y) && !float.IsNaN(vector.X) && !float.IsNaN(vector.Y));
+            return (IsValid(vector.X) && IsValid(vector.Y));
         }
-
-
-
+        
         public static float CurveAngle(float from, float to, float step)
         {
 

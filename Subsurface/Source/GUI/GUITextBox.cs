@@ -146,6 +146,7 @@ namespace Subsurface
 
         public void Deselect()
         {
+            Selected = false;
             if (keyboardDispatcher.Subscriber == this) keyboardDispatcher.Subscriber = null;
         }
 

@@ -36,7 +36,7 @@ namespace Subsurface
 
         private CharacterInventory inventory;
 
-        public double LastNetworkUpdate;
+        public float LastNetworkUpdate;
 
         public int LargeUpdateTimer;
 
@@ -1037,7 +1037,7 @@ namespace Subsurface
                 message.Write(secondaryKeyDown.Dequeue);
             //}
 
-            message.Write(NetTime.Now);
+            message.Write((float)NetTime.Now);
 
             // Write byte = move direction
             message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
@@ -1132,7 +1132,7 @@ namespace Subsurface
 
             bool actionKeyState     = false;
             bool secondaryKeyState  = false;
-            double sendingTime      = 0.0f;
+            float sendingTime      = 0.0f;
             Vector2 targetMovement  = Vector2.Zero;
             bool targetDir          = false;
             Vector2 cursorPos       = Vector2.Zero;
@@ -1142,7 +1142,7 @@ namespace Subsurface
                 actionKeyState      = message.ReadBoolean();
                 secondaryKeyState   = message.ReadBoolean();
             
-                sendingTime         = message.ReadDouble();
+                sendingTime         = message.ReadFloat();
 
                 targetMovement = new Vector2(message.ReadRangedSingle(-10.0f, 10.0f, 8), message.ReadRangedSingle(-10.0f, 10.0f, 8));
                 targetMovement.X = MathUtils.Round(targetMovement.X, 0.1f);

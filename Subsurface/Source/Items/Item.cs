@@ -551,14 +551,18 @@ namespace Subsurface
             Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
             
-            if (body==null)
+            if (prefab.sprite!=null)
             {
-                prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
+                if (body==null)
+                {
+                    prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
+                }
+                else if (body.Enabled)
+                {
+                    body.Draw(spriteBatch, prefab.sprite, color);
+                }
             }
-            else if (body.Enabled)
-            {
-                body.Draw(spriteBatch, prefab.sprite, color);
-            }
+
 
             foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
             
@@ -670,7 +674,13 @@ namespace Subsurface
             foreach (var objectProperty in editableProperties)
             {
                 new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, null, editingHUD);
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.style, editingHUD);
+
+                int height = 20;
+                var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault<Editable>();
+                if (editable != null) height = (int)(Math.Ceiling(editable.MaxLength / 20.0f) * 20.0f);
+
+                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, height), GUI.style, editingHUD);
+                if (height>20) propertyBox.Wrap = true;
 
                 object value = objectProperty.GetValue();
                 if (value != null)
@@ -681,7 +691,7 @@ namespace Subsurface
                 propertyBox.UserData = objectProperty;
                 propertyBox.OnEnter = EnterProperty;
                 propertyBox.OnTextChanged = PropertyChanged;
-                y = y + 30;
+                y = y + height+10;
             }
             return editingHUD;
         }
@@ -938,8 +948,8 @@ namespace Subsurface
             if (objectProperty == null) return false;
 
             object prevValue = objectProperty.GetValue();
-            
-            textBox.Selected = false;
+
+            textBox.Deselect();
             
             if (objectProperty.TrySetValue(text))
             {

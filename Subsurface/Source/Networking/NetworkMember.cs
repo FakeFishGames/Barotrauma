@@ -64,6 +64,11 @@ namespace Subsurface.Networking
             }
         }
 
+        public bool GameStarted
+        {
+            get { return gameStarted; }
+        }
+
         public GUIFrame InGameHUD
         {
             get { return inGameHUD; }
