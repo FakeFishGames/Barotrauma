@@ -10,6 +10,7 @@ using Subsurface.Particles;
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
+using System.Xml;
 
 namespace Subsurface
 {
@@ -119,8 +120,8 @@ namespace Subsurface
             //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
 
             World = new World(new Vector2(0, -9.82f));
-            Settings.VelocityIterations = 2;
-            Settings.PositionIterations = 1;
+            FarseerPhysics.Settings.VelocityIterations = 2;
+            FarseerPhysics.Settings.PositionIterations = 1;
         }
 
         /// <summary>
@@ -165,6 +166,7 @@ namespace Subsurface
         {
             GUI.Font        = ToolBox.TryLoadFont("SpriteFont1", Content);
             GUI.SmallFont   = ToolBox.TryLoadFont("SmallFont", Content);
+            GUI.LargeFont = ToolBox.TryLoadFont("LargeFont", Content);
 
             sw = new Stopwatch();
 
@@ -263,7 +265,7 @@ namespace Subsurface
 
                 DebugConsole.Update(this, (float)deltaTime);
 
-                if ((!DebugConsole.IsOpen && !GUI.PauseMenuOpen) || NetworkMember != null) Screen.Selected.Update(deltaTime);
+                if ((!DebugConsole.IsOpen && !GUI.PauseMenuOpen) || (NetworkMember != null && NetworkMember.GameStarted)) Screen.Selected.Update(deltaTime);
 
                 GUI.Update((float)deltaTime);
 

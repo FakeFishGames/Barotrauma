@@ -17,7 +17,9 @@ namespace Subsurface
 
         public static float Round(float value, float div)
         {
-            return (float)Math.Floor(value / div) * div;
+            return (value < 0.0f) ? 
+                (float)Math.Ceiling(value / div) * div : 
+                (float)Math.Floor(value / div) * div;
         }
 
         public static float VectorToAngle(Vector2 vector)
@@ -25,6 +27,16 @@ namespace Subsurface
             return (float)Math.Atan2(vector.Y, vector.X);
         }
 
+        public static bool IsValid(float value)
+        {
+            return (!float.IsInfinity(value) && !float.IsNaN(value));
+        }
+
+        public static bool IsValid(Vector2 vector)
+        {
+            return (IsValid(vector.X) && IsValid(vector.Y));
+        }
+        
         public static float CurveAngle(float from, float to, float step)
         {
 

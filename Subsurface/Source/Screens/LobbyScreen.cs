@@ -428,7 +428,7 @@ namespace Subsurface
 
         private bool StartShift(GUIButton button, object selection)
         {           
-            Game1.GameSession.StartShift(TimeSpan.Zero, selectedLevel);
+            Game1.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
             Game1.GameScreen.Select();
             
             return true;

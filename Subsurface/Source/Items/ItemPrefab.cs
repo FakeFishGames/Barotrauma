@@ -106,7 +106,7 @@ namespace Subsurface
                     position = placePosition;
                 }
 
-                sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, Color.White);
+                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, Color.White);
             }
             
             if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;

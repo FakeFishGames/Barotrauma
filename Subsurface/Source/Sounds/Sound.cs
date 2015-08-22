@@ -19,6 +19,8 @@ namespace Subsurface
         private OggSound oggSound;
 
         string filePath;
+
+        private int alSourceId;
                 
         
         //public float Volume
@@ -71,7 +73,8 @@ namespace Subsurface
 
         public int Play(float volume = 1.0f)
         {
-            return SoundManager.Play(this, volume);
+            alSourceId = SoundManager.Play(this, volume);
+            return alSourceId;
         }
 
         public int Play(float baseVolume, float range, Vector2 position)
@@ -83,7 +86,9 @@ namespace Subsurface
             Vector2 relativePos = GetRelativePosition(position);
             float volume = GetVolume(relativePos, range, baseVolume);
 
-            return SoundManager.Play(this, relativePos, volume, volume);
+            alSourceId = SoundManager.Play(this, relativePos, volume, volume);
+
+            return alSourceId;
 
             //if (newIndex == -1) return -1;
 
@@ -96,7 +101,9 @@ namespace Subsurface
             //bodyPosition.Y = -bodyPosition.Y;
 
 
-            return Play(volume, range, ConvertUnits.ToDisplayUnits(body.Position));
+            alSourceId = Play(volume, range, ConvertUnits.ToDisplayUnits(body.Position));
+
+            return alSourceId;
         }
 
         private float GetVolume(Vector2 relativePosition, float range, float baseVolume)
@@ -176,6 +183,14 @@ namespace Subsurface
 
             return SoundManager.Loop(this, sourceIndex, position, volume, volume);
 
+        }
+
+        public bool IsPlaying
+        {
+            get
+            {
+                return SoundManager.IsPlaying(alSourceId);
+            }
         }
 
         //public int Loop(float volume = 1.0f)

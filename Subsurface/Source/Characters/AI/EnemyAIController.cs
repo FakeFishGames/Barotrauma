@@ -82,11 +82,10 @@ namespace Subsurface
             state = AiState.None;
         }
 
-        public override void SelectTarget(IDamageable target)
+        public override void SelectTarget(AITarget target)
         {
-            targetEntity = target;
-            selectedAiTarget = target.AiTarget;
-            selectedTargetMemory = FindTargetMemory(target.AiTarget);
+            selectedAiTarget = target;
+            selectedTargetMemory = FindTargetMemory(target);
 
             targetValue = 100.0f;
         }
@@ -470,14 +469,21 @@ namespace Subsurface
         public override void FillNetworkData(NetOutgoingMessage message)
         {
             message.Write((byte)state);
+            
+            bool wallAttack = (wallAttackPos!=Vector2.Zero && state == AiState.Attack);
 
-            message.Write(wallAttackPos.X);
-            message.Write(wallAttackPos.Y);
+            message.Write(wallAttack);
 
-            message.Write(steeringManager.WanderAngle);
-            message.Write(updateTargetsTimer);
-            message.Write(raycastTimer);
-            message.Write(coolDownTimer);
+            if (wallAttack)
+            {
+                message.Write(wallAttackPos.X);
+                message.Write(wallAttackPos.Y);
+            }
+
+            message.Write(MathUtils.AngleToByte(steeringManager.WanderAngle));
+            message.WriteRangedSingle(MathHelper.Clamp(updateTargetsTimer,0.0f, UpdateTargetsInterval), 0.0f, UpdateTargetsInterval, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(raycastTimer, 0.0f, RaycastInterval), 0.0f, RaycastInterval, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(coolDownTimer, 0.0f, attackCoolDown * 2.0f), 0.0f, attackCoolDown * 2.0f, 8);
 
             message.Write(targetEntity==null ? -1 : (targetEntity as Entity).ID);
         }
@@ -485,7 +491,7 @@ namespace Subsurface
         public override void ReadNetworkData(NetIncomingMessage message)
         {
             AiState newState = AiState.None;
-            Vector2 newWallAttackPos;
+            Vector2 newWallAttackPos = Vector2.Zero;
             float wanderAngle;
             float updateTargetsTimer, raycastTimer, coolDownTimer;
 
@@ -495,12 +501,18 @@ namespace Subsurface
             {
 
                 newState = (AiState)(message.ReadByte());
-                newWallAttackPos = new Vector2(message.ReadFloat(), message.ReadFloat());
 
-                wanderAngle = MathUtils.WrapAngleTwoPi(message.ReadFloat());
-                updateTargetsTimer = MathHelper.Clamp(message.ReadFloat(), 0.0f, UpdateTargetsInterval);
-                raycastTimer = MathHelper.Clamp(message.ReadFloat(), 0.0f, RaycastInterval);
-                coolDownTimer = MathHelper.Clamp(message.ReadFloat(), 0.0f, attackCoolDown);
+                bool wallAttack = message.ReadBoolean();
+
+                if (wallAttack)
+                {
+                    newWallAttackPos = new Vector2(message.ReadFloat(), message.ReadFloat());
+                }
+
+                wanderAngle = MathUtils.ByteToAngle(message.ReadByte());
+                updateTargetsTimer = message.ReadRangedSingle(0.0f, UpdateTargetsInterval, 8);
+                raycastTimer = message.ReadRangedSingle(0.0f, RaycastInterval, 8);
+                coolDownTimer = message.ReadRangedSingle(0.0f, attackCoolDown*2.0f, 8);
 
                 targetID = message.ReadInt32();
             }

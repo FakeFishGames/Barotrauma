@@ -23,8 +23,6 @@ namespace Subsurface
 
         private GUITextBox textBox, seedBox;
 
-        //GUIFrame previewPlayer;
-
         private GUIScrollBar durationBar;
 
         private GUIFrame playerFrame;
@@ -35,6 +33,11 @@ namespace Subsurface
         public string ServerName, ServerMessage;
 
         private GUITextBox serverMessage;
+
+        public GUIListBox SubList
+        {
+            get { return subList; }
+        }
 
         public Submarine SelectedMap
         {
@@ -275,7 +278,7 @@ namespace Subsurface
                 modeList.OnSelected += Game1.Server.UpdateNetLobby;                
                 durationBar.OnMoved = Game1.Server.UpdateNetLobby;
 
-                if (subList.CountChildren > 0) subList.Select(0);
+                if (subList.CountChildren > 0) subList.Select(-1);
                 if (GameModePreset.list.Count > 0) modeList.Select(0);                
             }
             else if (playerFrame.children.Count==0)
@@ -306,9 +309,11 @@ namespace Subsurface
                 jobList = new GUIListBox(new Rectangle(0, 180, 180, 0), GUI.style, playerFrame);
                 jobList.Enabled = false;
 
+
+                int i = 1;
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
+                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), i+". "+job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
                     jobText.UserData = job;
 
                     GUIButton upButton = new GUIButton(new Rectangle(0, 0, 15, 15), "u", GUI.style, jobText);
@@ -443,6 +448,7 @@ namespace Subsurface
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, color, 
                 Alignment.Left, GUI.style, null, true);
             msg.Font = GUI.SmallFont;
+            msg.CanBeFocused = false;
 
             msg.Padding = new Vector4(20, 0, 0, 0);
             chatBox.AddChild(msg);
@@ -556,13 +562,17 @@ namespace Subsurface
         private void UpdateJobPreferences(GUIListBox listBox)
         {
             listBox.Deselect();
-            for (int i = 1; i < listBox.children.Count; i++)
+            for (int i = 0; i < listBox.children.Count; i++)
             {
                 float a = (float)(i - 1) / 3.0f;
                 a = Math.Min(a, 3);
                 Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
 
                 listBox.children[i].Color = color;
+                listBox.children[i].HoverColor = color;
+                listBox.children[i].SelectedColor = color;
+
+                (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
             }
 
             Game1.Client.SendCharacterData();
@@ -658,57 +668,13 @@ namespace Subsurface
                 return;
             }
 
-            TrySelectMap(mapName, md5Hash);
+            if (!string.IsNullOrWhiteSpace(mapName)) TrySelectMap(mapName, md5Hash);
 
             modeList.Select(modeIndex);
 
             durationBar.BarScroll = durationScroll;
 
             LevelSeed = levelSeed;
-
-            //try
-            //{
-            //    int playerCount = msg.ReadInt32();            
-            
-            //    for (int i = 0; i < playerCount; i++)
-            //    {
-            //        int clientID = msg.ReadInt32();
-            //        string jobName = msg.ReadString();
-                
-            //        Client client = null;
-            //        GUITextBlock textBlock = null;
-            //        foreach (GUIComponent child in playerList.children)
-            //        {
-            //            Client tempClient = child.UserData as Client;
-            //            if (tempClient == null || tempClient.ID != clientID) continue;
-
-            //            client = tempClient;
-            //            textBlock = child as GUITextBlock;
-            //            break;
-            //        }
-            //        if (client == null) continue;
-                
-            //        client.assignedJob = JobPrefab.List.Find(jp => jp.Name == jobName);
-                                
-            //        textBlock.Text = client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")");
-
-            //        if (client.assignedJob==null || jobName != client.assignedJob.Name)
-            //        {
-            //            if (clientID == Game1.Client.ID)
-            //            {
-            //                Game1.Client.CharacterInfo.Job = new Job(client.assignedJob);
-            //                Game1.Client.CharacterInfo.Name = client.name;
-            //                UpdatePreviewPlayer(Game1.Client.CharacterInfo);
-            //            }
-            //        }
-            //    }
-            //}
-
-            //catch
-            //{
-            //    return;
-            //}
-
         }
 
     }

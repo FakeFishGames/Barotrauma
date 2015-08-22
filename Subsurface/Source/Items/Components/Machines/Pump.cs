@@ -22,8 +22,9 @@ namespace Subsurface.Items.Components
             get { return flowPercentage; }
             set 
             {
-                if (float.IsNaN(flowPercentage)) return;
-                flowPercentage = MathHelper.Clamp(value,-100.0f,100.0f); 
+                if (!MathUtils.IsValid(flowPercentage)) return;
+                flowPercentage = MathHelper.Clamp(value,-100.0f,100.0f);
+                flowPercentage = MathUtils.Round(flowPercentage, 1.0f);
             }
         }
 
@@ -117,14 +118,14 @@ namespace Subsurface.Items.Components
             
             spriteBatch.DrawString(GUI.Font, "Flow percentage: " + (int)flowPercentage + " %", new Vector2(x + 20, y + 80), Color.White);
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "+", true))
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "+", false))
             {
-                FlowPercentage += 1.0f;
+                FlowPercentage += 10.0f;
                 item.NewComponentEvent(this, true);
             }
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "-", true))
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "-", false))
             {
-                FlowPercentage -= 1.0f;
+                FlowPercentage -= 10.0f;
                 item.NewComponentEvent(this, true);
             }
 
@@ -166,7 +167,7 @@ namespace Subsurface.Items.Components
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
-            message.Write(flowPercentage);
+            message.Write(Convert.ToByte(flowPercentage+100));
             message.Write(isActive);
         }
 
@@ -177,11 +178,17 @@ namespace Subsurface.Items.Components
 
             try
             {
-                newFlow = message.ReadFloat();
+                newFlow = (float)(message.ReadByte()-100);
                 newActive = message.ReadBoolean();
             }
 
-            catch { return; }
+            catch (Exception e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("invalid network message", e);
+#endif
+                return;
+            }
 
             FlowPercentage = newFlow;
             isActive = newActive;

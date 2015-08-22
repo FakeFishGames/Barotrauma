@@ -319,14 +319,13 @@ namespace Subsurface.Items.Components
                     if (index>-1)
                     {
                         Wires[index].RemoveConnection(this);
-                        Wires[index].Item.SetTransform(item.SimPosition, 0.0f);
-                        Wires[index].Item.Drop();
-                        Wires[index].Item.body.Enabled = true;
+                        //Wires[index].Item.SetTransform(item.SimPosition, 0.0f);
+                        //Wires[index].Item.Drop();
+                        //Wires[index].Item.body.Enabled = true;
                         Wires[index] = null;
                     }
                 }                    
-            }
-            
+            }           
 
         }
 

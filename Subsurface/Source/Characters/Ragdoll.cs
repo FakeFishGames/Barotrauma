@@ -472,7 +472,7 @@ namespace Subsurface
                 inWater = false;
                 headInWater = false;
 
-                if (currentHull.Volume>currentHull.FullVolume*0.95f || ConvertUnits.ToSimUnits(currentHull.Surface)-floorY> HeadPosition*0.95f)
+                if (currentHull.Volume > currentHull.FullVolume * 0.95f || ConvertUnits.ToSimUnits(currentHull.Surface) - floorY > HeadPosition * 0.95f)
                     inWater = true;
                 
             }
@@ -562,7 +562,7 @@ namespace Subsurface
         private void UpdateNetplayerPosition()
         {
             Limb refLimb = GetLimb(LimbType.Torso);
-            if (refLimb== null) refLimb = GetLimb(LimbType.Head);
+            if (refLimb == null) refLimb = GetLimb(LimbType.Head);
 
             if (refLimb.body.TargetPosition == Vector2.Zero) return;
 
@@ -603,7 +603,7 @@ namespace Subsurface
 
             if (resetAll)
             {
-                System.Diagnostics.Debug.WriteLine("resetall");
+                System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
 
                 foreach (Limb limb in limbs)
                 {

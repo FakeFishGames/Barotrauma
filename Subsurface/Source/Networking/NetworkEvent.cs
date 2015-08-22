@@ -11,14 +11,15 @@ namespace Subsurface.Networking
         DropItem = 3,
         InventoryUpdate = 4,
         PickItem = 5,
-        UpdateProperty = 6
+        UpdateProperty = 6,
+        NotMoving = 7
     }
 
     class NetworkEvent
     {
         public static List<NetworkEvent> events = new List<NetworkEvent>();
 
-        private static bool[] isImportant = { false, true, false, true, true, true };
+        private static bool[] isImportant = { false, true, false, true, true, true, true, false };
 
         private int id;
 
@@ -112,6 +113,8 @@ namespace Subsurface.Networking
                 //DebugConsole.ThrowError("Couldn't find an entity matching the ID ''" + id + "''");                
                 return false;
             }
+
+            System.Diagnostics.Debug.WriteLine("Networkevent entity: "+e.ToString());
 
             //System.Diagnostics.Debug.WriteLine("new message: " + eventType +" - "+e);
 

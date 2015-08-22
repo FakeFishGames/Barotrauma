@@ -17,7 +17,6 @@ namespace Launcher
 {
     public partial class LauncherMain : Form
     {
-        public static string ContentPackageFolder = "Data/ContentPackages/";
         private const string configPath = "config.xml";
         private Subsurface.GameSettings settings;
 
@@ -42,7 +41,7 @@ namespace Launcher
         {
             InitializeComponent();
 
-            ContentPackage.LoadAll(LauncherMain.ContentPackageFolder);
+            ContentPackage.LoadAll(ContentPackage.Folder);
             contentPackageBox.DataSource = ContentPackage.list;
 
             supportedModes = new List<GraphicsMode>();

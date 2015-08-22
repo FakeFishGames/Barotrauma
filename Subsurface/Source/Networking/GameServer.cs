@@ -22,39 +22,54 @@ namespace Subsurface.Networking
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 40);
         private DateTime refreshMasterTimer;
 
+        private bool masterServerResponded;
+
         private bool registeredToMaster;
+
+        private string password;
 
         private Client myClient;
 
-        public GameServer(string name, int port)
+        public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.style, inGameHUD);
             endRoundButton.OnClicked = EndButtonHit;
 
             this.name = name;
 
+            this.password = password;
+            
             config = new NetPeerConfiguration("subsurface");
 
-            //config.SimulatedLoss = 0.2f;
-            //config.SimulatedMinimumLatency = 0.25f;
-
+#if DEBUG
+            config.SimulatedLoss = 0.2f;
+            config.SimulatedMinimumLatency = 0.3f;
+#endif 
+            
             config.Port = port;
             Port = port;
 
-            config.EnableUPnP = true;
+            if (attemptUPnP)
+            {
+                config.EnableUPnP = true;
+            }
 
-            config.MaximumConnections = 10;
-            
+            config.MaximumConnections = maxPlayers;
+
+            config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
+                | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
+                        
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
                         
             try
             {
                 server = new NetServer(config);    
                 server.Start();
-                
-                // attempt to forward port
-                server.UPnP.ForwardPort(port, "subsurface");
 
+                if (attemptUPnP)
+                {
+                    server.UPnP.ForwardPort(port, "subsurface");
+                }
             }
 
             catch (Exception e)
@@ -62,7 +77,11 @@ namespace Subsurface.Networking
                 DebugConsole.ThrowError("Couldn't start the server", e);
             }
 
-            RegisterToMasterServer();
+            if (isPublic)
+            {
+                RegisterToMasterServer();
+            }
+
             
             updateInterval = new TimeSpan(0, 0, 0, 0, 30);
 
@@ -78,6 +97,7 @@ namespace Subsurface.Networking
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
             request.AddParameter("playercount", PlayerCountToByte(connectedClients.Count, config.MaximumConnections));
+            request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
 
             // execute the request
             RestResponse response = (RestResponse)client.Execute(request);
@@ -98,7 +118,7 @@ namespace Subsurface.Networking
             refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
 
-        private void RefreshMaster()
+        private IEnumerable<object> RefreshMaster()
         {
             var client = new RestClient(NetworkMember.MasterServerUrl);
 
@@ -112,17 +132,43 @@ namespace Subsurface.Networking
             var sw = new Stopwatch();
             sw.Start();
 
-            RestResponse response = (RestResponse)client.Execute(request);
+            masterServerResponded = false;
+            var restRequestHandle = client.ExecuteAsync(request, response => MasterServerCallBack(response));
 
-            sw.Stop();
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 15);
+            while (!masterServerResponded)
+            {
+                if (DateTime.Now > timeOut)
+                {
+                    restRequestHandle.Abort();
+                    DebugConsole.ThrowError("Couldn't connect to master server (request timed out)");
+                    registeredToMaster = false;
+                }
             System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
+                
+                yield return Status.Running;
+            }
+
+            yield return Status.Success;
+        }
+
+        private void MasterServerCallBack(IRestResponse response)
+        {
+            masterServerResponded = true;
+
+            if (response.ErrorException != null)
+            {
+                DebugConsole.ThrowError("Error while connecting to master server", response.ErrorException);
+                registeredToMaster = false;
+                return;
+            }
 
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
+                DebugConsole.ThrowError("Error while connecting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")");
+                registeredToMaster = false;
+                return;
             }
-
-
         }
 
         public override void Update(float deltaTime)
@@ -159,7 +205,7 @@ namespace Subsurface.Networking
 
             if (registeredToMaster && refreshMasterTimer < DateTime.Now)
             {
-                RefreshMaster();
+                CoroutineManager.StartCoroutine(RefreshMaster());
 
                 refreshMasterTimer = DateTime.Now + refreshMasterInterval;
             }
@@ -177,9 +223,9 @@ namespace Subsurface.Networking
                     break;
                 }
 
-                if (!isClient)
+                if (!isClient && (c.SimPosition==Vector2.Zero || c.SimPosition.Length() < 300.0f))
                 {
-                    c.LargeUpdateTimer = 0;
+                    c.LargeUpdateTimer -= 2;
                     new NetworkEvent(c.ID, false);
                 }
             }
@@ -204,9 +250,10 @@ namespace Subsurface.Networking
                     Client existingClient = connectedClients.Find(c=> c.Connection == inc.SenderConnection);
                     if (existingClient==null)
                     {
-                        string version = "", packageName="", packageHash="", name = "";
+                        string userPassword = "", version = "", packageName="", packageHash="", name = "";
                         try
                         {
+                            userPassword    = inc.ReadString();
                             version     = inc.ReadString();
                             packageName = inc.ReadString();
                             packageHash = inc.ReadString();
@@ -215,27 +262,38 @@ namespace Subsurface.Networking
                         catch
                         {
                             inc.SenderConnection.Deny("Connection error - server failed to read your ConnectionApproval message");
+                            DebugConsole.NewMessage("Connection error - server failed to read the ConnectionApproval message", Color.Red);
                             break;
                         }
 
-                        if (version != Game1.Version.ToString())
+                        if (userPassword != password)
+                        {
+                            inc.SenderConnection.Deny("Wrong password!");
+                            
+                            break;
+                        }
+                        else if (version != Game1.Version.ToString())
                         {
                             inc.SenderConnection.Deny("Subsurface version " + Game1.Version + " required to connect to the server (Your version: " + version + ")");
+                            DebugConsole.NewMessage("Connection error - wrong game version", Color.Red);
                             break;
                         } 
                         else if (packageName != Game1.SelectedPackage.Name)
                         {
                             inc.SenderConnection.Deny("Your content package ("+packageName+") doesn't match the server's version (" + Game1.SelectedPackage.Name + ")");
+                            DebugConsole.NewMessage("Connection error - wrong content package name", Color.Red);
                             break;
                         }
                         else if (packageHash != Game1.SelectedPackage.MD5hash.Hash)
                         {
                             inc.SenderConnection.Deny("Your content package (MD5: " + packageHash + ") doesn't match the server's version (MD5: " + Game1.SelectedPackage.MD5hash.Hash + ")");
+                            DebugConsole.NewMessage("Connection error - wrong content package hash", Color.Red);
                             break;
                         } 
                         else if (connectedClients.Find(c => c.name.ToLower() == name.ToLower())!=null)
                         {
                             inc.SenderConnection.Deny("The name ''" + name + "'' is already in use. Please choose another name.");
+                            DebugConsole.NewMessage("Connection error - name already in use", Color.Red);
                             break;
                         }
 
@@ -348,7 +406,9 @@ namespace Subsurface.Networking
                             }
 
                             if (recipients.Count == 0) break;
-                            server.SendMessage(outmsg, recipients, inc.DeliveryMethod, 0);  
+                            server.SendMessage(outmsg, recipients, inc.DeliveryMethod, 0);
+
+                            System.Diagnostics.Debug.WriteLine("Sending networkevent (" + outmsg.LengthBytes+" bytes)");
                             
                             break;
                         case (byte)PacketTypes.Chatmessage:
@@ -396,15 +456,42 @@ namespace Subsurface.Networking
             {
                 //System.Diagnostics.Debug.WriteLine("networkevent "+networkEvent.ID);
 
+                List<NetConnection> recipients = new List<NetConnection>();
+
+                if (!networkEvent.IsImportant)
+                {
+                    Entity e = Entity.FindEntityByID(networkEvent.ID);
+                    foreach (Client c in connectedClients)
+                    {
+                        if (c.character==null) continue;
+                        if (Vector2.Distance(e.SimPosition, c.character.SimPosition) > 2000.0f) continue;
+
+                        recipients.Add(c.Connection);
+                    }
+                }
+                else
+                {
+                    foreach (Client c in connectedClients)
+                    {
+                        if (c.character == null) continue;
+
+                        recipients.Add(c.Connection);
+                    }
+                }
+
+                if (recipients.Count == 0) return;
+
                 NetOutgoingMessage message = server.CreateMessage();
                 message.Write((byte)PacketTypes.NetworkEvent);
                 //if (!networkEvent.IsClient) continue;
                             
                 networkEvent.FillData(message);
 
+                System.Diagnostics.Debug.WriteLine("Sending networkevent " + Entity.FindEntityByID(networkEvent.ID).ToString() + " (" + message.LengthBytes + " bytes)");
+
                 if (server.ConnectionsCount>0)
                 {
-                    server.SendMessage(message, server.Connections, 
+                    server.SendMessage(message, recipients, 
                         (networkEvent.IsImportant) ? NetDeliveryMethod.Unreliable : NetDeliveryMethod.ReliableUnordered, 0);  
                 }
                             
@@ -415,13 +502,19 @@ namespace Subsurface.Networking
 
         public bool StartGame(GUIButton button, object obj)
         {
+            Submarine selectedMap = Game1.NetLobbyScreen.SelectedMap as Submarine;
+
+            if (selectedMap == null)
+            {
+                Game1.NetLobbyScreen.SubList.Flash();
+                return false;
+            }
+
             int seed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(seed);
 
-            AssignJobs();
-            
-            Submarine selectedMap = Game1.NetLobbyScreen.SelectedMap as Submarine;
-            
+            AssignJobs();            
+           
             //selectedMap.Load();
 
             Game1.GameSession = new GameSession(selectedMap, "", Game1.NetLobbyScreen.SelectedMode);
@@ -518,9 +611,10 @@ namespace Subsurface.Networking
             return true;
         }
 
-        public void EndGame(string endMessage)
+        public IEnumerable<object> EndGame(string endMessage)
         {
 
+            gameStarted = false;
 
             if (connectedClients.Count > 0)
             {
@@ -540,13 +634,34 @@ namespace Subsurface.Networking
                 }
             }
 
+            float endPreviewLength = 10.0f;
+
+            DateTime endTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, (int)(1000.0f * endPreviewLength));
+            float secondsLeft = endPreviewLength;
+
+            do
+            {
+                secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
+
+                float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
+                Vector2 offset = (new Vector2(
+                    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+                    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+
+                Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
+                //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
+
+                yield return Status.Running;
+            } while (secondsLeft > 0.0f);
+
             Submarine.Unload();
-                      
-            gameStarted = false;
 
             Game1.NetLobbyScreen.Select();
 
             DebugConsole.ThrowError(endMessage);
+
+            yield return Status.Success;
+
         }
 
         private void DisconnectClient(NetConnection senderConnection)
@@ -605,7 +720,7 @@ namespace Subsurface.Networking
 
         public void NewTraitor(Client traitor, Client target)
         {
-            new GUIMessageBox("New traitor", traitor.name + " is the traitor and the target is " + target+".");
+            new GUIMessageBox("New traitor", traitor.name + " is the traitor and the target is " + target.name+".");
 
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.Traitor);
@@ -614,6 +729,36 @@ namespace Subsurface.Networking
             {
                 server.SendMessage(msg, traitor.Connection, NetDeliveryMethod.ReliableUnordered, 0);
             }
+        }
+
+        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        {
+            base.Draw(spriteBatch);
+
+            if (!Game1.DebugDraw) return;
+
+            int width = 200, height = 300;
+            int x = Game1.GraphicsWidth - width, y = (int)(Game1.GraphicsHeight*0.3f);
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle(x,y,width,height), Color.Black*0.7f, true);
+            spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x+10, y+10), Color.White);
+
+            spriteBatch.DrawString(GUI.SmallFont, "Connections: "+server.ConnectionsCount, new Vector2(x + 10, y + 30), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + server.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Received packets: " + server.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
+
+            spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + server.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + server.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
+            
+            y += 110;
+            foreach (Client c in connectedClients)
+            {
+                spriteBatch.DrawString(GUI.SmallFont, c.name + ":", new Vector2(x + 10, y), Color.White);
+                spriteBatch.DrawString(GUI.SmallFont, "- avg roundtrip " + c.Connection.AverageRoundtripTime+" s", new Vector2(x + 20, y + 15), Color.White);
+                y += 50;
+            
+            }
+
         }
 
         public bool UpdateNetLobby(object obj)
@@ -650,12 +795,12 @@ namespace Subsurface.Networking
                 }
                 if (recipients.Count>0)
                 {
-                    server.SendMessage(msg, recipients, NetDeliveryMethod.Unreliable, 0);
+                    server.SendMessage(msg, recipients, NetDeliveryMethod.ReliableUnordered, 0);
                 }                
             }
             else
             {
-                server.SendMessage(msg, server.Connections, NetDeliveryMethod.Unreliable, 0);
+                server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);
             }
             
         }

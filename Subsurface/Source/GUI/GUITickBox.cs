@@ -25,6 +25,12 @@ namespace Subsurface
             }
         }
 
+        public bool Enabled
+        {
+            get;
+            set;
+        }
+
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
             : base(null)
         {
@@ -35,15 +41,26 @@ namespace Subsurface
             box.HoverColor = Color.Gray;
             box.SelectedColor = Color.DarkGray;
 
-            text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, 30), label, Color.Transparent, Color.White, Alignment.TopLeft, null, this);
+            text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, rect.Height), label, Color.Transparent, Color.White, Alignment.TopLeft, null, this);
+
+            Enabled = true;
         }
 
         public override void Update(float deltaTime)
         {
-            base.Update(deltaTime);
+                if (rect.Width ==420)
+                {
+                    int asd = 1;
+                }            
+            //base.Update(deltaTime);
 
-            if (box.Rect.Contains(PlayerInput.GetMouseState.Position))
+            if (!Enabled) return;
+
+            if (box.Rect.Contains(PlayerInput.MousePosition))
             {
+
+
+
                 box.State = ComponentState.Hover;
 
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
@@ -67,12 +84,16 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            if (rect.Width == 420)
+            {
+                int asd = 1;
+            }  
+
             DrawChildren(spriteBatch);
 
-            if (Selected)
-            {
-                GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 2, box.Rect.Y + 2, box.Rect.Width - 4, box.Rect.Height - 4), Color.Green * 0.8f, true);
-            }
+            GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 2, box.Rect.Y + 2, box.Rect.Width - 4, box.Rect.Height - 4), 
+                selected ? Color.Green * 0.8f : Color.Black, true);
+            
         }
     }
 }

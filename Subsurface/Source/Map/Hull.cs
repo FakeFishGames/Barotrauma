@@ -156,7 +156,7 @@ namespace Subsurface
         public int GetWaveIndex(Vector2 position)
         {
             int index = (int)(position.X - rect.X) / WaveWidth;
-            index = MathHelper.Clamp(index, 0, waveY.Length-1);
+            index = (int)MathHelper.Clamp(index, 0, waveY.Length-1);
             return index;
         }
 

@@ -106,8 +106,31 @@ namespace Subsurface.Items.Components
             if (reload > 0.0f) return false;
 
             Projectile projectileComponent = null;
+            //search for a projectile from linked containers
+            Item projectile = null;
+            foreach (MapEntity e in item.linkedTo)
+            {
+                Item container = e as Item;
+                if (container == null) continue;
 
-            //currPowerConsumption = powerConsumption;
+                ItemContainer containerComponent = container.GetComponent<ItemContainer>();
+                if (containerComponent == null) continue;
+
+                for (int i = 0; i < containerComponent.inventory.items.Length; i++)
+                {
+                    if (containerComponent.inventory.items[i] == null) continue;
+                    if ((projectileComponent = containerComponent.inventory.items[i].GetComponent<Projectile>()) != null)
+                    {
+                        projectile = containerComponent.inventory.items[i];
+                        break;
+                    }
+                }
+
+                if (projectileComponent != null) break;
+            }
+
+            if (projectile == null || projectileComponent == null) return false;
+
 
             float availablePower = 0.0f;
             //List<PowerContainer> batteries = new List<PowerContainer>();
@@ -132,31 +155,6 @@ namespace Subsurface.Items.Components
             
             if (availablePower < currPowerConsumption) return false;
             
-            //search for a projectile from linked containers
-            Item projectile = null;
-            foreach (MapEntity e in item.linkedTo)
-            {
-                Item container = e as Item;
-                if (container == null) continue;
-
-                ItemContainer containerComponent = container.GetComponent<ItemContainer>();
-                if (containerComponent == null) continue;
-
-                for (int i = 0; i < containerComponent.inventory.items.Length; i++)
-                {
-                    if (containerComponent.inventory.items[i] == null) continue;
-                    if ((projectileComponent = containerComponent.inventory.items[i].GetComponent<Projectile>()) != null)
-                    {
-                        projectile = containerComponent.inventory.items[i];
-                        break;
-                    }
-                }
-
-                if (projectileComponent != null) break;
-            }
-
-            if (projectile == null || projectileComponent==null) return false;
-
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
             projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y)), -rotation);

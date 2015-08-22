@@ -96,28 +96,25 @@ namespace Launcher
                 fileButton.Enabled = (selectedPackage != null);
             }
 
-            if (selectedPackage == null)
+
+            foreach (ListBox fileBox in fileBoxes)
             {
-                foreach (ListBox fileBox in fileBoxes)
+                fileBox.Items.Clear();
+            }
+
+
+            foreach (ListBox fileBox in fileBoxes)
+            {
+                ContentType type = (fileBox.Tag is ContentType) ? (ContentType)fileBox.Tag : ContentType.None;
+
+                foreach (ContentFile file in selectedPackage.files)
                 {
-                    fileBox.Items.Clear();
+                    if (file.type != type) continue;
+
+                    fileBox.Items.Add(file);
                 }
             }
-            else
-            {
-
-                foreach (ListBox fileBox in fileBoxes)
-                {
-                    ContentType type = (fileBox.Tag is ContentType) ? (ContentType)fileBox.Tag : ContentType.None;
-
-                    foreach (ContentFile file in selectedPackage.files)
-                    {
-                        if (file.type != type) continue;
-
-                        fileBox.Items.Add(file);
-                    }
-                }
-            }
+            
         }
 
         private void newPackage_Click(object sender, EventArgs e)
@@ -145,7 +142,7 @@ namespace Launcher
 
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "XML files (*.xml)|*.xml;*.XML";
-            //ofd.RestoreDirectory?
+            ofd.RestoreDirectory = true;
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
@@ -256,7 +253,7 @@ namespace Launcher
 
         private void okButton_Click(object sender, EventArgs e)
         {
-            if (selectedPackage!=null) selectedPackage.Save(LauncherMain.ContentPackageFolder);
+            if (selectedPackage!=null) selectedPackage.Save(ContentPackage.Folder);
 
             this.Close();
         }

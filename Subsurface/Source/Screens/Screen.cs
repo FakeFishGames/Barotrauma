@@ -5,7 +5,7 @@ namespace Subsurface
     class Screen
     {
         private static Screen selected;
-
+        
         public static Screen Selected
         {
             get { return selected; }

@@ -4,6 +4,7 @@ using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 using System;
+using Microsoft.Xna.Framework;
 
 namespace Subsurface
 {
@@ -44,8 +45,15 @@ namespace Subsurface
         {
             try
             {
+#if WINDOWS
                 using (Stream fileStream = File.OpenRead(path))
                     return FromStream(fileStream, preMultiplyAlpha);
+#endif
+#if LINUX
+			    using (Stream fileStream = File.OpenRead(path))
+					return Texture2D.FromFile(_graphicsDevice, fileStream);// .FromStream(fileStream, preMultiplyAlpha);
+#endif
+
             }
             catch (Exception e)
             {
@@ -55,7 +63,8 @@ namespace Subsurface
 
         }
 
-        public Texture2D FromStream(Stream stream, bool preMultiplyAlpha = true)
+#if WINDOWS
+ private Texture2D FromStream(Stream stream, bool preMultiplyAlpha = true)
         {
             Texture2D texture;
 
@@ -114,6 +123,8 @@ namespace Subsurface
 
             return texture;
         }
+#endif
+       
         
         private static readonly BlendState BlendColorBlendState;
         private static readonly BlendState BlendAlphaBlendState;

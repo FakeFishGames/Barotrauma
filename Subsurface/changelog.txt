@@ -1,5 +1,59 @@
 
 ---------------------------------------------------------------------------------------------------------
+v0.1.3.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- some major opimization to networked messages (less lag)
+	- option to disable UPnP port forwarding (which may have prevented some from hosting a server)
+	- a new round can't be started if a submarine hasn't been selected (which used to crash the game)
+	- maximum number of players can be changed
+	- fixed a bug in the net lobby screen that disabled the start button when the chat box was scrolled
+	to a specific position
+	- a window that displays some network statistics when hosting a server (can be activated by entering
+	"debugview" to the debug console)
+	
+---------------------------------------------------------------------------------------------------------
+v0.1.3.1
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- chat messages are sent reliably
+
+---------------------------------------------------------------------------------------------------------
+v0.1.3
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- fixed master server connection errors in server list screen
+	- fixed a bug that caused other characters to get "stuck" to the railgun controller, causing them
+	to fly back to it as they try to move away
+
+Items:
+	- putting items inside other items works properly now (i.e. by pulling a spear to the same slot as 
+	a harpoon, not the other way around)
+	- C4 blocks loaded inside a railgun shell won't explode inside the submarine when firing the railgun
+	- fixed another game-crashing railgun bug
+	- fixed a bug that caused characters to spawn with an incorrect number of items
+	
+---------------------------------------------------------------------------------------------------------
+v0.1.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- a "lobby screen" showing a list of servers that are currently running
+	- password protected servers
+	- traitor rounds end when the traitor dies/disconnects or if the submarine reaches the end of the level
+
+Items:
+	- fixed the crashing when firing the railgun or activating a detonator
+
+Other:
+	- optimized lightning and "line of sight" rendering
+	- an unfinished tutorial which can currently only be accessed by entering "tutorial" into the 
+	debug console
+
+---------------------------------------------------------------------------------------------------------
 v0.1.1
 ---------------------------------------------------------------------------------------------------------
 

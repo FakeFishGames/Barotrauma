@@ -43,7 +43,7 @@ namespace Subsurface
             steeringManager = new SteeringManager(this);
         }
 
-        public virtual void SelectTarget(IDamageable target) { }
+        public virtual void SelectTarget(AITarget target) { }
 
         public virtual void Update(float deltaTime) { }
 
