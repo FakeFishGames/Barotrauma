@@ -315,6 +315,9 @@
     <Content Include="Content\Items\Electricity\lamp.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\Electricity\supercapacitor.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Items\Electricity\wifi.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -594,6 +597,7 @@
     </Content>
     <Content Include="Content\Items\Electricity\poweritems.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\Weapons\railgun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
