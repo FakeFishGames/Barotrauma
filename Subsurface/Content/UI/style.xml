@@ -54,6 +54,13 @@
     <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
   </GUITextBox>
 
+  <GUITickBox
+    color="0.5, 0.5, 0.5, 1.0"
+  
+    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
+  </GUITickBox>
+
   <GUIMessageBox
     padding="40.0, 40.0, 40.0, 40.0"
     color="1.0, 1.0, 1.0, 1.0"

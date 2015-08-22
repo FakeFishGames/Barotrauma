@@ -20,7 +20,7 @@ namespace Subsurface
         public static GUIStyle style;
 
         static Texture2D t;
-        public static SpriteFont Font, SmallFont;
+        public static SpriteFont Font, SmallFont, LargeFont;
 
         private static GraphicsDevice graphicsDevice;        
 
@@ -274,7 +274,7 @@ namespace Subsurface
 
             bool clicked = false;
 
-            if (rect.Contains(PlayerInput.GetMouseState.Position))
+            if (rect.Contains(PlayerInput.MousePosition))
             {
                 clicked = (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
 
@@ -301,8 +301,16 @@ namespace Subsurface
                 spriteBatch.DrawString(Font,
                     "Physics: " + Game1.World.UpdateTime
                     + " - bodies: " + Game1.World.BodyList.Count 
-                    + "Camera pos: " + Game1.GameScreen.Cam.Position,
+                    + " Camera pos: " + Game1.GameScreen.Cam.Position,
                     new Vector2(10, 30), Color.White);
+
+                if (Submarine.Loaded!=null)
+                {
+                    spriteBatch.DrawString(Font,
+                        "Sub pos: " + Submarine.Loaded.Position,
+                        new Vector2(10, 50), Color.White);
+                }
+
             }
 
             

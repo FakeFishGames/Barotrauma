@@ -50,7 +50,7 @@ namespace Subsurface
         private string name;
 
 
-        private double lastNetworkUpdate;
+        private float lastNetworkUpdate;
 
 
         //properties ----------------------------------------------------
@@ -505,7 +505,7 @@ namespace Subsurface
 
         private void Translate(Vector2 amount)
         {
-            if (amount == Vector2.Zero) return;
+            if (amount == Vector2.Zero || !amount.IsValid()) return;
 
             Level.Loaded.Move(-amount);
         }
@@ -515,11 +515,6 @@ namespace Subsurface
         {
             speed += force/mass;
         }
-
-        //public void Move(Vector2 amount)
-        //{
-        //    speed = Vector2.Lerp(speed, amount, 0.05f);
-        //}
 
         VoronoiCell collidingCell;
         public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
@@ -569,7 +564,7 @@ namespace Subsurface
 
         public override void FillNetworkData(Networking.NetworkEventType type, NetOutgoingMessage message, object data)
         {
-            message.Write(NetTime.Now);
+            message.Write((float)NetTime.Now);
             message.Write(Position.X);
             message.Write(Position.Y);
 
@@ -580,11 +575,11 @@ namespace Subsurface
 
         public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message)
         {
-            double sendingTime;
+            float sendingTime;
             Vector2 newTargetPosition, newSpeed;
             try
             {
-                sendingTime = message.ReadDouble();
+                sendingTime = message.ReadFloat();
 
                 if (sendingTime <= lastNetworkUpdate) return;
 
@@ -592,10 +587,15 @@ namespace Subsurface
                 newSpeed = new Vector2(message.ReadFloat(), message.ReadFloat());
             }
 
-            catch
+            catch (Exception e)
             {
+#if DEBUG
+                DebugConsole.ThrowError("invalid network message", e);
+#endif
                 return;
             }
+
+            if (!newSpeed.IsValid() || !newTargetPosition.IsValid()) return;
 
             //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
 

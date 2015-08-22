@@ -5,11 +5,18 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
+
 namespace Subsurface
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class Editable : System.Attribute
     {
+        public int MaxLength;
+
+        public Editable(int maxLength = 20)
+        {
+            MaxLength = maxLength;
+        }
     }
 
     [AttributeUsage(AttributeTargets.Property)]

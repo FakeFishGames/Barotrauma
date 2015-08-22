@@ -132,7 +132,7 @@ namespace Subsurface
 
             if (Game1.Server!=null)
             {                
-                Game1.Server.EndGame(endMessage);
+                CoroutineManager.StartCoroutine(Game1.Server.EndGame(endMessage));
 
             }
             else if (Game1.Client==null)

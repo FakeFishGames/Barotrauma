@@ -92,8 +92,11 @@ namespace Subsurface.Items.Components
                 newText = message.ReadString();
             }
 
-            catch
+            catch (Exception e)
             {
+#if DEBUG
+                DebugConsole.ThrowError("invalid network message", e);
+#endif
                 return;
             }
 

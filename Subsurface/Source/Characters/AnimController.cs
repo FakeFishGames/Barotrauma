@@ -31,7 +31,11 @@ namespace Subsurface
         public float StunTimer
         {
             get { return stunTimer; }
-            set { stunTimer = value; }
+            set 
+            {
+                if (float.IsNaN(value) || float.IsInfinity(value)) return;
+                stunTimer = value; 
+            }
         }
         
         public AnimController(Character character, XElement element)

@@ -41,7 +41,27 @@
 
 		<ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
 			<requireditem name="Screwdriver" type="Equipped"/>
-			<input name="power_in"/>
+			<input name="power"/>
 		</ConnectionPanel>		
 	</Item>
+
+  <Item
+    name="Supercapacitor"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture ="supercapacitor.png" depth="0.8"/>
+
+    <PowerContainer capacity="2000.0" maxrechargespeed="2000.0" maxoutput="2000.0" canbeselected = "true">
+      <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+    </PowerContainer>
+
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power"/>
+    </ConnectionPanel>
+  </Item>
+
+
+
 </Items>

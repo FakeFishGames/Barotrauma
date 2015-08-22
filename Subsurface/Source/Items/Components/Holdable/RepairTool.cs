@@ -102,7 +102,7 @@ namespace Subsurface.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
-            if (!character.SecondaryKeyDown.State) return false;
+            if (!character.GetInputState(InputType.SecondaryHeld)) return false;
 
             if (DoesUseFail(character)) return false;
 
@@ -146,7 +146,7 @@ namespace Subsurface.Items.Components
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
-                if (character.SecondaryKeyDown.State)
+                if (character.GetInputState(InputType.SecondaryHeld))
                 {
                     targetLimb.character.Health += limbFixAmount;
                     //isActive = true;

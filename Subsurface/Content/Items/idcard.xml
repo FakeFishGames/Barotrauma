@@ -5,9 +5,9 @@
 	Tags="smallitem"
 	pickdistance="150">
 
-	<Sprite texture ="idcard.png" depth="0.5f"/>
+	<Sprite texture ="idcard.png" depth="0.8f"/>
 
-	<Body width="16" height="16" density="10"/>
+	<Body width="16" height="16"/>
 
 	<Pickable/>
 </Item>

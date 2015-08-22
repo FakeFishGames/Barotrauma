@@ -50,9 +50,8 @@ namespace Subsurface.Networking
 
         }
 
-        public void ConnectToServer(string hostIP)
+        public void ConnectToServer(string hostIP, string password = "")
         {
-
             string[] address = hostIP.Split(':');
             if (address.Length==1)
             {
@@ -65,7 +64,7 @@ namespace Subsurface.Networking
 
                 if (!int.TryParse(address[1], out Port))
                 {
-                    DebugConsole.ThrowError("Invalid port: address[1]!");
+                    DebugConsole.ThrowError("Invalid port: "+address[1]+"!");
                     Port = DefaultPort;
                 }                
             }
@@ -73,18 +72,24 @@ namespace Subsurface.Networking
             myCharacter = Character.Controlled;
 
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
-            NetPeerConfiguration Config = new NetPeerConfiguration("subsurface");
-            
-            //Config.SimulatedLoss = 0.2f;
-            //Config.SimulatedMinimumLatency = 0.25f;
+            NetPeerConfiguration config = new NetPeerConfiguration("subsurface");
+
+#if DEBUG
+            config.SimulatedLoss = 0.2f;
+            config.SimulatedMinimumLatency = 0.3f;
+#endif 
+
+            config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
+                | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
 
             // Create new client, with previously created configs
-            client = new NetClient(Config);
+            client = new NetClient(config);
                       
             NetOutgoingMessage outmsg = client.CreateMessage();                        
             client.Start();
 
             outmsg.Write((byte)PacketTypes.Login);
+            outmsg.Write(password);
             outmsg.Write(Game1.Version.ToString());
             outmsg.Write(Game1.SelectedPackage.Name);
             outmsg.Write(Game1.SelectedPackage.MD5hash.Hash);
@@ -111,8 +116,11 @@ namespace Subsurface.Networking
             //update.Elapsed += new System.Timers.ElapsedEventHandler(Update);
 
             // Funtion that waits for connection approval info from server
+            if (reconnectBox==null)
+            {
+                reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[0]);                
+            }
 
-            reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[0]);
             CoroutineManager.StartCoroutine(WaitForStartingInfo());
             
             // Start the timer
@@ -141,7 +149,7 @@ namespace Subsurface.Networking
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;
             
-            DateTime timeOut = DateTime.Now + new TimeSpan(0,0,5);
+            DateTime timeOut = DateTime.Now + new TimeSpan(0,0,15);
 
             // Loop untill we are approved
             while (!CanStart)
@@ -239,14 +247,19 @@ namespace Subsurface.Networking
 
             if (!connected || updateTimer > DateTime.Now) return;
             
-            if (client.ConnectionStatus == NetConnectionStatus.Disconnected && reconnectBox==null)
+            if (client.ConnectionStatus == NetConnectionStatus.Disconnected)
             {
-                reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
-                connected = false;
-                ConnectToServer(serverIP);
+                if (reconnectBox==null)
+                {
+                    reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
+                    connected = false;
+                    ConnectToServer(serverIP);
+                }
+
                 return;
             }
-            else if (reconnectBox!=null)
+
+            if (reconnectBox!=null)
             {
                 reconnectBox.Close(null,null);
                 reconnectBox = null;
@@ -259,9 +272,20 @@ namespace Subsurface.Networking
                     Character.Controlled = null;
                     Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
                 }
-                else
+                else if (gameStarted)
                 {
-                    if (gameStarted) new NetworkEvent(myCharacter.ID, true);
+                    Vector2 charMovement = myCharacter.AnimController.TargetMovement;
+                    if ((charMovement == Vector2.Zero || charMovement.Length() < 0.001f) &&
+                        !myCharacter.GetInputState(InputType.ActionHeld) &&
+                        !myCharacter.GetInputState(InputType.SecondaryHeld))
+                    {
+                        new NetworkEvent(NetworkEventType.NotMoving, myCharacter.ID, true);
+                        
+                    }
+                    else
+                    {
+                        new NetworkEvent(myCharacter.ID, true);
+                    }
                 }
             }
                           
@@ -354,7 +378,7 @@ namespace Subsurface.Networking
                         break;
                     case (byte)PacketTypes.EndGame:
                         string endMessage = inc.ReadString();
-                        EndGame(endMessage);
+                        CoroutineManager.StartCoroutine(EndGame(endMessage));
                         break;
                     case (byte)PacketTypes.PlayerJoined:
 
@@ -406,19 +430,68 @@ namespace Subsurface.Networking
             }
         }
 
-        public void EndGame(string endMessage)
+        public IEnumerable<object> EndGame(string endMessage)
         {
+            gameStarted = false;
+            
+            var messageBox = new GUIMessageBox("The round has ended", endMessage);
+
+            Character.Controlled = null;
+            Game1.LightManager.LosEnabled = false;
+
+            float endPreviewLength = 10.0f;
+
+            DateTime endTime = DateTime.Now + new TimeSpan(0,0,0,0,(int)(1000.0f*endPreviewLength));
+            float secondsLeft = endPreviewLength;
+
+            do
+            {
+                secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
+
+                float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
+                Vector2 offset = (new Vector2(
+                    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+                    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+
+                Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
+                //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
+
+                messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
+                yield return Status.Running;
+            } while (secondsLeft > 0.0f);
+
+            messageBox.Text = endMessage;
+
             Submarine.Unload();
 
             Game1.NetLobbyScreen.Select();
 
             if (Game1.GameSession!=null) Game1.GameSession.EndShift("");
 
-            new GUIMessageBox("The round has ended", endMessage);
-
             myCharacter = null;
 
-            gameStarted = false;
+            yield return Status.Success;
+
+        }
+
+        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        {
+            base.Draw(spriteBatch);
+
+            if (!Game1.DebugDraw) return;
+
+            int width = 200, height = 300;
+            int x = Game1.GraphicsWidth - width, y = (int)(Game1.GraphicsHeight * 0.3f);
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
+            spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
+
+            spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + client.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Received packets: " + client.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
+
+            spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + client.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + client.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
+            
         }
 
         public override void Disconnect()
@@ -514,7 +587,7 @@ namespace Subsurface.Networking
             msg.Write((byte)type);
             msg.Write(message);
 
-            client.SendMessage(msg, NetDeliveryMethod.Unreliable);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         /// <summary>

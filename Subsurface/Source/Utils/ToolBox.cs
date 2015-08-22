@@ -36,9 +36,9 @@ namespace Subsurface
             {
                 font = contentManager.Load<SpriteFont>(file);
             }
-            catch
+            catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading font ''"+file+"'' failed");
+                DebugConsole.ThrowError("Loading font ''"+file+"'' failed", e);
             }
 
             return font;

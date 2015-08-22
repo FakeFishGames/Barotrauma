@@ -176,7 +176,7 @@ namespace Subsurface
             //    CreateDummyCharacter();
             //}
 
-            cam.MoveCamera((float)deltaTime);
+            if (GUIComponent.MouseOn==null) cam.MoveCamera((float)deltaTime);
             cam.Zoom = MathHelper.Clamp(cam.Zoom + PlayerInput.ScrollWheelSpeed/1000.0f,0.1f, 2.0f);
 
             if (characterMode)

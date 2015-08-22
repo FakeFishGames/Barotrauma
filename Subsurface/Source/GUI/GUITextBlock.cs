@@ -76,9 +76,12 @@ namespace Subsurface
         }
 
 
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false)
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, SpriteFont font =null)
             : this (rect, text, null, null, alignment, textAlignment, style, parent, wrap)
         {
+            this.Font = font == null ? GUI.Font : font;
+
+            SetTextPos();
         }
 
         public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)
@@ -117,11 +120,7 @@ namespace Subsurface
             if (parent != null)
                 parent.AddChild(this);
 
-            //if (wrap)
-            //{
-                this.Wrap = wrap;
-            //    this.text = ToolBox.WrapText(this.text, rect.Width);
-            //}
+            this.Wrap = wrap;
 
             SetTextPos();
         }
@@ -135,7 +134,7 @@ namespace Subsurface
             if (Wrap && rect.Width>0)
             {
                 //text = text.Replace("\n"," ");
-                text = ToolBox.WrapText(text, rect.Width, Font);
+                text = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font);
 
                 Vector2 newSize = MeasureText(text);
 

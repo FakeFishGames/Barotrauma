@@ -36,7 +36,7 @@ namespace Subsurface
 
         private CharacterInventory inventory;
 
-        public double LastNetworkUpdate;
+        public float LastNetworkUpdate;
 
         public int LargeUpdateTimer;
 
@@ -46,9 +46,11 @@ namespace Subsurface
             get { return Properties; }
         }
 
-        protected Key selectKeyHit;
-        protected Key actionKeyHit, actionKeyDown;
-        protected Key secondaryKeyHit, secondaryKeyDown;
+        protected Key[] keys;
+
+        //protected Key selectKeyHit;
+        //protected Key actionKeyHit, actionKeyDown;
+        //protected Key secondaryKeyHit, secondaryKeyDown;
                 
         private Item selectedConstruction;
         private Item[] selectedItems;
@@ -244,31 +246,6 @@ namespace Subsurface
             get { return closestItem; }
         }
 
-        public Key SelectKeyHit
-        {
-            get { return selectKeyHit; }
-        }
-
-        public Key ActionKeyHit
-        {
-            get { return actionKeyHit; }
-        }
-
-        public Key ActionKeyDown
-        {
-            get { return actionKeyDown; }
-        }
-
-        public Key SecondaryKeyHit
-        {
-            get { return secondaryKeyHit; }
-        }
-
-        public Key SecondaryKeyDown
-        {
-            get { return secondaryKeyDown; }
-        }
-
         public AIController AIController
         {
             get { return aiController; }
@@ -311,12 +288,13 @@ namespace Subsurface
 
         public Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
         {
-            selectKeyHit        = new Key(false);
-            actionKeyDown       = new Key(true);
-            actionKeyHit        = new Key(false);
-            secondaryKeyHit     = new Key(false);
-            secondaryKeyDown    = new Key(true);
-
+            keys = new Key[5];
+            keys[(int)InputType.Select] = new Key(false);
+            keys[(int)InputType.ActionHeld] = new Key(true);
+            keys[(int)InputType.ActionHit] = new Key(false);
+            keys[(int)InputType.SecondaryHit] = new Key(false);
+            keys[(int)InputType.SecondaryHeld] = new Key(true);
+            
             selectedItems = new Item[2];
 
             IsNetworkPlayer = isNetworkPlayer;
@@ -426,6 +404,16 @@ namespace Subsurface
             }
         }
 
+        public bool GetInputState(InputType inputType)
+        {
+            return keys[(int)inputType].State;
+        }
+
+        public override string ToString()
+        {
+            return (info != null && !string.IsNullOrWhiteSpace(info.Name)) ? info.Name : SpeciesName;
+        }
+
         public void GiveJobItems(WayPoint spawnPoint)
         {
             if (info == null || info.Job == null) return;
@@ -482,7 +470,7 @@ namespace Subsurface
                 if (closestItem != null)
                 {
                     closestItem.IsHighlighted = true;
-                    if (selectKeyHit.State && closestItem.Pick(this, forcePick))
+                    if (GetInputState(InputType.Select) && closestItem.Pick(this, forcePick))
                     {
                         new NetworkEvent(NetworkEventType.PickItem, ID, true, closestItem.ID);
                     }
@@ -492,7 +480,7 @@ namespace Subsurface
                 if (closestCharacter != selectedCharacter) selectedCharacter = null;
                 if (closestCharacter!=null)
                 {
-                    if (selectKeyHit.State) selectedCharacter = (selectedCharacter==null) ? closestCharacter : null;
+                    if (GetInputState(InputType.Select)) selectedCharacter = (selectedCharacter == null) ? closestCharacter : null;
                 }
             }
 
@@ -501,23 +489,22 @@ namespace Subsurface
                 if (selectedItems[i] == null) continue;
                 if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
                 
-                if (actionKeyDown.State) selectedItems[i].Use(deltaTime, this);
-                if (secondaryKeyDown.State && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+                if (GetInputState(InputType.ActionHeld)) selectedItems[i].Use(deltaTime, this);
+                if (GetInputState(InputType.SecondaryHeld) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
             }
 
             if (selectedConstruction != null)
             {
-                if (actionKeyDown.State) selectedConstruction.Use(deltaTime, this);
-                if (secondaryKeyDown.State) selectedConstruction.SecondaryUse(deltaTime, this);
+                if (GetInputState(InputType.ActionHeld)) selectedConstruction.Use(deltaTime, this);
+                if (GetInputState(InputType.SecondaryHeld)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
 
             if (IsNetworkPlayer)
             {
-                selectKeyHit.Reset();
-                actionKeyHit.Reset();
-                actionKeyDown.Reset();
-                secondaryKeyHit.Reset();
-                secondaryKeyDown.Reset();
+                foreach (Key key in keys)
+                {
+                    key.Reset();
+                }
             }
         }
 
@@ -589,19 +576,19 @@ namespace Subsurface
                 if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) && Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir))
                     targetMovement *= 3.0f;
 
-                selectKeyHit.SetState(PlayerInput.KeyHit(Keys.E));
-                actionKeyHit.SetState(PlayerInput.LeftButtonClicked());
-                actionKeyDown.SetState(PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
-                secondaryKeyHit.SetState(PlayerInput.RightButtonClicked());
-                secondaryKeyDown.SetState(PlayerInput.GetMouseState.RightButton == ButtonState.Pressed);
+
+                keys[(int)InputType.Select].SetState(PlayerInput.KeyHit(Keys.E));
+                keys[(int)InputType.ActionHit].SetState(PlayerInput.LeftButtonClicked());
+                keys[(int)InputType.ActionHeld].SetState(PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
+                keys[(int)InputType.SecondaryHit].SetState(PlayerInput.RightButtonClicked());
+                keys[(int)InputType.SecondaryHeld].SetState(PlayerInput.GetMouseState.RightButton == ButtonState.Pressed);
             }
             else
             {
-                selectKeyHit.SetState(false);
-                actionKeyHit.SetState(false);
-                actionKeyDown.SetState(false);
-                secondaryKeyHit.SetState(false);
-                secondaryKeyDown.SetState(false);
+                foreach (Key key in keys)
+                {
+                    key.SetState(false);
+                }
             }
 
             AnimController.TargetMovement = targetMovement;
@@ -628,7 +615,6 @@ namespace Subsurface
                     }
                 }
             }
-
 
             if (AnimController.onGround &&
                 !AnimController.InWater &&
@@ -1020,26 +1006,28 @@ namespace Subsurface
             {
                 return;
             }
+            else if (type== NetworkEventType.NotMoving)
+            {
+                return;
+            }
 
-
-            //if (type == Networking.NetworkEventType.KeyHit)
-            //{
-            //    message.Write(selectKeyHit.Dequeue);
-                message.Write(actionKeyDown.Dequeue);
-                message.Write(secondaryKeyDown.Dequeue);
-            //}
-
-            message.Write(NetTime.Now);
+            message.Write(keys[(int)InputType.ActionHeld].Dequeue);
+            message.Write(keys[(int)InputType.SecondaryHeld].Dequeue);
+            
+            message.Write((float)NetTime.Now);
 
             // Write byte = move direction
-            message.Write(AnimController.TargetMovement.X);
-            message.Write(AnimController.TargetMovement.Y);
+            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 8);
 
             message.Write(AnimController.TargetDir==Direction.Right);
 
-            message.Write(cursorPosition.X);
-            message.Write(cursorPosition.Y);
-            
+            if (aiController==null)
+            {
+                message.Write(cursorPosition.X);
+                message.Write(cursorPosition.Y);
+            }
+                        
             message.Write(LargeUpdateTimer <= 0);
 
             if (LargeUpdateTimer<=0)
@@ -1050,32 +1038,31 @@ namespace Subsurface
                     message.Write(limb.body.Position.X);
                     message.Write(limb.body.Position.Y);
 
-                    message.Write(limb.body.LinearVelocity.X);
-                    message.Write(limb.body.LinearVelocity.Y);
+                    //message.Write(limb.body.LinearVelocity.X);
+                    //message.Write(limb.body.LinearVelocity.Y);
 
                     message.Write(limb.body.Rotation);
-                    message.Write(limb.body.AngularVelocity);
+                    //message.WriteRangedSingle(MathHelper.Clamp(limb.body.AngularVelocity, -10.0f, 10.0f), -10.0f, 10.0f, 8);
                     i++;
                 }
 
-                message.Write(AnimController.StunTimer);
-                message.Write((byte)health);
+                message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
+                message.Write((byte)((health/maxHealth)*255.0f));
 
-                LargeUpdateTimer = 5;
+                if (aiController != null) aiController.FillNetworkData(message);
+
+                LargeUpdateTimer = 10;
             }
             else
             {
                 Limb torso = AnimController.GetLimb(LimbType.Torso);
+                if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
+
                 message.Write(torso.body.Position.X);
                 message.Write(torso.body.Position.Y);
 
                 LargeUpdateTimer = Math.Max(0, LargeUpdateTimer-1);
-            }
-
-
-
-            if (aiController != null) aiController.FillNetworkData(message);
-            
+            }            
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
@@ -1112,10 +1099,17 @@ namespace Subsurface
                 }
                 return;
             }
+            else if (type == NetworkEventType.NotMoving)
+            {
+                AnimController.TargetMovement = Vector2.Zero;
+                keys[(int)InputType.ActionHeld].State = false;
+                keys[(int)InputType.SecondaryHeld].State = false;
+                return;
+            }
 
             bool actionKeyState     = false;
             bool secondaryKeyState  = false;
-            double sendingTime      = 0.0f;
+            float sendingTime       = 0.0f;
             Vector2 targetMovement  = Vector2.Zero;
             bool targetDir          = false;
             Vector2 cursorPos       = Vector2.Zero;
@@ -1125,12 +1119,20 @@ namespace Subsurface
                 actionKeyState      = message.ReadBoolean();
                 secondaryKeyState   = message.ReadBoolean();
             
-                sendingTime         = message.ReadDouble();
+                sendingTime         = message.ReadFloat();
 
-                targetMovement      = new Vector2 (message.ReadFloat(), message.ReadFloat());
+                targetMovement = new Vector2(message.ReadRangedSingle(-10.0f, 10.0f, 8), message.ReadRangedSingle(-10.0f, 10.0f, 8));
+                targetMovement.X = MathUtils.Round(targetMovement.X, 0.1f);
+                targetMovement.Y = MathUtils.Round(targetMovement.Y, 0.1f);
+
                 targetDir           = message.ReadBoolean();
 
-                cursorPos           = new Vector2(message.ReadFloat(), message.ReadFloat());
+                if (aiController==null)
+                {
+                    cursorPos = new Vector2(
+                        message.ReadFloat(), 
+                        message.ReadFloat());
+                }
             }
 
             catch
@@ -1140,8 +1142,8 @@ namespace Subsurface
 
             AnimController.IsStanding = true;
 
-            actionKeyDown.State = actionKeyState;
-            secondaryKeyDown.State = secondaryKeyState;
+            keys[(int)InputType.ActionHeld].State       = actionKeyState;
+            keys[(int)InputType.SecondaryHeld].State    = secondaryKeyState;
 
             if (sendingTime <= LastNetworkUpdate) return;
             
@@ -1162,11 +1164,11 @@ namespace Subsurface
                         pos.X = message.ReadFloat();
                         pos.Y = message.ReadFloat();
 
-                        vel.X = message.ReadFloat();
-                        vel.Y = message.ReadFloat();
+                        //vel.X = message.ReadFloat();
+                        //vel.Y = message.ReadFloat();
 
                         rotation = message.ReadFloat();
-                        angularVel = message.ReadFloat();
+                        //angularVel = message.ReadFloat();
                     }
                     catch
                     {
@@ -1175,10 +1177,10 @@ namespace Subsurface
 
                     if (limb.body != null)
                     {
-                        limb.body.TargetVelocity = vel;
+                        limb.body.TargetVelocity = limb.body.LinearVelocity;
                         limb.body.TargetPosition = pos;// +vel * (float)(deltaTime / 60.0);
                         limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
-                        limb.body.TargetAngularVelocity = angularVel;
+                        limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
                     }
 
                 }
@@ -1187,8 +1189,8 @@ namespace Subsurface
 
                 try
                 {
-                    newStunTimer = message.ReadFloat();
-                    newHealth = message.ReadByte();
+                    newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
+                    newHealth = (message.ReadByte()/255.0f)*maxHealth;
                 }
                 catch { return; }
 
@@ -1196,6 +1198,8 @@ namespace Subsurface
                 Health = newHealth;
 
                 LargeUpdateTimer = 1;
+
+                if (aiController != null) aiController.ReadNetworkData(message);
             }
             else
             {
@@ -1210,12 +1214,11 @@ namespace Subsurface
 
 
                 Limb torso = AnimController.GetLimb(LimbType.Torso);
+                if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
                 torso.body.TargetPosition = pos;
 
                 LargeUpdateTimer = 0;
             }
-
-            if (aiController != null) aiController.ReadNetworkData(message);
 
             LastNetworkUpdate = sendingTime;
             

@@ -101,7 +101,7 @@ namespace Subsurface.Items.Components
                 Msg = "";
             }
 
-            if (attachedByDefault) Use(1.0f);
+            if (attachedByDefault || Screen.Selected == Game1.EditMapScreen) Use(1.0f);
 
 
             //holdAngle = ToolBox.GetAttributeFloat(element, "holdangle", 0.0f);

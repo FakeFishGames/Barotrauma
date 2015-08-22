@@ -7,8 +7,26 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\bin\Windows\Content\SpriteFont1.xnb</Output>
-      <Time>2014-08-09T18:03:17.8614245+03:00</Time>
+      <Output>E:\Subsurface\Subsurface_content\Subsurface_content\bin\Windows\Content\SpriteFont1.xnb</Output>
+      <Time>2015-07-19T00:51:29.3427566+03:00</Time>
+    </Item>
+    <Item>
+      <Source>SmallFont.spritefont</Source>
+      <Name>SmallFont</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>E:\Subsurface\Subsurface_content\Subsurface_content\bin\Windows\Content\SmallFont.xnb</Output>
+      <Time>2015-07-19T00:51:26.3565858+03:00</Time>
+    </Item>
+    <Item>
+      <Source>LargeFont.spritefont</Source>
+      <Name>LargeFont</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>E:\Subsurface\Subsurface_content\Subsurface_content\bin\Windows\Content\LargeFont.xnb</Output>
+      <Time>2015-08-13T19:53:28.5907374+03:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>
@@ -17,15 +35,15 @@
       <TargetProfile>HiDef</TargetProfile>
       <BuildConfiguration>Windows</BuildConfiguration>
       <CompressContent>false</CompressContent>
-      <RootDirectory>C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_contentContent\</RootDirectory>
-      <LoggerRootDirectory>C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\</LoggerRootDirectory>
-      <IntermediateDirectory>C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\obj\Windows\</IntermediateDirectory>
-      <OutputDirectory>C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\bin\Windows\Content\</OutputDirectory>
+      <RootDirectory>E:\Subsurface\Subsurface_content\Subsurface_contentContent\</RootDirectory>
+      <LoggerRootDirectory>E:\Subsurface\Subsurface_content\Subsurface_content\</LoggerRootDirectory>
+      <IntermediateDirectory>E:\Subsurface\Subsurface_content\Subsurface_content\obj\Windows\</IntermediateDirectory>
+      <OutputDirectory>E:\Subsurface\Subsurface_content\Subsurface_content\bin\Windows\Content\</OutputDirectory>
     </Settings>
     <Assemblies>
       <Assembly>
         <Key>C:\Program Files (x86)\MSBuild\MonoGame\v3.0\MonoGameContentProcessors.dll</Key>
-        <Value>2014-04-06T00:56:18+03:00</Value>
+        <Value>2015-02-12T06:10:24+02:00</Value>
       </Assembly>
       <Assembly>
         <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v4.0\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.XImporter.dll</Key>

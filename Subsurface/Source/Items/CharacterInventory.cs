@@ -139,12 +139,13 @@ namespace Subsurface
             if (items[i] != null)
             {
                 bool combined = false;
-                if (item.Combine(items[i]))
-                {
-                    //PutItem(item, i, false, false);
-                    combined = true;
-                }
-                else if (items[i].Combine(item))
+                //if (item.Combine(items[i]))
+                //{
+                //    //PutItem(item, i, false, false);
+                //    combined = true;
+                //}
+                //else 
+                if (items[i].Combine(item))
                 {
                     //PutItem(items[i], i, false, false);
                     combined = true;

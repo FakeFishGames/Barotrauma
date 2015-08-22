@@ -18,12 +18,13 @@ namespace Subsurface
         private Vector2 position;
         private float rotation;
 
+        private Vector2 prevPosition;
+        private float prevZoom;
+
         public float Shake;
         private Vector2 shakePosition;
         private Vector2 shakeTargetPosition;
-
-
-
+        
         //the area of the world inside the camera view
         private Rectangle worldView;
 
@@ -130,9 +131,9 @@ namespace Subsurface
 
         private void UpdateTransform()
         {
-            Vector2 interpolatedPosition = position;//Physics.Interpolate(prevPosition,position);
+            Vector2 interpolatedPosition = Physics.Interpolate(prevPosition, position);
 
-            float interpolatedZoom = zoom;// Physics.Interpolate(prevZoom, zoom);
+            float interpolatedZoom =  Physics.Interpolate(prevZoom, zoom);
 
             worldView.X = (int)(interpolatedPosition.X - worldView.Width / 2.0);
             worldView.Y = (int)(interpolatedPosition.Y + worldView.Height / 2.0);
@@ -154,13 +155,19 @@ namespace Subsurface
         {
             float moveSpeed = 20.0f/zoom;
 
+            prevPosition = position;
+            prevZoom = zoom;
+
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
-                if (Keyboard.GetState().IsKeyDown(Keys.A))  moveCam.X -= moveSpeed;
-                if (Keyboard.GetState().IsKeyDown(Keys.D))  moveCam.X += moveSpeed;                
-                if (Keyboard.GetState().IsKeyDown(Keys.S))  moveCam.Y -= moveSpeed;
-                if (Keyboard.GetState().IsKeyDown(Keys.W))  moveCam.Y += moveSpeed;
+
+                if (PlayerInput.KeyDown(Keys.A)) moveCam.X -= moveSpeed;
+                if (PlayerInput.KeyDown(Keys.D)) moveCam.X += moveSpeed;
+                if (PlayerInput.KeyDown(Keys.S)) moveCam.Y -= moveSpeed;
+                if (PlayerInput.KeyDown(Keys.W)) moveCam.Y += moveSpeed;
+
+                moveCam = moveCam * deltaTime * 60.0f;
 
                 Zoom = MathHelper.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f, 0.1f, 2.0f);
             }
@@ -179,15 +186,26 @@ namespace Subsurface
 
                 float newZoom = Math.Min(DefaultZoom - Math.Min(offset.Length() / resolution.Y, 1.0f),1.0f);
                 Zoom += (newZoom - zoom) / ZoomSmoothness;
-                
-                moveCam = (targetPos + offset - position) / MoveSmoothness;
+
+                Vector2 diff = (targetPos + offset) - position;
+
+                if (diff == Vector2.Zero)
+                {
+                    moveCam = Vector2.Zero;
+                }
+                else
+                {
+                    float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
+
+                    moveCam = Vector2.Normalize(diff) * Math.Min(dist, (dist * deltaTime * 60.0f) / MoveSmoothness);
+                }
             }
 
             shakeTargetPosition = Rand.Vector(Shake);            
             shakePosition = Vector2.Lerp(shakePosition, shakeTargetPosition, 0.5f);
             Shake = MathHelper.Lerp(Shake, 0.0f, 0.03f);
 
-            Translate((moveCam+shakePosition)*deltaTime*60.0f);
+            Translate(moveCam+shakePosition);
         }
         
         public Vector2 Position
