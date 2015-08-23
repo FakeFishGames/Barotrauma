@@ -68,7 +68,6 @@ namespace Subsurface
 
             MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 
-
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLower())
@@ -91,6 +90,8 @@ namespace Subsurface
             {
                 doc.Add(new XElement("config"));
             }
+
+            doc.Root.Add(new XAttribute("masterserverurl", MasterServerUrl));
 
             XElement gMode = doc.Root.Element("graphicsmode");
             if (gMode == null)

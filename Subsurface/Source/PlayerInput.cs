@@ -4,7 +4,14 @@ using Microsoft.Xna.Framework.Input;
 namespace Subsurface
 {
 
-    public enum InputType { Select, ActionHit, ActionHeld, SecondaryHit, SecondaryHeld }
+    public enum InputType 
+    { 
+        Select, 
+        ActionHit, ActionHeld, 
+        SecondaryHit, SecondaryHeld,
+        Left, Right, Up, Down,
+        Run
+    }
 
 	class Key
 	{
