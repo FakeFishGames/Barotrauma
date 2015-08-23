@@ -460,6 +460,23 @@ namespace Subsurface
         {
             if (isDead) return;
 
+            Vector2 targetMovement = Vector2.Zero;
+            if (GetInputState(InputType.Left))  targetMovement.X -= 1.0f;
+            if (GetInputState(InputType.Right)) targetMovement.X += 1.0f;
+            if (GetInputState(InputType.Up))    targetMovement.Y += 1.0f;
+            if (GetInputState(InputType.Down))  targetMovement.Y -= 1.0f;
+            
+            //the vertical component is only used for falling through platforms and climbing ladders when not in water,
+            //so the movement can't be normalized or the character would walk slower when pressing down/up
+            if (AnimController.InWater)
+            {
+                float length = targetMovement.Length();
+                if (length > 0.0f) targetMovement = targetMovement / length;
+            }
+
+            if (Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir) && GetInputState(InputType.Run))
+                targetMovement *= 3.0f;
+
             //find the closest item if selectkey has been hit, or if the character is being
             //controlled by the player (in order to highlight it)
             if (controlled == this)
@@ -560,22 +577,15 @@ namespace Subsurface
 
             if (!DisableControls)
             {
-                if (PlayerInput.KeyDown(Keys.W)) targetMovement.Y += 1.0f;
-                if (PlayerInput.KeyDown(Keys.S)) targetMovement.Y -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.A)) targetMovement.X -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.D)) targetMovement.X += 1.0f;
+                keys[(int)InputType.Left].SetState(PlayerInput.KeyDown(Keys.A));
+                keys[(int)InputType.Right].SetState(PlayerInput.KeyDown(Keys.D));
+                keys[(int)InputType.Up].SetState(PlayerInput.KeyDown(Keys.W));
+                keys[(int)InputType.Down].SetState(PlayerInput.KeyDown(Keys.S));
 
-                //the vertical component is only used for falling through platforms and climbing ladders when not in water,
-                //so the movement can't be normalized or the character would walk slower when pressing down/up
-                if (AnimController.InWater)
-                {
-                    float length = targetMovement.Length();
-                    if (length > 0.0f) targetMovement = targetMovement / length;
-                }
-
-                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) && Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir))
-                    targetMovement *= 3.0f;
-
+                //if (PlayerInput.KeyDown(Keys.W)) targetMovement.Y += 1.0f;
+                //if (PlayerInput.KeyDown(Keys.S)) targetMovement.Y -= 1.0f;
+                //if () targetMovement.X -= 1.0f;
+                //if (PlayerInput.KeyDown(Keys.D)) targetMovement.X += 1.0f;
 
                 keys[(int)InputType.Select].SetState(PlayerInput.KeyHit(Keys.E));
                 keys[(int)InputType.ActionHit].SetState(PlayerInput.LeftButtonClicked());
@@ -1013,8 +1023,14 @@ namespace Subsurface
 
             message.Write(keys[(int)InputType.ActionHeld].Dequeue);
             message.Write(keys[(int)InputType.SecondaryHeld].Dequeue);
-            
+                        
             message.Write((float)NetTime.Now);
+
+            message.Write(keys[(int)InputType.Left].Dequeue);
+            message.Write(keys[(int)InputType.Right].Dequeue);
+
+            message.Write(keys[(int)InputType.Up].Dequeue);
+            message.Write(keys[(int)InputType.Down].Dequeue);
 
             // Write byte = move direction
             message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
@@ -1114,6 +1130,9 @@ namespace Subsurface
             bool targetDir          = false;
             Vector2 cursorPos       = Vector2.Zero;
 
+            bool leftKeyState = false, rightKeyState = false;
+            bool upKeyState = false, downKeyState = false;
+
             try
             {
                 actionKeyState      = message.ReadBoolean();
@@ -1121,9 +1140,14 @@ namespace Subsurface
             
                 sendingTime         = message.ReadFloat();
 
-                targetMovement = new Vector2(message.ReadRangedSingle(-10.0f, 10.0f, 8), message.ReadRangedSingle(-10.0f, 10.0f, 8));
-                targetMovement.X = MathUtils.Round(targetMovement.X, 0.1f);
-                targetMovement.Y = MathUtils.Round(targetMovement.Y, 0.1f);
+                leftKeyState        = message.ReadBoolean();
+                rightKeyState       = message.ReadBoolean();
+                upKeyState          = message.ReadBoolean();
+                downKeyState        = message.ReadBoolean();
+
+                //targetMovement = new Vector2(message.ReadRangedSingle(-10.0f, 10.0f, 8), message.ReadRangedSingle(-10.0f, 10.0f, 8));
+                //targetMovement.X = MathUtils.Round(targetMovement.X, 0.1f);
+                //targetMovement.Y = MathUtils.Round(targetMovement.Y, 0.1f);
 
                 targetDir           = message.ReadBoolean();
 
@@ -1144,6 +1168,12 @@ namespace Subsurface
 
             keys[(int)InputType.ActionHeld].State       = actionKeyState;
             keys[(int)InputType.SecondaryHeld].State    = secondaryKeyState;
+
+            keys[(int)InputType.Left].State     = leftKeyState;
+            keys[(int)InputType.Right].State    = rightKeyState;
+
+            keys[(int)InputType.Up].State       = upKeyState;
+            keys[(int)InputType.Down].State     = downKeyState;
 
             if (sendingTime <= LastNetworkUpdate) return;
             
