@@ -49,7 +49,7 @@ namespace Subsurface
             get { return targetPosition; }
             set
             {
-                if (float.IsNaN(value.X) || float.IsNaN(value.Y)) return;
+                if (!MathUtils.IsValid(value)) return;
                 targetPosition.X = MathHelper.Clamp(value.X, -10000.0f, 10000.0f);
                 targetPosition.Y = MathHelper.Clamp(value.Y, -10000.0f, 10000.0f);
             }
@@ -60,7 +60,7 @@ namespace Subsurface
             get { return targetVelocity; }
             set 
             {
-                if (float.IsNaN(value.X) || float.IsNaN(value.Y)) return;
+                if (!MathUtils.IsValid(value)) return;
                 targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
                 targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f); 
             }
@@ -71,7 +71,7 @@ namespace Subsurface
             get { return targetRotation; }
             set 
             {
-                if (float.IsNaN(value) || float.IsInfinity(value)) return;
+                if (!MathUtils.IsValid(value)) return;
                 targetRotation = value; 
             }
         }
@@ -81,7 +81,7 @@ namespace Subsurface
             get { return targetAngularVelocity; }
             set 
             {
-                if (float.IsNaN(value) || float.IsInfinity(value)) return;
+                if (!MathUtils.IsValid(value)) return;
                 targetAngularVelocity = value; 
             }
         }

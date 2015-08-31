@@ -129,12 +129,12 @@ namespace Subsurface
 
                 currBrightness -= 0.1f;
 
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             light.Remove();
             
-            yield return Status.Success;
+            yield return CoroutineStatus.Success;
         }
     }
 }

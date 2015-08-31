@@ -368,7 +368,7 @@ namespace Subsurface
                 }
             }
 
-            float midX = (leftX + rightX) / 2.0f;
+            float midX = GetCenterOfMass().X;
 
             foreach (Limb l in limbs)
             {

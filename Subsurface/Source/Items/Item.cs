@@ -126,10 +126,10 @@ namespace Subsurface
             }
         }
 
-        public AITarget AiTarget
-        {
-            get { return aiTarget; }
-        }
+        //public override AITarget AiTarget
+        //{
+        //    get { return aiTarget; }
+        //}
 
         public bool Updated
         {

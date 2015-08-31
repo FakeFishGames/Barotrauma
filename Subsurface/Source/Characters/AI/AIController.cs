@@ -34,6 +34,7 @@ namespace Subsurface
         public AiState State
         {
             get { return state; }
+            set { state = value; }
         }
 
         public AIController (Character c)

@@ -17,7 +17,7 @@ namespace Subsurface.Items.Components
         Hull hull1, hull2;
 
         [HasDefaultValue(0.0f, true)]
-        private float FlowPercentage
+        public float FlowPercentage
         {
             get { return flowPercentage; }
             set 
@@ -116,21 +116,18 @@ namespace Subsurface.Items.Components
                 item.NewComponentEvent(this, true);
             }
             
-            spriteBatch.DrawString(GUI.Font, "Flow percentage: " + (int)flowPercentage + " %", new Vector2(x + 20, y + 80), Color.White);
-
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "+", false))
-            {
-                FlowPercentage += 10.0f;
-                item.NewComponentEvent(this, true);
-            }
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "-", false))
+            spriteBatch.DrawString(GUI.Font, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 20, y + 80), Color.White);
+            
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "OUT", false))
             {
                 FlowPercentage -= 10.0f;
                 item.NewComponentEvent(this, true);
             }
-
-
-            
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "IN", false))
+            {
+                FlowPercentage += 10.0f;
+                item.NewComponentEvent(this, true);
+            }            
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)

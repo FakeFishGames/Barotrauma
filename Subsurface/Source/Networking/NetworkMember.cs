@@ -31,9 +31,6 @@ namespace Subsurface.Networking
 
     class NetworkMember
     {
-        public const int DefaultPort = 14242;
-
-        public static string MasterServerUrl = Game1.Config.MasterServerUrl;
 
         protected static Color[] messageColor = { Color.White, Color.Red, Color.LightBlue, Color.LightGreen };
         
@@ -53,6 +50,21 @@ namespace Subsurface.Networking
         private GUIFrame crewFrame;
 
         protected bool gameStarted;
+
+        protected Character myCharacter;
+        protected CharacterInfo characterInfo;
+
+        public Character Character
+        {
+            get { return myCharacter; }
+            set { myCharacter = value; }
+        }
+
+        public CharacterInfo CharacterInfo
+        {
+            get { return characterInfo; }
+            set { characterInfo = value; }
+        }
 
         public string Name
         {

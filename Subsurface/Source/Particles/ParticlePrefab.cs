@@ -5,6 +5,8 @@ namespace Subsurface.Particles
 {
     class ParticlePrefab
     {
+        public enum DrawTargetType { Air = 1, Water = 2, Both = 3 }
+
         public readonly string name;
 
         public readonly Sprite sprite;
@@ -27,7 +29,7 @@ namespace Subsurface.Particles
 
         public readonly Vector2 velocityChange;
 
-        public readonly bool inWater;
+        public readonly DrawTargetType DrawTarget;
 
         public readonly bool rotateToDirection;
 
@@ -67,8 +69,20 @@ namespace Subsurface.Particles
 
             rotateToDirection = ToolBox.GetAttributeBool(element, "rotatetodirection", false);
 
-            inWater = ToolBox.GetAttributeBool(element, "inwater", false);
-
+            switch (ToolBox.GetAttributeString(element, "drawtarget", "air").ToLower())
+            {
+                case "air":
+                default:
+                    DrawTarget = DrawTargetType.Air;
+                    break;
+                case "water":
+                    DrawTarget = DrawTargetType.Water;
+                    break;
+                case "both":
+                    DrawTarget = DrawTargetType.Both;
+                    break;
+                
+            }
         }
     }
 }

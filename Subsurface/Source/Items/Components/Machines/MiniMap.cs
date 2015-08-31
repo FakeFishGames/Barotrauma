@@ -67,17 +67,17 @@ namespace Subsurface.Items.Components
                 GUI.DrawRectangle(spriteBatch, hullRect, Color.White);
             }
 
-            foreach (Character c in Character.CharacterList)
-            {
-                if (c.AnimController.CurrentHull!=null) continue;
+            //foreach (Character c in Character.CharacterList)
+            //{
+            //    if (c.AnimController.CurrentHull!=null) continue;
 
-                Rectangle characterRect = new Rectangle(
-                    miniMap.X + (int)((c.Position.X - Submarine.Borders.X) * size),
-                    miniMap.Y - (int)((c.Position.Y - Submarine.Borders.Y) * size),
-                    5, 5);
+            //    Rectangle characterRect = new Rectangle(
+            //        miniMap.X + (int)((c.Position.X - Submarine.Borders.X) * size),
+            //        miniMap.Y - (int)((c.Position.Y - Submarine.Borders.Y) * size),
+            //        5, 5);
 
-                GUI.DrawRectangle(spriteBatch, characterRect, Color.White, true);
-            }
+            //    GUI.DrawRectangle(spriteBatch, characterRect, Color.White, true);
+            //}
         }
 
     }

@@ -270,6 +270,15 @@ namespace Subsurface
                           .Select(s => s[Rand.Int(s.Length)])
                           .ToArray());
         }
+
+        public static int StringToInt(string str)
+        {
+            str = str.Substring(0, Math.Min(str.Length, 32));
+
+            byte[] asciiBytes = Encoding.ASCII.GetBytes(str);
+
+            return BitConverter.ToInt32(asciiBytes, 0);
+        }
         
         public static string WrapText(string text, float lineLength, SpriteFont font)
         {

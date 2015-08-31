@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Subsurface
 {
-    enum Status
+    enum CoroutineStatus
     {
         Running, Success, Failure
     }
@@ -24,6 +24,13 @@ namespace Subsurface
             Coroutines.Add(func.GetEnumerator());
         }
 
+        public static void StopCoroutine(string name)
+        {
+            IEnumerator<object> coroutine = Coroutines.FirstOrDefault(c => c.ToString().Contains(name));
+
+            if (coroutine != null) Coroutines.Remove(coroutine);
+        }
+
         // Updating just means stepping through all the coroutines
         public static void Update(float deltaTime)
         {
@@ -39,12 +46,12 @@ namespace Subsurface
                     }
                     else
                     {
-                        switch ((Status)Coroutines[i].Current)
+                        switch ((CoroutineStatus)Coroutines[i].Current)
                         {
-                            case Status.Success:
+                            case CoroutineStatus.Success:
                                 Coroutines.RemoveAt(i);
                                 continue;
-                            case Status.Failure:
+                            case CoroutineStatus.Failure:
                                 DebugConsole.ThrowError("Coroutine ''" + Coroutines[i]+ "'' has failed");
                                 break;
                         }

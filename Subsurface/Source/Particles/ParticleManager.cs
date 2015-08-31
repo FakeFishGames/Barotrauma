@@ -95,14 +95,15 @@ namespace Subsurface.Particles
 
         public void Draw(SpriteBatch spriteBatch, bool inWater)
         {
+            ParticlePrefab.DrawTargetType drawTarget = inWater ? ParticlePrefab.DrawTargetType.Water : ParticlePrefab.DrawTargetType.Air;
+
             for (int i = 0; i < particleCount; i++)
             {
-                if (particles[i].InWater != inWater) continue;
+                if (!particles[i].DrawTarget.HasFlag(drawTarget)) continue;
                 
                 particles[i].Draw(spriteBatch);
             }
         }
-
 
     }
 }

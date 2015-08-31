@@ -157,16 +157,19 @@ namespace EventInput
                 throw new InvalidOperationException("TextInput.Initialize can only be called once!");
 
             hookProcDelegate = HookProc;
-            prevWndProc = (IntPtr)SetWindowLong(window.Handle, GWL_WNDPROC,
-                (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
+#if WINDOWS
+			prevWndProc = (IntPtr)SetWindowLong(window.Handle, GWL_WNDPROC,
+			(int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
-            hIMC = ImmGetContext(window.Handle);
+			hIMC = ImmGetContext(window.Handle);
+#endif
+
             initialized = true;
         }
 
         static IntPtr HookProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
-            IntPtr returnCode = CallWindowProc(prevWndProc, hWnd, msg, wParam, lParam);
+			IntPtr returnCode = CallWindowProc(prevWndProc, hWnd, msg, wParam, lParam);
 
             switch (msg)
             {
@@ -200,7 +203,10 @@ namespace EventInput
                     break;
             }
 
+
+
             return returnCode;
+
         }
     }
 

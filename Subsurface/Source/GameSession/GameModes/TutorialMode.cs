@@ -69,7 +69,17 @@ namespace Subsurface
         {
             base.Update(deltaTime);
 
+            if (Character.Controlled!=null && Character.Controlled.IsDead)
+            {
+                Character.Controlled = null;
+
+                    CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
+                    infoBox = null;
+                    CoroutineManager.StartCoroutine(Dead());
+            }
+
             CrewManager.Update(deltaTime);
+
             if (infoBox!=null) infoBox.Update(deltaTime);
         }
 
@@ -90,7 +100,7 @@ namespace Subsurface
             
             while (!tutorialDoor.IsOpen)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             yield return new WaitForSeconds(2.0f);
@@ -103,14 +113,14 @@ namespace Subsurface
 
             while (Vector2.Distance(Character.Controlled.Position, reactor.Item.Position)>200.0f)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Select the reactor by walking next to it and pressing E.");
 
             while (Character.Controlled.SelectedConstruction != reactor.Item)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }            
             yield return new WaitForSeconds(0.5f);
 
@@ -118,7 +128,7 @@ namespace Subsurface
 
             while (reactor.FissionRate <= 0.0f)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -128,7 +138,7 @@ namespace Subsurface
             
             while (Math.Abs(reactor.ShutDownTemp-5000.0f) > 400.0f)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -138,7 +148,7 @@ namespace Subsurface
 
             while (!reactor.AutoTemp)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -150,14 +160,14 @@ namespace Subsurface
 
             while (Vector2.Distance(Character.Controlled.Position, steering.Item.Position) > 150.0f)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             
             infoBox = CreateInfoFrame("Select the navigation terminal by walking next to it and pressing E.");
             
             while (Character.Controlled.SelectedConstruction != steering.Item)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -168,7 +178,7 @@ namespace Subsurface
 
             while (Character.Controlled.SelectedConstruction == steering.Item)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(1.0f);
 
@@ -178,7 +188,7 @@ namespace Subsurface
             while (Character.Controlled.SelectedConstruction != steering.Item ||
                 Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
 
@@ -188,7 +198,7 @@ namespace Subsurface
 
             while (!HasItem("Wire"))
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Head back to the navigation terminal to fix the wiring.");
@@ -199,7 +209,7 @@ namespace Subsurface
                 Character.Controlled.SelectedConstruction != steering.Item) ||
             Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             
             if (Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>()!=null) == null)
@@ -208,7 +218,7 @@ namespace Subsurface
 
                 while (Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>() != null) == null)
                 {
-                    yield return Status.Running;
+                    yield return CoroutineStatus.Running;
                 }
             }
 
@@ -219,7 +229,7 @@ namespace Subsurface
 
             while (steeringConnection.Wires.FirstOrDefault(w => w != null) == null)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
                 
             }
             
@@ -228,7 +238,7 @@ namespace Subsurface
 
             while (Character.Controlled.SelectedConstruction!=null)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             yield return new WaitForSeconds(2.0f);
@@ -239,7 +249,7 @@ namespace Subsurface
 
             while (radar.Voltage<0.1f)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Great! Now we should be able to get moving.");
@@ -247,23 +257,23 @@ namespace Subsurface
 
             while (Character.Controlled.SelectedConstruction != steering.Item)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("You can take a look at the area around the sub by pressing ''Activate Radar''.");
             
             while (!radar.IsActive)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
             infoBox = CreateInfoFrame("The white box in the middle is the submarine, and the white lines outside it are the walls of an underwater cavern. "
                 + "Try moving the submarine by clicking somewhere inside the rectangle and draggind the pointer to the direction you want to go to.");
 
-            while (steering.CurrTargetVelocity == Vector2.Zero && steering.CurrTargetVelocity.Length() < 40.0f)
+            while (steering.CurrTargetVelocity == Vector2.Zero && steering.CurrTargetVelocity.Length() < 50.0f)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(4.0f);
 
@@ -276,11 +286,13 @@ namespace Subsurface
 
             while (Submarine.Loaded.Position.Y > 31000.0f)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
             
-            var moloch = new Character("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 15.0f);
+            var moloch = new Character("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 25.0f);
             moloch.PlaySound(AIController.AiState.Attack);
+
+            yield return new WaitForSeconds(1.0f);
 
             infoBox = CreateInfoFrame("Uh-oh... Something enormous just appeared on the radar.");
 
@@ -295,13 +307,15 @@ namespace Subsurface
             bool broken = false;
             do
             {
+                Submarine.Loaded.Speed = Vector2.Zero;
+
                 moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
                 Vector2 steeringDir = windows[0].Position - moloch.Position;
                 if (steeringDir != Vector2.Zero) steeringDir = Vector2.Normalize(steeringDir);
 
                 foreach (Limb limb in moloch.AnimController.limbs)
                 {
-                    limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X, limb.LinearVelocity.Y + steeringDir.Y*0.01f);
+                    limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X, limb.LinearVelocity.Y + steeringDir.Y*10.0f);
                 }
 
                 moloch.AIController.Steering = steeringDir;
@@ -310,7 +324,7 @@ namespace Subsurface
                 {
                     for (int i = 0; i < window.SectionCount; i++)
                     {
-                        if (!window.SectionHasHole(i)) continue;
+                        if (!window.SectionIsLeaking(i)) continue;
                         broken = true;
                         break;
                     }
@@ -336,17 +350,17 @@ namespace Subsurface
             Door commandDoor2 = Item.itemList.Find(i => i.HasTag("commanddoor2")).GetComponent<Door>();
             Door commandDoor3 = Item.itemList.Find(i => i.HasTag("commanddoor3")).GetComponent<Door>();
 
-            while (commandDoor1.IsOpen && (commandDoor2.IsOpen || commandDoor3.IsOpen))
+            while (commandDoor1.IsOpen || (commandDoor2.IsOpen || commandDoor3.IsOpen))
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("Great! You should find yourself an diving mask or a diving suit, in case the creature causes more damage. "+
+            infoBox = CreateInfoFrame("You should find yourself an diving mask or a diving suit, in case the creature causes more damage. "+
                 "There are some in the room next to the airlock.");
 
             while (!HasItem("Diving Mask") && !HasItem("Diving Suit"))
             {
-                yield return Status.Running; 
+                yield return CoroutineStatus.Running; 
             }
 
             if (HasItem("Diving Mask"))
@@ -364,7 +378,7 @@ namespace Subsurface
 
             while (!HasItem("Oxygen Tank"))
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             yield return new WaitForSeconds(5.0f);
@@ -393,23 +407,153 @@ namespace Subsurface
 
             var loader = Item.itemList.Find(i => i.Name == "Railgun Loader").GetComponent<ItemContainer>();
 
-            while (Math.Abs(Character.Controlled.Position.Y - loader.Item.Position.Y)>50)
+            while (Math.Abs(Character.Controlled.Position.Y - loader.Item.Position.Y)>80)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Grab one of the shells. You can load it by selecting the railgun loader and dragging the shell to. "
-                +"one of the free slots.");
+                +"one of the free slots. You need two hands to carry a shell, so make sure you don't have anything else in either hand.");
 
-            while (loader.Item.ContainedItems.FirstOrDefault(i => i != null) != null)
+            while (loader.Item.ContainedItems.FirstOrDefault(i => i != null && i.Name == "Railgun Shell") == null)
             {
-                capacitor1.Charge += 1.0f;
-                capacitor2.Charge += 1.0f;
-                yield return Status.Running;
+                moloch.Health = 50.0f;
+
+                capacitor1.Charge += 5.0f;
+                capacitor2.Charge += 5.0f;
+                yield return CoroutineStatus.Running;
             }
 
+            infoBox = CreateInfoFrame("Now we're ready to shoot! Select the railgun controller.");
 
-            yield return Status.Success;
+            while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.Name != "Railgun Controller")
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            infoBox = CreateInfoFrame("Use the right mouse button to aim and left to shoot.");
+
+            while (!moloch.IsDead)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            infoBox = CreateInfoFrame("The creature has died. Now you should fix the damages in the control room: "+
+                "Grab a welding tool from the closet in the railgun room.");
+
+            while (!HasItem("Welding Tool"))
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            infoBox = CreateInfoFrame("The welding tool requires fuel to work. Grab a welding fuel tank and attach it to the tool "+
+                "by dragging it into the same slot.");
+
+            do
+            {
+                var weldingTool = Character.Controlled.Inventory.items.FirstOrDefault(i => i != null && i.Name == "Welding Tool");
+                if (weldingTool != null && 
+                    weldingTool.ContainedItems.FirstOrDefault(contained => contained != null && contained.Name == "Welding Fuel Tank") != null) break;
+
+                yield return CoroutineStatus.Running;
+            } while (true);
+
+
+            infoBox = CreateInfoFrame("You can aim with the tool using the right mouse button and weld using the left button. "+
+                "Head to the command room to fix the leaks there.");
+
+            do
+            {
+                broken = false;
+                foreach (Structure window in windows)
+                {
+                    for (int i = 0; i < window.SectionCount; i++)
+                    {
+                        if (!window.SectionIsLeaking(i)) continue;
+                        broken = true;
+                        break;
+                    }
+                    if (broken) break;
+                }
+
+                yield return new WaitForSeconds(1.0f);
+            } while (broken);
+
+            infoBox = CreateInfoFrame("Great! However, there's still quite a bit of water inside the sub. It should be pumped out "
+                +"using the pump in the room at the bottom of the submarine.");
+
+            Pump pump = Item.itemList.Find(i => i.HasTag("tutorialpump")).GetComponent<Pump>();
+
+            while (Vector2.Distance(Character.Controlled.Position, pump.Item.Position) > 100.0f)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            infoBox = CreateInfoFrame("The two pumps inside the ballast tanks "
+                +"are connected straight to the navigation terminal and can't be manually controlled unless you mess with their wiring, "+
+                "so you should only use the pump in the middle room to pump out the water. Select it, turn it on and adjust the pumping speed "+
+                "to start pumping water out.");
+
+            while (pump.Item.CurrentHull.Volume>1000.0f)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            infoBox = CreateInfoFrame("That was all there is to this tutorial! Now you should be able to handle "+
+            "most of the basic tasks on board the submarine.");
+
+            yield return new WaitForSeconds(4.0f);
+
+            float endPreviewLength = 10.0f;
+
+            DateTime endTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, (int)(1000.0f * endPreviewLength));
+            float secondsLeft = endPreviewLength;
+
+            Character.Controlled = null;
+
+            do
+            {
+                secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
+
+                float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
+                Vector2 offset = (new Vector2(
+                    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+                    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+
+                Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
+                //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
+
+                yield return CoroutineStatus.Running;
+            } while (secondsLeft > 0.0f);
+
+            Submarine.Unload();
+            Game1.MainMenuScreen.Select();
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private IEnumerable<object> Dead()
+        {
+            yield return new WaitForSeconds(3.0f);
+
+            var messageBox = new GUIMessageBox("You have died", "Do you want to try again?", new string[] { "Yes", "No" });
+
+            messageBox.Buttons[0].OnClicked += Restart;
+            messageBox.Buttons[0].OnClicked += messageBox.Close;
+
+            messageBox.Buttons[1].UserData = MainMenuScreen.Tabs.Main;
+            messageBox.Buttons[1].OnClicked = Game1.MainMenuScreen.SelectTab;
+            messageBox.Buttons[1].OnClicked += messageBox.Close;
+
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private bool Restart(GUIButton button, object obj)
+        {
+            TutorialMode.Start();
+
+            return true;
         }
 
         private bool HasItem(string itemName)
@@ -425,6 +569,10 @@ namespace Subsurface
         {
             do
             {
+                enemy.Health = 50.0f;
+
+                enemy.AIController.State = AIController.AiState.None;
+
                 Vector2 targetPos = Character.Controlled.Position + new Vector2(0.0f, 3000.0f);
 
                 Vector2 steering = targetPos - enemy.Position;
@@ -432,10 +580,10 @@ namespace Subsurface
 
                 enemy.AIController.Steering = steering*2.0f;
 
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             } while (capacitors.FirstOrDefault(c => c.Charge > 0.4f) == null);
 
-            yield return Status.Success;
+            yield return CoroutineStatus.Success;
         }
 
         public override void Draw(SpriteBatch spriteBatch)

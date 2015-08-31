@@ -45,38 +45,41 @@ namespace Subsurface
         public void Load(string filePath)
         {
             XDocument doc = ToolBox.TryLoadXml(filePath);
-            try
+
+            if (doc == null)
             {
-                XElement graphicsMode = doc.Root.Element("graphicsmode");
-                GraphicsWidth = int.Parse(graphicsMode.Attribute("width").Value);
-                GraphicsHeight = int.Parse(graphicsMode.Attribute("height").Value);
-                
-                FullScreenEnabled = graphicsMode.Attribute("fullscreen").Value == "true";
+                DebugConsole.ThrowError("No config file found");
 
-                MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
-
-                foreach (XElement subElement in doc.Root.Elements())
-                {
-                    switch (subElement.Name.ToString().ToLower())
-                    {
-                        case "contentpackage":
-                            string path = ToolBox.GetAttributeString(subElement, "path", "");
-                            SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
-
-                            if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
-                            break;
-                    }
-                }
-            }
-            catch
-            {
                 GraphicsWidth = 1024;
-                GraphicsHeight = 768;
+                GraphicsHeight = 678;
+
+                MasterServerUrl = "";
+
+                SelectedContentPackage = new ContentPackage("");
+
+                return;
             }
 
+            XElement graphicsMode = doc.Root.Element("graphicsmode");
+            GraphicsWidth = int.Parse(graphicsMode.Attribute("width").Value);
+            GraphicsHeight = int.Parse(graphicsMode.Attribute("height").Value);
+                
+            FullScreenEnabled = graphicsMode.Attribute("fullscreen").Value == "true";
 
+            MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 
+            foreach (XElement subElement in doc.Root.Elements())
+            {
+                switch (subElement.Name.ToString().ToLower())
+                {
+                    case "contentpackage":
+                        string path = ToolBox.GetAttributeString(subElement, "path", "");
+                        SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
 
+                        if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
+                        break;
+                }
+            }   
         }
 
         public void Save(string filePath)

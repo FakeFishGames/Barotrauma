@@ -59,6 +59,11 @@ namespace Subsurface
             shortHash = GetShortHash(hash);
         }
 
+        public override string ToString()
+        {
+            return hash;
+        }
+
         private string CalculateHash(FileStream stream)
         {
             MD5 md5 = MD5.Create();

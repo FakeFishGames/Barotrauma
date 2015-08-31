@@ -102,7 +102,7 @@ namespace Subsurface.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
-            if (!character.SecondaryKeyDown.State) return false;
+            if (!character.GetInputState(InputType.SecondaryHeld)) return false;
 
             if (DoesUseFail(character)) return false;
 
@@ -126,9 +126,6 @@ namespace Subsurface.Items.Components
 
             if (targetBody == null || targetBody.UserData == null) return true;
 
-            //ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-
-
             Structure targetStructure;
             Limb targetLimb;
             Item targetItem;
@@ -143,10 +140,19 @@ namespace Subsurface.Items.Components
 
                 targetStructure.AddDamage(sectionIndex, -structureFixAmount);
 
+                //if the next section is small enough, apply the effect to it as well
+                //(to make it easier to fix a small "left-over" section)
+                int nextSectionLength = targetStructure.SectionLength(sectionIndex + 1);
+                if (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f)
+                {
+                    targetStructure.HighLightSection(sectionIndex + 1);
+                    targetStructure.AddDamage(sectionIndex + 1, -structureFixAmount);
+                }
+
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
-                if (character.SecondaryKeyDown.State)
+                if (character.GetInputState(InputType.SecondaryHeld))
                 {
                     targetLimb.character.Health += limbFixAmount;
                     //isActive = true;

@@ -46,9 +46,11 @@ namespace Subsurface
             get { return Properties; }
         }
 
-        protected Key selectKeyHit;
-        protected Key actionKeyHit, actionKeyDown;
-        protected Key secondaryKeyHit, secondaryKeyDown;
+        protected Key[] keys;
+
+        //protected Key selectKeyHit;
+        //protected Key actionKeyHit, actionKeyDown;
+        //protected Key secondaryKeyHit, secondaryKeyDown;
                 
         private Item selectedConstruction;
         private Item[] selectedItems;
@@ -123,10 +125,10 @@ namespace Subsurface
             get { return cursorPosition; }
         }
 
-        public AITarget AiTarget
-        {
-            get { return aiTarget; }
-        }
+        //public AITarget AiTarget
+        //{
+        //    get { return aiTarget; }
+        //}
 
         public float SoundRange
         {
@@ -244,31 +246,6 @@ namespace Subsurface
             get { return closestItem; }
         }
 
-        public Key SelectKeyHit
-        {
-            get { return selectKeyHit; }
-        }
-
-        public Key ActionKeyHit
-        {
-            get { return actionKeyHit; }
-        }
-
-        public Key ActionKeyDown
-        {
-            get { return actionKeyDown; }
-        }
-
-        public Key SecondaryKeyHit
-        {
-            get { return secondaryKeyHit; }
-        }
-
-        public Key SecondaryKeyDown
-        {
-            get { return secondaryKeyDown; }
-        }
-
         public AIController AIController
         {
             get { return aiController; }
@@ -311,11 +288,19 @@ namespace Subsurface
 
         public Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
         {
-            selectKeyHit        = new Key(false);
-            actionKeyDown       = new Key(true);
-            actionKeyHit        = new Key(false);
-            secondaryKeyHit     = new Key(false);
-            secondaryKeyDown    = new Key(true);
+            keys = new Key[Enum.GetNames(typeof(InputType)).Length];
+            keys[(int)InputType.Select] = new Key(false);
+            keys[(int)InputType.ActionHeld] = new Key(true);
+            keys[(int)InputType.ActionHit] = new Key(false);
+            keys[(int)InputType.SecondaryHit] = new Key(false);
+            keys[(int)InputType.SecondaryHeld] = new Key(true);
+
+            keys[(int)InputType.Left] = new Key(true);
+            keys[(int)InputType.Right] = new Key(true);
+            keys[(int)InputType.Up] = new Key(true);
+            keys[(int)InputType.Down] = new Key(true);
+
+            keys[(int)InputType.Run] = new Key(true);
 
             selectedItems = new Item[2];
 
@@ -426,6 +411,19 @@ namespace Subsurface
             }
         }
 
+        public bool GetInputState(InputType inputType)
+        {
+            return keys[(int)inputType].State;
+        }
+
+        public void ClearInputs()
+        {
+            foreach (Key key in keys)
+            {
+                key.State = false;
+            }
+        }
+
         public override string ToString()
         {
             return (info != null && !string.IsNullOrWhiteSpace(info.Name)) ? info.Name : SpeciesName;
@@ -477,6 +475,42 @@ namespace Subsurface
         {
             if (isDead) return;
 
+            Vector2 targetMovement = Vector2.Zero;
+            if (GetInputState(InputType.Left))  targetMovement.X -= 1.0f;
+            if (GetInputState(InputType.Right)) targetMovement.X += 1.0f;
+            if (GetInputState(InputType.Up))    targetMovement.Y += 1.0f;
+            if (GetInputState(InputType.Down))  targetMovement.Y -= 1.0f;
+            
+            //the vertical component is only used for falling through platforms and climbing ladders when not in water,
+            //so the movement can't be normalized or the character would walk slower when pressing down/up
+            if (AnimController.InWater)
+            {
+                float length = targetMovement.Length();
+                if (length > 0.0f) targetMovement = targetMovement / length;
+            }
+
+            if (Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir) && GetInputState(InputType.Run))
+                targetMovement *= 3.0f;
+
+            AnimController.TargetMovement = targetMovement;
+            AnimController.IsStanding = true;
+
+            if (AnimController.onGround &&
+                !AnimController.InWater &&
+                AnimController.Anim != AnimController.Animation.UsingConstruction)
+            {
+                Limb head = AnimController.GetLimb(LimbType.Head);
+
+                if (cursorPosition.X < head.Position.X - 10.0f)
+                {
+                    AnimController.TargetDir = Direction.Left;
+                }
+                else if (cursorPosition.X > head.Position.X + 10.0f)
+                {
+                    AnimController.TargetDir = Direction.Right;
+                }
+            }
+
             //find the closest item if selectkey has been hit, or if the character is being
             //controlled by the player (in order to highlight it)
             if (controlled == this)
@@ -487,7 +521,7 @@ namespace Subsurface
                 if (closestItem != null)
                 {
                     closestItem.IsHighlighted = true;
-                    if (selectKeyHit.State && closestItem.Pick(this, forcePick))
+                    if (GetInputState(InputType.Select) && closestItem.Pick(this, forcePick))
                     {
                         new NetworkEvent(NetworkEventType.PickItem, ID, true, closestItem.ID);
                     }
@@ -497,7 +531,7 @@ namespace Subsurface
                 if (closestCharacter != selectedCharacter) selectedCharacter = null;
                 if (closestCharacter!=null)
                 {
-                    if (selectKeyHit.State) selectedCharacter = (selectedCharacter==null) ? closestCharacter : null;
+                    if (GetInputState(InputType.Select)) selectedCharacter = (selectedCharacter == null) ? closestCharacter : null;
                 }
             }
 
@@ -506,23 +540,22 @@ namespace Subsurface
                 if (selectedItems[i] == null) continue;
                 if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
                 
-                if (actionKeyDown.State) selectedItems[i].Use(deltaTime, this);
-                if (secondaryKeyDown.State && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+                if (GetInputState(InputType.ActionHeld)) selectedItems[i].Use(deltaTime, this);
+                if (GetInputState(InputType.SecondaryHeld) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
             }
 
             if (selectedConstruction != null)
             {
-                if (actionKeyDown.State) selectedConstruction.Use(deltaTime, this);
-                if (secondaryKeyDown.State) selectedConstruction.SecondaryUse(deltaTime, this);
+                if (GetInputState(InputType.ActionHeld)) selectedConstruction.Use(deltaTime, this);
+                if (GetInputState(InputType.SecondaryHeld)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
 
             if (IsNetworkPlayer)
             {
-                selectKeyHit.Reset();
-                actionKeyHit.Reset();
-                actionKeyDown.Reset();
-                secondaryKeyHit.Reset();
-                secondaryKeyDown.Reset();
+                foreach (Key key in keys)
+                {
+                    key.Reset();
+                }
             }
         }
 
@@ -574,43 +607,28 @@ namespace Subsurface
 
             Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(head.SimPosition);
 
-            Vector2 targetMovement = Vector2.Zero;
-
             if (!DisableControls)
             {
-                if (PlayerInput.KeyDown(Keys.W)) targetMovement.Y += 1.0f;
-                if (PlayerInput.KeyDown(Keys.S)) targetMovement.Y -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.A)) targetMovement.X -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.D)) targetMovement.X += 1.0f;
+                keys[(int)InputType.Left].SetState(PlayerInput.KeyDown(Keys.A));
+                keys[(int)InputType.Right].SetState(PlayerInput.KeyDown(Keys.D));
+                keys[(int)InputType.Up].SetState(PlayerInput.KeyDown(Keys.W));
+                keys[(int)InputType.Down].SetState(PlayerInput.KeyDown(Keys.S));
 
-                //the vertical component is only used for falling through platforms and climbing ladders when not in water,
-                //so the movement can't be normalized or the character would walk slower when pressing down/up
-                if (AnimController.InWater)
-                {
-                    float length = targetMovement.Length();
-                    if (length > 0.0f) targetMovement = targetMovement / length;
-                }
+                keys[(int)InputType.Select].SetState(PlayerInput.KeyHit(Keys.E));
+                keys[(int)InputType.ActionHit].SetState(PlayerInput.LeftButtonClicked());
+                keys[(int)InputType.ActionHeld].SetState(PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
+                keys[(int)InputType.SecondaryHit].SetState(PlayerInput.RightButtonClicked());
+                keys[(int)InputType.SecondaryHeld].SetState(PlayerInput.GetMouseState.RightButton == ButtonState.Pressed);
 
-                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) && Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir))
-                    targetMovement *= 3.0f;
-
-                selectKeyHit.SetState(PlayerInput.KeyHit(Keys.E));
-                actionKeyHit.SetState(PlayerInput.LeftButtonClicked());
-                actionKeyDown.SetState(PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
-                secondaryKeyHit.SetState(PlayerInput.RightButtonClicked());
-                secondaryKeyDown.SetState(PlayerInput.GetMouseState.RightButton == ButtonState.Pressed);
+                keys[(int)InputType.Run].SetState(PlayerInput.KeyDown(Keys.LeftShift));
             }
             else
             {
-                selectKeyHit.SetState(false);
-                actionKeyHit.SetState(false);
-                actionKeyDown.SetState(false);
-                secondaryKeyHit.SetState(false);
-                secondaryKeyDown.SetState(false);
+                foreach (Key key in keys)
+                {
+                    key.SetState(false);
+                }
             }
-
-            AnimController.TargetMovement = targetMovement;
-            AnimController.IsStanding = true;
 
             if (moveCam)
             {
@@ -631,20 +649,6 @@ namespace Subsurface
                     {
                         cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
                     }
-                }
-            }
-
-            if (AnimController.onGround &&
-                !AnimController.InWater &&
-                AnimController.Anim != AnimController.Animation.UsingConstruction)
-            {                
-                if (mouseSimPos.X < head.SimPosition.X-1.0f)
-                {
-                    AnimController.TargetDir = Direction.Left;
-                }
-                else if (mouseSimPos.X > head.SimPosition.X + 1.0f)
-                {
-                    AnimController.TargetDir = Direction.Right;
                 }
             }
 
@@ -810,7 +814,7 @@ namespace Subsurface
 
             Color color = Color.Orange;
 
-            if (closestCharacter != null && closestCharacter.isDead)
+            if (closestCharacter != null && closestCharacter.isDead && closestCharacter.isHumanoid)
             {
                 Vector2 startPos = Position + (closestCharacter.Position - Position) * 0.7f;
                 startPos = cam.WorldToScreen(startPos);
@@ -840,10 +844,10 @@ namespace Subsurface
                 textPos.Y += 50.0f;
                 foreach (ColoredText coloredText in closestItem.GetHUDTexts(Controlled))
                 {
-                    textPos.X = startPos.X - GUI.Font.MeasureString(coloredText.text).X / 2;
+                    textPos.X = startPos.X - GUI.Font.MeasureString(coloredText.Text).X / 2;
 
-                    spriteBatch.DrawString(GUI.Font, coloredText.text, textPos, Color.Black);
-                    spriteBatch.DrawString(GUI.Font, coloredText.text, textPos + new Vector2(1, -1), coloredText.color);
+                    spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos, Color.Black);
+                    spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos + new Vector2(1, -1), coloredText.Color);
 
                     textPos.Y += 25;
                 }               
@@ -919,13 +923,7 @@ namespace Subsurface
             Limb torso= AnimController.GetLimb(LimbType.Torso);
             if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
 
-            Vector2 centerOfMass = Vector2.Zero;
-            foreach (Limb limb in AnimController.limbs)
-            {
-                centerOfMass += limb.Mass * limb.SimPosition;
-            }
-
-            centerOfMass /= AnimController.Mass;
+            Vector2 centerOfMass = AnimController.GetCenterOfMass();
 
             health = 0.0f;
 
@@ -1022,33 +1020,43 @@ namespace Subsurface
             }
             else if (type == NetworkEventType.KillCharacter)
             {
-                return;
-            }
-            else if (type== NetworkEventType.NotMoving)
-            {
-                return;
+                return;            
             }
 
+            var hasInputs = (GetInputState(InputType.Left) ||
+                            GetInputState(InputType.Right) ||
+                            GetInputState(InputType.Up) ||
+                            GetInputState(InputType.Down) ||
+                            GetInputState(InputType.ActionHeld) ||
+                            GetInputState(InputType.SecondaryHeld));
 
-            //if (type == Networking.NetworkEventType.KeyHit)
-            //{
-            //    message.Write(selectKeyHit.Dequeue);
-                message.Write(actionKeyDown.Dequeue);
-                message.Write(secondaryKeyDown.Dequeue);
-            //}
+            message.Write(hasInputs || LargeUpdateTimer <= 0);
 
             message.Write((float)NetTime.Now);
 
-            // Write byte = move direction
-            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 8);
+            message.Write(keys[(int)InputType.ActionHeld].Dequeue);
+            message.Write(keys[(int)InputType.SecondaryHeld].Dequeue);
+                        
+            message.Write(keys[(int)InputType.Left].Dequeue);
+            message.Write(keys[(int)InputType.Right].Dequeue);
 
-            message.Write(AnimController.TargetDir==Direction.Right);
+            message.Write(keys[(int)InputType.Up].Dequeue);
+            message.Write(keys[(int)InputType.Down].Dequeue);
+
+            message.Write(keys[(int)InputType.Run].Dequeue);
+                       
+            // Write byte = move direction
+            //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
+            //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 8);
 
             if (aiController==null)
             {
                 message.Write(cursorPosition.X);
                 message.Write(cursorPosition.Y);
+            }
+            else
+            {
+                message.Write(AnimController.TargetDir == Direction.Right);
             }
                         
             message.Write(LargeUpdateTimer <= 0);
@@ -1070,7 +1078,7 @@ namespace Subsurface
                 }
 
                 message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
-                message.Write((byte)health);
+                message.Write((byte)((health/maxHealth)*255.0f));
 
                 if (aiController != null) aiController.FillNetworkData(message);
 
@@ -1122,40 +1130,39 @@ namespace Subsurface
                 }
                 return;
             }
-            else if (type == NetworkEventType.NotMoving)
-            {
-                AnimController.TargetMovement = Vector2.Zero;
-                actionKeyDown.State = false;
-                secondaryKeyDown.State = false;
-                return;
-            }
 
             bool actionKeyState     = false;
             bool secondaryKeyState  = false;
-            float sendingTime      = 0.0f;
-            Vector2 targetMovement  = Vector2.Zero;
+            float sendingTime       = 0.0f;
+            //Vector2 targetMovement  = Vector2.Zero;
             bool targetDir          = false;
             Vector2 cursorPos       = Vector2.Zero;
 
+            bool leftKeyState = false, rightKeyState = false;
+            bool upKeyState = false, downKeyState = false;
+
+            bool runState = false;
+
             try
             {
+                bool hasInputs = message.ReadBoolean();
+                if (!hasInputs)
+                {
+                    ClearInputs();
+                    return;
+                }
+
+                sendingTime         = message.ReadFloat();
+
                 actionKeyState      = message.ReadBoolean();
                 secondaryKeyState   = message.ReadBoolean();
             
-                sendingTime         = message.ReadFloat();
+                leftKeyState        = message.ReadBoolean();
+                rightKeyState       = message.ReadBoolean();
+                upKeyState          = message.ReadBoolean();
+                downKeyState        = message.ReadBoolean();
 
-                targetMovement = new Vector2(message.ReadRangedSingle(-10.0f, 10.0f, 8), message.ReadRangedSingle(-10.0f, 10.0f, 8));
-                targetMovement.X = MathUtils.Round(targetMovement.X, 0.1f);
-                targetMovement.Y = MathUtils.Round(targetMovement.Y, 0.1f);
-
-                targetDir           = message.ReadBoolean();
-
-                if (aiController==null)
-                {
-                    cursorPos = new Vector2(
-                        message.ReadFloat(), 
-                        message.ReadFloat());
-                }
+                runState            = message.ReadBoolean();
             }
 
             catch
@@ -1165,22 +1172,52 @@ namespace Subsurface
 
             AnimController.IsStanding = true;
 
-            actionKeyDown.State = actionKeyState;
-            secondaryKeyDown.State = secondaryKeyState;
+            keys[(int)InputType.ActionHeld].State       = actionKeyState;
+            keys[(int)InputType.SecondaryHeld].State    = secondaryKeyState;
 
             if (sendingTime <= LastNetworkUpdate) return;
-            
-            cursorPosition = cursorPos;
 
-            AnimController.TargetMovement= targetMovement;
-            AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
+            keys[(int)InputType.Left].State     = leftKeyState;
+            keys[(int)InputType.Right].State    = rightKeyState;
+
+            keys[(int)InputType.Up].State       = upKeyState;
+            keys[(int)InputType.Down].State     = downKeyState;
+
+            keys[(int)InputType.Run].State = runState;
+            
+            try
+            {
                 
+                if (aiController == null)
+                {
+                    cursorPos = new Vector2(
+                        message.ReadFloat(),
+                        message.ReadFloat());
+                }
+                else
+                {
+                    targetDir = message.ReadBoolean();
+                }
+            }
+            catch
+            {
+                return;
+            }
+            if (aiController == null)
+            {
+                cursorPosition = cursorPos;
+            }
+            else
+            {
+                AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;              
+            }
+                          
             if (message.ReadBoolean())
             {
                 foreach (Limb limb in AnimController.limbs)
                 {
                     Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
-                    float rotation = 0.0f, angularVel = 0.0f;
+                    float rotation = 0.0f;
 
                     try
                     {
@@ -1213,7 +1250,7 @@ namespace Subsurface
                 try
                 {
                     newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
-                    newHealth = message.ReadByte();
+                    newHealth = (message.ReadByte() / 255.0f) * maxHealth;
                 }
                 catch { return; }
 

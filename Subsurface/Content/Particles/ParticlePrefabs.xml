@@ -42,7 +42,7 @@
     colorchange="0.0, 0.0, 0.0, -0.5"
     lifetime="3"
     deleteonhit="true"
-    inwater="true"
+    drawtarget="water"
     velocitychange="0.0, 0.1">
     <sprite texture="Content/Particles/bubbles.png"/>
   </bubbles>
@@ -67,7 +67,7 @@
     startcolor="0.5, 0.0, 0.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -0.25"
     lifetime="5.0"
-    inwater="true"
+    drawtarget="water"
     velocitychange="0.0, 0.0">
     <sprite texture="Content/Particles/spatter.png"/>
   </waterblood>
@@ -79,7 +79,7 @@
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="-0.4, -0.4, -0.4, -0.3"
     lifetime="5.0"
-    inwater="false"
+    drawtarget="air"
     deleteonhit="true"
     velocitychange="0.0, 0.5">
     <sprite texture="Content/Particles/explosion.png"/>
@@ -91,7 +91,7 @@
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -4.0"
     lifetime="0.25"
-    inwater="false"
+    drawtarget="both"
     velocitychange="0.0, 0.0">
     <sprite texture="Content/Particles/flames.png" sourcerect="0,0,128,64" origin="0.15,0.5"/>
   </weld>
@@ -102,7 +102,7 @@
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -4.0"
     lifetime="0.25"
-    inwater="false"
+    drawtarget="both"
     velocitychange="0.0, 0.0">
     <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.15,0.5"/>
   </plasma>

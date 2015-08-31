@@ -469,8 +469,8 @@ namespace Subsurface
         public override void FillNetworkData(NetOutgoingMessage message)
         {
             message.Write((byte)state);
-            
-            bool wallAttack = (wallAttackPos!=Vector2.Zero && state == AiState.Attack);
+
+            bool wallAttack = (wallAttackPos != Vector2.Zero && state == AiState.Attack);
 
             message.Write(wallAttack);
 

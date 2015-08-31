@@ -75,22 +75,22 @@ namespace Subsurface
             startDrone.Play();
 
 
-            yield return Status.Running;
+            yield return CoroutineStatus.Running;
 
 
             waterAmbience = Sound.Load("Content/Sounds/Water/WaterAmbience.ogg");
-            yield return Status.Running;
+            yield return CoroutineStatus.Running;
             flowSounds[0] = Sound.Load("Content/Sounds/Water/FlowSmall.ogg");
-            yield return Status.Running;
+            yield return CoroutineStatus.Running;
             flowSounds[1] = Sound.Load("Content/Sounds/Water/FlowMedium.ogg");
-            yield return Status.Running;
+            yield return CoroutineStatus.Running;
             flowSounds[2] = Sound.Load("Content/Sounds/Water/FlowLarge.ogg");
-            yield return Status.Running;
+            yield return CoroutineStatus.Running;
 
-            XDocument doc = ToolBox.TryLoadXml("Content/Sounds/Sounds.xml");
-            if (doc == null) yield return Status.Failure;
+            XDocument doc = ToolBox.TryLoadXml("Content/Sounds/sounds.xml");
+            if (doc == null) yield return CoroutineStatus.Failure;
 
-            yield return Status.Running;
+            yield return CoroutineStatus.Running;
 
             var xMusic = doc.Root.Elements("music").ToList();
 
@@ -100,13 +100,13 @@ namespace Subsurface
                 int i = 0;
                 foreach (XElement element in xMusic)
                 {
-                    string file = ToolBox.GetAttributeString(element, "file", "").ToLower();
+                    string file = ToolBox.GetAttributeString(element, "file", "");
                     string type = ToolBox.GetAttributeString(element, "type", "").ToLower();
                     Vector2 priority = ToolBox.GetAttributeVector2(element, "priorityrange", new Vector2(0.0f, 100.0f));
 
                     musicClips[i] = new BackgroundMusic(file, type, priority);
 
-                    yield return Status.Running;
+                    yield return CoroutineStatus.Running;
 
                     i++;
                 }
@@ -120,7 +120,7 @@ namespace Subsurface
                 int i = 0;
                 foreach (XElement element in xDamageSounds)
                 {
-                    yield return Status.Running;
+                    yield return CoroutineStatus.Running;
 
                     Sound sound = Sound.Load(ToolBox.GetAttributeString(element, "file", ""));
                     if (sound == null) continue;
@@ -144,7 +144,7 @@ namespace Subsurface
                 }
             }
 
-            yield return Status.Success;
+            yield return CoroutineStatus.Success;
 
         }
         
@@ -189,6 +189,7 @@ namespace Subsurface
             {
                 foreach (Task task in Game1.GameSession.taskManager.Tasks)
                 {
+                    if (!task.IsStarted) continue;
                     if (criticalTask == null || task.Priority > criticalTask.Priority)
                     {
                         criticalTask = task;

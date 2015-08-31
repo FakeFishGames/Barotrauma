@@ -18,12 +18,12 @@ namespace Subsurface
 
         public string Text
         {
-            get { return coloredText.text; }
+            get { return coloredText.Text; }
         }
 
         public Color Color
         {
-            get { return coloredText.color; }
+            get { return coloredText.Color; }
         }
 
         public Vector2 Pos

@@ -11,8 +11,8 @@
     
     outlinecolor="0.5, 0.57, 0.6, 1.0">    
     
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>    
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>    
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
   </GUIFrame>
 
   <GUIButton
@@ -34,8 +34,8 @@
   
     textcolor="1.0, 1.0, 1.0, 1.0"
     outlinecolor="0.5, 0.57, 0.6, 1.0">
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
   </GUIListBox>
 
   <GUIScrollBar
@@ -43,7 +43,7 @@
   
     textcolor="1.0, 1.0, 1.0, 1.0"
     outlinecolor="0.5, 0.57, 0.6, 1.0">
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0"/>
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0"/>
   </GUIScrollBar>
 
   <GUITextBox
@@ -51,14 +51,14 @@
   
     textcolor="1.0, 1.0, 1.0, 1.0"
     outlinecolor="0.5, 0.57, 0.6, 1.0">
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
   </GUITextBox>
 
   <GUITickBox
     color="0.5, 0.5, 0.5, 1.0"
   
     outlinecolor="0.5, 0.57, 0.6, 1.0">
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
   </GUITickBox>
 
   <GUIMessageBox
@@ -72,8 +72,8 @@
     
     outlinecolor="0.5, 0.57, 0.6, 1.0">
 
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
-    <Sprite texture="Content\UI\uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
   </GUIMessageBox>
   
 </style>

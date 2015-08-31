@@ -118,7 +118,7 @@ namespace Subsurface
 
             new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server port:", GUI.style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
             portBox = new GUITextBox(new Rectangle(160, 100, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.style, menuTabs[(int)Tabs.HostServer]);
-            portBox.Text = NetworkMember.DefaultPort.ToString();
+            portBox.Text = NetConfig.DefaultPort.ToString();
             portBox.ToolTip = "Server port";
 
             new GUITextBlock(new Rectangle(0, 150, 100, 30), "Max players:", GUI.style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
@@ -210,7 +210,7 @@ namespace Subsurface
             int port;
             if (!int.TryParse(portBox.Text, out port) || port < 0 || port > 65535)
             {
-                portBox.Text = NetworkMember.DefaultPort.ToString();
+                portBox.Text = NetConfig.DefaultPort.ToString();
                 portBox.Flash();
 
                 return false;
@@ -219,7 +219,7 @@ namespace Subsurface
             Game1.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
             
             Game1.NetLobbyScreen.IsServer = true;
-            Game1.NetLobbyScreen.Select();
+            //Game1.NetLobbyScreen.Select();
             return true;
         }
 
@@ -320,7 +320,7 @@ namespace Subsurface
         }
 
         private void RemoveSaveFrame()
-        {
+		{
             GUIComponent prevFrame = null;
             foreach (GUIComponent child in menuTabs[(int)Tabs.LoadGame].children)
             {

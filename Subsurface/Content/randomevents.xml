@@ -1,24 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Randomevents>
   <MonsterEvent name="Under attack" description=""  
-    characterfile="Content/Characters/Crawler/Crawler.xml" 
+    characterfile="Content/Characters/Crawler/crawler.xml" 
     commonness="10" 
     difficulty="15"
     minamount="2" maxamount="3"
-    starttimemin="15" starttimemax="20"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/TigerThresher/tigerthresher.xml"
     commonness="10"
     difficulty="30"
-    starttimemin="15" starttimemax="20"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Moloch/moloch.xml"
     commonness="10"
     difficulty="50"
-    starttimemin="15" starttimemax="20"
     musictype="monster"/>
 </Randomevents>

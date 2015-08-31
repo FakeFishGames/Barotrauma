@@ -279,23 +279,44 @@ namespace Subsurface
                 durationBar.OnMoved = Game1.Server.UpdateNetLobby;
 
                 if (subList.CountChildren > 0) subList.Select(-1);
-                if (GameModePreset.list.Count > 0) modeList.Select(0);                
+                if (GameModePreset.list.Count > 0) modeList.Select(0);
+
+                var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                playYourself.OnSelected = TogglePlayYourself;
             }
-            else if (playerFrame.children.Count==0)
-            {                
+            else
+            {
+                UpdatePlayerFrame(Game1.Client.CharacterInfo);
+            }
+            
+
+
+            base.Select();
+        }
+
+        private void UpdatePlayerFrame(CharacterInfo characterInfo)
+        {
+            if (playerFrame.children.Count <= 1)
+            {
                 playerFrame.ClearChildren();
+
+                if (IsServer && Game1.Server != null)
+                {
+                    var playYourself = new GUITickBox(new Rectangle(0, -20, 200, 30), "Play yourself", Alignment.TopLeft, playerFrame);
+                    playYourself.OnSelected = TogglePlayYourself;
+                }
 
                 new GUITextBlock(new Rectangle(60, 0, 200, 30), "Name: ", GUI.style, playerFrame);
 
                 GUITextBox playerName = new GUITextBox(new Rectangle(60, 30, 0, 20),
                     Alignment.TopLeft, GUI.style, playerFrame);
-                playerName.Text = Game1.Client.CharacterInfo.Name;
+                playerName.Text = characterInfo.Name;
                 playerName.OnEnter += ChangeCharacterName;
 
                 new GUITextBlock(new Rectangle(0, 70, 200, 30), "Gender: ", GUI.style, playerFrame);
 
-                GUIButton maleButton = new GUIButton(new Rectangle(0, 100, 70, 20), "Male", 
-                    Alignment.TopLeft, GUI.style,playerFrame);
+                GUIButton maleButton = new GUIButton(new Rectangle(0, 100, 70, 20), "Male",
+                    Alignment.TopLeft, GUI.style, playerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
@@ -313,7 +334,7 @@ namespace Subsurface
                 int i = 1;
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0,0,0,20), i+". "+job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
+                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20), i + ". " + job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
                     jobText.UserData = job;
 
                     GUIButton upButton = new GUIButton(new Rectangle(0, 0, 15, 15), "u", GUI.style, jobText);
@@ -329,10 +350,29 @@ namespace Subsurface
 
                 //UpdatePreviewPlayer(Game1.Client.CharacterInfo);
 
-                UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+                UpdatePreviewPlayer(characterInfo);
             }
+        }
 
-            base.Select();
+        private bool TogglePlayYourself(object obj)
+        {
+            GUITickBox tickBox = obj as GUITickBox;
+            if (tickBox.Selected)
+            {
+                Game1.Server.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, Game1.Server.Name);
+                UpdatePlayerFrame(Game1.Server.CharacterInfo);
+            }
+            else
+            {
+                playerFrame.ClearChildren();
+
+                if (IsServer && Game1.Server != null)
+                {
+                    var playYourself = new GUITickBox(new Rectangle(0, -20, 200, 30), "Play yourself", Alignment.TopLeft, playerFrame);
+                    playYourself.OnSelected = TogglePlayYourself;
+                }
+            }
+            return false;
         }
 
         private bool SelectMap(object obj)
@@ -590,10 +630,10 @@ namespace Subsurface
             }
             else
             {
-                if (map.Hash.Hash != md5Hash)
+                if (map.MD5Hash.Hash != md5Hash)
                 {
                     DebugConsole.ThrowError("Your version of the map file ''" + map.Name + "'' doesn't match the server's version!");
-                    DebugConsole.ThrowError("Your file: " + map.Name + "(MD5 hash : " + map.Hash.Hash + ")");
+                    DebugConsole.ThrowError("Your file: " + map.Name + "(MD5 hash : " + map.MD5Hash.Hash + ")");
                     DebugConsole.ThrowError("Server's file: " + mapName + "(MD5 hash : " + md5Hash + ")");
                     return false;
                 }
@@ -618,7 +658,7 @@ namespace Subsurface
             else
             {
                 msg.Write(Path.GetFileName(selectedMap.Name));
-                msg.Write(selectedMap.Hash.Hash);
+                msg.Write(selectedMap.MD5Hash.Hash);
             }
 
             msg.Write(ServerName);

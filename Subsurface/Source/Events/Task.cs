@@ -34,6 +34,11 @@ namespace Subsurface
             get { return isFinished; }
         }
 
+        public virtual bool IsStarted
+        {
+            get { return true; }
+        }
+
         public Task(float priority, string name)
         {
             if (Game1.GameSession==null || Game1.GameSession.taskManager == null) return;

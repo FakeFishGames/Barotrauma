@@ -56,8 +56,13 @@ namespace Subsurface
             //vertexBuffer.SetData(vertices);
 
             //effect = Game1.game.Content.Load<Effect>("effects");
+#if WINDOWS
+			byte[] bytecode = File.ReadAllBytes("Content/effects.mgfx");
+#endif
+#if LINUX
+			byte[] bytecode = File.ReadAllBytes("Content/effects_linux.mgfx");
+#endif
 
-            byte[] bytecode = File.ReadAllBytes("Content/effects.mgfx");
             effect = new Effect(graphicsDevice, bytecode);
 
             //Texture2D waterBumpMap = Game1.textureLoader.FromFile("Content/waterbump.jpg");
