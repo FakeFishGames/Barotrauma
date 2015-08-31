@@ -130,7 +130,7 @@ namespace Subsurface
 
             refreshDisableTimer = DateTime.Now + AllowedRefreshInterval;
 
-            yield return Status.Success;
+            yield return CoroutineStatus.Success;
         }
 
         private void UpdateServerList(string masterServerData)
@@ -197,14 +197,14 @@ namespace Subsurface
             RestClient client = null;
             try
             {
-                client = new RestClient(NetworkMember.MasterServerUrl);
+                client = new RestClient(NetConfig.MasterServerUrl);
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error while connecting to master server", e);                
             }
 
-            if (client == null) yield return Status.Success;
+            if (client == null) yield return CoroutineStatus.Success;
 
 
             var request = new RestRequest("masterserver.php", Method.GET);
@@ -231,10 +231,10 @@ namespace Subsurface
                     restRequestHandle.Abort();
                     DebugConsole.ThrowError("Couldn't connect to master server (request timed out)");
                 }
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             }
 
-            yield return Status.Success;
+            yield return CoroutineStatus.Success;
 
         }
 
@@ -296,7 +296,7 @@ namespace Subsurface
                 while (GUIMessageBox.MessageBoxes.Contains(msgBox))
                 {
                     okButton.Enabled = !string.IsNullOrWhiteSpace(passwordBox.Text);
-                    yield return Status.Running;
+                    yield return CoroutineStatus.Running;
                 }
 
                 selectedPassword = passwordBox.Text;
@@ -305,9 +305,7 @@ namespace Subsurface
             Game1.NetworkMember = new GameClient(clientNameBox.Text);
             Game1.Client.ConnectToServer(ip, selectedPassword);
 
-            Game1.NetLobbyScreen.Select();
-
-            yield return Status.Success;
+            yield return CoroutineStatus.Success;
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

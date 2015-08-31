@@ -15,6 +15,11 @@ namespace Subsurface
         //GUIFrame frame;
         public GUIButton[] Buttons;
 
+        public static GUIMessageBox VisibleBox
+        {
+            get { return MessageBoxes.Count==0 ? null : MessageBoxes.Peek(); }
+        }
+
         public string Text
         {
             get { return (children[1] as GUITextBlock).Text; }
@@ -63,8 +68,8 @@ namespace Subsurface
         public bool Close(GUIButton button, object obj)
         {
             if (parent != null) parent.RemoveChild(this);
+            if (MessageBoxes.Contains(this)) MessageBoxes.Dequeue();
 
-            MessageBoxes.Dequeue();
             return true;
         }
     }

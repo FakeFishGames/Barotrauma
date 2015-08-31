@@ -6,6 +6,11 @@
 
         private bool prevStarted;
 
+        public override bool IsStarted
+        {
+            get { return scriptedEvent.IsStarted; }
+        }
+
         public ScriptedTask(ScriptedEvent scriptedEvent)
             : base(scriptedEvent.Difficulty, scriptedEvent.Name)
         {

@@ -32,7 +32,7 @@ namespace Subsurface
 
         public override void Start(Level level)
         {
-            Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count)];
+            Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
 
             monster = new Character(monsterFile, ConvertUnits.ToSimUnits(position+level.Position));
         }

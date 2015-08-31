@@ -174,42 +174,42 @@ namespace Subsurface
 
             Hull.renderer = new WaterRenderer(GraphicsDevice);
         loadState = 1.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             GUI.LoadContent(GraphicsDevice);
         loadState = 2.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             MapEntityPrefab.Init();
         loadState = 10.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
         loadState = 15.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
         loadState = 25.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
         loadState = 40.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
             CoroutineManager.StartCoroutine(AmbientSoundManager.Init());
         loadState = 70.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             GameModePreset.Init();
 
             Submarine.Preload("Content/SavedMaps");
         loadState = 80.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             GameScreen          =   new GameScreen(Graphics.GraphicsDevice);
         loadState = 90.0f;
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             MainMenuScreen      =   new MainMenuScreen(this); 
             LobbyScreen         =   new LobbyScreen();
@@ -220,21 +220,21 @@ namespace Subsurface
             EditMapScreen       =   new EditMapScreen();
             EditCharacterScreen =   new EditCharacterScreen();
 
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", Cam);
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             GUIComponent.Init(Window);
             DebugConsole.Init(Window);
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             LocationType.Init("Content/Map/locationTypes.xml");
             MainMenuScreen.Select();
-        yield return Status.Running;
+        yield return CoroutineStatus.Running;
 
             loadState = 100.0f;
-        yield return Status.Success;
+        yield return CoroutineStatus.Success;
         }
 
         /// <summary>

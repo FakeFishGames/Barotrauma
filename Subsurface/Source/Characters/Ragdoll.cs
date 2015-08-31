@@ -8,6 +8,7 @@ using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Subsurface.Networking;
 
 namespace Subsurface
 {
@@ -39,7 +40,7 @@ namespace Subsurface
 
         //a movement vector that overrides targetmovement if trying to steer
         //a character to the position sent by server in multiplayer mode
-        public Vector2 correctionMovement;
+        private Vector2 correctionMovement;
         
         protected float floorY;
         protected float surfaceY;
@@ -73,11 +74,7 @@ namespace Subsurface
             }
             set 
             {
-                if (float.IsNaN(value.X) || float.IsNaN(value.Y))
-                {
-                    targetMovement = Vector2.Zero;
-                    return;
-                }
+                if (!MathUtils.IsValid(value)) return;
                 targetMovement.X = MathHelper.Clamp(value.X, -3.0f, 3.0f);
                 targetMovement.Y = MathHelper.Clamp(value.Y, -3.0f, 3.0f);
             }
@@ -408,9 +405,23 @@ namespace Subsurface
                     new Vector2(
                         -limbs[i].pullJoint.LocalAnchorA.X, 
                         limbs[i].pullJoint.LocalAnchorA.Y);
-            }
-            
+            }            
         }
+
+        public Vector2 GetCenterOfMass()
+        {
+            Vector2 centerOfMass = Vector2.Zero;
+            foreach (Limb limb in limbs)
+            {
+                centerOfMass += limb.Mass * limb.SimPosition;
+            }
+
+            centerOfMass /= Mass;
+
+            return centerOfMass;
+        }
+
+
 
         /// <summary>
         /// 
@@ -567,10 +578,10 @@ namespace Subsurface
             if (refLimb.body.TargetPosition == Vector2.Zero) return;
 
             //if the limb is further away than resetdistance, all limbs are immediately snapped to their targetpositions
-            float resetDistance = 1.5f;
+            float resetDistance = NetConfig.ResetRagdollDistance;
 
-            //if the limb is closer than alloweddistance, limb positions aren't updated
-            float allowedDistance = 0.1f;
+            //if the limb is closer than alloweddistance, just ignore the difference
+            float allowedDistance = NetConfig.AllowedRagdollDistance;
 
             float dist = Vector2.Distance(limbs[0].body.Position, refLimb.body.TargetPosition);
             bool resetAll = (dist > resetDistance && character.LargeUpdateTimer == 1);
@@ -596,8 +607,7 @@ namespace Subsurface
                 }
                 else
                 {
-                    correctionMovement = Vector2.Normalize(newMovement) * ((targetMovement == Vector2.Zero) ? 1.0f : targetMovement.Length());
-                    
+                    correctionMovement = Vector2.Normalize(newMovement) * Math.Min(1.0f + dist, 3.0f);                    
                 }
             }
 
@@ -627,13 +637,13 @@ namespace Subsurface
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
                 Gap gap = e as Gap;
-                if (gap == null || gap.FlowTargetHull!=currentHull ||gap.FlowForce == Vector2.Zero) continue;
+                if (gap == null || gap.FlowTargetHull != currentHull || gap.FlowForce == Vector2.Zero) continue;
 
                 Vector2 gapPos = gap.SimPosition;
 
                 float dist = Vector2.Distance(limbPos, gapPos);
 
-                force += Vector2.Normalize(gap.FlowForce)*(Math.Max(gap.FlowForce.Length() - dist, 0.0f)/1000.0f);
+                force += Vector2.Normalize(gap.FlowForce) * (Math.Max(gap.FlowForce.Length() - dist, 0.0f) / 500.0f);
             }
 
             if (force.Length() > 20.0f) return force;

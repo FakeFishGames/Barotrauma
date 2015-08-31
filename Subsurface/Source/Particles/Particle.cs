@@ -32,9 +32,9 @@ namespace Subsurface.Particles
 
         private float checkCollisionTimer;
         
-        public bool InWater
+        public ParticlePrefab.DrawTargetType DrawTarget
         {
-            get { return prefab.inWater; }        
+            get { return prefab.DrawTarget; }        
         }
 
         public Vector2 yLimits

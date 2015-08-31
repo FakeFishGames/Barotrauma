@@ -122,8 +122,8 @@ namespace Subsurface
 
         public static Level CreateRandom(LocationConnection locationConnection)
         {
-            int seed = locationConnection.Locations[0].GetHashCode() | locationConnection.Locations[1].GetHashCode();
-            return new Level(seed.ToString(), locationConnection.Difficulty, 100000, 40000, 2000);
+            string seed = locationConnection.Locations[0].Name + locationConnection.Locations[1].Name;
+            return new Level(seed, locationConnection.Difficulty, 100000, 40000, 2000);
         }
 
         public static Level CreateRandom(string seed = "")
@@ -153,7 +153,7 @@ namespace Subsurface
 
             bodies = new List<Body>();
 
-            Random rand = new Random(seed.GetHashCode());
+            Random rand = new Random(ToolBox.StringToInt(seed));
 
             float siteVariance = siteInterval * 0.8f;
             for (int x = siteInterval / 2; x < borders.Width; x += siteInterval)

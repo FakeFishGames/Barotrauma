@@ -72,7 +72,7 @@ namespace Subsurface
             if (iceCraters == null) iceCraters = Game1.TextureLoader.FromFile("Content/Map/iceCraters.png");
             if (iceCrack == null) iceCrack = Game1.TextureLoader.FromFile("Content/Map/iceCrack.png");
             
-            Rand.SetSyncedSeed(this.seed.GetHashCode());
+            Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 
             GenerateLocations();
 
@@ -126,7 +126,7 @@ namespace Subsurface
                     newLocations[i] = Location.CreateRandom(position);
                     locations.Add(newLocations[i]);
                 }
-                int seed = (newLocations[0].GetHashCode() | newLocations[1].GetHashCode());
+                //int seed = (newLocations[0].GetHashCode() | newLocations[1].GetHashCode());
                 connections.Add(new LocationConnection(newLocations[0], newLocations[1]));
             }
 

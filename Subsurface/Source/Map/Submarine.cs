@@ -76,7 +76,7 @@ namespace Subsurface
             private set;
         }
 
-        public Md5Hash Hash
+        public Md5Hash MD5Hash
         {
             get
             {
@@ -115,6 +115,11 @@ namespace Subsurface
         public Vector2 Speed
         {
             get { return speed; }
+            set 
+            {
+                if (!MathUtils.IsValid(value)) return;
+                speed = value; 
+            }
         }
 
         public string FilePath
@@ -773,7 +778,7 @@ namespace Subsurface
                 try
                 {
                     // Get the type of a specified class.
-                    t = Type.GetType("Subsurface." + typeName + ", Subsurface", true, true);
+                    t = Type.GetType("Subsurface." + typeName, true, true);
                     if (t == null)
                     {
                         DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type ''" + typeName + "''.");

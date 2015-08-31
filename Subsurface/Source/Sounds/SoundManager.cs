@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
-#if WINDOWS
 using OpenTK.Audio.OpenAL;
-#endif
 using OpenTK.Audio;
 
 using System;

@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
 {
-    class Steering : ItemComponent
+    class Steering : Powered
     {
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
@@ -67,7 +67,9 @@ namespace Subsurface.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
+            //base.Update(deltaTime, cam);
+
+            //if (voltage < minVoltage) return;
                      
             if (autoPilot)
             {
@@ -112,6 +114,8 @@ namespace Subsurface.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            //if (voltage < minVoltage) return;
+
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;

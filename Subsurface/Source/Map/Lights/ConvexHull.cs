@@ -119,7 +119,7 @@ namespace Subsurface.Lights
                 shadowEffect.TextureEnabled = true;
                 //shadowEffect.VertexColorEnabled = true;
                 shadowEffect.LightingEnabled = false;
-                shadowEffect.Texture = Game1.TextureLoader.FromFile("Content/lights/penumbra.png");
+                shadowEffect.Texture = Game1.TextureLoader.FromFile("Content/Lights/penumbra.png");
             }
             
             //compute facing of each edge, using N*L

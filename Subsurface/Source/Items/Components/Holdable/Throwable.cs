@@ -28,7 +28,7 @@ namespace Subsurface.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
-            if (!character.SecondaryKeyDown.State || throwing) return false;
+            if (!character.GetInputState(InputType.SecondaryHeld) || throwing) return false;
 
             throwing = true;
 
@@ -60,7 +60,7 @@ namespace Subsurface.Items.Components
             if (!item.body.Enabled) return;
             if (!picker.HasSelectedItem(item)) isActive = false;
 
-            if (!picker.SecondaryKeyDown.State && !throwing) throwPos = 0.0f;
+            if (!picker.GetInputState(InputType.SecondaryHeld) && !throwing) throwPos = 0.0f;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 

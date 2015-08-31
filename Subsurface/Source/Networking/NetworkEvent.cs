@@ -11,8 +11,7 @@ namespace Subsurface.Networking
         DropItem = 3,
         InventoryUpdate = 4,
         PickItem = 5,
-        UpdateProperty = 6,
-        NotMoving = 7
+        UpdateProperty = 6
     }
 
     class NetworkEvent
@@ -46,6 +45,11 @@ namespace Subsurface.Networking
             get { return isImportant[(int)eventType]; }
         }
 
+        public NetworkEventType Type
+        { 
+            get { return eventType; } 
+        }
+
         public NetworkEvent(int id, bool isClient)
             : this(NetworkEventType.UpdateEntity, id, isClient)
         {
@@ -64,9 +68,9 @@ namespace Subsurface.Networking
 
             eventType = type;
 
-            foreach (NetworkEvent e in events)
+            if (!isImportant[(int)type])
             {
-                if (!isImportant[(int)type] && e.id == id && e.eventType == type) return;
+                if (events.Find(e => e.id == id && e.eventType == type) != null) return;
             }
 
             this.id = id;

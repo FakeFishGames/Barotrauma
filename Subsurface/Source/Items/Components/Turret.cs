@@ -75,7 +75,7 @@ namespace Subsurface.Items.Components
         {
             isActive = true;
 
-            barrelSprite = new Sprite(Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\" +element.Attribute("barrelsprite").Value,
+            barrelSprite = new Sprite(Path.GetDirectoryName(item.Prefab.ConfigFile) + "/" +element.Attribute("barrelsprite").Value,
                 ToolBox.GetAttributeVector2(element, "origin", Vector2.Zero));
         }
 
@@ -99,22 +99,7 @@ namespace Subsurface.Items.Components
             }
             
             rotation = MathUtils.CurveAngle(rotation, targetRotation, 0.05f);
-
-
         }
-
-        //public override void SecondaryUse(float deltaTime, Character character = null)
-        //{
-        //    if (character == null) return;
-
-        //    Vector2 centerPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
-            
-        //    if (character == Character.Controlled && cam!=null)
-        //    {
-        //        Lights.LightManager.ViewPos = centerPos;
-        //        cam.TargetPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
-        //    }
-        //}
 
         public override bool Use(float deltaTime, Character character = null)
         {
@@ -173,8 +158,6 @@ namespace Subsurface.Items.Components
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
             projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y)), -rotation);
-
-            //if (useSounds.Count() > 0) useSounds[Game1.localRandom.Next(useSounds.Count())].Play(1.0f, 800.0f, item.body.FarseerBody);
 
             projectileComponent.Use(deltaTime);
             item.RemoveContained(projectile);

@@ -10,9 +10,6 @@ namespace Subsurface.Networking
     {
         private NetClient client;
 
-        private Character myCharacter;
-        private CharacterInfo characterInfo;
-
         private GUIMessageBox reconnectBox;
 
         private bool connected;
@@ -23,17 +20,6 @@ namespace Subsurface.Networking
 
         private string serverIP;
                 
-        public Character Character
-        {
-            get { return myCharacter; }
-            set { myCharacter = value; }
-        }
-
-        public CharacterInfo CharacterInfo
-        {
-            get { return characterInfo; }
-        }
-
         public int ID
         {
             get { return myID; }
@@ -56,7 +42,7 @@ namespace Subsurface.Networking
             if (address.Length==1)
             {
                 serverIP = hostIP;
-                Port = DefaultPort;
+                Port = NetConfig.DefaultPort;
             }
             else
             {
@@ -65,7 +51,7 @@ namespace Subsurface.Networking
                 if (!int.TryParse(address[1], out Port))
                 {
                     DebugConsole.ThrowError("Invalid port: "+address[1]+"!");
-                    Port = DefaultPort;
+                    Port = NetConfig.DefaultPort;
                 }                
             }
 
@@ -151,10 +137,10 @@ namespace Subsurface.Networking
             
             DateTime timeOut = DateTime.Now + new TimeSpan(0,0,15);
 
-            // Loop untill we are approved
+            // Loop until we are approved
             while (!CanStart)
             {
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
 
                 if (DateTime.Now > timeOut) break;
 
@@ -171,7 +157,7 @@ namespace Subsurface.Networking
                         if (packetType == (byte)PacketTypes.LoggedIn)
                         {
                             myID = inc.ReadInt32();
-                            if (inc.ReadBoolean())
+                            if (inc.ReadBoolean() && Screen.Selected != Game1.GameScreen)
                             {
                                 new GUIMessageBox("Please wait", "A round is already running. You will have to wait for a new round to start.");
                             }
@@ -234,11 +220,11 @@ namespace Subsurface.Networking
             }
             else
             {
-                if (Screen.Selected == Game1.MainMenuScreen) Game1.NetLobbyScreen.Select();
+                if (Screen.Selected != Game1.GameScreen) Game1.NetLobbyScreen.Select();
                 connected = true;
             }
 
-            yield return Status.Success;
+            yield return CoroutineStatus.Success;
         }
 
         public override void Update(float deltaTime)
@@ -274,17 +260,7 @@ namespace Subsurface.Networking
                 }
                 else if (gameStarted)
                 {
-                    Vector2 charMovement = myCharacter.AnimController.TargetMovement;
-                    if ((charMovement==Vector2.Zero || charMovement.Length()<0.001f) && 
-                        !myCharacter.ActionKeyDown.State && !myCharacter.SecondaryKeyDown.State)
-                    {
-                        new NetworkEvent(NetworkEventType.NotMoving, myCharacter.ID, true);
-                        
-                    }
-                    else
-                    {
-                        new NetworkEvent(myCharacter.ID, true);
-                    }
+                    new NetworkEvent(myCharacter.ID, true);                    
                 }
             }
                           
@@ -335,7 +311,7 @@ namespace Subsurface.Networking
                         if (this.Character != null) Character.Remove();
 
                         int seed = inc.ReadInt32();
-                        Rand.SetSyncedSeed(seed);
+                        
 
                         string levelSeed = inc.ReadString();
 
@@ -347,7 +323,7 @@ namespace Subsurface.Networking
                         double durationMinutes = inc.ReadDouble();
 
                         TimeSpan duration = new TimeSpan(0,(int)durationMinutes,0);
-
+                        Rand.SetSyncedSeed(seed);
                         //int gameModeIndex = inc.ReadInt32();
                         Game1.GameSession = new GameSession(Submarine.Loaded, "", Game1.NetLobbyScreen.SelectedMode);
                         Game1.GameSession.StartShift(duration, levelSeed);
@@ -456,7 +432,7 @@ namespace Subsurface.Networking
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
-                yield return Status.Running;
+                yield return CoroutineStatus.Running;
             } while (secondsLeft > 0.0f);
 
             messageBox.Text = endMessage;
@@ -469,7 +445,7 @@ namespace Subsurface.Networking
 
             myCharacter = null;
 
-            yield return Status.Success;
+            yield return CoroutineStatus.Success;
 
         }
 

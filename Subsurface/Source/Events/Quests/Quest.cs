@@ -104,7 +104,7 @@ namespace Subsurface
 
                     try
                     {
-                        t = Type.GetType("Subsurface." + type + ", Subsurface", true, true);
+                        t = Type.GetType("Subsurface." + type, true, true);
                         if (t == null)
                         {
                             DebugConsole.ThrowError("Error in " + configFile + "! Could not find a quest class of the type ''" + type + "''.");

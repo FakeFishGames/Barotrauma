@@ -3,10 +3,25 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Subsurface
 {
+
+    public enum InputType 
+    { 
+        Select, 
+        ActionHit, ActionHeld, 
+        SecondaryHit, SecondaryHeld,
+        Left, Right, Up, Down,
+        Run
+    }
+
 	class Key
 	{
 		private bool state, stateQueue;
 		private bool canBeHeld;
+
+        public bool CanBeHeld
+        {
+            get { return canBeHeld; }
+        }
 		
 		public Key(bool canBeHeld)
 		{

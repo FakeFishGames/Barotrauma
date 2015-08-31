@@ -57,13 +57,14 @@ namespace Subsurface
         {
             XDocument doc = ToolBox.TryLoadXml(filePath);
 
+            Path = filePath;
+
             if (doc==null)
             {
                 DebugConsole.ThrowError("Couldn't load content package ''"+filePath+"''!");
                 return;
             }
 
-            Path = filePath;
 
             name = ToolBox.GetAttributeString(doc.Root, "name", "");
             
@@ -81,7 +82,7 @@ namespace Subsurface
 
         public static ContentPackage CreatePackage(string name)
         {
-            ContentPackage newPackage = new ContentPackage();
+            ContentPackage newPackage = new ContentPackage("Content/Data/"+name);
             newPackage.name = name;
             newPackage.Path = Folder + name;
             list.Add(newPackage);
@@ -149,8 +150,6 @@ namespace Subsurface
                     hashes.Add(md5.ComputeHash(stream));
                 }                
             }
-
-
 
             //string str = sb.ToString();
             byte[] bytes = new byte[hashes.Count()*16];

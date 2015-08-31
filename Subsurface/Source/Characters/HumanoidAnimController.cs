@@ -9,6 +9,8 @@ namespace Subsurface
 {
     class HumanoidAnimController : AnimController
     {
+        private bool aiming;
+
         public HumanoidAnimController(Character character, XElement element)
             : base(character, element)
         {
@@ -144,6 +146,7 @@ namespace Subsurface
                 limb.Disabled = false;
             }
 
+            aiming = false;
         }
 
         void UpdateStanding()
@@ -398,7 +401,7 @@ namespace Subsurface
             rotation = MathHelper.ToDegrees(rotation);
             if (rotation < 0.0f) rotation += 360;
 
-            if (!character.IsNetworkPlayer)
+            if (!character.IsNetworkPlayer && !aiming)
             {
                 if (rotation > 20 && rotation < 170)
                     TargetDir = Direction.Left;
@@ -413,12 +416,17 @@ namespace Subsurface
 
             //if trying to head to the opposite direction, apply torque
             //to the torso to flip the ragdoll around
-            if (Math.Sign(TargetMovement.X) != Dir && TargetMovement.X != 0.0f)
-            {
-                float torque = torso.Mass * 10.0f;
-                torque *= (rotation > 90 && rotation < 270) ? -Dir : Dir;
+            //if (Math.Sign(TargetMovement.X) != Dir && TargetMovement.X != 0.0f)
+            //{
+            //    float torque = torso.Mass * 10.0f;
+            //    torque *= (rotation > 90 && rotation < 270) ? -Dir : Dir;
 
-                torso.body.ApplyTorque(torque);
+            //    torso.body.ApplyTorque(torque);
+            //}
+
+            if (targetSpeed > 0.1f && !aiming)
+            {
+                torso.body.SmoothRotate(MathUtils.VectorToAngle(TargetMovement)-MathHelper.PiOver2);
             }
 
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
@@ -578,7 +586,7 @@ namespace Subsurface
 
             handPos = new Vector2(
                 ladderSimPos.X,
-                head.SimPosition.Y + 0.5f + movement.Y * 0.1f - ladderSimPos.Y);
+                head.SimPosition.Y + 0.0f + movement.Y * 0.1f - ladderSimPos.Y);
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
@@ -595,7 +603,7 @@ namespace Subsurface
 
             footPos = new Vector2(
                 handPos.X - Dir*0.05f,
-                head.SimPosition.Y - stepHeight * 2.7f - ladderSimPos.Y);
+                head.SimPosition.Y - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
 
             //if (movement.Y < 0) footPos.Y += 0.05f;
 
@@ -679,10 +687,10 @@ namespace Subsurface
             Limb rightHand  = GetLimb(LimbType.RightHand);
             Limb rightArm   = GetLimb(LimbType.RightArm);
 
-            Vector2 itemPos = character.SecondaryKeyDown.State ? aimPos : holdPos;       
+            Vector2 itemPos = character.GetInputState(InputType.SecondaryHeld) ? aimPos : holdPos;       
 
             float itemAngle;
-            if (character.SecondaryKeyDown.State && itemPos != Vector2.Zero)
+            if (character.GetInputState(InputType.SecondaryHeld) && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
@@ -697,9 +705,11 @@ namespace Subsurface
 
                 if (TargetMovement == Vector2.Zero && inWater)
                 {
-                    torso.body.SmoothRotate(0.2f * Dir);
+                    torso.body.AngularVelocity -= torso.body.AngularVelocity * 0.1f;
                     torso.body.ApplyForce(torso.body.LinearVelocity * -0.5f);
                 }
+
+                aiming = true;
             }
             else
             {

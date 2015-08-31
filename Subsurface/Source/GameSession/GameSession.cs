@@ -175,8 +175,7 @@ namespace Subsurface
         public void Draw(SpriteBatch spriteBatch)
         {
             guiRoot.Draw(spriteBatch);
-            taskManager.Draw(spriteBatch);
-
+            
             if (gameMode != null) gameMode.Draw(spriteBatch);
         }
 

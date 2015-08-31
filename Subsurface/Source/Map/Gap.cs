@@ -249,12 +249,20 @@ namespace Subsurface
                 {
                     pos.Y = ConvertUnits.ToSimUnits(MathHelper.Clamp(lowerSurface, rect.Y-rect.Height, rect.Y));
 
-                    Game1.ParticleManager.CreateParticle("watersplash",
+                    var particle = Game1.ParticleManager.CreateParticle("watersplash",
                         new Vector2(pos.X, pos.Y - Rand.Range(0.0f, 0.1f)),
-                        new Vector2(flowForce.X * Rand.Range(0.005f, 0.007f), flowForce.Y * Rand.Range(0.005f, 0.007f)));
+                        new Vector2(
+                            MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.005f, 0.007f), 
+                            flowForce.Y * Rand.Range(0.005f, 0.007f)));
+                    if (particle!=null)
+                    {
+                        particle.Size = particle.Size * Math.Abs(flowForce.X / 1000.0f);
 
+                    }
+                    
                     pos.Y = ConvertUnits.ToSimUnits(Rand.Range(lowerSurface, rect.Y - rect.Height));
-                        Game1.ParticleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
+
+                    Game1.ParticleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
                 }
                 else
                 {
@@ -312,7 +320,7 @@ namespace Subsurface
                         flowTargetHull = hull1;
 
                         //make sure not to move more than what the room contains
-                        delta = Math.Min((hull2.Pressure - hull1.Pressure) * sizeModifier, Math.Min(hull2.Volume, hull2.FullVolume));
+                        delta = Math.Min((hull2.Pressure - hull1.Pressure) * 5.0f * sizeModifier, Math.Min(hull2.Volume, hull2.FullVolume));
                         
                         //make sure not to place more water to the target room than it can hold
                         delta = Math.Min(delta, hull1.FullVolume + Hull.MaxCompress - (hull1.Volume));
@@ -331,7 +339,7 @@ namespace Subsurface
                         flowTargetHull = hull2;
 
                         //make sure not to move more than what the room contains
-                        delta = Math.Min((hull1.Pressure - hull2.Pressure) * sizeModifier, Math.Min(hull1.Volume, hull1.FullVolume));
+                        delta = Math.Min((hull1.Pressure - hull2.Pressure) * 5.0f * sizeModifier, Math.Min(hull1.Volume, hull1.FullVolume));
 
                         //make sure not to place more water to the target room than it can hold
                         delta = Math.Min(delta, hull2.FullVolume + Hull.MaxCompress - (hull2.Volume));
@@ -405,7 +413,7 @@ namespace Subsurface
                     flowTargetHull = hull2;
 
                     //make sure the amount of water moved isn't more than what the room contains
-                    float delta = Math.Min(hull1.Volume, deltaTime * 10000f * sizeModifier);
+                    float delta = Math.Min(hull1.Volume, deltaTime * 25000f * sizeModifier);
                     //make sure not to place more water to the target room than it can hold
                     delta = Math.Min(delta, (hull2.FullVolume + Math.Max(hull1.Volume - hull1.FullVolume, 0.0f)) - hull2.Volume + Hull.MaxCompress / 4.0f);
                     

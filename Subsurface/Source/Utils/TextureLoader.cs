@@ -51,7 +51,7 @@ namespace Subsurface
 #endif
 #if LINUX
 			    using (Stream fileStream = File.OpenRead(path))
-					return Texture2D.FromFile(_graphicsDevice, fileStream);// .FromStream(fileStream, preMultiplyAlpha);
+					return Texture2D.FromStream(_graphicsDevice, fileStream);// .FromStream(fileStream, preMultiplyAlpha);
 #endif
 
             }

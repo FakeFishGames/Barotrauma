@@ -82,6 +82,7 @@
     <Compile Include="Source\Items\FixRequirement.cs" />
     <Compile Include="Source\Map\Lights\Light.cs" />
     <Compile Include="Source\Map\LocationType.cs" />
+    <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Utils\Rand.cs" />
     <Compile Include="Source\Events\PropertyTask.cs" />
@@ -218,10 +219,6 @@
     <Compile Include="Source\Map\Hull.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Lidgren.Network, Version=3.3.0.2069, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Lidgren.Network.dll</HintPath>
-    </Reference>
     <Reference Include="MonoGame.Framework">
       <HintPath>$(MSBuildProgramFiles32)\MonoGame\v3.0\Assemblies\Windows\MonoGame.Framework.dll</HintPath>
     </Reference>
@@ -238,6 +235,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
@@ -942,6 +940,10 @@
     <ProjectReference Include="..\Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj">
       <Project>{0aad36e3-51a5-4a07-ab60-5c8a66bd38b7}</Project>
       <Name>Farseer Physics MonoGame</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+      <Project>{49ba1c69-6104-41ac-a5d8-b54fa9f696e8}</Project>
+      <Name>Lidgren.Network</Name>
     </ProjectReference>
     <ProjectReference Include="..\Subsurface_content\Subsurface_content\Subsurface_content.csproj">
       <Project>{1e6bf44d-6e31-40cc-8321-3d5958c983e7}</Project>

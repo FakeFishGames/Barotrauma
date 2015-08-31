@@ -223,7 +223,7 @@ namespace Subsurface.Items.Components
                     case "sound":
                         string filePath = ToolBox.GetAttributeString(subElement, "file", "");
                         if (filePath=="") continue;
-                        if (!filePath.Contains("\\")) filePath = Path.GetDirectoryName(item.Prefab.ConfigFile)+"\\"+filePath;
+                        if (!filePath.Contains("/")) filePath = Path.GetDirectoryName(item.Prefab.ConfigFile)+"/"+filePath;
 
                         ActionType type;
 
@@ -594,7 +594,7 @@ namespace Subsurface.Items.Components
             try
             {
                 // Get the type of a specified class.                
-                t = Type.GetType("Subsurface.Items.Components." + type + ", Subsurface", false, true);
+                t = Type.GetType("Subsurface.Items.Components." + type + "", false, true);
                 if (t == null)
                 {
                     if (errorMessages) DebugConsole.ThrowError("Could not find the component ''" + type + "'' (" + file + ")");

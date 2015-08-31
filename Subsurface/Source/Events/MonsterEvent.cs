@@ -18,10 +18,10 @@ namespace Subsurface
             characterFile = ToolBox.GetAttributeString(element, "characterfile", "");
 
             minAmount = ToolBox.GetAttributeInt(element, "minamount", 1);
-            maxAmount = Math.Max(ToolBox.GetAttributeInt(element, "maxamount", 1),minAmount);
+            maxAmount = Math.Max(ToolBox.GetAttributeInt(element, "maxamount", 1), minAmount);
         }
 
-        protected override void Start()
+        private void SpawnMonsters()
         {
             WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Enemy);
 
@@ -40,22 +40,26 @@ namespace Subsurface
 
         public override void Update(float deltaTime)
         {
-            base.Update(deltaTime);
+            if (monsters == null) SpawnMonsters();
 
-            if (!isStarted) return;
-            
-            if (!isFinished)
+            //base.Update(deltaTime);
+
+            //if (!isStarted) return;
+
+            if (isFinished) return;
+
+            bool monstersDead = true;
+            for (int i = 0; i < monsters.Length; i++)
             {
-                bool monstersDead = true;
-                for (int i = 0; i < monsters.Length; i++)
-                {
-                    if (monsters[i].IsDead) continue;
+                if (monsters[i].IsDead) continue;
+
+                if (!isStarted && monsters[i].SimPosition != Vector2.Zero && monsters[i].SimPosition.Length() < 20.0) isStarted = true;
                     
-                    monstersDead = false;
-                    break;                    
-                }
-                if (monstersDead) Finished();
+                monstersDead = false;
+                break;                    
             }
+            if (monstersDead) Finished();
+            
         }
     }
 }

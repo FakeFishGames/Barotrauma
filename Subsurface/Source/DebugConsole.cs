@@ -10,13 +10,17 @@ namespace Subsurface
 {
     struct ColoredText
     {
-        public string text;
-        public Color color;
+        public string Text;
+        public Color Color;
+
+        public readonly string Time;
 
         public ColoredText(string text, Color color)
         {
-            this.text = text;
-            this.color = color;
+            this.Text = text;
+            this.Color = color;
+
+            Time = DateTime.Now.ToString();
         }
     }
 
@@ -96,7 +100,7 @@ namespace Subsurface
             if (selectedIndex < 0) selectedIndex = messageCount - 1;
             selectedIndex = selectedIndex % messageCount;
 
-            textBox.Text = messages[selectedIndex].text;    
+            textBox.Text = messages[selectedIndex].Text;    
         }
 
         public static void Draw(SpriteBatch spriteBatch)
@@ -127,7 +131,7 @@ namespace Subsurface
             Vector2 messagePos = new Vector2(x + margin * 2, y + height - 70 - messages.Count()*20);
             foreach (ColoredText message in messages)
             {
-                spriteBatch.DrawString(GUI.Font, message.text, messagePos, message.color); 
+                spriteBatch.DrawString(GUI.Font, message.Text, messagePos, message.Color); 
                 messagePos.Y += 20;
             }
 
@@ -225,6 +229,16 @@ namespace Subsurface
                     foreach (Item it in Item.itemList)
                     {
                         it.Condition = 100.0f;
+                    }
+                    break;
+                case "fixhull":
+                case "fixwalls":
+                    foreach (Structure w in Structure.wallList)
+                    {
+                        for (int i = 0 ; i < w.SectionCount; i++)
+                        {
+                            w.AddDamage(i, -100000.0f);
+                        }
                     }
                     break;
                 case "shake":

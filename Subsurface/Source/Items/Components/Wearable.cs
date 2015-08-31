@@ -50,7 +50,7 @@ namespace Subsurface.Items.Components
                 }
 
                 string spritePath = subElement.Attribute("texture").Value;
-                spritePath = Path.GetDirectoryName( item.Prefab.ConfigFile)+"\\"+spritePath;
+                spritePath = Path.GetDirectoryName( item.Prefab.ConfigFile)+"/"+spritePath;
 
                 var sprite = new Sprite(subElement, "", spritePath);
                 wearableSprite[i] = new WearableSprite(sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false));

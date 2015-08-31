@@ -38,7 +38,7 @@ namespace Subsurface
 
     class Structure : MapEntity, IDamageable
     {
-        static int wallSectionSize = 100;
+        public static int wallSectionSize = 100;
         public static List<Structure> wallList = new List<Structure>();
 
         ConvexHull convexHull;
@@ -97,12 +97,7 @@ namespace Subsurface
         {
             get { return prefab.MaxHealth; }
         }
-
-        public AITarget AiTarget
-        {
-            get { return null;}
-        }
-        
+                
         public override void Move(Vector2 amount)
         {
             base.Move(amount);
@@ -368,6 +363,20 @@ namespace Subsurface
             return (sections[sectionIndex].damage>=prefab.MaxHealth);
         }
 
+        public bool SectionIsLeaking(int sectionIndex)
+        {
+            if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
+
+            return (sections[sectionIndex].damage >= prefab.MaxHealth*0.5f);
+        }
+
+        public int SectionLength(int sectionIndex)
+        {
+            if (sectionIndex < 0 || sectionIndex >= sections.Length) return 0;
+
+            return (isHorizontal ? sections[sectionIndex].rect.Width : sections[sectionIndex].rect.Height);
+        }
+
         public void AddDamage(int sectionIndex, float damage)
         {
             if (!prefab.HasBody || prefab.IsPlatform) return;
@@ -428,7 +437,7 @@ namespace Subsurface
             if (!prefab.HasBody) return;
 
             if (damage != sections[sectionIndex].damage)
-                new NetworkEvent(ID, false);
+                new NetworkEvent(NetworkEventType.UpdateEntity, ID, false, sectionIndex);
             
             if (damage < prefab.MaxHealth*0.5f)
             {
@@ -615,19 +624,40 @@ namespace Subsurface
 
         public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
-            for (int i = 0; i < sections.Length; i++ )
+            int sectionIndex = 0;
+            byte byteIndex = 0;
+
+            try
             {
-                message.Write(sections[i].damage);
+                sectionIndex = (int)data;
+                byteIndex = (byte)sectionIndex;
             }
+            catch
+            {
+                return;
+            }
+
+            message.Write(byteIndex);
+            message.Write(sections[sectionIndex].damage);
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            for (int i = 0; i < sections.Length; i++)
+            int sectionIndex = 0;
+            float damage = 0.0f;
+
+            try
             {
-                float damage = message.ReadFloat();
-                if (damage != sections[i].damage) SetDamage(i, damage);
+                sectionIndex = message.ReadByte();
+                damage = message.ReadFloat();
             }
+            catch
+            {
+                return;
+            }
+
+            SetDamage(sectionIndex, damage);
+            
         }
     
     }

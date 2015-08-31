@@ -77,7 +77,7 @@ namespace Subsurface
 
             if (!string.IsNullOrEmpty(path))
             {
-                if (!path.EndsWith("\\")) path += "\\";
+                if (!path.EndsWith("/")) path += "/";
             }
 
             file = path + file;
