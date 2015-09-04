@@ -10,7 +10,6 @@ namespace Subsurface.Items.Components
 {
     class LightComponent : Powered
     {
-        static Sound[] sparkSounds;
 
         private Color lightColor;
 
@@ -67,16 +66,6 @@ namespace Subsurface.Items.Components
         public LightComponent(Item item, XElement element)
             : base (item, element)
         {
-            if (sparkSounds==null)
-            {
-                sparkSounds = new Sound[4];
-                string dir = Path.GetDirectoryName(item.Prefab.ConfigFile)+"\\";
-                for (int i = 0; i<4; i++)
-                {
-                    sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap"+(i+1)+".ogg");
-                }
-            }
-
             //foreach (XElement subElement in element.Elements())
             //{
             //    if (subElement.Name.ToString().ToLower() != "sprite") continue;

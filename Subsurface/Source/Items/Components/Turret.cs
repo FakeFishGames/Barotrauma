@@ -88,17 +88,36 @@ namespace Subsurface.Items.Components
         {
             this.cam = cam;
 
-            if (reload>0.0f) reload -= deltaTime;
+            if (reload > 0.0f) reload -= deltaTime;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (targetRotation < minRotation || targetRotation > maxRotation)
+            float targetMidDiff = MathHelper.WrapAngle(targetRotation - (minRotation + maxRotation) / 2.0f);
+
+            float maxDist = (maxRotation - minRotation) / 2.0f;
+
+            if (Math.Abs(targetMidDiff) > maxDist)
             {
-                float diff = MathUtils.WrapAngleTwoPi(targetRotation - (minRotation + maxRotation) / 2.0f);
-                targetRotation = (diff > Math.PI) ? minRotation : maxRotation;
+                targetRotation = (targetMidDiff < 0.0f) ? minRotation : maxRotation;
+            }
+
+            float deltaRotation = MathHelper.WrapAngle(targetRotation-rotation);
+            deltaRotation = MathHelper.Clamp(deltaRotation, -0.5f, 0.5f) * 5.0f;
+
+            rotation += deltaRotation * deltaTime;
+
+            float rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
+
+            if (rotMidDiff < -maxDist)
+            {
+                rotation = minRotation;
+            } 
+            else if (rotMidDiff > maxDist)
+            {
+                rotation = maxRotation;
             }
             
-            rotation = MathUtils.CurveAngle(rotation, targetRotation, 0.05f);
+            
         }
 
         public override bool Use(float deltaTime, Character character = null)

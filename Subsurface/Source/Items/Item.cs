@@ -718,8 +718,8 @@ namespace Subsurface
                 FixRequirement.DrawHud(spriteBatch, this, character);
             }
         }
-        
-        public void SendSignal(string signal, string connectionName, float power=0.0f)
+
+        public void SendSignal(string signal, string connectionName, float power = 0.0f)
         {
             ConnectionPanel panel = GetComponent<ConnectionPanel>();
             if (panel == null) return;
@@ -729,7 +729,6 @@ namespace Subsurface
 
                 c.SendSignal(signal, this, power);
             }
-
         }
 
         /// <param name="position">Position of the character doing the pick, only items that are close enough to this are checked</param>

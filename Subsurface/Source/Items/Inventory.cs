@@ -304,6 +304,8 @@ namespace Subsurface
             Item item = FindEntityByID(itemId) as Item;
             if (item == null) return;
 
+            System.Diagnostics.Debug.WriteLine("Inventory update: "+itemId+"  -  "+slotIndex);
+
             if (slotIndex==-1)
             {
                 if (item.inventory == this) item.Drop();

@@ -302,8 +302,8 @@ namespace Subsurface
                             RevoluteJoint refJoint = limbJoints[limb.RefJointIndex];
                             footPos.X = refJoint.WorldAnchorA.X;
                         }
-                        footPos.X += stepOffset.X * Dir;
-                        footPos.Y += stepOffset.Y;
+                        footPos.X += limb.StepOffset.X * Dir;
+                        footPos.Y += limb.StepOffset.Y;
 
                         if (limb.type == LimbType.LeftFoot)
                         {
@@ -373,7 +373,20 @@ namespace Subsurface
             foreach (Limb l in limbs)
             {
                 Vector2 newPos = new Vector2(midX - (l.SimPosition.X - midX), l.SimPosition.Y);
-                l.body.SetTransform(newPos, l.body.Rotation);
+
+                if (Submarine.CheckVisibility(l.SimPosition, newPos)!=null)
+                {
+                    Vector2 diff = newPos - l.SimPosition;
+
+                    l.body.SetTransform(
+                        l.SimPosition + Submarine.LastPickedFraction * diff * 0.8f, l.body.Rotation);
+                }
+                else
+                {
+                    l.body.SetTransform(newPos, l.body.Rotation);
+                }
+
+                
             }
         }
   

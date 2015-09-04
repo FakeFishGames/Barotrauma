@@ -284,6 +284,7 @@ namespace Subsurface
                 if (infoFrame.children.Find(c => c.UserData as string == "playyourself") == null)
                 {
                     var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    playYourself.Selected = Game1.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
@@ -373,6 +374,7 @@ namespace Subsurface
                 if (IsServer && Game1.Server != null)
                 {
                     Game1.Server.CharacterInfo = null;
+                    Game1.Server.Character = null;
 
                     var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
                     playYourself.OnSelected = TogglePlayYourself;
@@ -577,9 +579,14 @@ namespace Subsurface
         {
             if (string.IsNullOrEmpty(newName)) return false;
 
-            Game1.Client.CharacterInfo.Name = newName;
-            Game1.Client.Name = newName;
-            Game1.Client.SendCharacterData();
+            if (Game1.NetworkMember == null || Game1.NetworkMember.CharacterInfo == null) return true;
+
+            Game1.NetworkMember.CharacterInfo.Name = newName;
+            if (Game1.Client != null)
+            {
+                Game1.Client.Name = newName;
+                Game1.Client.SendCharacterData();
+            }
 
             textBox.Text = newName;
             textBox.Selected = false;

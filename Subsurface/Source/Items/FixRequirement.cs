@@ -173,6 +173,7 @@ namespace Subsurface
             if (!unfixedFound)
             {
                 item.Condition = 100.0f;
+                frame = null;
             }
         }
 
@@ -184,6 +185,9 @@ namespace Subsurface
                 
             }
             UpdateGUIFrame(item, character);
+
+            if (frame == null) return;
+
             frame.Update((float)Physics.step);
             frame.Draw(spriteBatch);
         }

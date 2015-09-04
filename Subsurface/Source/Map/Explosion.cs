@@ -51,11 +51,18 @@ namespace Subsurface
 
         public void Explode(Vector2 simPosition)
         {
+            Game1.ParticleManager.CreateParticle("shockwave", simPosition,
+                Vector2.Zero, 0.0f);
+
             for (int i = 0; i < range * 10; i++)
             {
-                Game1.ParticleManager.CreateParticle("explosionfire", simPosition,
-                    Rand.Vector(Rand.Range(3.0f, 4.0f)), 0.0f);
+                Game1.ParticleManager.CreateParticle("spark", simPosition,
+                    Rand.Vector(Rand.Range(5.0f, 8.0f)), 0.0f);
+
+                Game1.ParticleManager.CreateParticle("explosionfire", simPosition + Rand.Vector(0.5f),
+                    Rand.Vector(Rand.Range(0.5f, 1.0f)), 0.0f);
             }
+
 
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
@@ -127,7 +134,7 @@ namespace Subsurface
                 light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, currBrightness);
                 light.Range = startRange * currBrightness;
 
-                currBrightness -= 0.1f;
+                currBrightness -= 0.05f;
 
                 yield return CoroutineStatus.Running;
             }

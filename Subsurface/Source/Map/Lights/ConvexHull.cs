@@ -8,8 +8,10 @@ namespace Subsurface.Lights
     class ConvexHull
     {
         public static List<ConvexHull> list = new List<ConvexHull>();
-        static BasicEffect losEffect;
         static BasicEffect shadowEffect;
+        static BasicEffect penumbraEffect;
+        
+        private static VertexPositionTexture[] penumbraVertices;
         
         private VertexPositionColor[] vertices;
         private short[] indices;
@@ -33,6 +35,25 @@ namespace Subsurface.Lights
                 
         public ConvexHull(Vector2[] points, Color color)
         {
+            if (shadowEffect == null)
+            {
+                shadowEffect = new BasicEffect(Game1.CurrGraphicsDevice);
+                shadowEffect.VertexColorEnabled = true;
+            }
+            if (penumbraEffect == null)
+            {
+                penumbraEffect = new BasicEffect(Game1.CurrGraphicsDevice);
+                penumbraEffect.TextureEnabled = true;
+                //shadowEffect.VertexColorEnabled = true;
+                penumbraEffect.LightingEnabled = false;
+                penumbraEffect.Texture = Game1.TextureLoader.FromFile("Content/Lights/penumbra.png");
+            }
+
+            if (penumbraVertices==null)
+            {
+                penumbraVertices = new VertexPositionTexture[6];
+            }
+
             int vertexCount = points.Length;
             vertices = new VertexPositionColor[vertexCount + 1];
             Vector2 center = Vector2.Zero;
@@ -90,37 +111,9 @@ namespace Subsurface.Lights
             }
         }
 
-        //public void Draw(GameTime gameTime)
-        //{
-        //    device.RasterizerState = RasterizerState.CullNone;
-        //    device.BlendState = BlendState.Opaque;
-
-        //    drawingEffect.World = Matrix.CreateTranslation(position.X, position.Y, 0);
-
-        //    foreach (EffectPass pass in drawingEffect.CurrentTechnique.Passes)
-        //    {
-        //        pass.Apply();
-        //        device.DrawUserIndexedPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, vertices, 0, vertices.Length, indices, 0, primitiveCount);
-        //    }
-        //}
-
         public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, bool los = true)
         {
             if (!Enabled) return;
-
-            if (losEffect == null)
-            {
-                losEffect = new BasicEffect(graphicsDevice);
-                losEffect.VertexColorEnabled = true;
-            }
-            if (shadowEffect==null)
-            {
-                shadowEffect = new BasicEffect(graphicsDevice);
-                shadowEffect.TextureEnabled = true;
-                //shadowEffect.VertexColorEnabled = true;
-                shadowEffect.LightingEnabled = false;
-                shadowEffect.Texture = Game1.TextureLoader.FromFile("Content/Lights/penumbra.png");
-            }
             
             //compute facing of each edge, using N*L
             for (int i = 0; i < primitiveCount; i++)
@@ -154,8 +147,6 @@ namespace Subsurface.Lights
                 if (!backFacing[currentEdge] && backFacing[nextEdge])
                     startingIndex = nextEdge;
             }
-
-            VertexPositionTexture[] penumbraVertices = new VertexPositionTexture[6];
 
             if (los)
             {
@@ -233,21 +224,19 @@ namespace Subsurface.Lights
                 currentIndex = (currentIndex + 1) % primitiveCount;
             }
 
-            losEffect.World = cam.ShaderTransform
+            shadowEffect.World = cam.ShaderTransform
                 * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
-            losEffect.CurrentTechnique.Passes[0].Apply();
+            shadowEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount * 2 - 2);
 
             if (los)
             {
-                shadowEffect.World = cam.ShaderTransform
-                    * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
-                shadowEffect.CurrentTechnique.Passes[0].Apply();
+                penumbraEffect.World = shadowEffect.World;
+                penumbraEffect.CurrentTechnique.Passes[0].Apply();
 
 #if WINDOWS
-    graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, penumbraVertices, 0, 2, VertexPositionTexture.VertexDeclaration);
-            
+                graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, penumbraVertices, 0, 2, VertexPositionTexture.VertexDeclaration);   
 #endif
             }
         }

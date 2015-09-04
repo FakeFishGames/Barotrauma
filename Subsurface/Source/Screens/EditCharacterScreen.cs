@@ -43,20 +43,19 @@ namespace Subsurface
 
             cam = new Camera();
 
-            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, Game1.GraphicsHeight), Color.DarkGray * 0.8f);
+            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, Game1.GraphicsHeight), GUI.style);
             GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
             physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, GUI.style, GUIpanel);
             physicsButton.OnClicked += TogglePhysics;
 
-            new GUITextBlock(new Rectangle(0, 80, 0, 25), "Limbs:", Color.Transparent, Color.Black, Alignment.Left, null, GUIpanel);
+            new GUITextBlock(new Rectangle(0, 80, 0, 25), "Limbs:", GUI.style, GUIpanel);
             limbList = new GUIListBox(new Rectangle(0, 110, 0, 250), Color.White * 0.7f, GUI.style, GUIpanel);
             limbList.OnSelected = SelectLimb;
 
-            new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", Color.Transparent, Color.Black, Alignment.Left, null, GUIpanel);
+            new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", GUI.style, GUIpanel);
             jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, GUI.style, GUIpanel);
-
-
+            
             while (Character.CharacterList.Count > 1)
             {
                 Character.CharacterList.First().Remove();
@@ -226,7 +225,7 @@ namespace Subsurface
                     new Rectangle(0,0,0,25),
                     limb.type.ToString(),
                     Color.Transparent,
-                    Color.Black,
+                    Color.White,
                     Alignment.Left, null,
                     limbList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
@@ -243,7 +242,7 @@ namespace Subsurface
                     new Rectangle(0, 0, 0, 25),
                     limb1.type.ToString() + " - " + limb2.type.ToString(),
                     Color.Transparent,
-                    Color.Black,
+                    Color.White,
                     Alignment.Left, null,
                     jointList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);

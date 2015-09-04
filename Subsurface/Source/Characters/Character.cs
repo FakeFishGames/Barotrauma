@@ -866,7 +866,7 @@ namespace Subsurface
             for (int i = 0; i < sounds.Count(); i++)
             {
                 if (soundStates[i] != state) continue;
-                if (n == selectedSound)
+                if (n == selectedSound && sounds[i]!=null)
                 {
                     sounds[i].Play(1.0f, 2000.0f,
                             AnimController.limbs[0].body.FarseerBody);

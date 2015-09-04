@@ -32,6 +32,8 @@ namespace Subsurface
 
         private readonly bool doesFlip;
         
+        protected readonly Vector2 stepOffset;
+        
         public Sprite sprite;
 
         public bool inWater;
@@ -128,6 +130,11 @@ namespace Subsurface
             get { return refJointIndex; }
         }
 
+        public Vector2 StepOffset
+        {
+            get { return stepOffset; }
+        }
+
         //public float Damage
         //{
         //    get { return damage; }
@@ -205,8 +212,10 @@ namespace Subsurface
 
 
                 Vector2 jointPos = ToolBox.GetAttributeVector2(element, "pullpos", Vector2.Zero);
-
                 jointPos = ConvertUnits.ToSimUnits(jointPos);
+
+                stepOffset = ToolBox.GetAttributeVector2(element, "stepoffset", Vector2.Zero);
+                stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
                 refJointIndex = ToolBox.GetAttributeInt(element, "refjoint", -1);
 
