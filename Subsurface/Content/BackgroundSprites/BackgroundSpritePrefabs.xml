@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<backgroundsprites>
+  <Fish1 speed ="100.0" wanderamount="5.0" wanderzamount="0.1" swarmmin="2" swarmmax="10" swarmradius="500">
+    <Sprite texture="Content\BackgroundSprites\bgFish1.png" sourcerect="0,0,128,64"/>
+  </Fish1>
+
+  <Fish2 speed="20.0" wanderamount="0.2" wanderzamount="0.1" swarmmin="1" swarmmax="3" swarmradius="300">
+    <Sprite texture="Content\BackgroundSprites\bgFish1.png" sourcerect="0,64,128,64"/>
+  </Fish2>
+</backgroundsprites>

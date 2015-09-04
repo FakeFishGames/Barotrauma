@@ -1123,7 +1123,7 @@ namespace Subsurface
             else if (type == NetworkEventType.KillCharacter)
             {
                 Kill(true);
-                if (Game1.Client != null && controlled == this)
+                if (Game1.NetworkMember != null && controlled == this)
                 {
                     Game1.Client.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
                     Game1.LightManager.LosEnabled = false;

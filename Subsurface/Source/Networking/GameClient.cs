@@ -148,61 +148,70 @@ namespace Subsurface.Networking
                 // If new messages arrived
                 if ((inc = client.ReadMessage()) == null) continue;
 
-                // Switch based on the message types
-                switch (inc.MessageType)
+                try
                 {
-                    // All manually sent messages are type of "Data"
-                    case NetIncomingMessageType.Data:
-                        byte packetType = inc.ReadByte();
-                        if (packetType == (byte)PacketTypes.LoggedIn)
-                        {
-                            myID = inc.ReadInt32();
-                            if (inc.ReadBoolean() && Screen.Selected != Game1.GameScreen)
+                    // Switch based on the message types
+                    switch (inc.MessageType)
+                    {
+                        // All manually sent messages are type of "Data"
+                        case NetIncomingMessageType.Data:
+                            byte packetType = inc.ReadByte();
+                            if (packetType == (byte)PacketTypes.LoggedIn)
                             {
-                                new GUIMessageBox("Please wait", "A round is already running. You will have to wait for a new round to start.");
+                                myID = inc.ReadInt32();
+                                if (inc.ReadBoolean() && Screen.Selected != Game1.GameScreen)
+                                {
+                                    new GUIMessageBox("Please wait", "A round is already running. You will have to wait for a new round to start.");
+                                }
+
+                                Game1.NetLobbyScreen.ClearPlayers();
+
+                                //add the names of other connected clients to the lobby screen
+                                int existingClients = inc.ReadInt32();
+                                for (int i = 1; i <= existingClients; i++)
+                                {
+                                    Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
+
+                                    Game1.NetLobbyScreen.AddPlayer(otherClient);
+                                    otherClients.Add(otherClient);
+                                }
+
+                                //add the name of own client to the lobby screen
+                                Game1.NetLobbyScreen.AddPlayer(new Client(name, myID));
+
+                                CanStart = true;
+                            }
+                            else if (packetType == (byte)PacketTypes.KickedOut)
+                            {
+                                string msg = inc.ReadString();
+                                DebugConsole.ThrowError(msg);
+
+                                Game1.MainMenuScreen.Select();
+                            }
+                            break;
+                        case NetIncomingMessageType.StatusChanged:
+                            NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
+                            Debug.WriteLine(connectionStatus);
+
+                            if (connectionStatus != NetConnectionStatus.Connected)
+                            {
+                                string denyMessage = inc.ReadString();
+                                DebugConsole.ThrowError(denyMessage);
                             }
 
-                            Game1.NetLobbyScreen.ClearPlayers();
+                            break;
+                        default:
+                            Console.WriteLine(inc.ReadString() + " Strange message");
+                            break;
+                    }                
+                }
 
-                            //add the names of other connected clients to the lobby screen
-                            int existingClients = inc.ReadInt32();
-                            for (int i = 1; i <= existingClients; i++)
-                            {
-                                Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
-
-                                Game1.NetLobbyScreen.AddPlayer(otherClient);
-                                otherClients.Add(otherClient);
-                            }
-
-                            //add the name of own client to the lobby screen
-                            Game1.NetLobbyScreen.AddPlayer(new Client(name, myID));
-
-                            CanStart = true;
-                        }
-                        else if (packetType == (byte)PacketTypes.KickedOut)
-                        {
-                            string msg = inc.ReadString();
-                            DebugConsole.ThrowError(msg);
-
-                            Game1.MainMenuScreen.Select();
-                        }
-                        break;
-                    case NetIncomingMessageType.StatusChanged:
-                        NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
-                        Debug.WriteLine(connectionStatus);
-
-                        if (connectionStatus != NetConnectionStatus.Connected)
-                        {
-                            string denyMessage = inc.ReadString();
-                            DebugConsole.ThrowError(denyMessage);
-                        }
-
-                        break;
-                    default:
-                        Console.WriteLine(inc.ReadString() + " Strange message");
-                        break;
-                }                
+                catch
+                {                    
+                    break;
+                }
             }
+
 
             if (reconnectBox != null)
             {

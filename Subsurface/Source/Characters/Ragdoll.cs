@@ -607,7 +607,8 @@ namespace Subsurface
                 }
                 else
                 {
-                    correctionMovement = Vector2.Normalize(newMovement) * Math.Min(1.0f + dist, 3.0f);                    
+                    correctionMovement = Vector2.Normalize(newMovement) * Math.Min(1.0f + dist, 3.0f);
+                    if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
                 }
             }
 

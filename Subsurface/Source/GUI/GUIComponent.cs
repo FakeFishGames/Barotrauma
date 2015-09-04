@@ -284,9 +284,9 @@ namespace Subsurface
 
             }
 
-            foreach (GUIComponent child in children)
+            for (int i = 0; i < children.Count; i++)
             {
-                child.Update(deltaTime);
+                children[i].Update(deltaTime);
             }
         }
 
