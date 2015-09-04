@@ -56,6 +56,9 @@
     <Compile Include="Source\Characters\AI\PathFinder.cs" />
     <Compile Include="Source\Characters\AnimController.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSprite.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpriteManager.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpritePrefab.cs" />
     <Compile Include="Source\Characters\Character.cs" />
     <Compile Include="Source\Characters\CharacterInfo.cs" />
     <Compile Include="Source\Characters\AI\ISteerable.cs" />
@@ -241,6 +244,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="changelog.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\BackgroundSprites\BackgroundSpritePrefabs.xml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\BackgroundSprites\bgFish1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Crawler\crawler.png">

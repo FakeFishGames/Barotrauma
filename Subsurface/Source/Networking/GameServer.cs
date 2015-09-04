@@ -30,7 +30,9 @@ namespace Subsurface.Networking
 
         private string password;
 
-        private Client myClient;
+       // private Client myClient;
+
+        //private CharacterInfo myCharacter;
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
@@ -208,7 +210,12 @@ namespace Subsurface.Networking
 
             base.Update(deltaTime);
 
-            if (gameStarted) inGameHUD.Update((float)Physics.step);
+            if (gameStarted)
+            {
+                if (myCharacter!=null) new NetworkEvent(myCharacter.ID, true);  
+
+                inGameHUD.Update((float)Physics.step);
+            }
 
             NetIncomingMessage inc = server.ReadMessage();
             if (inc != null)
@@ -384,7 +391,7 @@ namespace Subsurface.Networking
                             outmsg.Write(gameStarted);
 
                             //notify the client about other clients already logged in
-                            outmsg.Write((myClient == null) ? connectedClients.Count - 1 : connectedClients.Count);
+                            outmsg.Write((characterInfo == null) ? connectedClients.Count - 1 : connectedClients.Count);
                             foreach (Client c in connectedClients)
                             {
                                 if (c.Connection == inc.SenderConnection) continue;
@@ -392,7 +399,11 @@ namespace Subsurface.Networking
                                 outmsg.Write(c.ID);
                             }
 
-                            if (myClient != null) outmsg.Write(myClient.name);
+                            if (characterInfo != null)
+                            {
+                                outmsg.Write(characterInfo.Name);
+                                outmsg.Write(-1);
+                            }
 
                             server.SendMessage(outmsg, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered, 0);
                             
@@ -491,16 +502,17 @@ namespace Subsurface.Networking
 
                 List<NetConnection> recipients = new List<NetConnection>();
 
-                    Entity e = Entity.FindEntityByID(networkEvent.ID);
+                Entity e = Entity.FindEntityByID(networkEvent.ID);
+                if (e == null) continue;
 
-                    foreach (Client c in connectedClients)
-                    {
-                        if (c.character == null) continue;
-                        //if (networkEvent.Type == NetworkEventType.UpdateEntity && 
-                        //    Vector2.Distance(e.SimPosition, c.character.SimPosition) > NetConfig.UpdateEntityDistance) continue;
+                foreach (Client c in connectedClients)
+                {
+                    if (c.character == null) continue;
+                    //if (networkEvent.Type == NetworkEventType.UpdateEntity && 
+                    //    Vector2.Distance(e.SimPosition, c.character.SimPosition) > NetConfig.UpdateEntityDistance) continue;
 
-                        recipients.Add(c.Connection);
-                    }
+                    recipients.Add(c.Connection);
+                }
                 
 
                 if (recipients.Count == 0) return;
@@ -533,9 +545,7 @@ namespace Subsurface.Networking
                 Game1.NetLobbyScreen.SubList.Flash();
                 return false;
             }
-
-
-
+            
             AssignJobs();            
            
             //selectedMap.Load();
@@ -552,17 +562,20 @@ namespace Subsurface.Networking
             {
                 client.inGame = true;
 
-                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
-
-                if (client.characterInfo==null)
+                if (client.characterInfo == null)
                 {
                     client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
                 }
                 characterInfos.Add(client.characterInfo);
 
                 client.characterInfo.Job = new Job(client.assignedJob);
+            }
 
-                //client.character = new Character(client.characterInfo, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition, true);
+            //todo: fix
+            if (characterInfo != null)
+            {
+                characterInfo.Job = new Job(Game1.NetLobbyScreen.JobPreferences[0]);
+                characterInfos.Add(characterInfo);
             }
 
             List<Character> crew = new List<Character>();
@@ -577,16 +590,16 @@ namespace Subsurface.Networking
                 crew.Add(connectedClients[i].character);
             }
 
-            //todo: fix
-            if (myClient != null)
+            if (characterInfo != null)
             {
-                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
-                CharacterInfo ch = new CharacterInfo(Character.HumanConfigFile, myClient.name);
-                myClient.character = new Character(ch, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
-            }
+                myCharacter = new Character(characterInfo, assignedWayPoints[assignedWayPoints.Length-1]);
+                Character.Controlled = myCharacter;
 
-            //foreach (Client client in connectedClients)
-            //{
+                myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
+
+                crew.Add(myCharacter);
+            }
+            
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.StartGame);
 
@@ -599,30 +612,26 @@ namespace Subsurface.Networking
                 
             msg.Write(Game1.NetLobbyScreen.GameDuration.TotalMinutes);
 
-            //WriteCharacterData(msg, client.name, client.character);
-
-            msg.Write((myClient == null) ? connectedClients.Count : connectedClients.Count+1);
+            msg.Write((myCharacter == null) ? connectedClients.Count : connectedClients.Count+1);
             foreach (Client client in connectedClients)
             {
-                //if (otherClient == client) continue;
                 msg.Write(client.ID);
                 WriteCharacterData(msg, client.name, client.character);
             }
 
-            if (myClient!=null)
+            if (myCharacter != null)
             {
-                WriteCharacterData(msg, myClient.name, myClient.character);
+                msg.Write(-1);
+                WriteCharacterData(msg, myCharacter.Name, Character.Controlled);
             }
 
-                SendMessage(msg, NetDeliveryMethod.ReliableUnordered, null);
-            //}
+            SendMessage(msg, NetDeliveryMethod.ReliableUnordered, null);            
 
             gameStarted = true;
 
             Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Game1.GameScreen.Select();
-
 
             CreateCrewFrame(crew);
 
@@ -891,6 +900,11 @@ namespace Subsurface.Networking
 
             int[] assignedClientCount = new int[JobPrefab.List.Count];
 
+            if (characterInfo!=null)
+            {
+                assignedClientCount[JobPrefab.List.FindIndex(jp => jp == Game1.NetLobbyScreen.JobPreferences[0])]=1;
+            }
+
             //if any of the players has chosen a job that is Always Allowed, give them that job
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {
@@ -956,7 +970,7 @@ namespace Subsurface.Networking
                 }
             }
 
-            //none of the clients wants the job
+            //none of the clients wants the job, assign it to random client
             if (forceAssign && preferredClient == null)
             {
                 preferredClient = clients[Rand.Int(clients.Count)];

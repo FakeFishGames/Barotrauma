@@ -45,7 +45,7 @@ namespace Subsurface
             }
         }
 
-        public bool Fix(Character character, GUIComponent reqFrame)
+        public bool CanBeFixed(Character character, GUIComponent reqFrame)
         {
             bool success = true;
             foreach (string itemName in requiredItems)
@@ -101,7 +101,8 @@ namespace Subsurface
                 fixButton.OnClicked = FixButtonPressed;
                 fixButton.UserData = requirement;
 
-                new GUITickBox(new Rectangle(70, 0, 20,20), requirement.name, Alignment.Left, reqFrame);
+                var tickBox = new GUITickBox(new Rectangle(70, 0, 20,20), requirement.name, Alignment.Left, reqFrame);
+                tickBox.Enabled = false;
 
                 int y2 = 20;
                 foreach (string itemName in requirement.requiredItems)
@@ -133,7 +134,10 @@ namespace Subsurface
             FixRequirement requirement = obj as FixRequirement;
             if (requirement == null) return false;
 
+            if (!requirement.CanBeFixed(Character.Controlled, button.Parent)) return true;
+
             requirement.Fixed = true;
+
             return true;
         }
 
@@ -152,7 +156,7 @@ namespace Subsurface
                 }
                 else
                 {
-                    bool canBeFixed = requirement.Fix(character, child);
+                    bool canBeFixed = requirement.CanBeFixed(character, child);
                     unfixedFound = true;
                     //child.GetChild<GUITickBox>().Selected = canBeFixed;
                     GUITickBox tickBox = child.GetChild<GUITickBox>();

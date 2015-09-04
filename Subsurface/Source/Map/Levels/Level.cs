@@ -873,6 +873,37 @@ int currentTargetIndex = 1;
             //}
         }
 
+        public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)
+        {
+            int gridPosX = (int)Math.Floor(pos.X / GridCellWidth);
+            int gridPosY = (int)Math.Floor(pos.Y / GridCellWidth);
+
+            int startX = Math.Max(gridPosX - searchDepth, 0);
+            int endX = Math.Min(gridPosX + searchDepth, cellGrid.GetLength(0) - 1);
+
+            int startY = Math.Max(gridPosY - searchDepth, 0);
+            int endY = Math.Min(gridPosY + searchDepth, cellGrid.GetLength(1) - 1);
+
+            List<VoronoiCell> cells = new List<VoronoiCell>();
+
+            for (int x = startX; x < endX; x++)
+            {
+                for (int y = startY; y < endY; y++)
+                {
+                    foreach (VoronoiCell cell in cellGrid[x, y])
+                    {
+                        for (int i = 0; i < cell.edges.Count; i++)
+                        {
+                            cells.Add(cell);
+                            //GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Green : Color.Red);
+                        }
+                    }
+                }
+            }
+
+            return cells;
+        }
+
         public List<Vector2[]> GetCellEdges(Vector2 refPos, int searchDepth = 2, bool onlySolid = true)
         {
 
@@ -884,7 +915,6 @@ int currentTargetIndex = 1;
 
             int startY = Math.Max(gridPosY - searchDepth, 0);
             int endY = Math.Min(gridPosY + searchDepth, cellGrid.GetLength(1) - 1);
-
 
             List<Vector2[]> edges = new List<Vector2[]>();
 

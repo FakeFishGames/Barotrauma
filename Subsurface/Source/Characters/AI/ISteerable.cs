@@ -15,8 +15,6 @@ namespace Subsurface
         {
             get;
         }
-
-
         
         Vector2 Position 
         {

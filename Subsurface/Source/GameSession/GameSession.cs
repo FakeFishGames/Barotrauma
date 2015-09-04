@@ -107,7 +107,7 @@ namespace Subsurface
 
         public void StartShift(TimeSpan duration, Level level, bool reloadSub = true)
         {
-            Game1.LightManager.LosEnabled = (Game1.Server==null);
+            Game1.LightManager.LosEnabled = (Game1.Server==null && Character.Controlled==null);
                         
             this.level = level;
 

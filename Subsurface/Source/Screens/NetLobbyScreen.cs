@@ -278,18 +278,20 @@ namespace Subsurface
                 modeList.OnSelected += Game1.Server.UpdateNetLobby;                
                 durationBar.OnMoved = Game1.Server.UpdateNetLobby;
 
-                if (subList.CountChildren > 0) subList.Select(-1);
-                if (GameModePreset.list.Count > 0) modeList.Select(0);
+                if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(-1);
+                if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(-1);
 
-                var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
-                playYourself.OnSelected = TogglePlayYourself;
+                if (infoFrame.children.Find(c => c.UserData as string == "playyourself") == null)
+                {
+                    var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    playYourself.OnSelected = TogglePlayYourself;
+                    playYourself.UserData = "playyourself";
+                }
             }
             else
             {
                 UpdatePlayerFrame(Game1.Client.CharacterInfo);
             }
-            
-
 
             base.Select();
         }
@@ -302,8 +304,10 @@ namespace Subsurface
 
                 if (IsServer && Game1.Server != null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(0, -20, 200, 30), "Play yourself", Alignment.TopLeft, playerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    playYourself.Selected = Game1.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
+                    playYourself.UserData = "playyourself";
                 }
 
                 new GUITextBlock(new Rectangle(60, 0, 200, 30), "Name: ", GUI.style, playerFrame);
@@ -368,7 +372,9 @@ namespace Subsurface
 
                 if (IsServer && Game1.Server != null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(0, -20, 200, 30), "Play yourself", Alignment.TopLeft, playerFrame);
+                    Game1.Server.CharacterInfo = null;
+
+                    var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
                     playYourself.OnSelected = TogglePlayYourself;
                 }
             }
@@ -615,7 +621,7 @@ namespace Subsurface
                 (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
             }
 
-            Game1.Client.SendCharacterData();
+            if (Game1.Client!=null) Game1.Client.SendCharacterData();
         }
 
         public bool TrySelectMap(string mapName, string md5Hash)

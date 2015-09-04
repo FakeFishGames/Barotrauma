@@ -16,6 +16,8 @@ namespace Subsurface
 
         readonly Sprite background, backgroundTop;
 
+        private BackgroundSpriteManager backgroundSpriteManager;
+
         public Camera Cam
         {
             get { return cam; }
@@ -32,6 +34,8 @@ namespace Subsurface
 
             background = new Sprite("Content/Map/background.png", Vector2.Zero);
             backgroundTop = new Sprite("Content/Map/background2.png", Vector2.Zero);
+
+            backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
         }
 
         public override void Select()
@@ -70,6 +74,8 @@ namespace Subsurface
             //EventManager.Update(gameTime);
 
             Character.UpdateAll(cam, (float)deltaTime);
+
+            backgroundSpriteManager.Update((float)deltaTime);
 
             Game1.ParticleManager.Update((float)deltaTime);
 
@@ -175,12 +181,20 @@ namespace Subsurface
 
             spriteBatch.End();
 
+            spriteBatch.Begin(SpriteSortMode.BackToFront,
+                BlendState.AlphaBlend,
+                null, null, null, null,
+                cam.Transform);
+
+            backgroundSpriteManager.Draw(spriteBatch);
+
+            spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend,
                 null, null, null, null,
                 cam.Transform);
-                        
+
             Submarine.DrawBack(spriteBatch);
 
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
