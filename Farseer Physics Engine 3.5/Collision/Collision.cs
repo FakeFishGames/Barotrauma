@@ -434,16 +434,13 @@ namespace FarseerPhysics.Collision
         /// <param name="a">The first AABB.</param>
         /// <param name="b">The second AABB.</param>
         /// <returns>True if they are overlapping.</returns>
+
         public static bool TestOverlap(ref AABB a, ref AABB b)
         {
-            Vector2 d1 = b.LowerBound - a.UpperBound;
-            Vector2 d2 = a.LowerBound - b.UpperBound;
-
-            if (d1.X > 0.0f || d1.Y > 0.0f)
-                return false;
-
-            if (d2.X > 0.0f || d2.Y > 0.0f)
-                return false;
+            if (b.LowerBound.X - a.UpperBound.X > 0.0f ||
+                b.LowerBound.Y - a.UpperBound.Y > 0.0f ||
+                a.LowerBound.X - b.UpperBound.X > 0.0f ||
+                a.LowerBound.Y - b.UpperBound.Y > 0.0f) return false;
 
             return true;
         }

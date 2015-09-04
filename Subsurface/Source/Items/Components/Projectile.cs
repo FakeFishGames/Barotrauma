@@ -162,9 +162,11 @@ namespace Subsurface.Items.Components
 
             ignoredBodies.Clear();
 
+            f2.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
+
             if (attackResult.HitArmor)
             {
-                item.body.LinearVelocity *= 0.5f;
+                item.body.LinearVelocity *= 0.1f;
             }
             else if (doesStick)
             {
@@ -175,7 +177,10 @@ namespace Subsurface.Items.Components
 
                 if (Vector2.Dot(f1.Body.LinearVelocity, normal) < 0.0f) return StickToTarget(f2.Body, dir);
             }
-
+            else
+            {
+                item.body.LinearVelocity *= 0.5f;
+            }
 
             var containedItems = item.ContainedItems;
             if (containedItems == null) return true;
@@ -188,7 +193,7 @@ namespace Subsurface.Items.Components
                 contained.Condition = 0.0f;
             }
 
-            return true;
+            return false;
         }
 
         private bool StickToTarget(Body targetBody, Vector2 axis)

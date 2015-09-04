@@ -77,10 +77,9 @@ namespace FarseerPhysics.Common
 
         public static Vector2 Mul(ref Transform T, ref Vector2 v)
         {
-            float x = (T.q.c * v.X - T.q.s * v.Y) + T.p.X;
-            float y = (T.q.s * v.X + T.q.c * v.Y) + T.p.Y;
-
-            return new Vector2(x, y);
+            return new Vector2(
+                (T.q.c * v.X - T.q.s * v.Y) + T.p.X, 
+                (T.q.s * v.X + T.q.c * v.Y) + T.p.Y);
         }
 
         public static Vector2 MulT(ref Mat22 A, Vector2 v)
@@ -102,10 +101,8 @@ namespace FarseerPhysics.Common
         {
             float px = v.X - T.p.X;
             float py = v.Y - T.p.Y;
-            float x = (T.q.c * px + T.q.s * py);
-            float y = (-T.q.s * px + T.q.c * py);
 
-            return new Vector2(x, y);
+            return new Vector2(T.q.c * px + T.q.s * py, -T.q.s * px + T.q.c * py);
         }
 
         // A^T * B

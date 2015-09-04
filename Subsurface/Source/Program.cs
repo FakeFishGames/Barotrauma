@@ -26,19 +26,19 @@ namespace Subsurface
         {
             using (var game = new Game1())
             {
-//#if !DEBUG
+#if !DEBUG
                 try
                 {
-//#endif
+#endif
 
                     game.Run();
-//#if !DEBUG
+#if !DEBUG
                 }
                 catch (Exception e)
                 {
                     CrashDump(game, "crashreport.txt", e);
                 }
-//#endif
+#endif
             }
         }
 
@@ -60,11 +60,11 @@ namespace Subsurface
 
             if (Game1.Server != null)
             {
-                sb.AppendLine("Server (" +(Game1.Server.GameStarted ? "Round had started" : "Round hand't been started"));
+                sb.AppendLine("Server (" +(Game1.Server.GameStarted ? "Round had started)" : "Round hand't been started)"));
             }
             else if (Game1.Client != null)
             {
-                sb.AppendLine("Server (" +(Game1.Client.GameStarted ? "Round had started" : "Round hand't been started"));
+                sb.AppendLine("Client (" +(Game1.Client.GameStarted ? "Round had started)" : "Round hand't been started)"));
             }
 
             sb.AppendLine("\n");
@@ -85,7 +85,7 @@ namespace Subsurface
             }
 
 
-                sw.WriteLine(sb.ToString());
+            sw.WriteLine(sb.ToString());
 
             MessageBox.Show( "A crash report (''crashreport.txt'') was saved in the root folder of the game."+
                 " If you'd like to help fix this bug, please make a bug report on the Undertow Games forum with the report attached.",

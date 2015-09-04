@@ -26,7 +26,6 @@ namespace Subsurface
 
         protected readonly Vector2 stepSize;
         protected readonly float legTorque;
-        protected readonly Vector2 stepOffset;
 
         public float StunTimer
         {
@@ -46,8 +45,8 @@ namespace Subsurface
             stepSize = ToolBox.GetAttributeVector2(element, "stepsize", Vector2.One);
             stepSize = ConvertUnits.ToSimUnits(stepSize);
 
-            stepOffset = ToolBox.GetAttributeVector2(element, "stepoffset", Vector2.One);
-            stepOffset = ConvertUnits.ToSimUnits(stepOffset);
+            //stepOffset = ToolBox.GetAttributeVector2(element, "stepoffset", Vector2.One);
+            //stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
             //impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 10.0f);
 

@@ -47,7 +47,7 @@ namespace FarseerPhysics
         /// NOTE: If you are using a debug view that shows performance counters,
         /// you might want to enable this.
         /// </summary>
-        public const bool EnableDiagnostics = true;
+        public const bool EnableDiagnostics = false;
 
         /// <summary>
         /// Set this to true to skip sanity checks in the engine. This will speed up the

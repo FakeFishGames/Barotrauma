@@ -66,8 +66,13 @@ namespace Subsurface
 
         protected override void DropItem(Item item)
         {
+            bool enabled = draggingItem.body.Enabled;
             item.Drop(character);
-            item.body.SetTransform(character.SimPosition, 0.0f);
+
+            if (!enabled)
+            {
+                draggingItem.body.SetTransform(character.SimPosition, 0.0f);
+            }
         }
 
         public int FindLimbSlot(LimbSlot limbSlot)
@@ -202,8 +207,8 @@ namespace Subsurface
                     if (items[rightHandSlot] != null) return false;
                     if (items[leftHandSlot] != null) return false;
 
-                    PutItem(item, rightHandSlot, true, true);
-                    PutItem(item, leftHandSlot, true, false);
+                    PutItem(item, rightHandSlot, createNetworkEvent, true);
+                    PutItem(item, leftHandSlot, createNetworkEvent, false);
                     item.Equip(character);
                     return true;
                 }
@@ -269,8 +274,7 @@ namespace Subsurface
                     DrawSlot(spriteBatch, slotRect, draggingItem, false, false);
                 }
                 else
-                {
-                    draggingItem.body.SetTransform(character.SimPosition, 0.0f);
+                {                    
                     DropItem(draggingItem);
                     //draggingItem = null;
                 }

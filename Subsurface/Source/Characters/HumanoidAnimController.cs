@@ -786,7 +786,6 @@ namespace Subsurface
 
                 arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f);
                 hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f);
-
             }
             
         }

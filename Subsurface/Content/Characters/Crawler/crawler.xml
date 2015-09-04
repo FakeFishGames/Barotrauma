@@ -9,8 +9,7 @@
   <ragdoll headposition="50" headangle="-70" 
            waveamplitude="50.0" wavelength="2500" 
            swimspeed="2.0" walkspeed="2.0"
-           stepsize ="15.0,20.0" 
-           stepoffset="20.0,0.0"
+           stepsize ="15.0,20.0"           
            legtorque="10"
            flip="true">
 
@@ -37,7 +36,7 @@
     <limb id = "4" width="11" height="34" mass = "4" type="RightLeg" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
     </limb>
-    <limb id = "5" width="5" height="40" mass = "4" type="RightFoot" flip="true" pullpos="0.0,15.0" refjoint="3">
+    <limb id = "5" width="5" height="40" mass = "4" type="RightFoot" flip="true" pullpos="0.0,15.0" refjoint="3" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
@@ -45,7 +44,7 @@
     <limb id = "6" width="13" height="35" mass = "4"  type="LeftLeg" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
     </limb>
-    <limb id = "7" width="5" height="40" mass = "4" type="LeftFoot" flip="true" pullpos="0.0,15.0" refjoint="5">
+    <limb id = "7" width="5" height="40" mass = "4" type="LeftFoot" flip="true" pullpos="0.0,15.0" refjoint="5" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
@@ -53,7 +52,7 @@
     <limb id = "8" width="13" height="35" mass = "4" type="RightLeg" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
     </limb>
-    <limb id = "9" width="5" height="40" mass = "4" type="RightFoot" flip="true" pullpos="0.0,15.0"  refjoint="7">
+    <limb id = "9" width="5" height="40" mass = "4" type="RightFoot" flip="true" pullpos="0.0,15.0"  refjoint="7" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>

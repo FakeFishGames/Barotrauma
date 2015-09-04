@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Xml.Linq;
 
 namespace Subsurface.Items.Components
 {
     class Powered : ItemComponent
     {
+
+        protected static Sound[] sparkSounds;
+
         //the amount of power CURRENTLY consumed by the item
         //negative values mean that the item is providing power to connected items
         protected float currPowerConsumption;
@@ -63,6 +67,25 @@ namespace Subsurface.Items.Components
             set { voltage = Math.Max(0.0f, value); }
         }
 
+        public Powered(Item item, XElement element)
+            : base(item, element)
+        {
+            if (powerOnSound == null)
+            {
+                powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg");
+            }
+
+            if (sparkSounds == null)
+            {
+                sparkSounds = new Sound[4];
+                string dir = Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\";
+                for (int i = 0; i < 4; i++)
+                {
+                    sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap" + (i + 1) + ".ogg");
+                }
+            }
+        }
+
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
         {
             if (currPowerConsumption == 0.0f) voltage = 0.0f;
@@ -87,13 +110,6 @@ namespace Subsurface.Items.Components
             }
         }
 
-        public Powered(Item item, XElement element)
-            : base(item, element)
-        {
-            if (powerOnSound==null)
-            {
-                powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg");
-            }
-        }
+
     }
 }

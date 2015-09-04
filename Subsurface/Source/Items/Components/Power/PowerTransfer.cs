@@ -45,13 +45,34 @@ namespace Subsurface.Items.Components
             foreach (Powered p in connectedList)
             {
                 PowerTransfer pt = p as PowerTransfer;
-                if (pt!=null)
+                if (pt == null) continue;
+                
+                pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
+                pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
+                pt.Item.SendSignal("", "power", fullPower / Math.Max(fullLoad, 1.0f));
+
+                //damage the item if voltage is too high
+                if (-pt.currPowerConsumption > Math.Max(pt.powerLoad * 2.0f, 200.0f))
                 {
-                    pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
-                    pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
-                    pt.Item.SendSignal("", "power", fullPower / Math.Max(fullLoad, 1.0f));
-                    if (-pt.currPowerConsumption > Math.Max(pt.powerLoad * 2.0f, 200.0f)) pt.item.Condition -= deltaTime*10.0f;
+
+                    float prevCondition = pt.item.Condition;
+                    pt.item.Condition -= deltaTime * 10.0f;
+
+                    if (pt.item.Condition<=0.0f && prevCondition > 0.0f)
+                    {
+                        sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, item.Position);
+
+                        Vector2 baseVel = Rand.Vector(3.0f);
+                        for (int i = 0; i < 10; i++)
+                        {
+                            var particle = Game1.ParticleManager.CreateParticle("spark", pt.item.SimPosition,
+                                baseVel + Rand.Vector(1.0f), 0.0f);
+
+                            if (particle != null) particle.Size *= Rand.Range(0.5f,1.0f);
+                        }
+                    }
                 }
+                
             }
 
             
@@ -135,7 +156,7 @@ namespace Subsurface.Items.Components
         {
             base.ReceiveSignal(signal, connection, sender, power);
 
-            if (connection.Name.Length>5 && connection.Name.Substring(0, 6).ToLower() == "signal")
+            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6).ToLower() == "signal")
             {
                 connection.SendSignal(signal, sender, 0.0f);
             }

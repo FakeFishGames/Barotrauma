@@ -72,19 +72,45 @@
     <sprite texture="Content/Particles/spatter.png"/>
   </waterblood>
 
+  <spark
+    startsizemin="0.5,0.2" startsizemax="1.0,0.7"
+    sizechangemin="-0.5,-0.5" sizechangemax="-1.0,-1.0"
+    startrotationmin ="0.0" startrotationmax="6.28"
+    startcolor="1.0, 1.0, 1.0" startalpha="1.0"
+    colorchange="0.0, 0.0, 0.0, -0.3"
+    lifetime="5.0"
+    drawtarget="air"
+    deleteonhit="true"
+    rotatetodirection="true"
+    velocitychange="0.0, -5.0">
+    <sprite texture="Content/Particles/explosion.png" sourcerect="128,0,128,64"/>
+  </spark>
+
+  <shockwave
+    startsizemin="0.1,0.1" startsizemax="0.1,0.1"
+    sizechangemin="15.0,15.0" sizechangemax="15.0,15.0"
+    startrotationmin ="0.0" startrotationmax="6.28"
+    startcolor="1.0, 1.0, 1.0" startalpha="1.0"
+    colorchange="0.0, 0.0, 0.0, -2.0"
+    lifetime="1.0"
+    drawtarget="both"
+    velocitychange="0.0, 0.0">
+    <sprite texture="Content/Particles/explosion.png" sourcerect="0,128,128,128"/>
+  </shockwave>
+
   <explosionfire
-    startsizemin="1.5,1.5" startsizemax="3.0,3.0"
+    startsizemin="1.0,1.0" startsizemax="1.5,1.5"
     sizechangemin="0.5,0.5" sizechangemax="0.6,0.6"
     startrotationmin ="0.0" startrotationmax="6.28"
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
-    colorchange="-0.4, -0.4, -0.4, -0.3"
+    colorchange="-0.6, -0.6, -0.6, -0.5"
     lifetime="5.0"
     drawtarget="air"
     deleteonhit="true"
     velocitychange="0.0, 0.5">
-    <sprite texture="Content/Particles/explosion.png"/>
+    <sprite texture="Content/Particles/explosion.png" sourcerect="0,0,128,128"/>
   </explosionfire>
-
+  
   <weld
     startsizemin="0.9,0.9" startsizemax="1.1,1.1"
     sizechangemin="-4.0,-0.1" sizechangemax="-4.0,-0.5"

@@ -648,6 +648,13 @@ namespace Subsurface.Networking
         public IEnumerable<object> EndGame(string endMessage)
         {
 
+            var messageBox = new GUIMessageBox("The round has ended", endMessage);
+
+
+            Character.Controlled = null;
+            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+            Game1.LightManager.LosEnabled = false;
+
             gameStarted = false;
 
             if (connectedClients.Count > 0)
@@ -685,14 +692,14 @@ namespace Subsurface.Networking
                 Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
+                messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
+
                 yield return CoroutineStatus.Running;
             } while (secondsLeft > 0.0f);
 
             Submarine.Unload();
 
             Game1.NetLobbyScreen.Select();
-
-            DebugConsole.ThrowError(endMessage);
 
             yield return CoroutineStatus.Success;
 

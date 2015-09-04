@@ -31,7 +31,7 @@ namespace Subsurface
 
             selectedTab = -1;
 
-            GUIpanel = new GUIFrame(new Rectangle(0,0, 120, Game1.GraphicsHeight), Color.DarkGray*0.8f);
+            GUIpanel = new GUIFrame(new Rectangle(0, 0, 150, Game1.GraphicsHeight), GUI.style);
             GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             //GUIListBox constructionList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUIpanel);
             //constructionList.OnSelected = MapEntityPrefab.SelectPrefab;
@@ -50,13 +50,13 @@ namespace Subsurface
             
             GUItabs = new GUIComponent[2];
             int width = 400, height = 400;
-            GUItabs[0] = new GUIFrame(new Rectangle(Game1.GraphicsWidth/2-width/2, Game1.GraphicsHeight/2-height/2, width, height), Color.DarkGray*0.8f);
+            GUItabs[0] = new GUIFrame(new Rectangle(Game1.GraphicsWidth/2-width/2, Game1.GraphicsHeight/2-height/2, width, height), GUI.style);
             GUItabs[0].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.style, GUItabs[0]);
             itemList.OnSelected = SelectPrefab;
             itemList.CheckSelected = MapEntityPrefab.GetSelected;
-            
-            GUItabs[1] = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), Color.DarkGray * 0.8f);
+
+            GUItabs[1] = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), GUI.style);
             GUItabs[1].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             GUIListBox structureList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.style, GUItabs[1]);
             structureList.OnSelected = SelectPrefab;
@@ -65,7 +65,7 @@ namespace Subsurface
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)
             {
                 GUIListBox parent = ((ep as ItemPrefab) == null) ? structureList : itemList;
-                Color color = ((parent.CountChildren % 2) == 0) ? Color.White : Color.LightGray;
+                Color color = ((parent.CountChildren % 2) == 0) ? Color.Transparent : Color.White * 0.1f;
                 
                 GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, parent);
                 frame.UserData = ep;
@@ -77,7 +77,7 @@ namespace Subsurface
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(40, 0, 0, 25),
                     ep.Name,
-                    Color.Transparent, Color.Black,
+                    Color.Transparent, Color.White,
                     Alignment.Left, Alignment.Left,
                     null, frame);
                 textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
@@ -130,6 +130,8 @@ namespace Subsurface
         
         private bool ToggleCharacterMode(GUIButton button, object obj)
         {
+            selectedTab = 0;
+
             characterMode = !characterMode;         
             button.Color = (characterMode) ? Color.Gold : Color.White;
 

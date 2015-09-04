@@ -69,22 +69,22 @@ namespace Subsurface
             depth = MathHelper.Clamp(depth + velocity.Z * deltaTime, 0.0f, MaxDepth);
 
             checkWallsTimer -= deltaTime;
-            if (checkWallsTimer<=0.0f)
+            if (checkWallsTimer<=0.0f && Level.Loaded!=null)
             {
                 checkWallsTimer = CheckWallsInterval;
 
                 obstacleDiff = Vector2.Zero;
 
                 var cells = Level.Loaded.GetCells(position, 1);
-                if (cells.Count>0)
+                if (cells.Count > 0)
                 {
-                    
+
                     foreach (Voronoi2.VoronoiCell cell in cells)
                     {
                         obstacleDiff += cell.Center - position;
                     }
 
-                    obstacleDiff = Vector2.Normalize(obstacleDiff)*prefab.Speed;
+                    obstacleDiff = Vector2.Normalize(obstacleDiff) * prefab.Speed;
                 }
             }            
 
@@ -141,7 +141,9 @@ namespace Subsurface
                 if (velocity.X < 0.0f) rotation -= MathHelper.Pi;
             }
 
-            Vector2 drawPos = position + Level.Loaded.Position;
+            Vector2 drawPos = position;
+
+            if (Level.Loaded != null) drawPos += Level.Loaded.Position;
 
             if (depth > 0.0f)
             {
