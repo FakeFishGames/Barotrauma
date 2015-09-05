@@ -18,6 +18,12 @@ namespace Subsurface
 
         public override void UpdateAnim(float deltaTime)
         {
+            if (character.IsDead)
+            {
+                UpdateStruggling();
+                return;
+            }
+
             Vector2 colliderPos = GetLimb(LimbType.Torso).SimPosition;
 
             if (inWater) stairs = null;
@@ -543,11 +549,8 @@ namespace Subsurface
                 leftHandPos = Vector2.Transform(leftHandPos, rotationMatrix);
 
                 MoveLimb(leftHand, handPos + leftHandPos, 3.5f);
-            }
-            
+            }            
         }
-
-
 
         void UpdateClimbing()
         {
@@ -662,14 +665,17 @@ namespace Subsurface
             Limb rightLeg   = GetLimb(LimbType.RightFoot);
             Limb torso      = GetLimb(LimbType.Torso);
 
-            walkPos += 0.2f;
+            //walkPos += 0.2f;
 
             if (inWater) return;
 
-            Vector2 footPos = torso.body.Position+ new Vector2(TorsoPosition*Dir,0.0f);
+            HandIK(GetLimb(LimbType.RightHand), GetLimb(LimbType.Head).SimPosition,0.1f);
+            HandIK(GetLimb(LimbType.LeftHand), GetLimb(LimbType.Head).SimPosition,0.1f);
+            
+            //Vector2 footPos = torso.body.Position+ new Vector2(TorsoPosition*Dir,0.0f);
 
-            MoveLimb(leftLeg, footPos, 0.7f);
-            MoveLimb(rightLeg, footPos, 0.7f);
+            //MoveLimb(leftLeg, footPos, 0.7f);
+            //MoveLimb(rightLeg, footPos, 0.7f);
         }
 
         public override void HoldItem(float deltaTime, Camera cam, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, float holdAngle)
@@ -690,7 +696,7 @@ namespace Subsurface
             Vector2 itemPos = character.GetInputState(InputType.SecondaryHeld) ? aimPos : holdPos;       
 
             float itemAngle;
-            if (character.GetInputState(InputType.SecondaryHeld) && itemPos != Vector2.Zero)
+            if (stunTimer <= 0.0f && character.GetInputState(InputType.SecondaryHeld) && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
@@ -767,27 +773,54 @@ namespace Subsurface
                 if (itemPos == Vector2.Zero) continue;
 
                 Limb hand = (i == 0) ? rightHand : leftHand;
-                Limb arm = (i == 0) ? rightArm : leftArm;
 
-                //hand length
-                float a = 37.0f;
+                HandIK(hand, transformedHoldPos + transformedHandlePos[i]);
 
-                //arm length
-                float b = 28.0f;
+                //Limb arm = (i == 0) ? rightArm : leftArm;
 
-                //distance from shoulder to holdpos
-                float c = ConvertUnits.ToDisplayUnits(Vector2.Distance(transformedHoldPos + transformedHandlePos[i], shoulderPos));
-                c = MathHelper.Clamp(a + b - 1, b-a, c);
+                ////hand length
+                //float a = 37.0f;
 
-                float ang2 = MathUtils.VectorToAngle((transformedHoldPos + transformedHandlePos[i]) - shoulderPos)+MathHelper.PiOver2;
+                ////arm length
+                //float b = 28.0f;
 
-                float armAngle = MathUtils.SolveTriangleSSS(a, b, c);
-                float handAngle = MathUtils.SolveTriangleSSS(b, a, c);
+                ////distance from shoulder to holdpos
+                //float c = ConvertUnits.ToDisplayUnits(Vector2.Distance(transformedHoldPos + transformedHandlePos[i], shoulderPos));
+                //c = MathHelper.Clamp(a + b - 1, b-a, c);
 
-                arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f);
-                hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f);
-            }
-            
+                //float ang2 = MathUtils.VectorToAngle((transformedHoldPos + transformedHandlePos[i]) - shoulderPos)+MathHelper.PiOver2;
+
+                //float armAngle = MathUtils.SolveTriangleSSS(a, b, c);
+                //float handAngle = MathUtils.SolveTriangleSSS(b, a, c);
+
+                //arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f);
+                //hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f);
+            }            
+        }
+
+        private void HandIK(Limb hand, Vector2 pos, float force = 1.0f)
+        {
+            Vector2 shoulderPos = limbJoints[2].WorldAnchorA;
+
+            Limb arm = (hand.type == LimbType.LeftHand) ? GetLimb(LimbType.LeftArm) : GetLimb(LimbType.RightArm);
+
+            //hand length
+            float a = 37.0f;
+
+            //arm length
+            float b = 28.0f;
+
+            //distance from shoulder to holdpos
+            float c = ConvertUnits.ToDisplayUnits(Vector2.Distance(pos, shoulderPos));
+            c = MathHelper.Clamp(a + b - 1, b - a, c);
+
+            float ang2 = MathUtils.VectorToAngle(pos - shoulderPos) + MathHelper.PiOver2;
+
+            float armAngle = MathUtils.SolveTriangleSSS(a, b, c);
+            float handAngle = MathUtils.SolveTriangleSSS(b, a, c);
+
+            arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f*force);
+            hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f*force);
         }
 
         public override void Flip()

@@ -7,8 +7,9 @@
     startcolor="1.0, 1.0, 1.0" startalpha="0.8"
     colorchange="0.0, 0.0, 0.0, -0.25"
     lifetime="3"
-    deleteonhit="true"
-    velocitychange="0.0, -9.8">    
+    growtime ="0.2"
+    deleteoncollision="true"
+    velocitychange="0.0, -9.8">
     <sprite texture="Content/Particles/spatter.png"/>
   </watersplash>
 
@@ -18,6 +19,7 @@
     startrotationmin ="0.0" startrotationmax="6.28"
     startcolor="1.0, 1.0, 1.0" startalpha="0.5"
     colorchange="0.0, 0.0, 0.0, -0.25"
+    growtime ="0.2"
     lifetime="3"
     velocitychange="0.0, -0.05">
     <sprite texture="Content/Particles/spatter.png"/>
@@ -25,7 +27,7 @@
 
   <dustcloud
     startsizemin="0.8,0.8" startsizemax="1.0,1.0"
-    sizechangemin="0.0,0.0" sizechangemax="0.0,0.0"
+    sizechange="0.0,0.0"
     startrotationmin ="0.0" startrotationmax="6.28"
     startcolor="0.2, 0.2, 0.2" startalpha="0.5"
     colorchange="0.0, 0.0, 0.0, -0.3"
@@ -36,12 +38,12 @@
 
   <bubbles
     startsizemin="0.4,0.4" startsizemax="0.5,0.5"
-    sizechangemin="0.0,0.0" sizechangemax="0.1,0.1"
+    sizechangemin="0.1,0.1" sizechangemax="0.3,0.3"
     startrotationmin ="0.0" startrotationmax="3.14"
     startcolor="1.0, 1.0, 1.0" startalpha="0.8"
     colorchange="0.0, 0.0, 0.0, -0.5"
     lifetime="3"
-    deleteonhit="true"
+    deleteoncollision="true"
     drawtarget="water"
     velocitychange="0.0, 0.1">
     <sprite texture="Content/Particles/bubbles.png"/>
@@ -54,15 +56,16 @@
     startcolor="0.5, 0.0, 0.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -1.0"
     lifetime="2"
-    deleteonhit="true"
+    growtime ="0.1"
+    deleteoncollision="true"
     rotatetodirection="true"
     velocitychange="0.0, -9.8">
     <sprite texture="Content/Particles/blood.png"/>
   </blood>
 
   <waterblood
-    startsizemin="0.1,0.1" startsizemax="0.1,0.1"
-    sizechangemin="0.15,0.15" sizechangemax="0.2,0.2"
+    startsize="0.05,0.05"
+    sizechangemin="0.1,0.1" sizechangemax="0.15,0.15"
     startrotationmin ="0.0" startrotationmax="6.28"
     startcolor="0.5, 0.0, 0.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -0.25"
@@ -80,15 +83,16 @@
     colorchange="0.0, 0.0, 0.0, -0.3"
     lifetime="5.0"
     drawtarget="air"
-    deleteonhit="true"
+    growtime ="0.1"
+    deleteoncollision="true"
     rotatetodirection="true"
     velocitychange="0.0, -5.0">
     <sprite texture="Content/Particles/explosion.png" sourcerect="128,0,128,64"/>
   </spark>
 
   <shockwave
-    startsizemin="0.1,0.1" startsizemax="0.1,0.1"
-    sizechangemin="15.0,15.0" sizechangemax="15.0,15.0"
+    startsize="0.1,0.1"
+    sizechange="15.0,15.0"
     startrotationmin ="0.0" startrotationmax="6.28"
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -2.0"
@@ -105,8 +109,9 @@
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="-0.6, -0.6, -0.6, -0.5"
     lifetime="5.0"
+    growtime ="0.05"
     drawtarget="air"
-    deleteonhit="true"
+    deleteoncollision="true"
     velocitychange="0.0, 0.5">
     <sprite texture="Content/Particles/explosion.png" sourcerect="0,0,128,128"/>
   </explosionfire>
@@ -124,10 +129,10 @@
 
   <plasma
     startsizemin="0.9,0.9" startsizemax="1.1,1.1"
-    sizechangemin="-4.0,-0.5" sizechangemax="-4.0,-0.5"
+    sizechange="-4.0,-0.5"
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -4.0"
-    lifetime="0.25"
+    lifetime="0.25"    
     drawtarget="both"
     velocitychange="0.0, 0.0">
     <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.15,0.5"/>

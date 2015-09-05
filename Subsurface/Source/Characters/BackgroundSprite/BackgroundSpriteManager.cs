@@ -29,34 +29,53 @@ namespace Subsurface
             }
         }
 
-        public void Update(float deltaTime)
+        public void SpawnSprites(int count)
         {
-            if (activeSprites.Count < MaxSprites)
-            {
-                WayPoint wp = WayPoint.WayPointList[Rand.Int(WayPoint.WayPointList.Count)];
+            count = Math.Min(count, MaxSprites);
 
-                Vector2 pos = new Vector2(wp.Rect.X, wp.Rect.Y);
-                pos += Rand.Vector(200.0f);
+            activeSprites.Clear();
+
+            for (int i = 0; i < count; i++ )
+            {
+                Vector2 pos = Vector2.Zero;
+
+                if (WayPoint.WayPointList.Count>0)
+                {
+                    WayPoint wp = WayPoint.WayPointList[Rand.Int(WayPoint.WayPointList.Count)];
+
+                    pos = new Vector2(wp.Rect.X, wp.Rect.Y);
+                    pos += Rand.Vector(200.0f);
+                }
+                else
+                {
+                    pos = Rand.Vector(2000.0f);
+                } 
 
                 var prefab = prefabs[Rand.Int(prefabs.Count)];
 
-                int amount = Rand.Range(prefab.SwarmMin,prefab.SwarmMax);
+                int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax);
                 List<BackgroundSprite> swarmMembers = new List<BackgroundSprite>();
-                
-                for (int i = 0; i<amount; i++)
+
+                for (int n = 0; n < amount; n++)
                 {
                     var newSprite = new BackgroundSprite(prefab, pos);
                     activeSprites.Add(newSprite);
                     swarmMembers.Add(newSprite);
                 }
-                if (amount>0)
+                if (amount > 0)
                 {
                     Swarm swarm = new Swarm(swarmMembers, prefab.SwarmRadius);
                 }
-
-
             }
+        }
 
+        public void ClearSprites()
+        {
+            activeSprites.Clear();
+        }
+
+        public void Update(float deltaTime)
+        {
             foreach (BackgroundSprite sprite in activeSprites)
             {
                 sprite.Update(deltaTime);

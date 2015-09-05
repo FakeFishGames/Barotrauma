@@ -49,6 +49,8 @@ namespace Subsurface
         public bool onGround;
         private bool ignorePlatforms;
 
+        private Limb refLimb;
+
         protected Structure stairs;
                 
         protected Direction dir;
@@ -58,6 +60,14 @@ namespace Subsurface
         public Limb LowestLimb
         {
             get { return lowestLimb; }
+        }
+
+        public Limb RefLimb
+        {
+            get
+            {
+                return refLimb;
+            }
         }
 
         public float Mass
@@ -226,6 +236,10 @@ namespace Subsurface
 
             }
 
+            refLimb = GetLimb(LimbType.Torso);
+            if (refLimb == null) refLimb = GetLimb(LimbType.Head);
+            if (refLimb == null) DebugConsole.ThrowError("Character ''" + character + "'' doesn't have a head or torso!");
+
             foreach (var joint in limbJoints)
             {
 
@@ -348,14 +362,12 @@ namespace Subsurface
                 if (limb.pullJoint != null)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorA);
-                    pos.Y = -pos.Y;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true, 0.01f);
 
                     if (limb.AnimTargetPos == Vector2.Zero) continue;
 
                     Vector2 pos2 = ConvertUnits.ToDisplayUnits(limb.AnimTargetPos);
-                    pos2.Y = -pos2.Y;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos2.X, (int)pos2.Y, 5, 5), Color.Blue, true, 0.01f);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos2.X, (int)-pos2.Y, 5, 5), Color.Blue, true, 0.01f);
 
                     GUI.DrawLine(spriteBatch, pos, pos2, Color.Green);
                 }
@@ -368,7 +380,14 @@ namespace Subsurface
 
                 pos = ConvertUnits.ToDisplayUnits(joint.WorldAnchorB);
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);
-            }            
+            }
+
+            if (refLimb.body.TargetPosition != Vector2.Zero)
+            {
+                Vector2 pos = ConvertUnits.ToDisplayUnits(refLimb.body.TargetPosition);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X-5, (int)-pos.Y-5, 10, 10), Color.LightBlue, false);
+
+            }
 
         }
 
@@ -531,17 +550,17 @@ namespace Subsurface
 
                         //create a splash particle
                         Subsurface.Particles.Particle splash = Game1.ParticleManager.CreateParticle("watersplash",
-                            new Vector2(limb.SimPosition.X, ConvertUnits.ToSimUnits(limbHull.Surface)),
-                            new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 0.1f)),
+                            new Vector2(limb.Position.X, limbHull.Surface),
+                            new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 10.0f)),
                             0.0f);
 
-                        if (splash != null) splash.yLimits = ConvertUnits.ToSimUnits(
-                            new Vector2(
-                                limbHull.Rect.Y,
-                                limbHull.Rect.Y - limbHull.Rect.Height));
+                        //if (splash != null) splash.yLimits = ConvertUnits.ToSimUnits(
+                        //    new Vector2(
+                        //        limbHull.Rect.Y,
+                        //        limbHull.Rect.Y - limbHull.Rect.Height));
 
                         Game1.ParticleManager.CreateParticle("bubbles",
-                            new Vector2(limb.SimPosition.X, ConvertUnits.ToSimUnits(limbHull.Surface)),                            
+                            new Vector2(limb.Position.X, limbHull.Surface),                            
                             limb.LinearVelocity*0.001f,
                             0.0f);
 
@@ -572,9 +591,6 @@ namespace Subsurface
 
         private void UpdateNetplayerPosition()
         {
-            Limb refLimb = GetLimb(LimbType.Torso);
-            if (refLimb == null) refLimb = GetLimb(LimbType.Head);
-
             if (refLimb.body.TargetPosition == Vector2.Zero) return;
 
             //if the limb is further away than resetdistance, all limbs are immediately snapped to their targetpositions
@@ -583,7 +599,7 @@ namespace Subsurface
             //if the limb is closer than alloweddistance, just ignore the difference
             float allowedDistance = NetConfig.AllowedRagdollDistance;
 
-            float dist = Vector2.Distance(limbs[0].body.Position, refLimb.body.TargetPosition);
+            float dist = Vector2.Distance(refLimb.body.Position, refLimb.body.TargetPosition);
             bool resetAll = (dist > resetDistance && character.LargeUpdateTimer == 1);
 
             Vector2 newMovement = (refLimb.body.TargetPosition - refLimb.body.Position);

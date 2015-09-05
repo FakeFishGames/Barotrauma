@@ -117,6 +117,8 @@ namespace Subsurface
             {
                 level.Generate(submarine == null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
                 submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
+
+                Game1.GameScreen.BackgroundSpriteManager.SpawnSprites(80);
             }
 
             if (Quest!=null) Quest.Start(Level.Loaded);

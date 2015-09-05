@@ -212,8 +212,8 @@ namespace Subsurface
                 if (maxDelta > Rand.Range(0.2f,10.0f))
                 {
                     Game1.ParticleManager.CreateParticle("mist",
-                        ConvertUnits.ToSimUnits(new Vector2(rect.X + WaveWidth * i,surface + waveY[i])),
-                        new Vector2(0.0f, -0.5f));
+                        new Vector2(rect.X + WaveWidth * i,surface + waveY[i]),
+                        new Vector2(0.0f, -50.0f));
                 }
 
                 waveY[i] = waveY[i] + waveVel[i];

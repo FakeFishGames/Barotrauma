@@ -940,13 +940,13 @@ namespace Subsurface
             for (int i = 0; i < 10; i++)
             {
                 Particle p = Game1.ParticleManager.CreateParticle("waterblood",
-                    torso.SimPosition + new Vector2(Rand.Range(-0.5f, 0.5f), Rand.Range(-0.5f, 0.5f)),
+                    torso.Position + new Vector2(Rand.Range(-50f, 50f), Rand.Range(-50f, 50f)),
                     Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
                 Game1.ParticleManager.CreateParticle("bubbles",
                     torso.SimPosition,
-                    new Vector2(Rand.Range(-0.5f, 0.5f), Rand.Range(-1.0f,0.5f)));
+                    new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f,50f)));
             }
 
             foreach (var joint in AnimController.limbJoints)
@@ -954,6 +954,21 @@ namespace Subsurface
                 joint.LimitEnabled = false;
             }
             Kill(true);
+        }
+
+        private IEnumerable<object> DeathAnim()
+        {
+            float timer = 8.0f;
+
+            while (timer > 0.0f)
+            {
+                AnimController.UpdateAnim(1.0f / 60.0f);
+                timer -= 1.0f / 60.0f;
+
+                yield return CoroutineStatus.Running;
+            }
+
+            yield return CoroutineStatus.Success;
         }
 
         public void Kill(bool networkMessage = false)
@@ -972,6 +987,8 @@ namespace Subsurface
                     return;
                 }
             }
+
+            CoroutineManager.StartCoroutine(DeathAnim());
 
             health = 0.0f;
 
@@ -1086,11 +1103,8 @@ namespace Subsurface
             }
             else
             {
-                Limb torso = AnimController.GetLimb(LimbType.Torso);
-                if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
-
-                message.Write(torso.body.Position.X);
-                message.Write(torso.body.Position.Y);
+                message.Write(AnimController.RefLimb.Position.X);
+                message.Write(AnimController.RefLimb.Position.Y);
 
                 LargeUpdateTimer = Math.Max(0, LargeUpdateTimer-1);
             }            

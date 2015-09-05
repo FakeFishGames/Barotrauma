@@ -16,7 +16,7 @@ namespace Subsurface
 
         readonly Sprite background, backgroundTop;
 
-        private BackgroundSpriteManager backgroundSpriteManager;
+        public BackgroundSpriteManager BackgroundSpriteManager;
 
         public Camera Cam
         {
@@ -35,7 +35,7 @@ namespace Subsurface
             background = new Sprite("Content/Map/background.png", Vector2.Zero);
             backgroundTop = new Sprite("Content/Map/background2.png", Vector2.Zero);
 
-            backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
+            BackgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
         }
 
         public override void Select()
@@ -75,7 +75,7 @@ namespace Subsurface
 
             Character.UpdateAll(cam, (float)deltaTime);
 
-            backgroundSpriteManager.Update((float)deltaTime);
+            BackgroundSpriteManager.Update((float)deltaTime);
 
             Game1.ParticleManager.Update((float)deltaTime);
 
@@ -186,7 +186,7 @@ namespace Subsurface
                 null, null, null, null,
                 cam.Transform);
 
-            backgroundSpriteManager.Draw(spriteBatch);
+            BackgroundSpriteManager.Draw(spriteBatch);
 
             spriteBatch.End();
 

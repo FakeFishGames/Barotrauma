@@ -337,13 +337,13 @@ namespace Subsurface
                 if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
 
                 Game1.ParticleManager.CreateParticle("blood",
-                    SimPosition,
-                    particleVel * Rand.Range(1.0f, 3.0f));
+                    Position,
+                    particleVel * Rand.Range(100.0f, 300.0f));
             }
 
             for (int i = 0; i < bloodAmount / 2; i++)
             {
-                Game1.ParticleManager.CreateParticle("waterblood", SimPosition, Vector2.Zero);
+                Game1.ParticleManager.CreateParticle("waterblood", Position, Vector2.Zero);
             }
 
             return new AttackResult(amount, bleedingAmount, hitArmor);

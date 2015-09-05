@@ -51,21 +51,22 @@ namespace Subsurface
 
         public void Explode(Vector2 simPosition)
         {
-            Game1.ParticleManager.CreateParticle("shockwave", simPosition,
+            Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
+
+            Game1.ParticleManager.CreateParticle("shockwave", displayPosition,
                 Vector2.Zero, 0.0f);
 
             for (int i = 0; i < range * 10; i++)
             {
-                Game1.ParticleManager.CreateParticle("spark", simPosition,
-                    Rand.Vector(Rand.Range(5.0f, 8.0f)), 0.0f);
+                Game1.ParticleManager.CreateParticle("spark", displayPosition,
+                    Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f);
 
-                Game1.ParticleManager.CreateParticle("explosionfire", simPosition + Rand.Vector(0.5f),
-                    Rand.Vector(Rand.Range(0.5f, 1.0f)), 0.0f);
+                Game1.ParticleManager.CreateParticle("explosionfire", displayPosition + Rand.Vector(50f),
+                    Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f);
             }
 
 
 
-            Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
             float displayRange = ConvertUnits.ToDisplayUnits(range);
 
             light = new LightSource(displayPosition, displayRange, Color.LightYellow);
