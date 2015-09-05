@@ -34,7 +34,11 @@ namespace Subsurface
             swimSpeed = ToolBox.GetAttributeFloat(element, "swimspeed", 1.0f);
 
             float footRot = ToolBox.GetAttributeFloat(element,"footrotation", float.NaN);
-            if (!float.IsNaN(footRot))
+            if (float.IsNaN(footRot))
+            {
+                footRotation = null;
+            }
+            else
             {
                 footRotation = MathHelper.ToRadians(footRot);
             }
@@ -44,6 +48,12 @@ namespace Subsurface
 
         public override void UpdateAnim(float deltaTime)
         {
+            if (character.IsDead)
+            {
+                UpdateStruggling(deltaTime);
+                return;
+            }
+
             ResetPullJoints();
 
             if (strongestImpact > 0.0f)
@@ -54,7 +64,7 @@ namespace Subsurface
 
             if (stunTimer>0.0f)
             {
-                UpdateStruggling();
+                UpdateStruggling(deltaTime);
                 stunTimer -= deltaTime;
                 return;
             }
@@ -204,25 +214,27 @@ namespace Subsurface
             movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
             if (movement == Vector2.Zero) return;
 
+            IgnorePlatforms = (TargetMovement.Y < -Math.Abs(TargetMovement.X));
+
             Limb colliderLimb;
             float colliderHeight;
 
-            Limb torso = GetLimb(LimbType.Torso);
-            Limb head = GetLimb(LimbType.Head);
+            Limb torso  = GetLimb(LimbType.Torso);
+            Limb head   = GetLimb(LimbType.Head);
 
-            if (torso!=null)
+            if (torso != null)
             {
                 colliderLimb = torso;
                 colliderHeight = TorsoPosition;
 
-                colliderLimb.body.SmoothRotate(TorsoAngle*Dir, 10.0f);
+                colliderLimb.body.SmoothRotate(TorsoAngle * Dir, 10.0f);
             }
             else
             {
                 colliderLimb = head;
                 colliderHeight = HeadPosition;
 
-                if (onGround) colliderLimb.body.SmoothRotate(HeadAngle*Dir, 100.0f);
+                if (onGround) colliderLimb.body.SmoothRotate(HeadAngle * Dir, 100.0f);
             }
             
             Vector2 colliderPos = colliderLimb.SimPosition;
@@ -331,13 +343,24 @@ namespace Subsurface
             }
         }
 
-        void UpdateStruggling()
+        void UpdateStruggling(float deltaTime)
         {
             Limb head = GetLimb(LimbType.Head);
             Limb tail = GetLimb(LimbType.Tail);
 
-            if (head != null) head.body.ApplyTorque(head.Mass * Dir * 0.1f);
-            if (tail != null) tail.body.ApplyTorque(tail.Mass * -Dir * 0.1f);
+            if (head != null) head.body.ApplyTorque(head.Mass * Dir * (float)Math.Sin(walkPos) * 5.0f);
+            if (tail != null) tail.body.ApplyTorque(tail.Mass * -Dir * (float)Math.Sin(walkPos) * 5.0f);
+
+            walkPos += deltaTime * 5.0f;
+
+            Vector2 centerOfMass = GetCenterOfMass();
+
+            foreach (Limb limb in limbs)
+            {
+                if (limb.type == LimbType.Head || limb.type == LimbType.Tail) continue;
+
+                limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)Math.Sin(walkPos) * limb.Mass * 10.0f);
+            }
         }
 
         public override void Flip()

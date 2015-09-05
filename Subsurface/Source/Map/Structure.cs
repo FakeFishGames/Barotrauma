@@ -419,7 +419,7 @@ namespace Subsurface
             int i = FindSectionIndex(ConvertUnits.ToDisplayUnits(position));
             if (i == -1) return new AttackResult(0.0f, 0.0f);
             
-            Game1.ParticleManager.CreateParticle("dustcloud", ConvertUnits.ToSimUnits(SectionPosition(i)), 0.0f, 0.0f);
+            Game1.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 
             if (playSound && !SectionHasHole(i))
             {

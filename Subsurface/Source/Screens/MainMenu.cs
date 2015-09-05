@@ -160,9 +160,8 @@ namespace Subsurface
             }
 
             this.game = game;
-
         }
-
+        
         public bool SelectTab(GUIButton button, object obj)
         {
             selectedTab = (int)obj;

@@ -62,11 +62,11 @@ namespace Subsurface.Items.Components
                     {
                         sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, item.Position);
 
-                        Vector2 baseVel = Rand.Vector(3.0f);
+                        Vector2 baseVel = Rand.Vector(300.0f);
                         for (int i = 0; i < 10; i++)
                         {
-                            var particle = Game1.ParticleManager.CreateParticle("spark", pt.item.SimPosition,
-                                baseVel + Rand.Vector(1.0f), 0.0f);
+                            var particle = Game1.ParticleManager.CreateParticle("spark", pt.item.Position,
+                                baseVel + Rand.Vector(100.0f), 0.0f);
 
                             if (particle != null) particle.Size *= Rand.Range(0.5f,1.0f);
                         }

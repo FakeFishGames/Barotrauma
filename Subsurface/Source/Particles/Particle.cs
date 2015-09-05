@@ -24,25 +24,22 @@ namespace Subsurface.Particles
         private Color color;
         private float alpha;
 
+        private float totalLifeTime;
         private float lifeTime;
 
         private Vector2 velocityChange;
 
         private Vector2 drawPosition;
 
-        private float checkCollisionTimer;
+        //private float checkCollisionTimer;
+
+        private Hull currentHull;
         
         public ParticlePrefab.DrawTargetType DrawTarget
         {
             get { return prefab.DrawTarget; }        
         }
-
-        public Vector2 yLimits
-        {
-            get;
-            set;
-        }
-
+        
         public Vector2 Size
         {
             get { return size; }
@@ -62,29 +59,33 @@ namespace Subsurface.Particles
             this.position = position;
             prevPosition = position;
 
-            drawPosition = ConvertUnits.ToDisplayUnits(position);
+            drawPosition = position;
 
             velocity = speed;
 
-            this.rotation = rotation + Rand.Range(prefab.startRotationMin, prefab.startRotationMax);    
+            this.rotation = rotation + Rand.Range(prefab.StartRotationMin, prefab.StartRotationMax);    
             prevRotation = rotation;
 
-            angularVelocity = prefab.angularVelocityMin + (prefab.angularVelocityMax - prefab.angularVelocityMin) * Rand.Range(0.0f, 1.0f);
+            angularVelocity = prefab.AngularVelocityMin + (prefab.AngularVelocityMax - prefab.AngularVelocityMin) * Rand.Range(0.0f, 1.0f);
 
-            lifeTime = prefab.lifeTime;
-
-            size = prefab.startSizeMin + (prefab.startSizeMax - prefab.startSizeMin) * Rand.Range(0.0f, 1.0f);
-
-            sizeChange = prefab.sizeChangeMin + (prefab.sizeChangeMax - prefab.sizeChangeMin) * Rand.Range(0.0f, 1.0f);
-
-            yLimits = Vector2.Zero;
-
-            color = prefab.startColor;
-            alpha = prefab.startAlpha;
+            totalLifeTime = prefab.LifeTime;
+            lifeTime = prefab.LifeTime;
             
-            velocityChange = prefab.velocityChange;
+            size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
 
-            if (prefab.rotateToDirection)
+            sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
+
+            color = prefab.StartColor;
+            alpha = prefab.StartAlpha;
+            
+            velocityChange = prefab.VelocityChange;
+
+            if (prefab.DeleteOnCollision)
+            {
+                currentHull = Hull.FindHull(position);
+            }
+
+            if (prefab.RotateToDirection)
             {
                 this.rotation = MathUtils.VectorToAngle(new Vector2(velocity.X, -velocity.Y));
 
@@ -98,7 +99,7 @@ namespace Subsurface.Particles
             position.X += velocity.X * deltaTime;
             position.Y += velocity.Y * deltaTime;
 
-            if (prefab.rotateToDirection)
+            if (prefab.RotateToDirection)
             {
                 if (velocityChange != Vector2.Zero || angularVelocity != 0.0f)
                 {
@@ -114,37 +115,18 @@ namespace Subsurface.Particles
             velocity.Y += velocityChange.Y * deltaTime; 
 
             size.X += sizeChange.X * deltaTime;
-            size.Y += sizeChange.Y * deltaTime;
+            size.Y += sizeChange.Y * deltaTime;  
 
-            alpha += prefab.colorChange.W * deltaTime;
+            alpha += prefab.ColorChange.W * deltaTime;
 
             color = new Color(
-                color.R / 255.0f + prefab.colorChange.X * deltaTime,
-                color.G / 255.0f + prefab.colorChange.Y * deltaTime,
-                color.B / 255.0f + prefab.colorChange.Z * deltaTime);
-
-            if (yLimits!=Vector2.Zero)
+                color.R / 255.0f + prefab.ColorChange.X * deltaTime,
+                color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
+                color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
+            
+            if (prefab.DeleteOnCollision && currentHull!=null)
             {
-                if (position.Y>yLimits.X || position.Y<yLimits.Y)
-                {
-                    return false;
-                }
-            }
-
-            if (prefab.deleteOnHit)
-            {
-                if (checkCollisionTimer > 0.0f)
-                {
-                    checkCollisionTimer -= deltaTime;
-                }
-                else
-                {
-                    if (Submarine.InsideWall(new Vector2(drawPosition.X, -drawPosition.Y)))
-                    {
-                        return false;
-                    }
-                    checkCollisionTimer = 0.05f;
-                }
+                if (!Submarine.RectContains(currentHull.Rect, position)) return false;
             }
 
             lifeTime -= deltaTime;
@@ -160,9 +142,17 @@ namespace Subsurface.Particles
             drawPosition.Y = -drawPosition.Y;
             float drawRotation = Physics.Interpolate(prevRotation, rotation);
 
-            drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
-            
-            prefab.sprite.Draw(spriteBatch, drawPosition, color*alpha, prefab.sprite.origin, drawRotation, size, SpriteEffects.None, prefab.sprite.Depth);
+            //drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
+
+            Vector2 drawSize = size;
+
+            if (prefab.GrowTime>0.0f && totalLifeTime-lifeTime < prefab.GrowTime)
+            {
+                drawSize *= ((totalLifeTime - lifeTime) / prefab.GrowTime);
+
+            }
+
+            prefab.Sprite.Draw(spriteBatch, drawPosition, color*alpha, prefab.Sprite.origin, drawRotation, drawSize, SpriteEffects.None, prefab.Sprite.Depth);
 
             //spriteBatch.Draw(
             //    prefab.sprite.Texture, 
