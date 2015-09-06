@@ -270,6 +270,7 @@ namespace Subsurface
                     Game1.LobbyScreen.Select();
                     break;
                 case "savemap":
+                case "savesub":
                     if (commands.Length < 2) break;
 
                     string fileName = string.Join(" ", commands.Skip(1));
@@ -282,6 +283,7 @@ namespace Subsurface
                     NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":
+                case "loadsub":
                     if (commands.Length < 2) break;
                     Submarine.Load("Content/SavedMaps/" + string.Join(" ", commands.Skip(1)));
                     break;
