@@ -37,18 +37,16 @@ namespace Subsurface
             menuTabs[(int)Tabs.Main] = new GUIFrame(panelRect, GUI.style);
             //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
-            //GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
-            //button.OnClicked = TutorialButtonClicked;
+            GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button.OnClicked = TutorialButtonClicked;
 
-            GUIButton button = new GUIButton(new Rectangle(0, 70, 0, 30), "New Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 70, 0, 30), "New Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.NewGame;
             button.OnClicked = SelectTab;
-            //button.Enabled = false;
 
             button = new GUIButton(new Rectangle(0, 130, 0, 30), "Load Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.LoadGame;
             button.OnClicked = SelectTab;
-            //button.Enabled = false;
 
             button = new GUIButton(new Rectangle(0, 200, 0, 30), "Join Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             //button.UserData = (int)Tabs.JoinServer;
@@ -57,7 +55,6 @@ namespace Subsurface
             button = new GUIButton(new Rectangle(0, 260, 0, 30), "Host Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.UserData = (int)Tabs.HostServer;
             button.OnClicked = SelectTab;
-            //button.Enabled = false;
 
             button = new GUIButton(new Rectangle(0, 330, 0, 30), "Quit", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
             button.OnClicked = QuitClicked;

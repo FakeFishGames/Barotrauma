@@ -635,11 +635,12 @@ namespace Subsurface
                 }
             }
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 110 + (editableProperties.Count() + requiredItemCount) * 30), Color.Black * 0.5f);
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, 110 + (editableProperties.Count() + requiredItemCount) * 30), GUI.style);
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
             
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, GUI.style, editingHUD);
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, GUI.style, 
+                Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
 
             y += 20;
 
@@ -647,7 +648,8 @@ namespace Subsurface
             {
                 if (prefab.IsLinkable) 
                 {
-                    new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another construction", GUI.style, editingHUD);
+                    new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", 
+                        GUI.style, Alignment.TopLeft, Alignment.TopRight, editingHUD);
                     y += 25;
                 }
                 foreach (ItemComponent ic in components)

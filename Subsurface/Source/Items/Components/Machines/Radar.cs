@@ -111,6 +111,9 @@ namespace Subsurface.Items.Components
 
                 for (int i = 0; i < edges.Count; i++)
                 {
+                    if ((edges[i][0] * displayScale).Length() > radius) continue;
+                    if ((edges[i][1] * displayScale).Length() > radius) continue;
+
                     GUI.DrawLine(spriteBatch,
                         center + (edges[i][0] - offset) * displayScale,
                         center + (edges[i][1] - offset) * displayScale, Color.White);
@@ -132,15 +135,14 @@ namespace Subsurface.Items.Components
                 if (c.AnimController.CurrentHull != null) continue;
 
                 Vector2 pos = c.Position * displayScale;
-                if (c.SimPosition != Vector2.Zero && pos.Length() < radius)
-                {
-                    int width = (int)MathHelper.Clamp(c.Mass / 20, 1, 10);
+                if (c.SimPosition == Vector2.Zero || pos.Length() > radius) continue;
+                
+                int width = (int)MathHelper.Clamp(c.Mass / 20, 1, 10);
 
-                    pos.Y = -pos.Y;
-                    pos += center;
+                pos.Y = -pos.Y;
+                pos += center;
 
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - width / 2, (int)pos.Y - width / 2, width, width), Color.White, true);
-                }
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - width / 2, (int)pos.Y - width / 2, width, width), Color.White, true);                
             }
 
             if (screenOverlay!=null)
