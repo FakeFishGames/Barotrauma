@@ -65,7 +65,7 @@ namespace Subsurface.Items.Components
                 Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
                 Vector2 flippedPos = barrelPos;
                 if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
-                return (Vector2.Transform(flippedPos, bodyTransform) + item.body.Position);
+                return (Vector2.Transform(flippedPos, bodyTransform) + item.body.SimPosition);
             }
         }
 
@@ -108,7 +108,7 @@ namespace Subsurface.Items.Components
 
             isActive = true;
 
-            Vector2 targetPosition = item.body.Position;
+            Vector2 targetPosition = item.body.SimPosition;
             //targetPosition = targetPosition.X, -targetPosition.Y);
 
             targetPosition += new Vector2(

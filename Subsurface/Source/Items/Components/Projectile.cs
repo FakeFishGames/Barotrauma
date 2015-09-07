@@ -200,7 +200,7 @@ namespace Subsurface.Items.Components
         {
             if (stickJoint != null) return false;
 
-            stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.Position, axis, true);
+            stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, axis, true);
             stickJoint.MotorEnabled = true;
             stickJoint.MaxMotorForce = 30.0f;
 

@@ -79,12 +79,12 @@ namespace Subsurface
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(body.Position); }
+            get { return ConvertUnits.ToDisplayUnits(body.SimPosition); }
         }
 
         public Vector2 SimPosition
         {
-            get { return body.Position; }
+            get { return body.SimPosition; }
         }
 
         public float Rotation
@@ -271,7 +271,7 @@ namespace Subsurface
 
         public void Move(Vector2 pos, float amount, bool pullFromCenter=false)
         {
-            Vector2 pullPos = body.Position;
+            Vector2 pullPos = body.SimPosition;
             if (pullJoint!=null && !pullFromCenter)
             {
                 pullPos = pullJoint.WorldAnchorA;
@@ -318,19 +318,8 @@ namespace Subsurface
             //Bleeding += bleedingAmount;
             //Damage += amount;
 
-            float bloodAmount = hitArmor ? 0 : (int)Math.Min((int)(amount * 2.0f), 20);
-            //if (closestLimb.Damage>=100.0f)
-            //{
-            //    bloodAmount *= 2;
-            //    foreach (var joint in animController.limbJoints)
-            //    {
-            //        if (!(joint.BodyA == closestLimb.body.FarseerBody) && !(joint.BodyB == closestLimb.body.FarseerBody)) continue;
-
-            //        joint.Enabled = false;
-            //        break;                    
-            //    }
-            //}
-
+            float bloodAmount = hitArmor || bleedingAmount<=0.0f ? 0 : (int)Math.Min((int)(amount * 2.0f), 20);
+            
             for (int i = 0; i < bloodAmount; i++)
             {
                 Vector2 particleVel = SimPosition - position;
@@ -357,7 +346,7 @@ namespace Subsurface
                 foreach (Limb limb in character.AnimController.limbs)
                 {
                     limb.body.ResetDynamics();
-                    limb.body.SetTransform(body.Position, 0.0f);
+                    limb.body.SetTransform(body.SimPosition, 0.0f);
                 }                
             }
 

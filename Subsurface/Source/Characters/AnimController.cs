@@ -55,7 +55,7 @@ namespace Subsurface
 
         public virtual void UpdateAnim(float deltaTime) { }
 
-        public virtual void HoldItem(float deltaTime, Camera cam, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, float holdAngle) { }
+        public virtual void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle) { }
 
    }
 }

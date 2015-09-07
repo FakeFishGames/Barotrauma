@@ -83,8 +83,8 @@ namespace Subsurface.Items.Components
 
 
             Path ropePath = new Path();
-            ropePath.Add(item.body.Position);
-            ropePath.Add(item.body.Position + new Vector2(length, 0.0f));
+            ropePath.Add(item.body.SimPosition);
+            ropePath.Add(item.body.SimPosition + new Vector2(length, 0.0f));
             ropePath.Closed = false;
 
             Vertices box = PolygonTools.CreateRectangle(sectionLength, 0.05f);
@@ -202,7 +202,7 @@ namespace Subsurface.Items.Components
 
             if (Vector2.Distance(TransformedBarrelPos, projectile.SimPosition)>len*sectionLength)
             {
-                Vector2 stopForce = projectile.SimPosition - ropeBodies[ropeBodies.Length-1].Position;
+                Vector2 stopForce = projectile.SimPosition - ropeBodies[ropeBodies.Length-1].SimPosition;
                 stopForce = Vector2.Normalize(stopForce);
 
                 float dotProduct = Vector2.Dot(stopForce, Vector2.Normalize(projectile.body.LinearVelocity));
@@ -286,7 +286,7 @@ namespace Subsurface.Items.Components
 
             foreach (PhysicsBody b in ropeBodies)
             {
-                b.SetTransform(item.body.Position, 0.0f);
+                b.SetTransform(item.body.SimPosition, 0.0f);
                 b.UserData = false;
                 b.Enabled = true;
             }
@@ -296,7 +296,7 @@ namespace Subsurface.Items.Components
                 if (joint!=null) joint.Enabled = true;                
             }
 
-            ropeBodies[ropeBodies.Length - 1].SetTransform(projectile.body.Position, projectile.body.Rotation);
+            ropeBodies[ropeBodies.Length - 1].SetTransform(projectile.body.SimPosition, projectile.body.Rotation);
 
             //attach projectile to the last section of the rope
             if (ropeJoints[ropeJoints.Length-1] != null) Game1.World.RemoveJoint(ropeJoints[ropeJoints.Length-1]);

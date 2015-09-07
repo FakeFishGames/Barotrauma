@@ -89,7 +89,7 @@ namespace Subsurface
 
                 foreach (PhysicsBody pb in PhysicsBody.list)
                 {
-                    pb.SetPrevTransform(pb.Position, pb.Rotation);
+                    pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
                 }
                     
                 MapEntity.UpdateAll(cam, (float)Physics.step);

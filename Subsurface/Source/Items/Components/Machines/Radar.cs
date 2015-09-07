@@ -99,7 +99,7 @@ namespace Subsurface.Items.Components
                 pingCircle.Draw(spriteBatch, center, Color.White * (1.0f-pingState), 0.0f, (rect.Width/pingCircle.size.X)*pingState);
             }
 
-            float radius = pingCircle.size.X / 2.0f;
+            float radius = rect.Width / 2.0f;
             
             float simScale = 1.5f;
             float displayScale = 0.015f;

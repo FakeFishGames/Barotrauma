@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Subsurface.Particles;
 using System;
 using System.Xml.Linq;
 
@@ -42,6 +43,10 @@ namespace Subsurface
         public readonly float Damage;
         public readonly float BleedingDamage;
 
+        private Sound sound;
+
+        private ParticleEmitterPrefab particleEmitterPrefab;
+
         public readonly float Stun;
 
         private float priority;
@@ -73,12 +78,23 @@ namespace Subsurface
 
             Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
-
+            string soundPath = ToolBox.GetAttributeString(element, "sound", "");
+            if (!string.IsNullOrWhiteSpace(soundPath))
+            {
+                sound = Sound.Load(soundPath);
+            }
+                      
             Range = FarseerPhysics.ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "range", 0.0f));
 
             Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
             priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLower() == "particleemitter") particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
+            }
+
         }
 
         public AttackResult DoDamage(IDamageable target, Vector2 position, float deltaTime, bool playSound = true)
@@ -89,28 +105,28 @@ namespace Subsurface
             if (target as Character == null)
             {
                 damageAmount = StructureDamage;
-                //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt: DamageSoundType.StructureSlash;
 
             }
             else
             {
                 damageAmount = Damage;
-                //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
             }
-            //damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
-            //if (playSound) AmbientSoundManager.PlayDamageSound(damageSoundType, damageAmount, position);
 
             if (Duration > 0.0f) damageAmount *= deltaTime;
             float bleedingAmount = (Duration == 0.0f) ? BleedingDamage : BleedingDamage * deltaTime;
 
-            if (damageAmount > 0.0f)
+            if (particleEmitterPrefab != null)
             {
-                return target.AddDamage(position, DamageType, damageAmount, bleedingAmount, Stun, playSound);
+                particleEmitterPrefab.Emit(position);
             }
-            else
+
+            if (sound!=null)
             {
-                return new AttackResult(0.0f, 0.0f);
+                sound.Play(1.0f, 500.0f, position);
             }
+
+            return target.AddDamage(position, DamageType, damageAmount, bleedingAmount, Stun, playSound);
+
         }
     }
 }

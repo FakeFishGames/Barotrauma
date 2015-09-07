@@ -89,9 +89,12 @@ namespace Subsurface.Particles
             }
             else
             {
-                StartRotationMin = ToolBox.GetAttributeFloat(element, "startrotatio", 0.0f);
+                StartRotationMin = ToolBox.GetAttributeFloat(element, "startrotation", 0.0f);
                 StartRotationMax = StartRotationMin;
             }
+
+            StartRotationMin = MathHelper.ToRadians(StartRotationMin);
+            StartRotationMax = MathHelper.ToRadians(StartRotationMax);
 
             StartColor = new Color(ToolBox.GetAttributeVector4(element, "startcolor", Vector4.One));
             StartAlpha = ToolBox.GetAttributeFloat(element, "startalpha", 1.0f);

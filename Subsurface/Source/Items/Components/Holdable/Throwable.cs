@@ -30,6 +30,22 @@ namespace Subsurface.Items.Components
             if (character == null) return false;
             if (!character.GetInputState(InputType.SecondaryHeld) || throwing) return false;
 
+            //Vector2 diff = Vector2.Normalize(character.CursorPosition - character.AnimController.RefLimb.Position);
+
+            //if (character.SelectedItems[1]==item)
+            //{
+            //    Limb leftHand = character.AnimController.GetLimb(LimbType.LeftHand);
+            //    leftHand.body.ApplyLinearImpulse(diff * 20.0f);
+            //    leftHand.Disabled = true;
+            //}
+
+            //if (character.SelectedItems[0] == item)
+            //{
+            //    Limb rightHand = character.AnimController.GetLimb(LimbType.RightHand);
+            //    rightHand.body.ApplyLinearImpulse(diff * 20.0f);
+            //    rightHand.Disabled = true;
+            //}
+
             throwing = true;
 
             isActive = true;
@@ -39,7 +55,6 @@ namespace Subsurface.Items.Components
         public override void SecondaryUse(float deltaTime, Character character = null)
         {
             if (throwing) return;
-            throwPos = 0.25f;
         }
 
         public override void Drop(Character dropper)
@@ -68,31 +83,59 @@ namespace Subsurface.Items.Components
 
             AnimController ac = picker.AnimController;
 
-            ac.HoldItem(deltaTime, cam, item, handlePos, new Vector2(throwPos, 0.0f), aimPos, holdAngle);
-
-            if (!throwing) return;
-
-            throwPos += deltaTime*5.0f;
-
-            Vector2 throwVector = ConvertUnits.ToSimUnits(picker.CursorPosition) - item.body.Position;
-            throwVector = Vector2.Normalize(throwVector);
-
-            if (handlePos[0]!=Vector2.Zero)
+            if (!throwing)
             {
-                Limb leftHand = ac.GetLimb(LimbType.LeftHand);
-                leftHand.body.ApplyForce(throwVector*10.0f);
+                if (picker.GetInputState(InputType.SecondaryHeld))
+                {
+                    throwPos = (float)System.Math.Min(throwPos+deltaTime*5.0f, MathHelper.Pi*0.7f);
+
+                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.0f), new Vector2(-0.3f, 0.2f), false, throwPos);
+                }
+                else
+                {
+                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(throwPos, 0.0f), aimPos, false, 0.0f);
+                }
+
+
             }
+            else
+            {
+                //Vector2 diff = Vector2.Normalize(picker.CursorPosition - ac.RefLimb.Position);
+                //diff.X = diff.X * ac.Dir;
 
-            if (handlePos[1] != Vector2.Zero)
-            {
-                Limb rightHand = ac.GetLimb(LimbType.RightHand);
-                rightHand.body.ApplyForce(throwVector * 10.0f);
-            }
-                        
-            if (throwPos>1.0f)
-            {
-                item.Drop();
-                item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
+                throwPos -= deltaTime*15.0f;
+
+                //angl = -hitPos * 2.0f;
+                //    System.Diagnostics.Debug.WriteLine("<1.0f "+hitPos);
+
+
+
+                ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, 0.0f), new Vector2(-0.3f, 0.2f), false, throwPos);
+                //}
+                //else
+                //{
+                //    System.Diagnostics.Debug.WriteLine(">1.0f " + hitPos);
+                //    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.5f, 0.2f), new Vector2(1.0f, 0.2f), false, 0.0f);
+                //}
+
+
+                if (throwPos < -0.0)
+                {
+
+                    Vector2 throwVector = picker.CursorPosition - picker.AnimController.RefLimb.Position;
+                    throwVector = Vector2.Normalize(throwVector);
+
+                    item.Drop();
+                    item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
+
+                    ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector*10.0f);
+                    ac.GetLimb(LimbType.Torso).body.ApplyLinearImpulse(throwVector * 10.0f);
+
+                    Limb rightHand = ac.GetLimb(LimbType.RightHand);
+                    item.body.AngularVelocity = rightHand.body.AngularVelocity;
+
+                    throwing = false;
+                }
             }
         }    
     }

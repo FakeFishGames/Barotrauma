@@ -66,7 +66,7 @@ namespace Subsurface
                 if (editingCharacter != Character.CharacterList[0]) UpdateLimbLists(Character.CharacterList[0]);
                 editingCharacter = Character.CharacterList[0];
 
-                Vector2 camPos = editingCharacter.AnimController.limbs[0].body.Position;
+                Vector2 camPos = editingCharacter.AnimController.limbs[0].body.SimPosition;
                 camPos = ConvertUnits.ToDisplayUnits(camPos);
                 camPos.Y = -camPos.Y;
                 cam.TargetPos = camPos;

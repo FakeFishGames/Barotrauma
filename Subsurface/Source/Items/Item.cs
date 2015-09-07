@@ -314,7 +314,7 @@ namespace Subsurface
         {
             body.SetTransform(position, rotation);
 
-            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.Position);
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
 
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
@@ -328,7 +328,7 @@ namespace Subsurface
             {
                 amount = ConvertUnits.ToSimUnits(amount);
                 //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
-                body.SetTransform(body.Position+amount, body.Rotation);
+                body.SetTransform(body.SimPosition+amount, body.Rotation);
             }
             foreach (ItemComponent ic in components)
             {
@@ -357,7 +357,7 @@ namespace Subsurface
         
         public virtual Hull FindHull()
         {
-            CurrentHull = Hull.FindHull((body == null) ? Position : ConvertUnits.ToDisplayUnits(body.Position), CurrentHull);
+            CurrentHull = Hull.FindHull((body == null) ? Position : ConvertUnits.ToDisplayUnits(body.SimPosition), CurrentHull);
             return CurrentHull;
         }
         
@@ -495,7 +495,7 @@ namespace Subsurface
 
             if (body.LinearVelocity.Length()>0.001f) FindHull();
 
-            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.Position);
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
 
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
@@ -505,10 +505,10 @@ namespace Subsurface
             if (CurrentHull != null)
             {
                 float surfaceY = ConvertUnits.ToSimUnits(CurrentHull.Surface);
-                if (surfaceY > body.Position.Y) return;
+                if (surfaceY > body.SimPosition.Y) return;
 
                 //the item has gone through the surface of the water -> apply an impulse which serves as surface tension
-                if ((body.Position.Y - (body.LinearVelocity.Y / 60.0f)) < surfaceY)
+                if ((body.SimPosition.Y - (body.LinearVelocity.Y / 60.0f)) < surfaceY)
                 {
                     Vector2 impulse = -body.LinearVelocity * (body.Mass / body.Density);
                     body.ApplyLinearImpulse(impulse);
@@ -528,7 +528,7 @@ namespace Subsurface
                 if (body.LinearVelocity != Vector2.Zero && body.LinearVelocity.Length() > 1000.0f)
                 {
                     body.ResetDynamics();
-                    if (body.Position.Length() > 1000.0f)
+                    if (body.SimPosition.Length() > 1000.0f)
                     {
                         Remove();
                         return;
@@ -635,7 +635,7 @@ namespace Subsurface
                 }
             }
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 110 + (editableProperties.Count() + requiredItemCount) * 30), GUI.style);
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, 60 + (editableProperties.Count() + requiredItemCount) * 30), GUI.style);
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
             
@@ -707,8 +707,11 @@ namespace Subsurface
                     editingHUD = CreateEditingHUD(true);
                 }
 
-                editingHUD.Update((float)Physics.step);
-                editingHUD.Draw(spriteBatch);
+                if (editingHUD.Rect.Height>60)
+                {
+                    editingHUD.Update((float)Physics.step);
+                    editingHUD.Draw(spriteBatch);
+                }
 
                 foreach (ItemComponent ic in components)
                 {
@@ -882,7 +885,6 @@ namespace Subsurface
                 if (string.IsNullOrEmpty(ic.Msg)) continue;
                 if (!ic.CanBePicked && !ic.CanBeSelected) continue;
                
-
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
 

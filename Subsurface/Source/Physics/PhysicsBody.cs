@@ -108,7 +108,7 @@ namespace Subsurface
             set { body.Enabled = value; }
         }
 
-        public Vector2 Position
+        public Vector2 SimPosition
         {
             get { return body.Position; }
         }

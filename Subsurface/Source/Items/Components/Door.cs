@@ -216,7 +216,7 @@ namespace Subsurface.Items.Components
 
             //LinkedGap.Move(amount);
 
-            body.SetTransform(body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
+            body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
             convexHull.Move(amount);
             if (convexHull2 != null) convexHull2.Move(amount);
