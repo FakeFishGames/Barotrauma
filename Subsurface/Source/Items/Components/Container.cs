@@ -170,7 +170,7 @@ namespace Subsurface.Items.Components
                 transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                 
-                transformedItemPos += ConvertUnits.ToDisplayUnits(item.body.Position);
+                transformedItemPos += ConvertUnits.ToDisplayUnits(item.body.SimPosition);
 
                 currentRotation += item.body.Rotation;
             }

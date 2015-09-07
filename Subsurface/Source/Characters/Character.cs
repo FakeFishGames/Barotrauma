@@ -549,7 +549,7 @@ namespace Subsurface
                 if (GetInputState(InputType.ActionHeld)) selectedConstruction.Use(deltaTime, this);
                 if (GetInputState(InputType.SecondaryHeld)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
-
+                  
             if (IsNetworkPlayer)
             {
                 foreach (Key key in keys)
@@ -920,9 +920,6 @@ namespace Subsurface
 
         private void Implode()
         {
-            Limb torso= AnimController.GetLimb(LimbType.Torso);
-            if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
-
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
 
             health = 0.0f;
@@ -935,17 +932,17 @@ namespace Subsurface
                // limb.Damage = 100.0f;
             }
 
-            AmbientSoundManager.PlayDamageSound(DamageSoundType.Implode, 50.0f, torso.body.FarseerBody);
+            AmbientSoundManager.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body.FarseerBody);
             
             for (int i = 0; i < 10; i++)
             {
                 Particle p = Game1.ParticleManager.CreateParticle("waterblood",
-                    torso.Position + new Vector2(Rand.Range(-50f, 50f), Rand.Range(-50f, 50f)),
+                    centerOfMass + Rand.Vector(50.0f),
                     Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
                 Game1.ParticleManager.CreateParticle("bubbles",
-                    torso.SimPosition,
+                    centerOfMass + Rand.Vector(50.0f),
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f,50f)));
             }
 
@@ -1083,8 +1080,8 @@ namespace Subsurface
                 int i = 0;
                 foreach (Limb limb in AnimController.limbs)
                 {
-                    message.Write(limb.body.Position.X);
-                    message.Write(limb.body.Position.Y);
+                    message.Write(limb.body.SimPosition.X);
+                    message.Write(limb.body.SimPosition.Y);
 
                     //message.Write(limb.body.LinearVelocity.X);
                     //message.Write(limb.body.LinearVelocity.Y);
@@ -1103,8 +1100,8 @@ namespace Subsurface
             }
             else
             {
-                message.Write(AnimController.RefLimb.Position.X);
-                message.Write(AnimController.RefLimb.Position.Y);
+                message.Write(AnimController.RefLimb.SimPosition.X);
+                message.Write(AnimController.RefLimb.SimPosition.Y);
 
                 LargeUpdateTimer = Math.Max(0, LargeUpdateTimer-1);
             }            

@@ -223,7 +223,7 @@ namespace Subsurface.Items.Components
 
             //item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;
 
-            ac.HoldItem(deltaTime, cam, item, handlePos, holdPos, aimPos, holdAngle);
+            ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.GetInputState(InputType.SecondaryHeld), holdAngle);
         }    
     
         protected void Flip(Item item)

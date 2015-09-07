@@ -283,7 +283,8 @@ namespace Subsurface
             }
             else if (structure.StairDirection!=Direction.None)
             {
-                if (inWater || !(targetMovement.Y>Math.Abs(targetMovement.X/2.0f)) && lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)
+                if ((inWater || !(targetMovement.Y>Math.Abs(targetMovement.X/2.0f))) && 
+                    lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)
                 {
                     stairs = null;
                     return false;
@@ -341,9 +342,13 @@ namespace Subsurface
             if (impact > 1.0f && l.HitSound != null && l.soundTimer <= 0.0f) l.HitSound.Play(Math.Min(impact / 5.0f, 1.0f), impact * 100.0f, l.body.FarseerBody);
 
             if (impact > l.impactTolerance)
-            {
+            {   
                 character.Health -= (impact - l.impactTolerance * 0.1f);
                 strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
+
+                AmbientSoundManager.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body.FarseerBody);                
+
+                if (Character.Controlled == character) Game1.GameScreen.Cam.Shake = strongestImpact;
             }
         }
 
@@ -385,7 +390,10 @@ namespace Subsurface
             if (refLimb.body.TargetPosition != Vector2.Zero)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(refLimb.body.TargetPosition);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X-5, (int)-pos.Y-5, 10, 10), Color.LightBlue, false);
+                pos.Y = -pos.Y;
+                GUI.DrawLine(spriteBatch, pos+new Vector2(-30.0f,0.0f), pos+new Vector2(30.0f,0.0f), Color.LightBlue);
+                GUI.DrawLine(spriteBatch, pos + new Vector2(0.0f,-30.0f), pos + new Vector2(0.0f,30.0f), Color.LightBlue);
+
 
             }
 
@@ -502,7 +510,8 @@ namespace Subsurface
                 inWater = false;
                 headInWater = false;
 
-                if (currentHull.Volume > currentHull.FullVolume * 0.95f || ConvertUnits.ToSimUnits(currentHull.Surface) - floorY > HeadPosition * 0.95f)
+                if (currentHull.Volume > currentHull.FullVolume * 0.95f || 
+                    ConvertUnits.ToSimUnits(currentHull.Surface) - floorY > HeadPosition * 0.95f)
                     inWater = true;
                 
             }
@@ -517,13 +526,13 @@ namespace Subsurface
                 
                 bool prevInWater = limb.inWater;
                 limb.inWater = false;
-                            
-                if (limbHull==null)
+
+                if (limbHull == null)
                 {                  
                     //limb isn't in any room -> it's in the water
                     limb.inWater = true;
                 }
-                else if (limbHull.Volume>0.0f && Submarine.RectContains(limbHull.Rect, limbPosition))
+                else if (limbHull.Volume > 0.0f && Submarine.RectContains(limbHull.Rect, limbPosition))
                 {
                     
                     if (limbPosition.Y < limbHull.Surface)                        
@@ -578,9 +587,7 @@ namespace Subsurface
                             limbHull.WaveVel[n] = Math.Min(impulse.Y * 1.0f, 5.0f);
                             StrongestImpact = ((impulse.Length() * 0.5f) - limb.impactTolerance);
                         }
-                    }
-
-                    
+                    }                    
                 }
 
                 limb.Update(deltaTime);
@@ -591,7 +598,11 @@ namespace Subsurface
 
         private void UpdateNetplayerPosition()
         {
-            if (refLimb.body.TargetPosition == Vector2.Zero) return;
+            if (refLimb.body.TargetPosition == Vector2.Zero)
+            {
+                correctionMovement = Vector2.Zero;
+                return;
+            }
 
             //if the limb is further away than resetdistance, all limbs are immediately snapped to their targetpositions
             float resetDistance = NetConfig.ResetRagdollDistance;
@@ -599,10 +610,10 @@ namespace Subsurface
             //if the limb is closer than alloweddistance, just ignore the difference
             float allowedDistance = NetConfig.AllowedRagdollDistance;
 
-            float dist = Vector2.Distance(refLimb.body.Position, refLimb.body.TargetPosition);
+            float dist = Vector2.Distance(refLimb.body.SimPosition, refLimb.body.TargetPosition);
             bool resetAll = (dist > resetDistance && character.LargeUpdateTimer == 1);
 
-            Vector2 newMovement = (refLimb.body.TargetPosition - refLimb.body.Position);
+            Vector2 newMovement = (refLimb.body.TargetPosition - refLimb.body.SimPosition);
 
             if (newMovement == Vector2.Zero || newMovement.Length() < allowedDistance)
             {
@@ -623,7 +634,7 @@ namespace Subsurface
                 }
                 else
                 {
-                    correctionMovement = Vector2.Normalize(newMovement) * Math.Min(1.0f + dist, 3.0f);
+                    correctionMovement = Vector2.Normalize(newMovement) * Math.Min(0.1f + dist, 3.0f);
                     if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
                 }
             }

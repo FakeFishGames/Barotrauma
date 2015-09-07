@@ -202,7 +202,7 @@ namespace Subsurface
 
             float footMid = (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
 
-            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.5f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.4f);
             movement.Y = 0.0f;
 
             //place the anchors of the head and the torso to make the ragdoll stand
@@ -678,7 +678,54 @@ namespace Subsurface
             //MoveLimb(rightLeg, footPos, 0.7f);
         }
 
-        public override void HoldItem(float deltaTime, Camera cam, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, float holdAngle)
+        //float punchTimer;
+        //bool punching;
+
+        //public void Punch()
+        //{
+        //    if (punchTimer < 0.01f) punching = true;
+
+        //    Limb rightHand = GetLimb(LimbType.RightHand);
+        //    Limb head = GetLimb(LimbType.Head);
+
+        //    Vector2 diff = Vector2.Normalize(character.CursorPosition - RefLimb.Position);
+
+        //    rightHand.body.ApplyLinearImpulse(diff * 20.0f);
+        //    head.body.ApplyLinearImpulse(diff * 5.0f);
+        //    head.body.ApplyTorque(Dir*100.0f);
+        //}
+
+        //public void Block(float deltaTime)
+        //{
+        //    Limb head = GetLimb(LimbType.Head);
+        //    Limb torso = GetLimb(LimbType.Torso);
+        //    Limb leftHand = GetLimb(LimbType.LeftHand);
+        //    Limb leftFoot    = GetLimb(LimbType.LeftFoot);
+        //    Limb rightHand = GetLimb(LimbType.RightHand);
+
+        //    Vector2 pos = head.SimPosition;
+
+        //    rightHand.Disabled = true;
+        //    leftHand.Disabled = true;
+
+        //    HandIK(leftHand, pos + new Vector2(0.25f*Dir, 0.0f));
+
+        //    if (punching)
+        //    {
+        //        punchTimer += deltaTime*10.0f;
+        //        if (punchTimer>2.0f)
+        //        {
+        //            punching = false;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        punchTimer = MathHelper.Lerp(punchTimer, 0.0f, 0.3f);
+        //        HandIK(rightHand, pos + new Vector2((0.3f + punchTimer) * Dir, 0.1f));
+        //    }            
+        //}
+
+        public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)
         {
             //calculate the handle positions
             Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
@@ -689,14 +736,12 @@ namespace Subsurface
             Limb head       = GetLimb(LimbType.Head);
             Limb torso      = GetLimb(LimbType.Torso);
             Limb leftHand   = GetLimb(LimbType.LeftHand);
-            Limb leftArm    = GetLimb(LimbType.LeftArm);
             Limb rightHand  = GetLimb(LimbType.RightHand);
-            Limb rightArm   = GetLimb(LimbType.RightArm);
 
-            Vector2 itemPos = character.GetInputState(InputType.SecondaryHeld) ? aimPos : holdPos;       
+            Vector2 itemPos = aim ? aimPos : holdPos;       
 
             float itemAngle;
-            if (stunTimer <= 0.0f && character.GetInputState(InputType.SecondaryHeld) && itemPos != Vector2.Zero)
+            if (stunTimer <= 0.0f && aim && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
@@ -731,13 +776,11 @@ namespace Subsurface
                 {
                     transformedHoldPos = rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0];
                     itemAngle = (rightHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
-                    //rightHand.Disabled = true;
                 }
                 if (character.SelectedItems[1] == item)
                 {
                     transformedHoldPos = leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
                     itemAngle = (leftHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
-                    //leftHand.Disabled = true;
                 }
             }
             else
@@ -759,13 +802,10 @@ namespace Subsurface
                 transformedHoldPos += Vector2.Transform(itemPos, torsoTransform);
             }
 
-
             Vector2 bodyVelocity = torso.body.LinearVelocity / 60.0f;
             
             item.body.ResetDynamics();
-            item.body.SetTransform(MathUtils.SmoothStep(item.body.Position, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
-
-            //item.body.SmoothRotate(itemAngle, 50.0f);
+            item.body.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
 
             for (int i = 0; i < 2; i++)
             {
@@ -775,26 +815,6 @@ namespace Subsurface
                 Limb hand = (i == 0) ? rightHand : leftHand;
 
                 HandIK(hand, transformedHoldPos + transformedHandlePos[i]);
-
-                //Limb arm = (i == 0) ? rightArm : leftArm;
-
-                ////hand length
-                //float a = 37.0f;
-
-                ////arm length
-                //float b = 28.0f;
-
-                ////distance from shoulder to holdpos
-                //float c = ConvertUnits.ToDisplayUnits(Vector2.Distance(transformedHoldPos + transformedHandlePos[i], shoulderPos));
-                //c = MathHelper.Clamp(a + b - 1, b-a, c);
-
-                //float ang2 = MathUtils.VectorToAngle((transformedHoldPos + transformedHandlePos[i]) - shoulderPos)+MathHelper.PiOver2;
-
-                //float armAngle = MathUtils.SolveTriangleSSS(a, b, c);
-                //float handAngle = MathUtils.SolveTriangleSSS(b, a, c);
-
-                //arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f);
-                //hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f);
             }            
         }
 
@@ -837,7 +857,7 @@ namespace Subsurface
             {
                 if (character.SelectedItems[i] != null)
                 {
-                    difference = character.SelectedItems[i].body.Position - torso.SimPosition;
+                    difference = character.SelectedItems[i].body.SimPosition - torso.SimPosition;
                     difference = Vector2.Transform(difference, torsoTransform);
                     difference.Y = -difference.Y;
 
@@ -855,14 +875,14 @@ namespace Subsurface
                     case LimbType.LeftArm:
                     case LimbType.RightHand:
                     case LimbType.RightArm:
-                        difference = l.body.Position - torso.SimPosition;
+                        difference = l.body.SimPosition - torso.SimPosition;
                         difference = Vector2.Transform(difference, torsoTransform);
                         difference.Y = -difference.Y;
 
                         l.body.SetTransform(torso.SimPosition + Vector2.Transform(difference, -torsoTransform), -l.body.Rotation);
                         break;
                     default:
-                        if (!inWater) l.body.SetTransform(l.body.Position, 
+                        if (!inWater) l.body.SetTransform(l.body.SimPosition, 
                             MathUtils.WrapAnglePi(l.body.Rotation * (l.DoesFlip ? -1.0f : 1.0f)));
                         break;
                 }

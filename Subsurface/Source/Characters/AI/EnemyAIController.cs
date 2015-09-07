@@ -148,7 +148,7 @@ namespace Subsurface
             Limb limb = Character.AnimController.limbs[0];
             distanceAccumulator += (limb.SimPosition - prevPosition).Length();
 
-            prevPosition = limb.body.Position;
+            prevPosition = limb.body.SimPosition;
         }
         
         private void UpdateAttack(float deltaTime)

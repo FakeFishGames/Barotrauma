@@ -46,15 +46,8 @@ namespace Subsurface.Particles
         }
 
         public Particle CreateParticle(string prefabName, Vector2 position, Vector2 speed, float rotation=0.0f)
-        {         
-            ParticlePrefab prefab;
-            prefabs.TryGetValue(prefabName, out prefab);
-
-            if (prefab==null)
-            {
-                DebugConsole.ThrowError("Particle prefab "+prefabName+" not found!");
-                return null;
-            }
+        {
+            ParticlePrefab prefab = FindPrefab(prefabName);
 
             return CreateParticle(prefab, position, speed, rotation);
         }
@@ -74,6 +67,20 @@ namespace Subsurface.Particles
 
         }
 
+        public ParticlePrefab FindPrefab(string prefabName)
+        {
+            ParticlePrefab prefab;
+            prefabs.TryGetValue(prefabName, out prefab);
+
+            if (prefab == null)
+            {
+                DebugConsole.ThrowError("Particle prefab " + prefabName + " not found!");
+                return null;
+            }
+
+            return prefab;
+        }
+
         private void RemoveParticle(int index)
         {
             particleCount--;
@@ -82,8 +89,6 @@ namespace Subsurface.Particles
             particles[index] = particles[particleCount];
             particles[particleCount] = swap;
         }
-
-
 
         public void Update(float deltaTime)
         {

@@ -86,7 +86,7 @@ namespace Subsurface.Items.Components
 
             if (item.body != null)
             {
-                light.Position = ConvertUnits.ToDisplayUnits(item.body.Position);
+                light.Position = ConvertUnits.ToDisplayUnits(item.body.SimPosition);
             }
 
             Pickable pickable = item.GetComponent<Pickable>();
