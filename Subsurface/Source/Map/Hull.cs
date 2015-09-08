@@ -303,7 +303,7 @@ namespace Subsurface
 
         public void Render(GraphicsDevice graphicsDevice, Camera cam)
         {
-            if (renderer.positionInBuffer > renderer.vertices.Length - 6) return;
+            if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
 
             //calculate where the surface should be based on the water volume
             float top = rect.Y;
@@ -313,30 +313,37 @@ namespace Subsurface
             //interpolate the position of the rendered surface towards the "target surface"
             surface = surface + (surfaceY - surface) / 10.0f;
 
-            Matrix transform =
-                cam.Transform
-                * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
+            Matrix transform =  cam.Transform * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
 
             if (bottom > cam.WorldView.Y || top < cam.WorldView.Y - cam.WorldView.Height) return;
 
             if (!update)
             {
                 // create the four corners of our triangle.
-                Vector3 p1 = new Vector3(rect.X, top, 0.0f);
-                Vector3 p2 = new Vector3(rect.X + rect.Width, top, 0.0f);
 
-                Vector3 p3 = new Vector3(p2.X, bottom, 0.0f);
-                Vector3 p4 = new Vector3(p1.X, bottom, 0.0f);
+                Vector3[] corners = new Vector3[4];
 
-                renderer.vertices[renderer.positionInBuffer] = new WaterVertex(p1, new Vector2(p1.X, -p1.Y), transform);
-                renderer.vertices[renderer.positionInBuffer + 1] = new WaterVertex(p2, new Vector2(p2.X, -p2.Y), transform);
-                renderer.vertices[renderer.positionInBuffer + 2] = new WaterVertex(p3, new Vector2(p3.X, -p3.Y), transform);
+                corners[0] = new Vector3(rect.X, top, 0.0f);
+                corners[1] = new Vector3(rect.X + rect.Width, top, 0.0f);
 
-                renderer.vertices[renderer.positionInBuffer + 3] = new WaterVertex(p1, new Vector2(p1.X, -p1.Y), transform);
-                renderer.vertices[renderer.positionInBuffer + 4] = new WaterVertex(p3, new Vector2(p3.X, -p3.Y), transform);
-                renderer.vertices[renderer.positionInBuffer + 5] = new WaterVertex(p4, new Vector2(p4.X, -p4.Y), transform);
+                corners[2] = new Vector3(corners[1].X, bottom, 0.0f);
+                corners[3] = new Vector3(corners[0].X, bottom, 0.0f);
 
-                renderer.positionInBuffer += 6;
+                Vector2[] uvCoords = new Vector2[4];
+                for (int i = 0; i < 4; i++ )
+                {
+                    uvCoords[i] = Vector2.Transform(new Vector2(corners[i].X, -corners[i].Y), transform);                    
+                }
+
+                renderer.vertices[renderer.PositionInBuffer] = new VertexPositionTexture(corners[0], uvCoords[0]);
+                renderer.vertices[renderer.PositionInBuffer + 1] = new VertexPositionTexture(corners[1], uvCoords[1]);
+                renderer.vertices[renderer.PositionInBuffer + 2] = new VertexPositionTexture(corners[2], uvCoords[2]);
+
+                renderer.vertices[renderer.PositionInBuffer + 3] = new VertexPositionTexture(corners[0], uvCoords[0]);
+                renderer.vertices[renderer.PositionInBuffer + 4] = new VertexPositionTexture(corners[2], uvCoords[2]);
+                renderer.vertices[renderer.PositionInBuffer + 5] = new VertexPositionTexture(corners[3], uvCoords[3]);
+
+                renderer.PositionInBuffer += 6;
 
                 return;
             }
@@ -353,31 +360,39 @@ namespace Subsurface
             
             for (int i = start; i < end; i++)
             {
-                if (renderer.positionInBuffer > renderer.vertices.Length - 6) return;
+                if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
 
-                Vector3 p1 = new Vector3(x, top, 0.0f);
-                Vector3 p4 = new Vector3(p1.X, surface + waveY[i], 0.0f);
+                Vector3[] corners = new Vector3[4];
+
+                corners[0] = new Vector3(x, top, 0.0f);
+                corners[3] = new Vector3(corners[0].X, surface + waveY[i], 0.0f);
 
                 //skip adjacent "water rects" if the surface of the water is roughly at the same position
                 int width = WaveWidth;
-                while (i<end-1 && Math.Abs(waveY[i + 1] - waveY[i]) < 1.0f)
+                while (i < end - 1 && Math.Abs(waveY[i + 1] - waveY[i]) < 1.0f)
                 {
                     width += WaveWidth;
                     i++;
                 }
 
-                Vector3 p2 = new Vector3(x + width, top, 0.0f);
-                Vector3 p3 = new Vector3(p2.X, surface + waveY[i+1], 0.0f);
+                corners[1] = new Vector3(x + width, top, 0.0f);
+                corners[2] = new Vector3(corners[1].X, surface + waveY[i+1], 0.0f);
                 
-                renderer.vertices[renderer.positionInBuffer] = new WaterVertex(p1, new Vector2(p1.X, -p1.Y), transform);
-                renderer.vertices[renderer.positionInBuffer + 1] = new WaterVertex(p2, new Vector2(p2.X, -p2.Y), transform);
-                renderer.vertices[renderer.positionInBuffer + 2] = new WaterVertex(p3, new Vector2(p3.X, -p3.Y), transform);
+                Vector2[] uvCoords = new Vector2[4];
+                for (int n = 0; n < 4; n++)
+                {
+                    uvCoords[n] = Vector2.Transform(new Vector2(corners[n].X, -corners[n].Y), transform);
+                }
 
-                renderer.vertices[renderer.positionInBuffer + 3] = new WaterVertex(p1, new Vector2(p1.X, -p1.Y), transform);
-                renderer.vertices[renderer.positionInBuffer + 4] = new WaterVertex(p3, new Vector2(p3.X, -p3.Y), transform);
-                renderer.vertices[renderer.positionInBuffer + 5] = new WaterVertex(p4, new Vector2(p4.X, -p4.Y), transform);
+                renderer.vertices[renderer.PositionInBuffer] = new VertexPositionTexture(corners[0], uvCoords[0]);
+                renderer.vertices[renderer.PositionInBuffer + 1] = new VertexPositionTexture(corners[1], uvCoords[1]);
+                renderer.vertices[renderer.PositionInBuffer + 2] = new VertexPositionTexture(corners[2], uvCoords[2]);
 
-                renderer.positionInBuffer += 6;
+                renderer.vertices[renderer.PositionInBuffer + 3] = new VertexPositionTexture(corners[0], uvCoords[0]);
+                renderer.vertices[renderer.PositionInBuffer + 4] = new VertexPositionTexture(corners[2], uvCoords[2]);
+                renderer.vertices[renderer.PositionInBuffer + 5] = new VertexPositionTexture(corners[3], uvCoords[3]);
+
+                renderer.PositionInBuffer += 6;
 
                 x += width;
             }           

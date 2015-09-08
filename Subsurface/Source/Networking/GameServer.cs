@@ -571,7 +571,6 @@ namespace Subsurface.Networking
                 client.characterInfo.Job = new Job(client.assignedJob);
             }
 
-            //todo: fix
             if (characterInfo != null)
             {
                 characterInfo.Job = new Job(Game1.NetLobbyScreen.JobPreferences[0]);

@@ -17,11 +17,11 @@ namespace Subsurface
 
         public BackgroundSpriteManager(string configPath)
         {
-            XDocument doc = ToolBox.TryLoadXml(configPath);
-            if (doc == null) return;
-
             activeSprites = new List<BackgroundSprite>();
             prefabs = new List<BackgroundSpritePrefab>();
+
+            XDocument doc = ToolBox.TryLoadXml(configPath);
+            if (doc == null) return;
 
             foreach (XElement element in doc.Root.Elements())
             {
@@ -31,9 +31,12 @@ namespace Subsurface
 
         public void SpawnSprites(int count)
         {
-            count = Math.Min(count, MaxSprites);
 
             activeSprites.Clear();
+
+            if (prefabs.Count == 0) return;
+
+            count = Math.Min(count, MaxSprites);
 
             for (int i = 0; i < count; i++ )
             {
