@@ -56,10 +56,6 @@ namespace Subsurface
 				stateQueue = false;
 				return value;
 			}
-			//set
-			//{
-			//    stateQueue = value;
-			//}
 		}
 
 		public void Reset()
@@ -168,6 +164,23 @@ namespace Subsurface
 				if (timeSinceClick < doubleClickDelay) doubleClicked = true;
 				timeSinceClick = 0.0;
 			}
+
+#if LINUX
+            foreach (Keys key in keyboardState.GetPressedKeys())
+            {
+                if (!oldKeyboardState.IsKeyUp(key)) continue;
+
+                char character = (char)key;
+
+                if (keyboardState.IsKeyUp(Keys.LeftShift) && keyboardState.IsKeyUp(Keys.RightShift))
+                {
+                    character = char.ToLower(character);
+                }
+
+                EventInput.EventInput.OnCharEntered(character);
+            }
+#endif
+
 		}
 	}
 }

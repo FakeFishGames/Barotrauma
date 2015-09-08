@@ -208,7 +208,7 @@ namespace Subsurface
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.AlphaBlend);
-            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, Game1.GraphicsWidth, Game1.GraphicsHeight), Color.White);
+            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, Game1.GraphicsWidth, Game1.GraphicsHeight), new Color(0.75f, 0.8f, 0.9f, 1.0f));
             spriteBatch.End();
 
             BlendState blend = new BlendState();
@@ -246,10 +246,10 @@ namespace Subsurface
             //2. pass the renderTarget to the water shader to do the water effect
             //----------------------------------------------------------------------------------------
 
-            Hull.renderer.RenderBack(graphics, renderTargetWater, Cam.ShaderTransform);
+            Hull.renderer.RenderBack(spriteBatch, renderTargetWater, Cam.ShaderTransform);
 
             Array.Clear(Hull.renderer.vertices, 0, Hull.renderer.vertices.Length);
-            Hull.renderer.positionInBuffer = 0;
+            Hull.renderer.PositionInBuffer = 0;
             foreach (Hull hull in Hull.hullList)
             {
                 hull.Render(graphics, cam);

@@ -51,7 +51,11 @@ namespace Subsurface
 #endif
 #if LINUX
 			    using (Stream fileStream = File.OpenRead(path))
-					return Texture2D.FromStream(_graphicsDevice, fileStream);// .FromStream(fileStream, preMultiplyAlpha);
+                {
+                    var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
+                    texture = PreMultiplyAlpha(texture);
+                    return texture;
+                }
 #endif
 
             }
@@ -87,43 +91,46 @@ namespace Subsurface
                 texture = Texture2D.FromStream(_graphicsDevice, stream);
             }
 
-            if (preMultiplyAlpha)
-            {
-                // Setup a render target to hold our final texture which will have premulitplied alpha values
-                using (RenderTarget2D renderTarget = new RenderTarget2D(_graphicsDevice, texture.Width, texture.Height))
-                {
-                    Viewport viewportBackup = _graphicsDevice.Viewport;
-                    _graphicsDevice.SetRenderTarget(renderTarget);
-                    _graphicsDevice.Clear(Color.Black);
-
-                    // Multiply each color by the source alpha, and write in just the color values into the final texture
-                    _spriteBatch.Begin(SpriteSortMode.Immediate, BlendColorBlendState);
-                    _spriteBatch.Draw(texture, texture.Bounds, Color.White);
-                    _spriteBatch.End();
-
-                    // Now copy over the alpha values from the source texture to the final one, without multiplying them
-                    _spriteBatch.Begin(SpriteSortMode.Immediate, BlendAlphaBlendState);
-                    _spriteBatch.Draw(texture, texture.Bounds, Color.White);
-                    _spriteBatch.End();
-
-                    // Release the GPU back to drawing to the screen
-                    _graphicsDevice.SetRenderTarget(null);
-                    _graphicsDevice.Viewport = viewportBackup;
-
-                    // Store data from render target because the RenderTarget2D is volatile
-                    Color[] data = new Color[texture.Width * texture.Height];
-                    renderTarget.GetData(data);
-
-                    // Unset texture from graphic device and set modified data back to it
-                    _graphicsDevice.Textures[0] = null;
-                    texture.SetData(data);
-                }
-
-            }
+            if (preMultiplyAlpha) texture = PreMultiplyAlpha(texture);
 
             return texture;
         }
 #endif
+
+        private Texture2D PreMultiplyAlpha(Texture2D texture)
+        {
+            // Setup a render target to hold our final texture which will have premulitplied alpha values
+            using (RenderTarget2D renderTarget = new RenderTarget2D(_graphicsDevice, texture.Width, texture.Height))
+            {
+                Viewport viewportBackup = _graphicsDevice.Viewport;
+                _graphicsDevice.SetRenderTarget(renderTarget);
+                _graphicsDevice.Clear(Color.Black);
+
+                // Multiply each color by the source alpha, and write in just the color values into the final texture
+                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendColorBlendState);
+                _spriteBatch.Draw(texture, texture.Bounds, Color.White);
+                _spriteBatch.End();
+
+                // Now copy over the alpha values from the source texture to the final one, without multiplying them
+                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendAlphaBlendState);
+                _spriteBatch.Draw(texture, texture.Bounds, Color.White);
+                _spriteBatch.End();
+
+                // Release the GPU back to drawing to the screen
+                _graphicsDevice.SetRenderTarget(null);
+                _graphicsDevice.Viewport = viewportBackup;
+
+                // Store data from render target because the RenderTarget2D is volatile
+                Color[] data = new Color[texture.Width * texture.Height];
+                renderTarget.GetData(data);
+
+                // Unset texture from graphic device and set modified data back to it
+                _graphicsDevice.Textures[0] = null;
+                texture.SetData(data);
+            }  
+
+            return texture;
+        }
        
         
         private static readonly BlendState BlendColorBlendState;

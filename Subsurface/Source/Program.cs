@@ -5,8 +5,10 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
+#if WINDOWS
 using System.Management;
 using System.Windows.Forms;
+#endif
 
 #endregion
 
@@ -70,7 +72,6 @@ namespace Subsurface
             sb.AppendLine("\n");
             sb.AppendLine("System info:");
             sb.AppendLine("    Operating system: " + System.Environment.OSVersion + (System.Environment.Is64BitOperatingSystem ? " 64 bit" : " x86"));
-            sb.AppendLine("    Graphics device handle: " + game.GraphicsDevice.Handle.ToString());
             sb.AppendLine("\n");
             sb.AppendLine("Exception: "+exception.Message);
             sb.AppendLine("Target site: " +exception.TargetSite.ToString());
@@ -86,10 +87,11 @@ namespace Subsurface
 
 
             sw.WriteLine(sb.ToString());
-
+    #if WINDOWS
             MessageBox.Show( "A crash report (''crashreport.txt'') was saved in the root folder of the game."+
                 " If you'd like to help fix this bug, please make a bug report on the Undertow Games forum with the report attached.",
                 "Oops! Subsurface just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    #endif
 
             sw.Close();            
         }

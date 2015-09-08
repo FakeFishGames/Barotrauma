@@ -72,7 +72,7 @@ namespace Subsurface
                 new Vector3(Game1.GraphicsWidth / 2.0f,
                     Game1.GraphicsHeight / 2.0f, 0));     
 
-            Hull.renderer.RenderBack(graphics, renderTarget, transform);
+            Hull.renderer.RenderBack(spriteBatch, renderTarget, transform);
 
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);

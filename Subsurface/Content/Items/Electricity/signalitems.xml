@@ -20,6 +20,54 @@
   </Item>
 
   <Item
+    name="Red Wire"
+    Tags="smallitem"
+    spritecolor="1.0,0.0,0.0,1.0"
+    pickdistance="150"
+    linkable="true"
+    canbepicked="true"
+    price="10">
+
+    <Sprite texture ="wire.png" depth="0.55"/>
+    <Body radius="15"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+
+    <Wire/>
+  </Item>
+
+  <Item
+    name="Blue Wire"
+    Tags="smallitem"
+    spritecolor="0.0,0.6,1.0,1.0"
+    pickdistance="150"
+    linkable="true"
+    canbepicked="true"
+    price="10">
+
+    <Sprite texture ="wire.png" depth="0.55"/>
+    <Body radius="15"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+
+    <Wire/>
+  </Item>
+
+  <Item
+    name="Orange Wire"
+    Tags="smallitem"
+    spritecolor="1.0,0.5,0.0,1.0"
+    pickdistance="150"
+    linkable="true"
+    canbepicked="true"
+    price="10">
+
+    <Sprite texture ="wire.png" depth="0.55"/>
+    <Body radius="15"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+
+    <Wire/>
+  </Item>
+
+  <Item
     name="And Component"
     Tags="smallitem"
     pickdistance="150"
