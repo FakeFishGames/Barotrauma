@@ -216,7 +216,7 @@ namespace Subsurface.Items.Components
 
                         guiFrame = new GUIFrame(
                             new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W), 
-                            new Color(color.X, color.Y, color.Z, color.W), alignment, GUI.style);
+                            new Color(color.X, color.Y, color.Z, color.W), alignment, GUI.Style);
                         //guiFrame.Alpha = color.W;
 
                         break;

@@ -47,7 +47,7 @@ namespace Subsurface
 
             CargoManager = new CargoManager();
 
-            endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.style);
+            endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.Style);
             endShiftButton.OnClicked = EndShift;
 
             for (int i = 0; i < 3; i++)

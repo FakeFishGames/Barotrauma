@@ -5,11 +5,11 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface
 {
-    class GUIListBox : GUIComponent
+    public class GUIListBox : GUIComponent
     {
         protected GUIComponent selected;
 
-        public delegate bool OnSelectedHandler(object obj);
+        public delegate bool OnSelectedHandler(GUIComponent component, object obj);
         public OnSelectedHandler OnSelected;
 
         public delegate object CheckSelectedHandler();
@@ -34,7 +34,7 @@ namespace Subsurface
                 return selected;
             }
         }
-
+        
         public object SelectedData
         {
             get 
@@ -145,13 +145,15 @@ namespace Subsurface
                 if (child.UserData != selection) continue;
                 
                 selected = child;
-                if (OnSelected != null) OnSelected(selected.UserData);
+                if (OnSelected != null) OnSelected(selected, selected.UserData);
                 return;                
             }
         }
 
         public override void Update(float deltaTime)
         {
+            if (!Visible) return;
+
             base.Update(deltaTime);
             
             scrollBar.Update(deltaTime);
@@ -165,7 +167,7 @@ namespace Subsurface
             if (childIndex >= children.Count || childIndex<0) return;
 
             selected = children[childIndex];
-            if (OnSelected != null) OnSelected(selected.UserData);
+            if (OnSelected != null) OnSelected(selected, selected.UserData);
         }
 
         public void Deselect()
@@ -238,6 +240,8 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            if (!Visible) return;
+
             base.Draw(spriteBatch);
 
             frame.Draw(spriteBatch);
@@ -284,7 +288,8 @@ namespace Subsurface
                         if (CheckSelected() != selected.UserData) selected = null;
                     }
                 }
-                else if (enabled && (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
+                else if (enabled && child.CanBeFocused && 
+                    (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())
@@ -293,7 +298,7 @@ namespace Subsurface
                         selected = child;
                         if (OnSelected != null)
                         {
-                            if (!OnSelected(child.UserData)) selected = null;
+                            if (!OnSelected(selected, child.UserData)) selected = null;
                         }
 
                     }

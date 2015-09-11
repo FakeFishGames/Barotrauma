@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface
 {
-    abstract class GUIComponent
+    public abstract class GUIComponent
     {
         const float FlashDuration = 1.5f;
 
@@ -48,6 +48,12 @@ namespace Subsurface
         }
 
         public string ToolTip
+        {
+            get;
+            set;
+        }
+
+        public bool Visible
         {
             get;
             set;
@@ -94,7 +100,7 @@ namespace Subsurface
         //public Alignment SpriteAlignment { get; set; }
         //public bool RepeatSpriteX, RepeatSpriteY;
 
-        public Color OutlineColor { get; set; }
+        public virtual Color OutlineColor { get; set; }
 
         public ComponentState State
         {
@@ -125,38 +131,21 @@ namespace Subsurface
             set { color = value; }
         }
 
-        public Color HoverColor
+        public virtual Color HoverColor
         {
             get { return hoverColor; }
             set { hoverColor = value; }
         }
 
-        public Color SelectedColor
+        public virtual Color SelectedColor
         {
             get { return selectedColor; }
             set { selectedColor = value; }
         }
 
-
-        //public float Alpha
-        //{
-        //    get
-        //    {
-        //        return alpha;
-        //    }
-        //    set
-        //    {
-        //        alpha = MathHelper.Clamp(value, 0.0f, 1.0f);
-        //        foreach (GUIComponent child in children)
-        //        {
-        //            child.Alpha = value;
-        //        }
-        //    }
-        //}
-
         protected GUIComponent(GUIStyle style)
         {
-            //alpha = 1.0f;
+            Visible = true;
 
             OutlineColor = Color.Transparent;
 
@@ -218,6 +207,8 @@ namespace Subsurface
 
         public virtual void Draw(SpriteBatch spriteBatch) 
         {
+            if (!Visible) return;
+
             Color currColor = color;
             if (state == ComponentState.Selected) currColor = selectedColor;
             if (state == ComponentState.Hover) currColor = hoverColor;
@@ -255,20 +246,26 @@ namespace Subsurface
 
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
-            int width = 200;
+            if (!Visible) return;
+
+            int width = 400;
             if (toolTipBlock==null || (string)toolTipBlock.userData != ToolTip)
             {
                 string wrappedText = ToolBox.WrapText(ToolTip, width, GUI.SmallFont);
-                toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, wrappedText.Split('\n').Length*15), ToolTip, GUI.style, null, true);
+                toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, wrappedText.Split('\n').Length*15), ToolTip, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
+                toolTipBlock.Color = Color.Black*0.7f;
+                toolTipBlock.OutlineColor = Color.White;
                 toolTipBlock.userData = ToolTip;
             }
 
-            toolTipBlock.rect = new Rectangle((int)PlayerInput.MousePosition.X, (int)PlayerInput.MousePosition.Y, toolTipBlock.rect.Width, toolTipBlock.rect.Height);
+            toolTipBlock.rect = new Rectangle(MouseOn.Rect.Center.X, MouseOn.rect.Bottom, toolTipBlock.rect.Width, toolTipBlock.rect.Height);
             toolTipBlock.Draw(spriteBatch);
         }
 
         public virtual void Update(float deltaTime)
         {
+            if (!Visible) return;
+
             if (flashTimer>0.0f) flashTimer -= deltaTime;
 
             if (CanBeFocused)
@@ -276,6 +273,7 @@ namespace Subsurface
                 if (rect.Contains(PlayerInput.MousePosition))
                 {
                     MouseOn = this;
+                    //ToolTip = this.ToolTip;
                 }
                 else
                 {

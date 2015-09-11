@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface
 {
-    class GUIImage : GUIComponent
+    public class GUIImage : GUIComponent
     {
         Sprite sprite;
 
@@ -72,6 +72,8 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            if (!Visible) return;
+
             Color currColor = color;
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;

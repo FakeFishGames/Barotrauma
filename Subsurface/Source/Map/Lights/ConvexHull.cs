@@ -46,7 +46,7 @@ namespace Subsurface.Lights
                 penumbraEffect.TextureEnabled = true;
                 //shadowEffect.VertexColorEnabled = true;
                 penumbraEffect.LightingEnabled = false;
-                penumbraEffect.Texture = Game1.TextureLoader.FromFile("Content/Lights/penumbra.png");
+                penumbraEffect.Texture = TextureLoader.FromFile("Content/Lights/penumbra.png");
             }
 
             if (penumbraVertices==null)

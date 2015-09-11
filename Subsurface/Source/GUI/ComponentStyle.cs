@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Subsurface
 {
-    class GUIComponentStyle
+    public class GUIComponentStyle
     {
         public readonly Vector4 Padding;
 

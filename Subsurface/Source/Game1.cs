@@ -53,7 +53,7 @@ namespace Subsurface
 
         public static ParticleManager ParticleManager;
 
-        public static TextureLoader TextureLoader;
+        //public static TextureLoader TextureLoader;
         
         public static World World;
 
@@ -153,7 +153,7 @@ namespace Subsurface
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
                         
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            TextureLoader = new TextureLoader(GraphicsDevice);
+            TextureLoader.Init(GraphicsDevice);
 
             titleScreenOpen = true;
             TitleScreen = new TitleScreen(GraphicsDevice);
@@ -164,9 +164,7 @@ namespace Subsurface
         private float loadState = 0.0f;
         private IEnumerable<object> Load()
         {
-            GUI.Font        = ToolBox.TryLoadFont("SpriteFont1", Content);
-            GUI.SmallFont   = ToolBox.TryLoadFont("SmallFont", Content);
-            GUI.LargeFont = ToolBox.TryLoadFont("LargeFont", Content);
+            GUI.Init(Content);
 
             sw = new Stopwatch();
 

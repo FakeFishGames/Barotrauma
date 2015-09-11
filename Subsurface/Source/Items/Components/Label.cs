@@ -34,12 +34,12 @@ namespace Subsurface.Items.Components
         {
             if (textBox == null)
             {
-                textBox = new GUITextBox(Rectangle.Empty, GUI.style, GuiFrame);
+                textBox = new GUITextBox(Rectangle.Empty, GUI.Style, GuiFrame);
                 textBox.Wrap = true;
                 textBox.OnTextChanged = TextChanged;
                 textBox.LimitText = true;
 
-                GUIButton button = new GUIButton(new Rectangle(0,0,100,15), "OK", null, Alignment.BottomRight, GUI.style, GuiFrame);
+                GUIButton button = new GUIButton(new Rectangle(0,0,100,15), "OK", null, Alignment.BottomRight, GUI.Style, GuiFrame);
                 button.OnClicked = Close;
             }
 

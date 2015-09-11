@@ -11,10 +11,11 @@ namespace Subsurface
     /// <summary>
     /// Based on http://jakepoz.com/jake_poznanski__background_load_xna.html 
     /// </summary>
-    public class TextureLoader
+    public static class TextureLoader
     {
         static TextureLoader()
         {
+
             BlendColorBlendState = new BlendState
             {
                 ColorDestinationBlend = Blend.Zero,
@@ -34,14 +35,14 @@ namespace Subsurface
             };
         }
 
-        public TextureLoader(GraphicsDevice graphicsDevice, bool needsBmp = false)
+        public static void Init(GraphicsDevice graphicsDevice, bool needsBmp = false)
         {
             _graphicsDevice = graphicsDevice;
             _needsBmp = needsBmp;
             _spriteBatch = new SpriteBatch(_graphicsDevice);
         }
 
-        public Texture2D FromFile(string path, bool preMultiplyAlpha = true)
+        public static Texture2D FromFile(string path, bool preMultiplyAlpha = true)
         {
             try
             {
@@ -68,7 +69,7 @@ namespace Subsurface
         }
 
 #if WINDOWS
- private Texture2D FromStream(Stream stream, bool preMultiplyAlpha = true)
+ private static Texture2D FromStream(Stream stream, bool preMultiplyAlpha = true)
         {
             Texture2D texture;
 
@@ -97,7 +98,7 @@ namespace Subsurface
         }
 #endif
 
-        private Texture2D PreMultiplyAlpha(Texture2D texture)
+        private static Texture2D PreMultiplyAlpha(Texture2D texture)
         {
             // Setup a render target to hold our final texture which will have premulitplied alpha values
             using (RenderTarget2D renderTarget = new RenderTarget2D(_graphicsDevice, texture.Width, texture.Height))
@@ -136,8 +137,8 @@ namespace Subsurface
         private static readonly BlendState BlendColorBlendState;
         private static readonly BlendState BlendAlphaBlendState;
 
-        private readonly GraphicsDevice _graphicsDevice;
-        private readonly SpriteBatch _spriteBatch;
-        private readonly bool _needsBmp;
+        private static GraphicsDevice _graphicsDevice;
+        private static SpriteBatch _spriteBatch;
+        private static bool _needsBmp;
     }
 }

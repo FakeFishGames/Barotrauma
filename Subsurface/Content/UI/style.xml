@@ -16,11 +16,11 @@
   </GUIFrame>
 
   <GUIButton
-    color="0.88, 0.25, 0.15, 1.0"
+    color="0.88, 0.25, 0.15, 0.3"
   
     textcolor="1.0, 1.0, 1.0, 1.0"
   
-    hovercolor="1.0, 0.57, 0.31, 1.0"
+    hovercolor="0.88, 0.25, 0.15, 1.0"
     selectedcolor="1.0, 0.0, 0.0, 1.0"/>
 
   <GUITextBlock

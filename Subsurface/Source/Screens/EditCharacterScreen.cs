@@ -43,18 +43,18 @@ namespace Subsurface
 
             cam = new Camera();
 
-            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, Game1.GraphicsHeight), GUI.style);
+            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, Game1.GraphicsHeight), GUI.Style);
             GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, GUI.style, GUIpanel);
+            physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, GUI.Style, GUIpanel);
             physicsButton.OnClicked += TogglePhysics;
 
-            new GUITextBlock(new Rectangle(0, 80, 0, 25), "Limbs:", GUI.style, GUIpanel);
-            limbList = new GUIListBox(new Rectangle(0, 110, 0, 250), Color.White * 0.7f, GUI.style, GUIpanel);
+            new GUITextBlock(new Rectangle(0, 80, 0, 25), "Limbs:", GUI.Style, GUIpanel);
+            limbList = new GUIListBox(new Rectangle(0, 110, 0, 250), Color.White * 0.7f, GUI.Style, GUIpanel);
             limbList.OnSelected = SelectLimb;
 
-            new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", GUI.style, GUIpanel);
-            jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, GUI.style, GUIpanel);
+            new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", GUI.Style, GUIpanel);
+            jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, GUI.Style, GUIpanel);
             
             while (Character.CharacterList.Count > 1)
             {
@@ -304,7 +304,7 @@ namespace Subsurface
             }
         }
 
-        private bool SelectLimb(object selection)
+        private bool SelectLimb(GUIComponent component, object selection)
         {
             try
             {

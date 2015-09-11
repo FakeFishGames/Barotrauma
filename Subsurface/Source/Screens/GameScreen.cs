@@ -246,7 +246,7 @@ namespace Subsurface
             //2. pass the renderTarget to the water shader to do the water effect
             //----------------------------------------------------------------------------------------
 
-            Hull.renderer.RenderBack(spriteBatch, renderTargetWater, Cam.ShaderTransform);
+            Hull.renderer.RenderBack(spriteBatch, renderTargetWater);
 
             Array.Clear(Hull.renderer.vertices, 0, Hull.renderer.vertices.Length);
             Hull.renderer.PositionInBuffer = 0;

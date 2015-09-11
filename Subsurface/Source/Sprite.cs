@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Subsurface
 {
-    class Sprite
+    public class Sprite
     {
         static List<Sprite> list = new List<Sprite>();
         //the file from which the texture is loaded
@@ -170,7 +170,7 @@ namespace Subsurface
             
             if (File.Exists(file))
             {
-                return Game1.TextureLoader.FromFile(file);
+                return TextureLoader.FromFile(file);
             }
             else
             {

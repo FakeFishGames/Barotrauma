@@ -153,6 +153,9 @@ namespace Subsurface
 
             switch (commands[0].ToLower())
             {
+                case "createfilelist":
+                    UpdaterUtil.SaveFileList("filelist.xml");
+                    break;
                 case "spawn":
                     if (commands.Length == 1) return;
                     
@@ -165,7 +168,7 @@ namespace Subsurface
                             SinglePlayerMode mode = Game1.GameSession.gameMode as SinglePlayerMode;
                             if (mode == null) break;
                             mode.CrewManager.AddCharacter(Character.Controlled);
-                            mode.CrewManager.SelectCharacter(Character.Controlled);
+                            mode.CrewManager.SelectCharacter(null, Character.Controlled);
                         }
                     }
                     else

@@ -29,7 +29,7 @@ namespace Subsurface
         {
             this.character = character;
 
-            if (icons == null) icons = Game1.TextureLoader.FromFile("Content/UI/inventoryIcons.png");
+            if (icons == null) icons = TextureLoader.FromFile("Content/UI/inventoryIcons.png");
 
             slotPositions = new Vector2[limbSlots.Length];
 

@@ -150,17 +150,17 @@ namespace Subsurface
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing waypoint", GUI.style, editingHUD);
-            new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another entity", GUI.style, editingHUD);
-            new GUITextBlock(new Rectangle(0, 40, 100, 20), "Spawnpoint: ", GUI.style, editingHUD);
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing waypoint", GUI.Style, editingHUD);
+            new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another entity", GUI.Style, editingHUD);
+            new GUITextBlock(new Rectangle(0, 40, 100, 20), "Spawnpoint: ", GUI.Style, editingHUD);
 
-            var spawnTypeText = new GUITextBlock(new Rectangle(0, 40, 200, 20), spawnType.ToString(), GUI.style, Alignment.Right, Alignment.TopLeft, editingHUD);
+            var spawnTypeText = new GUITextBlock(new Rectangle(0, 40, 200, 20), spawnType.ToString(), GUI.Style, Alignment.Right, Alignment.TopLeft, editingHUD);
 
-            var button = new GUIButton(new Rectangle(-30,0,20,20), "-", Alignment.Right, GUI.style, spawnTypeText);
+            var button = new GUIButton(new Rectangle(-30,0,20,20), "-", Alignment.Right, GUI.Style, spawnTypeText);
             button.UserData = -1;
             button.OnClicked = ChangeSpawnType;
 
-            button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, GUI.style, spawnTypeText);
+            button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, GUI.Style, spawnTypeText);
             button.UserData = 1;
             button.OnClicked = ChangeSpawnType;
 
@@ -169,14 +169,14 @@ namespace Subsurface
             y = 40+20;                    
 
             new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.Black, Alignment.TopLeft, null, editingHUD);
-            GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.style, editingHUD);
+            GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
             propertyBox.Text = string.Join(", ", idCardTags);
             propertyBox.OnEnter = EnterIDCardTags;
             propertyBox.OnTextChanged = TextBoxChanged;
             y = y + 30;
 
             new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.Black, Alignment.TopLeft, null, editingHUD);
-            propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.style, editingHUD);
+            propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
             propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
 
             propertyBox.OnEnter = EnterAssignedJob;

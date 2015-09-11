@@ -96,15 +96,15 @@ namespace Subsurface.Networking
                 Game1.GraphicsWidth - 20 - width,
                 Game1.GraphicsHeight - 40 - 25 - height,
                 width, height),
-                Color.White * 0.5f, GUI.style, inGameHUD);
+                Color.White * 0.5f, GUI.Style, inGameHUD);
 
             chatMsgBox = new GUITextBox(
                 new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
-                Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, GUI.style, inGameHUD);
+                Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, GUI.Style, inGameHUD);
             chatMsgBox.Font = GUI.SmallFont;
             chatMsgBox.OnEnter = EnterChatMessage;
 
-            crewButton = new GUIButton(new Rectangle(chatBox.Rect.Right-80, chatBox.Rect.Y-30, 80, 20), "Crew", GUI.style, inGameHUD);
+            crewButton = new GUIButton(new Rectangle(chatBox.Rect.Right-80, chatBox.Rect.Y-30, 80, 20), "Crew", GUI.Style, inGameHUD);
             crewButton.OnClicked = ToggleCrewFrame;
         }
 
@@ -112,10 +112,10 @@ namespace Subsurface.Networking
         {
             int width = 500, height = 400;
 
-            crewFrame = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), GUI.style);
+            crewFrame = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
             crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 200, 300), Color.White * 0.7f, GUI.style, crewFrame);
+            GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 200, 300), Color.White * 0.7f, GUI.Style, crewFrame);
             crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             crewList.OnSelected = SelectCharacter;
 
@@ -138,11 +138,11 @@ namespace Subsurface.Networking
                 new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.limbs[0].sprite, Alignment.Left, frame);
             }
             
-            var closeButton = new GUIButton(new Rectangle(0,0, 80, 20), "Close", Alignment.BottomCenter, GUI.style, crewFrame);
+            var closeButton = new GUIButton(new Rectangle(0,0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, crewFrame);
             closeButton.OnClicked = ToggleCrewFrame;
         }
 
-        private bool SelectCharacter(object obj)
+        private bool SelectCharacter(GUIComponent component, object obj)
         {
             Character character = obj as Character;
             if (obj == null) return false;
@@ -152,7 +152,7 @@ namespace Subsurface.Networking
             
             var previewPlayer = new GUIFrame(
                 new Rectangle(0,0, 230, 300),
-                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, GUI.style, crewFrame);
+                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, GUI.Style, crewFrame);
             previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             previewPlayer.UserData = "selectedcharacter";
 
