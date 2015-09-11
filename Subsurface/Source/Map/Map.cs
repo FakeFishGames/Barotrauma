@@ -69,8 +69,8 @@ namespace Subsurface
             connections = new List<LocationConnection>();
 
             if (iceTexture==null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
-            if (iceCraters == null) iceCraters = Game1.TextureLoader.FromFile("Content/Map/iceCraters.png");
-            if (iceCrack == null) iceCrack = Game1.TextureLoader.FromFile("Content/Map/iceCrack.png");
+            if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
+            if (iceCrack == null) iceCrack = TextureLoader.FromFile("Content/Map/iceCrack.png");
             
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 

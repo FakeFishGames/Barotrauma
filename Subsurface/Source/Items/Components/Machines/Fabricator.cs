@@ -104,7 +104,7 @@ namespace Subsurface.Items.Components
             }
         }
 
-        private bool SelectItem(object obj)
+        private bool SelectItem(GUIComponent component, object obj)
         {
             FabricableItem targetItem = obj as FabricableItem;
             if (targetItem == null) return false;
@@ -134,7 +134,7 @@ namespace Subsurface.Items.Components
                     Alignment.Left, null,
                     selectedItemFrame);
 
-                GUIButton button = new GUIButton(new Rectangle(0,0,100,20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, GUI.style, selectedItemFrame);
+                GUIButton button = new GUIButton(new Rectangle(0,0,100,20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, GUI.Style, selectedItemFrame);
                 button.OnClicked = StartFabricating;
                 button.UserData = targetItem;
 

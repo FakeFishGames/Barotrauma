@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface
 {
-    class GUITextBlock : GUIComponent
+    public class GUITextBlock : GUIComponent
     {
         protected string text;
 
@@ -20,8 +20,6 @@ namespace Subsurface
         public TextGetterHandler TextGetter;
 
         public bool Wrap;
-
-
 
         public override Vector4 Padding
         {
@@ -75,15 +73,6 @@ namespace Subsurface
         {
         }
 
-
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, SpriteFont font =null)
-            : this (rect, text, null, null, alignment, textAlignment, style, parent, wrap)
-        {
-            this.Font = font == null ? GUI.Font : font;
-
-            SetTextPos();
-        }
-
         public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)
             : this(rect, text,color, textColor, Alignment.TopLeft, textAlignment, style, parent, wrap)
         {
@@ -105,24 +94,36 @@ namespace Subsurface
 
 
         public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)
-            :base (style)
+            : this (rect, text, style, alignment, textAlignment, parent, wrap, null)
         {
+            if (color != null) this.color = (Color)color;
+            if (textColor != null) this.textColor = (Color)textColor;
+        }
+
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, SpriteFont font = null)
+            :base (style)        
+        {
+            this.Font = font == null ? GUI.Font : font;
+
             this.rect = rect;
 
-            if (color!=null) this.color = (Color)color;
-            if (textColor!=null) this.textColor = (Color)textColor;
             this.text = text;
 
             this.alignment = alignment;
-            
+
             this.textAlignment = textAlignment;
-                      
+
             if (parent != null)
                 parent.AddChild(this);
 
             this.Wrap = wrap;
 
             SetTextPos();
+
+            if (rect.Height == 0)
+            {
+                this.rect.Height = (int)Font.MeasureString(Text).Y;
+            }
         }
 
         private void SetTextPos()
@@ -201,6 +202,8 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            if (!Visible) return;
+
             Color currColor = color;
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;

@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Subsurface
 {
-    class SaveUtil
+    public class SaveUtil
     {
         private const string SaveFolder = "Content/Data/Saves/";
 

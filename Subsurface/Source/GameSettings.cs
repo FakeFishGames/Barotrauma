@@ -37,6 +37,12 @@ namespace Subsurface
             private set;
         }
 
+        public bool AutoCheckUpdates
+        {
+            get;
+            set;
+        }
+
         public GameSettings(string filePath)
         {
             Load(filePath);
@@ -68,6 +74,8 @@ namespace Subsurface
 
             MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 
+            AutoCheckUpdates = ToolBox.GetAttributeBool(doc.Root, "autocheckupdates", true);
+
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLower())
@@ -91,7 +99,10 @@ namespace Subsurface
                 doc.Add(new XElement("config"));
             }
 
-            doc.Root.Add(new XAttribute("masterserverurl", MasterServerUrl));
+            doc.Root.Add(
+                new XAttribute("masterserverurl", MasterServerUrl),
+                new XAttribute("autocheckupdates", AutoCheckUpdates));
+            
 
             XElement gMode = doc.Root.Element("graphicsmode");
             if (gMode == null)

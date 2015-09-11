@@ -36,7 +36,7 @@ namespace Subsurface.Networking
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
-            var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.style, inGameHUD);
+            var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
             endRoundButton.OnClicked = EndButtonHit;
 
             this.name = name;
@@ -419,7 +419,7 @@ namespace Subsurface.Networking
 
                             AddChatMessage(sender.name + " has joined the server", ChatMessageType.Server);
 
-                            UpdateNetLobby(null);
+                            UpdateNetLobby(null, null);
                         }
                     }
                     else if (inc.SenderConnection.Status == NetConnectionStatus.Disconnected)
@@ -798,10 +798,14 @@ namespace Subsurface.Networking
                 y += 50;
             
             }
-
         }
 
         public bool UpdateNetLobby(object obj)
+        {
+            return UpdateNetLobby(null, obj);
+        }
+
+        public bool UpdateNetLobby(GUIComponent component, object obj)
         {
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.UpdateNetLobby);

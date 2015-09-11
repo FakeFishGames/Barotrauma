@@ -82,11 +82,11 @@ namespace Subsurface
             int width = 400, height = 500;
             int x = 0, y = 0;
 
-            frame = new GUIFrame(new Rectangle(0, 0, width, height), Color.White * 0.8f, Alignment.Center, GUI.style);
+            frame = new GUIFrame(new Rectangle(0, 0, width, height), Color.White * 0.8f, Alignment.Center, GUI.Style);
             frame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
             frame.UserData = item;
 
-            new GUITextBlock(new Rectangle(0,0,200,20), "Attempting to fix " + item.Name, GUI.style, frame);
+            new GUITextBlock(new Rectangle(0,0,200,20), "Attempting to fix " + item.Name, GUI.Style, frame);
 
             y = y + 40;
             foreach (FixRequirement requirement in item.FixRequirements)
@@ -97,7 +97,7 @@ namespace Subsurface
                 reqFrame.UserData = requirement;
 
 
-                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), "Fix", GUI.style, reqFrame);
+                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), "Fix", GUI.Style, reqFrame);
                 fixButton.OnClicked = FixButtonPressed;
                 fixButton.UserData = requirement;
 
@@ -107,7 +107,7 @@ namespace Subsurface
                 int y2 = 20;
                 foreach (string itemName in requirement.requiredItems)
                 {
-                    var itemBlock = new GUITextBlock(new Rectangle(30, y2, 200, 15), itemName, GUI.style, reqFrame);
+                    var itemBlock = new GUITextBlock(new Rectangle(30, y2, 200, 15), itemName, GUI.Style, reqFrame);
                     itemBlock.Font = GUI.SmallFont;
                     itemBlock.UserData = itemName;
                     
@@ -117,7 +117,7 @@ namespace Subsurface
                 y2 = 20;
                 foreach (Skill skill in requirement.requiredSkills)
                 {
-                    var skillBlock = new GUITextBlock(new Rectangle(150, y2, 200, 15), skill.Name + " - " + skill.Level, GUI.style, Alignment.Right, Alignment.TopLeft, reqFrame);
+                    var skillBlock = new GUITextBlock(new Rectangle(150, y2, 200, 15), skill.Name + " - " + skill.Level, GUI.Style, Alignment.Right, Alignment.TopLeft, reqFrame);
                     skillBlock.Font = GUI.SmallFont;
                     skillBlock.UserData = skill;
 

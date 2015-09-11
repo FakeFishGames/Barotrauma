@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface
 {
-    class GUIProgressBar : GUIComponent
+    public class GUIProgressBar : GUIComponent
     {
         private bool isHorizontal;
 
@@ -67,6 +67,8 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            if (!Visible) return;
+
             if (ProgressGetter != null) BarSize = ProgressGetter();
 
             DrawChildren(spriteBatch);

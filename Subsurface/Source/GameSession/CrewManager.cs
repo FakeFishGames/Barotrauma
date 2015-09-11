@@ -53,8 +53,8 @@ namespace Subsurface
                 characterInfos.Add(new CharacterInfo(subElement));
             }
         }
-        
-        public bool SelectCharacter(object selection)
+
+        public bool SelectCharacter(GUIComponent component, object selection)
         {
             //listBox.Select(selection);
             Character character = selection as Character;
@@ -137,7 +137,7 @@ namespace Subsurface
                 AddCharacter(character);
             }
 
-            if (characters.Count > 0) SelectCharacter(characters[0]);
+            if (characters.Count > 0) SelectCharacter(null, characters[0]);
         }
 
         public void EndShift()

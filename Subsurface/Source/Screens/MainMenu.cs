@@ -9,7 +9,9 @@ namespace Subsurface
 {
     class MainMenuScreen : Screen
     {
-        public enum Tabs { Main = 0, NewGame = 1, LoadGame = 2, HostServer = 3 }
+        public enum Tabs { NewGame = 1, LoadGame = 2, HostServer = 3 }
+
+        GUIFrame buttonsTab;
 
         private GUIFrame[] menuTabs;
         private GUIListBox mapList;
@@ -27,145 +29,154 @@ namespace Subsurface
 
         public MainMenuScreen(Game1 game)
         {
-            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tabs)).Length];
+            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tabs)).Length+1];
 
-            Rectangle panelRect = new Rectangle(                
-                Game1.GraphicsWidth / 2 - 250,
-                Game1.GraphicsHeight/ 2 - 250,
-                500, 500);
 
-            menuTabs[(int)Tabs.Main] = new GUIFrame(panelRect, GUI.style);
+
+            buttonsTab = new GUIFrame(new Rectangle(50, 200, 200, 500), Color.Transparent, Alignment.Left);
             //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
-            GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            Rectangle panelRect = new Rectangle(
+                Game1.GraphicsWidth / 2 - 250,
+                buttonsTab.Rect.Y,
+                500, 360);
+
+            GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.Style, buttonsTab);
             button.OnClicked = TutorialButtonClicked;
 
-            button = new GUIButton(new Rectangle(0, 70, 0, 30), "New Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 70, 0, 30), "New Game", Alignment.CenterX, GUI.Style, buttonsTab);
             button.UserData = (int)Tabs.NewGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 130, 0, 30), "Load Game", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 130, 0, 30), "Load Game", Alignment.CenterX, GUI.Style, buttonsTab);
             button.UserData = (int)Tabs.LoadGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 200, 0, 30), "Join Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 200, 0, 30), "Join Server", Alignment.CenterX, GUI.Style, buttonsTab);
             //button.UserData = (int)Tabs.JoinServer;
             button.OnClicked = JoinServerClicked;
 
-            button = new GUIButton(new Rectangle(0, 260, 0, 30), "Host Server", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 260, 0, 30), "Host Server", Alignment.CenterX, GUI.Style, buttonsTab);
             button.UserData = (int)Tabs.HostServer;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 330, 0, 30), "Quit", Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.Main]);
+            button = new GUIButton(new Rectangle(0, 330, 0, 30), "Quit", Alignment.CenterX, GUI.Style, buttonsTab);
             button.OnClicked = QuitClicked;
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tabs.NewGame] = new GUIFrame(panelRect, GUI.style);
+            menuTabs[(int)Tabs.NewGame] = new GUIFrame(panelRect, GUI.Style);
             //menuTabs[(int)Tabs.NewGame].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, -20, 0, 30), "New Game", null, null, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.NewGame]);
+            //new GUITextBlock(new Rectangle(0, -20, 0, 30), "New Game", null, null, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.NewGame]);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Selected submarine:", null, null, Alignment.Left, GUI.style, menuTabs[(int)Tabs.NewGame]);
-            mapList = new GUIListBox(new Rectangle(0, 60, 200, 360), GUI.style, menuTabs[(int)Tabs.NewGame]);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Selected submarine:", null, null, Alignment.Left, GUI.Style, menuTabs[(int)Tabs.NewGame]);
+            mapList = new GUIListBox(new Rectangle(0, 30, 200, panelRect.Height-100), GUI.Style, menuTabs[(int)Tabs.NewGame]);
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     sub.Name, 
-                    GUI.style,
+                    GUI.Style,
                     Alignment.Left, Alignment.Left, mapList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = sub;
             }
             if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
 
-            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 30, 100, 20),
-                "Save name: ", GUI.style, Alignment.Left, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
+            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 0, 100, 20),
+                "Save name: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
 
-            saveNameBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 60, 180, 20),
-                Alignment.TopLeft, GUI.style, menuTabs[(int)Tabs.NewGame]);
+            saveNameBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 30, 180, 20),
+                Alignment.TopLeft, GUI.Style, menuTabs[(int)Tabs.NewGame]);
             saveNameBox.Text = SaveUtil.CreateSavePath();
 
-            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 90, 100, 20),
-                "Map Seed: ", GUI.style, Alignment.Left, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
+            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 60, 100, 20),
+                "Map Seed: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tabs.NewGame]);
 
-            seedBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 120, 180, 20),
-                Alignment.TopLeft, GUI.style, menuTabs[(int)Tabs.NewGame]);
+            seedBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 90, 180, 20),
+                Alignment.TopLeft, GUI.Style, menuTabs[(int)Tabs.NewGame]);
             seedBox.Text = ToolBox.RandomSeed(8);
 
 
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.style,  menuTabs[(int)Tabs.NewGame]);
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.Style,  menuTabs[(int)Tabs.NewGame]);
             button.OnClicked = StartGame;
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tabs.LoadGame] = new GUIFrame(panelRect, GUI.style);
+            menuTabs[(int)Tabs.LoadGame] = new GUIFrame(panelRect, GUI.Style);
             //menuTabs[(int)Tabs.LoadGame].Padding = GUI.style.smallPadding;
 
 
-            menuTabs[(int)Tabs.HostServer] = new GUIFrame(panelRect, GUI.style);
+            menuTabs[(int)Tabs.HostServer] = new GUIFrame(panelRect, GUI.Style);
             //menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Host Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer], false, GUI.LargeFont);
+            //new GUITextBlock(new Rectangle(0, -25, 0, 30), "Host Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer], false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 50, 0, 30), "Server Name:", GUI.style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
-            serverNameBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.style, menuTabs[(int)Tabs.HostServer]);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Server Name:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
+            serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tabs.HostServer]);
 
-            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server port:", GUI.style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
-            portBox = new GUITextBox(new Rectangle(160, 100, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.style, menuTabs[(int)Tabs.HostServer]);
+            new GUITextBlock(new Rectangle(0, 50, 0, 30), "Server port:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
+            portBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tabs.HostServer]);
             portBox.Text = NetConfig.DefaultPort.ToString();
             portBox.ToolTip = "Server port";
 
-            new GUITextBlock(new Rectangle(0, 150, 100, 30), "Max players:", GUI.style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
-            maxPlayersBox = new GUITextBox(new Rectangle(195, 150, 30, 30), null, null, Alignment.TopLeft, Alignment.Center, GUI.style, menuTabs[(int)Tabs.HostServer]);
+            new GUITextBlock(new Rectangle(0, 100, 100, 30), "Max players:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
+            maxPlayersBox = new GUITextBox(new Rectangle(195, 100, 30, 30), null, null, Alignment.TopLeft, Alignment.Center, GUI.Style, menuTabs[(int)Tabs.HostServer]);
             maxPlayersBox.Text = "8";
             maxPlayersBox.Enabled = false;
 
-            var plusPlayersBox = new GUIButton(new Rectangle(230, 150, 30, 30), "+", GUI.style, menuTabs[(int)Tabs.HostServer]);
+            var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", GUI.Style, menuTabs[(int)Tabs.HostServer]);
             plusPlayersBox.UserData = 1;
             plusPlayersBox.OnClicked = ChangeMaxPlayers;
 
-            var minusPlayersBox = new GUIButton(new Rectangle(160, 150, 30, 30), "-", GUI.style, menuTabs[(int)Tabs.HostServer]);
+            var minusPlayersBox = new GUIButton(new Rectangle(160, 100, 30, 30), "-", GUI.Style, menuTabs[(int)Tabs.HostServer]);
             minusPlayersBox.UserData = -1;
             minusPlayersBox.OnClicked = ChangeMaxPlayers;
 
-            new GUITextBlock(new Rectangle(0, 200, 0, 30), "Password (optional):", GUI.style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
-            passwordBox = new GUITextBox(new Rectangle(160, 200, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.style, menuTabs[(int)Tabs.HostServer]);
-
-
-            isPublicBox = new GUITickBox(new Rectangle(10, 250, 20, 20), "Public server", Alignment.TopLeft, menuTabs[(int)Tabs.HostServer]);
-
-            useUpnpBox = new GUITickBox(new Rectangle(10, 300, 20, 20), "Attempt UPnP port forwarding", Alignment.TopLeft, menuTabs[(int)Tabs.HostServer]);
-            new GUITextBlock(new Rectangle(0, 330, 0, 30), 
-                "UPnP can be used for forwarding ports on your router to allow players join the server."
-            + " However, UPnP isn't supported by all routers, so you may need to setup port forwards manually"
-            +" if players are unable to join the server (see the readme for instructions).",
-            GUI.style, Alignment.TopLeft, Alignment.TopLeft, menuTabs[(int)Tabs.HostServer], true, GUI.SmallFont);
+            new GUITextBlock(new Rectangle(0, 150, 0, 30), "Password (optional):", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
+            passwordBox = new GUITextBox(new Rectangle(160, 170, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tabs.HostServer]);
             
+            isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), "Public server", Alignment.TopLeft, menuTabs[(int)Tabs.HostServer]);
+            isPublicBox.ToolTip = "Public servers are shown in the list of available servers in the ''Join Server'' -tab";
 
 
-            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomCenter, GUI.style, menuTabs[(int)Tabs.HostServer]);
+            useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), "Attempt UPnP port forwarding", Alignment.TopLeft, menuTabs[(int)Tabs.HostServer]);
+            useUpnpBox.ToolTip = "UPnP can be used for forwarding ports on your router to allow players join the server."
+            + " However, UPnP isn't supported by all routers, so you may need to setup port forwards manually"
+            +" if players are unable to join the server (see the readme for instructions).";
+            
+            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomRight, GUI.Style, menuTabs[(int)Tabs.HostServer]);
             hostButton.OnClicked = HostServerClicked;
 
-            //----------------------------------------------------------------------
-            for (int i = 1; i < 4; i++ )
-            {
-                button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.style, menuTabs[i]);
-                button.OnClicked = PreviousTab;
-            }
-
             this.game = game;
+        }
+
+        public override void Select()
+        {
+            base.Select();
+
+            selectedTab = 0;
         }
         
         public bool SelectTab(GUIButton button, object obj)
         {
             selectedTab = (int)obj;
 
+            if (button != null) button.Selected = true;
+            
+            foreach (GUIComponent child in buttonsTab.children)
+            {
+                GUIButton otherButton = child as GUIButton;
+                if (otherButton == null || otherButton == button) continue;
+
+                otherButton.Selected = false;
+            }
+
             if (selectedTab == (int)Tabs.LoadGame) UpdateLoadScreen();
 
-            this.Select();
+            if (Selected != this) this.Select();
             return true;
         }
 
@@ -229,11 +240,9 @@ namespace Subsurface
         {
             menuTabs[(int)Tabs.LoadGame].ClearChildren();
 
-            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Load Game", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.LoadGame], false, GUI.LargeFont);
-
             string[] saveFiles = SaveUtil.GetSaveFiles();
 
-            saveList = new GUIListBox(new Rectangle(0, 60, 200, 360), Color.White, GUI.style, menuTabs[(int)Tabs.LoadGame]);
+            saveList = new GUIListBox(new Rectangle(0, 0, 200, menuTabs[(int)Tabs.LoadGame].Rect.Height - 80), Color.White, GUI.Style, menuTabs[(int)Tabs.LoadGame]);
             saveList.OnSelected = SelectSaveFile;
 
             foreach (string saveFile in saveFiles)
@@ -241,7 +250,7 @@ namespace Subsurface
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     saveFile,
-                    GUI.style,
+                    GUI.Style,
                     Alignment.Left,
                     Alignment.Left,
                     saveList);
@@ -249,14 +258,12 @@ namespace Subsurface
                 textBlock.UserData = saveFile;
             }
 
-            var button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, GUI.style, menuTabs[(int)Tabs.LoadGame]);
+            var button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, GUI.Style, menuTabs[(int)Tabs.LoadGame]);
             button.OnClicked = LoadGame;
 
-            button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.style, menuTabs[(int)Tabs.LoadGame]);
-            button.OnClicked = PreviousTab;
         }
 
-        private bool SelectSaveFile(object obj)
+        private bool SelectSaveFile(GUIComponent component, object obj)
         {
             string fileName = (string)obj;
             
@@ -283,19 +290,19 @@ namespace Subsurface
 
             string mapseed = ToolBox.GetAttributeString(modeElement, "mapseed", "unknown");
 
-            GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 60, 200, 200), Color.Black*0.4f, GUI.style, menuTabs[(int)Tabs.LoadGame]);
+            GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 200), Color.Black*0.4f, GUI.Style, menuTabs[(int)Tabs.LoadGame]);
             saveFileFrame.UserData = "savefileframe";
             saveFileFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0,0,0,20), fileName, GUI.style, saveFileFrame);
+            new GUITextBlock(new Rectangle(0,0,0,20), fileName, GUI.Style, saveFileFrame);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 20), "Last saved: ", GUI.style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 45, 0, 20), saveTime, GUI.style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 30, 0, 20), "Last saved: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 45, 0, 20), saveTime, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
 
-            new GUITextBlock(new Rectangle(0, 65, 0, 20), "Map seed: ", GUI.style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 80, 0, 20), mapseed, GUI.style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 65, 0, 20), "Map seed: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 80, 0, 20), mapseed, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
 
-            var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Delete", Alignment.BottomCenter, GUI.style, saveFileFrame);
+            var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Delete", Alignment.BottomCenter, GUI.Style, saveFileFrame);
             deleteSaveButton.UserData = fileName;
             deleteSaveButton.OnClicked = DeleteSave;
 
@@ -330,9 +337,15 @@ namespace Subsurface
 
         public override void Update(double deltaTime)
         {
-            menuTabs[selectedTab].Update((float)deltaTime);
+            buttonsTab.Update((float)deltaTime);
+            if (selectedTab>0) menuTabs[selectedTab].Update((float)deltaTime);
 
-            Game1.TitleScreen.Position.Y = MathHelper.Lerp(Game1.TitleScreen.Position.Y, -870.0f, 0.1f);
+            Game1.TitleScreen.TitlePosition =
+                Vector2.Lerp(Game1.TitleScreen.TitlePosition, new Vector2(
+                    Game1.TitleScreen.TitleSize.X / 2.0f * Game1.TitleScreen.Scale + 30.0f,
+                    Game1.TitleScreen.TitleSize.Y / 2.0f * Game1.TitleScreen.Scale + 30.0f), 
+                    0.1f);
+                
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -345,7 +358,8 @@ namespace Subsurface
             
             spriteBatch.Begin();
 
-            menuTabs[selectedTab].Draw(spriteBatch);
+            buttonsTab.Draw(spriteBatch);
+            if (selectedTab>0) menuTabs[selectedTab].Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -384,7 +398,7 @@ namespace Subsurface
 
         private bool PreviousTab(GUIButton button, object obj)
         {
-            selectedTab = (int)Tabs.Main;
+            //selectedTab = (int)Tabs.Main;
 
             return true;
         }

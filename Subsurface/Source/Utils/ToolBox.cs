@@ -5,11 +5,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Subsurface
 {
-    static class ToolBox
+    public static class ToolBox
     {
         public static XDocument TryLoadXml(string filePath)
         {
@@ -195,6 +196,19 @@ namespace Subsurface
             return ParseToVector4(val);
         }
 
+        public static string ElementInnerText(this XElement el)
+        {
+            StringBuilder str = new StringBuilder();
+            foreach (XNode element in el.DescendantNodes().Where(x => x.NodeType == XmlNodeType.Text))
+            {
+                str.Append(element.ToString());
+            }
+            return str.ToString();
+        }
+
+
+
+
         public static Vector2 ParseToVector2(string stringVector2, bool errorMessages = true)
         {
             string[] components = stringVector2.Split(',');
@@ -284,14 +298,16 @@ namespace Subsurface
         {
             if (font.MeasureString(text).X < lineLength) return text;
 
-            string[] words = text.Split(' ', '\n');
+            text = text.Replace("\n", " \n ");
+
+            string[] words = text.Split(' ');//, '\n');
 
             StringBuilder wrappedText = new StringBuilder();
             float linePos = 0f;
             float spaceWidth = font.MeasureString(" ").X;
             for (int i = 0; i < words.Length; ++i)
             {
-                if (string.IsNullOrWhiteSpace(words[i])) continue;
+                if (string.IsNullOrWhiteSpace(words[i]) && words[i]!="\n") continue;
 
                 Vector2 size;
                 string tempWord = words[i];
@@ -299,9 +315,8 @@ namespace Subsurface
                 while ((size = font.MeasureString(tempWord)).X > lineLength)
                 {
                     tempWord = tempWord.Remove(tempWord.Length - 1, 1);
-                    
-
                 }
+
                 words[i] = tempWord;
                 if (prevWord.Length> tempWord.Length)
                 {
@@ -315,22 +330,29 @@ namespace Subsurface
                 
                 if (linePos + size.X < lineLength)
                 {
-                    wrappedText.Append(words[i]);
-                    linePos += size.X + spaceWidth;
+                        wrappedText.Append(words[i]);
+                    if (words[i] == "\n")
+                    {
+                        linePos = 0.0f;
+                    }
+                    else
+                    {
+
+                        linePos += size.X + spaceWidth;
+                    }
                 }
                 else
                 {
                     //if (i>0)wrappedText.Remove(wrappedText.Length - 1, 1);
-                    wrappedText.Append("\n");
-                    wrappedText.Append(words[i]);
 
-
-
-
-                    linePos = size.X + spaceWidth;
+                        wrappedText.Append("\n");
+                        wrappedText.Append(words[i]);
+                    
+                        linePos = size.X + spaceWidth;
+                    
                 }
-                
-                if (i<words.Length-1) wrappedText.Append(" ");
+
+                if (i < words.Length - 1) wrappedText.Append(" ");
             }
 
             return wrappedText.ToString();

@@ -1,4 +1,5 @@
-﻿using Subsurface;
+﻿using RestSharp;
+using Subsurface;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,6 +8,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,8 +20,12 @@ namespace Launcher
 {
     public partial class LauncherMain : Form
     {
+        string version = AssemblyName.GetAssemblyName("subsurface.exe").Version.ToString();
+
         private const string configPath = "config.xml";
         private Subsurface.GameSettings settings;
+
+        private string latestVersionFileList, latestVersionFolder;
 
         [DllImport("user32.dll")]
         public static extern bool EnumDisplaySettings(
@@ -33,6 +40,12 @@ namespace Launcher
         {
             get { return settings.FullScreenEnabled; }
             set { settings.FullScreenEnabled = value; }
+        }
+
+        public bool AutoCheckUpdates
+        {
+            get { return settings.AutoCheckUpdates; }
+            set { settings.AutoCheckUpdates = value; }
         }
 
         //private GraphicsMode selectedMode;
@@ -80,6 +93,9 @@ namespace Launcher
 
             fullscreenBox.DataBindings.Add("Checked", this, "FullscreenEnabled");
 
+            autoUpdateCheckBox.DataBindings.Add("Checked", this, "AutoCheckUpdates");
+
+
             if (settings.SelectedContentPackage == null)
             {
                 if (contentPackageBox.Items.Count > 0) contentPackageBox.SelectedItem = contentPackageBox.Items[0];
@@ -87,6 +103,15 @@ namespace Launcher
             else
             {
                 contentPackageBox.SelectedItem = settings.SelectedContentPackage;
+            }
+
+            progressBar.Visible = false;
+            updateLabel.Visible = false;
+            downloadButton.Visible = false;
+
+            if (settings.AutoCheckUpdates)
+            {
+                CheckForUpdates();                
             }
 
             //resolutionBox.SelectedItem = selectedMode;
@@ -122,6 +147,172 @@ namespace Launcher
             
             settings.SelectedContentPackage = comboBox.SelectedItem as ContentPackage;
         }
+
+        private bool CheckForUpdates()
+        {
+            patchNoteBox.Text = "Checking for updates...";
+
+            XDocument doc = null;
+
+            try
+            {
+                doc = FetchXML("versioninfo.xml");
+            }
+
+            catch (Exception e)
+            {
+                patchNoteBox.Text = "Error while checking for updates: " + e.Message;
+                return false;
+            }
+
+            CheckUpdateXML(doc);
+
+            return true;
+        }
+
+        private XDocument FetchXML(string fileName)
+        {
+            var client = new RestClient(settings.MasterServerUrl);
+
+            var request = new RestRequest(fileName, Method.GET);
+
+            IRestResponse response = client.Execute(request);
+
+            if (response.ResponseStatus!= ResponseStatus.Completed) return null;            
+            if (response.StatusCode != HttpStatusCode.OK) return null;
+
+            string xml = response.Content;
+
+            string _byteOrderMarkUtf8 = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
+            if (xml.StartsWith(_byteOrderMarkUtf8))
+            {
+                xml = xml.Remove(0, _byteOrderMarkUtf8.Length);
+            }
+
+            return XDocument.Parse(xml);
+        }
+
+        private bool CheckUpdateXML(XDocument doc)
+        {
+            if (doc.Root==null)
+            {
+                patchNoteBox.Text = "Error while checking for updates: could not parse update info";
+                return false;
+            }
+
+            progressBar.Visible = true;
+            downloadButton.Visible = true;
+            updateLabel.Visible = true;
+
+            string latestVersion = ToolBox.GetAttributeString(doc.Root, "latestversion", "");
+            latestVersionFolder = ToolBox.GetAttributeString(doc.Root, "latestversionfolder", "");
+            latestVersionFileList = ToolBox.GetAttributeString(doc.Root, "latestversionfilelist", "");
+
+            if (latestVersion == version)
+            {
+                patchNoteBox.Text = "Game is up to date!";
+                return false;
+            }
+
+            updateLabel.Text = "New update found! (" + latestVersion + ")";
+
+            XElement patchNotes = doc.Root.Element("patchnotes");
+
+            if (patchNotes!=null)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                foreach (XElement patchNote in patchNotes.Elements())
+                {
+                    string patchNumber = ToolBox.GetAttributeString(patchNote, "version", "");
+
+                    //read the patch notes until we reach the user's version
+                    if (patchNumber == version) break;
+
+                    sb.AppendLine(ToolBox.ElementInnerText(patchNote));
+                    sb.AppendLine("*************************************\n");
+                }
+
+                patchNoteBox.Text = sb.ToString();
+            }
+
+            return true;
+        }
+
+        private void downloadButton_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(latestVersionFolder)) return;
+
+            Button senderButton = sender as Button;
+            senderButton.Enabled = false;
+
+            XDocument doc = null;
+
+            try
+            {
+                doc = FetchXML("filelist.xml");
+            }
+
+            catch (Exception exception)
+            {
+                patchNoteBox.Text = "Error while checking for updates: " + exception.Message;
+                return;
+            }
+
+            filesToDownload = UpdaterUtil.GetRequiredFiles(doc);
+
+            string dir = Directory.GetCurrentDirectory();
+
+            filesToDownloadCount = filesToDownload.Count;
+            if (filesToDownloadCount>0)
+            {
+                WebClient webClient = new WebClient();
+                webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(Completed);
+                //webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ProgressChanged);
+
+                webClient.DownloadFileAsync(new Uri(latestVersionFolder + filesToDownload[0]), dir);
+            }            
+        }
+
+        private List<string> filesToDownload;
+
+        private int filesDownloaded, filesToDownloadCount;
+        
+        private void Completed(object sender, AsyncCompletedEventArgs e)
+        {
+            filesDownloaded++; 
+            progressBar.Value = (int)(((float)filesDownloaded / (float)filesToDownloadCount) * 100.0f);//e.ProgressPercentage;
+
+            filesToDownload.RemoveAt(0);
+
+            if (filesToDownload.Count==0)
+            {
+                progressBar.Visible = false;
+                downloadButton.Visible = false;
+                updateLabel.Visible = false;
+
+                MessageBox.Show("Download completed!");
+                return;
+            }
+
+            updateLabel.Text = "Downloading file "+ filesDownloaded + "/" + filesToDownloadCount + " ("+ filesToDownload[0] + ")";
+
+            WebClient webClient = new WebClient();
+            webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(Completed);
+            //webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ProgressChanged);
+
+            string dir = Directory.GetCurrentDirectory();
+
+            string fileDir = Path.GetDirectoryName(filesToDownload[0]);
+            if (!string.IsNullOrWhiteSpace(fileDir) && !Directory.Exists(fileDir))
+            {
+                Directory.CreateDirectory(fileDir);
+            }
+
+            webClient.DownloadFileAsync(new Uri(latestVersionFolder + filesToDownload[0]), @dir + "\\" + filesToDownload[0]);
+           
+        }
+
     }
 
     public class GraphicsMode
@@ -182,7 +373,6 @@ namespace Launcher
             public int dmReserved2;
             public int dmPanningWidth;
             public int dmPanningHeight;
-
         }
     
 }

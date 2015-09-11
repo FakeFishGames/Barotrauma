@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Subsurface
 {
-    class GUITickBox : GUIComponent
+    public class GUITickBox : GUIComponent
     {
         GUIFrame box;
         GUITextBlock text;
@@ -41,25 +41,24 @@ namespace Subsurface
             box.HoverColor = Color.Gray;
             box.SelectedColor = Color.DarkGray;
 
+
             text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, rect.Height), label, Color.Transparent, Color.White, Alignment.TopLeft, null, this);
+
+            this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
 
             Enabled = true;
         }
 
         public override void Update(float deltaTime)
         {
-                if (rect.Width ==420)
-                {
-                    int asd = 1;
-                }            
-            //base.Update(deltaTime);
+            if (!Visible || !Enabled) return;
 
-            if (!Enabled) return;
+            if (text.Rect.Contains(PlayerInput.MousePosition)) MouseOn = this;
 
             if (box.Rect.Contains(PlayerInput.MousePosition))
             {
-
-
+                //ToolTip = this.ToolTip;
+                MouseOn = this;
 
                 box.State = ComponentState.Hover;
 
@@ -84,10 +83,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            if (rect.Width == 420)
-            {
-                int asd = 1;
-            }  
+            if (!Visible) return;
 
             DrawChildren(spriteBatch);
 

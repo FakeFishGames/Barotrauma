@@ -17,13 +17,26 @@ namespace Subsurface
 
         float state;
 
-        public Vector2 Position;
+        public Vector2 CenterPosition;
+
+        public Vector2 TitlePosition;
+
+        public Vector2 TitleSize
+        {
+            get { return new Vector2(titleTexture.Width, titleTexture.Height); }
+        }
+
+        public float Scale
+        {
+            get;
+            private set;
+        }
 
         public TitleScreen(GraphicsDevice graphics)
         {
-            backgroundTexture = Game1.TextureLoader.FromFile("Content/UI/titleBackground.png");
-            monsterTexture = Game1.TextureLoader.FromFile("Content/UI/titleMonster.png");
-            titleTexture = Game1.TextureLoader.FromFile("Content/UI/titleText.png");
+            backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
+            monsterTexture = TextureLoader.FromFile("Content/UI/titleMonster.png");
+            titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
 
             renderTarget = new RenderTarget2D(graphics, Game1.GraphicsWidth, Game1.GraphicsHeight);
 
@@ -40,46 +53,44 @@ namespace Subsurface
             graphics.SetRenderTarget(renderTarget);
             //Debug.WriteLine(stopwatch.Elapsed.TotalMilliseconds);
 
-            float scale = Game1.GraphicsHeight/2048.0f;
+            Scale = Game1.GraphicsHeight/1500.0f;
 
             state += deltaTime;
 
-            Vector2 center = new Vector2(Game1.GraphicsWidth*0.3f, Game1.GraphicsHeight/2.0f) + Position*scale;
+            if (loadState>-1)
+            {
+                CenterPosition = new Vector2(Game1.GraphicsWidth*0.3f, Game1.GraphicsHeight/2.0f); 
+                TitlePosition = CenterPosition + new Vector2(-0.0f + (float)Math.Sqrt(state) * 220.0f, 0.0f) * Scale;
+                TitlePosition.X = Math.Min(TitlePosition.X, (float)Game1.GraphicsWidth / 2.0f);
+            }
 
-            Vector2 titlePos = center + new Vector2(-0.0f + (float)Math.Sqrt(state) * 220.0f, 0.0f) * scale;
-            titlePos.X = Math.Min(titlePos.X, (float)Game1.GraphicsWidth / 2.0f);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
             graphics.Clear(Color.Black);
 
-            spriteBatch.Draw(backgroundTexture, center, null, Color.White * Math.Min(state / 5.0f, 1.0f), 0.0f,
+            spriteBatch.Draw(backgroundTexture, CenterPosition, null, Color.White * Math.Min(state / 5.0f, 1.0f), 0.0f,
                 new Vector2(backgroundTexture.Width / 2.0f, backgroundTexture.Height / 2.0f),
-                scale, SpriteEffects.None, 0.2f);
+                Scale*1.5f, SpriteEffects.None, 0.2f);
 
             spriteBatch.Draw(monsterTexture,
-                center + new Vector2(state * 100.0f - 1200.0f, state * 30.0f - 100.0f) * scale, null,
-                Color.White, 0.0f, Vector2.Zero, scale, SpriteEffects.None, 0.1f);
+                CenterPosition + new Vector2((state % 40) * 100.0f - 1800.0f, (state % 40) * 30.0f - 200.0f) * Scale, null,
+                Color.White, 0.0f, Vector2.Zero, Scale, SpriteEffects.None, 0.1f);
 
             spriteBatch.Draw(titleTexture,
-                titlePos, null,
-                Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), scale, SpriteEffects.None, 0.0f);
+                TitlePosition, null,
+                Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), Scale, SpriteEffects.None, 0.0f);
             
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
 
-            Matrix transform = Matrix.CreateTranslation(
-                new Vector3(Game1.GraphicsWidth / 2.0f,
-                    Game1.GraphicsHeight / 2.0f, 0));     
-
-            Hull.renderer.RenderBack(spriteBatch, renderTarget, transform);
-
-
+            Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
+            
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
             
             spriteBatch.Draw(titleTexture,
-                titlePos, null,
-                Color.White * Math.Min((state - 3.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), scale, SpriteEffects.None, 0.0f);
+                TitlePosition, null,
+                Color.White * Math.Min((state - 3.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), Scale, SpriteEffects.None, 0.0f);
 
             string loadText = "";
             if (loadState == 100.0f)

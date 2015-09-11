@@ -543,7 +543,7 @@ namespace Subsurface
             messageBox.Buttons[0].OnClicked += Restart;
             messageBox.Buttons[0].OnClicked += messageBox.Close;
 
-            messageBox.Buttons[1].UserData = MainMenuScreen.Tabs.Main;
+            //messageBox.Buttons[1].UserData = MainMenuScreen.Tabs.Main;
             messageBox.Buttons[1].OnClicked = Game1.MainMenuScreen.SelectTab;
             messageBox.Buttons[1].OnClicked += messageBox.Close;
 
@@ -605,12 +605,12 @@ namespace Subsurface
 
             height += wrappedText.Split('\n').Length*25;
 
-            var infoBlock = new GUIFrame(new Rectangle(-20, 20, width, height), null, Alignment.TopRight, GUI.style);
+            var infoBlock = new GUIFrame(new Rectangle(-20, 20, width, height), null, Alignment.TopRight, GUI.Style);
             //infoBlock.Color = infoBlock.Color * 0.8f;
             infoBlock.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             infoBlock.Flash(Color.Green);
 
-            new GUITextBlock(new Rectangle(10, 10, width - 40, height), text, GUI.style, infoBlock, true);
+            new GUITextBlock(new Rectangle(10, 10, width - 40, height), text, GUI.Style, infoBlock, true);
 
 
             GUI.PlayMessageSound();

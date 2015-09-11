@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface
 {
-    class GUIScrollBar : GUIComponent
+    public class GUIScrollBar : GUIComponent
     {
         public static GUIScrollBar draggingBar;
 
@@ -122,6 +122,8 @@ namespace Subsurface
 
         public override void Update(float deltaTime)
         {
+            if (!Visible) return;
+
             base.Update(deltaTime);
 
             if (draggingBar != this) return;
@@ -132,6 +134,8 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            if (!Visible) return;
+
             DrawChildren(spriteBatch);
         }
 

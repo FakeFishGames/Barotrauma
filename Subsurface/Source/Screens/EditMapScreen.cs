@@ -31,34 +31,34 @@ namespace Subsurface
 
             selectedTab = -1;
 
-            GUIpanel = new GUIFrame(new Rectangle(0, 0, 150, Game1.GraphicsHeight), GUI.style);
+            GUIpanel = new GUIFrame(new Rectangle(0, 0, 150, Game1.GraphicsHeight), GUI.Style);
             GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             //GUIListBox constructionList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUIpanel);
             //constructionList.OnSelected = MapEntityPrefab.SelectPrefab;
             //constructionList.CheckSelected = MapEntityPrefab.GetSelected;
 
-            GUIButton button = new GUIButton(new Rectangle(0, 50, 100, 20), "Items", Alignment.Left, GUI.style, GUIpanel);
+            GUIButton button = new GUIButton(new Rectangle(0, 50, 100, 20), "Items", Alignment.Left, GUI.Style, GUIpanel);
             button.UserData = 0;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 80, 100, 20), "Structures", Alignment.Left, GUI.style, GUIpanel);
+            button = new GUIButton(new Rectangle(0, 80, 100, 20), "Structures", Alignment.Left, GUI.Style, GUIpanel);
             button.UserData = 1;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 140, 100, 20), "Character mode", Alignment.Left, GUI.style, GUIpanel);
+            button = new GUIButton(new Rectangle(0, 140, 100, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
             button.OnClicked = ToggleCharacterMode;
             
             GUItabs = new GUIComponent[2];
             int width = 400, height = 400;
-            GUItabs[0] = new GUIFrame(new Rectangle(Game1.GraphicsWidth/2-width/2, Game1.GraphicsHeight/2-height/2, width, height), GUI.style);
+            GUItabs[0] = new GUIFrame(new Rectangle(Game1.GraphicsWidth/2-width/2, Game1.GraphicsHeight/2-height/2, width, height), GUI.Style);
             GUItabs[0].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.style, GUItabs[0]);
+            GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[0]);
             itemList.OnSelected = SelectPrefab;
             itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
-            GUItabs[1] = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), GUI.style);
+            GUItabs[1] = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
             GUItabs[1].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            GUIListBox structureList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.style, GUItabs[1]);
+            GUIListBox structureList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.Style, GUItabs[1]);
             structureList.OnSelected = SelectPrefab;
             structureList.CheckSelected = MapEntityPrefab.GetSelected;
 
@@ -154,7 +154,7 @@ namespace Subsurface
             return true;
         }
 
-        private bool SelectPrefab(object obj)
+        private bool SelectPrefab(GUIComponent component, object obj)
         {
             MapEntityPrefab.SelectPrefab(obj);
             selectedTab = -1;

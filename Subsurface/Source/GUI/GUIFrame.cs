@@ -3,7 +3,7 @@ using System;
 
 namespace Subsurface
 {
-    class GUIFrame : GUIComponent
+    public class GUIFrame : GUIComponent
     {        
         public GUIFrame(Rectangle rect, GUIStyle style = null, GUIComponent parent = null)
             : this(rect, null, (Alignment.Left | Alignment.Top), style, parent)
@@ -39,7 +39,7 @@ namespace Subsurface
                 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            
+            if (!Visible) return;
                            
             Color currColor = color;
             if (state == ComponentState.Selected) currColor = selectedColor;

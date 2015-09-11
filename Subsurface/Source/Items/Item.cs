@@ -635,11 +635,11 @@ namespace Subsurface
                 }
             }
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 60 + (editableProperties.Count() + requiredItemCount) * 30), GUI.style);
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, 60 + (editableProperties.Count() + requiredItemCount) * 30), GUI.Style);
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
             
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, GUI.style, 
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, GUI.Style, 
                 Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
 
             y += 20;
@@ -649,15 +649,15 @@ namespace Subsurface
                 if (prefab.IsLinkable) 
                 {
                     new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", 
-                        GUI.style, Alignment.TopLeft, Alignment.TopRight, editingHUD);
+                        GUI.Style, Alignment.TopLeft, Alignment.TopRight, editingHUD);
                     y += 25;
                 }
                 foreach (ItemComponent ic in components)
                 {
                     foreach (RelatedItem relatedItem in ic.requiredItems)
                     {
-                        new GUITextBlock(new Rectangle(0, y, 100, 20), ic.Name + ": " + relatedItem.Type.ToString() + " required", GUI.style, editingHUD);
-                        GUITextBox namesBox = new GUITextBox(new Rectangle(0, y, 200, 20), Alignment.Right, GUI.style, editingHUD);
+                        new GUITextBlock(new Rectangle(0, y, 100, 20), ic.Name + ": " + relatedItem.Type.ToString() + " required", GUI.Style, editingHUD);
+                        GUITextBox namesBox = new GUITextBox(new Rectangle(0, y, 200, 20), Alignment.Right, GUI.Style, editingHUD);
 
                         PropertyDescriptorCollection properties = TypeDescriptor.GetProperties (relatedItem);
                         PropertyDescriptor property = properties.Find("JoinedNames", false);
@@ -681,7 +681,7 @@ namespace Subsurface
                 var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault<Editable>();
                 if (editable != null) height = (int)(Math.Ceiling(editable.MaxLength / 20.0f) * 20.0f);
 
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, height), GUI.style, editingHUD);
+                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, height), GUI.Style, editingHUD);
                 if (height>20) propertyBox.Wrap = true;
 
                 object value = objectProperty.GetValue();

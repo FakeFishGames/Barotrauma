@@ -41,19 +41,19 @@ namespace Subsurface
 
             Rectangle panelRect = new Rectangle(0, 0, width, height);
 
-            menu = new GUIFrame(panelRect, null, Alignment.Center, GUI.style);
+            menu = new GUIFrame(panelRect, null, Alignment.Center, GUI.Style);
 
-            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Join Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Join Server", GUI.Style, Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", GUI.style, menu);
-            clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), GUI.style, menu);
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", GUI.Style, menu);
+            clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), GUI.Style, menu);
 
-            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.style, menu);
-            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), GUI.style, menu);
+            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.Style, menu);
+            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), GUI.Style, menu);
 
             int middleX = (int)(width * 0.4f);
 
-            serverList = new GUIListBox(new Rectangle(middleX,60,0,(int)(height*0.7f)), GUI.style, menu);
+            serverList = new GUIListBox(new Rectangle(middleX,60,0,(int)(height*0.7f)), GUI.Style, menu);
             serverList.OnSelected = SelectServer;
 
             float[] columnRelativeX = new float[] { 0.15f, 0.55f, 0.15f, 0.15f };
@@ -64,19 +64,19 @@ namespace Subsurface
                 if (n > 0) columnX[n] += columnX[n - 1];
             }
 
-            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Password", GUI.style, menu);
+            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Password", GUI.Style, menu);
 
-            new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), "Name", GUI.style, menu);
-            new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), "Players", GUI.style, menu);
-            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Running", GUI.style, menu);
+            new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), "Name", GUI.Style, menu);
+            new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), "Players", GUI.Style, menu);
+            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Running", GUI.Style, menu);
 
-            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, GUI.style, menu);
+            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, GUI.Style, menu);
             joinButton.OnClicked = RefreshServers;
 
-            joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, GUI.style, menu);
+            joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, GUI.Style, menu);
             joinButton.OnClicked = JoinServer;
 
-            GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.style, menu);
+            GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.Style, menu);
             button.UserData = 0;
             button.OnClicked = Game1.MainMenuScreen.SelectTab;
             
@@ -93,7 +93,7 @@ namespace Subsurface
             //UpdateServerList();
         }
 
-        private bool SelectServer(object obj)
+        private bool SelectServer(GUIComponent component, object obj)
         {
             string ip = obj as string;
             if (string.IsNullOrWhiteSpace(ip)) return false;
@@ -108,7 +108,7 @@ namespace Subsurface
             if (waitingForRefresh) return false;
             serverList.ClearChildren();
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 20), "Refreshing server list...", GUI.style, serverList);
+            new GUITextBlock(new Rectangle(0, 0, 0, 20), "Refreshing server list...", GUI.Style, serverList);
             
             CoroutineManager.StartCoroutine(WaitForRefresh());
 
@@ -141,7 +141,7 @@ namespace Subsurface
 
             if (string.IsNullOrWhiteSpace(masterServerData))
             {
-                var nameText = new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", GUI.style, serverList);
+                var nameText = new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", GUI.Style, serverList);
 
                 return;
             }
@@ -178,12 +178,12 @@ namespace Subsurface
                 passwordBox.Enabled = false;
                 passwordBox.UserData = "password";
 
-                var nameText = new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, GUI.style, serverFrame);
+                var nameText = new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, GUI.Style, serverFrame);
 
                 int playerCount, maxPlayers;
                 playerCount = GameClient.ByteToPlayerCount((byte)int.Parse(playerCountStr), out maxPlayers);
 
-                var playerCountText = new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, GUI.style, serverFrame);
+                var playerCountText = new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, GUI.Style, serverFrame);
 
                 var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2])/ 2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
                 gameStartedBox.Selected = gameStarted == "1";
@@ -288,7 +288,7 @@ namespace Subsurface
             if (serverList.Selected!=null && (serverList.Selected.GetChild("password") as GUITickBox).Selected)
             {
                 var msgBox = new GUIMessageBox("Password required", "");
-                var passwordBox = new GUITextBox(new Rectangle(0,0,150,20), Alignment.BottomCenter, GUI.style, msgBox);
+                var passwordBox = new GUITextBox(new Rectangle(0,0,150,20), Alignment.BottomCenter, GUI.Style, msgBox);
                 passwordBox.UserData = "password";
 
                 var okButton = msgBox.GetChild<GUIButton>();                

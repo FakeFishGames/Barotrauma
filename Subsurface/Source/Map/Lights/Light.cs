@@ -43,7 +43,7 @@ namespace Subsurface.Lights
 
             if (lightTexture == null)
             {
-                lightTexture = Game1.TextureLoader.FromFile("Content/Lights/light.png");
+                lightTexture = TextureLoader.FromFile("Content/Lights/light.png");
             }
 
             texture = lightTexture;

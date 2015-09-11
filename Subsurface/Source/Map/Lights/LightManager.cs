@@ -41,7 +41,7 @@ namespace Subsurface.Lights
 
             if (alphaClearTexture==null)
             {
-                alphaClearTexture = Game1.TextureLoader.FromFile("Content/Lights/alphaOne.png");
+                alphaClearTexture = TextureLoader.FromFile("Content/Lights/alphaOne.png");
             }
         }
 

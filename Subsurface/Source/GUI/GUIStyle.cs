@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Subsurface
 {
-    class GUIStyle
+    public class GUIStyle
     {
         private Dictionary<string, GUIComponentStyle> componentStyles;
                 

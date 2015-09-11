@@ -31,10 +31,10 @@ namespace Subsurface
 
             waterEffect = new Effect(graphicsDevice, bytecode);
 
-            waterTexture = Game1.TextureLoader.FromFile("Content/waterbump.jpg");
-            waterEffect.Parameters["xWaveWidth"].SetValue(0.1f);
-            waterEffect.Parameters["xWaveHeight"].SetValue(0.1f);
-            waterEffect.Parameters["xBlurDistance"].SetValue(0.0007f);
+            waterTexture = TextureLoader.FromFile("Content/waterbump.png");
+            waterEffect.Parameters["xWaveWidth"].SetValue(0.05f);
+            waterEffect.Parameters["xWaveHeight"].SetValue(0.05f);
+            
 
             if (basicEffect==null)
             {                
@@ -45,13 +45,14 @@ namespace Subsurface
             }
         }
 
-        public void RenderBack (SpriteBatch spriteBatch, RenderTarget2D texture, Matrix transform)
+        public void RenderBack (SpriteBatch spriteBatch, RenderTarget2D texture, float blurAmount = 0.0007f)
         {            
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap);
 
             waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
             waterEffect.Parameters["xTexture"].SetValue(texture);
-            waterEffect.Parameters["xWavePos"].SetValue(wavePos);            
+            waterEffect.Parameters["xWavePos"].SetValue(wavePos);
+            waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
             waterEffect.CurrentTechnique.Passes[0].Apply();
 
             wavePos.X += 0.0001f;

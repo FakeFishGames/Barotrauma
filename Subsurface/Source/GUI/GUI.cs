@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -15,9 +16,9 @@ namespace Subsurface
         BottomRight = (Bottom | Right), BottomLeft = (Bottom | Left), BottomCenter = (CenterX | Bottom)
     }
     
-    class GUI
+    public class GUI
     {
-        public static GUIStyle style;
+        public static GUIStyle Style;
 
         static Texture2D t;
         public static SpriteFont Font, SmallFont, LargeFont;
@@ -30,6 +31,13 @@ namespace Subsurface
 
         private static bool pauseMenuOpen;
         private static GUIFrame pauseMenu;
+
+        public static void Init(ContentManager content)
+        {
+            GUI.Font = ToolBox.TryLoadFont("SpriteFont1", content);
+            GUI.SmallFont = ToolBox.TryLoadFont("SmallFont", content);
+            GUI.LargeFont = ToolBox.TryLoadFont("LargeFont", content);
+        }
 
         public static bool PauseMenuOpen
         {
@@ -48,7 +56,7 @@ namespace Subsurface
             t.SetData<Color>(
                 new Color[] { Color.White });// fill the texture with white
             
-            style = new GUIStyle("Content/UI/style.xml");
+            Style = new GUIStyle("Content/UI/style.xml");
         }
 
         public static void TogglePauseMenu()
@@ -59,10 +67,10 @@ namespace Subsurface
 
             if (pauseMenuOpen)
             {
-                pauseMenu = new GUIFrame(new Rectangle(0,0,200,300), null, Alignment.Center, style);
+                pauseMenu = new GUIFrame(new Rectangle(0,0,200,300), null, Alignment.Center, Style);
 
                 int y = 0;
-                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, GUI.style, pauseMenu);
+                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, GUI.Style, pauseMenu);
                 button.OnClicked = TogglePauseMenu;
 
                 y += 60;
@@ -72,7 +80,7 @@ namespace Subsurface
                     SinglePlayerMode spMode = Game1.GameSession.gameMode as SinglePlayerMode;
                     if (spMode!=null)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, GUI.style, pauseMenu);
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, GUI.Style, pauseMenu);
                         button.OnClicked += TogglePauseMenu;
                         button.OnClicked += Game1.GameSession.LoadPrevious;
 
@@ -85,7 +93,7 @@ namespace Subsurface
                     SinglePlayerMode spMode = Game1.GameSession.gameMode as SinglePlayerMode;
                     if (spMode != null)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, GUI.style, pauseMenu);
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, GUI.Style, pauseMenu);
                         button.OnClicked += QuitClicked;
                         button.OnClicked += TogglePauseMenu;
                         button.UserData = "save";
@@ -95,7 +103,7 @@ namespace Subsurface
                 }
 
 
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, GUI.style, pauseMenu);                
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, GUI.Style, pauseMenu);                
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }
@@ -118,7 +126,7 @@ namespace Subsurface
 
 
             Game1.MainMenuScreen.Select();
-            Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);
+            //Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);
 
             return true;
         }

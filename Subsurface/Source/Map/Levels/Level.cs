@@ -97,7 +97,7 @@ namespace Subsurface
 
         public Level(string seed, float difficulty, int width, int height, int siteInterval)
         {
-            if (shaftTexture == null) shaftTexture = Game1.TextureLoader.FromFile("Content/Map/shaft.png");
+            if (shaftTexture == null) shaftTexture = TextureLoader.FromFile("Content/Map/shaft.png");
 
             if (basicEffect==null)
             {
@@ -106,7 +106,7 @@ namespace Subsurface
                 basicEffect.VertexColorEnabled = false;
 
                 basicEffect.TextureEnabled = true;
-                basicEffect.Texture = Game1.TextureLoader.FromFile("Content/Map/iceSurface.png");
+                basicEffect.Texture = TextureLoader.FromFile("Content/Map/iceSurface.png");
             }
 
             this.seed = seed;

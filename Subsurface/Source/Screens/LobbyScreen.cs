@@ -60,29 +60,29 @@ namespace Subsurface
                 180,
                 Game1.GraphicsHeight - 80);
 
-            leftPanel = new GUIFrame(panelRect, GUI.style);
+            leftPanel = new GUIFrame(panelRect, GUI.Style);
             //leftPanel.Padding = GUI.style.smallPadding;
 
             new GUITextBlock(new Rectangle(0, 0, 200, 25), 
-                "asdfdasfasdf", Color.Transparent, Color.White, Alignment.Left, GUI.style, leftPanel);
+                "asdfdasfasdf", Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
 
             GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 200, 25), 
-                "", Color.Transparent, Color.White, Alignment.Left, GUI.style, leftPanel);
+                "", Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
             moneyText.TextGetter = GetMoney;
             
-            GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.Left, GUI.style, leftPanel);
+            GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.Left, GUI.Style, leftPanel);
             button.UserData = PanelTab.Map;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 110, 100, 30), "Crew", null, Alignment.Left, GUI.style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 110, 100, 30), "Crew", null, Alignment.Left, GUI.Style, leftPanel);
             button.UserData = PanelTab.Crew;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 150, 100, 30), "Hire", null, Alignment.Left, GUI.style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 150, 100, 30), "Hire", null, Alignment.Left, GUI.Style, leftPanel);
             button.UserData = PanelTab.CurrentLocation;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 190, 100, 30), "Store", null, Alignment.Left, GUI.style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 190, 100, 30), "Store", null, Alignment.Left, GUI.Style, leftPanel);
             button.UserData = PanelTab.Store;
             button.OnClicked = SelectRightPanel;
    
@@ -97,42 +97,42 @@ namespace Subsurface
 
             rightPanel = new GUIFrame[4];
 
-            rightPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.style);
+            rightPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.Style);
             //rightPanel[(int)PanelTab.Crew].Padding = GUI.style.smallPadding;
 
-            new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, GUI.style, rightPanel[(int)PanelTab.Crew]);
+            new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, GUI.Style, rightPanel[(int)PanelTab.Crew]);
 
-            characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.style, rightPanel[(int)PanelTab.Crew]);
+            characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.Style, rightPanel[(int)PanelTab.Crew]);
             characterList.OnSelected = SelectCharacter;
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.Map] = new GUIFrame(panelRect, GUI.style);
+            rightPanel[(int)PanelTab.Map] = new GUIFrame(panelRect, GUI.Style);
             //rightPanel[(int)PanelTab.Map].Padding = GUI.style.smallPadding;
 
             startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",
-                Alignment.BottomRight, GUI.style, rightPanel[(int)PanelTab.Map]);
+                Alignment.BottomRight, GUI.Style, rightPanel[(int)PanelTab.Map]);
             startButton.OnClicked = StartShift;
             startButton.Enabled = false;
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(panelRect, GUI.style);
+            rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(panelRect, GUI.Style);
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.Store] = new GUIFrame(panelRect, GUI.style);
+            rightPanel[(int)PanelTab.Store] = new GUIFrame(panelRect, GUI.Style);
 
-            selectedItemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, GUI.style, rightPanel[(int)PanelTab.Store]);
+            selectedItemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, GUI.Style, rightPanel[(int)PanelTab.Store]);
             selectedItemList.OnSelected = DeselectItem;
 
-            var costText = new GUITextBlock(new Rectangle(0, 0, 200, 25), "Cost: ", GUI.style, Alignment.BottomLeft, Alignment.TopLeft, rightPanel[(int)PanelTab.Store]);
+            var costText = new GUITextBlock(new Rectangle(0, 0, 200, 25), "Cost: ", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, rightPanel[(int)PanelTab.Store]);
             costText.TextGetter = CostTextGetter;
 
-            buyButton = new GUIButton(new Rectangle(150, 0, 100, 25), "Buy", Alignment.Bottom, GUI.style, rightPanel[(int)PanelTab.Store]);
+            buyButton = new GUIButton(new Rectangle(150, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, rightPanel[(int)PanelTab.Store]);
             buyButton.OnClicked = BuyItems;
 
-            itemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, Alignment.TopRight, GUI.style, rightPanel[(int)PanelTab.Store]);
+            itemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, rightPanel[(int)PanelTab.Store]);
             itemList.OnSelected = SelectItem;
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)
@@ -158,18 +158,18 @@ namespace Subsurface
 
         private void UpdateLocationTab(Location location)
         {
-            rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(rightPanel[(int)PanelTab.CurrentLocation].Rect, GUI.style);
+            rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(rightPanel[(int)PanelTab.CurrentLocation].Rect, GUI.Style);
             rightPanel[(int)PanelTab.CurrentLocation].UserData = location;
             //rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
             
             new GUITextBlock(new Rectangle(0, 0, 200, 25), 
-                "Location: "+location.Name, GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
+                "Location: "+location.Name, GUI.Style, rightPanel[(int)PanelTab.CurrentLocation]);
             new GUITextBlock(new Rectangle(0, 20, 200, 25),
-                "("+location.Type.Name+")", GUI.style, rightPanel[(int)PanelTab.CurrentLocation]);
+                "("+location.Type.Name+")", GUI.Style, rightPanel[(int)PanelTab.CurrentLocation]);
             
             if (location.HireManager != null)
             {
-                hireList = new GUIListBox(new Rectangle(0, 60, 300, 0), GUI.style, Alignment.Left, rightPanel[(int)PanelTab.CurrentLocation]);
+                hireList = new GUIListBox(new Rectangle(0, 60, 300, 0), GUI.Style, Alignment.Left, rightPanel[(int)PanelTab.CurrentLocation]);
                 hireList.OnSelected = SelectCharacter;
 
                 hireList.ClearChildren();
@@ -177,14 +177,14 @@ namespace Subsurface
                 {
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
-                        c.Name + " (" + c.Job.Name + ")", GUI.style, hireList);
+                        c.Name + " (" + c.Job.Name + ")", GUI.Style, hireList);
                     textBlock.UserData = c;
 
                     textBlock = new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
                         c.Salary.ToString(),
                         null, null,
-                        Alignment.TopRight, GUI.style, textBlock);
+                        Alignment.TopRight, GUI.Style, textBlock);
                 }
             }
         }
@@ -234,7 +234,7 @@ namespace Subsurface
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    c.Name + " (" + c.Job.Name + ")", GUI.style, 
+                    c.Name + " (" + c.Job.Name + ")", GUI.Style, 
                     Alignment.Left, 
                     Alignment.Left,
                     characterList);
@@ -266,7 +266,7 @@ namespace Subsurface
                 new Rectangle(0, 0, 0, 25),
                 ep.Price.ToString(),
                 null, null,
-                Alignment.TopRight, GUI.style, textBlock);
+                Alignment.TopRight, GUI.Style, textBlock);
 
             if (ep.sprite != null)
             {
@@ -275,7 +275,7 @@ namespace Subsurface
             }
         }
 
-        private bool SelectItem(object obj)
+        private bool SelectItem(GUIComponent component, object obj)
         {
             MapEntityPrefab prefab = obj as MapEntityPrefab;
             if (prefab == null) return false;
@@ -287,7 +287,7 @@ namespace Subsurface
             return false;
         }
 
-        private bool DeselectItem(object obj)
+        private bool DeselectItem(GUIComponent component, object obj)
         {
             MapEntityPrefab prefab = obj as MapEntityPrefab;
             if (prefab == null) return false;
@@ -383,7 +383,7 @@ namespace Subsurface
             return "Money: " + ((Game1.GameSession == null) ? "" : gameMode.CrewManager.Money.ToString());
         }
 
-        private bool SelectCharacter(object selection)
+        private bool SelectCharacter(GUIComponent component, object selection)
         {
             CharacterInfo characterInfo = selection as CharacterInfo;
             if (characterInfo == null) return false;
@@ -394,7 +394,7 @@ namespace Subsurface
             {
                 previewFrame = new GUIFrame(new Rectangle(350, 60, 300, 300),
                         new Color(0.0f, 0.0f, 0.0f, 0.8f),
-                        Alignment.Top, GUI.style, rightPanel[selectedRightPanel]);
+                        Alignment.Top, GUI.Style, rightPanel[selectedRightPanel]);
                 previewFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
                 previewFrame.UserData = characterInfo;
                 
@@ -403,7 +403,7 @@ namespace Subsurface
 
             if (selectedRightPanel == (int)PanelTab.CurrentLocation)
             {
-                GUIButton hireButton = new GUIButton(new Rectangle(0,0, 100, 20), "Hire", Alignment.BottomCenter, GUI.style, previewFrame);
+                GUIButton hireButton = new GUIButton(new Rectangle(0,0, 100, 20), "Hire", Alignment.BottomCenter, GUI.Style, previewFrame);
                 hireButton.UserData = characterInfo;
                 hireButton.OnClicked = HireCharacter;
             }

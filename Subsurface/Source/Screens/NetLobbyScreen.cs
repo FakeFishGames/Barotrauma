@@ -115,7 +115,7 @@ namespace Subsurface
 
             //server info panel ------------------------------------------------------------
 
-            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.7f), (int)(panelRect.Height * 0.6f)), GUI.style, menu);
+            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.7f), (int)(panelRect.Height * 0.6f)), GUI.Style, menu);
             //infoFrame.Padding = GUI.style.smallPadding;
             
             //chatbox ----------------------------------------------------------------------
@@ -123,10 +123,10 @@ namespace Subsurface
                 new Rectangle(0, (int)(panelRect.Height * 0.6f + 20),
                     (int)(panelRect.Width * 0.7f),
                     (int)(panelRect.Height * 0.4f - 20)),
-                GUI.style, menu);
+                GUI.Style, menu);
 
-            chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, GUI.style, chatFrame);            
-            textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, GUI.style, chatFrame);
+            chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, GUI.Style, chatFrame);            
+            textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, GUI.Style, chatFrame);
             textBox.Font = GUI.SmallFont;
             textBox.OnEnter = EnterChatMessage;
 
@@ -135,24 +135,24 @@ namespace Subsurface
             playerFrame = new GUIFrame(
                 new Rectangle((int)(panelRect.Width * 0.7f + 20), 0,
                     (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.6f)),
-                GUI.style, menu);
+                GUI.Style, menu);
 
             //player list ------------------------------------------------------------------
 
             GUIFrame playerListFrame = new GUIFrame(
                 new Rectangle((int)(panelRect.Width * 0.7f + 20), (int)(panelRect.Height * 0.6f + 20),
                     (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.4f - 20)),
-                GUI.style, menu);
+                GUI.Style, menu);
 
-            playerList = new GUIListBox(new Rectangle(0,0,0,0), null, GUI.style, playerListFrame);
+            playerList = new GUIListBox(new Rectangle(0,0,0,0), null, GUI.Style, playerListFrame);
 
             //submarine list ------------------------------------------------------------------
 
             int columnWidth = infoFrame.Rect.Width / 5 - 30;
             int columnX = 0;
 
-            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Selected submarine:", GUI.style, infoFrame);
-            subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), Color.White, GUI.style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Selected submarine:", GUI.Style, infoFrame);
+            subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), Color.White, GUI.Style, infoFrame);
             subList.OnSelected = SelectMap;
 
             if (Submarine.SavedSubmarines.Count > 0)
@@ -161,7 +161,7 @@ namespace Subsurface
                 {
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
-                        sub.Name, GUI.style,
+                        sub.Name, GUI.Style,
                         Alignment.Left, Alignment.Left,
                         subList);
                     textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
@@ -178,8 +178,8 @@ namespace Subsurface
 
             //gamemode ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Selected game mode: ", GUI.style, infoFrame);
-            modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), GUI.style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Selected game mode: ", GUI.Style, infoFrame);
+            modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), GUI.Style, infoFrame);
 
 
             foreach (GameModePreset mode in GameModePreset.list)
@@ -188,7 +188,7 @@ namespace Subsurface
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    mode.Name, GUI.style,
+                    mode.Name, GUI.Style,
                     Alignment.Left, Alignment.Left,
                     modeList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
@@ -202,7 +202,7 @@ namespace Subsurface
 
             var modeDescription = new GUITextBlock(
                 new Rectangle(columnX, 150, (int)(columnWidth * 1.5f), infoFrame.Rect.Height - 150 - 80), 
-                "", Color.Black*0.3f, Color.White, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame, true);
+                "", Color.Black*0.3f, Color.White, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame, true);
 
             modeList.UserData = modeDescription;
 
@@ -211,31 +211,31 @@ namespace Subsurface
             //duration ------------------------------------------------------------------
             
             GUITextBlock durationText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 20),
-                "Game duration: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
+                "Game duration: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
             durationText.TextGetter = DurationText;
 
             durationBar = new GUIScrollBar(new Rectangle(columnX, 150, columnWidth, 20),
-                GUI.style, 0.1f, infoFrame);
+                GUI.Style, 0.1f, infoFrame);
             durationBar.BarSize = 0.1f;
 
             //seed ------------------------------------------------------------------
             
             new GUITextBlock(new Rectangle(columnX, 190, columnWidth, 20),
-                "Level Seed: ", GUI.style, Alignment.Left, Alignment.TopLeft, infoFrame);
+                "Level Seed: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
 
             seedBox = new GUITextBox(new Rectangle(columnX, 220, columnWidth, 20),
-                Alignment.TopLeft, GUI.style, infoFrame);
+                Alignment.TopLeft, GUI.Style, infoFrame);
             seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
 
             //server info ------------------------------------------------------------------
             
-            var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
+            var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
             serverName.TextGetter = GetServerName;
             serverName.Enabled = Game1.Server != null;
             serverName.OnTextChanged = ChangeServerName;
 
-            serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.style, infoFrame);
+            serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
             serverMessage.Wrap = true;
             serverMessage.TextGetter = GetServerMessage;
             serverMessage.OnTextChanged = UpdateServerMessage;
@@ -270,7 +270,7 @@ namespace Subsurface
 
             if (IsServer && Game1.Server != null)
             {
-                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomRight, GUI.style, infoFrame);
+                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
                 startButton.OnClicked = Game1.Server.StartGame;
                 startButton.UserData = "startButton";
                 
@@ -311,42 +311,42 @@ namespace Subsurface
                     playYourself.UserData = "playyourself";
                 }
 
-                new GUITextBlock(new Rectangle(60, 0, 200, 30), "Name: ", GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(60, 0, 200, 30), "Name: ", GUI.Style, playerFrame);
 
                 GUITextBox playerName = new GUITextBox(new Rectangle(60, 30, 0, 20),
-                    Alignment.TopLeft, GUI.style, playerFrame);
+                    Alignment.TopLeft, GUI.Style, playerFrame);
                 playerName.Text = characterInfo.Name;
                 playerName.OnEnter += ChangeCharacterName;
 
-                new GUITextBlock(new Rectangle(0, 70, 200, 30), "Gender: ", GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(0, 70, 200, 30), "Gender: ", GUI.Style, playerFrame);
 
                 GUIButton maleButton = new GUIButton(new Rectangle(0, 100, 70, 20), "Male",
-                    Alignment.TopLeft, GUI.style, playerFrame);
+                    Alignment.TopLeft, GUI.Style, playerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
                 GUIButton femaleButton = new GUIButton(new Rectangle(90, 100, 70, 20), "Female",
-                    Alignment.TopLeft, GUI.style, playerFrame);
+                    Alignment.TopLeft, GUI.Style, playerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.style, playerFrame);
+                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.Style, playerFrame);
 
-                jobList = new GUIListBox(new Rectangle(0, 180, 180, 0), GUI.style, playerFrame);
+                jobList = new GUIListBox(new Rectangle(0, 180, 180, 0), GUI.Style, playerFrame);
                 jobList.Enabled = false;
 
 
                 int i = 1;
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20), i + ". " + job.Name, GUI.style, Alignment.Left, Alignment.Right, jobList);
+                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20), i + ". " + job.Name, GUI.Style, Alignment.Left, Alignment.Right, jobList);
                     jobText.UserData = job;
 
-                    GUIButton upButton = new GUIButton(new Rectangle(0, 0, 15, 15), "u", GUI.style, jobText);
+                    GUIButton upButton = new GUIButton(new Rectangle(0, 0, 15, 15), "u", GUI.Style, jobText);
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
-                    GUIButton downButton = new GUIButton(new Rectangle(25, 0, 15, 15), "d", GUI.style, jobText);
+                    GUIButton downButton = new GUIButton(new Rectangle(25, 0, 15, 15), "d", GUI.Style, jobText);
                     downButton.UserData = 1;
                     downButton.OnClicked += ChangeJobPreference;
                 }
@@ -383,7 +383,7 @@ namespace Subsurface
             return false;
         }
 
-        private bool SelectMap(object obj)
+        private bool SelectMap(GUIComponent component, object obj)
         {
             if (Game1.Server != null) Game1.Server.UpdateNetLobby(obj);
 
@@ -401,7 +401,7 @@ namespace Subsurface
         {
             if (Game1.Server == null) return false;
             ServerName = text;
-            Game1.Server.UpdateNetLobby(null);
+            Game1.Server.UpdateNetLobby(null, null);
 
             return true;
         }
@@ -410,7 +410,7 @@ namespace Subsurface
         {
             if (Game1.Server == null) return false;
             ServerMessage = text;
-            Game1.Server.UpdateNetLobby(null);
+            Game1.Server.UpdateNetLobby(null, null);
 
             return true;
         }
@@ -421,7 +421,7 @@ namespace Subsurface
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(0, 0, 0, 25),
                  client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")"), 
-                 GUI.style, Alignment.Left, Alignment.Left,
+                 GUI.Style, Alignment.Left, Alignment.Left,
                 playerList);
             textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
             textBlock.UserData = client;          
@@ -494,7 +494,7 @@ namespace Subsurface
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20),
                 message, 
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, color, 
-                Alignment.Left, GUI.style, null, true);
+                Alignment.Left, GUI.Style, null, true);
             msg.Font = GUI.SmallFont;
             msg.CanBeFocused = false;
 
@@ -545,7 +545,7 @@ namespace Subsurface
             return true;
         }
 
-        private bool SelectMode(object obj)
+        private bool SelectMode(GUIComponent component, object obj)
         {
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;

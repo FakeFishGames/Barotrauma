@@ -65,7 +65,7 @@ namespace Subsurface
 		}
 	}
 
-	static class PlayerInput
+	public static class PlayerInput
 	{
 		static MouseState mouseState, oldMouseState;
 		static KeyboardState keyboardState, oldKeyboardState;

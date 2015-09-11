@@ -153,6 +153,8 @@ namespace Subsurface
         MouseState previousMouse;
         public override void Update(float deltaTime)
         {
+            if (!Visible) return;
+
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
 
@@ -186,6 +188,8 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            if (!Visible) return;
+
             DrawChildren(spriteBatch);
             
             Vector2 caretPos = textBlock.CaretPos;

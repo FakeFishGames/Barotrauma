@@ -76,6 +76,7 @@
     <Compile Include="Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="Source\GameSession\GameModes\QuestMode.cs" />
     <Compile Include="Source\GameSession\GameModes\TutorialMode.cs" />
+    <Compile Include="Source\GUI\GUIDropDown.cs" />
     <Compile Include="Source\GUI\GUIMessage.cs" />
     <Compile Include="Source\GUI\TitleScreen.cs" />
     <Compile Include="Source\Items\Components\Holdable\MeleeWeapon.cs" />
@@ -222,6 +223,7 @@
     <Compile Include="Source\Utils\TextureLoader.cs" />
     <Compile Include="Source\Utils\ToolBox.cs" />
     <Compile Include="Source\Map\Hull.cs" />
+    <Compile Include="Source\Utils\UpdaterUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
@@ -241,7 +243,7 @@
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
@@ -710,14 +712,14 @@
     <Content Include="Content\UI\uiBackground.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\waterbump.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\randomevents.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Quests.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\waterbump.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Icon.ico" />
