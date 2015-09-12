@@ -150,7 +150,7 @@ namespace Subsurface
                 File.Move(file, fileRelPath);
             }
 
-            Directory.Delete(updateFileFolder);
+            Directory.Delete(updateFileFolder, true);
         }
 
         public static void CleanUnnecessaryFiles(List<string> filesToKeep)

@@ -38,6 +38,8 @@ namespace Launcher2
         private GUIProgressBar progressBar;
         private GUIButton downloadButton;
 
+        GUIButton launchButton;
+
         public bool FullScreenEnabled
         {
             get { return settings.FullScreenEnabled; }
@@ -104,8 +106,8 @@ namespace Launcher2
             guiRoot = new GUIFrame(new Rectangle(0,0,graphicsWidth, graphicsHeight), Color.Transparent);
             guiRoot.Padding = new Vector4(40.0f, 40.0f, 40.0f, 40.0f);
 
-            GUIButton button = new GUIButton(new Rectangle(0,0,100,30), "START", Alignment.BottomRight, GUI.Style, guiRoot);
-            button.OnClicked = LaunchClick;
+            launchButton = new GUIButton(new Rectangle(0,0,100,30), "START", Alignment.BottomRight, GUI.Style, guiRoot);
+            launchButton.OnClicked = LaunchClick;
 
             int y = 50;
 
@@ -360,7 +362,8 @@ namespace Launcher2
             if (string.IsNullOrWhiteSpace(latestVersionFolder)) return false;
 
             button.Enabled = false;
-
+            launchButton.Enabled = false;
+            
             XDocument doc = null;
 
             try
@@ -371,6 +374,7 @@ namespace Launcher2
             catch (Exception e)
             {
                 SetUpdateInfoBox("Error while updating: " + e.Message);
+                launchButton.Enabled = true;
                 return false;
             }
 
@@ -420,12 +424,14 @@ namespace Launcher2
                 {
                     updateInfoText.Text = "Update failed";
                     SetUpdateInfoBox("Error while installing the update: "+e.Message);
+                    launchButton.Enabled = true;
                     return;
-                }
+                }   
 
                 UpdaterUtil.CleanUnnecessaryFiles(latestVersionFiles);
 
                 updateInfoText.Text = "The game was updated succesfully!";
+                launchButton.Enabled = true;
 
                 //MessageBox.Show("Download completed!");
                 return;
@@ -442,16 +448,13 @@ namespace Launcher2
             
             WebClient webClient = new WebClient();
             webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(Completed);
-            //webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ProgressChanged);
-
-            
-
+                       
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
 
-            string fileDir = Path.GetDirectoryName(filesToDownload[filesDownloaded]);
+            string fileDir = dir+"\\"+Path.GetDirectoryName(filesToDownload[filesDownloaded]);
             if (!string.IsNullOrWhiteSpace(fileDir) && !Directory.Exists(fileDir))
             {
                 Directory.CreateDirectory(fileDir);
