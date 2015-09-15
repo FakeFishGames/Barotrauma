@@ -287,20 +287,21 @@ namespace Subsurface.Items.Components
 
             for (int i = 1; i < Nodes.Count; i++)
             {
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 3, (int)-Nodes[i].Y -3, 6, 6), Color.Red, true, 0.0f);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 3, (int)-Nodes[i].Y - 3, 6, 6), Color.Red, true, 0.0f);
 
-                if (Vector2.Distance(Game1.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) < 20.0f)
+                if (GUIComponent.MouseOn == null && 
+                    Vector2.Distance(Game1.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) < 20.0f)
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 10, (int)-Nodes[i].Y - 10, 20, 20), Color.Red, false, 0.0f);
 
-                    if (selectedNodeIndex==null && selectedNodeIndex>0 && selectedNodeIndex<Nodes.Count-1)
+                    if (selectedNodeIndex==null)// && selectedNodeIndex>0 && selectedNodeIndex<Nodes.Count-1)
                     {
-                        if ( PlayerInput.LeftButtonDown())
+                        if (PlayerInput.LeftButtonDown())
                         {
                             MapEntity.SelectEntity(item);
                             selectedNodeIndex = i;
                         }
-                        else
+                        else if (PlayerInput.RightButtonClicked())
                         {
                             Nodes.RemoveAt(i);
                             break;
@@ -325,8 +326,7 @@ namespace Subsurface.Items.Components
             }
             else
             {
-                //if (selectedNodeIndex != null) MapEntity.SelectEntity(item); ;
-selectedNodeIndex = null;
+                selectedNodeIndex = null;
             }
 
 

@@ -56,12 +56,18 @@ namespace Subsurface
                                 break;
                         }
                     }
-
                 }
 
+                try
+                {
+                    Coroutines[i].MoveNext();
+                }
 
-                Coroutines[i].MoveNext();
-
+                catch (Exception e)
+                {                    
+                    DebugConsole.ThrowError("Coroutine "+Coroutines[i]+" threw an exception: "+e.Message);
+                    Coroutines.RemoveAt(i);
+                }
 
             }
         }

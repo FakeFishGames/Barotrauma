@@ -178,22 +178,40 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch sb, bool editing)
         {
-            //if (linkedTo[0] != null)
-            //    GUI.DrawLine(sb, new Vector2(Position.X, Position.Y),
-            //         new Vector2(linkedTo[0].Position.X, linkedTo[0].Position.Y), Color.Blue);
-
-            //if (linkedTo.Count > 1 && linkedTo[1] != null)
-            //    GUI.DrawLine(sb, new Vector2(Position.X, Position.Y),
-            //         new Vector2(linkedTo[1].Position.X, linkedTo[1].Position.Y), Color.Blue);
-
-
-            //GUI.DrawLine(sb, new Vector2(Position.X, -Position.Y), new Vector2(Position.X, -Position.Y)+new Vector2(flowForce.X, -flowForce.Y), Color.LightBlue);
-
             if (!editing) return;
 
             Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
 
-            GUI.DrawRectangle(sb, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), clr);
+            GUI.DrawRectangle(sb, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), clr*0.5f, true);
+
+            if (isHorizontal)
+            {
+                for (int i = 0; i < linkedTo.Count; i++ )
+                {
+                    if (linkedTo[i].Rect.Center.X > rect.Center.X)
+                    {
+                        GUI.DrawRectangle(sb, new Rectangle(rect.Right, -rect.Y, 10, rect.Height), Color.Green * 0.3f, true);
+                    }
+                    else
+                    {
+                        GUI.DrawRectangle(sb, new Rectangle(rect.X - 10, -rect.Y, 10, rect.Height), Color.Green * 0.3f, true);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < linkedTo.Count; i++)
+                {
+                    if (linkedTo[i].Rect.Y - linkedTo[i].Rect.Height/2.0f > rect.Y)
+                    {
+                        GUI.DrawRectangle(sb, new Rectangle(rect.X, -rect.Y - 10, rect.Width, 10), Color.Green * 0.3f, true);
+                    }
+                    else
+                    {
+                        GUI.DrawRectangle(sb, new Rectangle(rect.X, -rect.Y + rect.Height, rect.Width, 10), Color.Green * 0.3f, true);
+                    }
+                }
+            }
 
             if (isSelected)
             {
@@ -202,10 +220,6 @@ namespace Subsurface
                     new Vector2(rect.Width + 10, rect.Height + 10),
                     Color.Red);
             }
-
-            //HUD.DrawLine(sb, new Vector2(position.X, -position.Y),
-            //    isHorizontal ? new Vector2(position.X, -position.Y + size) : new Vector2(position.X + size, -position.Y),
-            //    clr);
         }
         
         public override void Update(Camera cam, float deltaTime)
@@ -218,10 +232,7 @@ namespace Subsurface
             index = Math.Min(index,2);
 
             soundIndex = AmbientSoundManager.flowSounds[index].Loop(soundIndex, soundVolume, Position, 2000.0f);
-            //soundVolume = Math.Max(0.0f, soundVolume-deltaTime);
-            //Sound.UpdatePosition(soundIndex, Position, 2000.0f);                
             
-
             flowForce = Vector2.Zero;
 
             if (open == 0.0f) return;
@@ -240,7 +251,7 @@ namespace Subsurface
                 UpdateRoomToRoom(deltaTime);
             }
 
-            if (FlowForce.Length() > 150.0f && flowTargetHull!=null && flowTargetHull.Volume < flowTargetHull.FullVolume)
+            if (FlowForce.Length() > 150.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {
                 //UpdateFlowForce();
 

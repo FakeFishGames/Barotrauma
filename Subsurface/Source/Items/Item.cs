@@ -635,7 +635,7 @@ namespace Subsurface
                 }
             }
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 60 + (editableProperties.Count() + requiredItemCount) * 30), GUI.Style);
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, 70 + (editableProperties.Count() + requiredItemCount) * 30), GUI.Style);
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
             

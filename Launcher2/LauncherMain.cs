@@ -143,6 +143,11 @@ namespace Launcher2
                 if (settings.GraphicsWidth == mode.Width && settings.GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
             }
 
+            if (resolutionDD.SelectedItemData==null)
+            {
+                resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
+            }
+
             new GUITextBlock(new Rectangle(x, y + 50, 20, 20), "Content package", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, guiRoot);
             contentPackageDD = new GUIDropDown(new Rectangle(x, y + 70, 200, 20), "", GUI.Style, guiRoot);
 
@@ -153,7 +158,7 @@ namespace Launcher2
                 if (settings.SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
             }
 
-            new GUIButton(new Rectangle(x,y+120,150,20), "Package Manager", GUI.Style, guiRoot);
+            //new GUIButton(new Rectangle(x,y+120,150,20), "Package Manager", GUI.Style, guiRoot);
 
             var fullScreenTick = new GUITickBox(new Rectangle(x,y+150,20,20), "Fullscreen", Alignment.TopLeft, guiRoot);
             fullScreenTick.OnSelected = ToggleFullScreen;

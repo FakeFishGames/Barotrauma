@@ -43,6 +43,12 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\Windows\Release\</OutputPath>
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
+    <AllowedReferenceRelatedFileExtensions>
+      <!-- Prevent default XML and PDB files copied to output in RELEASE. 
+           Only *.allowedextension files will be included, which doesn't exist in my case.
+       -->
+      .allowedextension
+    </AllowedReferenceRelatedFileExtensions>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -85,7 +91,7 @@
     <Compile Include="Source\Items\Components\Signal\SignalCheckComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\FixRequirement.cs" />
-    <Compile Include="Source\Map\Lights\Light.cs" />
+    <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\LocationType.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Particles\ParticleEmitter.cs" />

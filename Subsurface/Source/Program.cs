@@ -87,13 +87,15 @@ namespace Subsurface
 
 
             sw.WriteLine(sb.ToString());
+            sw.Close(); 
+
     #if WINDOWS
             MessageBox.Show( "A crash report (''crashreport.txt'') was saved in the root folder of the game."+
-                " If you'd like to help fix this bug, please make a bug report on the Undertow Games forum with the report attached.",
+                " If you'd like to help fix this bug, please post the report on the Undertow Games forums.",
                 "Oops! Subsurface just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
     #endif
 
-            sw.Close();            
+                       
         }
     }
 #endif

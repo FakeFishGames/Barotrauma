@@ -38,8 +38,19 @@ namespace Subsurface.Items.Components
         public Pump(Item item, XElement element)
             : base(item, element)
         {
-            item.linkedTo.CollectionChanged += delegate(object sender, NotifyCollectionChangedEventArgs e)
-            { GetHulls(); };
+            GetHull();
+        }
+
+        public override void Move(Vector2 amount)
+        {
+            base.Move(amount);
+
+            GetHull();
+        }
+
+        public override void OnMapLoaded()
+        {
+            GetHull();
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -77,28 +88,33 @@ namespace Subsurface.Items.Components
 
             voltage = 0.0f;
         }
-        
-        private void GetHulls()
+
+        private void GetHull()
         {
-            hull1 = null;
-            hull2 = null;
-
-            foreach (MapEntity e in item.linkedTo)
-            {
-                Hull hull = e as Hull;
-                if (hull == null) continue;
-
-                if (hull1 == null)
-                {
-                    hull1 = hull;
-                }
-                else if (hull2 == null && hull != hull1)
-                {
-                    hull2 = hull;
-                    break;
-                }
-            }
+            hull1 = Hull.FindHull(item.Position, item.CurrentHull);
         }
+        
+        //private void GetHulls()
+        //{
+        //    hull1 = null;
+        //    hull2 = null;
+
+        //    foreach (MapEntity e in item.linkedTo)
+        //    {
+        //        Hull hull = e as Hull;
+        //        if (hull == null) continue;
+
+        //        if (hull1 == null)
+        //        {
+        //            hull1 = hull;
+        //        }
+        //        else if (hull2 == null && hull != hull1)
+        //        {
+        //            hull2 = hull;
+        //            break;
+        //        }
+        //    }
+        //}
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {

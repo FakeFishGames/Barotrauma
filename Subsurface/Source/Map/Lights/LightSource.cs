@@ -9,7 +9,6 @@ namespace Subsurface.Lights
 {
     class LightSource
     {
-
         private static Texture2D lightTexture;
 
         private Color color;

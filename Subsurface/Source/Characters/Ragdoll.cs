@@ -283,13 +283,15 @@ namespace Subsurface
             }
             else if (structure.StairDirection!=Direction.None)
             {
-                if ((inWater || !(targetMovement.Y>Math.Abs(targetMovement.X/2.0f))) && 
-                    lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)
+                if (targetMovement.Y < 0.5f)
                 {
-                    stairs = null;
-                    return false;
+                    if (inWater || lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)
+                    {
+                        stairs = null;
+                        return false;
+                    }
                 }
-
+                
                 if (targetMovement.Y >= 0.0f && lowestLimb.SimPosition.Y > ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 8.0f))
                 {
                     stairs = null;
@@ -367,12 +369,14 @@ namespace Subsurface
                 if (limb.pullJoint != null)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorA);
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true, 0.01f);
+                    pos.Y = -pos.Y;
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
 
                     if (limb.AnimTargetPos == Vector2.Zero) continue;
 
                     Vector2 pos2 = ConvertUnits.ToDisplayUnits(limb.AnimTargetPos);
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos2.X, (int)-pos2.Y, 5, 5), Color.Blue, true, 0.01f);
+                    pos2.Y = -pos2.Y;
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos2.X, (int)pos2.Y, 5, 5), Color.Blue, true, 0.01f);
 
                     GUI.DrawLine(spriteBatch, pos, pos2, Color.Green);
                 }
