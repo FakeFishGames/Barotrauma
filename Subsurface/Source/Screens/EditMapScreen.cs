@@ -24,6 +24,27 @@ namespace Subsurface
             get { return cam; }
         }
 
+        public string GetSubName()
+        {
+            return ((Submarine.Loaded == null) ? "" : Submarine.Loaded.Name);
+        }
+
+        private string GetItemCount()
+        {
+            return "Items: " +Item.itemList.Count;
+        }
+
+        private string GetStructureCount()
+        {
+            return "Structures: " + (MapEntity.mapEntityList.Count - Item.itemList.Count);
+        }
+
+        private string GetPhysicsBodyCount()
+        {
+            return "Physics bodies: " + Game1.World.BodyList.Count;
+        }
+
+
         public EditMapScreen()
         {
             cam = new Camera(); 
@@ -37,15 +58,28 @@ namespace Subsurface
             //constructionList.OnSelected = MapEntityPrefab.SelectPrefab;
             //constructionList.CheckSelected = MapEntityPrefab.GetSelected;
 
-            GUIButton button = new GUIButton(new Rectangle(0, 50, 100, 20), "Items", Alignment.Left, GUI.Style, GUIpanel);
+            GUITextBlock nameBlock = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, GUIpanel, true, GUI.LargeFont);
+            nameBlock.TextGetter = GetSubName;
+
+            GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 80, 0, 20), "", GUI.Style, GUIpanel);
+            itemCount.TextGetter = GetItemCount;
+
+            GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 100, 0, 20), "", GUI.Style, GUIpanel);
+            structureCount.TextGetter = GetStructureCount;
+
+            //GUITextBlock physicsBodyCount = new GUITextBlock(new Rectangle(0, 120, 0, 20), "", GUI.Style, GUIpanel);
+            //physicsBodyCount.TextGetter = GetPhysicsBodyCount;
+            
+            GUIButton button = new GUIButton(new Rectangle(0, 150, 0, 20), "Items", Alignment.Left, GUI.Style, GUIpanel);
             button.UserData = 0;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 80, 100, 20), "Structures", Alignment.Left, GUI.Style, GUIpanel);
+            button = new GUIButton(new Rectangle(0, 180, 0, 20), "Structures", Alignment.Left, GUI.Style, GUIpanel);
             button.UserData = 1;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 140, 100, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
+            button = new GUIButton(new Rectangle(0, 220, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
+            button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
             
             GUItabs = new GUIComponent[2];
@@ -130,10 +164,10 @@ namespace Subsurface
         
         private bool ToggleCharacterMode(GUIButton button, object obj)
         {
-            selectedTab = 0;
+            selectedTab = -1;
 
             characterMode = !characterMode;         
-            button.Color = (characterMode) ? Color.Gold : Color.White;
+            //button.Color = (characterMode) ? Color.Gold : Color.White;
 
             if (characterMode)
             {
@@ -170,16 +204,9 @@ namespace Subsurface
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Update(double deltaTime)
         {
-            //Vector2 mousePosition = new Vector2(PlayerInput.GetMouseState.X, PlayerInput.GetMouseState.Y);
-            //mousePosition = cam.ScreenToWorld(mousePosition);
 
-            //if (!Character.characterList.Contains(dummyCharacter))
-            //{
-            //    CreateDummyCharacter();
-            //}
-
-            if (GUIComponent.MouseOn==null) cam.MoveCamera((float)deltaTime);
-            cam.Zoom = MathHelper.Clamp(cam.Zoom + PlayerInput.ScrollWheelSpeed/1000.0f,0.1f, 2.0f);
+            if (GUIComponent.MouseOn == null) cam.MoveCamera((float)deltaTime);
+            cam.Zoom = MathHelper.Clamp(cam.Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f, 0.1f, 2.0f);
 
             if (characterMode)
             {

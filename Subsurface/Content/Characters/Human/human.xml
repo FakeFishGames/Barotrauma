@@ -4,7 +4,11 @@
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
   
   <ragdoll headposition="156" torsoposition="120" 
-           stepsize="42.0, 12.0">
+           stepsize="42.0, 12.0"
+           walkanimspeed="4.58"
+           movementlerp="0.4"
+           legtorque="15.0"
+           thightorque="-5.0">
     
     <!-- head -->
     <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="4.0">

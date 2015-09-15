@@ -120,7 +120,7 @@ namespace Subsurface
 
             SetTextPos();
 
-            if (rect.Height == 0)
+            if (rect.Height == 0 && !string.IsNullOrWhiteSpace(Text))
             {
                 this.rect.Height = (int)Font.MeasureString(Text).Y;
             }

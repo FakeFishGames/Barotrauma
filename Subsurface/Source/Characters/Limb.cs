@@ -426,7 +426,7 @@ namespace Subsurface
             if (pullJoint!=null)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
             }
 
             if (bodyShapeTexture == null)

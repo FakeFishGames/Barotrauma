@@ -400,9 +400,9 @@ namespace Subsurface
                 yield return new WaitForSeconds(1.0f);
             }
 
-            infoBox = CreateInfoFrame("The capacitors consume large amounts of power when they're being charged at a high rate. "+
-                "Be cautious to overload the electrical grid or the reactor. They also take some time to recharge, so now is a good "+
-                "time to head to the room below to load some shells into the railgun.");
+            infoBox = CreateInfoFrame("The capacitors consume large amounts of power when they're being charged at a high rate, so "+
+                "be careful not to overload the electrical grid or the reactor. They also take some time to recharge, so now is a good "+
+                "time to head to the room below and load some shells for the railgun.");
 
 
             var loader = Item.itemList.Find(i => i.Name == "Railgun Loader").GetComponent<ItemContainer>();

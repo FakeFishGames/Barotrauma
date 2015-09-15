@@ -680,17 +680,8 @@ namespace Subsurface
 
         public void Update(Camera cam, float deltaTime)
         {
-            if (isDead)
-            {
-                if (controlled == this)
-                {
-                    cam.Zoom = MathHelper.Lerp(cam.Zoom, 1.5f, 0.1f);
-                    cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
-                    cam.OffsetAmount = 0.0f;
-                }
-                return;
-            }
-
+            if (isDead) return;
+            
             if (PressureProtection==0.0f && 
                 (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 100.0f))
             {
@@ -953,15 +944,40 @@ namespace Subsurface
             Kill(true);
         }
 
-        private IEnumerable<object> DeathAnim()
+        private IEnumerable<object> DeathAnim(Camera cam)
         {
-            float timer = 8.0f;
+            float dimDuration = 8.0f;
+            float timer = 0.0f;
 
-            while (timer > 0.0f)
+            Color prevAmbientLight = Game1.LightManager.AmbientLight;
+
+            while (timer < dimDuration)
             {
                 AnimController.UpdateAnim(1.0f / 60.0f);
-                timer -= 1.0f / 60.0f;
+                timer += 1.0f / 60.0f;
 
+                if (cam != null)
+                {
+                    cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
+                    cam.OffsetAmount = 0.0f;
+                }
+
+                Game1.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, Color.DarkGray, timer / dimDuration);
+
+                yield return CoroutineStatus.Running;
+            }
+
+            while (Character.Controlled == this)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            float lerpLightBack = 0.0f;
+            while (lerpLightBack<1.0f)
+            {
+                lerpLightBack = Math.Min(lerpLightBack+0.05f,1.0f);
+
+                Game1.LightManager.AmbientLight = Color.Lerp(Color.DarkGray, prevAmbientLight, lerpLightBack);
                 yield return CoroutineStatus.Running;
             }
 
@@ -985,7 +1001,7 @@ namespace Subsurface
                 }
             }
 
-            CoroutineManager.StartCoroutine(DeathAnim());
+            CoroutineManager.StartCoroutine(DeathAnim(Game1.GameScreen.Cam));
 
             health = 0.0f;
 
