@@ -39,11 +39,11 @@ namespace Subsurface
         {
             base.Select();
 
-            Game1.DebugDraw = true;
+            GameMain.DebugDraw = true;
 
             cam = new Camera();
 
-            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, Game1.GraphicsHeight), GUI.Style);
+            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), GUI.Style);
             GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
             physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, GUI.Style, GUIpanel);
@@ -66,7 +66,7 @@ namespace Subsurface
                 if (editingCharacter != Character.CharacterList[0]) UpdateLimbLists(Character.CharacterList[0]);
                 editingCharacter = Character.CharacterList[0];
 
-                Vector2 camPos = editingCharacter.AnimController.limbs[0].body.SimPosition;
+                Vector2 camPos = editingCharacter.AnimController.Limbs[0].body.SimPosition;
                 camPos = ConvertUnits.ToDisplayUnits(camPos);
                 camPos.Y = -camPos.Y;
                 cam.TargetPos = camPos;
@@ -83,7 +83,7 @@ namespace Subsurface
 
             textures = new List<Texture2D>();
             texturePaths = new List<string>();
-            foreach (Limb limb in editingCharacter.AnimController.limbs)
+            foreach (Limb limb in editingCharacter.AnimController.Limbs)
             {
                 if (texturePaths.Contains(limb.sprite.FilePath)) continue;
                 textures.Add(limb.sprite.Texture);
@@ -112,7 +112,7 @@ namespace Subsurface
 
                     Ragdoll.UpdateAll((float)Physics.step);
 
-                    Game1.World.Step((float)Physics.step);
+                    GameMain.World.Step((float)Physics.step);
 
                     Physics.accumulator -= Physics.step;
                 }
@@ -169,10 +169,10 @@ namespace Subsurface
             int x = 0, y = 0;
             for (int i = 0; i < textures.Count; i++ )
             {
-                x = Game1.GraphicsWidth - textures[i].Width;
+                x = GameMain.GraphicsWidth - textures[i].Width;
                 spriteBatch.Draw(textures[i], new Vector2(x, y), Color.White);
 
-                foreach (Limb limb in editingCharacter.AnimController.limbs)
+                foreach (Limb limb in editingCharacter.AnimController.Limbs)
                 {
                     if (limb.sprite.FilePath != texturePaths[i]) continue;
                     Rectangle rect = limb.sprite.SourceRect;
@@ -219,7 +219,7 @@ namespace Subsurface
         private void UpdateLimbLists(Character character)
         {
             limbList.ClearChildren();
-            foreach (Limb limb in character.AnimController.limbs)
+            foreach (Limb limb in character.AnimController.Limbs)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0,0,0,25),

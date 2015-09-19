@@ -41,7 +41,7 @@ namespace Subsurface
 
         private string GetPhysicsBodyCount()
         {
-            return "Physics bodies: " + Game1.World.BodyList.Count;
+            return "Physics bodies: " + GameMain.World.BodyList.Count;
         }
 
 
@@ -52,7 +52,7 @@ namespace Subsurface
 
             selectedTab = -1;
 
-            GUIpanel = new GUIFrame(new Rectangle(0, 0, 150, Game1.GraphicsHeight), GUI.Style);
+            GUIpanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), GUI.Style);
             GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             //GUIListBox constructionList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUIpanel);
             //constructionList.OnSelected = MapEntityPrefab.SelectPrefab;
@@ -84,13 +84,13 @@ namespace Subsurface
             
             GUItabs = new GUIComponent[2];
             int width = 400, height = 400;
-            GUItabs[0] = new GUIFrame(new Rectangle(Game1.GraphicsWidth/2-width/2, Game1.GraphicsHeight/2-height/2, width, height), GUI.Style);
+            GUItabs[0] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth/2-width/2, GameMain.GraphicsHeight/2-height/2, width, height), GUI.Style);
             GUItabs[0].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[0]);
             itemList.OnSelected = SelectPrefab;
             itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
-            GUItabs[1] = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+            GUItabs[1] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
             GUItabs[1].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             GUIListBox structureList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.Style, GUItabs[1]);
             structureList.OnSelected = SelectPrefab;
@@ -143,7 +143,7 @@ namespace Subsurface
             {
                 dummyCharacter.Remove();
                 dummyCharacter = null;
-                Game1.World.ProcessChanges();
+                GameMain.World.ProcessChanges();
             }
         }
 
@@ -153,7 +153,7 @@ namespace Subsurface
 
             dummyCharacter = new Character(Character.HumanConfigFile, Vector2.Zero);
             Character.Controlled = dummyCharacter;
-            Game1.World.ProcessChanges();
+            GameMain.World.ProcessChanges();
         }
 
         private bool SelectTab(GUIButton button, object obj)
@@ -218,7 +218,7 @@ namespace Subsurface
                 if (dummyCharacter.SelectedConstruction==null)
                 {
                     Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(cam.ScreenToWorld(PlayerInput.MousePosition));
-                    foreach (Limb limb in dummyCharacter.AnimController.limbs)
+                    foreach (Limb limb in dummyCharacter.AnimController.Limbs)
                     {
                         limb.body.SetTransform(mouseSimPos, 0.0f);
                     }

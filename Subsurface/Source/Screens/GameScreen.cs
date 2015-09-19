@@ -28,9 +28,9 @@ namespace Subsurface
             cam = new Camera();
             cam.Translate(new Vector2(-10.0f, 50.0f));
             
-            renderTarget = new RenderTarget2D(graphics, Game1.GraphicsWidth, Game1.GraphicsHeight);
-            renderTargetWater = new RenderTarget2D(graphics, Game1.GraphicsWidth, Game1.GraphicsHeight);
-            renderTargetAir = new RenderTarget2D(graphics, Game1.GraphicsWidth, Game1.GraphicsHeight);
+            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetAir = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             background = new Sprite("Content/Map/background.png", Vector2.Zero);
             backgroundTop = new Sprite("Content/Map/background2.png", Vector2.Zero);
@@ -70,14 +70,14 @@ namespace Subsurface
             //    Game1.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
             //}
 
-            if (Game1.GameSession!=null) Game1.GameSession.Update((float)deltaTime);
+            if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);
 
             Character.UpdateAll(cam, (float)deltaTime);
 
             BackgroundSpriteManager.Update((float)deltaTime);
 
-            Game1.ParticleManager.Update((float)deltaTime);
+            GameMain.ParticleManager.Update((float)deltaTime);
 
             StatusEffect.UpdateAll((float)deltaTime);
 
@@ -98,9 +98,9 @@ namespace Subsurface
 
                 Ragdoll.UpdateAll((float)Physics.step);
 
-                if (Game1.GameSession != null && Game1.GameSession.Level != null) Game1.GameSession.Submarine.Update((float)Physics.step);
+                if (GameMain.GameSession != null && GameMain.GameSession.Level != null) GameMain.GameSession.Submarine.Update((float)Physics.step);
 
-                Game1.World.Step((float)Physics.step);
+                GameMain.World.Step((float)Physics.step);
 
                 Level.AfterWorldStep();
 
@@ -132,7 +132,7 @@ namespace Subsurface
                 }
             }
 
-            if (Game1.GameSession != null) Game1.GameSession.Draw(spriteBatch);
+            if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         
@@ -143,7 +143,7 @@ namespace Subsurface
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            Game1.LightManager.DrawLightmap(graphics, spriteBatch, cam);
+            GameMain.LightManager.DrawLightmap(graphics, spriteBatch, cam);
 
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
@@ -167,14 +167,14 @@ namespace Subsurface
                     background.SourceRect = new Rectangle((int)backgroundPos.X, (int)Math.Max(backgroundPos.Y, 0), 1024, 1024);
                     background.DrawTiled(spriteBatch, 
                         (backgroundPos.Y < 0) ? new Vector2(0.0f, -backgroundPos.Y) : Vector2.Zero, 
-                        new Vector2(Game1.GraphicsWidth, 1024 - backgroundPos.Y),
+                        new Vector2(GameMain.GraphicsWidth, 1024 - backgroundPos.Y),
                         Vector2.Zero, Color.White);
                 }
 
                 if (backgroundPos.Y < 0)
                 {
                     backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
-                    backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(Game1.GraphicsWidth, Math.Min(-backgroundPos.Y, Game1.GraphicsHeight)),
+                    backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
                         Vector2.Zero, Color.White);
                 }
             }
@@ -208,7 +208,7 @@ namespace Subsurface
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.AlphaBlend);
-            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, Game1.GraphicsWidth, Game1.GraphicsHeight), new Color(0.75f, 0.8f, 0.9f, 1.0f));
+            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), new Color(0.75f, 0.8f, 0.9f, 1.0f));
             spriteBatch.End();
 
             BlendState blend = new BlendState();
@@ -219,7 +219,7 @@ namespace Subsurface
                 BlendState.AlphaBlend,
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-            Game1.ParticleManager.Draw(spriteBatch, true);
+            GameMain.ParticleManager.Draw(spriteBatch, true);
 
             spriteBatch.End();
 
@@ -229,7 +229,7 @@ namespace Subsurface
             graphics.SetRenderTarget(renderTargetAir);
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.AlphaBlend);
-            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, Game1.GraphicsWidth, Game1.GraphicsHeight), Color.White);
+            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
@@ -237,7 +237,7 @@ namespace Subsurface
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
 
-            Game1.ParticleManager.Draw(spriteBatch, false);
+            GameMain.ParticleManager.Draw(spriteBatch, false);
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
@@ -257,17 +257,17 @@ namespace Subsurface
 
             Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
 
-            if (Game1.GameSession != null && Game1.GameSession.Level != null)
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
             {
-                Game1.GameSession.Level.Render(graphics, cam);
-                Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
+                GameMain.GameSession.Level.Render(graphics, cam);
+                GameMain.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
             }
 
-            if (Game1.LightManager.LightingEnabled)
+            if (GameMain.LightManager.LightingEnabled)
             {
                 //multiply scene with lightmap
                 spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
-                spriteBatch.Draw(Game1.LightManager.LightMap, Vector2.Zero, Color.White);
+                spriteBatch.Draw(GameMain.LightManager.LightMap, Vector2.Zero, Color.White);
                 spriteBatch.End();
             }
 
@@ -284,15 +284,15 @@ namespace Subsurface
 
             foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
 
-            if (Game1.GameSession != null && Game1.GameSession.Level != null)
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
             {
-                Game1.GameSession.Level.Draw(spriteBatch);
+                GameMain.GameSession.Level.Draw(spriteBatch);
                 //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
             }
 
             spriteBatch.End();
 
-            Game1.LightManager.DrawLOS(graphics, cam, LightManager.ViewPos);
+            GameMain.LightManager.DrawLOS(graphics, cam, LightManager.ViewPos);
 
         }
     }

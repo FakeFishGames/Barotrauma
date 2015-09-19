@@ -47,7 +47,7 @@ namespace Subsurface.Lights
 
             texture = lightTexture;
 
-            Game1.LightManager.AddLight(this);
+            GameMain.LightManager.AddLight(this);
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -59,7 +59,7 @@ namespace Subsurface.Lights
 
         public void Remove()
         {
-            Game1.LightManager.RemoveLight(this);
+            GameMain.LightManager.RemoveLight(this);
         }
     }
 }

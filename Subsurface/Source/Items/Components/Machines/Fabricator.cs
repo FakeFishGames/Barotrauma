@@ -74,7 +74,7 @@ namespace Subsurface.Items.Components
             }
 
             int width = 400, height = 300;
-            itemList = new GUIListBox(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), Color.White * 0.7f);
+            itemList = new GUIListBox(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), Color.White * 0.7f);
             itemList.OnSelected = SelectItem;
             //structureList.CheckSelected = MapEntityPrefab.GetSelected;
 
@@ -110,7 +110,7 @@ namespace Subsurface.Items.Components
             if (targetItem == null) return false;
 
             int width = 200, height = 150;
-            selectedItemFrame = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, itemList.Rect.Bottom+20, width, height), Color.Black*0.8f);
+            selectedItemFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, itemList.Rect.Bottom+20, width, height), Color.Black*0.8f);
             //selectedItemFrame.Padding = GUI.style.smallPadding;
 
             if (targetItem.TargetItem.sprite != null)

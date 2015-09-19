@@ -34,7 +34,7 @@ namespace Subsurface
                 Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
                 position.X += Rand.Range(-0.5f, 0.5f);
                 position.Y += Rand.Range(-0.5f, 0.5f);
-                monsters[i] = new Character(characterFile, position);
+                monsters[i] = new AICharacter(characterFile, position);
             }
         }
 

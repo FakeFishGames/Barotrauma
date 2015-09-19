@@ -105,13 +105,13 @@ namespace Subsurface
             position = Vector2.Zero;
 
             worldView = new Rectangle(0,0, 
-                Game1.GraphicsWidth,
-                Game1.GraphicsHeight);
+                GameMain.GraphicsWidth,
+                GameMain.GraphicsHeight);
 
-            resolution = new Point(Game1.GraphicsWidth, Game1.GraphicsHeight);
+            resolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             viewMatrix = 
-                Matrix.CreateTranslation(new Vector3(Game1.GraphicsWidth / 2.0f, Game1.GraphicsHeight / 2.0f, 0));
+                Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
         }
 
         public Vector2 TargetPos

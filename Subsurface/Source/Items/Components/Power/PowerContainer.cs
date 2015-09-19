@@ -184,8 +184,8 @@ namespace Subsurface.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             int width = 300, height = 200;
-            int x = Game1.GraphicsWidth / 2 - width / 2;
-            int y = Game1.GraphicsHeight / 2 - height / 2;
+            int x = GameMain.GraphicsWidth / 2 - width / 2;
+            int y = GameMain.GraphicsHeight / 2 - height / 2;
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 

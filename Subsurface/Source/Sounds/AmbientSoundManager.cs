@@ -170,7 +170,7 @@ namespace Subsurface
                 if (animController.HeadInWater)
                 {
                     ambienceVolume = 0.5f;
-                    ambienceVolume += animController.limbs[0].LinearVelocity.Length();
+                    ambienceVolume += animController.Limbs[0].LinearVelocity.Length();
 
                     lowpassHFGain = 0.2f;
                 }
@@ -185,9 +185,9 @@ namespace Subsurface
             if (musicClips == null) return;
             
             Task criticalTask = null;
-            if (Game1.GameSession!=null)
+            if (GameMain.GameSession!=null)
             {
-                foreach (Task task in Game1.GameSession.taskManager.Tasks)
+                foreach (Task task in GameMain.GameSession.taskManager.Tasks)
                 {
                     if (!task.IsStarted) continue;
                     if (criticalTask == null || task.Priority > criticalTask.Priority)

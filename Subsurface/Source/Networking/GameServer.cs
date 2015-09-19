@@ -36,7 +36,7 @@ namespace Subsurface.Networking
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
-            var endRoundButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
+            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
             endRoundButton.OnClicked = EndButtonHit;
 
             this.name = name;
@@ -116,7 +116,7 @@ namespace Subsurface.Networking
 
             DebugConsole.NewMessage("Server started", Color.Green);
                         
-            Game1.NetLobbyScreen.Select();
+            GameMain.NetLobbyScreen.Select();
             started = true;
             yield return CoroutineStatus.Success;
         }
@@ -312,21 +312,21 @@ namespace Subsurface.Networking
                             
                             break;
                         }
-                        else if (version != Game1.Version.ToString())
+                        else if (version != GameMain.Version.ToString())
                         {
-                            inc.SenderConnection.Deny("Subsurface version " + Game1.Version + " required to connect to the server (Your version: " + version + ")");
+                            inc.SenderConnection.Deny("Subsurface version " + GameMain.Version + " required to connect to the server (Your version: " + version + ")");
                             DebugConsole.NewMessage("Connection error - wrong game version", Color.Red);
                             break;
                         } 
-                        else if (packageName != Game1.SelectedPackage.Name)
+                        else if (packageName != GameMain.SelectedPackage.Name)
                         {
-                            inc.SenderConnection.Deny("Your content package ("+packageName+") doesn't match the server's version (" + Game1.SelectedPackage.Name + ")");
+                            inc.SenderConnection.Deny("Your content package ("+packageName+") doesn't match the server's version (" + GameMain.SelectedPackage.Name + ")");
                             DebugConsole.NewMessage("Connection error - wrong content package name", Color.Red);
                             break;
                         }
-                        else if (packageHash != Game1.SelectedPackage.MD5hash.Hash)
+                        else if (packageHash != GameMain.SelectedPackage.MD5hash.Hash)
                         {
-                            inc.SenderConnection.Deny("Your content package (MD5: " + packageHash + ") doesn't match the server's version (MD5: " + Game1.SelectedPackage.MD5hash.Hash + ")");
+                            inc.SenderConnection.Deny("Your content package (MD5: " + packageHash + ") doesn't match the server's version (MD5: " + GameMain.SelectedPackage.MD5hash.Hash + ")");
                             DebugConsole.NewMessage("Connection error - wrong content package hash", Color.Red);
                             break;
                         } 
@@ -365,10 +365,10 @@ namespace Subsurface.Networking
 
                         if (sender == null) break;
 
-                        if (sender.version != Game1.Version.ToString())
+                        if (sender.version != GameMain.Version.ToString())
                         {
                             DisconnectClient(sender, sender.name+" was unable to connect to the server (nonmatching game version)", 
-                                "Subsurface version " + Game1.Version + " required to connect to the server (Your version: " + sender.version + ")");
+                                "Subsurface version " + GameMain.Version + " required to connect to the server (Your version: " + sender.version + ")");
                         }
                         else if (connectedClients.Find(x => x.name == sender.name && x != sender)!=null)
                         {
@@ -379,7 +379,7 @@ namespace Subsurface.Networking
                         {
                             //AssignJobs();
 
-                            Game1.NetLobbyScreen.AddPlayer(sender);
+                            GameMain.NetLobbyScreen.AddPlayer(sender);
 
                             // Notify the client that they have logged in
                             outmsg = server.CreateMessage();
@@ -538,11 +538,11 @@ namespace Subsurface.Networking
 
         public bool StartGame(GUIButton button, object obj)
         {
-            Submarine selectedMap = Game1.NetLobbyScreen.SelectedMap as Submarine;
+            Submarine selectedMap = GameMain.NetLobbyScreen.SelectedMap as Submarine;
 
             if (selectedMap == null)
             {
-                Game1.NetLobbyScreen.SubList.Flash();
+                GameMain.NetLobbyScreen.SubList.Flash();
                 return false;
             }
             
@@ -552,8 +552,8 @@ namespace Subsurface.Networking
 
             int seed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(seed);
-            Game1.GameSession = new GameSession(selectedMap, "", Game1.NetLobbyScreen.SelectedMode);
-            Game1.GameSession.StartShift(Game1.NetLobbyScreen.GameDuration, Game1.NetLobbyScreen.LevelSeed);
+            GameMain.GameSession = new GameSession(selectedMap, "", GameMain.NetLobbyScreen.SelectedMode);
+            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.GameDuration, GameMain.NetLobbyScreen.LevelSeed);
             //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
 
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
@@ -573,7 +573,7 @@ namespace Subsurface.Networking
 
             if (characterInfo != null)
             {
-                characterInfo.Job = new Job(Game1.NetLobbyScreen.JobPreferences[0]);
+                characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
                 characterInfos.Add(characterInfo);
             }
 
@@ -604,12 +604,12 @@ namespace Subsurface.Networking
 
             msg.Write(seed);
 
-            msg.Write(Game1.NetLobbyScreen.LevelSeed);
+            msg.Write(GameMain.NetLobbyScreen.LevelSeed);
 
-            msg.Write(Game1.NetLobbyScreen.SelectedMap.Name);
-            msg.Write(Game1.NetLobbyScreen.SelectedMap.MD5Hash.Hash);
+            msg.Write(GameMain.NetLobbyScreen.SelectedMap.Name);
+            msg.Write(GameMain.NetLobbyScreen.SelectedMap.MD5Hash.Hash);
                 
-            msg.Write(Game1.NetLobbyScreen.GameDuration.TotalMinutes);
+            msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
             msg.Write((myCharacter == null) ? connectedClients.Count : connectedClients.Count+1);
             foreach (Client client in connectedClients)
@@ -628,9 +628,9 @@ namespace Subsurface.Networking
 
             gameStarted = true;
 
-            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
-            Game1.GameScreen.Select();
+            GameMain.GameScreen.Select();
 
             CreateCrewFrame(crew);
 
@@ -639,7 +639,7 @@ namespace Subsurface.Networking
 
         private bool EndButtonHit(GUIButton button, object obj)
         {
-            Game1.GameSession.gameMode.End("Server admin has ended the round");
+            GameMain.GameSession.gameMode.End("Server admin has ended the round");
 
             return true;
         }
@@ -651,8 +651,8 @@ namespace Subsurface.Networking
 
 
             Character.Controlled = null;
-            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
-            Game1.LightManager.LosEnabled = false;
+            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+            GameMain.LightManager.LosEnabled = false;
 
             gameStarted = false;
 
@@ -688,7 +688,7 @@ namespace Subsurface.Networking
                     (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
                     (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
+                GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
@@ -698,7 +698,7 @@ namespace Subsurface.Networking
 
             Submarine.Unload();
 
-            Game1.NetLobbyScreen.Select();
+            GameMain.NetLobbyScreen.Select();
 
             yield return CoroutineStatus.Success;
 
@@ -731,7 +731,7 @@ namespace Subsurface.Networking
             outmsg.Write(client.ID);
             outmsg.Write(msg);
 
-            Game1.NetLobbyScreen.RemovePlayer(client);
+            GameMain.NetLobbyScreen.RemovePlayer(client);
 
             if (server.Connections.Count > 0)
             {
@@ -775,10 +775,10 @@ namespace Subsurface.Networking
         {
             base.Draw(spriteBatch);
 
-            if (!Game1.DebugDraw) return;
+            if (!GameMain.DebugDraw) return;
 
             int width = 200, height = 300;
-            int x = Game1.GraphicsWidth - width, y = (int)(Game1.GraphicsHeight*0.3f);
+            int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight*0.3f);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x,y,width,height), Color.Black*0.7f, true);
             spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x+10, y+10), Color.White);
@@ -809,7 +809,7 @@ namespace Subsurface.Networking
         {
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.UpdateNetLobby);
-            Game1.NetLobbyScreen.WriteData(msg);
+            GameMain.NetLobbyScreen.WriteData(msg);
 
             if (server.Connections.Count > 0)
             {
@@ -912,7 +912,7 @@ namespace Subsurface.Networking
 
             if (characterInfo!=null)
             {
-                assignedClientCount[JobPrefab.List.FindIndex(jp => jp == Game1.NetLobbyScreen.JobPreferences[0])]=1;
+                assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])]=1;
             }
 
             //if any of the players has chosen a job that is Always Allowed, give them that job

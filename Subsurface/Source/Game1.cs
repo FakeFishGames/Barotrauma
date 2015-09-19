@@ -14,7 +14,7 @@ using System.Xml;
 
 namespace Subsurface
 {
-    class Game1 : Game
+    class GameMain : Game
     {
         public static GraphicsDeviceManager Graphics;
         static int graphicsWidth, graphicsHeight;
@@ -93,7 +93,7 @@ namespace Subsurface
             get { return NetworkMember as GameClient; }
         }
                 
-        public Game1()
+        public GameMain()
         {
             Graphics = new GraphicsDeviceManager(this);
 

@@ -76,9 +76,9 @@ namespace Subsurface.Networking
 
             outmsg.Write((byte)PacketTypes.Login);
             outmsg.Write(password);
-            outmsg.Write(Game1.Version.ToString());
-            outmsg.Write(Game1.SelectedPackage.Name);
-            outmsg.Write(Game1.SelectedPackage.MD5hash.Hash);
+            outmsg.Write(GameMain.Version.ToString());
+            outmsg.Write(GameMain.SelectedPackage.Name);
+            outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
             outmsg.Write(name);
 
             // Connect client, to ip previously requested from user 
@@ -124,8 +124,8 @@ namespace Subsurface.Networking
         private bool SelectMainMenu(GUIButton button, object obj)
         {
             Disconnect();
-            Game1.NetworkMember = null;
-            Game1.MainMenuScreen.Select();
+            GameMain.NetworkMember = null;
+            GameMain.MainMenuScreen.Select();
             return true;
         }
 
@@ -159,12 +159,12 @@ namespace Subsurface.Networking
                             if (packetType == (byte)PacketTypes.LoggedIn)
                             {
                                 myID = inc.ReadInt32();
-                                if (inc.ReadBoolean() && Screen.Selected != Game1.GameScreen)
+                                if (inc.ReadBoolean() && Screen.Selected != GameMain.GameScreen)
                                 {
                                     new GUIMessageBox("Please wait", "A round is already running. You will have to wait for a new round to start.");
                                 }
 
-                                Game1.NetLobbyScreen.ClearPlayers();
+                                GameMain.NetLobbyScreen.ClearPlayers();
 
                                 //add the names of other connected clients to the lobby screen
                                 int existingClients = inc.ReadInt32();
@@ -172,12 +172,12 @@ namespace Subsurface.Networking
                                 {
                                     Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
 
-                                    Game1.NetLobbyScreen.AddPlayer(otherClient);
+                                    GameMain.NetLobbyScreen.AddPlayer(otherClient);
                                     otherClients.Add(otherClient);
                                 }
 
                                 //add the name of own client to the lobby screen
-                                Game1.NetLobbyScreen.AddPlayer(new Client(name, myID));
+                                GameMain.NetLobbyScreen.AddPlayer(new Client(name, myID));
 
                                 CanStart = true;
                             }
@@ -186,7 +186,7 @@ namespace Subsurface.Networking
                                 string msg = inc.ReadString();
                                 DebugConsole.ThrowError(msg);
 
-                                Game1.MainMenuScreen.Select();
+                                GameMain.MainMenuScreen.Select();
                             }
                             break;
                         case NetIncomingMessageType.StatusChanged:
@@ -229,7 +229,7 @@ namespace Subsurface.Networking
             }
             else
             {
-                if (Screen.Selected != Game1.GameScreen) Game1.NetLobbyScreen.Select();
+                if (Screen.Selected != GameMain.GameScreen) GameMain.NetLobbyScreen.Select();
                 connected = true;
             }
 
@@ -265,7 +265,7 @@ namespace Subsurface.Networking
                 if (myCharacter.IsDead)
                 {
                     Character.Controlled = null;
-                    Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
                 }
                 else if (gameStarted)
                 {
@@ -327,15 +327,15 @@ namespace Subsurface.Networking
                         string mapName = inc.ReadString();
                         string mapHash = inc.ReadString();
 
-                        Game1.NetLobbyScreen.TrySelectMap(mapName, mapHash);
+                        GameMain.NetLobbyScreen.TrySelectMap(mapName, mapHash);
                         
                         double durationMinutes = inc.ReadDouble();
 
                         TimeSpan duration = new TimeSpan(0,(int)durationMinutes,0);
                         Rand.SetSyncedSeed(seed);
                         //int gameModeIndex = inc.ReadInt32();
-                        Game1.GameSession = new GameSession(Submarine.Loaded, "", Game1.NetLobbyScreen.SelectedMode);
-                        Game1.GameSession.StartShift(duration, levelSeed);
+                        GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameMain.NetLobbyScreen.SelectedMode);
+                        GameMain.GameSession.StartShift(duration, levelSeed);
 
                         //myCharacter = ReadCharacterData(inc);
                         //Character.Controlled = myCharacter;                       
@@ -353,7 +353,7 @@ namespace Subsurface.Networking
 
                         gameStarted = true;
 
-                        Game1.GameScreen.Select();
+                        GameMain.GameScreen.Select();
 
                         AddChatMessage("Press TAB to chat", ChatMessageType.Server);
 
@@ -368,7 +368,7 @@ namespace Subsurface.Networking
 
                         Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
 
-                        Game1.NetLobbyScreen.AddPlayer(otherClient);
+                        GameMain.NetLobbyScreen.AddPlayer(otherClient);
                         otherClients.Add(otherClient);
 
                         AddChatMessage(otherClient.name + " has joined the server", ChatMessageType.Server);
@@ -378,7 +378,7 @@ namespace Subsurface.Networking
                         int leavingID = inc.ReadInt32();
 
                         AddChatMessage(inc.ReadString(), ChatMessageType.Server);
-                        Game1.NetLobbyScreen.RemovePlayer(otherClients.Find(c => c.ID==leavingID));
+                        GameMain.NetLobbyScreen.RemovePlayer(otherClients.Find(c => c.ID==leavingID));
                         break;
 
                     case (byte)PacketTypes.KickedOut:
@@ -386,7 +386,7 @@ namespace Subsurface.Networking
 
                         new GUIMessageBox("KICKED", msg);
 
-                        Game1.MainMenuScreen.Select();
+                        GameMain.MainMenuScreen.Select();
 
                         break;
                     case (byte)PacketTypes.Chatmessage:
@@ -400,7 +400,7 @@ namespace Subsurface.Networking
                         break;
                     case (byte)PacketTypes.UpdateNetLobby:
                         if (gameStarted) continue;
-                        Game1.NetLobbyScreen.ReadData(inc);
+                        GameMain.NetLobbyScreen.ReadData(inc);
                         break;
                     case (byte)PacketTypes.Traitor:
                         string targetName = inc.ReadString();
@@ -421,7 +421,7 @@ namespace Subsurface.Networking
             var messageBox = new GUIMessageBox("The round has ended", endMessage);
 
             Character.Controlled = null;
-            Game1.LightManager.LosEnabled = false;
+            GameMain.LightManager.LosEnabled = false;
 
             float endPreviewLength = 10.0f;
 
@@ -437,7 +437,7 @@ namespace Subsurface.Networking
                     (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
                     (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
+                GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
@@ -448,9 +448,9 @@ namespace Subsurface.Networking
 
             Submarine.Unload();
 
-            Game1.NetLobbyScreen.Select();
+            GameMain.NetLobbyScreen.Select();
 
-            if (Game1.GameSession!=null) Game1.GameSession.EndShift("");
+            if (GameMain.GameSession!=null) GameMain.GameSession.EndShift("");
 
             myCharacter = null;
 
@@ -462,10 +462,10 @@ namespace Subsurface.Networking
         {
             base.Draw(spriteBatch);
 
-            if (!Game1.DebugDraw) return;
+            if (!GameMain.DebugDraw) return;
 
             int width = 200, height = 300;
-            int x = Game1.GraphicsWidth - width, y = (int)(Game1.GraphicsHeight * 0.3f);
+            int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
             spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
@@ -497,7 +497,7 @@ namespace Subsurface.Networking
             msg.Write(characterInfo.Gender == Gender.Male);
             msg.Write(characterInfo.HeadSpriteId);
 
-            var jobPreferences = Game1.NetLobbyScreen.JobPreferences;
+            var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
             int count = Math.Min(jobPreferences.Count, 3);
             msg.Write(count);
             for (int i = 0; i < count; i++ )

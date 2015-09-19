@@ -159,7 +159,7 @@ namespace Subsurface
 
         public void GiveReward()
         {
-            var mode = Game1.GameSession.gameMode as SinglePlayerMode;
+            var mode = GameMain.GameSession.gameMode as SinglePlayerMode;
             mode.Money += reward;
 
             if (!string.IsNullOrWhiteSpace(successMessage))

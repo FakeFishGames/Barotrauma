@@ -47,7 +47,7 @@ namespace Subsurface
 
             CargoManager = new CargoManager();
 
-            endShiftButton = new GUIButton(new Rectangle(Game1.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.Style);
+            endShiftButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.Style);
             endShiftButton.OnClicked = EndShift;
 
             for (int i = 0; i < 3; i++)
@@ -101,7 +101,7 @@ namespace Subsurface
 
             if (!savedOnStart)
             {
-                SaveUtil.SaveGame(Game1.GameSession.SaveFile);
+                SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
                 savedOnStart = true;
             }
 
@@ -192,9 +192,9 @@ namespace Subsurface
                 sb.Append("Your entire crew has died!");
 
                 var msgBox = new GUIMessageBox("", sb.ToString(), new string[] { "Load game", "Quit" });
-                msgBox.Buttons[0].OnClicked += Game1.GameSession.LoadPrevious;
+                msgBox.Buttons[0].OnClicked += GameMain.GameSession.LoadPrevious;
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[1].OnClicked = Game1.LobbyScreen.QuitToMainMenu;
+                msgBox.Buttons[1].OnClicked = GameMain.LobbyScreen.QuitToMainMenu;
                 msgBox.Buttons[1].OnClicked += msgBox.Close;
             }
             else
@@ -217,7 +217,7 @@ namespace Subsurface
                     Map.MoveToNextLocation();
                 }
 
-                SaveUtil.SaveGame(Game1.GameSession.SaveFile);
+                SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
             }
 
             CrewManager.EndShift();
@@ -226,7 +226,7 @@ namespace Subsurface
                 Character.CharacterList[i].Remove();
             }
 
-            Game1.GameSession.EndShift("");
+            GameMain.GameSession.EndShift("");
 
         }
 

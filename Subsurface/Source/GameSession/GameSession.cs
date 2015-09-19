@@ -77,7 +77,7 @@ namespace Subsurface
 
             this.saveFile = saveFile;
 
-            guiRoot = new GUIFrame(new Rectangle(0,0,Game1.GraphicsWidth,Game1.GraphicsWidth), Color.Transparent);
+            guiRoot = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsWidth), Color.Transparent);
 
             this.gameMode = gameMode;
             this.submarine = selectedSub;
@@ -107,7 +107,7 @@ namespace Subsurface
 
         public void StartShift(TimeSpan duration, Level level, bool reloadSub = true)
         {
-            Game1.LightManager.LosEnabled = (Game1.Server==null || Game1.Server.CharacterInfo!=null);
+            GameMain.LightManager.LosEnabled = (GameMain.Server==null || GameMain.Server.CharacterInfo!=null);
                         
             this.level = level;
 
@@ -118,7 +118,7 @@ namespace Subsurface
                 level.Generate(submarine == null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
                 submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
 
-                Game1.GameScreen.BackgroundSpriteManager.SpawnSprites(80);
+                GameMain.GameScreen.BackgroundSpriteManager.SpawnSprites(80);
             }
 
             if (Quest!=null) Quest.Start(Level.Loaded);
@@ -132,14 +132,14 @@ namespace Subsurface
         {
             if (Quest != null) Quest.End();
 
-            if (Game1.Server!=null)
+            if (GameMain.Server!=null)
             {                
-                CoroutineManager.StartCoroutine(Game1.Server.EndGame(endMessage));
+                CoroutineManager.StartCoroutine(GameMain.Server.EndGame(endMessage));
 
             }
-            else if (Game1.Client==null)
+            else if (GameMain.Client==null)
             {                
-                Game1.LobbyScreen.Select();
+                GameMain.LobbyScreen.Select();
             }
             
             taskManager.EndShift();
@@ -160,7 +160,7 @@ namespace Subsurface
         {
             SaveUtil.LoadGame(saveFile);
 
-            Game1.LobbyScreen.Select();
+            GameMain.LobbyScreen.Select();
 
             return true;
         }

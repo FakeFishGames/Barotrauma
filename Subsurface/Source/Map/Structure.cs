@@ -148,7 +148,7 @@ namespace Subsurface
                 bodies = new List<Body>();
                 //gaps = new List<Gap>();
 
-                Body newBody = BodyFactory.CreateRectangle(Game1.World,
+                Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                     ConvertUnits.ToSimUnits(rect.Width),
                     ConvertUnits.ToSimUnits(rect.Height),
                     1.5f);
@@ -206,7 +206,7 @@ namespace Subsurface
                 {
                     bodies = new List<Body>();
 
-                    Body newBody = BodyFactory.CreateRectangle(Game1.World,
+                    Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                         ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X*3.0f),
                         ConvertUnits.ToSimUnits(10),
                         1.5f);
@@ -273,7 +273,7 @@ namespace Subsurface
             if (bodies != null)
             {
                 foreach (Body b in bodies)
-                    Game1.World.RemoveBody(b);
+                    GameMain.World.RemoveBody(b);
             }
 
             if (convexHull != null) convexHull.Remove();
@@ -381,7 +381,7 @@ namespace Subsurface
         {
             if (!prefab.HasBody || prefab.IsPlatform) return;
 
-            if (Game1.Client==null)
+            if (GameMain.Client==null)
                 SetDamage(sectionIndex, sections[sectionIndex].damage + damage);
 
         }
@@ -419,7 +419,7 @@ namespace Subsurface
             int i = FindSectionIndex(ConvertUnits.ToDisplayUnits(position));
             if (i == -1) return new AttackResult(0.0f, 0.0f);
             
-            Game1.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+            GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 
             if (playSound && !SectionHasHole(i))
             {
@@ -477,7 +477,7 @@ namespace Subsurface
         {
             foreach (Body b in bodies)
             {
-                Game1.World.RemoveBody(b);
+                GameMain.World.RemoveBody(b);
             }
             bodies.Clear();
 
@@ -531,7 +531,7 @@ namespace Subsurface
 
         private Body CreateRectBody(Rectangle rect)
         {
-            Body newBody = BodyFactory.CreateRectangle(Game1.World,
+            Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                 ConvertUnits.ToSimUnits(rect.Width),
                 ConvertUnits.ToSimUnits(rect.Height),
                 1.5f);

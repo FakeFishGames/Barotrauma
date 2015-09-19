@@ -150,20 +150,20 @@ namespace Subsurface.Items.Components
                 screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width/screenOverlay.size.X);
             }
 
-            if (Game1.GameSession == null) return;
+            if (GameMain.GameSession == null) return;
 
 
             DrawMarker(spriteBatch,
-                (Game1.GameSession.Map == null) ? "Start" : Game1.GameSession.Map.CurrentLocation.Name,
+                (GameMain.GameSession.Map == null) ? "Start" : GameMain.GameSession.Map.CurrentLocation.Name,
                 (Level.Loaded.StartPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
 
             DrawMarker(spriteBatch,
-                (Game1.GameSession.Map == null) ? "End" : Game1.GameSession.Map.SelectedLocation.Name,
+                (GameMain.GameSession.Map == null) ? "End" : GameMain.GameSession.Map.SelectedLocation.Name,
                 (Level.Loaded.EndPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
 
-            if (Game1.GameSession.Quest != null)
+            if (GameMain.GameSession.Quest != null)
             {
-                var quest = Game1.GameSession.Quest;
+                var quest = GameMain.GameSession.Quest;
 
                 if (!string.IsNullOrWhiteSpace(quest.RadarLabel))
                 {

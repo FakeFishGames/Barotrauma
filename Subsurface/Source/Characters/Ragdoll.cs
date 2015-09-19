@@ -18,7 +18,7 @@ namespace Subsurface
 
         protected Hull currentHull;
 
-        public Limb[] limbs;
+        public Limb[] Limbs;
         private Dictionary<LimbType, Limb> limbDictionary;
         public RevoluteJoint[] limbJoints;
 
@@ -138,7 +138,7 @@ namespace Subsurface
                 if (ignorePlatforms == value) return;
                 ignorePlatforms = value;
 
-                foreach (Limb l in limbs)
+                foreach (Limb l in Limbs)
                 {
                     if (l.ignoreCollisions) continue;
 
@@ -170,7 +170,7 @@ namespace Subsurface
             dir = Direction.Right;
             
             //int limbAmount = ;
-            limbs = new Limb[element.Elements("limb").Count()];
+            Limbs = new Limb[element.Elements("limb").Count()];
             limbJoints = new RevoluteJoint[element.Elements("joint").Count()];
             limbDictionary = new Dictionary<LimbType, Limb>();
 
@@ -193,7 +193,7 @@ namespace Subsurface
 
                         limb.body.FarseerBody.OnCollision += OnLimbCollision;
                         
-                        limbs[ID] = limb;
+                        Limbs[ID] = limb;
                         Mass += limb.Mass;
                         if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
                         break;
@@ -207,7 +207,7 @@ namespace Subsurface
                         Vector2 limb2Pos = ToolBox.GetAttributeVector2(subElement, "limb2anchor", Vector2.Zero);
                         limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
 
-                        RevoluteJoint joint = new RevoluteJoint(limbs[limb1ID].body.FarseerBody, limbs[limb2ID].body.FarseerBody, limb1Pos, limb2Pos);
+                        RevoluteJoint joint = new RevoluteJoint(Limbs[limb1ID].body.FarseerBody, Limbs[limb2ID].body.FarseerBody, limb1Pos, limb2Pos);
 
                         joint.CollideConnected = false;
 
@@ -221,7 +221,7 @@ namespace Subsurface
                         joint.MotorEnabled = true;
                         joint.MaxMotorTorque = 0.25f;
 
-                        Game1.World.AddJoint(joint);
+                        GameMain.World.AddJoint(joint);
 
                         for (int i = 0; i < limbJoints.Length; i++ )
                         {
@@ -257,7 +257,7 @@ namespace Subsurface
                 startDepth+=increment;
             }
 
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
             }
@@ -328,16 +328,16 @@ namespace Subsurface
             Vector2 normal = contact.Manifold.LocalNormal;
 
             Vector2 avgVelocity = Vector2.Zero;
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 avgVelocity += limb.LinearVelocity;
             }
 
-            avgVelocity = avgVelocity / limbs.Count();
+            avgVelocity = avgVelocity / Limbs.Count();
             
             float impact = Vector2.Dot((f1.Body.LinearVelocity + avgVelocity) / 2.0f, -normal);
 
-            if (Game1.Server != null) impact = impact / 2.0f;
+            if (GameMain.Server != null) impact = impact / 2.0f;
 
             Limb l = (Limb)f1.Body.UserData;
 
@@ -350,20 +350,20 @@ namespace Subsurface
 
                 AmbientSoundManager.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body.FarseerBody);                
 
-                if (Character.Controlled == character) Game1.GameScreen.Cam.Shake = strongestImpact;
+                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
             }
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {            
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 limb.Draw(spriteBatch);
             }
             
-            if (!Game1.DebugDraw) return;
+            if (!GameMain.DebugDraw) return;
 
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
 
                 if (limb.pullJoint != null)
@@ -420,29 +420,29 @@ namespace Subsurface
             }
 
 
-            for (int i = 0; i < limbs.Count(); i++)
+            for (int i = 0; i < Limbs.Count(); i++)
             {
-                if (limbs[i] == null) continue;
+                if (Limbs[i] == null) continue;
 
-                Vector2 spriteOrigin = limbs[i].sprite.Origin;
-                spriteOrigin.X = limbs[i].sprite.SourceRect.Width - spriteOrigin.X;
-                limbs[i].sprite.Origin = spriteOrigin;
+                Vector2 spriteOrigin = Limbs[i].sprite.Origin;
+                spriteOrigin.X = Limbs[i].sprite.SourceRect.Width - spriteOrigin.X;
+                Limbs[i].sprite.Origin = spriteOrigin;
 
-                limbs[i].Dir = Dir;
+                Limbs[i].Dir = Dir;
 
-                if (limbs[i].pullJoint == null) continue;
+                if (Limbs[i].pullJoint == null) continue;
 
-                limbs[i].pullJoint.LocalAnchorA = 
+                Limbs[i].pullJoint.LocalAnchorA = 
                     new Vector2(
-                        -limbs[i].pullJoint.LocalAnchorA.X, 
-                        limbs[i].pullJoint.LocalAnchorA.Y);
+                        -Limbs[i].pullJoint.LocalAnchorA.X, 
+                        Limbs[i].pullJoint.LocalAnchorA.Y);
             }            
         }
 
         public Vector2 GetCenterOfMass()
         {
             Vector2 centerOfMass = Vector2.Zero;
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 centerOfMass += limb.Mass * limb.SimPosition;
             }
@@ -465,11 +465,11 @@ namespace Subsurface
                 
         public void ResetPullJoints()
         {
-            for (int i = 0; i < limbs.Count(); i++)
+            for (int i = 0; i < Limbs.Count(); i++)
             {
-                if (limbs[i] == null) continue;
-                if (limbs[i].pullJoint == null) continue;
-                limbs[i].pullJoint.Enabled = false;
+                if (Limbs[i] == null) continue;
+                if (Limbs[i].pullJoint == null) continue;
+                Limbs[i].pullJoint.Enabled = false;
             }
         }
 
@@ -520,7 +520,7 @@ namespace Subsurface
                 
             }
                        
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 Vector2 limbPosition = ConvertUnits.ToDisplayUnits(limb.SimPosition);
 
@@ -562,7 +562,7 @@ namespace Subsurface
                     {
 
                         //create a splash particle
-                        Subsurface.Particles.Particle splash = Game1.ParticleManager.CreateParticle("watersplash",
+                        Subsurface.Particles.Particle splash = GameMain.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.Position.X, limbHull.Surface),
                             new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 10.0f)),
                             0.0f);
@@ -572,7 +572,7 @@ namespace Subsurface
                         //        limbHull.Rect.Y,
                         //        limbHull.Rect.Y - limbHull.Rect.Height));
 
-                        Game1.ParticleManager.CreateParticle("bubbles",
+                        GameMain.ParticleManager.CreateParticle("bubbles",
                             new Vector2(limb.Position.X, limbHull.Surface),                            
                             limb.LinearVelocity*0.001f,
                             0.0f);
@@ -629,7 +629,7 @@ namespace Subsurface
             {
                 if (inWater)
                 {
-                    foreach (Limb limb in limbs)
+                    foreach (Limb limb in Limbs)
                     {
                         if (limb.body.TargetPosition == Vector2.Zero) continue;
 
@@ -647,7 +647,7 @@ namespace Subsurface
             {
                 System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
 
-                foreach (Limb limb in limbs)
+                foreach (Limb limb in Limbs)
                 {
                     if (limb.body.TargetPosition == Vector2.Zero) continue;
 
@@ -663,7 +663,7 @@ namespace Subsurface
 
         private Vector2 GetFlowForce()
         {
-            Vector2 limbPos = ConvertUnits.ToDisplayUnits(limbs[0].SimPosition);
+            Vector2 limbPos = ConvertUnits.ToDisplayUnits(Limbs[0].SimPosition);
 
             Vector2 force = Vector2.Zero;
             foreach (MapEntity e in MapEntity.mapEntityList)
@@ -693,7 +693,7 @@ namespace Subsurface
         {
             //find the lowest limb
             lowestLimb = null;
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 if (lowestLimb == null)
                     lowestLimb = limb;
@@ -704,10 +704,10 @@ namespace Subsurface
 
         public void Remove()
         {
-            foreach (Limb l in limbs) l.Remove();
+            foreach (Limb l in Limbs) l.Remove();
             foreach (RevoluteJoint joint in limbJoints)
             {
-                Game1.World.RemoveJoint(joint);
+                GameMain.World.RemoveJoint(joint);
             }
         }
 

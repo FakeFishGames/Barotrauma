@@ -56,7 +56,6 @@ namespace Subsurface
         private Item[] selectedItems;
         
         public AnimController AnimController;
-        private AIController aiController;
 
         private Vector2 cursorPosition;
 
@@ -246,9 +245,9 @@ namespace Subsurface
             get { return closestItem; }
         }
 
-        public AIController AIController
+        public virtual AIController AIController
         {
-            get { return aiController; }
+            get { return null; }
         }
 
         public bool IsDead
@@ -258,12 +257,12 @@ namespace Subsurface
 
         public override Vector2 SimPosition
         {
-            get { return AnimController.limbs[0].SimPosition; }
+            get { return AnimController.Limbs[0].SimPosition; }
         }
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition); }
+            get { return ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition); }
         }
 
         public Character(string file) : this(file, Vector2.Zero, null)
@@ -332,11 +331,9 @@ namespace Subsurface
                 AnimController = new FishAnimController(this, doc.Root.Element("ragdoll"));
                 PressureProtection = 100.0f;
                 //FishAnimController fishAnim = (FishAnimController)animController;
-
-                aiController = new EnemyAIController(this, file);
             }
 
-            foreach (Limb limb in AnimController.limbs)
+            foreach (Limb limb in AnimController.Limbs)
             {
                 limb.body.SetTransform(position+limb.SimPosition, 0.0f);
                 //limb.prevPosition = ConvertUnits.ToDisplayUnits(position);
@@ -397,7 +394,7 @@ namespace Subsurface
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    var characterFiles = Game1.SelectedPackage.GetFilesOfType(ContentType.Character);
+                    var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
 
                     humanConfigFile = characterFiles.Find(c => c.EndsWith("human.xml"));
                     if (humanConfigFile == null)
@@ -632,15 +629,15 @@ namespace Subsurface
 
             if (moveCam)
             {
-                cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
+                cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
             }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);            
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-            if (Vector2.Distance(AnimController.limbs[0].SimPosition, mouseSimPos)>1.0f)
+            if (Vector2.Distance(AnimController.Limbs[0].SimPosition, mouseSimPos)>1.0f)
             {
-                Body body = Submarine.PickBody(AnimController.limbs[0].SimPosition, mouseSimPos);
+                Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
                 Structure structure = null;
                 if (body != null) structure = body.UserData as Structure;
                 if (structure != null)
@@ -678,7 +675,7 @@ namespace Subsurface
             }
         }
 
-        public void Update(Camera cam, float deltaTime)
+        public virtual void Update(Camera cam, float deltaTime)
         {
             if (isDead) return;
             
@@ -714,22 +711,13 @@ namespace Subsurface
                 PressureProtection -= deltaTime*100.0f;
             }
 
-            if (soundTimer > 0)
-            {
-                soundTimer -= deltaTime;
-            }
-            else
-            {
-                PlaySound((aiController == null) ? AIController.AiState.None : aiController.State);
-                soundTimer = soundInterval;
-            }
+
 
             //foreach (Limb limb in animController.limbs)
             //{
                 Health = health - bleeding * deltaTime;
             //}
 
-            if (aiController != null) aiController.Update(deltaTime);
         }
 
         private void UpdateSightRange()
@@ -738,7 +726,7 @@ namespace Subsurface
 
             //distance is approximated based on the mass of the character 
             //(which corresponds to size because all the characters have the same limb density)
-            foreach (Limb limb in AnimController.limbs)
+            foreach (Limb limb in AnimController.Limbs)
             {
                 aiTarget.SightRange += limb.Mass * 1000.0f;
             }
@@ -761,7 +749,7 @@ namespace Subsurface
 
         public void DrawFront(SpriteBatch spriteBatch)
         {
-            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
+            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
             pos.Y = -pos.Y;
             
             if (this == Character.controlled) return;
@@ -772,7 +760,7 @@ namespace Subsurface
                 spriteBatch.DrawString(GUI.Font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
                 spriteBatch.DrawString(GUI.Font, Info.Name, namePos, Color.White);
 
-                if (Game1.DebugDraw)
+                if (GameMain.DebugDraw)
                 {
                     spriteBatch.DrawString(GUI.Font, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
                 }
@@ -790,9 +778,9 @@ namespace Subsurface
             if (drowningBar == null)
             {
                 int width = 100, height = 20;
-                drowningBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight / 2, width, height), Color.Blue, 1.0f);
+                drowningBar = new GUIProgressBar(new Rectangle(20, GameMain.GraphicsHeight / 2, width, height), Color.Blue, 1.0f);
 
-                healthBar = new GUIProgressBar(new Rectangle(20, Game1.GraphicsHeight / 2 + 30, width, height), Color.Red, 1.0f);
+                healthBar = new GUIProgressBar(new Rectangle(20, GameMain.GraphicsHeight / 2 + 30, width, height), Color.Red, 1.0f);
             }
 
             drowningBar.BarSize = Controlled.Oxygen / 100.0f;
@@ -860,7 +848,7 @@ namespace Subsurface
                 if (n == selectedSound && sounds[i]!=null)
                 {
                     sounds[i].Play(1.0f, 2000.0f,
-                            AnimController.limbs[0].body.FarseerBody);
+                            AnimController.Limbs[0].body.FarseerBody);
                     Debug.WriteLine("playing: " + sounds[i]);
                     return;
                 }
@@ -874,7 +862,7 @@ namespace Subsurface
 
             Limb closestLimb = null;
             float closestDistance = 0.0f;
-            foreach (Limb limb in AnimController.limbs)
+            foreach (Limb limb in AnimController.Limbs)
             {
                 float distance = Vector2.Distance(position, limb.SimPosition);
                 if (closestLimb == null || distance < closestDistance)
@@ -915,7 +903,7 @@ namespace Subsurface
 
             health = 0.0f;
 
-            foreach (Limb limb in AnimController.limbs)
+            foreach (Limb limb in AnimController.Limbs)
             {
                 Vector2 diff = centerOfMass - limb.SimPosition;
                 if (diff == Vector2.Zero) continue;
@@ -927,12 +915,12 @@ namespace Subsurface
             
             for (int i = 0; i < 10; i++)
             {
-                Particle p = Game1.ParticleManager.CreateParticle("waterblood",
+                Particle p = GameMain.ParticleManager.CreateParticle("waterblood",
                     centerOfMass + Rand.Vector(50.0f),
                     Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
-                Game1.ParticleManager.CreateParticle("bubbles",
+                GameMain.ParticleManager.CreateParticle("bubbles",
                     centerOfMass + Rand.Vector(50.0f),
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f,50f)));
             }
@@ -949,20 +937,22 @@ namespace Subsurface
             float dimDuration = 8.0f;
             float timer = 0.0f;
 
-            Color prevAmbientLight = Game1.LightManager.AmbientLight;
+            Color prevAmbientLight = GameMain.LightManager.AmbientLight;
 
             while (timer < dimDuration)
             {
-                AnimController.UpdateAnim(1.0f / 60.0f);
                 timer += 1.0f / 60.0f;
 
-                if (cam != null)
+                if (Character.controlled == this)
                 {
-                    cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.limbs[0].SimPosition);
-                    cam.OffsetAmount = 0.0f;
-                }
+                    if (cam != null)
+                    {
+                        cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
+                        cam.OffsetAmount = 0.0f;
+                    }
 
-                Game1.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, Color.DarkGray, timer / dimDuration);
+                    GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, Color.DarkGray, timer / dimDuration);
+                }
 
                 yield return CoroutineStatus.Running;
             }
@@ -977,7 +967,7 @@ namespace Subsurface
             {
                 lerpLightBack = Math.Min(lerpLightBack+0.05f,1.0f);
 
-                Game1.LightManager.AmbientLight = Color.Lerp(Color.DarkGray, prevAmbientLight, lerpLightBack);
+                GameMain.LightManager.AmbientLight = Color.Lerp(Color.DarkGray, prevAmbientLight, lerpLightBack);
                 yield return CoroutineStatus.Running;
             }
 
@@ -989,7 +979,7 @@ namespace Subsurface
             if (isDead) return;
 
             //if the game is run by a client, characters are only killed when the server says so
-            if (Game1.Client != null)
+            if (GameMain.Client != null)
             {
                 if (networkMessage)
                 {
@@ -1001,7 +991,7 @@ namespace Subsurface
                 }
             }
 
-            CoroutineManager.StartCoroutine(DeathAnim(Game1.GameScreen.Cam));
+            CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
 
             health = 0.0f;
 
@@ -1017,7 +1007,7 @@ namespace Subsurface
             aiTarget.Remove();
             aiTarget = null;
 
-            foreach (Limb limb in AnimController.limbs)
+            foreach (Limb limb in AnimController.Limbs)
             {
                 if (limb.pullJoint == null) continue;
                 limb.pullJoint.Enabled = false;
@@ -1029,14 +1019,14 @@ namespace Subsurface
                 joint.MaxMotorTorque = 0.0f;
             }
 
-            if (Game1.Server != null)
+            if (GameMain.Server != null)
             {
                 new NetworkEvent(NetworkEventType.KillCharacter, ID, false);
             }
 
-            if (Game1.GameSession != null)
+            if (GameMain.GameSession != null)
             {
-                Game1.GameSession.KillCharacter(this);
+                GameMain.GameSession.KillCharacter(this);
             }
         }
 
@@ -1053,16 +1043,21 @@ namespace Subsurface
                 return;            
             }
 
-            var hasInputs = (GetInputState(InputType.Left) ||
-                            GetInputState(InputType.Right) ||
-                            GetInputState(InputType.Up) ||
-                            GetInputState(InputType.Down) ||
-                            GetInputState(InputType.ActionHeld) ||
-                            GetInputState(InputType.SecondaryHeld));
+            var hasInputs =  
+                    (GetInputState(InputType.Left) ||
+                    GetInputState(InputType.Right) ||
+                    GetInputState(InputType.Up) ||
+                    GetInputState(InputType.Down) ||
+                    GetInputState(InputType.ActionHeld) ||
+                    GetInputState(InputType.SecondaryHeld));
 
             message.Write(hasInputs || LargeUpdateTimer <= 0);
 
             message.Write((float)NetTime.Now);
+                                   
+            // Write byte = move direction
+            //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
+            //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 8);
 
             message.Write(keys[(int)InputType.ActionHeld].Dequeue);
             message.Write(keys[(int)InputType.SecondaryHeld].Dequeue);
@@ -1074,27 +1069,16 @@ namespace Subsurface
             message.Write(keys[(int)InputType.Down].Dequeue);
 
             message.Write(keys[(int)InputType.Run].Dequeue);
-                       
-            // Write byte = move direction
-            //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-            //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 8);
 
-            if (aiController==null)
-            {
-                message.Write(cursorPosition.X);
-                message.Write(cursorPosition.Y);
-            }
-            else
-            {
-                message.Write(AnimController.TargetDir == Direction.Right);
-            }
+            message.Write(cursorPosition.X);
+            message.Write(cursorPosition.Y);
                         
             message.Write(LargeUpdateTimer <= 0);
 
             if (LargeUpdateTimer<=0)
             {
                 int i = 0;
-                foreach (Limb limb in AnimController.limbs)
+                foreach (Limb limb in AnimController.Limbs)
                 {
                     message.Write(limb.body.SimPosition.X);
                     message.Write(limb.body.SimPosition.Y);
@@ -1109,8 +1093,6 @@ namespace Subsurface
 
                 message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
                 message.Write((byte)((health/maxHealth)*255.0f));
-
-                if (aiController != null) aiController.FillNetworkData(message);
 
                 LargeUpdateTimer = 10;
             }
@@ -1150,10 +1132,10 @@ namespace Subsurface
             else if (type == NetworkEventType.KillCharacter)
             {
                 Kill(true);
-                if (Game1.NetworkMember != null && controlled == this)
+                if (GameMain.NetworkMember != null && controlled == this)
                 {
-                    Game1.Client.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
-                    Game1.LightManager.LosEnabled = false;
+                    GameMain.Client.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
+                    GameMain.LightManager.LosEnabled = false;
                 }
                 return;
             }
@@ -1161,8 +1143,6 @@ namespace Subsurface
             bool actionKeyState     = false;
             bool secondaryKeyState  = false;
             float sendingTime       = 0.0f;
-            //Vector2 targetMovement  = Vector2.Zero;
-            bool targetDir          = false;
             Vector2 cursorPos       = Vector2.Zero;
 
             bool leftKeyState = false, rightKeyState = false;
@@ -1211,37 +1191,26 @@ namespace Subsurface
             keys[(int)InputType.Down].State     = downKeyState;
 
             keys[(int)InputType.Run].State = runState;
-            
+
+            bool isLargeUpdate;
+
             try
             {
-                
-                if (aiController == null)
-                {
-                    cursorPos = new Vector2(
-                        message.ReadFloat(),
-                        message.ReadFloat());
-                }
-                else
-                {
-                    targetDir = message.ReadBoolean();
-                }
+                cursorPos = new Vector2(
+                    message.ReadFloat(),
+                    message.ReadFloat());
+                isLargeUpdate = message.ReadBoolean();
             }
             catch
             {
                 return;
             }
-            if (aiController == null)
+
+            cursorPosition = cursorPos;
+                                      
+            if (isLargeUpdate)
             {
-                cursorPosition = cursorPos;
-            }
-            else
-            {
-                AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;              
-            }
-                          
-            if (message.ReadBoolean())
-            {
-                foreach (Limb limb in AnimController.limbs)
+                foreach (Limb limb in AnimController.Limbs)
                 {
                     Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
                     float rotation = 0.0f;
@@ -1285,8 +1254,6 @@ namespace Subsurface
                 Health = newHealth;
 
                 LargeUpdateTimer = 1;
-
-                if (aiController != null) aiController.ReadNetworkData(message);
             }
             else
             {
@@ -1319,7 +1286,7 @@ namespace Subsurface
 
             if (controlled == this) controlled = null;
 
-            if (Game1.Client!=null && Game1.Client.Character == this) Game1.Client.Character = null;
+            if (GameMain.Client!=null && GameMain.Client.Character == this) GameMain.Client.Character = null;
 
             if (inventory != null) inventory.Remove();
 

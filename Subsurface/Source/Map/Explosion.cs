@@ -53,15 +53,15 @@ namespace Subsurface
         {
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
 
-            Game1.ParticleManager.CreateParticle("shockwave", displayPosition,
+            GameMain.ParticleManager.CreateParticle("shockwave", displayPosition,
                 Vector2.Zero, 0.0f);
 
             for (int i = 0; i < range * 10; i++)
             {
-                Game1.ParticleManager.CreateParticle("spark", displayPosition,
+                GameMain.ParticleManager.CreateParticle("spark", displayPosition,
                     Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f);
 
-                Game1.ParticleManager.CreateParticle("explosionfire", displayPosition + Rand.Vector(50f),
+                GameMain.ParticleManager.CreateParticle("explosionfire", displayPosition + Rand.Vector(50f),
                     Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f);
             }
 
@@ -72,8 +72,8 @@ namespace Subsurface
             light = new LightSource(displayPosition, displayRange, Color.LightYellow);
             CoroutineManager.StartCoroutine(DimLight());
 
-            float cameraDist = Vector2.Distance(Game1.GameScreen.Cam.Position, displayPosition)/2.0f;
-            Game1.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist)/displayRange, 0.0f);
+            float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, displayPosition)/2.0f;
+            GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist)/displayRange, 0.0f);
             
             if (structureDamage > 0.0f)
             {
@@ -111,11 +111,11 @@ namespace Subsurface
 
                 float distFactor = 1.0f - dist / range;
                                 
-                foreach (Limb limb in c.AnimController.limbs)
+                foreach (Limb limb in c.AnimController.Limbs)
                 {
                     distFactor = 1.0f - Vector2.Distance(limb.SimPosition, simPosition)/range;
 
-                    c.AddDamage(limb.SimPosition, DamageType.None, damage / c.AnimController.limbs.Length * distFactor, 0.0f, stun * distFactor);
+                    c.AddDamage(limb.SimPosition, DamageType.None, damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor);
                     
                     if (force>0.0f)
                     {

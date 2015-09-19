@@ -177,5 +177,31 @@ namespace Subsurface
                 }
             }
         }
+
+
+        public static void CleanOldFiles()
+        {
+            string currentDir = Directory.GetCurrentDirectory();
+
+            string[] files = Directory.GetFiles(currentDir, "*", SearchOption.AllDirectories);
+
+            foreach (string file in files)
+            {
+                if (file.Length<4 || file.Substring(0,4)!="OLD_") continue;
+
+                System.Diagnostics.Debug.WriteLine("deleting file " + file);
+
+                try
+                {
+                    File.Delete(currentDir + "\\" + file);
+                }
+
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debug.WriteLine("Could not delete file ''" + file + "'' (" + e.Message + ")");
+                    continue;
+                }
+            }
+        }
     }
 }

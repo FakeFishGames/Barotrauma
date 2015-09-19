@@ -147,7 +147,7 @@ namespace Subsurface
 
             if (depth > 0.0f)
             {
-                Vector2 camOffset = drawPos - Game1.GameScreen.Cam.WorldViewCenter;
+                Vector2 camOffset = drawPos - GameMain.GameScreen.Cam.WorldViewCenter;
 
                 drawPos = drawPos - camOffset * (depth / MaxDepth) * 0.05f;
             }

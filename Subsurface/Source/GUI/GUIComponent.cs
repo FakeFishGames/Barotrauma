@@ -290,7 +290,7 @@ namespace Subsurface
 
         protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
-            Rectangle parentRect = (parent==null) ? new Rectangle(0,0,Game1.GraphicsWidth, Game1.GraphicsHeight) : parent.rect;
+            Rectangle parentRect = (parent==null) ? new Rectangle(0,0,GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
 
             Vector4 padding = (parent == null) ? Vector4.Zero : parent.padding;
 

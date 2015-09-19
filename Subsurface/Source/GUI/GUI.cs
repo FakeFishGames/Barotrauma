@@ -61,7 +61,7 @@ namespace Subsurface
 
         public static void TogglePauseMenu()
         {
-            if (Screen.Selected == Game1.MainMenuScreen) return;
+            if (Screen.Selected == GameMain.MainMenuScreen) return;
 
             TogglePauseMenu(null, null);
 
@@ -75,22 +75,22 @@ namespace Subsurface
 
                 y += 60;
                 
-                if (Screen.Selected == Game1.GameScreen && Game1.GameSession !=null)
+                if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession !=null)
                 {
-                    SinglePlayerMode spMode = Game1.GameSession.gameMode as SinglePlayerMode;
+                    SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
                     if (spMode!=null)
                     {
                         button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, GUI.Style, pauseMenu);
                         button.OnClicked += TogglePauseMenu;
-                        button.OnClicked += Game1.GameSession.LoadPrevious;
+                        button.OnClicked += GameMain.GameSession.LoadPrevious;
 
                         y += 60;
                     }
                 }
                 
-                if (Screen.Selected == Game1.LobbyScreen)
+                if (Screen.Selected == GameMain.LobbyScreen)
                 {
-                    SinglePlayerMode spMode = Game1.GameSession.gameMode as SinglePlayerMode;
+                    SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
                     if (spMode != null)
                     {
                         button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, GUI.Style, pauseMenu);
@@ -121,11 +121,11 @@ namespace Subsurface
         {
             if (button.UserData as string == "save")
             {
-                SaveUtil.SaveGame(Game1.GameSession.SaveFile);
+                SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
             }
 
 
-            Game1.MainMenuScreen.Select();
+            GameMain.MainMenuScreen.Select();
             //Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);
 
             return true;
@@ -301,15 +301,15 @@ namespace Subsurface
         public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
             spriteBatch.DrawString(Font,
-                "FPS: " + (int)Game1.FrameCounter.AverageFramesPerSecond,
+                "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
                 new Vector2(10, 10), Color.White);
 
-            if (Game1.DebugDraw)
+            if (GameMain.DebugDraw)
             {
                 spriteBatch.DrawString(Font,
-                    "Physics: " + Game1.World.UpdateTime
-                    + " - bodies: " + Game1.World.BodyList.Count 
-                    + " Camera pos: " + Game1.GameScreen.Cam.Position,
+                    "Physics: " + GameMain.World.UpdateTime
+                    + " - bodies: " + GameMain.World.BodyList.Count 
+                    + " Camera pos: " + GameMain.GameScreen.Cam.Position,
                     new Vector2(10, 30), Color.White);
 
                 if (Submarine.Loaded!=null)
@@ -318,12 +318,10 @@ namespace Subsurface
                         "Sub pos: " + Submarine.Loaded.Position,
                         new Vector2(10, 50), Color.White);
                 }
-
             }
-
             
             if (Character.Controlled != null && cam!=null) Character.Controlled.DrawHud(spriteBatch, cam);
-            if (Game1.NetworkMember != null) Game1.NetworkMember.Draw(spriteBatch);
+            if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
 
             DrawMessages(spriteBatch, (float)deltaTime);
 
@@ -366,7 +364,7 @@ namespace Subsurface
                 return;
             }
 
-            Vector2 currPos = new Vector2(Game1.GraphicsWidth / 2.0f, Game1.GraphicsHeight * 0.7f);
+            Vector2 currPos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
             currPos.Y += messages.Count * 30;
 
             messages.Add(new GUIMessage(message, color, currPos, lifeTime));
@@ -382,7 +380,7 @@ namespace Subsurface
         {
             if (messages.Count == 0) return;
 
-            Vector2 currPos = new Vector2(Game1.GraphicsWidth / 2.0f, Game1.GraphicsHeight * 0.7f);
+            Vector2 currPos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
 
             int i = 1;
             foreach (GUIMessage msg in messages)

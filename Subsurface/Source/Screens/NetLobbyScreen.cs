@@ -105,8 +105,8 @@ namespace Subsurface
                 
         public NetLobbyScreen()
         {
-            int width = Math.Min(Game1.GraphicsWidth - 80, 1500);
-            int height = Math.Min(Game1.GraphicsHeight - 80, 800);
+            int width = Math.Min(GameMain.GraphicsWidth - 80, 1500);
+            int height = Math.Min(GameMain.GraphicsHeight - 80, 800);
 
             Rectangle panelRect = new Rectangle(0,0,width,height);
 
@@ -232,7 +232,7 @@ namespace Subsurface
             
             var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
             serverName.TextGetter = GetServerName;
-            serverName.Enabled = Game1.Server != null;
+            serverName.Enabled = GameMain.Server != null;
             serverName.OnTextChanged = ChangeServerName;
 
             serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
@@ -248,50 +248,50 @@ namespace Subsurface
 
         public override void Select()
         {
-            Game1.LightManager.LosEnabled = false;
+            GameMain.LightManager.LosEnabled = false;
 
             //infoFrame.ClearChildren();
             
             textBox.Select();
 
             Character.Controlled = null;
-            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             
-            subList.Enabled         = Game1.Server != null;
-            modeList.Enabled        = Game1.Server != null;
-            durationBar.Enabled     = Game1.Server != null;                      
-            seedBox.Enabled         = Game1.Server != null;                       
-            serverMessage.Enabled   = Game1.Server != null;
-            ServerName = (Game1.Server==null) ? "Server" : Game1.Server.Name;
+            subList.Enabled         = GameMain.Server != null;
+            modeList.Enabled        = GameMain.Server != null;
+            durationBar.Enabled     = GameMain.Server != null;                      
+            seedBox.Enabled         = GameMain.Server != null;                       
+            serverMessage.Enabled   = GameMain.Server != null;
+            ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
 
             modeList.OnSelected += SelectMode;
 
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
 
-            if (IsServer && Game1.Server != null)
+            if (IsServer && GameMain.Server != null)
             {
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
-                startButton.OnClicked = Game1.Server.StartGame;
+                startButton.OnClicked = GameMain.Server.StartGame;
                 startButton.UserData = "startButton";
                 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
-                modeList.OnSelected += Game1.Server.UpdateNetLobby;                
-                durationBar.OnMoved = Game1.Server.UpdateNetLobby;
+                modeList.OnSelected += GameMain.Server.UpdateNetLobby;                
+                durationBar.OnMoved = GameMain.Server.UpdateNetLobby;
 
                 if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(-1);
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(-1);
 
                 if (infoFrame.children.Find(c => c.UserData as string == "playyourself") == null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
-                    playYourself.Selected = Game1.Server.CharacterInfo != null;
+                    var playYourself = new GUITickBox(new Rectangle(-30, -30, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
             }
             else
             {
-                UpdatePlayerFrame(Game1.Client.CharacterInfo);
+                UpdatePlayerFrame(GameMain.Client.CharacterInfo);
             }
 
             base.Select();
@@ -303,10 +303,10 @@ namespace Subsurface
             {
                 playerFrame.ClearChildren();
 
-                if (IsServer && Game1.Server != null)
+                if (IsServer && GameMain.Server != null)
                 {
                     var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
-                    playYourself.Selected = Game1.Server.CharacterInfo != null;
+                    playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
@@ -364,17 +364,17 @@ namespace Subsurface
             GUITickBox tickBox = obj as GUITickBox;
             if (tickBox.Selected)
             {
-                Game1.Server.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, Game1.Server.Name);
-                UpdatePlayerFrame(Game1.Server.CharacterInfo);
+                GameMain.Server.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.Server.Name);
+                UpdatePlayerFrame(GameMain.Server.CharacterInfo);
             }
             else
             {
                 playerFrame.ClearChildren();
 
-                if (IsServer && Game1.Server != null)
+                if (IsServer && GameMain.Server != null)
                 {
-                    Game1.Server.CharacterInfo = null;
-                    Game1.Server.Character = null;
+                    GameMain.Server.CharacterInfo = null;
+                    GameMain.Server.Character = null;
 
                     var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
                     playYourself.OnSelected = TogglePlayYourself;
@@ -385,7 +385,7 @@ namespace Subsurface
 
         private bool SelectMap(GUIComponent component, object obj)
         {
-            if (Game1.Server != null) Game1.Server.UpdateNetLobby(obj);
+            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(obj);
 
             Submarine sub = (Submarine)obj;
 
@@ -399,18 +399,18 @@ namespace Subsurface
 
         public bool ChangeServerName(GUITextBox textBox, string text)
         {
-            if (Game1.Server == null) return false;
+            if (GameMain.Server == null) return false;
             ServerName = text;
-            Game1.Server.UpdateNetLobby(null, null);
+            GameMain.Server.UpdateNetLobby(null, null);
 
             return true;
         }
 
         public bool UpdateServerMessage(GUITextBox textBox, string text)
         {
-            if (Game1.Server == null) return false;
+            if (GameMain.Server == null) return false;
             ServerMessage = text;
-            Game1.Server.UpdateNetLobby(null, null);
+            GameMain.Server.UpdateNetLobby(null, null);
 
             return true;
         }
@@ -456,8 +456,8 @@ namespace Subsurface
             
             pos += offset * 0.8f;
             
-            Game1.GameScreen.Cam.TargetPos = pos;
-            Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
+            GameMain.GameScreen.Cam.TargetPos = pos;
+            GameMain.GameScreen.Cam.MoveCamera((float)deltaTime);
 
             menu.Update((float)deltaTime);
                         
@@ -468,7 +468,7 @@ namespace Subsurface
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            Game1.GameScreen.DrawMap(graphics, spriteBatch);
+            GameMain.GameScreen.DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
 
@@ -507,7 +507,7 @@ namespace Subsurface
 
         public bool StartGame(object obj)
         {
-            Game1.Server.StartGame(null, obj);
+            GameMain.Server.StartGame(null, obj);
             return true;
         }
 
@@ -515,7 +515,7 @@ namespace Subsurface
         {
             if (String.IsNullOrEmpty(message)) return false;
 
-            Game1.NetworkMember.SendChatMessage(Game1.NetworkMember.Name + ": " + message);
+            GameMain.NetworkMember.SendChatMessage(GameMain.NetworkMember.Name + ": " + message);
             
             return true;
         }
@@ -534,14 +534,14 @@ namespace Subsurface
             try
             {
                 Gender gender = (Gender)obj;
-                Game1.Client.CharacterInfo.Gender = gender;
-                Game1.Client.SendCharacterData();
+                GameMain.Client.CharacterInfo.Gender = gender;
+                GameMain.Client.SendCharacterData();
                 
                 //CreatePreviewCharacter();
             }
             catch {}
             
-            UpdatePreviewPlayer(Game1.Client.CharacterInfo);
+            UpdatePreviewPlayer(GameMain.Client.CharacterInfo);
             return true;
         }
 
@@ -570,7 +570,7 @@ namespace Subsurface
             //textBox.Text = LevelSeed;
             //textBox.Selected = false;
 
-            if (Game1.Server != null) Game1.Server.UpdateNetLobby(null);
+            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(null);
 
             return true;
         }
@@ -579,13 +579,13 @@ namespace Subsurface
         {
             if (string.IsNullOrEmpty(newName)) return false;
 
-            if (Game1.NetworkMember == null || Game1.NetworkMember.CharacterInfo == null) return true;
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo == null) return true;
 
-            Game1.NetworkMember.CharacterInfo.Name = newName;
-            if (Game1.Client != null)
+            GameMain.NetworkMember.CharacterInfo.Name = newName;
+            if (GameMain.Client != null)
             {
-                Game1.Client.Name = newName;
-                Game1.Client.SendCharacterData();
+                GameMain.Client.Name = newName;
+                GameMain.Client.SendCharacterData();
             }
 
             textBox.Text = newName;
@@ -628,7 +628,7 @@ namespace Subsurface
                 (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
             }
 
-            if (Game1.Client!=null) Game1.Client.SendCharacterData();
+            if (GameMain.Client!=null) GameMain.Client.SendCharacterData();
         }
 
         public bool TrySelectMap(string mapName, string md5Hash)

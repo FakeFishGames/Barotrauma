@@ -145,7 +145,7 @@ namespace Subsurface
 
         private void UpdateDistanceAccumulator()
         {
-            Limb limb = Character.AnimController.limbs[0];
+            Limb limb = Character.AnimController.Limbs[0];
             distanceAccumulator += (limb.SimPosition - prevPosition).Length();
 
             prevPosition = limb.body.SimPosition;
@@ -187,7 +187,7 @@ namespace Subsurface
             //check if any of the limbs is close enough to attack the target
             if (attackingLimb == null)
             {
-                foreach (Limb limb in Character.AnimController.limbs)
+                foreach (Limb limb in Character.AnimController.Limbs)
                 {
                     if (limb.attack==null || limb.attack.Type == AttackType.None) continue;
                     if (Vector2.Distance(limb.SimPosition, attackPosition) > limb.attack.Range) continue;
@@ -210,7 +210,7 @@ namespace Subsurface
             //System.Diagnostics.Debug.WriteLine("cooldown");
 
             if (selectedAiTarget.Entity is Hull ||
-                Vector2.Distance(attackPosition, Character.AnimController.limbs[0].SimPosition) < ConvertUnits.ToSimUnits(500.0f))
+                Vector2.Distance(attackPosition, Character.AnimController.Limbs[0].SimPosition) < ConvertUnits.ToSimUnits(500.0f))
             {
                 steeringManager.SteeringSeek(attackPosition, -0.8f);
                 steeringManager.SteeringAvoid(deltaTime, 1.0f);
@@ -226,7 +226,7 @@ namespace Subsurface
         {
             targetEntity = null;
             //check if there's a wall between the target and the character   
-            Vector2 rayStart = Character.AnimController.limbs[0].SimPosition;
+            Vector2 rayStart = Character.AnimController.Limbs[0].SimPosition;
             Vector2 rayEnd = selectedAiTarget.Position;
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
 
@@ -372,7 +372,7 @@ namespace Subsurface
                 }
 
                 dist = Vector2.Distance(
-                    character.AnimController.limbs[0].SimPosition,
+                    character.AnimController.Limbs[0].SimPosition,
                     target.Position);
                 dist = ConvertUnits.ToDisplayUnits(dist);
 
@@ -383,7 +383,7 @@ namespace Subsurface
 
                 if (Math.Abs(valueModifier) > Math.Abs(targetValue) && (dist < target.SightRange * sight || dist < target.SoundRange * hearing))
                 {                  
-                    Vector2 rayStart = character.AnimController.limbs[0].SimPosition;
+                    Vector2 rayStart = character.AnimController.Limbs[0].SimPosition;
                     Vector2 rayEnd = target.Position;
 
                     Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);

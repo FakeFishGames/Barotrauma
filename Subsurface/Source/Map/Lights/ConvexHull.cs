@@ -37,12 +37,12 @@ namespace Subsurface.Lights
         {
             if (shadowEffect == null)
             {
-                shadowEffect = new BasicEffect(Game1.CurrGraphicsDevice);
+                shadowEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
                 shadowEffect.VertexColorEnabled = true;
             }
             if (penumbraEffect == null)
             {
-                penumbraEffect = new BasicEffect(Game1.CurrGraphicsDevice);
+                penumbraEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
                 penumbraEffect.TextureEnabled = true;
                 //shadowEffect.VertexColorEnabled = true;
                 penumbraEffect.LightingEnabled = false;
@@ -225,7 +225,7 @@ namespace Subsurface.Lights
             }
 
             shadowEffect.World = cam.ShaderTransform
-                * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
             shadowEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount * 2 - 2);

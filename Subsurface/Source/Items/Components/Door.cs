@@ -119,7 +119,7 @@ namespace Subsurface.Items.Components
                 (int)doorSprite.size.X,
                 (int)doorSprite.size.Y);
 
-            body = new PhysicsBody(BodyFactory.CreateRectangle(Game1.World,
+            body = new PhysicsBody(BodyFactory.CreateRectangle(GameMain.World,
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),
                 1.5f));
@@ -282,8 +282,8 @@ namespace Subsurface.Items.Components
 
                     foreach (Character c in Character.CharacterList)
                     {
-                        int dir = Math.Sign(c.AnimController.limbs[0].SimPosition.X - simPos.X);
-                        foreach (Limb l in c.AnimController.limbs)
+                        int dir = Math.Sign(c.AnimController.Limbs[0].SimPosition.X - simPos.X);
+                        foreach (Limb l in c.AnimController.Limbs)
                         {
                             if (l.SimPosition.Y < simPos.Y || l.SimPosition.Y > simPos.Y - simSize.Y) continue;
                             if (Math.Abs(l.SimPosition.X - simPos.X) > simSize.X * 2.0f) continue;
@@ -299,7 +299,7 @@ namespace Subsurface.Items.Components
         {
             base.Remove();
 
-            Game1.World.RemoveBody(body.FarseerBody);
+            GameMain.World.RemoveBody(body.FarseerBody);
 
             if (linkedGap!=null) linkedGap.Remove();
 

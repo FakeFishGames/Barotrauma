@@ -23,11 +23,11 @@ namespace Subsurface
         private GUITextBox serverNameBox, portBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, useUpnpBox;
 
-        private Game1 game;
+        private GameMain game;
 
         int selectedTab;
 
-        public MainMenuScreen(Game1 game)
+        public MainMenuScreen(GameMain game)
         {
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tabs)).Length+1];
 
@@ -37,7 +37,7 @@ namespace Subsurface
             //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
             Rectangle panelRect = new Rectangle(
-                Game1.GraphicsWidth / 2 - 250,
+                GameMain.GraphicsWidth / 2 - 250,
                 buttonsTab.Rect.Y,
                 500, 360);
 
@@ -136,7 +136,7 @@ namespace Subsurface
             minusPlayersBox.OnClicked = ChangeMaxPlayers;
 
             new GUITextBlock(new Rectangle(0, 150, 0, 30), "Password (optional):", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tabs.HostServer]);
-            passwordBox = new GUITextBox(new Rectangle(160, 170, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tabs.HostServer]);
+            passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tabs.HostServer]);
             
             isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), "Public server", Alignment.TopLeft, menuTabs[(int)Tabs.HostServer]);
             isPublicBox.ToolTip = "Public servers are shown in the list of available servers in the ''Join Server'' -tab";
@@ -189,7 +189,7 @@ namespace Subsurface
 
         private bool JoinServerClicked(GUIButton button, object obj)
         {            
-            Game1.ServerListScreen.Select();
+            GameMain.ServerListScreen.Select();
             return true;
         }
 
@@ -223,9 +223,9 @@ namespace Subsurface
                 return false;
             }
 
-            Game1.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
+            GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
             
-            Game1.NetLobbyScreen.IsServer = true;
+            GameMain.NetLobbyScreen.IsServer = true;
             //Game1.NetLobbyScreen.Select();
             return true;
         }
@@ -340,10 +340,10 @@ namespace Subsurface
             buttonsTab.Update((float)deltaTime);
             if (selectedTab>0) menuTabs[selectedTab].Update((float)deltaTime);
 
-            Game1.TitleScreen.TitlePosition =
-                Vector2.Lerp(Game1.TitleScreen.TitlePosition, new Vector2(
-                    Game1.TitleScreen.TitleSize.X / 2.0f * Game1.TitleScreen.Scale + 30.0f,
-                    Game1.TitleScreen.TitleSize.Y / 2.0f * Game1.TitleScreen.Scale + 30.0f), 
+            GameMain.TitleScreen.TitlePosition =
+                Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
+                    GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
+                    GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f), 
                     0.1f);
                 
         }
@@ -352,7 +352,7 @@ namespace Subsurface
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            Game1.TitleScreen.Draw(spriteBatch, graphics, -1.0f, (float)deltaTime);
+            GameMain.TitleScreen.Draw(spriteBatch, graphics, -1.0f, (float)deltaTime);
 
             //Game1.GameScreen.DrawMap(graphics, spriteBatch);
             
@@ -363,7 +363,7 @@ namespace Subsurface
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
-            spriteBatch.DrawString(GUI.Font, "Subsurface v"+Game1.Version, new Vector2(10, Game1.GraphicsHeight-20), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Subsurface v"+GameMain.Version, new Vector2(10, GameMain.GraphicsHeight-20), Color.White);
 
             spriteBatch.End();
         }
@@ -383,10 +383,10 @@ namespace Subsurface
             Submarine selectedSub = mapList.SelectedData as Submarine;
             if (selectedSub == null) return false;
 
-            Game1.GameSession = new GameSession(selectedSub, saveNameBox.Text, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
-            (Game1.GameSession.gameMode as SinglePlayerMode).GenerateMap(seedBox.Text);
+            GameMain.GameSession = new GameSession(selectedSub, saveNameBox.Text, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
+            (GameMain.GameSession.gameMode as SinglePlayerMode).GenerateMap(seedBox.Text);
 
-            Game1.LobbyScreen.Select();
+            GameMain.LobbyScreen.Select();
 
             new GUIMessageBox("Welcome to Subsurface!", "Please note that the single player mode is very unfinished at the moment; "+
             "for example, the NPCs don't have an AI yet and there are only a couple of different quests to complete. The multiplayer "+
@@ -420,7 +420,7 @@ namespace Subsurface
             }
 
 
-            Game1.LobbyScreen.Select();
+            GameMain.LobbyScreen.Select();
 
             return true;
         }

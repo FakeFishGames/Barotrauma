@@ -197,17 +197,17 @@ namespace Subsurface
 
             if (width != 0.0f && height != 0.0f)
             {
-                body = BodyFactory.CreateRectangle(Game1.World, width, height, density);
+                body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
                 bodyShape = Shape.Rectangle;
             }
             else if (radius != 0.0f && height != 0.0f)
             {
-                body = BodyFactory.CreateCapsule(Game1.World, height, radius, density);
+                body = BodyFactory.CreateCapsule(GameMain.World, height, radius, density);
                 bodyShape = Shape.Capsule;
             }
             else if (radius != 0.0f)
             {
-                body = BodyFactory.CreateCircle(Game1.World, radius, density);
+                body = BodyFactory.CreateCircle(GameMain.World, radius, density);
                 bodyShape = Shape.Circle;
             }
             else
@@ -346,7 +346,7 @@ namespace Subsurface
         public void Remove()
         {
             list.Remove(this);
-            Game1.World.RemoveBody(body);
+            GameMain.World.RemoveBody(body);
 
         }
 

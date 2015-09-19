@@ -38,7 +38,7 @@ namespace Subsurface
             monsterTexture = TextureLoader.FromFile("Content/UI/titleMonster.png");
             titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
 
-            renderTarget = new RenderTarget2D(graphics, Game1.GraphicsWidth, Game1.GraphicsHeight);
+            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
         }
 
@@ -53,15 +53,15 @@ namespace Subsurface
             graphics.SetRenderTarget(renderTarget);
             //Debug.WriteLine(stopwatch.Elapsed.TotalMilliseconds);
 
-            Scale = Game1.GraphicsHeight/1500.0f;
+            Scale = GameMain.GraphicsHeight/1500.0f;
 
             state += deltaTime;
 
             if (loadState>-1)
             {
-                CenterPosition = new Vector2(Game1.GraphicsWidth*0.3f, Game1.GraphicsHeight/2.0f); 
+                CenterPosition = new Vector2(GameMain.GraphicsWidth*0.3f, GameMain.GraphicsHeight/2.0f); 
                 TitlePosition = CenterPosition + new Vector2(-0.0f + (float)Math.Sqrt(state) * 220.0f, 0.0f) * Scale;
-                TitlePosition.X = Math.Min(TitlePosition.X, (float)Game1.GraphicsWidth / 2.0f);
+                TitlePosition.X = Math.Min(TitlePosition.X, (float)GameMain.GraphicsWidth / 2.0f);
             }
 
 
@@ -103,7 +103,7 @@ namespace Subsurface
                 loadText = "Loading... " + (int)loadState + " %";
             }
 
-            spriteBatch.DrawString(GUI.Font, loadText, new Vector2(Game1.GraphicsWidth/2.0f - 50.0f, Game1.GraphicsHeight*0.8f), Color.White);
+            spriteBatch.DrawString(GUI.Font, loadText, new Vector2(GameMain.GraphicsWidth/2.0f - 50.0f, GameMain.GraphicsHeight*0.8f), Color.White);
             
             spriteBatch.End();
 

@@ -296,7 +296,7 @@ namespace Subsurface
                     {
                         selectedConnection = connection;
                         selectedLocation = highlightedLocation;    
-                        Game1.LobbyScreen.SelectLocation(highlightedLocation, connection);                    
+                        GameMain.LobbyScreen.SelectLocation(highlightedLocation, connection);                    
                     } 
                 }
 

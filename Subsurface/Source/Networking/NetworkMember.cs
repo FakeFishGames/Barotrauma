@@ -93,8 +93,8 @@ namespace Subsurface.Networking
 
             int width = 350, height = 100;
             chatBox = new GUIListBox(new Rectangle(
-                Game1.GraphicsWidth - 20 - width,
-                Game1.GraphicsHeight - 40 - 25 - height,
+                GameMain.GraphicsWidth - 20 - width,
+                GameMain.GraphicsHeight - 40 - 25 - height,
                 width, height),
                 Color.White * 0.5f, GUI.Style, inGameHUD);
 
@@ -112,7 +112,7 @@ namespace Subsurface.Networking
         {
             int width = 500, height = 400;
 
-            crewFrame = new GUIFrame(new Rectangle(Game1.GraphicsWidth / 2 - width / 2, Game1.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+            crewFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
             crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
             GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 200, 300), Color.White * 0.7f, GUI.Style, crewFrame);
@@ -135,7 +135,7 @@ namespace Subsurface.Networking
                     null, frame);
                 textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-                new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.limbs[0].sprite, Alignment.Left, frame);
+                new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
             }
             
             var closeButton = new GUIButton(new Rectangle(0,0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, crewFrame);
@@ -171,7 +171,7 @@ namespace Subsurface.Networking
         {
             if (string.IsNullOrWhiteSpace(message)) return false;
 
-            SendChatMessage(Game1.NetworkMember.Name + ": " + message);            
+            SendChatMessage(GameMain.NetworkMember.Name + ": " + message);            
 
             textBox.Deselect();
 
@@ -180,7 +180,7 @@ namespace Subsurface.Networking
         
         public void AddChatMessage(string message, ChatMessageType messageType)
         {
-            Game1.NetLobbyScreen.NewChatMessage(message, messageColor[(int)messageType]);
+            GameMain.NetLobbyScreen.NewChatMessage(message, messageColor[(int)messageType]);
 
             while (chatBox.CountChildren > 20)
             {

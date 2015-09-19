@@ -326,7 +326,7 @@ namespace Subsurface
 
             float closestFraction = 1.0f;
             Body closestBody = null;
-            Game1.World.RayCast((fixture, point, normal, fraction) =>
+            GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null || fixture.CollisionCategories == Category.None) return -1;                
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
@@ -363,7 +363,7 @@ namespace Subsurface
                 return null;
             }
             
-            Game1.World.RayCast((fixture, point, normal, fraction) =>
+            GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null || fixture.CollisionCategories != Physics.CollisionWall) return -1;
 
@@ -395,7 +395,7 @@ namespace Subsurface
             Body foundBody = null;
             AABB aabb = new AABB(point, point);
 
-            Game1.World.QueryAABB(p =>
+            GameMain.World.QueryAABB(p =>
             {
                 foundBody = p.Body;
 
@@ -406,16 +406,16 @@ namespace Subsurface
             return foundBody;
         }
 
-        public static bool InsideWall(Vector2 point)
-        {
-            Body foundBody = PickBody(point);
-            if (foundBody==null) return false;
+        //public static bool InsideWall(Vector2 point)
+        //{
+        //    Body foundBody = PickBody(point);
+        //    if (foundBody==null) return false;
 
-            Structure wall = foundBody.UserData as Structure;
-            if (wall == null || wall.IsPlatform) return false;
+        //    Structure wall = foundBody.UserData as Structure;
+        //    if (wall == null || wall.IsPlatform) return false;
             
-            return true;
-        }
+        //    return true;
+        //}
         
         //movement ----------------------------------------------------
 
@@ -436,8 +436,10 @@ namespace Subsurface
             }
 
             Translate(translateAmount);
+
+            //-------------------------
             
-            ApplyForce(CalculateBuoyancy());
+            Vector2 totalForce = CalculateBuoyancy();
 
             float dragCoefficient = 0.00001f;
 
@@ -446,8 +448,11 @@ namespace Subsurface
 
             if (speed != Vector2.Zero)
             {
-                ApplyForce(-Vector2.Normalize(speed) * drag);
+                totalForce += -Vector2.Normalize(speed) * drag;
             }
+
+            ApplyForce(totalForce);
+
             //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
             
             //hullBody.SetTransform(Vector2.Zero , 0.0f);
@@ -462,14 +467,16 @@ namespace Subsurface
             foreach (GraphEdge ge in collidingCell.edges)
             {
                 Body body = PickBody(
-                    ConvertUnits.ToSimUnits(ge.point1+ Game1.GameSession.Level.Position), 
-                    ConvertUnits.ToSimUnits(ge.point2 + Game1.GameSession.Level.Position), new List<Body>(){collidingCell.body});
+                    ConvertUnits.ToSimUnits(ge.point1+ GameMain.GameSession.Level.Position), 
+                    ConvertUnits.ToSimUnits(ge.point2 + GameMain.GameSession.Level.Position), new List<Body>(){collidingCell.body});
                 if (body == null || body.UserData == null) continue;
 
                 Structure structure = body.UserData as Structure;
                 if (structure == null) continue;
                 structure.AddDamage(lastPickedPosition, DamageType.Blunt, 50.0f, 0.0f, 0.0f, true);
             }
+
+            collidingCell = null;
 
             //hullBodies[0].body.SetTransform(Vector2.Zero, 0.0f);
 
@@ -528,15 +535,41 @@ namespace Subsurface
             VoronoiCell cell = f2.Body.UserData as VoronoiCell;
             if (cell==null) return true;
 
-            Vector2 normal = -contact.Manifold.LocalNormal;
+            Vector2 normal = contact.Manifold.LocalNormal;
             Vector2 simSpeed = ConvertUnits.ToSimUnits(speed);
-            float impact = -Vector2.Dot(simSpeed, normal);
+            float impact = Vector2.Dot(simSpeed, normal);
 
-            Vector2 u = Vector2.Dot(simSpeed, normal)*normal;
+            Vector2 u = Vector2.Dot(simSpeed, -normal)*-normal;
             Vector2 w = simSpeed - u;
 
+            Vector2 limbForce = normal * impact;
 
-            System.Diagnostics.Debug.WriteLine("IMPACT:"+impact);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.AnimController.CurrentHull == null) continue;
+
+                if (impact > 2.0f) c.AnimController.StunTimer = (impact - 2.0f) * 0.1f;
+
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    limb.body.ApplyLinearImpulse(limb.Mass * limbForce);
+                }
+            }
+
+            if (impact >= 1.0f)
+            {
+                AmbientSoundManager.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, cell.body);
+
+                FixedArray2<Vector2> worldPoints;
+                contact.GetWorldManifold(out normal, out worldPoints);
+
+
+                AmbientSoundManager.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(worldPoints[0]));
+
+                GameMain.GameScreen.Cam.Shake = impact*2.0f;
+            }
+
+            System.Diagnostics.Debug.WriteLine("IMPACT: "+impact + " normal: "+normal+" simspeed: "+simSpeed+" u: "+u+" w: " +w);
             if (impact < 4.0f)
             {
                 speed = ConvertUnits.ToDisplayUnits(w * 0.9f - u * 0.2f);
@@ -547,13 +580,6 @@ namespace Subsurface
                 speed = ConvertUnits.ToDisplayUnits(w * 0.9f + u * 0.5f);
             }
 
-            if (contact.Manifold.PointCount >= 1)
-            {
-                FixedArray2<Vector2> worldPoints;
-                contact.GetWorldManifold(out normal, out worldPoints);
-
-                Game1.GameScreen.Cam.Shake = impact;
-            }
 
             collisionRigidness = 0.8f;
 
@@ -828,7 +854,7 @@ namespace Subsurface
             
             var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
 
-            hullBody = BodyFactory.CreateCompoundPolygon(Game1.World, triangulatedVertices, 5.0f);
+            hullBody = BodyFactory.CreateCompoundPolygon(GameMain.World, triangulatedVertices, 5.0f);
             hullBody.BodyType = BodyType.Dynamic;
 
             hullBody.CollisionCategories = Physics.CollisionMisc;
@@ -880,7 +906,7 @@ namespace Subsurface
 
         private void Clear()
         {
-            if (Game1.GameScreen.Cam != null) Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+            if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
 
@@ -888,7 +914,7 @@ namespace Subsurface
             
             Ragdoll.list.Clear();
 
-            Game1.World.Clear();
+            GameMain.World.Clear();
         }
 
     }

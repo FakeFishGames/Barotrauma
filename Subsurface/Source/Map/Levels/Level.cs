@@ -102,7 +102,7 @@ namespace Subsurface
             if (basicEffect==null)
             {
                 
-                basicEffect = new BasicEffect(Game1.CurrGraphicsDevice);
+                basicEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
                 basicEffect.VertexColorEnabled = false;
 
                 basicEffect.TextureEnabled = true;
@@ -354,7 +354,7 @@ namespace Subsurface
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
 
-            vertexBuffer = new VertexBuffer(Game1.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            vertexBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             vertexBuffer.SetData(vertices);
 
             if (mirror)
@@ -639,7 +639,7 @@ int currentTargetIndex = 1;
 
                 triangles = MathUtils.TriangulateConvexHull(bodyPoints, cell.Center);
 
-                Body edgeBody = new Body(Game1.World);
+                Body edgeBody = new Body(GameMain.World);
 
                 for (int i = 0; i < triangles.Count; i++)
                 {
@@ -661,7 +661,7 @@ int currentTargetIndex = 1;
 
             for (int i = 0; i < 2; i++ )
             {
-                Body shaftBody = BodyFactory.CreateRectangle(Game1.World, 100.0f, 10.0f, 5.0f);
+                Body shaftBody = BodyFactory.CreateRectangle(GameMain.World, 100.0f, 10.0f, 5.0f);
                 shaftBody.BodyType = BodyType.Kinematic;
                 shaftBody.CollisionCategories = Physics.CollisionWall | Physics.CollisionLevel;
                 shaftBody.SetTransform(ConvertUnits.ToSimUnits((i==0) ? startPosition : endPosition), 0.0f);
@@ -720,7 +720,7 @@ int currentTargetIndex = 1;
 
             foreach (Character character in Character.CharacterList)
             {
-                foreach (Limb limb in character.AnimController.limbs)
+                foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (character.AnimController.CurrentHull != null) continue;
                     
@@ -762,7 +762,7 @@ int currentTargetIndex = 1;
             {
                 if (character.AnimController.CurrentHull != null) continue;
 
-                foreach (Limb limb in character.AnimController.limbs)
+                foreach (Limb limb in character.AnimController.Limbs)
                 {
                     limb.body.LinearVelocity -= prevVelocity;
                 }
@@ -949,7 +949,7 @@ int currentTargetIndex = 1;
             if (vertices.Length <= 0) return;
 
             basicEffect.World = Matrix.CreateTranslation(new Vector3(Position, 0.0f)) * cam.ShaderTransform
-                * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
             
             basicEffect.CurrentTechnique.Passes[0].Apply();
 

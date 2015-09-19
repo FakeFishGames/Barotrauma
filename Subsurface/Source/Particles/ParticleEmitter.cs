@@ -21,7 +21,7 @@ namespace Subsurface.Particles
         {
             Name = element.Name.ToString();
 
-            particlePrefab = Game1.ParticleManager.FindPrefab(ToolBox.GetAttributeString(element, "particle", ""));
+            particlePrefab = GameMain.ParticleManager.FindPrefab(ToolBox.GetAttributeString(element, "particle", ""));
 
             if (element.Attribute("startrotation") == null)
             {
@@ -58,7 +58,7 @@ namespace Subsurface.Particles
                 float angle = Rand.Range(AngleMin, AngleMax);
                 Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(VelocityMin, VelocityMax);
 
-                Game1.ParticleManager.CreateParticle(particlePrefab, position, velocity);
+                GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity);
             }
         }
     }

@@ -79,7 +79,7 @@ namespace Subsurface
                 endTime = startTime + duration;
                 this.duration = duration;
 
-                timerBar = new GUIProgressBar(new Rectangle(Game1.GraphicsWidth - 120, 20, 100, 25), Color.Gold, 0.0f, null);  
+                timerBar = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth - 120, 20, 100, 25), Color.Gold, 0.0f, null);  
             }
 
             endMessage = "The round has ended!";
@@ -108,7 +108,7 @@ namespace Subsurface
 
             if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
 
-            Game1.GameSession.EndShift(endMessage);
+            GameMain.GameSession.EndShift(endMessage);
         }
         
 

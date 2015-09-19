@@ -26,7 +26,7 @@ namespace Subsurface
         [STAThread]
         static void Main()
         {
-            using (var game = new Game1())
+            using (var game = new GameMain())
             {
 #if !DEBUG
                 try
@@ -44,7 +44,7 @@ namespace Subsurface
             }
         }
 
-        static void CrashDump(Game1 game, string filePath, Exception exception)
+        static void CrashDump(GameMain game, string filePath, Exception exception)
         {
             StreamWriter sw = new StreamWriter(filePath);
 
@@ -54,19 +54,19 @@ namespace Subsurface
             sb.AppendLine("Subsurface seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
             sb.AppendLine("\n");
-            sb.AppendLine("Subsurface version " + Game1.Version);
-            sb.AppendLine("Selected content package: "+Game1.SelectedPackage.Name);
+            sb.AppendLine("Subsurface version " + GameMain.Version);
+            sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
             sb.AppendLine("Level seed: "+ ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.Loaded == null) ? "none" : Submarine.Loaded.Name +" ("+Submarine.Loaded.MD5Hash+")"));
             sb.AppendLine("Selected screen: " + Screen.Selected.ToString());
 
-            if (Game1.Server != null)
+            if (GameMain.Server != null)
             {
-                sb.AppendLine("Server (" +(Game1.Server.GameStarted ? "Round had started)" : "Round hand't been started)"));
+                sb.AppendLine("Server (" + (GameMain.Server.GameStarted ? "Round had started)" : "Round hand't been started)"));
             }
-            else if (Game1.Client != null)
+            else if (GameMain.Client != null)
             {
-                sb.AppendLine("Client (" +(Game1.Client.GameStarted ? "Round had started)" : "Round hand't been started)"));
+                sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hand't been started)"));
             }
 
             sb.AppendLine("\n");
