@@ -116,7 +116,7 @@ namespace Subsurface.Items.Components
                 (float)Math.Sin(item.body.Rotation)) * range * item.body.Dir;
 
             List<Body> ignoredBodies = new List<Body>();
-            foreach (Limb limb in character.AnimController.limbs)
+            foreach (Limb limb in character.AnimController.Limbs)
             {
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
@@ -200,7 +200,7 @@ namespace Subsurface.Items.Components
 
             if (!string.IsNullOrWhiteSpace(particles))
             {
-                Game1.ParticleManager.CreateParticle(particles, ConvertUnits.ToDisplayUnits(TransformedBarrelPos), 
+                GameMain.ParticleManager.CreateParticle(particles, ConvertUnits.ToDisplayUnits(TransformedBarrelPos), 
                     -item.body.Rotation + ((item.body.Dir>0.0f) ? 0.0f : MathHelper.Pi), 0.0f);
             }
             

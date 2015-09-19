@@ -223,7 +223,7 @@ namespace Subsurface
                 pullJoint.Enabled = false;
                 pullJoint.MaxForce = 150.0f * body.Mass;
 
-                Game1.World.AddJoint(pullJoint);
+                GameMain.World.AddJoint(pullJoint);
             }
             else
             {
@@ -325,14 +325,14 @@ namespace Subsurface
                 Vector2 particleVel = SimPosition - position;
                 if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
 
-                Game1.ParticleManager.CreateParticle("blood",
+                GameMain.ParticleManager.CreateParticle("blood",
                     Position,
                     particleVel * Rand.Range(100.0f, 300.0f));
             }
 
             for (int i = 0; i < bloodAmount / 2; i++)
             {
-                Game1.ParticleManager.CreateParticle("waterblood", Position, Vector2.Zero);
+                GameMain.ParticleManager.CreateParticle("waterblood", Position, Vector2.Zero);
             }
 
             return new AttackResult(amount, bleedingAmount, hitArmor);
@@ -343,7 +343,7 @@ namespace Subsurface
             if (LinearVelocity.X>100.0f)
             {
                 DebugConsole.ThrowError("CHARACTER EXPLODED");
-                foreach (Limb limb in character.AnimController.limbs)
+                foreach (Limb limb in character.AnimController.Limbs)
                 {
                     limb.body.ResetDynamics();
                     limb.body.SetTransform(body.SimPosition, 0.0f);
@@ -421,7 +421,7 @@ namespace Subsurface
                     1.0f, spriteEffect, sprite.Depth - 0.000001f);
             }
 
-            if (!Game1.DebugDraw) return;
+            if (!GameMain.DebugDraw) return;
 
             if (pullJoint!=null)
             {

@@ -18,13 +18,13 @@ namespace Subsurface
         {
             Submarine.Load("Content/Map/TutorialSub.gz");
 
-            Game1.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLower()=="tutorial"));
+            GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLower()=="tutorial"));
 
-            Game1.GameSession.StartShift(TimeSpan.Zero, "tutorial");
+            GameMain.GameSession.StartShift(TimeSpan.Zero, "tutorial");
 
-            Game1.GameSession.taskManager.Tasks.Clear();
+            GameMain.GameSession.taskManager.Tasks.Clear();
 
-            Game1.GameScreen.Select();
+            GameMain.GameScreen.Select();
         }
 
         public TutorialMode(GameModePreset preset)
@@ -313,7 +313,7 @@ namespace Subsurface
                 Vector2 steeringDir = windows[0].Position - moloch.Position;
                 if (steeringDir != Vector2.Zero) steeringDir = Vector2.Normalize(steeringDir);
 
-                foreach (Limb limb in moloch.AnimController.limbs)
+                foreach (Limb limb in moloch.AnimController.Limbs)
                 {
                     limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X, limb.LinearVelocity.Y + steeringDir.Y*10.0f);
                 }
@@ -511,7 +511,7 @@ namespace Subsurface
             float secondsLeft = endPreviewLength;
 
             Character.Controlled = null;
-            Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             do
             {
@@ -522,14 +522,14 @@ namespace Subsurface
                     (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
                     (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                Game1.GameScreen.Cam.TargetPos = offset * 0.8f;
+                GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 yield return CoroutineStatus.Running;
             } while (secondsLeft > 0.0f);
 
             Submarine.Unload();
-            Game1.MainMenuScreen.Select();
+            GameMain.MainMenuScreen.Select();
 
             yield return CoroutineStatus.Success;
         }
@@ -544,7 +544,7 @@ namespace Subsurface
             messageBox.Buttons[0].OnClicked += messageBox.Close;
 
             //messageBox.Buttons[1].UserData = MainMenuScreen.Tabs.Main;
-            messageBox.Buttons[1].OnClicked = Game1.MainMenuScreen.SelectTab;
+            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.SelectTab;
             messageBox.Buttons[1].OnClicked += messageBox.Close;
 
 

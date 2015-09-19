@@ -25,7 +25,7 @@ namespace Subsurface
 
         public override void Update(float deltaTime)
         {
-            if (Game1.Server == null) return;
+            if (GameMain.Server == null) return;
 
             base.Update(deltaTime);
 
@@ -34,21 +34,21 @@ namespace Subsurface
 
             if (traitor==null || target ==null)
             {
-                int clientCount = Game1.Server.connectedClients.Count();
+                int clientCount = GameMain.Server.connectedClients.Count();
                 if (clientCount < 2) return;
 
                 int traitorIndex = Rand.Int(clientCount, false);
-                traitor = Game1.Server.connectedClients[traitorIndex];
+                traitor = GameMain.Server.connectedClients[traitorIndex];
 
                 int targetIndex = 0;
                 while (targetIndex == traitorIndex)
                 {
                     targetIndex = Rand.Int(clientCount, false);
                 }
-                target = Game1.Server.connectedClients[targetIndex];
+                target = GameMain.Server.connectedClients[targetIndex];
 
 
-                Game1.Server.NewTraitor(traitor, target);
+                GameMain.Server.NewTraitor(traitor, target);
             }
             else
             {

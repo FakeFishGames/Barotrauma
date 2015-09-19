@@ -23,12 +23,12 @@ namespace Subsurface
         
         public Vector2 Position
         {
-            get { return Character.AnimController.limbs[0].SimPosition; }
+            get { return Character.AnimController.Limbs[0].SimPosition; }
         }
 
         public Vector2 Velocity
         {
-            get { return Character.AnimController.limbs[0].LinearVelocity; }
+            get { return Character.AnimController.Limbs[0].LinearVelocity; }
         }
 
         public AiState State

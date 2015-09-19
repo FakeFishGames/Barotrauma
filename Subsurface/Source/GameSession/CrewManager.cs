@@ -94,7 +94,7 @@ namespace Subsurface
                 null, frame);
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-            new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.limbs[0].sprite, Alignment.Left, frame);
+            new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
         }
 
         public void Update(float deltaTime)

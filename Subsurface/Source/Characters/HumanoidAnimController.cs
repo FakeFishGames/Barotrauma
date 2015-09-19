@@ -30,11 +30,7 @@ namespace Subsurface
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (character.IsDead)
-            {
-                UpdateStruggling();
-                return;
-            }
+            if (character.IsDead)  return;            
 
             Vector2 colliderPos = GetLimb(LimbType.Torso).SimPosition;
 
@@ -49,7 +45,7 @@ namespace Subsurface
             //out whether the  ragdoll is standing on ground
             float closestFraction = 1;
             Structure closestStructure = null;
-            Game1.World.RayCast((fixture, point, normal, fraction) =>
+            GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 switch (fixture.CollisionCategories)
                 {
@@ -136,7 +132,7 @@ namespace Subsurface
 
             if (stunTimer > 0)
             {
-                UpdateStruggling();
+                //UpdateStruggling();
                 stunTimer -= deltaTime;
                 return;
             }
@@ -159,7 +155,7 @@ namespace Subsurface
 
             if (TargetDir != dir) Flip();
 
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 limb.Disabled = false;
             }
@@ -223,7 +219,7 @@ namespace Subsurface
             //place the anchors of the head and the torso to make the ragdoll stand
             if (onGround && LowestLimb != null && (LowestLimb.SimPosition.Y-floorY < 0.5f || stairs != null) && head !=null)
             {
-                getUpSpeed = Math.Max(getUpSpeed * (head.SimPosition.Y - colliderPos.Y), 0.25f);
+                getUpSpeed = getUpSpeed * (head.SimPosition.Y - colliderPos.Y);//, 0.25f);
 
                 if (stairs != null)
                 {
@@ -325,8 +321,7 @@ namespace Subsurface
                            posAdditon.Y += 0.1f;
                         }
                     }
-
-
+                    
                     if (!rightHand.Disabled)
                     {
                         rightHand.body.ApplyTorque(walkPosY * runningModifier * Dir);
@@ -676,26 +671,7 @@ namespace Subsurface
             }
 
         }
-
-        void UpdateStruggling()
-        {
-            Limb leftLeg    = GetLimb(LimbType.LeftFoot);
-            Limb rightLeg   = GetLimb(LimbType.RightFoot);
-            Limb torso      = GetLimb(LimbType.Torso);
-
-            //walkPos += 0.2f;
-
-            if (inWater) return;
-
-            HandIK(GetLimb(LimbType.RightHand), GetLimb(LimbType.Head).SimPosition,0.1f);
-            HandIK(GetLimb(LimbType.LeftHand), GetLimb(LimbType.Head).SimPosition,0.1f);
-            
-            //Vector2 footPos = torso.body.Position+ new Vector2(TorsoPosition*Dir,0.0f);
-
-            //MoveLimb(leftLeg, footPos, 0.7f);
-            //MoveLimb(rightLeg, footPos, 0.7f);
-        }
-
+        
         //float punchTimer;
         //bool punching;
 
@@ -885,7 +861,7 @@ namespace Subsurface
                 }
             }
 
-            foreach (Limb l in limbs)
+            foreach (Limb l in Limbs)
             {
                 switch (l.type)
                 {

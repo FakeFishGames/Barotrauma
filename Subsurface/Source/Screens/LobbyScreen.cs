@@ -58,7 +58,7 @@ namespace Subsurface
             Rectangle panelRect = new Rectangle(
                 40, 40,
                 180,
-                Game1.GraphicsHeight - 80);
+                GameMain.GraphicsHeight - 80);
 
             leftPanel = new GUIFrame(panelRect, GUI.Style);
             //leftPanel.Padding = GUI.style.smallPadding;
@@ -92,8 +92,8 @@ namespace Subsurface
             panelRect = new Rectangle(
                 panelRect.X + panelRect.Width + 40,
                 40,
-                Game1.GraphicsWidth - panelRect.Width - 120,
-                Game1.GraphicsHeight - 80);
+                GameMain.GraphicsWidth - panelRect.Width - 120,
+                GameMain.GraphicsHeight - 80);
 
             rightPanel = new GUIFrame[4];
 
@@ -147,7 +147,7 @@ namespace Subsurface
         {
             base.Select();
 
-            gameMode = Game1.GameSession.gameMode as SinglePlayerMode;
+            gameMode = GameMain.GameSession.gameMode as SinglePlayerMode;
 
             selectedRightPanel = (int)PanelTab.Crew;
 
@@ -210,9 +210,9 @@ namespace Subsurface
 
             new GUITextBlock(new Rectangle(0,0,0,0), location.Name, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
 
-            if (Game1.GameSession.Map.SelectedConnection != null && Game1.GameSession.Map.SelectedConnection.Quest != null)
+            if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Quest != null)
             {
-                var quest = Game1.GameSession.Map.SelectedConnection.Quest;
+                var quest = GameMain.GameSession.Map.SelectedConnection.Quest;
 
                 new GUITextBlock(new Rectangle(0, 40, 0, 20), "Quest: "+quest.Name, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
                 
@@ -343,7 +343,7 @@ namespace Subsurface
 
             graphics.Clear(Color.CornflowerBlue);
 
-            Game1.GameScreen.DrawMap(graphics, spriteBatch);
+            GameMain.GameScreen.DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
 
@@ -353,16 +353,16 @@ namespace Subsurface
 
             if (selectedRightPanel == (int)PanelTab.Map)
             {
-                Game1.GameSession.Map.Draw(spriteBatch, new Rectangle(
+                GameMain.GameSession.Map.Draw(spriteBatch, new Rectangle(
                     rightPanel[selectedRightPanel].Rect.X + 20, 
                     rightPanel[selectedRightPanel].Rect.Y + 20,
                     rightPanel[selectedRightPanel].Rect.Width - 280, 
                     rightPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
             }
      
-            if (rightPanel[(int)selectedRightPanel].UserData as Location != Game1.GameSession.Map.CurrentLocation)
+            if (rightPanel[(int)selectedRightPanel].UserData as Location != GameMain.GameSession.Map.CurrentLocation)
             {
-                UpdateLocationTab(Game1.GameSession.Map.CurrentLocation);
+                UpdateLocationTab(GameMain.GameSession.Map.CurrentLocation);
             }
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
@@ -380,7 +380,7 @@ namespace Subsurface
         
         private string GetMoney()
         {
-            return "Money: " + ((Game1.GameSession == null) ? "" : gameMode.CrewManager.Money.ToString());
+            return "Money: " + ((GameMain.GameSession == null) ? "" : gameMode.CrewManager.Money.ToString());
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)
@@ -416,9 +416,9 @@ namespace Subsurface
             CharacterInfo characterInfo = selection as CharacterInfo;
             if (characterInfo == null) return false;
 
-            if (gameMode.TryHireCharacter(Game1.GameSession.Map.CurrentLocation.HireManager, characterInfo))
+            if (gameMode.TryHireCharacter(GameMain.GameSession.Map.CurrentLocation.HireManager, characterInfo))
             {
-                UpdateLocationTab(Game1.GameSession.Map.CurrentLocation);
+                UpdateLocationTab(GameMain.GameSession.Map.CurrentLocation);
             }
 
 
@@ -428,15 +428,15 @@ namespace Subsurface
 
         private bool StartShift(GUIButton button, object selection)
         {           
-            Game1.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
-            Game1.GameScreen.Select();
+            GameMain.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
+            GameMain.GameScreen.Select();
             
             return true;
         }
 
         public bool QuitToMainMenu(GUIButton button, object selection)
         {
-            Game1.MainMenuScreen.Select();
+            GameMain.MainMenuScreen.Select();
             return true;
         }
     }

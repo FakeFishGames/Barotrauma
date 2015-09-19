@@ -50,7 +50,7 @@ namespace Subsurface
         {
             if (character.IsDead)
             {
-                UpdateStruggling(deltaTime);
+                UpdateDying(deltaTime);
                 return;
             }
 
@@ -64,7 +64,7 @@ namespace Subsurface
 
             if (stunTimer>0.0f)
             {
-                UpdateStruggling(deltaTime);
+                //UpdateStruggling(deltaTime);
                 stunTimer -= deltaTime;
                 return;
             }
@@ -185,18 +185,18 @@ namespace Subsurface
                 if (!inWater) steerForce.Y = 0.0f;
             }
 
-            for (int i = 0; i < limbs.Count(); i++)
+            for (int i = 0; i < Limbs.Count(); i++)
             {
                 if (steerForce!=Vector2.Zero)
-                    limbs[i].body.ApplyForce(steerForce * limbs[i].SteerForce * limbs[i].Mass);
+                    Limbs[i].body.ApplyForce(steerForce * Limbs[i].SteerForce * Limbs[i].Mass);
 
-                if (limbs[i].type != LimbType.Torso) continue;
+                if (Limbs[i].type != LimbType.Torso) continue;
 
-                float dist = (limbs[0].SimPosition - limbs[i].SimPosition).Length();
+                float dist = (Limbs[0].SimPosition - Limbs[i].SimPosition).Length();
 
-                Vector2 limbPos = limbs[0].SimPosition - Vector2.Normalize(movement) * dist;
+                Vector2 limbPos = Limbs[0].SimPosition - Vector2.Normalize(movement) * dist;
 
-                limbs[i].body.ApplyForce(((limbPos - limbs[i].SimPosition) * 3.0f - limbs[i].LinearVelocity * 3.0f) * limbs[i].Mass);
+                Limbs[i].body.ApplyForce(((limbPos - Limbs[i].SimPosition) * 3.0f - Limbs[i].LinearVelocity * 3.0f) * Limbs[i].Mass);
             }
 
             if (!inWater)
@@ -205,7 +205,7 @@ namespace Subsurface
             }
             else
             {
-                floorY = limbs[0].SimPosition.Y;
+                floorY = Limbs[0].SimPosition.Y;
             }
         }
     
@@ -247,7 +247,7 @@ namespace Subsurface
             //out whether the  ragdoll is standing on ground
             float closestFraction = 1;
             //Structure closestStructure = null;
-            Game1.World.RayCast((fixture, point, normal, fraction) =>
+            GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 //other limbs and bodies with no collision detection are ignored
                 if (fixture == null ||
@@ -301,7 +301,7 @@ namespace Subsurface
                 (float)Math.Cos(walkPos) * stepSize.X * 3.0f,
                 (float)Math.Sin(walkPos) * stepSize.Y * 2.0f);
 
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 switch (limb.type)
                 {
@@ -343,7 +343,7 @@ namespace Subsurface
             }
         }
 
-        void UpdateStruggling(float deltaTime)
+        void UpdateDying(float deltaTime)
         {
             Limb head = GetLimb(LimbType.Head);
             Limb tail = GetLimb(LimbType.Tail);
@@ -355,7 +355,7 @@ namespace Subsurface
 
             Vector2 centerOfMass = GetCenterOfMass();
 
-            foreach (Limb limb in limbs)
+            foreach (Limb limb in Limbs)
             {
                 if (limb.type == LimbType.Head || limb.type == LimbType.Tail) continue;
 
@@ -367,7 +367,7 @@ namespace Subsurface
         {
             base.Flip();
 
-            foreach (Limb l in limbs)
+            foreach (Limb l in Limbs)
             {
                 if (!l.DoesFlip) continue;
                 
@@ -378,22 +378,22 @@ namespace Subsurface
 
         private void Mirror()
         {
-            float leftX = limbs[0].SimPosition.X, rightX = limbs[0].SimPosition.X;
-            for (int i = 1; i < limbs.Count(); i++ )
+            float leftX = Limbs[0].SimPosition.X, rightX = Limbs[0].SimPosition.X;
+            for (int i = 1; i < Limbs.Count(); i++ )
             {
-                if (limbs[i].SimPosition.X < leftX)
+                if (Limbs[i].SimPosition.X < leftX)
                 {
-                    leftX = limbs[i].SimPosition.X;
+                    leftX = Limbs[i].SimPosition.X;
                 }
-                else if (limbs[i].SimPosition.X > rightX)
+                else if (Limbs[i].SimPosition.X > rightX)
                 {
-                    rightX = limbs[i].SimPosition.X;
+                    rightX = Limbs[i].SimPosition.X;
                 }
             }
 
             float midX = GetCenterOfMass().X;
 
-            foreach (Limb l in limbs)
+            foreach (Limb l in Limbs)
             {
                 Vector2 newPos = new Vector2(midX - (l.SimPosition.X - midX), l.SimPosition.Y);
 

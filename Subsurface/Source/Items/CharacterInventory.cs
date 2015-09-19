@@ -46,19 +46,19 @@ namespace Subsurface
                     case 2:
                         slotPositions[i] = new Vector2(
                             spacing, 
-                            Game1.GraphicsHeight - (spacing + rectHeight) * (3 - i));
+                            GameMain.GraphicsHeight - (spacing + rectHeight) * (3 - i));
                         break;
                     //lefthand, righthand
                     case 3:
                     case 4:
                         slotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 3),
-                            Game1.GraphicsHeight - (spacing + rectHeight)*3);
+                            GameMain.GraphicsHeight - (spacing + rectHeight)*3);
                         break;
                     default:
                         slotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 3)%5),
-                            Game1.GraphicsHeight - (spacing + rectHeight) * ((i>9) ? 2 : 1));
+                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>9) ? 2 : 1));
                         break;
                 }
             }

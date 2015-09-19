@@ -38,7 +38,7 @@ namespace Subsurface
 
             if (basicEffect==null)
             {                
-                basicEffect = new BasicEffect(Game1.CurrGraphicsDevice);
+                basicEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
                 basicEffect.VertexColorEnabled = false;
 
                 basicEffect.TextureEnabled = true;
@@ -58,7 +58,7 @@ namespace Subsurface
             wavePos.X += 0.0001f;
             wavePos.Y += 0.0001f;
 
-            spriteBatch.Draw(waterTexture, new Rectangle(0,0,Game1.GraphicsWidth, Game1.GraphicsHeight), Color.White);
+            spriteBatch.Draw(waterTexture, new Rectangle(0,0,GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
 
             spriteBatch.End();
         }
@@ -72,7 +72,7 @@ namespace Subsurface
 
             basicEffect.View = Matrix.Identity;
             basicEffect.World = cam.ShaderTransform
-                * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
                         
             basicEffect.CurrentTechnique.Passes[0].Apply();
 

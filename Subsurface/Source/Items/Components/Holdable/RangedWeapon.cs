@@ -60,7 +60,7 @@ namespace Subsurface.Items.Components
             bool failed = DoesUseFail(character);
 
             List<Body> limbBodies = new List<Body>();
-            foreach (Limb l in character.AnimController.limbs)
+            foreach (Limb l in character.AnimController.Limbs)
             {
                 limbBodies.Add(l.body.FarseerBody);
             }

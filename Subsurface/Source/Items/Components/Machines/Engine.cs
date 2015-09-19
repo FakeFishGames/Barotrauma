@@ -72,7 +72,7 @@ namespace Subsurface.Items.Components
 
                 for (int i = 0; i < 5; i++)
                 {
-                    Game1.ParticleManager.CreateParticle("bubbles", item.Position,
+                    GameMain.ParticleManager.CreateParticle("bubbles", item.Position,
                         -currForce/5.0f + new Vector2(Rand.Range(-100.0f, 100.0f), Rand.Range(-50f, 50f)));
                 }
             }

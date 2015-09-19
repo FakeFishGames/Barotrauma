@@ -90,7 +90,7 @@ namespace Subsurface.Items.Components
             Vertices box = PolygonTools.CreateRectangle(sectionLength, 0.05f);
             PolygonShape shape = new PolygonShape(box, 5);
             
-            List<Body>ropeList = PathManager.EvenlyDistributeShapesAlongPath(Game1.World, ropePath, shape, BodyType.Dynamic, (int)(length/sectionLength));
+            List<Body>ropeList = PathManager.EvenlyDistributeShapesAlongPath(GameMain.World, ropePath, shape, BodyType.Dynamic, (int)(length/sectionLength));
             
             ropeBodies = new PhysicsBody[ropeList.Count()];
             for (int i = 0; i<ropeBodies.Length; i++)
@@ -104,14 +104,14 @@ namespace Subsurface.Items.Components
                 ropeBodies[i] = new PhysicsBody(ropeList[i]);
             }
 
-            List<RevoluteJoint> joints = PathManager.AttachBodiesWithRevoluteJoint(Game1.World, ropeList, 
+            List<RevoluteJoint> joints = PathManager.AttachBodiesWithRevoluteJoint(GameMain.World, ropeList, 
                 new Vector2(-sectionLength/2, 0.0f), new Vector2(sectionLength/2, 0.0f), false, false);
 
             ropeJoints = new RevoluteJoint[joints.Count+1];
             //ropeJoints[0] = JointFactory.CreateRevoluteJoint(Game1.world, item.body, ropeList[0], new Vector2(0f, -0.0f)); 
             for (int i = 0; i < joints.Count; i++)
             {
-                var distanceJoint = JointFactory.CreateDistanceJoint(Game1.World, ropeList[i], ropeList[i + 1]);
+                var distanceJoint = JointFactory.CreateDistanceJoint(GameMain.World, ropeList[i], ropeList[i + 1]);
 
                 distanceJoint.Length = sectionLength;
                 distanceJoint.DampingRatio = 1.0f;
@@ -299,8 +299,8 @@ namespace Subsurface.Items.Components
             ropeBodies[ropeBodies.Length - 1].SetTransform(projectile.body.SimPosition, projectile.body.Rotation);
 
             //attach projectile to the last section of the rope
-            if (ropeJoints[ropeJoints.Length-1] != null) Game1.World.RemoveJoint(ropeJoints[ropeJoints.Length-1]);
-            ropeJoints[ropeJoints.Length - 1] = JointFactory.CreateRevoluteJoint(Game1.World, 
+            if (ropeJoints[ropeJoints.Length-1] != null) GameMain.World.RemoveJoint(ropeJoints[ropeJoints.Length-1]);
+            ropeJoints[ropeJoints.Length - 1] = JointFactory.CreateRevoluteJoint(GameMain.World, 
                 projectile.body.FarseerBody, ropeBodies[ropeBodies.Length - 1].FarseerBody, 
                 projectileAnchor, new Vector2(sectionLength / 2, 0.0f));
 
@@ -315,7 +315,7 @@ namespace Subsurface.Items.Components
             body.SetTransform(TransformedBarrelPos, rotation);
             //Vector2 axis = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
 
-            if (gunJoint != null) Game1.World.RemoveJoint(gunJoint);
+            if (gunJoint != null) GameMain.World.RemoveJoint(gunJoint);
             gunJoint = new DistanceJoint(item.body.FarseerBody, body, BarrelPos,
                 new Vector2(sectionLength / 2, 0.0f));
 
@@ -328,7 +328,7 @@ namespace Subsurface.Items.Components
             //gunJoint.LimitEnabled = true;
             //gunJoint.ReferenceAngle = 0.0f;
 
-            Game1.World.AddJoint(gunJoint);
+            GameMain.World.AddJoint(gunJoint);
         }
 
     }

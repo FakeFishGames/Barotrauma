@@ -290,7 +290,7 @@ namespace Subsurface.Items.Components
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 3, (int)-Nodes[i].Y - 3, 6, 6), Color.Red, true, 0.0f);
 
                 if (GUIComponent.MouseOn == null && 
-                    Vector2.Distance(Game1.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) < 20.0f)
+                    Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) < 20.0f)
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 10, (int)-Nodes[i].Y - 10, 20, 20), Color.Red, false, 0.0f);
 
@@ -315,7 +315,7 @@ namespace Subsurface.Items.Components
                 if (selectedNodeIndex!=null && item.IsSelected)
                 {
                     MapEntity.DisableSelect = true;
-                    Nodes[(int)selectedNodeIndex] = Game1.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                    Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
 
                     Vector2 pos = Nodes[(int)selectedNodeIndex];
 

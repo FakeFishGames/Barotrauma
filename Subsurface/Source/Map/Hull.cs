@@ -211,7 +211,7 @@ namespace Subsurface
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
                 if (maxDelta > Rand.Range(0.2f,10.0f))
                 {
-                    Game1.ParticleManager.CreateParticle("mist",
+                    GameMain.ParticleManager.CreateParticle("mist",
                         new Vector2(rect.X + WaveWidth * i,surface + waveY[i]),
                         new Vector2(0.0f, -50.0f));
                 }
@@ -276,7 +276,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (!editing && !Game1.DebugDraw) return;
+            if (!editing && !GameMain.DebugDraw) return;
 
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(rect.X, -rect.Y),
@@ -313,7 +313,7 @@ namespace Subsurface
             //interpolate the position of the rendered surface towards the "target surface"
             surface = surface + (surfaceY - surface) / 10.0f;
 
-            Matrix transform =  cam.Transform * Matrix.CreateOrthographic(Game1.GraphicsWidth, Game1.GraphicsHeight, -1, 1) * 0.5f;
+            Matrix transform =  cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
             if (bottom > cam.WorldView.Y || top < cam.WorldView.Y - cam.WorldView.Height) return;
 

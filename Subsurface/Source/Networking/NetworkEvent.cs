@@ -59,11 +59,11 @@ namespace Subsurface.Networking
         {
             if (isClient)
             {
-                if (Game1.Server != null && Game1.Server.Character == null) return;
+                if (GameMain.Server != null && GameMain.Server.Character == null) return;
             }
             else
             {
-                if (Game1.Server == null) return;
+                if (GameMain.Server == null) return;
             }
 
             eventType = type;

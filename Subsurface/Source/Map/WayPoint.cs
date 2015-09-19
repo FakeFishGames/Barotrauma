@@ -55,7 +55,7 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (!editing && !Game1.DebugDraw) return;
+            if (!editing && !GameMain.DebugDraw) return;
 
             Point pos = new Point((int)Position.X, (int)Position.Y);
 
@@ -144,7 +144,7 @@ namespace Subsurface
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
             int width = 500;
-            int x = Game1.GraphicsWidth / 2 - width / 2, y = 10;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
 
             editingHUD = new GUIFrame(new Rectangle(x, y, width, 150), Color.Black * 0.5f);
             editingHUD.Padding = new Vector4(10, 10, 0, 0);

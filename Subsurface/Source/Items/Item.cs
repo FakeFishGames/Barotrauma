@@ -40,6 +40,19 @@ namespace Subsurface
             get { return properties; }
         }
 
+        private bool? hasInGameEditableProperties;
+        bool HasInGameEditableProperties
+        {
+            get
+            {
+                if (hasInGameEditableProperties==null)
+                {
+                    hasInGameEditableProperties = GetProperties<InGameEditable>().Count>0;
+                }
+                return (bool)hasInGameEditableProperties;
+            }
+        }
+
         public PhysicsBody body;
         
         private float condition;
@@ -194,7 +207,7 @@ namespace Subsurface
 
         public override string ToString()
         {
-            return (Game1.DebugDraw) ? Name +"(ID: "+ID+")" : Name;
+            return (GameMain.DebugDraw) ? Name +"(ID: "+ID+")" : Name;
         }
 
         public List<IPropertyObject> AllPropertyObjects
@@ -622,7 +635,7 @@ namespace Subsurface
         private GUIComponent CreateEditingHUD(bool inGame=false)
         {
             int width = 500;
-            int x = Game1.GraphicsWidth/2-width/2, y = 10;
+            int x = GameMain.GraphicsWidth/2-width/2, y = 10;
 
             List<ObjectProperty> editableProperties = inGame ? GetProperties<InGameEditable>() : GetProperties<Editable>();
             
@@ -700,27 +713,29 @@ namespace Subsurface
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (condition>0.0f)
+            if (condition<=0.0f)
             {
-                if (editingHUD==null || editingHUD.UserData as Item != this)
+                FixRequirement.DrawHud(spriteBatch, this, character);
+                return;
+            }
+
+            if (!HasInGameEditableProperties)
+            {
+                if (editingHUD == null || editingHUD.UserData as Item != this)
                 {
                     editingHUD = CreateEditingHUD(true);
                 }
 
-                if (editingHUD.Rect.Height>60)
+                if (editingHUD.Rect.Height > 60)
                 {
                     editingHUD.Update((float)Physics.step);
                     editingHUD.Draw(spriteBatch);
                 }
-
-                foreach (ItemComponent ic in components)
-                {
-                    ic.DrawHUD(spriteBatch, character);
-                }
             }
-            else
+
+            foreach (ItemComponent ic in components)
             {
-                FixRequirement.DrawHud(spriteBatch, this, character);
+                ic.DrawHUD(spriteBatch, character);
             }
         }
 

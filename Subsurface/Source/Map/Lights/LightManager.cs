@@ -34,7 +34,7 @@ namespace Subsurface.Lights
 
             var pp = graphics.PresentationParameters;
 
-            lightMap = new RenderTarget2D(graphics, Game1.GraphicsWidth, Game1.GraphicsHeight, false,
+            lightMap = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false,
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
 

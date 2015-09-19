@@ -28,8 +28,8 @@ namespace Subsurface
             set 
             { 
                 centerPos = value;
-                centerPos.X *= Game1.GraphicsWidth;
-                centerPos.Y *= Game1.GraphicsHeight;
+                centerPos.X *= GameMain.GraphicsWidth;
+                centerPos.Y *= GameMain.GraphicsHeight;
             }
         }
 

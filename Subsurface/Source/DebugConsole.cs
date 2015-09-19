@@ -46,7 +46,7 @@ namespace Subsurface
             NewMessage("Press F3 to open/close the debug console", Color.Green);        
         }
 
-        public static void Update(Game1 game, float deltaTime)
+        public static void Update(GameMain game, float deltaTime)
         {
             if (PlayerInput.KeyHit(Keys.F3))
             {
@@ -138,7 +138,7 @@ namespace Subsurface
             textBox.Draw(spriteBatch);
         }
 
-        public static void ExecuteCommand(string command, Game1 game)
+        public static void ExecuteCommand(string command, GameMain game)
         {
 #if !DEBUG
             if (Game1.Client!=null)
@@ -163,9 +163,9 @@ namespace Subsurface
                     {
                         WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
                         Character.Controlled = new Character(Character.HumanConfigFile, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
-                        if (Game1.GameSession != null)
+                        if (GameMain.GameSession != null)
                         {
-                            SinglePlayerMode mode = Game1.GameSession.gameMode as SinglePlayerMode;
+                            SinglePlayerMode mode = GameMain.GameSession.gameMode as SinglePlayerMode;
                             if (mode == null) break;
                             mode.CrewManager.AddCharacter(Character.Controlled);
                             mode.CrewManager.SelectCharacter(null, Character.Controlled);
@@ -174,7 +174,7 @@ namespace Subsurface
                     else
                     {
                         WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
-                        new Character("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
+                        new AICharacter("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
                     }
 
                     break;
@@ -183,50 +183,50 @@ namespace Subsurface
                 //        Game1.NetworkMember = new GameServer();
                 //    break;
                 case "kick":
-                    if (Game1.Server == null) break;
-                    Game1.Server.KickPlayer(commands[1]);
+                    if (GameMain.Server == null) break;
+                    GameMain.Server.KickPlayer(commands[1]);
                     break;
                 case "startclient":
                     if (commands.Length == 1) return;
-                    if (Game1.Client == null)
+                    if (GameMain.Client == null)
                     {
-                        Game1.NetworkMember = new GameClient("Name");
-                        Game1.Client.ConnectToServer(commands[1]);
+                        GameMain.NetworkMember = new GameClient("Name");
+                        GameMain.Client.ConnectToServer(commands[1]);
                     }
                     break;
                 case "mainmenuscreen":
                 case "mainmenu":
                 case "menu":
-                    Game1.MainMenuScreen.Select();
+                    GameMain.MainMenuScreen.Select();
                     break;
                 case "gamescreen":
                 case "game":
-                    Game1.GameScreen.Select();
+                    GameMain.GameScreen.Select();
                     break;
                 case "editmapscreen":
                 case "editmap":
                 case "edit":              
-                    Game1.EditMapScreen.Select();
+                    GameMain.EditMapScreen.Select();
                     break;
                 case "editcharacter":
                 case "editchar":
-                    Game1.EditCharacterScreen.Select();
+                    GameMain.EditCharacterScreen.Select();
                     break;
                 case "freecamera":
                 case "freecam":
                     Character.Controlled = null;
-                    Game1.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
                     break;
                 case "editwater":
                 case "water":
-                    if (Game1.Client== null)
+                    if (GameMain.Client== null)
                     {
                         Hull.EditWater = !Hull.EditWater;
                     }
                     break;
                 case "generatelevel":
-                    Game1.Level = new Level("asdf", 50.0f, 500,500, 50);
-                    Game1.Level.Generate(100.0f);
+                    GameMain.Level = new Level("asdf", 50.0f, 500,500, 50);
+                    GameMain.Level.Generate(100.0f);
                     break;
                 case "fixitems":
                     foreach (Item it in Item.itemList)
@@ -245,18 +245,18 @@ namespace Subsurface
                     }
                     break;
                 case "shake":
-                    Game1.GameScreen.Cam.Shake = 10.0f;
+                    GameMain.GameScreen.Cam.Shake = 10.0f;
                     break;
                 case "losenabled":
                 case "los":
                 case "drawlos":
-                    Game1.LightManager.LosEnabled = !Game1.LightManager.LosEnabled;
+                    GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
                     break;
                 case "lighting":
                 case "lightingenabled":
                 case "light":
                 case "lights":
-                    Game1.LightManager.LightingEnabled = !Game1.LightManager.LightingEnabled;
+                    GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
                     break;
                 case "oxygen":
                 case "air":
@@ -270,7 +270,7 @@ namespace Subsurface
                     break;
                 case "lobbyscreen":
                 case "lobby":
-                    Game1.LobbyScreen.Select();
+                    GameMain.LobbyScreen.Select();
                     break;
                 case "savemap":
                 case "savesub":
@@ -297,7 +297,7 @@ namespace Subsurface
                 case "debugdraw":
                     //Hull.DebugDraw = !Hull.DebugDraw;
                     //Ragdoll.DebugDraw = !Ragdoll.DebugDraw;
-                    Game1.DebugDraw = !Game1.DebugDraw;
+                    GameMain.DebugDraw = !GameMain.DebugDraw;
                     break;
                 default:
                     NewMessage("Command not found", Color.Red);

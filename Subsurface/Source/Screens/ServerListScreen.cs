@@ -36,8 +36,8 @@ namespace Subsurface
 
         public ServerListScreen()
         {
-            int width = Math.Min(Game1.GraphicsWidth - 160, 1000);
-            int height = Math.Min(Game1.GraphicsHeight - 160, 700);
+            int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
+            int height = Math.Min(GameMain.GraphicsHeight - 160, 700);
 
             Rectangle panelRect = new Rectangle(0, 0, width, height);
 
@@ -78,7 +78,7 @@ namespace Subsurface
 
             GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.Style, menu);
             button.UserData = 0;
-            button.OnClicked = Game1.MainMenuScreen.SelectTab;
+            button.OnClicked = GameMain.MainMenuScreen.SelectTab;
             
 
             refreshDisableTimer = DateTime.Now;
@@ -302,8 +302,8 @@ namespace Subsurface
                 selectedPassword = passwordBox.Text;
             }
 
-            Game1.NetworkMember = new GameClient(clientNameBox.Text);
-            Game1.Client.ConnectToServer(ip, selectedPassword);
+            GameMain.NetworkMember = new GameClient(clientNameBox.Text);
+            GameMain.Client.ConnectToServer(ip, selectedPassword);
 
             yield return CoroutineStatus.Success;
         }
@@ -312,7 +312,7 @@ namespace Subsurface
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            Game1.GameScreen.DrawMap(graphics, spriteBatch);
+            GameMain.GameScreen.DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
 

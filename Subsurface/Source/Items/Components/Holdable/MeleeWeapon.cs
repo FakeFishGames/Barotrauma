@@ -51,7 +51,7 @@ namespace Subsurface.Items.Components
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
             item.body.FarseerBody.OnCollision += OnCollision;
 
-            foreach (Limb l in character.AnimController.limbs)
+            foreach (Limb l in character.AnimController.Limbs)
             {
                 item.body.FarseerBody.IgnoreCollisionWith(l.body.FarseerBody);
 
@@ -153,7 +153,7 @@ namespace Subsurface.Items.Components
             item.body.CollisionCategories = Physics.CollisionMisc;
             item.body.CollidesWith = Physics.CollisionWall;
 
-            foreach (Limb l in picker.AnimController.limbs)
+            foreach (Limb l in picker.AnimController.Limbs)
             {
                 item.body.FarseerBody.RestoreCollisionWith(l.body.FarseerBody);
             }

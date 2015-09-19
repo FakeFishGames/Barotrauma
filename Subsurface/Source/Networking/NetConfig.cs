@@ -12,7 +12,7 @@ namespace Subsurface.Networking
         //UpdateEntity networkevents aren't sent to clients if they're further than this from the entity
         public const float UpdateEntityDistance = 2500.0f;
 
-        public static string MasterServerUrl = Game1.Config.MasterServerUrl;
+        public static string MasterServerUrl = GameMain.Config.MasterServerUrl;
 
         //if a ragdoll is further than this from the correct position, teleport it there
         //(in sim units)

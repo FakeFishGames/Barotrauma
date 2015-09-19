@@ -41,9 +41,9 @@ namespace Subsurface
 
         public Task(float priority, string name)
         {
-            if (Game1.GameSession==null || Game1.GameSession.taskManager == null) return;
+            if (GameMain.GameSession==null || GameMain.GameSession.taskManager == null) return;
 
-            taskManager = Game1.GameSession.taskManager;
+            taskManager = GameMain.GameSession.taskManager;
             musicType = "repair";
             this.priority = priority;
             this.name = name;

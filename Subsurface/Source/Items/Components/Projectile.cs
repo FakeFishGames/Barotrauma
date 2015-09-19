@@ -106,7 +106,7 @@ namespace Subsurface.Items.Components
             if (stickJoint != null && doesStick)
             {
                 if (stickTarget!=null) item.body.FarseerBody.RestoreCollisionWith(stickTarget);
-                Game1.World.RemoveJoint(stickJoint);
+                GameMain.World.RemoveJoint(stickJoint);
                 stickJoint = null;
             }
         }
@@ -122,7 +122,7 @@ namespace Subsurface.Items.Components
                         item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                     }
 
-                    Game1.World.RemoveJoint(stickJoint);
+                    GameMain.World.RemoveJoint(stickJoint);
                     stickJoint = null;
 
                     isActive = false;
@@ -209,7 +209,7 @@ namespace Subsurface.Items.Components
 
             item.body.FarseerBody.IgnoreCollisionWith(targetBody);
             stickTarget = targetBody;
-            Game1.World.AddJoint(stickJoint);
+            GameMain.World.AddJoint(stickJoint);
 
             isActive = true;
 

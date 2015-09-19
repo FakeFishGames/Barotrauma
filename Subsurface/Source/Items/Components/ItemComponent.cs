@@ -196,10 +196,10 @@ namespace Subsurface.Items.Components
                         break;
                     case "guiframe":
                         Vector4 rect = ToolBox.GetAttributeVector4(subElement, "rect", Vector4.One);
-                        rect.X *= Game1.GraphicsWidth;
-                        rect.Y *= Game1.GraphicsHeight;
-                        rect.Z *= Game1.GraphicsWidth;
-                        rect.W *= Game1.GraphicsHeight;
+                        rect.X *= GameMain.GraphicsWidth;
+                        rect.Y *= GameMain.GraphicsHeight;
+                        rect.Z *= GameMain.GraphicsWidth;
+                        rect.W *= GameMain.GraphicsHeight;
 
                         Vector4 color = ToolBox.GetAttributeVector4(subElement, "color", Vector4.One);
 

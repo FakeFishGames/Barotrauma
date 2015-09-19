@@ -172,7 +172,7 @@ namespace Subsurface.Items.Components
         {
             
             int width = 400, height = 200;
-            int x = Game1.GraphicsWidth/2 - width/2, y = Game1.GraphicsHeight - height;
+            int x = GameMain.GraphicsWidth/2 - width/2, y = GameMain.GraphicsHeight - height;
 
             Rectangle panelRect = new Rectangle(x, y, width, height);
 

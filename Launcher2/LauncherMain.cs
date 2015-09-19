@@ -433,7 +433,7 @@ namespace Launcher2
                     return;
                 }   
 
-                UpdaterUtil.CleanUnnecessaryFiles(latestVersionFiles);
+                //UpdaterUtil.CleanUnnecessaryFiles(latestVersionFiles);
 
                 updateInfoText.Text = "The game was updated succesfully!";
                 launchButton.Enabled = true;

@@ -23,7 +23,7 @@ namespace Subsurface
         {
             Location[] locations = new Location[2];
 
-            Random rand = new Random(ToolBox.StringToInt(Game1.NetLobbyScreen.LevelSeed));
+            Random rand = new Random(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
 
             for (int i = 0; i < 2; i++)
             {

@@ -38,7 +38,7 @@ namespace Subsurface
                 }
                 else
                 {
-                    File.Copy(Game1.GameSession.Submarine.FilePath, tempPath + "\\map.gz");
+                    File.Copy(GameMain.GameSession.Submarine.FilePath, tempPath + "\\map.gz");
                 }
             }
             catch (Exception e)
@@ -48,7 +48,7 @@ namespace Subsurface
 
             try
             {
-                Game1.GameSession.Save(tempPath + "\\gamesession.xml");
+                GameMain.GameSession.Save(tempPath + "\\gamesession.xml");
             }
 
             catch (Exception e)
@@ -76,7 +76,7 @@ namespace Subsurface
             DecompressToDirectory(filePath, tempPath, null);
 
             Submarine selectedMap = Submarine.Load(tempPath +"\\map.gz");
-            Game1.GameSession = new GameSession(selectedMap, fileName, tempPath + "\\gamesession.xml");
+            GameMain.GameSession = new GameSession(selectedMap, fileName, tempPath + "\\gamesession.xml");
 
             //Directory.Delete(tempPath, true);
         }

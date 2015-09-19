@@ -65,7 +65,7 @@ namespace Subsurface.Items.Components
                         Vector2 baseVel = Rand.Vector(300.0f);
                         for (int i = 0; i < 10; i++)
                         {
-                            var particle = Game1.ParticleManager.CreateParticle("spark", pt.item.Position,
+                            var particle = GameMain.ParticleManager.CreateParticle("spark", pt.item.Position,
                                 baseVel + Rand.Vector(100.0f), 0.0f);
 
                             if (particle != null) particle.Size *= Rand.Range(0.5f,1.0f);

@@ -260,7 +260,7 @@ namespace Subsurface
                 {
                     pos.Y = MathHelper.Clamp(lowerSurface, rect.Y - rect.Height, rect.Y);
 
-                    var particle = Game1.ParticleManager.CreateParticle("watersplash",
+                    var particle = GameMain.ParticleManager.CreateParticle("watersplash",
                         new Vector2(pos.X, pos.Y - Rand.Range(0.0f, 10.0f)),
                         new Vector2(
                             MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
@@ -273,7 +273,7 @@ namespace Subsurface
 
                     pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
 
-                    Game1.ParticleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
+                    GameMain.ParticleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
                 }
                 else
                 {
@@ -281,12 +281,12 @@ namespace Subsurface
                     for (int i = 0; i < rect.Width; i += (int)Rand.Range(80, 100))
                     {
                         pos.X = Rand.Range(rect.X, rect.X + rect.Width);
-                        Subsurface.Particles.Particle splash = Game1.ParticleManager.CreateParticle("watersplash", pos,
+                        Subsurface.Particles.Particle splash = GameMain.ParticleManager.CreateParticle("watersplash", pos,
                             new Vector2(0, Math.Max(flowForce.Y * Rand.Range(0.5f, 0.8f), 0.0f)));
 
                         if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 
-                        Game1.ParticleManager.CreateParticle("bubbles", pos, flowForce / 2.0f);
+                        GameMain.ParticleManager.CreateParticle("bubbles", pos, flowForce / 2.0f);
                     }
                 }
 
