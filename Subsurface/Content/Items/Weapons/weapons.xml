@@ -51,7 +51,7 @@
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="5.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stunGrenade.ogg">
-        <Explosion range="5" damage="5" stun="10" force="0.1"/>
+        <Explosion range="500" damage="5" stun="10" force="0.1"/>
       </StatusEffect>
     </Throwable>
   </Item>

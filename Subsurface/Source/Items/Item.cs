@@ -459,11 +459,11 @@ namespace Subsurface
         }
 
 
-        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = true)
+        public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound = true)
         {
-            Condition -= amount;
+            Condition -= attack.Damage;
 
-            return new AttackResult(amount, 0.0f, false);
+            return new AttackResult(attack.Damage, 0.0f, false);
         }
 
 
@@ -601,7 +601,7 @@ namespace Subsurface
                 GUI.DrawLine(spriteBatch,
                     new Vector2(rect.X + rect.Width / 2, -rect.Y + rect.Height / 2),
                     new Vector2(e.Rect.X + e.Rect.Width / 2, -e.Rect.Y + e.Rect.Height / 2),
-                    Color.Red);
+                    Color.Red*0.3f);
             }
         }
 

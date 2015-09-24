@@ -12,7 +12,7 @@
             rotationlimits="180,360"
             powerconsumption="500.0">
       <StatusEffect type="OnUse" target="This" sound="Content/Items/Weapons/railgun.ogg">
-        <Explosion range="10.0" structuredamage="0" force="0.05"/>
+        <Explosion range="1000.0" structuredamage="0" force="0.01"/>
       </StatusEffect>
     </Turret>
 

@@ -245,9 +245,9 @@ namespace Subsurface.Items.Components
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             body.Enabled = false;
-            convexHull.Enabled = false;
+            //convexHull.Enabled = false;
             linkedGap.Open = 1.0f;
-            if (convexHull2 != null) convexHull2.Enabled = false;
+            //if (convexHull2 != null) convexHull2.Enabled = false;
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)

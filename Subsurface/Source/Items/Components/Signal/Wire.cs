@@ -289,36 +289,38 @@ namespace Subsurface.Items.Components
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 3, (int)-Nodes[i].Y - 3, 6, 6), Color.Red, true, 0.0f);
 
-                if (GUIComponent.MouseOn == null && 
-                    Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) < 20.0f)
+                if (GUIComponent.MouseOn != null ||
+                    Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) > 20.0f)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 10, (int)-Nodes[i].Y - 10, 20, 20), Color.Red, false, 0.0f);
+                    continue;
+                }
 
-                    if (selectedNodeIndex==null)// && selectedNodeIndex>0 && selectedNodeIndex<Nodes.Count-1)
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 10, (int)-Nodes[i].Y - 10, 20, 20), Color.Red, false, 0.0f);
+
+                if (selectedNodeIndex == null && !MapEntity.SelectedAny)
+                {
+                    if (PlayerInput.LeftButtonDown())
                     {
-                        if (PlayerInput.LeftButtonDown())
-                        {
-                            MapEntity.SelectEntity(item);
-                            selectedNodeIndex = i;
-                        }
-                        else if (PlayerInput.RightButtonClicked())
-                        {
-                            Nodes.RemoveAt(i);
-                            break;
-                        }
+                        MapEntity.SelectEntity(item);
+                        selectedNodeIndex = i;
+                        MapEntity.DisableSelect = true;
+                    }
+                    else if (PlayerInput.RightButtonClicked())
+                    {
+                        Nodes.RemoveAt(i);
+                        break;
                     }
                 }
-            } 
+            }
+
             if (PlayerInput.LeftButtonDown())
             {
-
-                if (selectedNodeIndex!=null && item.IsSelected)
+                if (selectedNodeIndex != null && item.IsSelected)
                 {
                     MapEntity.DisableSelect = true;
                     Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
 
                     Vector2 pos = Nodes[(int)selectedNodeIndex];
-
 
                     Nodes[(int)selectedNodeIndex] = RoundNode(Nodes[(int)selectedNodeIndex], Hull.FindHull(Nodes[(int)selectedNodeIndex]));
                     MapEntity.SelectEntity(item);
@@ -328,9 +330,6 @@ namespace Subsurface.Items.Components
             {
                 selectedNodeIndex = null;
             }
-
-
-
         }
 
         private void DrawSection(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color)

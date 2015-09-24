@@ -1,10 +1,7 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
-using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
-using FarseerPhysics.Factories;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Voronoi2;
 
 namespace Subsurface
 {
@@ -32,20 +28,14 @@ namespace Subsurface
 
         private static Submarine loaded;
 
+        private SubmarineBody subBody;
+
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
 
         static string SaveFolder;
         Md5Hash hash;
         
-        Vector2 speed;
-
-        Vector2 targetPosition;
-
-        private Rectangle borders;
-
-        private Body hullBody;
-
         private string filePath;
         private string name;
 
@@ -70,12 +60,6 @@ namespace Subsurface
             get { return lastPickedFraction; }
         }
 
-        public List<Vector2> HullVertices
-        {
-            get;
-            private set;
-        }
-
         public Md5Hash MD5Hash
         {
             get
@@ -98,14 +82,11 @@ namespace Subsurface
         {
             get 
             { 
-                return (loaded==null) ? Rectangle.Empty : loaded.borders;                
+                return (loaded==null) ? Rectangle.Empty : Loaded.subBody.Borders;                
             }
         }
 
-        public Vector2 Center
-        {
-            get { return new Vector2(borders.X+borders.Width/2, borders.Y - borders.Height/2); }
-        }
+
 
         public Vector2 Position
         {
@@ -114,13 +95,15 @@ namespace Subsurface
 
         public Vector2 Speed
         {
-            get { return speed; }
-            set 
-            {
-                if (!MathUtils.IsValid(value)) return;
-                speed = value; 
-            }
+            get { return subBody.Speed; }
+            set { subBody.Speed = value; }
         }
+
+        public List<Vector2> HullVertices
+        {
+            get { return subBody.HullVertices; }
+        }
+
 
         public string FilePath
         {
@@ -160,69 +143,6 @@ namespace Subsurface
 
             base.Remove();
             ID = -1;
-        }
-
-        private List<Vector2> GenerateConvexHull()
-        {
-            List<Vector2> points = new List<Vector2>();
-            
-            Vector2 leftMost = Vector2.Zero;
-
-            foreach (Structure wall in Structure.wallList)
-            {
-                for (int x = -1; x <= 1; x += 2)
-                {
-                    for (int y = -1; y <= 1; y += 2)
-                    {
-                        Vector2 corner = new Vector2(wall.Rect.X + wall.Rect.Width / 2.0f, wall.Rect.Y - wall.Rect.Height / 2.0f);
-                        corner.X += x * wall.Rect.Width / 2.0f;
-                        corner.Y += y * wall.Rect.Height / 2.0f;
-
-                        if (points.Contains(corner)) continue;
-
-                        points.Add(corner);
-                        if (leftMost == Vector2.Zero || corner.X < leftMost.X) leftMost = corner;
-                    }
-                }
-            }
-
-            List<Vector2> hullPoints = new List<Vector2>();
-
-            Vector2 currPoint = leftMost;
-            Vector2 endPoint;
-            do
-            {
-                hullPoints.Add(currPoint);
-                endPoint = points[0];
-
-                for (int i = 1; i < points.Count; i++)
-                {
-                    if ((currPoint == endPoint)
-                        || (Orientation(currPoint, endPoint, points[i]) == -1))
-                    {
-                        endPoint = points[i];
-                    }
-                }
-
-                currPoint = endPoint;
-
-            }
-            while (endPoint != hullPoints[0]);
-
-            return hullPoints;
-        }
-
-        private static int Orientation(Vector2 p1, Vector2 p2, Vector2 p)
-        {
-            // Determinant
-            float Orin = (p2.X - p1.X) * (p.Y - p1.Y) - (p.X - p1.X) * (p2.Y - p1.Y);
-
-            if (Orin > 0)
-                return -1; //          (* Orientation is to the left-hand side  *)
-            if (Orin < 0)
-                return 1; // (* Orientation is to the right-hand side *)
-
-            return 0; //  (* Orientation is neutral aka collinear  *)
         }
 
         //drawing ----------------------------------------------------
@@ -419,178 +339,31 @@ namespace Subsurface
         
         //movement ----------------------------------------------------
 
-        float collisionRigidness = 1.0f;
 
         public void Update(float deltaTime)
         {
-            Vector2 translateAmount = speed * deltaTime;
-            translateAmount += ConvertUnits.ToDisplayUnits(hullBody.Position) * collisionRigidness;
+            if (Level.Loaded == null) return;
 
-            if (targetPosition != Vector2.Zero && Vector2.Distance(targetPosition, Position) > 50.0f)
-            {
-                translateAmount += (targetPosition - Position) * 0.01f;
-            }
-            else
-            {
-                targetPosition = Vector2.Zero;
-            }
-
-            Translate(translateAmount);
-
-            //-------------------------
-            
-            Vector2 totalForce = CalculateBuoyancy();
-
-            float dragCoefficient = 0.00001f;
-
-            float speedLength = (speed == Vector2.Zero) ? 0.0f : speed.Length();
-            float drag = speedLength * speedLength * dragCoefficient * mass;
-
-            if (speed != Vector2.Zero)
-            {
-                totalForce += -Vector2.Normalize(speed) * drag;
-            }
-
-            ApplyForce(totalForce);
-
-            //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
-            
-            //hullBody.SetTransform(Vector2.Zero , 0.0f);
-            hullBody.LinearVelocity = -hullBody.Position/(float)Physics.step;
-
-            if (collidingCell == null)
-            {
-                collisionRigidness = MathHelper.Lerp(collisionRigidness, 1.0f, 0.1f);
-                return;
-            }
-
-            foreach (GraphEdge ge in collidingCell.edges)
-            {
-                Body body = PickBody(
-                    ConvertUnits.ToSimUnits(ge.point1+ GameMain.GameSession.Level.Position), 
-                    ConvertUnits.ToSimUnits(ge.point2 + GameMain.GameSession.Level.Position), new List<Body>(){collidingCell.body});
-                if (body == null || body.UserData == null) continue;
-
-                Structure structure = body.UserData as Structure;
-                if (structure == null) continue;
-                structure.AddDamage(lastPickedPosition, DamageType.Blunt, 50.0f, 0.0f, 0.0f, true);
-            }
-
-            collidingCell = null;
-
-            //hullBodies[0].body.SetTransform(Vector2.Zero, 0.0f);
-
-            //position = hullBodies[0].body.Position;
-
-            //Level.Loaded.Move(-ConvertUnits.ToDisplayUnits(position - prevPosition));
-
-            //prevPosition = hullBodies[0].body.Position;
-
+            subBody.Update(deltaTime);
         }
 
-        private Vector2 CalculateBuoyancy()
+        public void ApplyForce(Vector2 force)
         {
-            float waterVolume = 0.0f;
-            float volume = 0.0f;
-            foreach (Hull hull in Hull.hullList)
-            {
-                waterVolume += hull.Volume;
-                volume += hull.FullVolume;
-            }
-
-            float waterPercentage = waterVolume / volume;
-
-            float neutralPercentage = 0.07f;
-
-            float buoyancy = neutralPercentage-waterPercentage;
-            buoyancy *= mass * 30.0f;
-
-            return new Vector2(0.0f, buoyancy);
+            subBody.ApplyForce(force);
         }
 
         public void SetPosition(Vector2 position)
         {
-            //hullBodies[0].body.SetTransform(position, 0.0f);
+            if (!MathUtils.IsValid(position)) return;
             Level.Loaded.SetPosition(-position);
             //prevPosition = position;
         }
 
-        private void Translate(Vector2 amount)
+        public void Translate(Vector2 amount)
         {
-            if (amount == Vector2.Zero || !amount.IsValid()) return;
+            if (amount == Vector2.Zero || !MathUtils.IsValid(amount)) return;
 
             Level.Loaded.Move(-amount);
-        }
-
-        float mass = 10000.0f;
-        public void ApplyForce(Vector2 force)
-        {
-            speed += force/mass;
-        }
-
-        VoronoiCell collidingCell;
-        public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
-        {
-            System.Diagnostics.Debug.WriteLine("colliding");
-            VoronoiCell cell = f2.Body.UserData as VoronoiCell;
-            if (cell==null) return true;
-
-            Vector2 normal = contact.Manifold.LocalNormal;
-            Vector2 simSpeed = ConvertUnits.ToSimUnits(speed);
-            float impact = Vector2.Dot(simSpeed, normal);
-
-            Vector2 u = Vector2.Dot(simSpeed, -normal)*-normal;
-            Vector2 w = simSpeed - u;
-
-            Vector2 limbForce = normal * impact;
-
-            foreach (Character c in Character.CharacterList)
-            {
-                if (c.AnimController.CurrentHull == null) continue;
-
-                if (impact > 2.0f) c.AnimController.StunTimer = (impact - 2.0f) * 0.1f;
-
-                foreach (Limb limb in c.AnimController.Limbs)
-                {
-                    limb.body.ApplyLinearImpulse(limb.Mass * limbForce);
-                }
-            }
-
-            if (impact >= 1.0f)
-            {
-                AmbientSoundManager.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, cell.body);
-
-                FixedArray2<Vector2> worldPoints;
-                contact.GetWorldManifold(out normal, out worldPoints);
-
-
-                AmbientSoundManager.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(worldPoints[0]));
-
-                GameMain.GameScreen.Cam.Shake = impact*2.0f;
-            }
-
-            System.Diagnostics.Debug.WriteLine("IMPACT: "+impact + " normal: "+normal+" simspeed: "+simSpeed+" u: "+u+" w: " +w);
-            if (impact < 4.0f)
-            {
-                speed = ConvertUnits.ToDisplayUnits(w * 0.9f - u * 0.2f);
-                return true;
-            }
-            else
-            {
-                speed = ConvertUnits.ToDisplayUnits(w * 0.9f + u * 0.5f);
-            }
-
-
-            collisionRigidness = 0.8f;
-
-            collidingCell = cell;
-
-            return true;
-        }
-
-        public void OnSeparation(Fixture f1, Fixture f2)
-        {            
-            collidingCell = null;
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, NetOutgoingMessage message, object data)
@@ -599,8 +372,8 @@ namespace Subsurface
             message.Write(Position.X);
             message.Write(Position.Y);
 
-            message.Write(speed.X);
-            message.Write(speed.Y);
+            message.Write(Speed.X);
+            message.Write(Speed.Y);
 
         }
 
@@ -630,13 +403,12 @@ namespace Subsurface
 
             //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
 
-            targetPosition = newTargetPosition;
-            speed = newSpeed;
+            subBody.TargetPosition = newTargetPosition;
+            subBody.Speed = newSpeed;
 
             lastNetworkUpdate = sendingTime;
         }
-    
-        
+            
 
         //saving/loading ----------------------------------------------------
 
@@ -829,42 +601,7 @@ namespace Subsurface
 
             }
 
-            List<Vector2> convexHull = GenerateConvexHull();
-
-            HullVertices = convexHull;
-
-            for (int i = 0; i < convexHull.Count; i++)
-            {
-                convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
-            }
-
-            convexHull.Reverse();
-
-            //get farseer 'vertices' from vectors
-            Vertices shapevertices = new Vertices(convexHull);
-            
-            AABB hullAABB = shapevertices.GetAABB();
-
-            borders = new Rectangle(
-                (int)ConvertUnits.ToDisplayUnits(hullAABB.LowerBound.X),
-                (int)ConvertUnits.ToDisplayUnits(hullAABB.UpperBound.Y),
-                (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.X * 2.0f),
-                (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.Y * 2.0f));
-
-            
-            var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
-
-            hullBody = BodyFactory.CreateCompoundPolygon(GameMain.World, triangulatedVertices, 5.0f);
-            hullBody.BodyType = BodyType.Dynamic;
-
-            hullBody.CollisionCategories = Physics.CollisionMisc;
-            hullBody.CollidesWith = Physics.CollisionLevel;
-            hullBody.FixedRotation = true;
-            hullBody.Awake = true;
-            hullBody.SleepingAllowed = false;
-            hullBody.GravityScale = 0.0f;
-            hullBody.OnCollision += OnCollision;
-            hullBody.OnSeparation += OnSeparation;
+            subBody = new SubmarineBody(this);            
             
             MapEntity.LinkAll();
             
@@ -907,6 +644,8 @@ namespace Subsurface
         private void Clear()
         {
             if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+
+            subBody = null;
 
             Entity.RemoveAll();
 

@@ -44,6 +44,8 @@ namespace Subsurface
             steeringManager = new SteeringManager(this);
         }
 
+        public virtual void OnAttacked(IDamageable attacker, float amount) { }
+
         public virtual void SelectTarget(AITarget target) { }
 
         public virtual void Update(float deltaTime) { }

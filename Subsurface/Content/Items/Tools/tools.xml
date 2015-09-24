@@ -34,7 +34,7 @@
 
       <!-- if using the item fails (due to a insufficient skill level for example), the contained tank will break and an explosion will occurr -->
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
-        <Explosion range="5" damage="20" stun="10" force="5.0"/>
+        <Explosion range="500" damage="20" stun="10" force="5.0"/>
       </StatusEffect>
 
       <LightComponent color="1.0,0.9,0.7,1.0" Flicker="0.5">
@@ -74,7 +74,7 @@
       <RequiredSkill name="Construction" level="30"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-100.0" sound="Content/Items/Weapons/stunGrenade.ogg">
-        <Explosion range="5" damage="20" stun="10" force="5.0"/>
+        <Explosion range="500" damage="20" stun="10" force="5.0"/>
       </StatusEffect>
 
       <LightComponent color="0.1,0.8,1.0,1.0" Flicker="0.5">

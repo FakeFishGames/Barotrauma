@@ -262,6 +262,13 @@ namespace Subsurface
             targetEntity = closestBody.UserData as IDamageable;            
         }
 
+        public override void OnAttacked(IDamageable attacker, float amount)
+        {
+            if (attacker==null || attacker.AiTarget==null) return;
+            AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
+            targetMemory.Priority += amount;
+        }
+
         private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition)
         {
             IDamageable damageTarget = null;
@@ -295,8 +302,8 @@ namespace Subsurface
                     {
                         attackTimer += deltaTime;
                         limb.body.ApplyTorque(limb.Mass * 50.0f * Character.AnimController.Dir * dir);
-
-                        limb.attack.DoDamage(damageTarget, limb.SimPosition, deltaTime, (limb.soundTimer <= 0.0f));
+                        
+                        limb.attack.DoDamage(Character, damageTarget, limb.SimPosition, deltaTime, (limb.soundTimer <= 0.0f));
 
                         limb.soundTimer = Limb.SoundInterval;
                     }

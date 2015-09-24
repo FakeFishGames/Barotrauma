@@ -55,8 +55,8 @@ namespace Subsurface
 
         private const float MusicLerpSpeed = 0.01f;
 
-        private static Sound waterAmbience;
-        private static int waterAmbienceIndex;
+        private static Sound[] waterAmbiences = new Sound[2];
+        private static int[] waterAmbienceIndexes = new int[2];
 
         private static DamageSound[] damageSounds;
 
@@ -78,7 +78,9 @@ namespace Subsurface
             yield return CoroutineStatus.Running;
 
 
-            waterAmbience = Sound.Load("Content/Sounds/Water/WaterAmbience.ogg");
+            waterAmbiences[0] = Sound.Load("Content/Sounds/Water/WaterAmbience1.ogg");
+            yield return CoroutineStatus.Running;
+            waterAmbiences[1] = Sound.Load("Content/Sounds/Water/WaterAmbience2.ogg");
             yield return CoroutineStatus.Running;
             flowSounds[0] = Sound.Load("Content/Sounds/Water/FlowSmall.ogg");
             yield return CoroutineStatus.Running;
@@ -162,22 +164,33 @@ namespace Subsurface
                 }
             }
 
-            float ambienceVolume = 0.5f;
+            float ambienceVolume = 0.6f;
             float lowpassHFGain = 1.0f;
             if (Character.Controlled != null)
             {
                 AnimController animController = Character.Controlled.AnimController;
                 if (animController.HeadInWater)
                 {
-                    ambienceVolume = 0.5f;
+                    ambienceVolume = 0.8f;
                     ambienceVolume += animController.Limbs[0].LinearVelocity.Length();
 
                     lowpassHFGain = 0.2f;
                 }
             }
 
+            //how fast the sub is moving, scaled to 0.0 -> 1.0
+            float movementFactor = 0.0f;
+            if (Submarine.Loaded!=null)
+            {
+                movementFactor = (Submarine.Loaded.Speed == Vector2.Zero) ? 0.0f : Submarine.Loaded.Speed.Length() / 500.0f;
+
+                movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
+            }
+
             SoundManager.LowPassHFGain = lowpassHFGain;
-            waterAmbienceIndex = waterAmbience.Loop(waterAmbienceIndex, ambienceVolume);
+            waterAmbienceIndexes[0] = waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f-movementFactor));
+            waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementFactor);
+
         }
 
         private static void UpdateMusic()

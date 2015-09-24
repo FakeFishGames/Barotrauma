@@ -94,6 +94,7 @@
     <Compile Include="Source\Items\FixRequirement.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\LocationType.cs" />
+    <Compile Include="Source\Map\SubmarineHull.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Particles\ParticleEmitter.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
@@ -682,7 +683,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Map\testroom.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Map\StructurePrefabs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -706,6 +707,7 @@
     </Content>
     <Content Include="Content\Sounds\sounds.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\UI\titleBackground.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -943,13 +945,16 @@
     <None Include="Content\Sounds\startDrone.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Sounds\Water\WaterAmbience2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\SpriteFont1.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\step.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Content\Sounds\Water\WaterAmbience.ogg">
+    <None Include="Content\Sounds\Water\WaterAmbience1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\watershader.mgfx">

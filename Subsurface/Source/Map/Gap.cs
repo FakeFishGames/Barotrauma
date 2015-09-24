@@ -40,6 +40,13 @@ namespace Subsurface
             get { return flowForce*soundVolume; }
         }
 
+        public Vector2 LerpedFlowForce
+        {
+            get { return lerpedFlowForce; }
+        }
+
+        private Vector2 lerpedFlowForce;
+
         public Hull FlowTargetHull
         {
             get { return flowTargetHull; }
@@ -178,6 +185,14 @@ namespace Subsurface
 
         public override void Draw(SpriteBatch sb, bool editing)
         {
+            if (GameMain.DebugDraw)
+            {
+                Vector2 center = new Vector2(rect.X + rect.Width / 2.0f, -(rect.Y - rect.Width / 2.0f));
+                GUI.DrawLine(sb, center, center + flowForce/10.0f, Color.Red);
+
+                GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + lerpedFlowForce / 10.0f + Vector2.One * 5.0f, Color.Orange);
+            }
+
             if (!editing) return;
 
             Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
@@ -250,6 +265,8 @@ namespace Subsurface
                 //gap leading from a room to another
                 UpdateRoomToRoom(deltaTime);
             }
+
+            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, 0.1f);
 
             if (FlowForce.Length() > 150.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {

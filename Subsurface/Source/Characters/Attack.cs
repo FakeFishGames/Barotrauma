@@ -51,6 +51,12 @@ namespace Subsurface
 
         private float priority;
 
+
+        //public Attack(AttackType type, float range,)
+        //{
+
+        //}
+
         public Attack(XElement element)
         {
             try
@@ -94,10 +100,10 @@ namespace Subsurface
             {
                 if (subElement.Name.ToString().ToLower() == "particleemitter") particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
             }
-
         }
 
-        public AttackResult DoDamage(IDamageable target, Vector2 position, float deltaTime, bool playSound = true)
+
+        public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 position, float deltaTime, bool playSound = true)
         {
             float damageAmount = 0.0f;
             //DamageSoundType damageSoundType = DamageSoundType.None;
@@ -125,7 +131,7 @@ namespace Subsurface
                 sound.Play(1.0f, 500.0f, position);
             }
 
-            return target.AddDamage(position, DamageType, damageAmount, bleedingAmount, Stun, playSound);
+            return target.AddDamage(attacker, position, this, playSound);
 
         }
     }

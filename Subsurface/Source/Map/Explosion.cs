@@ -11,37 +11,32 @@ namespace Subsurface
     {
         private Vector2 position;
 
-        private float range;
-        private float damage;
-        private float structureDamage;
-        private float stun;
-
+        private Attack attack;
+        
         private float force;
 
         private LightSource light;
 
         public float CameraShake;
 
-        public Explosion(Vector2 position, float range, float damage, float structureDamage, float stun = 0.0f, float force = 0.0f)
-        {
-            this.position = position;
-            this.range = Math.Max(range, 1.0f);
-            this.damage = damage;
-            this.structureDamage = structureDamage;
-            this.stun = stun;
-            this.force = force;
+        //public Explosion(Vector2 position, float range, float damage, float structureDamage, float stun = 0.0f, float force = 0.0f)
+        //{
+        //    this.position = position;
 
-            CameraShake = range*10.0f;
-        }
+        //    attack = new Attack(,);
+
+        //    this.force = force;
+
+
+        //}
 
         public Explosion(XElement element)
         {
-            range = Math.Max(ToolBox.GetAttributeFloat(element, "range", 1.0f), 1.0f);
-            damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
-            structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
-            stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
+            attack = new Attack(element);
 
             force = ToolBox.GetAttributeFloat(element, "force", 0.0f);
+
+            CameraShake = attack.Range*10.0f;
         }
 
         public void Explode()
@@ -56,7 +51,7 @@ namespace Subsurface
             GameMain.ParticleManager.CreateParticle("shockwave", displayPosition,
                 Vector2.Zero, 0.0f);
 
-            for (int i = 0; i < range * 10; i++)
+            for (int i = 0; i < attack.Range * 10; i++)
             {
                 GameMain.ParticleManager.CreateParticle("spark", displayPosition,
                     Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f);
@@ -67,7 +62,7 @@ namespace Subsurface
 
 
 
-            float displayRange = ConvertUnits.ToDisplayUnits(range);
+            float displayRange = ConvertUnits.ToDisplayUnits(attack.Range);
 
             light = new LightSource(displayPosition, displayRange, Color.LightYellow);
             CoroutineManager.StartCoroutine(DimLight());
@@ -75,7 +70,7 @@ namespace Subsurface
             float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, displayPosition)/2.0f;
             GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist)/displayRange, 0.0f);
             
-            if (structureDamage > 0.0f)
+            if (attack.StructureDamage > 0.0f)
             {
                 List<Structure> structureList = new List<Structure>();
             
@@ -98,7 +93,7 @@ namespace Subsurface
                     for (int i = 0; i < structure.SectionCount; i++)
                     {
                         float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i), displayPosition) / displayRange);
-                        if (distFactor > 0.0f) structure.AddDamage(i, structureDamage*distFactor);
+                        if (distFactor > 0.0f) structure.AddDamage(i, attack.StructureDamage*distFactor);
                     }
                 }
             }
@@ -107,16 +102,16 @@ namespace Subsurface
             {
                 float dist = Vector2.Distance(c.SimPosition, simPosition);
 
-                if (dist > range) continue;
+                if (dist > attack.Range) continue;
 
-                float distFactor = 1.0f - dist / range;
+                float distFactor = 1.0f - dist / attack.Range;
                                 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    distFactor = 1.0f - Vector2.Distance(limb.SimPosition, simPosition)/range;
-
-                    c.AddDamage(limb.SimPosition, DamageType.None, damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor);
+                    distFactor = 1.0f - Vector2.Distance(limb.SimPosition, simPosition)/attack.Range;
                     
+                    c.AddDamage(limb.SimPosition, DamageType.None, 
+                        attack.Damage / c.AnimController.Limbs.Length * distFactor, 0.0f, attack.Stun * distFactor, true);
                     if (force>0.0f)
                     {
                         limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.SimPosition - simPosition) * distFactor * force);

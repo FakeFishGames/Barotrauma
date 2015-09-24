@@ -12,7 +12,7 @@
 
     <Pickable slots="Any">
       <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
-        <Explosion range="5.0" structuredamage="300" damage="200" stun="5" force="20.0"/>
+        <Explosion range="500.0" structuredamage="300" damage="200" stun="5" force="20.0"/>
       </StatusEffect>
     </Pickable>
   </Item>

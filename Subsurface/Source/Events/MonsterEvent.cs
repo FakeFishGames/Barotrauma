@@ -27,7 +27,7 @@ namespace Subsurface
 
             int amount = Rand.Range(minAmount, maxAmount, false);
 
-            monsters = new Character[amount];
+            monsters = new AICharacter[amount];
 
             for (int i = 0; i < amount; i++)
             {

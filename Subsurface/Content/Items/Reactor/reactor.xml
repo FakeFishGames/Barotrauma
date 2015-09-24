@@ -27,7 +27,7 @@
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02f"/>
 
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true" sound="Content/Items/Reactor/explosion.ogg">
-        <Explosion range ="6.0" damage="500" structuredamage="600" stun="5.0" force="5.0"/>
+        <Explosion range ="800" damage="500" structuredamage="400" stun="5.0" force="5.0"/>
       </StatusEffect>
     </Reactor>
 
