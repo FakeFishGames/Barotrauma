@@ -856,7 +856,12 @@ namespace Subsurface
             }
         }
 
-        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
+        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound = false)
+        {
+            return AddDamage(position, attack.DamageType, attack.Damage, attack.BleedingDamage, attack.Stun, playSound);
+        }
+
+        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
         {
             AnimController.StunTimer = Math.Max(AnimController.StunTimer, stun);
 
@@ -882,7 +887,6 @@ namespace Subsurface
             bleeding += attackResult.Bleeding;
 
             return attackResult;
-
         }
 
         public void Stun()

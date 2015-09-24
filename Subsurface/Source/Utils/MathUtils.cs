@@ -36,6 +36,21 @@ namespace Subsurface
         {
             return (IsValid(vector.X) && IsValid(vector.Y));
         }
+
+
+        public static int VectorOrientation(Vector2 p1, Vector2 p2, Vector2 p)
+        {
+            // Determinant
+            float Orin = (p2.X - p1.X) * (p.Y - p1.Y) - (p.X - p1.X) * (p2.Y - p1.Y);
+
+            if (Orin > 0)
+                return -1; //          (* Orientation is to the left-hand side  *)
+            if (Orin < 0)
+                return 1; // (* Orientation is to the right-hand side *)
+
+            return 0; //  (* Orientation is neutral aka collinear  *)
+        }
+
         
         public static float CurveAngle(float from, float to, float step)
         {

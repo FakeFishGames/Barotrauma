@@ -669,13 +669,13 @@ namespace Subsurface
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
                 Gap gap = e as Gap;
-                if (gap == null || gap.FlowTargetHull != currentHull || gap.FlowForce == Vector2.Zero) continue;
+                if (gap == null || gap.FlowTargetHull != currentHull || gap.LerpedFlowForce == Vector2.Zero) continue;
 
                 Vector2 gapPos = gap.SimPosition;
 
                 float dist = Vector2.Distance(limbPos, gapPos);
 
-                force += Vector2.Normalize(gap.FlowForce) * (Math.Max(gap.FlowForce.Length() - dist, 0.0f) / 500.0f);
+                force += Vector2.Normalize(gap.LerpedFlowForce) * (Math.Max(gap.LerpedFlowForce.Length() - dist, 0.0f) / 500.0f);
             }
 
             if (force.Length() > 20.0f) return force;

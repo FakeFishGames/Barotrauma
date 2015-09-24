@@ -16,6 +16,8 @@ namespace Subsurface.Items.Components
 
         private float range;
 
+        private Character user;
+
         [HasDefaultValue(0.0f, false)]
         public float Range
         {
@@ -44,6 +46,8 @@ namespace Subsurface.Items.Components
         {
             if (character == null) return false;
             if (!character.GetInputState(InputType.SecondaryHeld) || hitting) return false;
+
+            user = character;
 
             if (hitPos < MathHelper.Pi * 0.69f) return false;
 
@@ -178,7 +182,7 @@ namespace Subsurface.Items.Components
 
             if (target == null) return false;
 
-            attack.DoDamage(target, item.Position, 1.0f);
+            attack.DoDamage(user, target, item.Position, 1.0f);
 
             RestoreCollision();
             hitting = false;

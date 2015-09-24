@@ -41,15 +41,22 @@ namespace Subsurface
         public static bool DisableSelect
         {
             get { return disableSelect; }
-            set { 
+            set 
+            { 
                 disableSelect = value; 
-                if (disableSelect==true)
+                if (disableSelect)
                 {
                     startMovingPos = Vector2.Zero;
                     selectionSize = Vector2.Zero;
                     selectionPos = Vector2.Zero;
                 }
             }
+        }
+
+
+        public static bool SelectedAny
+        {
+            get { return selectedList.Count > 0; }
         }
 
         public bool MoveWithLevel

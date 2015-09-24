@@ -145,11 +145,11 @@ namespace Subsurface.Items.Components
                 Structure structure;
                 if ((limb = (f2.Body.UserData as Limb)) != null)
                 {
-                    attackResult = attack.DoDamage(limb.character, item.SimPosition, 1.0f);
+                    attackResult = attack.DoDamage(null, limb.character, item.SimPosition, 1.0f);
                 }
                 else if ((structure = (f2.Body.UserData as Structure)) != null)
                 {
-                    attackResult = attack.DoDamage(structure, item.SimPosition, 1.0f);
+                    attackResult = attack.DoDamage(null, structure, item.SimPosition, 1.0f);
                 }
             }
 

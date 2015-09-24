@@ -98,7 +98,10 @@ namespace Subsurface
 
                 Ragdoll.UpdateAll((float)Physics.step);
 
-                if (GameMain.GameSession != null && GameMain.GameSession.Level != null) GameMain.GameSession.Submarine.Update((float)Physics.step);
+                if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+                {
+                    GameMain.GameSession.Submarine.Update((float)Physics.step);
+                }
 
                 GameMain.World.Step((float)Physics.step);
 

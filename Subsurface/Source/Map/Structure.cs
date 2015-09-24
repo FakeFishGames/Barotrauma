@@ -386,11 +386,11 @@ namespace Subsurface
 
         }
 
-        public int FindSectionIndex(Vector2 pos)
+        public int FindSectionIndex(Vector2 displayPos)
         {
             int index = (isHorizontal) ?
-                (int)Math.Floor((pos.X - rect.X) / wallSectionSize) :
-                (int)Math.Floor((rect.Y - pos.Y) / wallSectionSize);
+                (int)Math.Floor((displayPos.X - rect.X) / wallSectionSize) :
+                (int)Math.Floor((rect.Y - displayPos.Y) / wallSectionSize);
 
             if (index < 0 || index > sections.Length - 1) return -1;
             return index;
@@ -412,7 +412,7 @@ namespace Subsurface
                 sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
         }
 
-        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound = false)
+        public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound = false)
         {
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
@@ -423,13 +423,13 @@ namespace Subsurface
 
             if (playSound && !SectionHasHole(i))
             {
-                DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
-                AmbientSoundManager.PlayDamageSound(damageSoundType, amount, position);
+                DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
+                AmbientSoundManager.PlayDamageSound(damageSoundType, attack.Damage, position);
             }
 
-            AddDamage(i, amount);
+            AddDamage(i, attack.Damage);
 
-            return new AttackResult(amount, 0.0f);
+            return new AttackResult(attack.Damage, 0.0f);
         }
 
         private void SetDamage(int sectionIndex, float damage)

@@ -10,6 +10,8 @@ namespace Subsurface
 {
     class AICharacter : Character
     {
+        const float AttackBackPriority = 1.0f;
+
         private AIController aiController;
 
         public AICharacter(string file) : this(file, Vector2.Zero, null)
@@ -55,6 +57,15 @@ namespace Subsurface
             }
 
             aiController.Update(deltaTime);
+        }
+
+        public override AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound = false)
+        {
+            AttackResult result = base.AddDamage(attacker, position, attack, playSound);
+
+            aiController.OnAttacked(attacker, (result.Damage + result.Bleeding)/Math.Max(health,1.0f));
+
+            return result;
         }
 
         public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
