@@ -320,7 +320,7 @@ namespace Subsurface
                 }
             }
             
-            if (Character.Controlled != null && cam!=null) Character.Controlled.DrawHud(spriteBatch, cam);
+            if (Character.Controlled != null && cam!=null) Character.Controlled.DrawHUD(spriteBatch, cam);
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
 
             DrawMessages(spriteBatch, (float)deltaTime);

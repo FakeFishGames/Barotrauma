@@ -420,7 +420,7 @@ namespace Subsurface
                 {        
                     foreach (Item containedItem in containedItems)
                     {
-                        if (containedItem == null || containedItem.condition==0.0f) continue;
+                        if (containedItem == null) continue;
                         if (effect.TargetNames != null && !effect.TargetNames.Contains(containedItem.Name)) continue;
 
                         hasTargets = true;
@@ -719,7 +719,7 @@ namespace Subsurface
                 return;
             }
 
-            if (!HasInGameEditableProperties)
+            if (HasInGameEditableProperties)
             {
                 if (editingHUD == null || editingHUD.UserData as Item != this)
                 {

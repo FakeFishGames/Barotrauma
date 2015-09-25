@@ -47,6 +47,11 @@ namespace Subsurface
         }
 
         public GUIImage(Rectangle rect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
+            : this(rect, sprite.SourceRect, sprite, alignment, parent)
+        {
+        }
+
+        public GUIImage(Rectangle rect, Rectangle sourceRect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
             : base(null)
         {
             this.rect = rect;
@@ -60,12 +65,12 @@ namespace Subsurface
             Scale = 1.0f;
 
             this.sprite = sprite;
-            
+
             if (rect.Width == 0) this.rect.Width = (int)sprite.size.X;
             if (rect.Height == 0) this.rect.Height = (int)Math.Min(sprite.size.Y, sprite.size.Y * (this.rect.Width / sprite.size.X));
 
-            sourceRect = sprite.SourceRect;
-            
+            this.sourceRect = sourceRect;
+
             if (parent != null)
                 parent.AddChild(this);
         }

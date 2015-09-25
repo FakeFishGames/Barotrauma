@@ -7,28 +7,6 @@ using System.Xml.Linq;
 
 namespace Subsurface
 {
-    class Skill
-    {
-        string name;
-        int level;
-
-        public string Name
-        {
-            get { return name; }
-        }
-
-        public int Level
-        {
-            get { return level; }
-        }
-
-        public Skill(string name, int level)
-        {
-            this.name = name;
-            this.level = level;
-        }
-    }
-
     class Job
     {
 
@@ -76,11 +54,9 @@ namespace Subsurface
             prefab = jobPrefab;
 
             skills = new Dictionary<string, Skill>();
-            foreach (KeyValuePair<string, Vector2> skill in prefab.Skills)
+            foreach (SkillPrefab skillPrefab in prefab.Skills)
             {
-                skills.Add(
-                    skill.Key, 
-                    new Skill( skill.Key, (int)Rand.Range(skill.Value.X, skill.Value.Y, false)));
+                skills.Add(skillPrefab.Name, new Skill(skillPrefab));
             }
         }
 

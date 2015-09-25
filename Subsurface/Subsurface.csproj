@@ -67,6 +67,7 @@
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpriteManager.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpritePrefab.cs" />
     <Compile Include="Source\Characters\Character.cs" />
+    <Compile Include="Source\Characters\CharacterHUD.cs" />
     <Compile Include="Source\Characters\CharacterInfo.cs" />
     <Compile Include="Source\Characters\AI\ISteerable.cs" />
     <Compile Include="Source\Characters\DelayedEffect.cs" />
@@ -74,6 +75,8 @@
     <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Source\Characters\AI\SteeringManager.cs" />
     <Compile Include="Source\Characters\AI\SteeringPath.cs" />
+    <Compile Include="Source\Characters\Jobs\Skill.cs" />
+    <Compile Include="Source\Characters\Jobs\SkillPrefab.cs" />
     <Compile Include="Source\ContentPackage.cs" />
     <Compile Include="Source\CoroutineManager.cs" />
     <Compile Include="Source\Events\Quests\Quest.cs" />
@@ -217,7 +220,7 @@
     <Compile Include="Source\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\Screens\LobbyScreen.cs" />
-    <Compile Include="Source\Screens\MainMenu.cs" />
+    <Compile Include="Source\Screens\MainMenuScreen.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\SettingsScreen.cs" />
     <Compile Include="Source\Screens\Screen.cs" />
@@ -528,6 +531,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\inventoryIcons.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\statusIcons.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\style.xml">

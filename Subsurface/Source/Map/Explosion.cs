@@ -60,8 +60,6 @@ namespace Subsurface
                     Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f);
             }
 
-
-
             float displayRange = ConvertUnits.ToDisplayUnits(attack.Range);
 
             light = new LightSource(displayPosition, displayRange, Color.LightYellow);

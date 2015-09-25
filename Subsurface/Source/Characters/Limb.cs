@@ -285,7 +285,7 @@ namespace Subsurface
             body.ApplyLinearImpulse((deltaPos - vel * 0.5f) * body.Mass, pullPos);
         }
 
-        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, bool playSound)
         {
             DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
 
@@ -299,7 +299,7 @@ namespace Subsurface
 
                 float mid = (armorLimits.X + armorLimits.Y) / 2.0f;
 
-                float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(position - SimPosition), mid);
+                float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(simPosition - SimPosition), mid);
 
                 if (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2.0f)
                 {
@@ -310,9 +310,9 @@ namespace Subsurface
                 }
             }
 
-            if (playSound)
+            if (playSound && amount>0.0f)
             {
-                AmbientSoundManager.PlayDamageSound(damageSoundType, amount, position);
+                AmbientSoundManager.PlayDamageSound(damageSoundType, amount, ConvertUnits.ToDisplayUnits(simPosition));
             }
 
             //Bleeding += bleedingAmount;
@@ -322,7 +322,7 @@ namespace Subsurface
             
             for (int i = 0; i < bloodAmount; i++)
             {
-                Vector2 particleVel = SimPosition - position;
+                Vector2 particleVel = SimPosition - simPosition;
                 if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
 
                 GameMain.ParticleManager.CreateParticle("blood",

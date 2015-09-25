@@ -27,6 +27,8 @@ namespace Subsurface
 
         private GUIFrame playerFrame;
 
+        private GUIFrame jobInfoFrame;
+
         private float camAngle;
 
         public bool IsServer;
@@ -305,7 +307,7 @@ namespace Subsurface
 
                 if (IsServer && GameMain.Server != null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(-30, -30, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
@@ -332,21 +334,25 @@ namespace Subsurface
 
                 new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.Style, playerFrame);
 
-                jobList = new GUIListBox(new Rectangle(0, 180, 180, 0), GUI.Style, playerFrame);
+                jobList = new GUIListBox(new Rectangle(0, 180, 250, 0), GUI.Style, playerFrame);
                 jobList.Enabled = false;
 
 
                 int i = 1;
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20), i + ". " + job.Name, GUI.Style, Alignment.Left, Alignment.Right, jobList);
+                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20), i + ". " + job.Name+"    ", GUI.Style, Alignment.Left, Alignment.Right, jobList);
                     jobText.UserData = job;
 
-                    GUIButton upButton = new GUIButton(new Rectangle(0, 0, 15, 15), "u", GUI.Style, jobText);
+                    GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 15, 15), "?", GUI.Style, jobText);
+                    infoButton.UserData = -1;
+                    infoButton.OnClicked += ViewJobInfo;
+
+                    GUIButton upButton = new GUIButton(new Rectangle(30, 0, 15, 15), "^", GUI.Style, jobText);
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
-                    GUIButton downButton = new GUIButton(new Rectangle(25, 0, 15, 15), "d", GUI.Style, jobText);
+                    GUIButton downButton = new GUIButton(new Rectangle(50, 0, 15, 15), "˅", GUI.Style, jobText);
                     downButton.UserData = 1;
                     downButton.OnClicked += ChangeJobPreference;
                 }
@@ -460,6 +466,8 @@ namespace Subsurface
             GameMain.GameScreen.Cam.MoveCamera((float)deltaTime);
 
             menu.Update((float)deltaTime);
+
+            if (jobInfoFrame != null) jobInfoFrame.Update((float)deltaTime);
                         
             //durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
@@ -473,6 +481,8 @@ namespace Subsurface
             spriteBatch.Begin();
 
             menu.Draw(spriteBatch);
+
+            if (jobInfoFrame != null) jobInfoFrame.Draw(spriteBatch);
 
             //if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
 
@@ -531,17 +541,14 @@ namespace Subsurface
 
         private bool SwitchGender(GUIButton button, object obj)
         {
-            try
-            {
-                Gender gender = (Gender)obj;
-                GameMain.Client.CharacterInfo.Gender = gender;
-                GameMain.Client.SendCharacterData();
+            Gender gender = (Gender)obj;
+            GameMain.NetworkMember.CharacterInfo.Gender = gender;
+            GameMain.Client.SendCharacterData();
                 
-                //CreatePreviewCharacter();
-            }
-            catch {}
+            //CreatePreviewCharacter();
+           
             
-            UpdatePreviewPlayer(GameMain.Client.CharacterInfo);
+            UpdatePreviewPlayer(GameMain.NetworkMember.CharacterInfo);
             return true;
         }
 
@@ -591,6 +598,25 @@ namespace Subsurface
             textBox.Text = newName;
             textBox.Selected = false;
 
+            return true;
+        }
+
+        private bool ViewJobInfo(GUIButton button, object obj)
+        {
+            GUIComponent jobText = button.Parent;
+
+            JobPrefab jobPrefab = jobText.UserData as JobPrefab;
+            if (jobPrefab == null) return false;
+
+            jobInfoFrame = jobPrefab.CreateInfoFrame();
+            GUIButton closeButton = new GUIButton(new Rectangle(0,0,100,20), "Close", Alignment.BottomRight, GUI.Style, jobInfoFrame);
+            closeButton.OnClicked = CloseJobInfo;
+            return true;
+        }
+
+        private bool CloseJobInfo(GUIButton button, object obj)
+        {
+            jobInfoFrame = null;
             return true;
         }
 
