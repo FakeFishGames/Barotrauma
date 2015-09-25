@@ -109,6 +109,8 @@ namespace Launcher
             updateLabel.Visible = false;
             downloadButton.Visible = false;
 
+            installedVersionLabel.Text = "Installed version: " + version;
+
             if (settings.AutoCheckUpdates)
             {
                 CheckForUpdates();                
@@ -311,6 +313,11 @@ namespace Launcher
 
             webClient.DownloadFileAsync(new Uri(latestVersionFolder + filesToDownload[0]), @dir + "\\" + filesToDownload[0]);
            
+        }
+
+        private void LauncherMain_Load(object sender, EventArgs e)
+        {
+
         }
 
     }

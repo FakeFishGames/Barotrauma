@@ -223,6 +223,8 @@ namespace FarseerPhysics.Collision
 
         public static float Evaluate(int indexA, int indexB, float t)
         {
+            if (float.IsNaN(t)) return 0.0f;
+
             Transform xfA, xfB;
             _sweepA.GetTransform(out xfA, t);
             _sweepB.GetTransform(out xfB, t);

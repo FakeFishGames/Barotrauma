@@ -459,11 +459,12 @@ namespace Subsurface
         }
 
 
-        public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound = true)
+        public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = true)
         {
-            Condition -= attack.Damage;
+            float damageAmount = attack.GetDamage(deltaTime);
+            Condition -= damageAmount;
 
-            return new AttackResult(attack.Damage, 0.0f, false);
+            return new AttackResult(damageAmount, 0.0f, false);
         }
 
 
@@ -921,8 +922,8 @@ namespace Subsurface
 
         public void Drop(Character dropper = null, bool createNetworkEvent = true)
         {
-            if (dropper == Character.Controlled)
-                new NetworkEvent(NetworkEventType.DropItem, ID, true);
+            //if (dropper == Character.Controlled)
+            //    new NetworkEvent(NetworkEventType.DropItem, ID, true);
             
             foreach (ItemComponent ic in components) ic.Drop(dropper);
 

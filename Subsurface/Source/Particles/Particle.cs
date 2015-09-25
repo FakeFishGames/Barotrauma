@@ -1,6 +1,8 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
 
 namespace Subsurface.Particles
 {
@@ -34,6 +36,8 @@ namespace Subsurface.Particles
         //private float checkCollisionTimer;
 
         private Hull currentHull;
+
+        private List<Hull> hullLimits;
         
         public ParticlePrefab.DrawTargetType DrawTarget
         {
@@ -80,9 +84,11 @@ namespace Subsurface.Particles
             
             velocityChange = prefab.VelocityChange;
 
-            if (prefab.DeleteOnCollision)
+            if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
-                currentHull = Hull.FindHull(position);
+                //currentHull = Hull.FindHull(position);
+                hullLimits = new List<Hull>();
+                hullLimits = FindLimits(position);
             }
 
             if (prefab.RotateToDirection)
@@ -91,6 +97,45 @@ namespace Subsurface.Particles
 
                 prevRotation = rotation;
             }
+        }
+
+        private List<Hull> FindLimits(Vector2 position)
+        {
+            List<Hull> hullList = new List<Hull>();
+
+            currentHull = Hull.FindHull(position);
+            if (currentHull == null) return hullList;
+
+            hullList.Add(currentHull);
+            
+            return FindAdjacentHulls(hullList, currentHull, Math.Abs(velocity.X)>Math.Abs(velocity.Y));
+        }
+
+        private List<Hull> FindAdjacentHulls(List<Hull> adjacentHulls, Hull currentHull, bool isHorizontal)
+        {
+                foreach (Gap gap in Gap.GapList)
+                {
+                    if (gap.isHorizontal != isHorizontal) continue;
+                    if (gap.Open < 0.01f) continue;
+                    if (gap.linkedTo[0]==currentHull && gap.linkedTo[1]!=null)
+                    {
+                        if (!adjacentHulls.Contains(gap.linkedTo[1] as Hull))
+                        {
+                            adjacentHulls.Add(gap.linkedTo[1] as Hull);
+                            FindAdjacentHulls(adjacentHulls, gap.linkedTo[1] as Hull, isHorizontal);
+                        }
+                    }
+                    else if (gap.linkedTo[1] == currentHull && gap.linkedTo[0] != null)
+                    {
+                        if (!adjacentHulls.Contains(gap.linkedTo[0] as Hull))
+                        {
+                            adjacentHulls.Add(gap.linkedTo[0] as Hull);
+                            FindAdjacentHulls(adjacentHulls, gap.linkedTo[0] as Hull, isHorizontal);
+                        }
+                    }
+                }
+
+                return adjacentHulls;
         }
 
         public bool Update(float deltaTime)
@@ -124,9 +169,34 @@ namespace Subsurface.Particles
                 color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
                 color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
             
-            if (prefab.DeleteOnCollision && currentHull!=null)
+            if ((prefab.DeleteOnCollision || prefab.CollidesWithWalls) && currentHull!=null)
             {
-                if (!Submarine.RectContains(currentHull.Rect, position)) return false;
+                bool insideHull = false;
+                foreach (Hull hull in hullLimits)
+                {
+                    if (!Submarine.RectContains(hull.Rect, position)) continue;
+                    
+                    insideHull = true;
+                    break;                    
+                }
+
+                if (!insideHull)
+                {
+                    if (prefab.DeleteOnCollision) return false;
+
+                    Hull prevHull = Hull.FindHull(prevPosition, hullLimits, currentHull);
+
+                    if (prevHull == null) return false;
+
+                    OnWallCollision(prevHull);
+                }
+
+                //if (position.Y < currentHull.Rect.Y-currentHull.Rect.Height)
+                //{
+                //    position.Y = currentHull.Rect.Y - currentHull.Rect.Height;
+                //    velocity.Y *= -0.2f;
+                //}
+                //if (!Submarine.RectContains(currentHull.Rect, position)) return false;
             }
 
             lifeTime -= deltaTime;
@@ -134,6 +204,35 @@ namespace Subsurface.Particles
             if (lifeTime <= 0.0f || alpha <= 0.0f || size.X <= 0.0f || size.Y <= 0.0f) return false;
 
             return true;
+        }
+
+        private void OnWallCollision(Hull prevHull)
+        {
+            float restitution = 0.05f;
+
+            if (position.Y < prevHull.Rect.Y - prevHull.Rect.Height)
+            {
+                position.Y = prevHull.Rect.Y - prevHull.Rect.Height + 1.0f;
+                velocity.Y = -velocity.Y;
+            }
+            else if (position.Y > prevHull.Rect.Y)
+            {
+                position.Y = prevHull.Rect.Y - 1.0f;
+                velocity.Y = -velocity.Y;
+            }
+
+            if (position.X < prevHull.Rect.X)
+            {
+                position.X = prevHull.Rect.X + 1.0f;
+                velocity.X = -velocity.X;
+            }
+            else if (position.X > prevHull.Rect.X + prevHull.Rect.Width)
+            {
+                position.X = prevHull.Rect.X + prevHull.Rect.Width - 1.0f;
+                velocity.X = -velocity.X;
+            }
+
+            velocity *= restitution;
         }
         
         public void Draw(SpriteBatch spriteBatch)

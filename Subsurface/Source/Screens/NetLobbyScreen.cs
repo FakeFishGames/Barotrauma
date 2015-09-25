@@ -747,7 +747,7 @@ namespace Subsurface
                 return;
             }
 
-            //if (!string.IsNullOrWhiteSpace(mapName)) TrySelectMap(mapName, md5Hash);
+            if (!string.IsNullOrWhiteSpace(mapName)) TrySelectMap(mapName, md5Hash);
 
             modeList.Select(modeIndex);
 

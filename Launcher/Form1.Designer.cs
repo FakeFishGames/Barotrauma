@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LauncherMain));
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.launchButton = new System.Windows.Forms.Button();
             this.resolutionBox = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -37,25 +36,15 @@
             this.contentPackageBox = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.packageManagerButton = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
+            this.installedVersionLabel = new System.Windows.Forms.Label();
             this.autoUpdateCheckBox = new System.Windows.Forms.CheckBox();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.patchNoteBox = new System.Windows.Forms.TextBox();
             this.updateLabel = new System.Windows.Forms.Label();
             this.downloadButton = new System.Windows.Forms.Button();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.BackColor = System.Drawing.Color.OrangeRed;
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(-11, 33);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(650, 42);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox1.TabIndex = 0;
-            this.pictureBox1.TabStop = false;
             // 
             // launchButton
             // 
@@ -137,16 +126,16 @@
             this.packageManagerButton.UseVisualStyleBackColor = false;
             this.packageManagerButton.Click += new System.EventHandler(this.packageManagerButton_Click);
             // 
-            // label3
+            // installedVersionLabel
             // 
-            this.label3.AutoSize = true;
-            this.label3.BackColor = System.Drawing.Color.Transparent;
-            this.label3.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.label3.Location = new System.Drawing.Point(266, 78);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(86, 13);
-            this.label3.TabIndex = 8;
-            this.label3.Text = "Installed version:";
+            this.installedVersionLabel.BackColor = System.Drawing.Color.Transparent;
+            this.installedVersionLabel.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.installedVersionLabel.Location = new System.Drawing.Point(-8, 78);
+            this.installedVersionLabel.Name = "installedVersionLabel";
+            this.installedVersionLabel.Size = new System.Drawing.Size(644, 23);
+            this.installedVersionLabel.TabIndex = 8;
+            this.installedVersionLabel.Text = "Installed version:";
+            this.installedVersionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // autoUpdateCheckBox
             // 
@@ -202,20 +191,32 @@
             this.downloadButton.UseVisualStyleBackColor = false;
             this.downloadButton.Click += new System.EventHandler(this.downloadButton_Click);
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
+            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.Location = new System.Drawing.Point(-8, 12);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(644, 63);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox1.TabIndex = 0;
+            this.pictureBox1.TabStop = false;
+            // 
             // LauncherMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
-            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(628, 453);
             this.Controls.Add(this.downloadButton);
             this.Controls.Add(this.updateLabel);
             this.Controls.Add(this.patchNoteBox);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.autoUpdateCheckBox);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.installedVersionLabel);
             this.Controls.Add(this.packageManagerButton);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.contentPackageBox);
@@ -227,6 +228,7 @@
             this.DoubleBuffered = true;
             this.Name = "LauncherMain";
             this.Text = "Form1";
+            this.Load += new System.EventHandler(this.LauncherMain_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -235,7 +237,6 @@
 
         #endregion
 
-        private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Button launchButton;
         private System.Windows.Forms.ComboBox resolutionBox;
         private System.Windows.Forms.Label label1;
@@ -243,12 +244,13 @@
         private System.Windows.Forms.ComboBox contentPackageBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button packageManagerButton;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label installedVersionLabel;
         private System.Windows.Forms.CheckBox autoUpdateCheckBox;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.TextBox patchNoteBox;
         private System.Windows.Forms.Label updateLabel;
         private System.Windows.Forms.Button downloadButton;
+        private System.Windows.Forms.PictureBox pictureBox1;
     }
 }
 

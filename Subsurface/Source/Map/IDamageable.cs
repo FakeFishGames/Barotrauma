@@ -19,6 +19,6 @@ namespace Subsurface
             get;
         }
 
-        AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound=true);
+        AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound=true);
     }
 }

@@ -629,12 +629,14 @@ namespace Subsurface
             {
                 if (inWater)
                 {
-                    foreach (Limb limb in Limbs)
-                    {
-                        if (limb.body.TargetPosition == Vector2.Zero) continue;
+                    //foreach (Limb limb in Limbs)
+                    //{
+                    //    if (limb.body.TargetPosition == Vector2.Zero) continue;
 
-                        limb.body.SetTransform(limb.SimPosition + newMovement * 0.1f, limb.Rotation);
-                    }
+                    //    limb.body.SetTransform(limb.SimPosition + newMovement * 0.1f, limb.Rotation);
+                    //}
+
+                    correctionMovement = Vector2.Normalize(newMovement) * Math.Min(0.1f + dist, 3.0f);
                 }
                 else
                 {
