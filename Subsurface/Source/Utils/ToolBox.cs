@@ -158,12 +158,21 @@ namespace Subsurface
 
             return val;
         }
-
+        
         public static bool GetAttributeBool(XElement element, string name, bool defaultValue)
         {
-            if (element.Attribute(name) == null) return defaultValue;
+            var attribute = element.Attribute(name);
+            if (attribute == null) return defaultValue;
 
-            string val = element.Attribute(name).Value.ToLower().Trim();
+            string val = attribute.Value.ToLower().Trim();
+            return GetAttributeBool(attribute, defaultValue);
+        }
+
+        public static bool GetAttributeBool(XAttribute attribute, bool defaultValue)
+        {
+            if (attribute == null) return defaultValue;
+
+            string val = attribute.Value.ToLower().Trim();
             if (val == "true")
             {
                 return true;
@@ -174,10 +183,13 @@ namespace Subsurface
             }
             else
             {
-                DebugConsole.ThrowError("Error in " + element + "! ''" + val + "'' is not a valid boolean value");
+                DebugConsole.ThrowError("Error in " + attribute.Value.ToString() + "! ''" + val + "'' is not a valid boolean value");
                 return false;
             }
         }
+
+
+
         public static Vector2 GetAttributeVector2(XElement element, string name, Vector2 defaultValue)
         {
             if (element.Attribute(name) == null) return defaultValue;

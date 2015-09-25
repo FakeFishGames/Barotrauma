@@ -98,7 +98,7 @@ namespace Subsurface.Items.Components
 
         PhysicsBody body;
 
-        Sprite doorSprite;
+        Sprite doorSprite, weldedSprite;
         
         public Door(Item item, XElement element)
             : base(item, element)
@@ -108,9 +108,15 @@ namespace Subsurface.Items.Components
            // isOpen = false;
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "sprite") continue;
-                doorSprite = new Sprite(subElement, Path.GetDirectoryName(item.Prefab.ConfigFile));
-                break;
+                switch (subElement.Name.ToString().ToLower())
+                {
+                    case "sprite":
+                        doorSprite = new Sprite(subElement, Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        break;
+                    case "weldedsprite":
+                        weldedSprite = new Sprite(subElement, Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        break;
+                }
             }
 
             doorRect = new Rectangle(
@@ -258,6 +264,11 @@ namespace Subsurface.Items.Components
 
             //prefab.sprite.Draw(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
 
+            if (stuck>0.0f && weldedSprite!=null)
+            {
+                weldedSprite.Draw(spriteBatch, new Vector2(item.Rect.X, -item.Rect.Y), Color.White*(stuck/100.0f), 0.0f, 1.0f);
+            }
+
             if (openState == 1.0f)
             {
                 body.Enabled = false;
@@ -311,6 +322,8 @@ namespace Subsurface.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
+            if (isStuck) return;
+
             if (connection.Name=="toggle")
             {
                 isOpen = !isOpen;
@@ -318,7 +331,10 @@ namespace Subsurface.Items.Components
             else if (connection.Name == "set_state")
             {
                 isOpen = (signal!="0");                
-            }            
+            }
+
+            //opening a partially stuck door makes it less stuck
+            if (isOpen) stuck = MathHelper.Clamp(stuck-30.0f, 0.0f, 100.0f); ;
         }
     }
 }

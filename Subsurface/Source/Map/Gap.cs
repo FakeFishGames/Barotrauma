@@ -237,6 +237,7 @@ namespace Subsurface
             soundIndex = AmbientSoundManager.flowSounds[index].Loop(soundIndex, soundVolume, Position, 2000.0f);
             
             flowForce = Vector2.Zero;
+            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, 0.05f);
 
             if (open == 0.0f) return;
 
@@ -252,8 +253,6 @@ namespace Subsurface
                 //gap leading from a room to another
                 UpdateRoomToRoom(deltaTime);
             }
-
-            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, 0.05f);
 
             if (FlowForce.Length() > 150.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {

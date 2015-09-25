@@ -76,6 +76,8 @@ namespace Subsurface
             element.Add(
                 new XAttribute("name", JoinedNames),
                 new XAttribute("type", type.ToString()));
+
+            if (!string.IsNullOrWhiteSpace("msg")) element.Add(new XAttribute("msg", Msg));
         }
 
         public static RelatedItem Load(XElement element)

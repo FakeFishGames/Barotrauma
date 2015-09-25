@@ -564,10 +564,10 @@ namespace Subsurface
         {
             Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
-            
-            if (prefab.sprite!=null)
+
+            if (prefab.sprite != null)
             {
-                if (body==null)
+                if (body == null)
                 {
                     prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
                 }
@@ -576,8 +576,7 @@ namespace Subsurface
                     body.Draw(spriteBatch, prefab.sprite, color);
                 }
             }
-
-
+            
             foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
             
             if (!editing || (body!=null && !body.Enabled))

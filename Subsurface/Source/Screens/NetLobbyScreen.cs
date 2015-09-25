@@ -283,7 +283,7 @@ namespace Subsurface
                 if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(-1);
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(-1);
 
-                if (infoFrame.children.Find(c => c.UserData as string == "playyourself") == null)
+                if (playerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
                 {
                     var playYourself = new GUITickBox(new Rectangle(-30, -30, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;

@@ -21,6 +21,8 @@ namespace Subsurface
         public string[] propertyNames;
         private object[] propertyEffects;
 
+        private bool setValue;
+
         private bool disableDeltaTime;
         
         private string[] onContainingNames;
@@ -63,7 +65,6 @@ namespace Subsurface
             IEnumerable<XAttribute> attributes = element.Attributes();            
             List<XAttribute> propertyAttributes = new List<XAttribute>();
 
-            disableDeltaTime = ToolBox.GetAttributeBool(element, "disabledeltatime", false);
 
             foreach (XAttribute attribute in attributes)
             {
@@ -96,6 +97,12 @@ namespace Subsurface
                             targetTypes |= (TargetType)Enum.Parse(typeof(TargetType), s, true);
                         }
 
+                        break;
+                    case "disabledeltatime":                        
+                        disableDeltaTime = ToolBox.GetAttributeBool(attribute, false);
+                        break;
+                    case "setvalue":                        
+                        setValue = ToolBox.GetAttributeBool(attribute, false);
                         break;
                     case "targetnames":
                         string[] names = attribute.Value.Split(',');
@@ -220,11 +227,15 @@ namespace Subsurface
             Type type = value.GetType();
             if (type == typeof(float))
             {
-                property.TrySetValue((float)property.GetValue() + (float)value * deltaTime);
+                float floatValue = (float)value * deltaTime;
+                if (!setValue) floatValue += (float)property.GetValue();
+                property.TrySetValue(floatValue);
             }
             else if (type == typeof(int))
             {
-                property.TrySetValue((int)property.GetValue() + (int)value * deltaTime);
+                int intValue = (int)((int)value * deltaTime);
+                if (!setValue) intValue += (int)property.GetValue();
+                property.TrySetValue(intValue);
             }
             else if (type == typeof(bool))
             {

@@ -134,10 +134,12 @@ namespace Subsurface
             get { return selectedCharacter; }
         }
 
-        //public AITarget AiTarget
-        //{
-        //    get { return aiTarget; }
-        //}
+        private float lowPassMultiplier;
+        public float LowPassMultiplier
+        {
+            get { return lowPassMultiplier; }
+            set { lowPassMultiplier = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
 
         public float SoundRange
         {
@@ -194,6 +196,12 @@ namespace Subsurface
                 if (MathUtils.IsValid(value)) return;
                 bleeding = Math.Max(value, 0.0f); 
             }
+        }
+
+        public float SpeedMultiplier
+        {
+            get;
+            set;
         }
         
         public Item[] SelectedItems
@@ -296,7 +304,6 @@ namespace Subsurface
         public Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
         {
 
-
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
             keys[(int)InputType.Select] = new Key(false);
             keys[(int)InputType.ActionHeld] = new Key(true);
@@ -318,6 +325,8 @@ namespace Subsurface
             oxygen = 100.0f;
             //blood = 100.0f;
             aiTarget = new AITarget(this);
+
+            lowPassMultiplier = 1.0f;
 
             Properties = ObjectProperty.GetProperties(this);
 
@@ -498,6 +507,9 @@ namespace Subsurface
 
             if (Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir) && GetInputState(InputType.Run))
                 targetMovement *= 3.0f;
+
+            targetMovement *= SpeedMultiplier;
+            SpeedMultiplier = 1.0f;
 
             AnimController.TargetMovement = targetMovement;
             AnimController.IsStanding = true;
@@ -739,6 +751,8 @@ namespace Subsurface
 
             UpdateSightRange();
             aiTarget.SoundRange = 0.0f;
+
+            lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
             if (needsAir)
             {
