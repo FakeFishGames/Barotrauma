@@ -147,7 +147,7 @@ namespace Subsurface
             + " However, UPnP isn't supported by all routers, so you may need to setup port forwards manually"
             +" if players are unable to join the server (see the readme for instructions).";
             
-            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomRight, GUI.Style, menuTabs[(int)Tabs.HostServer]);
+            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.Style, menuTabs[(int)Tabs.HostServer]);
             hostButton.OnClicked = HostServerClicked;
 
             this.game = game;

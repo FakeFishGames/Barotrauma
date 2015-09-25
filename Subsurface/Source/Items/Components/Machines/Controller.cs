@@ -131,13 +131,11 @@ namespace Subsurface.Items.Components
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            //character = activator;
-            //foreach (MapEntity e in item.linkedTo)
-            //{
-            //    Item linkedItem = e as Item;
-            //    if (linkedItem == null) continue;
-            //    linkedItem.Use(deltaTime, activator);
-            //}
+            if (character.SelectedConstruction != item)
+            {
+                character = null;
+                return false;
+            }
 
             item.SendSignal("1", "trigger_out");
 
@@ -149,6 +147,11 @@ namespace Subsurface.Items.Components
         public override void SecondaryUse(float deltaTime, Character character = null)
         {
             if (character == null) return;
+            if (character.SelectedConstruction!=item)
+            {
+                character = null;
+                return;
+            }
 
             foreach (Connection c in item.Connections)
             {

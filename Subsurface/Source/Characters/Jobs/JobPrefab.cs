@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Subsurface
 {
@@ -30,7 +31,7 @@ namespace Subsurface
         public List<string> ItemNames;
         public List<bool> EquipItem;
 
-        public Dictionary<string, Vector2> Skills;
+        public List<SkillPrefab> Skills;
 
         public string Name
         {
@@ -54,7 +55,7 @@ namespace Subsurface
 
         public JobPrefab(XElement element)
         {
-            name = element.Name.ToString();
+            name = ToolBox.GetAttributeString(element, "name", "name not found");
 
             description = ToolBox.GetAttributeString(element, "description", "");
 
@@ -66,7 +67,7 @@ namespace Subsurface
             ItemNames = new List<string>();
             EquipItem = new List<bool>();
 
-            Skills = new Dictionary<string, Vector2>();
+            Skills = new List<SkillPrefab>();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -82,10 +83,15 @@ namespace Subsurface
                         }
                         break;
                     case "skills":
-                        LoadSkills(subElement);
+                        foreach (XElement skillElement in subElement.Elements())
+                        {
+                            Skills.Add(new SkillPrefab(skillElement));
+                        } 
                         break;
                 }
             }
+
+            Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
         }
 
         public static JobPrefab Random()
@@ -93,28 +99,51 @@ namespace Subsurface
             return List[Rand.Int(List.Count)];
         }
 
-        private void LoadSkills(XElement element)
+        public GUIFrame CreateInfoFrame()
         {
-            foreach (XElement subElement in element.Elements())
+            int width = 500, height = 400;
+
+            GUIFrame frame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+            frame.Padding = new Vector4(30.0f, 30.0f, 30.0f, 30.0f);
+            
+            new GUITextBlock(new Rectangle(0,0,100,20), name, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+
+            var descriptionBlock = new GUITextBlock(new Rectangle(0, 40, 0, 0), description, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+
+            new GUITextBlock(new Rectangle(0, 40 + descriptionBlock.Rect.Height + 20, 100, 20), "Skills: ", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+
+            int y = 40 + descriptionBlock.Rect.Height + 50;
+            foreach (SkillPrefab skill in Skills)
             {
-                string skillName = ToolBox.GetAttributeString(subElement, "name", "");
+                string skillDescription = Skill.GetLevelName((int)skill.LevelRange.X);
+                string skillDescription2 =  Skill.GetLevelName((int)skill.LevelRange.Y);
 
-                if (string.IsNullOrEmpty(skillName) || Skills.ContainsKey(skillName)) continue;
-
-                var levelString = ToolBox.GetAttributeString(subElement, "level", "");
-                if (levelString.Contains(","))
+                if (skillDescription2!= skillDescription)
                 {
-                    Skills.Add(skillName, ToolBox.ParseToVector2(levelString, false));
+                    skillDescription += "/"+skillDescription2;
                 }
-                else
-                {
-                    float skillLevel = float.Parse(levelString, CultureInfo.InvariantCulture);
-                    Skills.Add(skillName, new Vector2(skillLevel, skillLevel));
-                }
+                new GUITextBlock(new Rectangle(0, y, 100, 20),
+                    "   - " + skill.Name + ": " + skillDescription, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.SmallFont);
 
+                y += 20;
             }
-        }
 
+            new GUITextBlock(new Rectangle(250, 40 + descriptionBlock.Rect.Height + 20, 0, 20), "Items: ", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+
+            y = 40 + descriptionBlock.Rect.Height + 50;
+            foreach (string itemName in ItemNames)
+            {
+                new GUITextBlock(new Rectangle(250, y, 100, 20),
+                "   - " + itemName, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.SmallFont);
+
+                y += 20;
+            }
+
+
+
+
+            return frame;
+        }
 
         public static void LoadAll(List<string> filePaths)
         {

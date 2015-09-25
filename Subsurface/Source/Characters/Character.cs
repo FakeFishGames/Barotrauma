@@ -124,6 +124,16 @@ namespace Subsurface
             get { return cursorPosition; }
         }
 
+        public Character ClosestCharacter
+        {
+            get { return closestCharacter; }
+        }
+
+        public Character SelectedCharacter
+        {
+            get { return selectedCharacter; }
+        }
+
         //public AITarget AiTarget
         //{
         //    get { return aiTarget; }
@@ -152,7 +162,7 @@ namespace Subsurface
         {
             get { return oxygen; }
             set 
-            { 
+            {
                 oxygen = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (oxygen == 0.0f) Kill();
             }
@@ -163,19 +173,17 @@ namespace Subsurface
             get 
             {
                 return health;
-                //float totalHealth = 0.0f;
-                //foreach (Limb l in animController.limbs)
-                //{
-                //    totalHealth += (l.MaxHealth - l.Damage);
-
-                //}
-                //return totalHealth/animController.limbs.Count();
             }
             set
             {
                 health = MathHelper.Clamp(value, 0.0f, maxHealth);
-                if (health==0.0f) Kill();
+                if (health == 0.0f) Kill();
             }
+        }
+
+        public float MaxHealth
+        {
+            get { return maxHealth; }
         }
 
         public float Bleeding
@@ -183,7 +191,7 @@ namespace Subsurface
             get { return bleeding; }
             set 
             {
-                if (float.IsNaN(value) || float.IsInfinity(value)) return;
+                if (MathUtils.IsValid(value)) return;
                 bleeding = Math.Max(value, 0.0f); 
             }
         }
@@ -287,6 +295,8 @@ namespace Subsurface
 
         public Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
         {
+
+
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
             keys[(int)InputType.Select] = new Key(false);
             keys[(int)InputType.ActionHeld] = new Key(true);
@@ -513,22 +523,55 @@ namespace Subsurface
             if (controlled == this)
             {
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cam.ScreenToWorld(PlayerInput.MousePosition));
-                closestItem = FindClosestItem(mouseSimPos);
-
-                if (closestItem != null)
+                
+                closestCharacter = FindClosestCharacter(mouseSimPos);
+                if (closestCharacter != null)
                 {
-                    closestItem.IsHighlighted = true;
-                    if (GetInputState(InputType.Select) && closestItem.Pick(this, forcePick))
+                    if (closestCharacter != selectedCharacter) selectedCharacter = null;
+                    if (!closestCharacter.isHumanoid) closestCharacter = null;
+                }
+                
+                
+                closestItem = FindClosestItem(mouseSimPos);
+                
+                if (closestCharacter != null && closestItem != null)
+                {
+                    if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < Vector2.Distance(closestItem.SimPosition, mouseSimPos))
                     {
-                        new NetworkEvent(NetworkEventType.PickItem, ID, true, closestItem.ID);
+                        if (selectedConstruction!=closestItem) closestItem = null;
+                    }
+                    else
+                    {
+                        closestCharacter = null;
                     }
                 }
 
-                closestCharacter = FindClosestCharacter(mouseSimPos);
-                if (closestCharacter != selectedCharacter) selectedCharacter = null;
-                if (closestCharacter!=null)
+                if (selectedCharacter==null)
+                {                
+                    if (closestItem != null)
+                    {
+                        closestItem.IsHighlighted = true;
+                        if (GetInputState(InputType.Select) && closestItem.Pick(this, forcePick))
+                        {
+                            new NetworkEvent(NetworkEventType.PickItem, ID, true, closestItem.ID);
+                        }
+                    }
+                }
+                else
                 {
-                    if (GetInputState(InputType.Select)) selectedCharacter = (selectedCharacter == null) ? closestCharacter : null;
+                    if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f) selectedCharacter = null;
+                }
+
+                if (GetInputState(InputType.Select))
+                {
+                    if (selectedCharacter!=null)
+                    {
+                        selectedCharacter = null;
+                    }
+                    else if (closestCharacter!=null && closestCharacter.isDead && closestCharacter.isHumanoid)
+                    {
+                        selectedCharacter = closestCharacter;
+                    }
                 }
             }
 
@@ -686,7 +729,11 @@ namespace Subsurface
                 return;
             }
 
-            if (controlled == this) ControlLocalPlayer(cam);
+            if (controlled == this)
+            {
+                CharacterHUD.Update(deltaTime,this);
+                ControlLocalPlayer(cam);
+            }
 
             Control(deltaTime, cam);
 
@@ -711,14 +758,10 @@ namespace Subsurface
                 PressureProtection -= deltaTime*100.0f;
             }
 
-
-
-            //foreach (Limb limb in animController.limbs)
-            //{
-                Health = health - bleeding * deltaTime;
-            //}
-
+            Health = health - bleeding * deltaTime;
         }
+
+
 
         private void UpdateSightRange()
         {
@@ -747,6 +790,11 @@ namespace Subsurface
             //    ConvertUnits.ToDisplayUnits(animController.targetMovement.X, animController.targetMovement.Y), Color.Green);
         }
 
+        public void DrawHUD(SpriteBatch spriteBatch, Camera cam)
+        {
+            CharacterHUD.Draw(spriteBatch, this, cam);
+        }
+
         public void DrawFront(SpriteBatch spriteBatch)
         {
             Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
@@ -772,67 +820,7 @@ namespace Subsurface
         }
 
 
-        private static GUIProgressBar drowningBar, healthBar;
-        public void DrawHud(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (drowningBar == null)
-            {
-                int width = 100, height = 20;
-                drowningBar = new GUIProgressBar(new Rectangle(20, GameMain.GraphicsHeight / 2, width, height), Color.Blue, 1.0f);
 
-                healthBar = new GUIProgressBar(new Rectangle(20, GameMain.GraphicsHeight / 2 + 30, width, height), Color.Red, 1.0f);
-            }
-
-            drowningBar.BarSize = Controlled.Oxygen / 100.0f;
-            if (drowningBar.BarSize < 0.95f) drowningBar.Draw(spriteBatch);
-
-            healthBar.BarSize = health / maxHealth;
-            if (healthBar.BarSize < 1.0f) healthBar.Draw(spriteBatch);
-
-            if (Controlled.Inventory != null) Controlled.Inventory.DrawOwn(spriteBatch);
-
-            Color color = Color.Orange;
-
-            if (closestCharacter != null && closestCharacter.isDead && closestCharacter.isHumanoid)
-            {
-                Vector2 startPos = Position + (closestCharacter.Position - Position) * 0.7f;
-                startPos = cam.WorldToScreen(startPos);
-
-                Vector2 textPos = startPos;
-
-                float stringWidth = GUI.Font.MeasureString(closestCharacter.Info.Name).X;
-                textPos -= new Vector2(stringWidth / 2, 20);
-                spriteBatch.DrawString(GUI.Font, closestCharacter.Info.Name, textPos, Color.Black);
-                spriteBatch.DrawString(GUI.Font, closestCharacter.Info.Name, textPos + new Vector2(1, -1), Color.Orange);
-
-                if (selectedCharacter==closestCharacter) closestCharacter.inventory.Draw(spriteBatch);
-            }
-            else if (closestItem != null && selectedConstruction==null)
-            {
-
-                Vector2 startPos = Position + (closestItem.Position - Position) * 0.7f;
-                startPos = cam.WorldToScreen(startPos);
-
-                Vector2 textPos = startPos;
-
-                float stringWidth = GUI.Font.MeasureString(closestItem.Prefab.Name).X;
-                textPos -= new Vector2(stringWidth / 2, 20);
-                spriteBatch.DrawString(GUI.Font, closestItem.Prefab.Name, textPos, Color.Black);
-                spriteBatch.DrawString(GUI.Font, closestItem.Prefab.Name, textPos + new Vector2(1, -1), Color.Orange);
-                
-                textPos.Y += 50.0f;
-                foreach (ColoredText coloredText in closestItem.GetHUDTexts(Controlled))
-                {
-                    textPos.X = startPos.X - GUI.Font.MeasureString(coloredText.Text).X / 2;
-
-                    spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos, Color.Black);
-                    spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos + new Vector2(1, -1), coloredText.Color);
-
-                    textPos.Y += 25;
-                }               
-            }
-            
-        }
 
         public void PlaySound(AIController.AiState state)
         {
@@ -856,20 +844,23 @@ namespace Subsurface
             }
         }
 
-        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound = false)
+        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 simPosition, Attack attack, bool playSound = false)
         {
-            return AddDamage(position, attack.DamageType, attack.Damage, attack.BleedingDamage, attack.Stun, playSound);
+            return AddDamage(simPosition, attack.DamageType, attack.Damage, attack.BleedingDamage, attack.Stun, playSound);
         }
 
-        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
         {
             AnimController.StunTimer = Math.Max(AnimController.StunTimer, stun);
+
+            if (controlled == this) CharacterHUD.TakeDamage();
+            
 
             Limb closestLimb = null;
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
             {
-                float distance = Vector2.Distance(position, limb.SimPosition);
+                float distance = Vector2.Distance(simPosition, limb.SimPosition);
                 if (closestLimb == null || distance < closestDistance)
                 {
                     closestLimb = limb;
@@ -877,12 +868,12 @@ namespace Subsurface
                 }
             }
 
-            Vector2 pull = position - closestLimb.SimPosition;
+            Vector2 pull = simPosition - closestLimb.SimPosition;
             if (pull != Vector2.Zero) pull = Vector2.Normalize(pull);
             closestLimb.body.ApplyForce(pull*Math.Min(amount*100.0f, 100.0f));
 
 
-            AttackResult attackResult = closestLimb.AddDamage(position, damageType, amount, bleedingAmount, playSound);
+            AttackResult attackResult = closestLimb.AddDamage(simPosition, damageType, amount, bleedingAmount, playSound);
             health -= attackResult.Damage;
             bleeding += attackResult.Bleeding;
 
@@ -938,6 +929,8 @@ namespace Subsurface
 
         private IEnumerable<object> DeathAnim(Camera cam)
         {
+            if (controlled != this) yield return CoroutineStatus.Success;
+
             float dimDuration = 8.0f;
             float timer = 0.0f;
 
@@ -967,9 +960,9 @@ namespace Subsurface
             }
 
             float lerpLightBack = 0.0f;
-            while (lerpLightBack<1.0f)
+            while (lerpLightBack < 1.0f)
             {
-                lerpLightBack = Math.Min(lerpLightBack+0.05f,1.0f);
+                lerpLightBack = Math.Min(lerpLightBack + 0.05f, 1.0f);
 
                 GameMain.LightManager.AmbientLight = Color.Lerp(Color.DarkGray, prevAmbientLight, lerpLightBack);
                 yield return CoroutineStatus.Running;

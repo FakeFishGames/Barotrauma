@@ -239,7 +239,6 @@ namespace Subsurface
         
         public override void Update(Camera cam, float deltaTime)
         {
-
             soundVolume = soundVolume + ((flowForce.Length() < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
             soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
 
@@ -254,7 +253,6 @@ namespace Subsurface
 
             UpdateOxygen();
 
-
             if (linkedTo.Count == 1)
             {
                 //gap leading from a room to outside
@@ -266,7 +264,7 @@ namespace Subsurface
                 UpdateRoomToRoom(deltaTime);
             }
 
-            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, 0.1f);
+            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, 0.05f);
 
             if (FlowForce.Length() > 150.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {
