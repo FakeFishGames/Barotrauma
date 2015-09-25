@@ -116,12 +116,7 @@ namespace Subsurface
                 item.body.Enabled = false;
             }
 
-
-            if (createNetworkEvent)
-            {
-                int[] data = { item.ID, i };
-                new NetworkEvent(NetworkEventType.InventoryUpdate, ID, true, data);
-            }
+            if (createNetworkEvent) new NetworkEvent(NetworkEventType.InventoryUpdate, ID, true);            
         }
 
         public void RemoveItem(Item item)
@@ -273,47 +268,56 @@ namespace Subsurface
 
         public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
-            int[] dataArray = data as int[];
-            if (dataArray == null || dataArray.Length<2)
+            for (int i = 0; i<capacity; i++)
             {
-                message.Write(-1);
-                return;
+                message.Write((items[i] == null) ? -1 : items[i].ID);
             }
-            //item id
-            message.Write(dataArray[0]);
-            //index of the slot which the item was moved to
-            message.Write(dataArray[1]);
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            int itemId=-1, slotIndex = -1;
-
+            int[] newItemIDs = new int[capacity];
+                        
             try
             {
-                itemId = message.ReadInt32();
-                slotIndex = message.ReadInt32();
+                for (int i = 0; i<capacity; i++)
+                {
+                    newItemIDs[i] = message.ReadInt32();
+                }
             }
             catch
             {
                 return;
             }
 
-            if (itemId == -1) return;
-
-            Item item = FindEntityByID(itemId) as Item;
-            if (item == null) return;
-
-            System.Diagnostics.Debug.WriteLine("Inventory update: "+itemId+"  -  "+slotIndex);
-
-            if (slotIndex==-1)
+            for (int i = 0; i < capacity; i++)
             {
-                if (item.inventory == this) item.Drop();
+                if (newItemIDs[i] == -1)
+                {
+                    if (items[i] == null) continue;
+
+                    items[i].Drop(null, false);
+                    continue;
+                }
+
+                Item item = FindEntityByID(newItemIDs[i]) as Item;
+                if (item == null) continue;
+
+                TryPutItem(item, i, false);
             }
-            else
-            {
-                TryPutItem(item, slotIndex, false);
-            }
+
+
+
+            //System.Diagnostics.Debug.WriteLine("Inventory update: "+itemId+"  -  "+slotIndex);
+
+            //if (slotIndex==-1)
+            //{
+            //    if (item.inventory == this) item.Drop();
+            //}
+            //else
+            //{
+            //    TryPutItem(item, slotIndex, false);
+            //}
 
 
         }

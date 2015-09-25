@@ -29,6 +29,7 @@ namespace Subsurface.Particles
         public readonly float GrowTime;
 
         public readonly bool DeleteOnCollision;
+        public readonly bool CollidesWithWalls;
 
         public readonly Vector2 VelocityChange;
 
@@ -100,6 +101,7 @@ namespace Subsurface.Particles
             StartAlpha = ToolBox.GetAttributeFloat(element, "startalpha", 1.0f);
 
             DeleteOnCollision = ToolBox.GetAttributeBool(element, "deleteoncollision", false);
+            CollidesWithWalls = ToolBox.GetAttributeBool(element, "collideswithwalls", false); 
 
             ColorChange = ToolBox.GetAttributeVector4(element, "colorchange", Vector4.Zero);
 

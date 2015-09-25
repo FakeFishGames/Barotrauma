@@ -68,7 +68,7 @@ namespace Subsurface
             float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, displayPosition)/2.0f;
             GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist)/displayRange, 0.0f);
             
-            if (attack.StructureDamage > 0.0f)
+            if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
                 List<Structure> structureList = new List<Structure>();
             
@@ -91,10 +91,12 @@ namespace Subsurface
                     for (int i = 0; i < structure.SectionCount; i++)
                     {
                         float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i), displayPosition) / displayRange);
-                        if (distFactor > 0.0f) structure.AddDamage(i, attack.StructureDamage*distFactor);
+                        if (distFactor > 0.0f) structure.AddDamage(i, attack.GetStructureDamage(1.0f)*distFactor);
                     }
                 }
             }
+
+            if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
 
             foreach (Character c in Character.CharacterList)
             {
@@ -109,7 +111,7 @@ namespace Subsurface
                     distFactor = 1.0f - Vector2.Distance(limb.SimPosition, simPosition)/attack.Range;
                     
                     c.AddDamage(limb.SimPosition, DamageType.None, 
-                        attack.Damage / c.AnimController.Limbs.Length * distFactor, 0.0f, attack.Stun * distFactor, true);
+                        attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 0.0f, attack.Stun * distFactor, true);
                     if (force>0.0f)
                     {
                         limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.SimPosition - simPosition) * distFactor * force);

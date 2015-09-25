@@ -487,10 +487,17 @@ namespace Subsurface
                 message.Write(wallAttackPos.Y);
             }
 
+            //message.Write(Velocity.X);
+            //message.Write(Velocity.Y);
+
+            //message.Write(Character.AnimController.RefLimb.SimPosition.X);
+            //message.Write(Character.AnimController.RefLimb.SimPosition.Y);
+
+
             message.Write(MathUtils.AngleToByte(steeringManager.WanderAngle));
-            message.WriteRangedSingle(MathHelper.Clamp(updateTargetsTimer,0.0f, UpdateTargetsInterval), 0.0f, UpdateTargetsInterval, 8);
-            message.WriteRangedSingle(MathHelper.Clamp(raycastTimer, 0.0f, RaycastInterval), 0.0f, RaycastInterval, 8);
-            message.WriteRangedSingle(MathHelper.Clamp(coolDownTimer, 0.0f, attackCoolDown * 2.0f), 0.0f, attackCoolDown * 2.0f, 8);
+            //message.WriteRangedSingle(MathHelper.Clamp(updateTargetsTimer,0.0f, UpdateTargetsInterval), 0.0f, UpdateTargetsInterval, 8);
+            //message.WriteRangedSingle(MathHelper.Clamp(raycastTimer, 0.0f, RaycastInterval), 0.0f, RaycastInterval, 8);
+            //message.WriteRangedSingle(MathHelper.Clamp(coolDownTimer, 0.0f, attackCoolDown * 2.0f), 0.0f, attackCoolDown * 2.0f, 8);
 
             message.Write(targetEntity==null ? -1 : (targetEntity as Entity).ID);
         }
@@ -501,6 +508,10 @@ namespace Subsurface
             Vector2 newWallAttackPos = Vector2.Zero;
             float wanderAngle;
             float updateTargetsTimer, raycastTimer, coolDownTimer;
+
+            Vector2 newVelocity = Vector2.Zero;
+
+            Vector2 targetPosition = Vector2.Zero;
 
             int targetID;
 
@@ -516,10 +527,14 @@ namespace Subsurface
                     newWallAttackPos = new Vector2(message.ReadFloat(), message.ReadFloat());
                 }
 
+                //newVelocity = new Vector2(message.ReadFloat(), message.ReadFloat());
+
+                //targetPosition = new Vector2(message.ReadFloat(), message.ReadFloat());   
+
                 wanderAngle = MathUtils.ByteToAngle(message.ReadByte());
-                updateTargetsTimer = message.ReadRangedSingle(0.0f, UpdateTargetsInterval, 8);
-                raycastTimer = message.ReadRangedSingle(0.0f, RaycastInterval, 8);
-                coolDownTimer = message.ReadRangedSingle(0.0f, attackCoolDown*2.0f, 8);
+                //updateTargetsTimer = message.ReadRangedSingle(0.0f, UpdateTargetsInterval, 8);
+                //raycastTimer = message.ReadRangedSingle(0.0f, RaycastInterval, 8);
+                //coolDownTimer = message.ReadRangedSingle(0.0f, attackCoolDown*2.0f, 8);
 
                 targetID = message.ReadInt32();
             }
@@ -529,9 +544,9 @@ namespace Subsurface
             wallAttackPos = newWallAttackPos;
 
             steeringManager.WanderAngle = wanderAngle;
-            this.updateTargetsTimer = updateTargetsTimer;
-            this.raycastTimer = raycastTimer;
-            this.coolDownTimer = coolDownTimer;
+            //this.updateTargetsTimer = updateTargetsTimer;
+            //this.raycastTimer = raycastTimer;
+            //this.coolDownTimer = coolDownTimer;
 
             if (targetID > -1)
                 targetEntity = Entity.FindEntityByID(targetID) as IDamageable;            

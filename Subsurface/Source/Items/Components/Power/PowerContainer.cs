@@ -52,8 +52,9 @@ namespace Subsurface.Items.Components
             get { return rechargeSpeed; }
             set
             {
-                if (float.IsNaN(value)) return;
+                if (float.IsNaN(value)) return;                
                 rechargeSpeed = MathHelper.Clamp(value, 0.0f, maxRechargeSpeed);
+                rechargeSpeed = MathUtils.Round(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.1f, 1.0f));
             }
         }
 
@@ -194,38 +195,38 @@ namespace Subsurface.Items.Components
                 new Vector2(x + 30, y + 30), Color.White);
 
             spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (rechargeSpeed / maxRechargeSpeed), new Vector2(x + 30, y + 100), Color.White);
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 50, y + 150, 40, 40), "+", true))
-            {                
-               rechargeSpeed = Math.Min(rechargeSpeed + 10.0f, maxRechargeSpeed);
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 50, y + 150, 40, 40), "+"))
+            {
+               rechargeSpeed = Math.Min(rechargeSpeed + maxRechargeSpeed*0.1f, maxRechargeSpeed);
                item.NewComponentEvent(this, true);
             }
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 150, 40, 40), "-", true))
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 150, 40, 40), "-"))
             {
-                rechargeSpeed = Math.Max(rechargeSpeed - 10.0f, 0.0f);
+                rechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);                
                 item.NewComponentEvent(this, true);
             }
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
-            message.Write(rechargeSpeed);
+            message.Write((byte)((int)(rechargeSpeed/maxRechargeSpeed*255.0f)));
             message.Write(charge);
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
         {
-            float newRechargeSpeed = 0.0f;
+            byte newRechargeSpeed = 0;
             float newCharge = 0.0f;
 
             try
             {
-                newRechargeSpeed = message.ReadFloat();
+                newRechargeSpeed = message.ReadByte();
                 newCharge = message.ReadFloat();
             }
             catch { }
 
-            RechargeSpeed = newRechargeSpeed;
+            RechargeSpeed = (newRechargeSpeed/255.0f)*maxRechargeSpeed;
             Charge = newCharge;
         }
 

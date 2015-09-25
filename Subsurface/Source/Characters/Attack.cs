@@ -39,9 +39,9 @@ namespace Subsurface
 
         public readonly DamageType DamageType;
 
-        public readonly float StructureDamage;
-        public readonly float Damage;
-        public readonly float BleedingDamage;
+        private readonly float structureDamage;
+        private readonly float damage;
+        private readonly float bleedingDamage;
 
         private Sound sound;
 
@@ -50,6 +50,21 @@ namespace Subsurface
         public readonly float Stun;
 
         private float priority;
+
+        public float GetDamage(float deltaTime)
+        {
+            return (Duration == 0.0f) ? damage : damage * deltaTime;
+        }
+
+        public float GetBleedingDamage(float deltaTime)
+        {
+            return (Duration == 0.0f) ? bleedingDamage : bleedingDamage * deltaTime;
+        }
+
+        public float GetStructureDamage(float deltaTime)
+        {
+            return (Duration == 0.0f) ? structureDamage : structureDamage * deltaTime;
+        }
 
 
         //public Attack(AttackType type, float range,)
@@ -78,9 +93,9 @@ namespace Subsurface
             }
 
 
-            Damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
-            StructureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
-            BleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
+            damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
+            structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
+            bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
 
             Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
@@ -110,28 +125,25 @@ namespace Subsurface
 
             if (target as Character == null)
             {
-                damageAmount = StructureDamage;
+                damageAmount = structureDamage;
 
             }
             else
             {
-                damageAmount = Damage;
+                damageAmount = damage;
             }
-
-            if (Duration > 0.0f) damageAmount *= deltaTime;
-            float bleedingAmount = (Duration == 0.0f) ? BleedingDamage : BleedingDamage * deltaTime;
 
             if (particleEmitterPrefab != null)
             {
                 particleEmitterPrefab.Emit(position);
             }
 
-            if (sound!=null)
+            if (sound != null)
             {
                 sound.Play(1.0f, 500.0f, position);
             }
 
-            return target.AddDamage(attacker, position, this, playSound);
+            return target.AddDamage(attacker, position, this, deltaTime, playSound);
 
         }
     }

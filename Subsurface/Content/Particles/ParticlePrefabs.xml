@@ -5,10 +5,10 @@
     sizechangemin="0.9,0.9" sizechangemax="1.2,1.2"
     startrotationmin ="0.0" startrotationmax="360"
     startcolor="1.0, 1.0, 1.0" startalpha="0.8"
-    colorchange="0.0, 0.0, 0.0, -0.25"
-    lifetime="3"
+    colorchange="0.0, 0.0, 0.0, -0.8"
+    lifetime="2"
     growtime ="0.2"
-    deleteoncollision="true"
+    collideswithwalls="true"
     velocitychange="0.0, -9.8">
     <sprite texture="Content/Particles/spatter.png"/>
   </watersplash>
@@ -111,7 +111,7 @@
     lifetime="5.0"
     growtime ="0.05"
     drawtarget="air"
-    deleteoncollision="true"
+    collideswithwalls="true"
     velocitychange="0.0, 0.5">
     <sprite texture="Content/Particles/explosion.png" sourcerect="0,0,128,128"/>
   </explosionfire>

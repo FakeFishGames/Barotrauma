@@ -21,6 +21,10 @@ namespace Subsurface
         public float damage;
         public Gap gap;
 
+        public float lastSentDamage;
+
+        public float lastUpdate;
+
         public bool isHighLighted;
         
         public WallSection(Rectangle rect)
@@ -412,7 +416,7 @@ namespace Subsurface
                 sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
         }
 
-        public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound = false)
+        public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
         {
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
@@ -421,23 +425,29 @@ namespace Subsurface
             
             GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 
+            float damageAmount = attack.GetStructureDamage(deltaTime);
+
             if (playSound && !SectionHasHole(i))
             {
                 DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
-                AmbientSoundManager.PlayDamageSound(damageSoundType, attack.Damage, position);
+                AmbientSoundManager.PlayDamageSound(damageSoundType, damageAmount, position);
             }
 
-            AddDamage(i, attack.Damage);
+            AddDamage(i, damageAmount);
 
-            return new AttackResult(attack.Damage, 0.0f);
+            return new AttackResult(damageAmount, 0.0f);
         }
 
         private void SetDamage(int sectionIndex, float damage)
         {
             if (!prefab.HasBody) return;
 
-            if (damage != sections[sectionIndex].damage)
+            if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage)>5.0f)
+            {
                 new NetworkEvent(NetworkEventType.UpdateEntity, ID, false, sectionIndex);
+                sections[sectionIndex].lastSentDamage = damage;
+
+            }
             
             if (damage < prefab.MaxHealth*0.5f)
             {
@@ -637,6 +647,7 @@ namespace Subsurface
                 return;
             }
 
+            message.Write((float)NetTime.Now);
             message.Write(byteIndex);
             message.Write(sections[sectionIndex].damage);
         }
@@ -645,9 +656,11 @@ namespace Subsurface
         {
             int sectionIndex = 0;
             float damage = 0.0f;
+            float updateTime = 0.0f;
 
             try
             {
+                updateTime = message.ReadFloat();
                 sectionIndex = message.ReadByte();
                 damage = message.ReadFloat();
             }
@@ -656,6 +669,9 @@ namespace Subsurface
                 return;
             }
 
+            if (sections[sectionIndex].lastUpdate != 0.0f && updateTime < sections[sectionIndex].lastUpdate) return;
+
+            sections[sectionIndex].lastUpdate = updateTime;
             SetDamage(sectionIndex, damage);
             
         }

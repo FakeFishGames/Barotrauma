@@ -844,9 +844,9 @@ namespace Subsurface
             }
         }
 
-        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 simPosition, Attack attack, bool playSound = false)
+        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 simPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            return AddDamage(simPosition, attack.DamageType, attack.Damage, attack.BleedingDamage, attack.Stun, playSound);
+            return AddDamage(simPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
         }
 
         public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
@@ -855,7 +855,6 @@ namespace Subsurface
 
             if (controlled == this) CharacterHUD.TakeDamage();
             
-
             Limb closestLimb = null;
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)

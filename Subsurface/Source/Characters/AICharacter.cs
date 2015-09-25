@@ -59,9 +59,9 @@ namespace Subsurface
             aiController.Update(deltaTime);
         }
 
-        public override AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, bool playSound = false)
+        public override AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
         {
-            AttackResult result = base.AddDamage(attacker, position, attack, playSound);
+            AttackResult result = base.AddDamage(attacker, position, attack, deltaTime, playSound);
 
             aiController.OnAttacked(attacker, (result.Damage + result.Bleeding)/Math.Max(health,1.0f));
 
@@ -106,6 +106,9 @@ namespace Subsurface
             {
                 message.Write(AnimController.RefLimb.SimPosition.X);
                 message.Write(AnimController.RefLimb.SimPosition.Y);
+
+                message.Write(AnimController.RefLimb.LinearVelocity.X);
+                message.Write(AnimController.RefLimb.LinearVelocity.Y);
 
                 LargeUpdateTimer = Math.Max(0, LargeUpdateTimer - 1);
             }
@@ -201,19 +204,21 @@ namespace Subsurface
             }
             else
             {
-                Vector2 pos = Vector2.Zero;
+                Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
                 try
                 {
                     pos.X = message.ReadFloat();
                     pos.Y = message.ReadFloat();
+
+                    vel.X = message.ReadFloat();
+                    vel.Y = message.ReadFloat();
                 }
 
                 catch { return; }
 
 
-                Limb torso = AnimController.GetLimb(LimbType.Torso);
-                if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
-                torso.body.TargetPosition = pos;
+                AnimController.RefLimb.body.TargetPosition = pos;
+                AnimController.RefLimb.body.TargetVelocity = vel;
 
                 LargeUpdateTimer = 0;
             }

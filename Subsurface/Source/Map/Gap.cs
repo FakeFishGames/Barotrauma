@@ -10,6 +10,8 @@ namespace Subsurface
 {
     class Gap : MapEntity
     {
+        public static List<Gap> GapList = new List<Gap>();
+
         public bool isHorizontal;
 
         //private Sound waterSound;
@@ -53,21 +55,8 @@ namespace Subsurface
         }
 
         public Gap(Rectangle newRect)
+            : this(newRect, (newRect.Width < newRect.Height))
         {
-            rect = newRect;
-            linkedTo = new ObservableCollection<MapEntity>();
-
-            //waterSound = new Sound("waterstream", 0.0f);
-
-            flowForce = Vector2.Zero;
-
-            isHorizontal = (rect.Width < rect.Height);
-
-            open = 1.0f;
-
-            FindHulls();
-
-            mapEntityList.Add(this);
         }
 
         public Gap(Rectangle newRect, bool isHorizontal)
@@ -83,15 +72,15 @@ namespace Subsurface
 
             FindHulls();
 
+            GapList.Add(this);
             mapEntityList.Add(this);
         }
 
         public static void UpdateHulls()
         {
-            foreach (MapEntity entity in mapEntityList)
+            foreach (Gap g in Gap.GapList)
             {
-                Gap g = entity as Gap;
-                if (g != null) g.FindHulls();
+                g.FindHulls();
             }
         }
 
@@ -273,17 +262,19 @@ namespace Subsurface
                 Vector2 pos = Position;
                 if (isHorizontal)
                 {
-                    pos.Y = MathHelper.Clamp(lowerSurface, rect.Y - rect.Height, rect.Y);
+                    pos.X += Math.Sign(flowForce.X);
+                    pos.Y = MathHelper.Clamp((higherSurface+lowerSurface)/2.0f, rect.Y - rect.Height, rect.Y);
+
+                    Vector2 velocity = new Vector2(
+                        MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
+                        flowForce.Y * Rand.Range(0.5f, 0.7f));
 
                     var particle = GameMain.ParticleManager.CreateParticle("watersplash",
-                        new Vector2(pos.X, pos.Y - Rand.Range(0.0f, 10.0f)),
-                        new Vector2(
-                            MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
-                            flowForce.Y * Rand.Range(0.5f, 0.7f)));
+                        new Vector2(pos.X, pos.Y - Rand.Range(0.0f, 10.0f)), velocity);
+
                     if (particle != null)
                     {
                         particle.Size = particle.Size * Math.Abs(flowForce.X / 1000.0f);
-
                     }
 
                     pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
@@ -296,8 +287,13 @@ namespace Subsurface
                     for (int i = 0; i < rect.Width; i += (int)Rand.Range(80, 100))
                     {
                         pos.X = Rand.Range(rect.X, rect.X + rect.Width);
-                        Subsurface.Particles.Particle splash = GameMain.ParticleManager.CreateParticle("watersplash", pos,
-                            new Vector2(0, Math.Max(flowForce.Y * Rand.Range(0.5f, 0.8f), 0.0f)));
+
+                        Vector2 velocity = new Vector2(
+                            flowForce.X * Rand.Range(0.5f, 0.7f), 
+                            Math.Max(flowForce.Y,-100.0f) * Rand.Range(0.5f, 0.7f));
+                        
+                        var splash = GameMain.ParticleManager.CreateParticle("watersplash", pos,
+                            velocity);
 
                         if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 
@@ -327,7 +323,7 @@ namespace Subsurface
             //horizontal gap (such as a regular door)
             if (isHorizontal)
             {
-                //higherSurface = Math.Min(hull1.Surface,hull2.Surface);
+                higherSurface = Math.Max(hull1.Surface,hull2.Surface);
                     float delta=0.0f;                
                 //water level is above the lower boundary of the gap
                 if (Math.Max(hull1.Surface+hull1.WaveY[hull1.WaveY.Length - 1], hull2.Surface+hull2.WaveY[0]) > rect.Y - size)
@@ -453,6 +449,8 @@ namespace Subsurface
 
                     flowForce = new Vector2(0.0f,-delta);
 
+                    flowForce.X = hull1.WaveY[hull1.GetWaveIndex(rect.X)] - hull1.WaveY[hull1.GetWaveIndex(rect.Right)] * 10.0f;
+
                     //if (water2.Volume < water2.FullVolume - Hull.MaxCompress)
                     //{
                     //    int posX = (int)((rect.X + size / 2.0f - water1.Rect.X) / Hull.WaveWidth);
@@ -568,6 +566,8 @@ namespace Subsurface
         public override void Remove()
         {
             base.Remove();
+
+            GapList.Remove(this);
 
             if (soundIndex > -1) Sounds.SoundManager.Stop(soundIndex);
         }

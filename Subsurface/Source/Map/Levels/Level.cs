@@ -417,7 +417,7 @@ int currentTargetIndex = 1;
                     }
                     if (allowedEdges.Count==0)
                     {
-                        edgeIndex = 0;
+                        edgeIndex = rand.Next() % currentCell.edges.Count;
                     }
                     else
                     {

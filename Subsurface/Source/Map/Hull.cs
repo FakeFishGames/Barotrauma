@@ -48,6 +48,8 @@ namespace Subsurface
         float[] leftDelta;
         float[] rightDelta;
 
+        float lastSentVolume;
+
         public override bool IsLinkable
         {
             get { return true; }
@@ -73,7 +75,8 @@ namespace Subsurface
         {
             get { return volume; }
             set
-            {               
+            {
+                if (!MathUtils.IsValid(value)) return;
                 volume = MathHelper.Clamp(value, 0.0f, FullVolume + MaxCompress);
                 if (volume < FullVolume) Pressure = rect.Y - rect.Height + volume / rect.Width;
                 if (volume > 0.0f) update = true;
@@ -155,8 +158,13 @@ namespace Subsurface
 
         public int GetWaveIndex(Vector2 position)
         {
-            int index = (int)(position.X - rect.X) / WaveWidth;
-            index = (int)MathHelper.Clamp(index, 0, waveY.Length-1);
+            return GetWaveIndex(position.X);
+        }
+
+        public int GetWaveIndex(float xPos)
+        {
+            int index = (int)(xPos - rect.X) / WaveWidth;
+            index = (int)MathHelper.Clamp(index, 0, waveY.Length - 1);
             return index;
         }
 
@@ -202,6 +210,12 @@ namespace Subsurface
                 }
             }
 
+            //update client hulls if the amount of water has changed by >10%
+            if (Math.Abs(lastSentVolume-volume)>FullVolume*0.1f)
+            {
+                new Networking.NetworkEvent(ID, false);
+                lastSentVolume = volume;
+            }
 
             if (!update) return;
 
@@ -254,9 +268,9 @@ namespace Subsurface
                 }
             }
 
-            if (volume<FullVolume)
+            if (volume < FullVolume)
             {
-                LethalPressure -= 0.5f;
+                LethalPressure -= 10.0f * deltaTime;
                 if (Volume == 0.0f)
                 {
                     for (int i = 1; i < waveY.Length - 1; i++)
@@ -268,7 +282,7 @@ namespace Subsurface
             }
             else
             {
-                LethalPressure += 1.0f;
+                LethalPressure += 10.0f * deltaTime;
             }
 
 
@@ -402,12 +416,17 @@ namespace Subsurface
         //returns the water block which contains the point (or null if it isn't inside any)
         public static Hull FindHull(Vector2 position, Hull guess = null)
         {
-            if (guess != null && hullList.Contains(guess))
+            return FindHull(position, hullList, guess);
+        }
+
+        public static Hull FindHull(Vector2 position, List<Hull> hulls, Hull guess = null)
+        {
+            if (guess != null && hulls.Contains(guess))
             {
                 if (Submarine.RectContains(guess.rect, position)) return guess;
             }
 
-            foreach (Hull w in hullList)
+            foreach (Hull w in hulls)
             {
                 if (Submarine.RectContains(w.rect, position)) return w;
             }
@@ -444,6 +463,28 @@ namespace Subsurface
             h.volume = ToolBox.GetAttributeFloat(element, "pressure", 0.0f);
 
             h.ID = int.Parse(element.Attribute("ID").Value);
+        }
+
+        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message, object data)
+        {
+            message.Write(volume);
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        {
+            float newVolume = this.volume;
+
+            try
+            {
+                newVolume = message.ReadFloat();
+            }
+
+            catch
+            {
+                return;
+            }
+
+            Volume = newVolume;
         }
     
 

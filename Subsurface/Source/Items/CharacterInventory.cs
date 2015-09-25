@@ -153,6 +153,7 @@ namespace Subsurface
                 if (items[i].Combine(item))
                 {
                     //PutItem(items[i], i, false, false);
+                    new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, items[i].ID, true);
                     combined = true;
                 }
 
@@ -186,7 +187,6 @@ namespace Subsurface
                 {
                     return false;
                 }
-
             }
             else
             {
@@ -276,6 +276,8 @@ namespace Subsurface
                 else
                 {                    
                     DropItem(draggingItem);
+
+                    new Networking.NetworkEvent(Subsurface.Networking.NetworkEventType.DropItem, draggingItem.ID, true);
                     //draggingItem = null;
                 }
             }                       
