@@ -152,7 +152,7 @@ namespace Subsurface.Items.Components
 
                 if (PlayerInput.LeftButtonDown())
                 {
-                    targetVelocity = PlayerInput.MousePosition - new Vector2(velRect.Center.X, velRect.Center.Y);
+                    TargetVelocity = PlayerInput.MousePosition - new Vector2(velRect.Center.X, velRect.Center.Y);
                     targetVelocity.Y = -targetVelocity.Y;
 
                     valueChanged = true;

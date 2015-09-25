@@ -176,6 +176,8 @@ namespace Subsurface
 
                     lowpassHFGain = 0.2f;
                 }
+
+                lowpassHFGain *= Character.Controlled.LowPassMultiplier;
             }
 
             //how fast the sub is moving, scaled to 0.0 -> 1.0

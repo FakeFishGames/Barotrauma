@@ -117,7 +117,14 @@ namespace Subsurface.Particles
                 {
                     if (gap.isHorizontal != isHorizontal) continue;
                     if (gap.Open < 0.01f) continue;
-                    if (gap.linkedTo[0]==currentHull && gap.linkedTo[1]!=null)
+                    if (gap.linkedTo.Count==1)
+                    {
+                        if (!adjacentHulls.Contains(gap.linkedTo[0] as Hull))
+                        {
+                            adjacentHulls.Add(gap.linkedTo[0] as Hull);
+                        }
+                    }
+                    else if (gap.linkedTo[0] == currentHull && gap.linkedTo[1] != null)
                     {
                         if (!adjacentHulls.Contains(gap.linkedTo[1] as Hull))
                         {

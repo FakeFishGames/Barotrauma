@@ -414,11 +414,22 @@ namespace Subsurface
                 Vector2 origin = wearingItemSprite.Sprite.Origin;
                 if (body.Dir == -1.0f) origin.X = wearingItemSprite.Sprite.SourceRect.Width - origin.X;
 
+                float depth = sprite.Depth - 0.000001f;
+
+                if (wearingItemSprite.DepthLimb==LimbType.None)
+                {
+                    Limb depthLimb = character.AnimController.GetLimb(wearingItemSprite.DepthLimb);
+                    if (depthLimb!=null)
+                    {
+                        depth = depthLimb.sprite.Depth - 0.000001f;
+                    }
+                }
+
                 wearingItemSprite.Sprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     color, origin,
                     -body.DrawRotation,
-                    1.0f, spriteEffect, sprite.Depth - 0.000001f);
+                    1.0f, spriteEffect, depth);
             }
 
             if (!GameMain.DebugDraw) return;

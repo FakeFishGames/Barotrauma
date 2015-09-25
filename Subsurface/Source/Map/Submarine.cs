@@ -532,9 +532,9 @@ namespace Subsurface
                     stream.Dispose();
                 }
 
-                catch
+                catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed!");
+                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed! ("+e.Message+")");
                     return null;
                 }
             }
@@ -545,9 +545,9 @@ namespace Subsurface
                     doc = XDocument.Load(file);
                 }
 
-                catch
+                catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed!");
+                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed! (" + e.Message + ")");
                     return null;
                 }
             }

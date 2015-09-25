@@ -9,11 +9,14 @@ namespace Subsurface.Items.Components
     {
         public Sprite Sprite;
         public bool HideLimb;
+        public LimbType DepthLimb;
 
-        public WearableSprite(Sprite sprite, bool hideLimb)
+        public WearableSprite(Sprite sprite, bool hideLimb, LimbType depthLimb = LimbType.None)
         {
             Sprite = sprite;
             HideLimb = hideLimb;
+
+            DepthLimb = depthLimb;
         }
     }
 
@@ -31,8 +34,8 @@ namespace Subsurface.Items.Components
             var sprites = element.Elements().Where(x => x.Name.ToString() == "sprite").ToList();
             int spriteCount = sprites.Count();
             wearableSprite = new WearableSprite[spriteCount];
-            limbType = new LimbType[spriteCount];
-            limb = new Limb[spriteCount];
+            limbType    = new LimbType[spriteCount];
+            limb        = new Limb[spriteCount];
 
             int i = 0;
             foreach (XElement subElement in sprites)
@@ -53,11 +56,12 @@ namespace Subsurface.Items.Components
                 spritePath = Path.GetDirectoryName( item.Prefab.ConfigFile)+"/"+spritePath;
 
                 var sprite = new Sprite(subElement, "", spritePath);
-                wearableSprite[i] = new WearableSprite(sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false));
-                //sprite[i].origin = new Vector2(sourceRect.Width / 2.0f, sourceRect.Height / 2.0f);
+                wearableSprite[i] = new WearableSprite(sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false),
+                    (LimbType)Enum.Parse(typeof(LimbType),
+                    ToolBox.GetAttributeString(subElement, "depthlimb", "None"), true));
 
                 limbType[i] = (LimbType)Enum.Parse(typeof(LimbType),
-                    ToolBox.GetAttributeString(subElement, "limb", "Head"));
+                    ToolBox.GetAttributeString(subElement, "limb", "Head"), true);                
 
                 i++;
             }

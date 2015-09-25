@@ -59,9 +59,8 @@ namespace Subsurface.Items.Components
             {
                 float hullPercentage = 0.0f;
                 if (hull1 != null) hullPercentage = (hull1.Volume / hull1.FullVolume) * 100.0f;
-                flowPercentage = ((float)targetLevel - hullPercentage);
+                FlowPercentage = ((float)targetLevel - hullPercentage) * 10.0f;
             }
-
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
 
@@ -72,11 +71,8 @@ namespace Subsurface.Items.Components
             float powerFactor = (currPowerConsumption==0.0f) ? 1.0f : voltage;
             //flowPercentage = maxFlow * powerFactor;
 
-            float deltaVolume = 0.0f;
-
-                deltaVolume = (flowPercentage/100.0f) * maxFlow * powerFactor;
+            float deltaVolume = (flowPercentage/100.0f) * maxFlow * powerFactor;
             
-
             hull1.Volume += deltaVolume;
             if (hull1.Volume > hull1.FullVolume) hull1.Pressure += 0.5f;
 
@@ -171,7 +167,7 @@ namespace Subsurface.Items.Components
                 float tempTarget;
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempTarget))
                 {
-                    targetLevel = MathHelper.Clamp(tempTarget, 0.0f, 100.0f);
+                    targetLevel = MathHelper.Clamp((tempTarget+100.0f)/2.0f, 0.0f, 100.0f);
                 }
             }
 
