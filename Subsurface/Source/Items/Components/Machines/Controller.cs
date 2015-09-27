@@ -131,9 +131,9 @@ namespace Subsurface.Items.Components
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            if (character.SelectedConstruction != item)
+            if (activator.SelectedConstruction != item)
             {
-                character = null;
+                activator = null;
                 return false;
             }
 

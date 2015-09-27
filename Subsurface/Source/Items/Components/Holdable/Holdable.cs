@@ -101,7 +101,7 @@ namespace Subsurface.Items.Components
                 Msg = "";
             }
 
-            if (attachedByDefault || Screen.Selected == GameMain.EditMapScreen) Use(1.0f);
+            if (attachedByDefault || (Screen.Selected == GameMain.EditMapScreen && Submarine.Loaded!=null)) Use(1.0f);
 
 
             //holdAngle = ToolBox.GetAttributeFloat(element, "holdangle", 0.0f);

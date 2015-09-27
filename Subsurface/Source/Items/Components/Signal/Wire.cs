@@ -299,7 +299,7 @@ namespace Subsurface.Items.Components
 
                 if (selectedNodeIndex == null && !MapEntity.SelectedAny)
                 {
-                    if (PlayerInput.LeftButtonDown())
+                    if (PlayerInput.LeftButtonDown() && PlayerInput.GetOldMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
                     {
                         MapEntity.SelectEntity(item);
                         selectedNodeIndex = i;

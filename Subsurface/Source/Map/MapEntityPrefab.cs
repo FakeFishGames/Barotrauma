@@ -56,6 +56,12 @@ namespace Subsurface
             get { return resizeVertical; }
         }
 
+        public Color SpriteColor
+        {
+            get;
+            protected set;
+        }
+
         public int Price
         {
             get { return price; }

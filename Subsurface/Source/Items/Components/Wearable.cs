@@ -130,9 +130,13 @@ namespace Subsurface.Items.Components
         {
             base.Update(deltaTime, cam);
 
+            item.SetTransform(picker.SimPosition, 0.0f);
+
             Item[] containedItems = item.ContainedItems;
           
             ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
+
+            PlaySound(ActionType.OnWearing, picker.Position);
 
             if (containedItems == null) return;
             for (int j = 0; j<containedItems.Length; j++)

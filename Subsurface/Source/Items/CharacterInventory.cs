@@ -66,12 +66,14 @@ namespace Subsurface
 
         protected override void DropItem(Item item)
         {
-            bool enabled = draggingItem.body.Enabled;
+            if (item.body == null) return;
+
+            bool enabled = item.body.Enabled;
             item.Drop(character);
 
             if (!enabled)
             {
-                draggingItem.body.SetTransform(character.SimPosition, 0.0f);
+                item.SetTransform(character.SimPosition, 0.0f);
             }
         }
 

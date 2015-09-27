@@ -53,7 +53,6 @@ namespace Subsurface
             }
         }
 
-
         public static bool SelectedAny
         {
             get { return selectedList.Count > 0; }
