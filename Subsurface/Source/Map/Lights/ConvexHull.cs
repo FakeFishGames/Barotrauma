@@ -111,7 +111,7 @@ namespace Subsurface.Lights
             }
         }
 
-        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, bool los = true)
+        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, Matrix transform, bool los = true)
         {
             if (!Enabled) return;
             
@@ -224,8 +224,7 @@ namespace Subsurface.Lights
                 currentIndex = (currentIndex + 1) % primitiveCount;
             }
 
-            shadowEffect.World = cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+            shadowEffect.World = transform;
             shadowEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount * 2 - 2);

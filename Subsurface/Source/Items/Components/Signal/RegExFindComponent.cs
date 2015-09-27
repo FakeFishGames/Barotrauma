@@ -10,6 +10,11 @@ namespace Subsurface.Items.Components
         private string expression;
 
         private string receivedSignal;
+        private string previousReceivedSignal;
+
+        bool previousResult;
+
+        private Regex regex;
 
         [InGameEditable, HasDefaultValue("1", true)]
         public string Output
@@ -22,7 +27,22 @@ namespace Subsurface.Items.Components
         public string Expression
         {
             get { return expression; }
-            set { expression = value; }
+            set 
+            {
+                if (expression == value) return;
+                expression = value; 
+
+                try
+                {
+                    regex = new Regex(@expression);
+                }
+
+                catch
+                {
+                    item.SendSignal("ERROR", "signal_out");
+                    return;
+                }
+            }
         }
 
         public RegExFindComponent(Item item, XElement element)
@@ -33,22 +53,26 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (string.IsNullOrWhiteSpace(expression)) return;
+            if (string.IsNullOrWhiteSpace(expression) || regex==null) return;
 
-            bool success = false;
-            try
+            if (receivedSignal!=previousReceivedSignal)
             {
-                Regex regex = new Regex(@expression);
-                Match match = regex.Match(receivedSignal);
-                success = match.Success;
-            }
-            catch
-            {
-                item.SendSignal("ERROR", "signal_out");
-                return;
+                try
+                {
+                    Match match = regex.Match(receivedSignal);
+                    previousResult =  match.Success;
+
+                }
+                catch
+                {
+                    item.SendSignal("ERROR", "signal_out");
+                    previousResult = false;
+                    return;
+                }
             }
 
-            item.SendSignal(success ? output : "0", "signal_out");
+
+            item.SendSignal(previousResult ? output : "0", "signal_out");
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0.0f)
@@ -57,7 +81,6 @@ namespace Subsurface.Items.Components
             {
                 case "signal_in":
                     receivedSignal = signal;
-
                     break;
                 case "set_output":
                     output = signal;

@@ -326,11 +326,7 @@ namespace Subsurface
 
         public void SetTransform(Vector2 simPosition, float rotation)
         {
-            if (body != null)
-            {
-                body.SetTransform(simPosition, rotation);
-            }
-
+            if (body != null) body.SetTransform(simPosition, rotation);            
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(simPosition);
 
@@ -770,7 +766,7 @@ namespace Subsurface
             foreach (Item item in itemList)
             {
                 if (ignoredItems!=null && ignoredItems.Contains(item)) continue;
-                if (hull != null && item.CurrentHull != hull) continue;
+                if (hull != item.CurrentHull) continue;
                 if (item.body != null && !item.body.Enabled) continue;
 
                 Pickable pickableComponent = item.GetComponent<Pickable>();

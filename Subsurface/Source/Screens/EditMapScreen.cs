@@ -225,7 +225,7 @@ namespace Subsurface
                     }
                 }
 
-                dummyCharacter.ControlLocalPlayer(cam, false);
+                dummyCharacter.ControlLocalPlayer((float)deltaTime, cam);
                 dummyCharacter.Control((float)deltaTime, cam);
             }
             else
@@ -287,6 +287,8 @@ namespace Subsurface
             {
                 if (dummyCharacter != null)                     
                 {
+                    dummyCharacter.AnimController.FindHull(); 
+
                     foreach (Item item in dummyCharacter.SelectedItems)
                     {
                         if (item == null) continue;
@@ -311,10 +313,6 @@ namespace Subsurface
 
                 if (PlayerInput.GetMouseState.LeftButton != ButtonState.Pressed)
                 {
-                    //if (Inventory.draggingItem!=null)
-                    //{
-                    //    Inventory.draggingItem.see
-                    //}
                     Inventory.draggingItem = null;
                 }
             }

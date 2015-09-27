@@ -59,18 +59,24 @@ namespace Subsurface.Lights
         {
             Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
 
+            Matrix shadowTransform = cam.ShaderTransform
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+
             if (!LosEnabled) return;
             foreach (ConvexHull convexHull in ConvexHull.list)
             {
                 if (!camView.Intersects(convexHull.BoundingBox)) continue;
 
-                convexHull.DrawShadows(graphics, cam, pos);
+                convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
             }
 
         }
 
         public void DrawLightmap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
+            Matrix shadowTransform = cam.ShaderTransform
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+
             graphics.SetRenderTarget(lightMap);
 
             Rectangle viewRect = cam.WorldView;
@@ -96,7 +102,7 @@ namespace Subsurface.Lights
                 {
                     if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, ch.BoundingBox)) continue;
                     //draw shadow
-                    ch.DrawShadows(graphics, cam, light.Position, false);
+                    ch.DrawShadows(graphics, cam, light.Position, shadowTransform, false);
                 }
 
                 //draw the light shape
