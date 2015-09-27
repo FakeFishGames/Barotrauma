@@ -120,6 +120,7 @@ namespace Subsurface
                 {
                     GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.Left, frame);
                     img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
+                    img.Color = ep.SpriteColor;
                 }
             }
         }

@@ -157,6 +157,9 @@ namespace Subsurface
 
             offsetOnSelected    = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
 
+            string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");
+            SpriteColor = new Color(ToolBox.ParseToVector4(spriteColorStr));
+
             price = ToolBox.GetAttributeInt(element, "price", 0);
             
             Triggers            = new List<Rectangle>();

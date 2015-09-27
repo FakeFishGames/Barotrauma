@@ -2,6 +2,7 @@
   name="Button"
   type="Controller"  
   linkable="true"
+  tags="smallitem"
   pickdistance="150.0"
   price="10">
 

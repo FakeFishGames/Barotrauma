@@ -11,25 +11,25 @@ namespace Subsurface
     {
         enum PanelTab { Crew = 0, Map = 1, CurrentLocation = 2, Store = 3 }
 
-        GUIFrame leftPanel;
-        GUIFrame[] rightPanel;
+        private GUIFrame leftPanel;
+        private GUIFrame[] rightPanel;
 
-        GUIButton startButton;
+        private GUIButton startButton;
 
-        int selectedRightPanel;
+        private int selectedRightPanel;
 
-        GUIListBox characterList;
-        GUIListBox hireList;
+        private GUIListBox characterList;
+        private GUIListBox hireList;
 
-        GUIListBox selectedItemList, itemList;
+        private GUIListBox selectedItemList, itemList;
 
-        SinglePlayerMode gameMode;
+        private SinglePlayerMode gameMode;
 
-        GUIFrame previewFrame;
+        private GUIFrame previewFrame;
 
-        GUIButton buyButton;
+        private GUIButton buyButton;
 
-        Level selectedLevel;
+        private Level selectedLevel;
 
         float mapZoom = 3.0f;
 
@@ -271,6 +271,7 @@ namespace Subsurface
             if (ep.sprite != null)
             {
                 GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.Left, frame);
+                img.Color = ep.SpriteColor;
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }
         }
@@ -373,8 +374,25 @@ namespace Subsurface
 
         public bool SelectRightPanel(GUIButton button, object selection)
         {
-            try { selectedRightPanel = (int)selection; }
+            try 
+            { 
+                selectedRightPanel =  (int)selection;                
+            }
             catch { return false; }
+
+
+            if (button != null)
+            {
+                button.Selected = true;
+                foreach (GUIComponent child in leftPanel.children)
+                {
+                    GUIButton otherButton = child as GUIButton;
+                    if (otherButton == null || otherButton == button) continue;
+
+                    otherButton.Selected = false;
+                }
+            }
+
             return true;
         }
         

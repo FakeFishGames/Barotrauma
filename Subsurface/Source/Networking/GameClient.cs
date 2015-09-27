@@ -75,6 +75,7 @@ namespace Subsurface.Networking
             client.Start();
 
             outmsg.Write((byte)PacketTypes.Login);
+            outmsg.Write(myID);
             outmsg.Write(password);
             outmsg.Write(GameMain.Version.ToString());
             outmsg.Write(GameMain.SelectedPackage.Name);
@@ -244,6 +245,7 @@ namespace Subsurface.Networking
             
             if (client.ConnectionStatus == NetConnectionStatus.Disconnected)
             {
+                GameMain.NetLobbyScreen.RemovePlayer(myID);
                 if (reconnectBox==null)
                 {
                     reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);

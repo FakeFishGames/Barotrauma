@@ -157,7 +157,8 @@ namespace Subsurface
         {
             base.Select();
 
-            selectedTab = 0;
+            SelectTab(null, 0);
+            //selectedTab = 0;
         }
         
         public bool SelectTab(GUIButton button, object obj)

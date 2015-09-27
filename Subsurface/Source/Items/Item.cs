@@ -27,8 +27,7 @@ namespace Subsurface
         protected ItemPrefab prefab;
 
         private List<string> tags;
-
-
+        
         public Hull CurrentHull;
 
         //components that determine the functionality of the item
@@ -79,6 +78,22 @@ namespace Subsurface
             get { return prefab.PickDistance; }
         }
 
+        protected Color spriteColor;
+        [Editable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
+        public string SpriteColor
+        {
+            get { return ToolBox.Vector4ToString(spriteColor.ToVector4()); }
+            set
+            {
+                spriteColor = new Color(ToolBox.ParseToVector4(value));
+            }
+        }
+
+        public Color Color
+        {
+            get { return spriteColor; }
+        }
+
         public float Condition
         {
             get { return condition; }
@@ -102,22 +117,6 @@ namespace Subsurface
         public float Health
         {
             get { return condition; }
-        }
-
-        private Color spriteColor;
-        [Editable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
-        public string SpriteColor
-        {
-            get { return ToolBox.Vector4ToString(spriteColor.ToVector4()); }
-            set
-            {
-                spriteColor = new Color(ToolBox.ParseToVector4(value));
-            }
-        }
-
-        public Color Color
-        {
-            get { return spriteColor; }
         }
 
         [Editable, HasDefaultValue("", true)]
@@ -242,6 +241,8 @@ namespace Subsurface
         {
             prefab = itemPrefab;
 
+            spriteColor = prefab.SpriteColor;
+
             linkedTo        = new ObservableCollection<MapEntity>();
             components      = new List<ItemComponent>();
             FixRequirements = new List<FixRequirement>();
@@ -323,11 +324,15 @@ namespace Subsurface
         }
 
 
-        public void SetTransform(Vector2 position, float rotation)
+        public void SetTransform(Vector2 simPosition, float rotation)
         {
-            body.SetTransform(position, rotation);
+            if (body != null)
+            {
+                body.SetTransform(simPosition, rotation);
+            }
 
-            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(simPosition);
 
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);

@@ -13,6 +13,10 @@ namespace Subsurface.Networking
 
         public List<Client> connectedClients = new List<Client>();
 
+        //for keeping track of disconnected clients in case the reconnect shortly after
+        private List<Client> disconnectedClients = new List<Client>();
+
+        //is the server running
         bool started;
 
         private NetServer server;
@@ -29,10 +33,6 @@ namespace Subsurface.Networking
         private bool registeredToMaster;
 
         private string password;
-
-       // private Client myClient;
-
-        //private CharacterInfo myCharacter;
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
@@ -217,6 +217,13 @@ namespace Subsurface.Networking
                 inGameHUD.Update((float)Physics.step);
             }
 
+            for (int i = disconnectedClients.Count - 1; i >= 0; i-- )
+            {
+                disconnectedClients[i].deleteDisconnectedTimer -= deltaTime;
+                if (disconnectedClients[i].deleteDisconnectedTimer > 0.0f) continue;
+                disconnectedClients.RemoveAt(i);
+            }
+
             NetIncomingMessage inc = server.ReadMessage();
             if (inc != null)
             {
@@ -282,80 +289,7 @@ namespace Subsurface.Networking
             switch (inc.MessageType)
             {
                 case NetIncomingMessageType.ConnectionApproval:
-                    if (inc.ReadByte() != (byte)PacketTypes.Login) break;
-                    
-                    DebugConsole.NewMessage("New player has joined the server", Color.White);
-
-                    
-                    Client existingClient = connectedClients.Find(c=> c.Connection == inc.SenderConnection);
-                    if (existingClient==null)
-                    {
-                        string userPassword = "", version = "", packageName="", packageHash="", name = "";
-                        try
-                        {
-                            userPassword    = inc.ReadString();
-                            version     = inc.ReadString();
-                            packageName = inc.ReadString();
-                            packageHash = inc.ReadString();
-                            name        = inc.ReadString();
-                        }
-                        catch
-                        {
-                            inc.SenderConnection.Deny("Connection error - server failed to read your ConnectionApproval message");
-                            DebugConsole.NewMessage("Connection error - server failed to read the ConnectionApproval message", Color.Red);
-                            break;
-                        }
-
-                        if (userPassword != password)
-                        {
-                            inc.SenderConnection.Deny("Wrong password!");
-                            
-                            break;
-                        }
-                        else if (version != GameMain.Version.ToString())
-                        {
-                            inc.SenderConnection.Deny("Subsurface version " + GameMain.Version + " required to connect to the server (Your version: " + version + ")");
-                            DebugConsole.NewMessage("Connection error - wrong game version", Color.Red);
-                            break;
-                        } 
-                        else if (packageName != GameMain.SelectedPackage.Name)
-                        {
-                            inc.SenderConnection.Deny("Your content package ("+packageName+") doesn't match the server's version (" + GameMain.SelectedPackage.Name + ")");
-                            DebugConsole.NewMessage("Connection error - wrong content package name", Color.Red);
-                            break;
-                        }
-                        else if (packageHash != GameMain.SelectedPackage.MD5hash.Hash)
-                        {
-                            inc.SenderConnection.Deny("Your content package (MD5: " + packageHash + ") doesn't match the server's version (MD5: " + GameMain.SelectedPackage.MD5hash.Hash + ")");
-                            DebugConsole.NewMessage("Connection error - wrong content package hash", Color.Red);
-                            break;
-                        } 
-                        else if (connectedClients.Find(c => c.name.ToLower() == name.ToLower())!=null)
-                        {
-                            inc.SenderConnection.Deny("The name ''" + name + "'' is already in use. Please choose another name.");
-                            DebugConsole.NewMessage("Connection error - name already in use", Color.Red);
-                            break;
-                        }
-
-                        int id = 1;
-                        while (connectedClients.Find(c => c.ID==id)!=null)
-                        {
-                            id++;
-                        }
-                        Client newClient = new Client(name, id);
-                        newClient.Connection = inc.SenderConnection;
-                        newClient.version = version;
-
-                        connectedClients.Add(newClient);
-                        
-                        inc.SenderConnection.Approve();
-                    }
-                    else
-                    {
-                        inc.SenderConnection.Deny();
-                    }
-                    //Character ch = new Character("Content/Characters/Human/human.xml");
-
+                    HandleConnectionApproval(inc);
                     break;
                 case NetIncomingMessageType.StatusChanged:
                     Debug.WriteLine(inc.SenderConnection + " status changed. " + (NetConnectionStatus)inc.SenderConnection.Status);
@@ -424,6 +358,13 @@ namespace Subsurface.Networking
                     }
                     else if (inc.SenderConnection.Status == NetConnectionStatus.Disconnected)
                     {
+                        var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
+                        if (connectedClient != null && !disconnectedClients.Contains(connectedClient))
+                        {
+                            connectedClient.deleteDisconnectedTimer = NetConfig.DeleteDisconnectedTime;
+                            disconnectedClients.Add(connectedClient);
+                        }
+
                         DisconnectClient(inc.SenderConnection);
                     }
                     
@@ -476,6 +417,104 @@ namespace Subsurface.Networking
             }
         }
 
+        private void HandleConnectionApproval(NetIncomingMessage inc)
+        {
+            if (inc.ReadByte() != (byte)PacketTypes.Login) return;
+
+            DebugConsole.NewMessage("New player has joined the server", Color.White);
+            
+            if (connectedClients.Find(c => c.Connection == inc.SenderConnection)!=null)
+            {
+                inc.SenderConnection.Deny("Connection error - already joined");
+                return;
+            }
+
+            int userID;
+            string userPassword = "", version = "", packageName = "", packageHash = "", name = "";
+            try
+            {
+                userID = inc.ReadInt32();
+                userPassword = inc.ReadString();
+                version = inc.ReadString();
+                packageName = inc.ReadString();
+                packageHash = inc.ReadString();
+                name = inc.ReadString();
+            }
+            catch
+            {
+                inc.SenderConnection.Deny("Connection error - server failed to read your ConnectionApproval message");
+                DebugConsole.NewMessage("Connection error - server failed to read the ConnectionApproval message", Color.Red);
+                return;
+            }
+
+            if (userPassword != password)
+            {
+                inc.SenderConnection.Deny("Wrong password!");
+                DebugConsole.NewMessage(name +" couldn't join the server (wrong password)", Color.Red);
+                return;
+            }
+            else if (version != GameMain.Version.ToString())
+            {
+                inc.SenderConnection.Deny("Subsurface version " + GameMain.Version + " required to connect to the server (Your version: " + version + ")");
+                DebugConsole.NewMessage(name + " couldn't join the server (wrong game version)", Color.Red);
+                return;
+            }
+            else if (packageName != GameMain.SelectedPackage.Name)
+            {
+                inc.SenderConnection.Deny("Your content package (" + packageName + ") doesn't match the server's version (" + GameMain.SelectedPackage.Name + ")");
+                DebugConsole.NewMessage(name + " couldn't join the server (wrong content package name)", Color.Red);
+                return;
+            }
+            else if (packageHash != GameMain.SelectedPackage.MD5hash.Hash)
+            {
+                inc.SenderConnection.Deny("Your content package (MD5: " + packageHash + ") doesn't match the server's version (MD5: " + GameMain.SelectedPackage.MD5hash.Hash + ")");
+                DebugConsole.NewMessage(name + " couldn't join the server (wrong content package hash)", Color.Red);
+                return;
+            }
+            else if (connectedClients.Find(c => c.name.ToLower() == name.ToLower() && c.ID!=userID) != null)
+            {
+                inc.SenderConnection.Deny("The name ''" + name + "'' is already in use. Please choose another name.");
+                DebugConsole.NewMessage(name + " couldn't join the server (name already in use)", Color.Red);
+                return;
+            }
+
+            //existing user re-joining
+            if (userID > 0)
+            {
+                Client existingClient = connectedClients.Find(c => c.ID == userID);
+                if (existingClient == null)
+                {
+                    existingClient = disconnectedClients.Find(c => c.ID == userID);
+                    if (existingClient != null)
+                    {
+                        disconnectedClients.Remove(existingClient);
+                        connectedClients.Add(existingClient);
+                    }
+                }
+                if (existingClient != null)
+                {
+                    existingClient.Connection = inc.SenderConnection;
+                    inc.SenderConnection.Approve();
+                    return;
+                }
+            }
+
+            userID = Rand.Range(1, 1000000);
+            while (connectedClients.Find(c => c.ID == userID) != null)
+            {
+                userID++;
+            }
+
+            Client newClient = new Client(name, userID);
+            newClient.Connection = inc.SenderConnection;
+            newClient.version = version;
+
+            connectedClients.Add(newClient);
+
+            inc.SenderConnection.Approve();
+        }
+
+
         private void SendMessage(NetOutgoingMessage msg, NetDeliveryMethod deliveryMethod, NetConnection excludedConnection)
         {
             List<NetConnection> recipients = new List<NetConnection>();
@@ -495,7 +534,6 @@ namespace Subsurface.Networking
         {
             if (NetworkEvent.events.Count == 0) return;
                     
-            //System.Diagnostics.Debug.WriteLine("*************************");
             foreach (NetworkEvent networkEvent in NetworkEvent.events)  
             {
                 //System.Diagnostics.Debug.WriteLine("networkevent "+networkEvent.ID);
@@ -615,13 +653,13 @@ namespace Subsurface.Networking
             foreach (Client client in connectedClients)
             {
                 msg.Write(client.ID);
-                WriteCharacterData(msg, client.name, client.character);
+                WriteCharacterData(msg, client.character.Name, client.character);
             }
 
             if (myCharacter != null)
             {
                 msg.Write(-1);
-                WriteCharacterData(msg, myCharacter.Name, Character.Controlled);
+                WriteCharacterData(msg, myCharacter.Info.Name, Character.Controlled);
             }
 
             SendMessage(msg, NetDeliveryMethod.ReliableUnordered, null);            
@@ -648,8 +686,7 @@ namespace Subsurface.Networking
         {
 
             var messageBox = new GUIMessageBox("The round has ended", endMessage);
-
-
+            
             Character.Controlled = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
@@ -1055,6 +1092,8 @@ namespace Subsurface.Networking
 
         public List<JobPrefab> jobPreferences;
         public JobPrefab assignedJob;
+
+        public float deleteDisconnectedTimer;
 
         public Client(string name, int ID)
         {

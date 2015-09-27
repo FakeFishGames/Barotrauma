@@ -68,12 +68,12 @@ namespace Subsurface
             }
         }
 
-        public static StructurePrefab Load(XElement el)
+        public static StructurePrefab Load(XElement element)
         {
             StructurePrefab sp = new StructurePrefab();
-            sp.name = el.Name.ToString();
+            sp.name = element.Name.ToString();
 
-            Vector4 sourceVector = ToolBox.GetAttributeVector4(el, "sourcerect", new Vector4(0,0,1,1));
+            Vector4 sourceVector = ToolBox.GetAttributeVector4(element, "sourcerect", new Vector4(0,0,1,1));
             
             Rectangle sourceRect = new Rectangle(
                 (int)sourceVector.X,
@@ -81,32 +81,35 @@ namespace Subsurface
                 (int)sourceVector.Z,
                 (int)sourceVector.W);
             
-            if (el.Attribute("sprite") != null)
+            if (element.Attribute("sprite") != null)
             {
-                sp.sprite = new Sprite(el.Attribute("sprite").Value, sourceRect, Vector2.Zero);
+                sp.sprite = new Sprite(element.Attribute("sprite").Value, sourceRect, Vector2.Zero);
                 
-                sp.sprite.Depth = ToolBox.GetAttributeFloat(el, "depth", 0.0f);
+                sp.sprite.Depth = ToolBox.GetAttributeFloat(element, "depth", 0.0f);
 
-                if (ToolBox.GetAttributeBool(el, "fliphorizontal", false)) sp.sprite.effects = SpriteEffects.FlipHorizontally;
-                if (ToolBox.GetAttributeBool(el, "flipvertical", false)) sp.sprite.effects = SpriteEffects.FlipVertically;
+                if (ToolBox.GetAttributeBool(element, "fliphorizontal", false)) sp.sprite.effects = SpriteEffects.FlipHorizontally;
+                if (ToolBox.GetAttributeBool(element, "flipvertical", false)) sp.sprite.effects = SpriteEffects.FlipVertically;
             }
 
             sp.size = Vector2.Zero;
-            sp.size.X = ToolBox.GetAttributeFloat(el, "width", 0.0f);
-            sp.size.Y = ToolBox.GetAttributeFloat(el, "height", 0.0f);
-
-            sp.maxHealth = ToolBox.GetAttributeFloat(el, "health", 100.0f);
-
-            sp.resizeHorizontal = ToolBox.GetAttributeBool(el, "resizehorizontal", false);
-            sp.resizeVertical = ToolBox.GetAttributeBool(el, "resizevertical", false);
+            sp.size.X = ToolBox.GetAttributeFloat(element, "width", 0.0f);
+            sp.size.Y = ToolBox.GetAttributeFloat(element, "height", 0.0f);
             
-            sp.isPlatform = ToolBox.GetAttributeBool(el, "platform", false);
-            sp.stairDirection = (Direction)Enum.Parse(typeof(Direction), ToolBox.GetAttributeString(el, "stairdirection", "None"));
+            string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");
+            sp.SpriteColor = new Color(ToolBox.ParseToVector4(spriteColorStr));
 
-            sp.castShadow = ToolBox.GetAttributeBool(el, "castshadow", false); 
+            sp.maxHealth = ToolBox.GetAttributeFloat(element, "health", 100.0f);
+
+            sp.resizeHorizontal = ToolBox.GetAttributeBool(element, "resizehorizontal", false);
+            sp.resizeVertical = ToolBox.GetAttributeBool(element, "resizevertical", false);
+            
+            sp.isPlatform = ToolBox.GetAttributeBool(element, "platform", false);
+            sp.stairDirection = (Direction)Enum.Parse(typeof(Direction), ToolBox.GetAttributeString(element, "stairdirection", "None"), true);
+
+            sp.castShadow = ToolBox.GetAttributeBool(element, "castshadow", false); 
 
 
-            sp.hasBody = ToolBox.GetAttributeBool(el, "body", false); 
+            sp.hasBody = ToolBox.GetAttributeBool(element, "body", false); 
             
             return sp;
         }

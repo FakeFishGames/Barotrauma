@@ -421,7 +421,6 @@ namespace Subsurface
             return true;
         }
 
-
         public void AddPlayer(Client client)
         {
             GUITextBlock textBlock = new GUITextBlock(
@@ -431,6 +430,17 @@ namespace Subsurface
                 playerList);
             textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
             textBlock.UserData = client;          
+        }
+
+        public void RemovePlayer(int clientID)
+        {
+            GUIComponent child = playerList.children.Find(c =>
+                {
+                    Client client = c.UserData as Client;
+                    return (client.ID == clientID);
+                });
+
+            if (child != null) playerList.RemoveChild(child);
         }
 
         public void RemovePlayer(Client client)
