@@ -487,7 +487,9 @@ namespace Subsurface
             return Info.Job.GetSkillLevel(skillName);
         }
 
-        public void Control(float deltaTime, Camera cam, bool forcePick = false)
+        float findClosestTimer;
+
+        public void Control(float deltaTime, Camera cam)
         {
             if (isDead) return;
 
@@ -530,63 +532,6 @@ namespace Subsurface
                 }
             }
 
-            //find the closest item if selectkey has been hit, or if the character is being
-            //controlled by the player (in order to highlight it)
-            if (controlled == this)
-            {
-                Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cam.ScreenToWorld(PlayerInput.MousePosition));
-                
-                closestCharacter = FindClosestCharacter(mouseSimPos);
-                if (closestCharacter != null)
-                {
-                    if (closestCharacter != selectedCharacter) selectedCharacter = null;
-                    if (!closestCharacter.isHumanoid) closestCharacter = null;
-                }
-                
-                
-                closestItem = FindClosestItem(mouseSimPos);
-                
-                if (closestCharacter != null && closestItem != null)
-                {
-                    if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < Vector2.Distance(closestItem.SimPosition, mouseSimPos))
-                    {
-                        if (selectedConstruction!=closestItem) closestItem = null;
-                    }
-                    else
-                    {
-                        closestCharacter = null;
-                    }
-                }
-
-                if (selectedCharacter==null)
-                {                
-                    if (closestItem != null)
-                    {
-                        closestItem.IsHighlighted = true;
-                        if (GetInputState(InputType.Select) && closestItem.Pick(this, forcePick))
-                        {
-                            new NetworkEvent(NetworkEventType.PickItem, ID, true, closestItem.ID);
-                        }
-                    }
-                }
-                else
-                {
-                    if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f) selectedCharacter = null;
-                }
-
-                if (GetInputState(InputType.Select))
-                {
-                    if (selectedCharacter!=null)
-                    {
-                        selectedCharacter = null;
-                    }
-                    else if (closestCharacter!=null && closestCharacter.isDead && closestCharacter.isHumanoid)
-                    {
-                        selectedCharacter = closestCharacter;
-                    }
-                }
-            }
-
             for (int i = 0; i < selectedItems.Length; i++ )
             {
                 if (selectedItems[i] == null) continue;
@@ -616,7 +561,7 @@ namespace Subsurface
             Limb torso = AnimController.GetLimb(LimbType.Torso);
             Vector2 pos = (torso.body.TargetPosition != Vector2.Zero) ? torso.body.TargetPosition : torso.SimPosition;
 
-            return Item.FindPickable(pos, selectedConstruction == null ? mouseSimPos : selectedConstruction.SimPosition, null, selectedItems);
+            return Item.FindPickable(pos, selectedConstruction == null ? mouseSimPos : selectedConstruction.SimPosition, AnimController.CurrentHull, selectedItems);
         }
 
         private Character FindClosestCharacter(Vector2 mouseSimPos, float maxDist = 150.0f)
@@ -647,7 +592,7 @@ namespace Subsurface
         /// <summary>
         /// Control the character according to player input
         /// </summary>
-        public void ControlLocalPlayer(Camera cam, bool moveCam = true)
+        public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
             //if (isDead)
             //{
@@ -704,6 +649,69 @@ namespace Subsurface
                 }
             }
 
+
+            //find the closest item if selectkey has been hit, or if the character is being
+            //controlled by the player (in order to highlight it)
+
+            if (findClosestTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)
+            {
+                closestCharacter = FindClosestCharacter(mouseSimPos);
+                if (closestCharacter != null)
+                {
+                    if (closestCharacter != selectedCharacter) selectedCharacter = null;
+                    if (!closestCharacter.isHumanoid) closestCharacter = null;
+                }
+
+                closestItem = FindClosestItem(mouseSimPos);
+
+                if (closestCharacter != null && closestItem != null)
+                {
+                    if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < Vector2.Distance(closestItem.SimPosition, mouseSimPos))
+                    {
+                        if (selectedConstruction != closestItem) closestItem = null;
+                    }
+                    else
+                    {
+                        closestCharacter = null;
+                    }
+                }
+
+                findClosestTimer = 0.1f;
+            }
+            else
+            {
+                findClosestTimer -= deltaTime;
+            }
+
+            if (selectedCharacter == null)
+            {
+                if (closestItem != null)
+                {
+                    closestItem.IsHighlighted = true;
+                    if (GetInputState(InputType.Select) && closestItem.Pick(this, false))
+                    {
+                        new NetworkEvent(NetworkEventType.PickItem, ID, true, closestItem.ID);
+                    }
+                }
+            }
+            else
+            {
+                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f) selectedCharacter = null;
+            }
+
+            if (GetInputState(InputType.Select))
+            {
+                if (selectedCharacter != null)
+                {
+                    selectedCharacter = null;
+                }
+                else if (closestCharacter != null && closestCharacter.isDead && closestCharacter.isHumanoid)
+                {
+                    selectedCharacter = closestCharacter;
+                }
+            }
+            
+
             DisableControls = false;
         }
         
@@ -744,7 +752,7 @@ namespace Subsurface
             if (controlled == this)
             {
                 CharacterHUD.Update(deltaTime,this);
-                ControlLocalPlayer(cam);
+                ControlLocalPlayer(deltaTime, cam);
             }
 
             Control(deltaTime, cam);
