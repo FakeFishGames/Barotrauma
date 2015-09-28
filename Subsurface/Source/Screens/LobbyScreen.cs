@@ -73,6 +73,7 @@ namespace Subsurface
             GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.Left, GUI.Style, leftPanel);
             button.UserData = PanelTab.Map;
             button.OnClicked = SelectRightPanel;
+            SelectRightPanel(button, button.UserData);
 
             button = new GUIButton(new Rectangle(0, 110, 100, 30), "Crew", null, Alignment.Left, GUI.Style, leftPanel);
             button.UserData = PanelTab.Crew;
@@ -148,8 +149,6 @@ namespace Subsurface
             base.Select();
 
             gameMode = GameMain.GameSession.gameMode as SinglePlayerMode;
-
-            selectedRightPanel = (int)PanelTab.Crew;
 
             //Map.Unload();
 

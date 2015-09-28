@@ -228,6 +228,7 @@ namespace Subsurface
             if (type == typeof(float))
             {
                 float floatValue = (float)value * deltaTime;
+                
                 if (!setValue) floatValue += (float)property.GetValue();
                 property.TrySetValue(floatValue);
             }
@@ -253,7 +254,6 @@ namespace Subsurface
             {
                 DelayedEffect.List[i].Update(deltaTime);
             }
-        }
-
+        }        
     }
 }

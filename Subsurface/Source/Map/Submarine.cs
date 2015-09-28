@@ -607,7 +607,6 @@ namespace Subsurface
             
             foreach (Item item in Item.itemList)
             {
-                System.Diagnostics.Debug.WriteLine(item.ID);
                 foreach (ItemComponent ic in item.components)
                 {
                     ic.OnMapLoaded();
@@ -634,6 +633,8 @@ namespace Subsurface
         public static void Unload()
         {
             if (loaded == null) return;
+
+            Sound.OnGameEnd();
             
             loaded.Remove();
 

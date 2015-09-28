@@ -49,7 +49,7 @@ namespace Subsurface
             graphicsDevice = graphics;
 
             sounds = new Sound[2];
-            sounds[0] = Sound.Load("Content/Sounds/UI/UImsg.ogg");
+            sounds[0] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
 
             // create 1x1 texture for line drawing
             t = new Texture2D(graphicsDevice, 1, 1);

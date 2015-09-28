@@ -138,7 +138,8 @@ namespace Subsurface
 
             }
             else if (GameMain.Client==null)
-            {                
+            {
+                Submarine.Unload();
                 GameMain.LobbyScreen.Select();
             }
             

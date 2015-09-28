@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Xml.Linq;
+using System.ComponentModel;
 
 
 namespace Subsurface
@@ -37,12 +39,13 @@ namespace Subsurface
             this.isSaveable = isSaveable;
         }
     }
-        
+
     class ObjectProperty
     {
         readonly PropertyDescriptor property;
+        readonly PropertyInfo propertyInfo;
         readonly object obj;
-
+        
         public string Name
         {
             get { return property.Name; }
@@ -56,6 +59,7 @@ namespace Subsurface
         public ObjectProperty(PropertyDescriptor property, object obj)
         {
             this.property = property;
+            propertyInfo = property.ComponentType.GetProperty(property.Name);
             this.obj = obj;
         }
                 
@@ -65,7 +69,7 @@ namespace Subsurface
             
             if (property.PropertyType == typeof(string))
             {
-                property.SetValue(obj, value);
+                propertyInfo.SetValue(obj, value, null);
             }
             else if (property.PropertyType == typeof(float))
             {
@@ -73,19 +77,19 @@ namespace Subsurface
 
                 if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
                 {
-                    property.SetValue(obj, floatVal);
+                    propertyInfo.SetValue(obj, floatVal, null);
                 }
             }
             else if (property.PropertyType == typeof(bool))
             {
-                property.SetValue(obj, (value.ToLower()=="true"));                
+                propertyInfo.SetValue(obj, (value.ToLower() == "true"), null);                
             }
             else if (property.PropertyType == typeof(int))
             {
                 int intVal = 0;
                 if (int.TryParse(value, out intVal))
                 {
-                    property.SetValue(obj, intVal);
+                    propertyInfo.SetValue(obj, intVal, null);
                 }
             }
             else
@@ -114,7 +118,47 @@ namespace Subsurface
             if (obj == null || property == null) return false;
             try
             {
-                property.SetValue(obj, value);
+                propertyInfo.SetValue(obj, value, null);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool TrySetValue(float value)
+        {
+            try
+            {
+                propertyInfo.SetValue(obj, value, null);                
+            }
+            catch
+            {
+                return false;
+            }
+            
+            return true;
+        }
+
+        public bool TrySetValue(bool value)
+        {
+            try
+            {
+                propertyInfo.SetValue(obj, value, null);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool TrySetValue(int value)
+        {
+            try
+            {
+                propertyInfo.SetValue(obj, value, null);
             }
             catch
             {
@@ -129,7 +173,7 @@ namespace Subsurface
 
             try
             {
-                return property.GetValue(obj);
+                return propertyInfo.GetValue(obj, null);
             }
             catch
             {

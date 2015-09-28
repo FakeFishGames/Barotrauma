@@ -72,7 +72,7 @@ namespace Subsurface.Items.Components
         {
             if (powerOnSound == null)
             {
-                powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg");
+                powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg", false);
             }
 
             if (sparkSounds == null)
@@ -81,7 +81,7 @@ namespace Subsurface.Items.Components
                 string dir = Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\";
                 for (int i = 0; i < 4; i++)
                 {
-                    sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap" + (i + 1) + ".ogg");
+                    sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap" + (i + 1) + ".ogg", false);
                 }
             }
         }

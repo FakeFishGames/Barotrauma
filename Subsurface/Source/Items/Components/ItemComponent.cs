@@ -426,23 +426,43 @@ namespace Subsurface.Items.Components
             return true;
         }
 
-        protected bool DoesUseFail(Character character)
+        /// <summary>
+        /// Returns 0.0f-1.0f based on how well the character can use the itemcomponent
+        /// </summary>
+        /// <returns>0.5f if all the skills meet the skill requirements exactly, 1.0f if they're way above and 0.0f if way less</returns>
+        protected float DegreeOfSuccess(Character character)
         {
-            foreach (Skill skill in requiredSkills)
-            {
-                int characterLevel = character.GetSkillLevel(skill.Name);
-                if (characterLevel > skill.Level) continue;
+            if (requiredSkills.Count == 0) return 100.0f;
 
-                if (Rand.Int(characterLevel) - skill.Level < 0)
-                {
-                    item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
-                    //Item.ApplyStatusEffects();
-                    return true;
-                }
+            float[] skillSuccess = new float[requiredSkills.Count];
+
+            for (int i = 0; i < requiredSkills.Count; i++ )
+            {
+                int characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
+
+                skillSuccess[i] = (characterLevel - requiredSkills[i].Level);
             }
 
-            return false;
+            float average = skillSuccess.Average();
+
+            return (average+100.0f)/2.0f;        
         }
+
+        //public bool CheckFailure(Character character)
+        //{
+        //    foreach (Skill skill in requiredSkills)
+        //    {
+        //        int characterLevel = character.GetSkillLevel(skill.Name);
+        //        if (characterLevel > skill.Level) continue;
+
+        //        item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+        //        //Item.ApplyStatusEffects();
+        //        return true;
+                
+        //    }
+
+        //    return false;
+        //}
 
         public bool HasRequiredContainedItems(bool addMessage)
         {

@@ -62,7 +62,7 @@ namespace Subsurface
 
         private Direction dir;
 
-        private Item wearingItem;
+        private Wearable wearingItem;
         private WearableSprite wearingItemSprite;
 
         private Vector2 animTargetPos;
@@ -92,6 +92,7 @@ namespace Subsurface
             get { return body.Rotation; }
         }
 
+        //where an animcontroller is trying to pull the limb, only used for debug visualization
         public Vector2 AnimTargetPos
         {
             get { return animTargetPos; }
@@ -156,7 +157,7 @@ namespace Subsurface
         //    set { bleeding = MathHelper.Clamp(value, 0.0f, 100.0f); }
         //}
 
-        public Item WearingItem
+        public Wearable WearingItem
         {
             get { return wearingItem; }
             set { wearingItem = value; }
@@ -238,7 +239,7 @@ namespace Subsurface
             armorSector.X = MathHelper.ToRadians(armorSector.X);
             armorSector.Y = MathHelper.ToRadians(armorSector.Y);
 
-            armorValue = Math.Max(ToolBox.GetAttributeFloat(element, "armor", 1.0f), 1.0f);
+            armorValue = Math.Max(ToolBox.GetAttributeFloat(element, "armor", 0.0f), 0.0f);
             
             body.BodyType = BodyType.Dynamic;
             body.FarseerBody.AngularDamping = LimbAngularDamping;
@@ -290,27 +291,33 @@ namespace Subsurface
             DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
 
             bool hitArmor = false;
-            if (armorSector != Vector2.Zero)
+            float totalArmorValue = 0.0f;
+
+            if (armorValue>0.0f && SectorHit(armorSector, simPosition))
             {
-                float rot = body.Rotation;
-                if (Dir == -1) rot -= MathHelper.Pi;
-
-                Vector2 armorLimits = new Vector2(rot-armorSector.X*Dir, rot-armorSector.Y*Dir);
-
-                float mid = (armorLimits.X + armorLimits.Y) / 2.0f;
-
-                float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(simPosition - SimPosition), mid);
-
-                if (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2.0f)
-                {
-                    hitArmor = true;
-                    damageSoundType = DamageSoundType.LimbArmor;
-                    amount /= armorValue;
-                    bleedingAmount /= armorValue;
-                }
+                hitArmor = true;
+                totalArmorValue += armorValue;
             }
 
-            if (playSound && amount>0.0f)
+            if (wearingItem!=null && 
+                wearingItem.ArmorValue>0.0f && 
+                SectorHit(wearingItem.ArmorSectorLimits, simPosition))
+            {
+                hitArmor = true;
+                totalArmorValue += wearingItem.ArmorValue;
+            }                    
+            
+            if (hitArmor)
+            {
+                totalArmorValue = Math.Max(totalArmorValue, 0.0f);
+
+                damageSoundType = DamageSoundType.LimbArmor;
+                amount = Math.Max(0.0f, amount - totalArmorValue);
+                bleedingAmount = Math.Max(0.0f, bleedingAmount - totalArmorValue); ;
+            }
+
+
+            if (playSound)
             {
                 AmbientSoundManager.PlayDamageSound(damageSoundType, amount, ConvertUnits.ToDisplayUnits(simPosition));
             }
@@ -336,6 +343,21 @@ namespace Subsurface
             }
 
             return new AttackResult(amount, bleedingAmount, hitArmor);
+        }
+
+        public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
+        {
+            if (armorSector == Vector2.Zero) return false;
+            
+            float rot = body.Rotation;
+            if (Dir == -1) rot -= MathHelper.Pi;
+
+            Vector2 armorLimits = new Vector2(rot - armorSector.X * Dir, rot - armorSector.Y * Dir);
+
+            float mid = (armorLimits.X + armorLimits.Y) / 2.0f;
+            float angleDiff = MathUtils.GetShortestAngle(MathUtils.VectorToAngle(simPosition - SimPosition), mid);
+
+            return (Math.Abs(angleDiff) < (armorSector.Y - armorSector.X) / 2.0f);
         }
 
         public void Update(float deltaTime)
@@ -416,7 +438,7 @@ namespace Subsurface
 
                 float depth = sprite.Depth - 0.000001f;
 
-                if (wearingItemSprite.DepthLimb==LimbType.None)
+                if (wearingItemSprite.DepthLimb!=LimbType.None)
                 {
                     Limb depthLimb = character.AnimController.GetLimb(wearingItemSprite.DepthLimb);
                     if (depthLimb!=null)

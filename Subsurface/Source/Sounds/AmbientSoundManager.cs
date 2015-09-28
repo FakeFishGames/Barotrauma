@@ -71,22 +71,22 @@ namespace Subsurface
         {
 
 
-            startDrone = Sound.Load("Content/Sounds/startDrone.ogg");
+            startDrone = Sound.Load("Content/Sounds/startDrone.ogg", false);
             startDrone.Play();
 
 
             yield return CoroutineStatus.Running;
 
 
-            waterAmbiences[0] = Sound.Load("Content/Sounds/Water/WaterAmbience1.ogg");
+            waterAmbiences[0] = Sound.Load("Content/Sounds/Water/WaterAmbience1.ogg", false);
             yield return CoroutineStatus.Running;
-            waterAmbiences[1] = Sound.Load("Content/Sounds/Water/WaterAmbience2.ogg");
+            waterAmbiences[1] = Sound.Load("Content/Sounds/Water/WaterAmbience2.ogg", false);
             yield return CoroutineStatus.Running;
-            flowSounds[0] = Sound.Load("Content/Sounds/Water/FlowSmall.ogg");
+            flowSounds[0] = Sound.Load("Content/Sounds/Water/FlowSmall.ogg", false);
             yield return CoroutineStatus.Running;
-            flowSounds[1] = Sound.Load("Content/Sounds/Water/FlowMedium.ogg");
+            flowSounds[1] = Sound.Load("Content/Sounds/Water/FlowMedium.ogg", false);
             yield return CoroutineStatus.Running;
-            flowSounds[2] = Sound.Load("Content/Sounds/Water/FlowLarge.ogg");
+            flowSounds[2] = Sound.Load("Content/Sounds/Water/FlowLarge.ogg", false);
             yield return CoroutineStatus.Running;
 
             XDocument doc = ToolBox.TryLoadXml("Content/Sounds/sounds.xml");
@@ -124,7 +124,7 @@ namespace Subsurface
                 {
                     yield return CoroutineStatus.Running;
 
-                    Sound sound = Sound.Load(ToolBox.GetAttributeString(element, "file", ""));
+                    Sound sound = Sound.Load(ToolBox.GetAttributeString(element, "file", ""), false);
                     if (sound == null) continue;
                     
                     DamageSoundType damageSoundType = DamageSoundType.None;
@@ -155,13 +155,10 @@ namespace Subsurface
         {
             UpdateMusic();
 
-            if (startDrone!=null)
+            if (startDrone!=null && !startDrone.IsPlaying)
             {
-                if (!startDrone.IsPlaying)
-                {
-                    startDrone.Remove();
-                    startDrone = null;
-                }
+                startDrone.Remove();
+                startDrone = null;                
             }
 
             float ambienceVolume = 0.6f;
