@@ -21,12 +21,33 @@ namespace Subsurface
         string filePath;
 
         private int alSourceId;
+
+        private bool destroyOnGameEnd;
                 
         
         //public float Volume
         //{
         //    set { SoundManager.Volume(sourceIndex, value); }
         //}
+
+        private Sound(string file, bool destroyOnGameEnd)
+        {
+            filePath = file;
+
+            foreach (Sound loadedSound in loadedSounds)
+            {
+                if (loadedSound.filePath == file) oggSound = loadedSound.oggSound;
+            }
+
+            if (oggSound == null)
+            {
+                oggSound = OggSound.Load(file);            
+            }
+
+            this.destroyOnGameEnd = destroyOnGameEnd;
+                
+            loadedSounds.Add(this);
+        }
 
         public string FilePath
         {
@@ -43,32 +64,15 @@ namespace Subsurface
             SoundManager.Init();
         }
         
-        public static Sound Load(string file)
+        public static Sound Load(string file, bool destroyOnGameEnd = true)
         {
             if (!File.Exists(file))
             {
                 DebugConsole.ThrowError("File ''" + file + "'' not found!");
                 return null;
             }
-
-            Sound s = new Sound();
-
-            s.filePath = file;
-
-            foreach (Sound loadedSound in loadedSounds)
-            {
-                if (loadedSound.filePath == file) s.oggSound = loadedSound.oggSound;
-            }
-
-            if (s.oggSound == null)
-            {
-                s.oggSound = OggSound.Load(file);
             
-            }
-                
-            loadedSounds.Add(s);
-
-            return s;
+            return new Sound(file, destroyOnGameEnd);
         }
 
         public int Play(float volume = 1.0f)
@@ -212,12 +216,27 @@ namespace Subsurface
         //{
         //    SoundManager.Stop(this);
         //}
+
+        public static void OnGameEnd()
+        {
+            List<Sound> removableSounds = loadedSounds.FindAll(s => s.destroyOnGameEnd);
+
+            foreach (Sound sound in removableSounds)
+            {
+                sound.Remove();
+            }
+        }
                         
         public void Remove()
         {
             loadedSounds.Remove(this);
 
-            System.Diagnostics.Debug.WriteLine(AlBufferId);
+            System.Diagnostics.Debug.WriteLine("Removing sound " + filePath + " (buffer id" + AlBufferId + ")");
+
+            if (alSourceId>0 && SoundManager.IsPlaying(alSourceId))
+            {
+                SoundManager.Stop(alSourceId);
+            }
 
             foreach (Sound s in loadedSounds)
             {

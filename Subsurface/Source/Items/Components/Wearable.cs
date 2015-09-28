@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -25,6 +26,34 @@ namespace Subsurface.Items.Components
         WearableSprite[] wearableSprite;
         LimbType[] limbType;
         Limb[] limb;
+
+        private float armorValue;
+
+        private Vector2 armorSector;
+
+        [HasDefaultValue(0.0f, false)]
+        public float ArmorValue
+        {
+            get { return armorValue; }
+            set { armorValue = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
+        [HasDefaultValue("0.0,360.0", false)]
+        public string ArmorSector
+        {
+            get { return ToolBox.Vector2ToString(armorSector); }
+            set 
+            { 
+                armorSector = ToolBox.ParseToVector2(value);
+                armorSector.X = MathHelper.ToRadians(armorSector.X);
+                armorSector.Y = MathHelper.ToRadians(armorSector.Y);
+            }
+        }
+
+        public Vector2 ArmorSectorLimits
+        {
+            get { return armorSector; }
+        }
 
         public Wearable (Item item, XElement element)
             : base(item, element)
@@ -76,7 +105,7 @@ namespace Subsurface.Items.Components
                 if (equipLimb == null) continue;
 
                 //something is already on the limb -> unequip it
-                if (equipLimb.WearingItem != null && equipLimb.WearingItem != item)
+                if (equipLimb.WearingItem != null && equipLimb.WearingItem != this)
                 {
                     equipLimb.WearingItem.Unequip(character);
                 }
@@ -88,7 +117,7 @@ namespace Subsurface.Items.Components
                 isActive = true;
 
                 limb[i] = equipLimb;
-                equipLimb.WearingItem = item;
+                equipLimb.WearingItem = this;
                 equipLimb.WearingItemSprite = wearableSprite[i];
             }
         }
@@ -111,7 +140,7 @@ namespace Subsurface.Items.Components
                 Limb equipLimb = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
 
-                if (equipLimb.WearingItem != item) continue;
+                if (equipLimb.WearingItem != this) continue;
                 
                 limb[i] = null;
                 equipLimb.WearingItem = null;

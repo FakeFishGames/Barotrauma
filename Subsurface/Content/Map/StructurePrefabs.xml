@@ -1,18 +1,18 @@
 <prefabs>
-  <largehorizontalback sprite="Content/Map/testroom.png" sourcerect="0,0,896,64" depth ="0.4"
+  <largehorizontalback sprite="Content/Map/testroom.png" sourcerect="0,0,896,64" depth ="0.9"
   width = "128" height ="64" resizehorizontal="true"/>
 
-  <smallhorizontalback sprite="Content/Map/testroom.png" sourcerect="0,64,896,32" depth ="0.4" 
+  <smallhorizontalback sprite="Content/Map/testroom.png" sourcerect="0,64,896,32" depth ="0.9" 
   width = "128" height ="32" resizehorizontal="true"/>
 
-  <largeverticalback sprite="Content/Map/testroom.png" sourcerect="0,96,64,448" depth ="0.4"
+  <largeverticalback sprite="Content/Map/testroom.png" sourcerect="0,96,64,448" depth ="0.9"
     width = "64" height ="128" resizevertical="true"/>
-  <largeverticalback2 sprite="Content/Map/testroom.png" sourcerect="64,96,64,448" depth ="0.4"
+  <largeverticalback2 sprite="Content/Map/testroom.png" sourcerect="64,96,64,448" depth ="0.9"
     width = "64" height ="128" resizevertical="true"/>
 
-  <smallverticalback sprite="Content/Map/testroom.png" sourcerect="128,96,32,352" depth ="0.85"
+  <smallverticalback sprite="Content/Map/testroom.png" sourcerect="128,96,32,352" depth ="0.9"
     width = "32" height ="128" resizevertical="true"/>
-  <smallverticalback2 sprite="Content/Map/testroom.png" sourcerect="160,96,32,352" depth ="0.85"
+  <smallverticalback2 sprite="Content/Map/testroom.png" sourcerect="160,96,32,352" depth ="0.9"
     width = "32" height ="128" resizevertical="true"/>
 
   <engineeringLabel sprite="Content/Map/testroom.png" sourcerect="464,336,153,16" depth ="0.99"
@@ -45,10 +45,10 @@
   <rightwall sprite="Content/Map/testroom.png" sourcerect="688,368,32,496" depth ="0.05" castshadow="true"
   width = "32" height ="64" resizevertical="true" body="true" health="500"/>
 
-  <topwall sprite="Content/Map/testroom.png" sourcerect="144,464,496,32" depth ="0.05" castshadow="true"
+  <topwall sprite="Content/Map/testroom.png" sourcerect="144,464,496,32" depth ="0.06" castshadow="true"
   width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
 
-  <bottomwall sprite="Content/Map/testroom.png" flipvertical ="true" sourcerect="144,496,640,32" depth ="0.05" castshadow="true"
+  <bottomwall sprite="Content/Map/testroom.png" flipvertical ="true" sourcerect="144,496,640,32" depth ="0.06" castshadow="true"
   width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
 
   <topwindow sprite="Content/Map/testroom.png" sourcerect="208,352,128,80" depth ="0.05"

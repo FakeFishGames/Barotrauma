@@ -18,4 +18,11 @@
     commonness="10"
     difficulty="50"
     musictype="monster"/>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Mantis/mantis.xml"
+    commonness="10"
+    difficulty="25"
+    minamount="1" maxamount="2"
+    musictype="monster"/>
 </Randomevents>

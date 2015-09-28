@@ -125,8 +125,7 @@ namespace Subsurface
             //stun (= disable the animations) if the ragdoll receives a large enough impact
             if (strongestImpact > 0.0f)
             {
-                character.Stun();
-                stunTimer = MathHelper.Clamp(strongestImpact * 0.5f, stunTimer, 5.0f);
+                character.StartStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
             }
             strongestImpact = 0.0f;
 

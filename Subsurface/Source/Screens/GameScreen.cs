@@ -80,8 +80,7 @@ namespace Subsurface
             GameMain.ParticleManager.Update((float)deltaTime);
 
             StatusEffect.UpdateAll((float)deltaTime);
-
-
+            
             Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 4);
             while (Physics.accumulator >= Physics.step)
             {
@@ -147,7 +146,7 @@ namespace Subsurface
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             GameMain.LightManager.DrawLightmap(graphics, spriteBatch, cam);
-
+            
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
             //----------------------------------------------------------------------------------------

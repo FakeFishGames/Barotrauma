@@ -16,22 +16,22 @@
            flip="true">
 
     <!-- head -->
-    <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="5.0f">
+    <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="10.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53"/>
     </limb>
 
     <!-- middle part -->
-    <limb id = "1" width="42" height="61"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="5.0f">
+    <limb id = "1" width="42" height="61"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="10.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="3,168,59,64" depth="0.021" origin="0.3,0.65"/>
     </limb>
 
     <!-- middle part -->
-    <limb id = "2" width="35" height="52"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="5.0f">
+    <limb id = "2" width="35" height="52"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="10.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65"/>
     </limb>
 
     <!-- tail -->
-    <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true" armorsector="0.0,180.0" armorvalue="5.0f">
+    <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true" armorsector="0.0,180.0" armorvalue="10.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="130,158,46,93" depth="0.023" origin="0.37,0.3"/>
     </limb>
       
@@ -44,7 +44,7 @@
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
     <!-- ""claw" -->
-    <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" frefjoint="0">
+    <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" refjoint="0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
       <attack type="PinchCW" range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="5" structuredamage="50" damagetype="slash"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>

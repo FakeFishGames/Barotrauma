@@ -19,6 +19,8 @@ namespace Subsurface
 
         public float CameraShake;
 
+        private bool sparks, shockwave, flames;
+
         //public Explosion(Vector2 position, float range, float damage, float structureDamage, float stun = 0.0f, float force = 0.0f)
         //{
         //    this.position = position;
@@ -36,6 +38,10 @@ namespace Subsurface
 
             force = ToolBox.GetAttributeFloat(element, "force", 0.0f);
 
+            sparks      = ToolBox.GetAttributeBool(element, "sparks", true);
+            shockwave   = ToolBox.GetAttributeBool(element, "shockwave", true);
+            flames      = ToolBox.GetAttributeBool(element, "flames", true); 
+
             CameraShake = attack.Range*10.0f;
         }
 
@@ -48,16 +54,25 @@ namespace Subsurface
         {
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
 
-            GameMain.ParticleManager.CreateParticle("shockwave", displayPosition,
-                Vector2.Zero, 0.0f);
+            if (shockwave)
+            {
+                GameMain.ParticleManager.CreateParticle("shockwave", displayPosition,
+                    Vector2.Zero, 0.0f);
+            }
+
 
             for (int i = 0; i < attack.Range * 10; i++)
             {
-                GameMain.ParticleManager.CreateParticle("spark", displayPosition,
-                    Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f);
-
-                GameMain.ParticleManager.CreateParticle("explosionfire", displayPosition + Rand.Vector(50f),
-                    Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f);
+                if (sparks)
+                {
+                    GameMain.ParticleManager.CreateParticle("spark", displayPosition,
+                        Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f);
+                }
+                if (flames)
+                {
+                    GameMain.ParticleManager.CreateParticle("explosionfire", displayPosition + Rand.Vector(50f),
+                        Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f);
+                }
             }
 
             float displayRange = ConvertUnits.ToDisplayUnits(attack.Range);

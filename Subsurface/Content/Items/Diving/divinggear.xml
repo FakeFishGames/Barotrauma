@@ -46,7 +46,7 @@
 
     <Body width="37" height="113" density="5"/>
 
-    <Wearable slots="Head,Torso,Legs">
+    <Wearable slots="Head,Torso,Legs" armorvalue="10.0">
       <sprite texture="DivingSuit.png" limb="Torso" sourcerect="40,0,42,97" origin="0.5,0.55" depthlimb="Head" hidelimb="true"/>
 
       <sprite texture="DivingSuit.png" limb="RightHand" sourcerect="0,78,15,50" origin="0.45,0.4" hidelimb="true"/>

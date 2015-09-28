@@ -52,5 +52,35 @@
     </Wearable>
   </Item>
 
+  <Item
+    name="Body Armour"
+    pickdistance="150"
+    tags="smallitem">
+
+    <Sprite texture ="securitygear.png" sourcerect="68,0,60,31" depth="0.4"/>
+
+    <Body width="52" height="17"/>
+
+    <Wearable slots="Any,Torso" armorvalue="10.0">
+      <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.47,0.48"/>
+
+      <sprite texture="securitygear.png" limb="RightArm" sourcerect="41,0,21,21" origin="0.5,1.1"/>
+    </Wearable>
+  </Item>
+
+  <Item
+    name="Ballistic Helmet"
+    pickdistance="150"
+    tags="smallitem">
+
+    <Sprite texture ="securitygear.png" sourcerect="40,32,34,25" depth="0.4"/>
+
+    <Body radius="12"/>
+
+    <Wearable slots="Any,Head" armorvalue="20.0">
+      <sprite texture="securitygear.png" limb="Head" sourcerect="39,31,29,22" origin="0.5,1.5"/>
+    </Wearable>
+  </Item>
+
 </Items>
 

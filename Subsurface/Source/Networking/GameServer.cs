@@ -436,6 +436,9 @@ namespace Subsurface.Networking
                 userID = inc.ReadInt32();
                 userPassword = inc.ReadString();
                 version = inc.ReadString();
+#if DEBUG
+                version = GameMain.Version.ToString();
+#endif
                 packageName = inc.ReadString();
                 packageHash = inc.ReadString();
                 name = inc.ReadString();

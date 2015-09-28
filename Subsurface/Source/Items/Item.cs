@@ -1256,7 +1256,6 @@ namespace Subsurface
             {
                 ic.Remove();
             }
-
             itemList.Remove(this);
 
             foreach (Item it in itemList)

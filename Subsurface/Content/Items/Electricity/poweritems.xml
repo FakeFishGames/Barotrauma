@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
-	<Item
-		name="Junction Box"
-		linkable="true"
-		pickdistance="150">
-		
-		<Sprite texture ="junctionbox.png" depth="0.8"/>
+  <Item
+    name="Junction Box"
+    linkable="true"
+    pickdistance="150">
+    
+    <Sprite texture ="junctionbox.png" depth="0.8"/>
 
     <fixrequirement name="Electrical repairs">
       <skill name="Electrical Engineering" level="40"/>
@@ -17,33 +17,41 @@
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
     </PowerTransfer>
 
-		<ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
-			<requireditem name="Screwdriver" type="Equipped"/>
-			<output name="power"/>
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <RequiredSkill name="Electrical Engineering" level="30"/>
+      <StatusEffect type="OnFailure" target="Character">
+        <Explosion range="100.0" damage="5" stun="10" force="2.0" flames="false" shockwave="false" sparks="true"/>
+      </StatusEffect>
+
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <output name="power"/>
       <output name="signal_0"/>
       <output name="signal_1"/>
       <output name="signal_2"/>
       <output name="signal_3"/>
     </ConnectionPanel>
 
-	</Item>
+  </Item>
 
-	<Item
-		name="Battery"
-		linkable="true"
-		pickdistance="150">
+  <Item
+    name="Battery"
+    linkable="true"
+    pickdistance="150">
 
-		<Sprite texture ="battery.png" depth="0.8"/>
+    <Sprite texture ="battery.png" depth="0.8"/>
 
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected = "true">
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
     </PowerContainer>
 
-		<ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
-			<requireditem name="Screwdriver" type="Equipped"/>
-			<input name="power"/>
-		</ConnectionPanel>		
-	</Item>
+    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <StatusEffect type="OnFailure" target="Character">
+        <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
+      </StatusEffect>
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power"/>
+    </ConnectionPanel>		
+  </Item>
 
   <Item
     name="Supercapacitor"
@@ -57,11 +65,11 @@
     </PowerContainer>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+      <StatusEffect type="OnFailure" target="Character">
+        <Explosion range="100.0" damage="30" stun="20" force="5.0" shockwave="false" sparks="true"/>
+      </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power"/>
     </ConnectionPanel>
   </Item>
-
-
-
 </Items>

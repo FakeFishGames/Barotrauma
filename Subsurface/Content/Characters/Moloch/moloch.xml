@@ -9,7 +9,7 @@
   <ragdoll waveamplitude="0.0" swimspeed="1.0" walkspeed="0.3" flip="true" rotatetowardsmovement="false" headangle="-90">
 
     <!-- head -->
-    <limb id = "0" radius="230" height="500" type="Head" steerforce="1.0" flip="true" armorsector="0.0,180.0" armorvalue="10.0f">
+    <limb id = "0" radius="230" height="500" type="Head" steerforce="1.0" flip="true" armorsector="0.0,180.0" armorvalue="100.0">
       <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="0,0,628,1024" depth="0.02" origin ="0.4,0.5"/>
     </limb>
 

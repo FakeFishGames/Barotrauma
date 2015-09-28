@@ -15,6 +15,7 @@ using System.Xml.Linq;
 
 namespace Subsurface
 {
+    
     class Character : Entity, IDamageable, IPropertyObject
     {
         public static List<Character> CharacterList = new List<Character>();
@@ -168,6 +169,12 @@ namespace Subsurface
                 oxygen = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (oxygen == 0.0f) Kill();
             }
+        }
+
+        public float Stun
+        {
+            get { return AnimController.StunTimer; }
+            set { StartStun(value); }
         }
 
         public float Health
@@ -873,8 +880,7 @@ namespace Subsurface
 
         public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
         {
-            AnimController.StunTimer = Math.Max(AnimController.StunTimer, stun);
-
+            StartStun(stun);
             if (controlled == this) CharacterHUD.TakeDamage();
             
             Limb closestLimb = null;
@@ -901,14 +907,11 @@ namespace Subsurface
             return attackResult;
         }
 
-        public void Stun()
+        public void StartStun(float stunTimer)
         {
-            //for (int i = 0; i < selectedItems.Length; i++ )
-            //{
-            //    if (selectedItems[i] == null) continue;
-            //    selectedItems[i].Drop();
-            //    selectedItems[i] = null;
-            //}
+            if (stunTimer <= 0.0f) return;
+
+            AnimController.StunTimer = Math.Max(AnimController.StunTimer, stunTimer);
                 
             selectedConstruction = null;
         }
@@ -1268,7 +1271,7 @@ namespace Subsurface
                 }
                 catch { return; }
 
-                AnimController.StunTimer = newStunTimer;
+                StartStun(newStunTimer);
                 Health = newHealth;
 
                 LargeUpdateTimer = 1;

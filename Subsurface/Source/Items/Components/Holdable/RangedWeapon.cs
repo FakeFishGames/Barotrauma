@@ -56,8 +56,6 @@ namespace Subsurface.Items.Components
             if (!character.GetInputState(InputType.SecondaryHeld) || reload > 0.0f) return false;
             isActive = true;
             reload = 1.0f;
-            
-            bool failed = DoesUseFail(character);
 
             List<Body> limbBodies = new List<Body>();
             foreach (Limb l in character.AnimController.Limbs)
@@ -68,6 +66,15 @@ namespace Subsurface.Items.Components
             Item[] containedItems = item.ContainedItems;
             if (containedItems == null || !containedItems.Any()) return false;
 
+            float degreeOfFailure = (100.0f - DegreeOfSuccess(character))/100.0f;
+
+            degreeOfFailure *= degreeOfFailure;
+
+            if (degreeOfFailure > Rand.Range(0.0f, 1.0f))
+            {
+                ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+            }
+
             foreach (Item projectile in containedItems)
             {
                 if (projectile == null) continue;
@@ -76,35 +83,28 @@ namespace Subsurface.Items.Components
                 //so that the player can't shoot himself
                 Projectile projectileComponent= projectile.GetComponent<Projectile>();
                 if (projectileComponent == null) continue;
-
+                
                 projectile.body.ResetDynamics();
                 projectile.SetTransform(TransformedBarrelPos, 
-                    (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi);
+                    ((item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi)
+                    + Rand.Range(-degreeOfFailure, degreeOfFailure));
 
                 projectile.Use(deltaTime);
 
-
-                if (failed)
-                {
-                    Vector2 modifiedVelocity = projectile.body.LinearVelocity;
-                    modifiedVelocity.X *= Rand.Range(0.0f, 0.5f);
-                    modifiedVelocity.Y *= Rand.Range(0.0f, 0.5f);
-
-                    projectile.body.LinearVelocity = modifiedVelocity;
-                    projectile.body.ApplyTorque(projectile.body.Mass * Rand.Range(-10.0f, 10.0f));
+                projectile.body.ApplyTorque(projectile.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
 
                     //recoil
-                    //item.body.ApplyLinearImpulse(
-                    //    new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -10.0f);
-                }
-                else
-                {
+                item.body.ApplyLinearImpulse(
+                    new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);
+                
+                //else
+                //{
                     projectileComponent.ignoredBodies = limbBodies;
 
                     //recoil
                     //item.body.ApplyLinearImpulse(
                     //    new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * -item.body.Mass);
-                }
+                //}
 
                 item.RemoveContained(projectile);
                 

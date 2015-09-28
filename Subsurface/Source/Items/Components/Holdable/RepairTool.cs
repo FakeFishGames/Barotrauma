@@ -104,12 +104,20 @@ namespace Subsurface.Items.Components
             if (character == null) return false;
             if (!character.GetInputState(InputType.SecondaryHeld)) return false;
 
-            if (DoesUseFail(character)) return false;
+            //if (DoesUseFail(character)) return false;
 
             isActive = true;
 
             Vector2 targetPosition = item.body.SimPosition;
             //targetPosition = targetPosition.X, -targetPosition.Y);
+
+            float degreeOfSuccess = DegreeOfSuccess(character);
+
+            if (Rand.Range(0.0f, 1.0f) > degreeOfSuccess * degreeOfSuccess)
+            {
+                ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+                return false;
+            }
 
             targetPosition += new Vector2(
                 (float)Math.Cos(item.body.Rotation),
@@ -118,6 +126,7 @@ namespace Subsurface.Items.Components
             List<Body> ignoredBodies = new List<Body>();
             foreach (Limb limb in character.AnimController.Limbs)
             {
+                if (Rand.Range(0.0f, 1.0f) > degreeOfSuccess) continue;
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
 
