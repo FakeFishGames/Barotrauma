@@ -12,6 +12,10 @@ namespace Subsurface
     {
         const int MaxSprites = 100;
 
+        const float checkActiveInterval = 1.0f;
+
+        float checkActiveTimer;
+
         private List<BackgroundSpritePrefab> prefabs;
         private List<BackgroundSprite> activeSprites;
 
@@ -31,7 +35,6 @@ namespace Subsurface
 
         public void SpawnSprites(int count)
         {
-
             activeSprites.Clear();
 
             if (prefabs.Count == 0) return;
@@ -77,10 +80,26 @@ namespace Subsurface
             activeSprites.Clear();
         }
 
-        public void Update(float deltaTime)
+        public void Update(Camera cam, float deltaTime)
         {
+            if (checkActiveTimer<0.0f)
+            {
+                foreach (BackgroundSprite sprite in activeSprites)
+                {
+                    sprite.Enabled = (Math.Abs(sprite.TransformedPosition.X - cam.WorldViewCenter.X) < 4000.0f &&
+                    Math.Abs(sprite.TransformedPosition.Y - cam.WorldViewCenter.Y) < 4000.0f);                    
+                }
+
+                checkActiveTimer = checkActiveInterval;
+            }
+            else
+            {
+                checkActiveTimer -= deltaTime;
+            }
+
             foreach (BackgroundSprite sprite in activeSprites)
             {
+                if (!sprite.Enabled) continue;
                 sprite.Update(deltaTime);
             }
         }
@@ -89,6 +108,7 @@ namespace Subsurface
         {
             foreach (BackgroundSprite sprite in activeSprites)
             {
+                if (!sprite.Enabled) continue;
                 sprite.Draw(spriteBatch);
             }
         }

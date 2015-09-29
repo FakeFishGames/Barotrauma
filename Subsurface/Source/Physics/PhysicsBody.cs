@@ -226,6 +226,8 @@ namespace Subsurface
             body.CollidesWith = Physics.CollisionWall;
 
             body.Friction = ToolBox.GetAttributeFloat(element, "friction", 0.3f);
+            body.Restitution = 0.05f;
+
 
             body.BodyType = BodyType.Dynamic;
             //body.AngularDamping = Limb.LimbAngularDamping;
@@ -307,9 +309,14 @@ namespace Subsurface
             UpdateDrawPosition();
 
             SpriteEffects spriteEffect = (dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+            if (GameMain.DebugDraw && !body.Awake)
+            {
+                color = Color.Blue;
+            }
             
             sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), color, -drawRotation, 1.0f, spriteEffect, depth);
-
+            
             //prevPosition = body.Position;
             //prevRotation = body.Rotation;
         }

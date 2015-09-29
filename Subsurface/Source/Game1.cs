@@ -120,6 +120,8 @@ namespace Subsurface
             //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
 
             World = new World(new Vector2(0, -9.82f));
+            FarseerPhysics.Settings.AllowSleep = true;
+            FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 2;
             FarseerPhysics.Settings.PositionIterations = 1;
         }

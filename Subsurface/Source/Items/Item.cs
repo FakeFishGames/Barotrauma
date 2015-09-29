@@ -68,7 +68,7 @@ namespace Subsurface
             get { return prefab.Name; }
         }
 
-        public override Sprite sprite
+        public override Sprite Sprite
         {
             get { return prefab.sprite; }
         }
@@ -299,9 +299,8 @@ namespace Subsurface
                 }
             }
 
-            
+            InsertToList();
             itemList.Add(this);
-            mapEntityList.Add(this);
         }
 
         public T GetComponent<T>()
@@ -475,23 +474,8 @@ namespace Subsurface
             {
                 if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;
 
-                //if (!ic.WasUsed)
-                //{
-                //    if (ic.Name == "RepairTool" && ic.IsActive)
-                //    {
-                //        System.Diagnostics.Debug.WriteLine("stop sounds");
-                //    }
-                //    ic.StopSounds(ActionType.OnUse);
-                //}
-                //ic.WasUsed = false;
-                
+                if (!ic.IsActive) continue;
 
-                if (!ic.IsActive)
-                {
-                    ic.StopSounds(ActionType.OnActive);
-                    ic.StopSounds(ActionType.OnUse);
-                    continue;
-                }
                 if (condition > 0.0f)
                 {
                     ic.Update(deltaTime, cam);
@@ -503,17 +487,19 @@ namespace Subsurface
                 {
                     ic.UpdateBroken(deltaTime, cam);
                 }
+            }            
+            
+            if (body == null || !body.Enabled) return;
+
+            if (body.LinearVelocity.Length() > 0.001f)
+            {
+                FindHull();
+
+                Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+
+                rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+                rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
             }
-            
-            
-            if (body == null) return;
-
-            if (body.LinearVelocity.Length()>0.001f) FindHull();
-
-            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-
-            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
 
             body.SetToTargetPosition();
 
@@ -527,7 +513,7 @@ namespace Subsurface
                 {
                     Vector2 impulse = -body.LinearVelocity * (body.Mass / body.Density);
                     body.ApplyLinearImpulse(impulse);
-                    int n = (int)((displayPos.X - CurrentHull.Rect.X) / Hull.WaveWidth);
+                    int n = (int)((ConvertUnits.ToDisplayUnits(body.SimPosition.X) - CurrentHull.Rect.X) / Hull.WaveWidth);
                     CurrentHull.WaveVel[n] = impulse.Y * 10.0f;
                 }
             }
@@ -537,28 +523,21 @@ namespace Subsurface
             Vector2 buoyancy = new Vector2(0, volume * 20.0f);
 
             //apply buoyancy and drag
-            try
-            {
-                //if ((buoyancy - body.LinearVelocity * volume) == Vector2.Zero) DebugConsole.ThrowError("v.zero ");
-                if (body.LinearVelocity != Vector2.Zero && body.LinearVelocity.Length() > 1000.0f)
-                {
-                    body.ResetDynamics();
-                    if (body.SimPosition.Length() > 1000.0f)
-                    {
-                        Remove();
-                        return;
-                    }
-                }
-                body.ApplyForce(buoyancy - body.LinearVelocity * volume);
-                
-                //apply simple angular drag
-                body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
-            }
 
-            catch
+            //if ((buoyancy - body.LinearVelocity * volume) == Vector2.Zero) DebugConsole.ThrowError("v.zero ");
+            if (body.LinearVelocity != Vector2.Zero && body.LinearVelocity.Length() > 1000.0f)
             {
-                DebugConsole.ThrowError("something bad happened with the physics");
+                body.ResetDynamics();
+                if (body.SimPosition.Length() > 1000.0f)
+                {
+                    Remove();
+                    return;
+                }
             }
+            body.ApplyForce(buoyancy - body.LinearVelocity * volume);
+                
+            //apply simple angular drag
+            body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)

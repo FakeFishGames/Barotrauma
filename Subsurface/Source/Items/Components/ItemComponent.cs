@@ -82,7 +82,16 @@ namespace Subsurface.Items.Components
         public virtual bool IsActive
         {
             get { return isActive; }
-            set { isActive = value; }
+            set 
+            {
+                if (!value && isActive)
+                {
+                    StopSounds(ActionType.OnActive);
+                    StopSounds(ActionType.OnUse);
+                }
+
+                isActive = value; 
+            }
         }
 
         [HasDefaultValue(false, false)]

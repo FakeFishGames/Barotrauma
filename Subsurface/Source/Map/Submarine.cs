@@ -159,7 +159,7 @@ namespace Subsurface
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count(); i++)
             {
-                if (MapEntity.mapEntityList[i].sprite == null || MapEntity.mapEntityList[i].sprite.Depth < 0.5f)
+                if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth < 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
 
@@ -181,7 +181,7 @@ namespace Subsurface
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count(); i++)
             {
-                if (MapEntity.mapEntityList[i].sprite == null || MapEntity.mapEntityList[i].sprite.Depth >= 0.5f)
+                if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth >= 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
         }
@@ -603,7 +603,7 @@ namespace Subsurface
 
             subBody = new SubmarineBody(this);            
             
-            MapEntity.LinkAll();
+            MapEntity.OnMapLoaded();
             
             foreach (Item item in Item.itemList)
             {

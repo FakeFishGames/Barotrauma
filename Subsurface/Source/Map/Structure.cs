@@ -57,7 +57,7 @@ namespace Subsurface
 
         bool isHorizontal;
         
-        public override Sprite sprite
+        public override Sprite Sprite
         {
             get { return prefab.sprite; }
         }
@@ -265,7 +265,7 @@ namespace Subsurface
                 convexHull = new ConvexHull(corners, Color.Black);
             }
 
-            mapEntityList.Add(this);
+            InsertToList();
         }
         
         public override void Remove()
@@ -290,19 +290,22 @@ namespace Subsurface
 
             Color color = (isHighlighted) ? Color.Green : Color.White;
             if (isSelected && editing) color = Color.Red;
+
+            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
             
-            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, color); 
- 
             foreach (WallSection s in sections)
             {
                 if (s.isHighLighted)
+                {
                     GUI.DrawRectangle(spriteBatch,
                         new Rectangle((int)s.rect.X, (int)-s.rect.Y, (int)s.rect.Width, (int)s.rect.Height),
                         new Color((s.damage / prefab.MaxHealth), 1.0f - (s.damage / prefab.MaxHealth), 0.0f, 1.0f), true);
+                }
+
 
                 s.isHighLighted = false;
 
-                if (s.damage == 0.0f) continue;
+                if (s.damage < 0.01f) continue;
                 
                 GUI.DrawRectangle(spriteBatch, 
                     new Rectangle((int)s.rect.X, (int)-s.rect.Y, (int)s.rect.Width, (int)s.rect.Height),

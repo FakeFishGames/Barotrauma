@@ -251,7 +251,7 @@ namespace Subsurface
 
             if (item == null) return;
 
-            item.sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
+            item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
 
             if (isHighLighted)
             {

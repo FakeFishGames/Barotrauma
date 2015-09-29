@@ -10,18 +10,17 @@ namespace Subsurface.Lights
         public static List<ConvexHull> list = new List<ConvexHull>();
         static BasicEffect shadowEffect;
         static BasicEffect penumbraEffect;
-        
-        private static VertexPositionTexture[] penumbraVertices;
-        
-        private VertexPositionColor[] vertices;
-        private short[] indices;
-        int primitiveCount;
+                
+        private Vector2[] vertices;
+        private int primitiveCount;
 
-        bool[] backFacing;
-        VertexPositionColor[] shadowVertices;
+        private bool[] backFacing;
+
+        private VertexPositionColor[] shadowVertices;
+        private VertexPositionTexture[] penumbraVertices;
 
         private Rectangle boundingBox;
-        
+
         public bool Enabled
         {
             get;
@@ -48,86 +47,77 @@ namespace Subsurface.Lights
                 penumbraEffect.LightingEnabled = false;
                 penumbraEffect.Texture = TextureLoader.FromFile("Content/Lights/penumbra.png");
             }
+            
+            vertices = points;
+            primitiveCount = vertices.Length;
 
-            if (penumbraVertices==null)
-            {
-                penumbraVertices = new VertexPositionTexture[6];
-            }
+            CalculateDimensions();
+            //indices = new short[primitiveCount * 3];
 
-            int vertexCount = points.Length;
-            vertices = new VertexPositionColor[vertexCount + 1];
-            Vector2 center = Vector2.Zero;
-
-            float? minX = null, minY = null, maxX = null, maxY = null;
-
-            for (int i = 0; i < vertexCount; i++)
-            {
-                vertices[i] = new VertexPositionColor(new Vector3(points[i], 0), color);
-                center += points[i];
-
-                if (minX == null || points[i].X < minX) minX = points[i].X;
-                if (minY == null || points[i].Y < minY) minY = points[i].Y;
-
-                if (maxX == null || points[i].X > maxX) maxX = points[i].X;
-                if (maxY == null || points[i].Y > minY) maxY = points[i].Y;
-            }
-            center /= points.Length;
-            vertices[vertexCount] = new VertexPositionColor(new Vector3(center, 0), color);
-
-            boundingBox = new Rectangle((int)minX, (int)minY, (int)(maxX-minX), (int)(maxY-minY));
-
-            primitiveCount = points.Length;
-            indices = new short[primitiveCount * 3];
-
-            for (int i = 0; i < primitiveCount; i++)
-            {
-                indices[3 * i] = (short)i;
-                indices[3 * i + 1] = (short)((i + 1) % vertexCount);
-                indices[3 * i + 2] = (short)vertexCount;
-            }
-            backFacing = new bool[vertexCount];
+            //for (int i = 0; i < primitiveCount; i++)
+            //{
+            //    indices[3 * i] = (short)i;
+            //    indices[3 * i + 1] = (short)((i + 1) % vertexCount);
+            //    indices[3 * i + 2] = (short)vertexCount;
+            //}
+            backFacing = new bool[primitiveCount];
             
             Enabled = true;
 
             list.Add(this);
         }
 
+        private void CalculateDimensions()
+        {
+            Vector2 center = Vector2.Zero;
+
+            float? minX = null, minY = null, maxX = null, maxY = null;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                center += vertices[i];
+
+                if (minX == null || vertices[i].X < minX) minX = vertices[i].X;
+                if (minY == null || vertices[i].Y < minY) minY = vertices[i].Y;
+
+                if (maxX == null || vertices[i].X > maxX) maxX = vertices[i].X;
+                if (maxY == null || vertices[i].Y > minY) maxY = vertices[i].Y;
+            }
+            center /= vertices.Length;
+
+            boundingBox = new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
+        }
+                
         public void Move(Vector2 amount)
         {
             for (int i = 0; i < vertices.Count(); i++)
             {
-                vertices[i].Position = new Vector3(vertices[i].Position.X + amount.X, vertices[i].Position.Y + amount.Y, vertices[i].Position.Z);
+                vertices[i] += amount;
             }
+
+            CalculateDimensions();
         }
 
         public void SetVertices(Vector2[] points)
         {
-            int vertexCount = points.Length;
-            vertices = new VertexPositionColor[vertexCount + 1];
-
-            for (int i = 0; i < vertexCount; i++)
-            {
-                vertices[i] = new VertexPositionColor(new Vector3(points[i], 0), Color.Black);
-            }
+            vertices = points;
         }
 
-        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, Matrix transform, bool los = true)
+        private void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
         {
-            if (!Enabled) return;
-            
             //compute facing of each edge, using N*L
             for (int i = 0; i < primitiveCount; i++)
             {
-                Vector2 firstVertex = new Vector2(vertices[i].Position.X, vertices[i].Position.Y);
+                Vector2 firstVertex = new Vector2(vertices[i].X, vertices[i].Y);
                 int secondIndex = (i + 1) % primitiveCount;
-                Vector2 secondVertex = new Vector2(vertices[secondIndex].Position.X, vertices[secondIndex].Position.Y);
+                Vector2 secondVertex = new Vector2(vertices[secondIndex].X, vertices[secondIndex].Y);
                 Vector2 middle = (firstVertex + secondVertex) / 2;
 
                 Vector2 L = lightSourcePos - middle;
 
-                Vector2 N = new Vector2();
-                N.X = -(secondVertex.Y - firstVertex.Y);
-                N.Y = secondVertex.X - firstVertex.X;
+                Vector2 N = new Vector2(
+                    -(secondVertex.Y - firstVertex.Y),
+                    secondVertex.X - firstVertex.X);
 
                 backFacing[i] = (Vector2.Dot(N, L) < 0);
             }
@@ -148,49 +138,6 @@ namespace Subsurface.Lights
                     startingIndex = nextEdge;
             }
 
-            if (los)
-            {
-                for (int n = 0; n < 4; n+=3)
-                {
-                    Vector3 penumbraStart = (n == 0) ? vertices[startingIndex].Position : vertices[endingIndex].Position;
-
-                    penumbraVertices[n] = new VertexPositionTexture();
-                    penumbraVertices[n].Position = penumbraStart;
-                    penumbraVertices[n].TextureCoordinate = new Vector2(0.0f, 1.0f);
-                    //penumbraVertices[0].te = fow ? Color.Black : Color.Transparent;
-
-                    for (int i = 0; i < 2; i++ )
-                    {
-                        penumbraVertices[n + i + 1] = new VertexPositionTexture();
-                        Vector3 vertexDir = penumbraStart - new Vector3(lightSourcePos, 0);
-                        vertexDir.Normalize();
-
-                        Vector3 normal = (i == 0) ? new Vector3(-vertexDir.Y, vertexDir.X, 0.0f) : new Vector3(vertexDir.Y, -vertexDir.X, 0.0f)*0.05f;
-                        if (n > 0) normal = -normal;
-                        vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) - normal * 20.0f);
-                        vertexDir.Normalize();
-                        penumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000;
-                        
-                        if (los)
-                        {
-                            penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
-                        }
-                        else
-                        {
-                            penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(1.0f, 0.0f) : Vector2.Zero;
-                        }
-                    }
-
-                    if (n > 0)
-                    {
-                        var temp = penumbraVertices[4];
-                        penumbraVertices[4] = penumbraVertices[5];
-                        penumbraVertices[5] = temp;
-                    }
-                }
-            }  
-                
-
             int shadowVertexCount;
 
             //nr of vertices that are in the shadow
@@ -206,7 +153,7 @@ namespace Subsurface.Lights
             int svCount = 0;
             while (svCount != shadowVertexCount * 2)
             {
-                Vector3 vertexPos = vertices[currentIndex].Position;
+                Vector3 vertexPos = new Vector3(vertices[currentIndex], 0.0f);
 
                 //one vertex on the hull
                 shadowVertices[svCount] = new VertexPositionColor();
@@ -224,10 +171,68 @@ namespace Subsurface.Lights
                 currentIndex = (currentIndex + 1) % primitiveCount;
             }
 
+            if (los)
+            {
+                CalculatePenumbraVertices(startingIndex, endingIndex, lightSourcePos, los);
+            }
+        }
+
+        private void CalculatePenumbraVertices(int startingIndex, int endingIndex, Vector2 lightSourcePos, bool los)
+        {
+            penumbraVertices = new VertexPositionTexture[6];
+
+            for (int n = 0; n < 4; n += 3)
+            {
+                Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex] : vertices[endingIndex], 0.0f);
+
+                penumbraVertices[n] = new VertexPositionTexture();
+                penumbraVertices[n].Position = penumbraStart;
+                penumbraVertices[n].TextureCoordinate = new Vector2(0.0f, 1.0f);
+                //penumbraVertices[0].te = fow ? Color.Black : Color.Transparent;
+
+                for (int i = 0; i < 2; i++)
+                {
+                    penumbraVertices[n + i + 1] = new VertexPositionTexture();
+                    Vector3 vertexDir = penumbraStart - new Vector3(lightSourcePos, 0);
+                    vertexDir.Normalize();
+
+                    Vector3 normal = (i == 0) ? new Vector3(-vertexDir.Y, vertexDir.X, 0.0f) : new Vector3(vertexDir.Y, -vertexDir.X, 0.0f) * 0.05f;
+                    if (n > 0) normal = -normal;
+
+                    vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) - normal * 20.0f);
+                    vertexDir.Normalize();
+                    penumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000;
+
+                    if (los)
+                    {
+                        penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
+                    }
+                    else
+                    {
+                        penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(1.0f, 0.0f) : Vector2.Zero;
+                    }
+                }
+
+                if (n > 0)
+                {
+                    var temp = penumbraVertices[4];
+                    penumbraVertices[4] = penumbraVertices[5];
+                    penumbraVertices[5] = temp;
+                }
+            }
+        }
+
+        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, Matrix transform, bool los = true)
+        {
+            if (!Enabled) return;
+
+            CalculateShadowVertices(lightSourcePos, los);
+                           
+
             shadowEffect.World = transform;
             shadowEffect.CurrentTechnique.Passes[0].Apply();
 
-            graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount * 2 - 2);
+            graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertices.Length - 2);
 
             if (los)
             {
