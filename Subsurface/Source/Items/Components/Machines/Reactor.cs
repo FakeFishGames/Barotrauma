@@ -206,7 +206,7 @@ namespace Subsurface.Items.Components
             if (item.CurrentHull != null)
             {
                 //the sound can be heard from 20 000 display units away when everything running at 100%
-                item.CurrentHull.SoundRange += (coolingRate + fissionRate) * 100;
+                item.CurrentHull.SoundRange = (coolingRate + fissionRate) * 100;
             }
 
             UpdateGraph(deltaTime);

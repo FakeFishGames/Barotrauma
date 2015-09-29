@@ -132,7 +132,7 @@ namespace Subsurface
                 Debug.WriteLine("   char: " + sw.ElapsedTicks);
                 sw.Restart();
 
-                Ragdoll.UpdateAll((float)Physics.step);
+                Ragdoll.UpdateAll(cam, (float)Physics.step);
 
                 if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
                 {
