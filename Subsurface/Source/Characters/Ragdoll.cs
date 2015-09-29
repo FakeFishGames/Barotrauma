@@ -22,7 +22,9 @@ namespace Subsurface
         private Dictionary<LimbType, Limb> limbDictionary;
         public RevoluteJoint[] limbJoints;
 
-        Character character;
+        private bool simplePhysicsEnabled;
+
+        private Character character;
 
         private Limb lowestLimb;
 
@@ -74,6 +76,29 @@ namespace Subsurface
         {
             get;
             private set;
+        }
+
+        public bool SimplePhysicsEnabled
+        {
+            get { return simplePhysicsEnabled; }
+            set
+            {
+                if (value == simplePhysicsEnabled) return;
+
+                simplePhysicsEnabled = value;
+
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.Enabled = !simplePhysicsEnabled;
+                }
+
+                foreach (RevoluteJoint joint in limbJoints)
+                {
+                    joint.Enabled = !simplePhysicsEnabled;
+                }
+
+                refLimb.body.Enabled = true;
+            }
         }
 
         public Vector2 TargetMovement
@@ -473,11 +498,11 @@ namespace Subsurface
             }
         }
 
-        public static void UpdateAll(float deltaTime)
+        public static void UpdateAll(Camera cam, float deltaTime)
         {
             foreach (Ragdoll r in list)
             {
-                r.Update(deltaTime);
+                r.Update(cam, deltaTime);
             }
         }
 
@@ -491,9 +516,11 @@ namespace Subsurface
                 currentHull);
         }
 
-        public void Update(float deltaTime)
+        public void Update(Camera cam, float deltaTime)
         {
             UpdateNetplayerPosition();
+
+
 
             Vector2 flowForce = Vector2.Zero;
 
@@ -537,8 +564,7 @@ namespace Subsurface
                     limb.inWater = true;
                 }
                 else if (limbHull.Volume > 0.0f && Submarine.RectContains(limbHull.Rect, limbPosition))
-                {
-                    
+                {                    
                     if (limbPosition.Y < limbHull.Surface)                        
                     {
                         limb.inWater = true;

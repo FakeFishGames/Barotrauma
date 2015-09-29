@@ -728,19 +728,10 @@ int currentTargetIndex = 1;
                 }
             }
 
-            foreach (MapEntity mapEntity in MapEntity.mapEntityList)
-            {               
-                Item item = mapEntity as Item;
-                if (item == null)
-                {
-                    //if (!mapEntity.MoveWithLevel) continue;
-                    //mapEntity.Move(velocity);
-                }
-                else if (item.body!=null)
-                {
-                    if (item.CurrentHull != null) continue;
-                    item.body.LinearVelocity += simVelocity;
-                }
+            foreach (Item item in Item.itemList)
+            {        
+                if (item.body==null || item.CurrentHull != null) continue;
+                item.body.LinearVelocity += simVelocity;                
             }
 
             AtStartPosition = Vector2.Distance(startPosition, -Position) < ExitDistance;

@@ -110,7 +110,7 @@ namespace Subsurface
                 {
                     Character.UpdateAnimAll((float)Physics.step * 1000.0f);
 
-                    Ragdoll.UpdateAll((float)Physics.step);
+                    Ragdoll.UpdateAll(cam, (float)Physics.step);
 
                     GameMain.World.Step((float)Physics.step);
 

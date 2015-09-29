@@ -18,10 +18,7 @@ namespace Subsurface
 
         public override Vector2 RadarPosition
         {
-            get
-            {
-                return monster.Position;
-            }
+            get { return monster.Position; }
         }
 
         public MonsterQuest(XElement element)
@@ -34,7 +31,7 @@ namespace Subsurface
         {
             Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
 
-            monster = new Character(monsterFile, ConvertUnits.ToSimUnits(position+level.Position));
+            monster = new AICharacter(monsterFile, ConvertUnits.ToSimUnits(position+level.Position));
         }
 
         public override void End()
