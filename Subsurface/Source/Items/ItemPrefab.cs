@@ -145,7 +145,7 @@ namespace Subsurface
 
             name = ToolBox.GetAttributeString(element, "name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
-            
+
             pickDistance = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f));
             
             isLinkable          = ToolBox.GetAttributeBool(element, "linkable", false);

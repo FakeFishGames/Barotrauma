@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Subsurface.Lights;
+using System.Diagnostics;
 
 namespace Subsurface
 {
@@ -57,7 +58,14 @@ namespace Subsurface
             //http://gafferongames.com/game-physics/fix-your-timestep/
             Physics.accumulator += deltaTime;
 
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             AmbientSoundManager.Update();
+
+            sw.Stop();
+            Debug.WriteLine("**************  abupdate: "+sw.ElapsedTicks);
+            sw.Restart();
 
             //if (Game1.GameSession != null && Game1.GameSession.Level != null)
             //{
@@ -73,17 +81,38 @@ namespace Subsurface
             if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);
 
+            sw.Stop();
+            Debug.WriteLine("gamesession update: " + sw.ElapsedTicks);
+            sw.Restart();
+
             Character.UpdateAll(cam, (float)deltaTime);
 
-            BackgroundSpriteManager.Update((float)deltaTime);
+            sw.Stop();
+            Debug.WriteLine("characterupdate: " + sw.ElapsedTicks);
+            sw.Restart();
+
+            BackgroundSpriteManager.Update(cam, (float)deltaTime);
+
+            sw.Stop();
+            Debug.WriteLine("bgsprite: " + sw.ElapsedTicks);
+            sw.Restart();
 
             GameMain.ParticleManager.Update((float)deltaTime);
 
+            sw.Stop();
+            Debug.WriteLine("particlemanager: " + sw.ElapsedTicks);
+            sw.Restart();
+
             StatusEffect.UpdateAll((float)deltaTime);
+
+            sw.Stop();
+            Debug.WriteLine("statuseff: " + sw.ElapsedTicks);
+
             
             Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 4);
             while (Physics.accumulator >= Physics.step)
             {
+            sw.Restart();
                 cam.MoveCamera((float)Physics.step);
 
                 foreach (PhysicsBody pb in PhysicsBody.list)
@@ -93,7 +122,15 @@ namespace Subsurface
                     
                 MapEntity.UpdateAll(cam, (float)Physics.step);
 
+                sw.Stop();
+                Debug.WriteLine("   mapentity: " + sw.ElapsedTicks);
+                sw.Restart();
+
                 Character.UpdateAnimAll((float)Physics.step);
+
+                sw.Stop();
+                Debug.WriteLine("   char: " + sw.ElapsedTicks);
+                sw.Restart();
 
                 Ragdoll.UpdateAll((float)Physics.step);
 
@@ -102,7 +139,15 @@ namespace Subsurface
                     GameMain.GameSession.Submarine.Update((float)Physics.step);
                 }
 
+                sw.Stop();
+                Debug.WriteLine("   sub: " + sw.ElapsedTicks);
+                sw.Restart();
+
                 GameMain.World.Step((float)Physics.step);
+
+                sw.Stop();
+                Debug.WriteLine("   worldstep: " + sw.ElapsedTicks);
+                sw.Restart();
 
                 Level.AfterWorldStep();
 
@@ -146,7 +191,7 @@ namespace Subsurface
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             GameMain.LightManager.DrawLightmap(graphics, spriteBatch, cam);
-            
+
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
             //----------------------------------------------------------------------------------------
@@ -200,7 +245,7 @@ namespace Subsurface
             Submarine.DrawBack(spriteBatch);
 
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
-
+            
             spriteBatch.End();
 
             //----------------------------------------------------------------------------------------
@@ -212,10 +257,6 @@ namespace Subsurface
                 BlendState.AlphaBlend);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), new Color(0.75f, 0.8f, 0.9f, 1.0f));
             spriteBatch.End();
-
-            BlendState blend = new BlendState();
-            blend.AlphaSourceBlend = Blend.One;
-            blend.AlphaDestinationBlend = Blend.InverseSourceAlpha;
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.AlphaBlend,
@@ -258,7 +299,7 @@ namespace Subsurface
             }
 
             Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
-
+            
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
             {
                 GameMain.GameSession.Level.Render(graphics, cam);
@@ -285,17 +326,16 @@ namespace Subsurface
             Submarine.DrawFront(spriteBatch);
 
             foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
-
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
-            {
-                GameMain.GameSession.Level.Draw(spriteBatch);
-                //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
-            }
+            
+            //if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+            //{
+            //    GameMain.GameSession.Level.Draw(spriteBatch);
+            //    //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
+            //}
 
             spriteBatch.End();
 
             GameMain.LightManager.DrawLOS(graphics, cam, LightManager.ViewPos);
-
         }
     }
 }

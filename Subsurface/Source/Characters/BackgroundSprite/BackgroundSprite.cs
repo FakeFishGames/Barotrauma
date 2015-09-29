@@ -15,6 +15,8 @@ namespace Subsurface
 
         const float CheckWallsInterval = 5.0f;
 
+        public bool Enabled;
+
         private BackgroundSpritePrefab prefab;
 
         private Vector2 position;
@@ -28,6 +30,12 @@ namespace Subsurface
         private float checkWallsTimer;
 
         public Swarm Swarm;
+
+        Vector2 drawPosition;
+        public Vector2 TransformedPosition
+        {
+            get { return drawPosition; }
+        }
 
         public Vector2 Position
         {
@@ -50,6 +58,8 @@ namespace Subsurface
             this.prefab = prefab;
 
             this.position = position;
+
+            drawPosition = position + Level.Loaded.Position;
 
             steeringManager = new SteeringManager(this);
 
@@ -141,18 +151,16 @@ namespace Subsurface
                 if (velocity.X < 0.0f) rotation -= MathHelper.Pi;
             }
 
-            Vector2 drawPos = position;
-
-            if (Level.Loaded != null) drawPos += Level.Loaded.Position;
+            if (Level.Loaded != null) drawPosition = position + Level.Loaded.Position;
 
             if (depth > 0.0f)
             {
-                Vector2 camOffset = drawPos - GameMain.GameScreen.Cam.WorldViewCenter;
+                Vector2 camOffset = drawPosition - GameMain.GameScreen.Cam.WorldViewCenter;
 
-                drawPos = drawPos - camOffset * (depth / MaxDepth) * 0.05f;
+                drawPosition = drawPosition - camOffset * (depth / MaxDepth) * 0.05f;
             }
 
-            prefab.Sprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), Color.Lerp(Color.White, Color.DarkBlue, (depth/MaxDepth)*0.3f),
+            prefab.Sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), Color.Lerp(Color.White, Color.DarkBlue, (depth/MaxDepth)*0.3f),
                 rotation, 1.0f - (depth / MaxDepth) * 0.2f, velocity.X > 0.0f ? SpriteEffects.None : SpriteEffects.FlipHorizontally, (depth / MaxDepth));
         }
     }

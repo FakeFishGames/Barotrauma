@@ -48,7 +48,7 @@ namespace Subsurface
             linkedTo = new ObservableCollection<MapEntity>();
             idCardTags = new string[0];
 
-            mapEntityList.Add(this);
+            InsertToList();
             WayPointList.Add(this);
         }
 

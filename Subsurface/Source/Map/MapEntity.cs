@@ -72,7 +72,7 @@ namespace Subsurface
             set { rect = value; }
         }        
 
-        public virtual Sprite sprite 
+        public virtual Sprite Sprite 
         {
             get { return null; } 
         }
@@ -150,6 +150,28 @@ namespace Subsurface
             return (Submarine.RectContains(rect, position));
         }
         
+        protected void InsertToList()
+        {
+            int i = 0;
+
+            if (Sprite==null)
+            {
+                mapEntityList.Add(this);
+                return;
+            }
+
+            while (i<mapEntityList.Count)
+            {
+                i++;
+
+                Sprite existingSprite = mapEntityList[i-1].Sprite;
+                if (existingSprite == null) continue;                
+                if (existingSprite.Texture == this.Sprite.Texture) break;
+            }
+
+            mapEntityList.Insert(i, this);
+        }
+
         public virtual void Draw(SpriteBatch spriteBatch, bool editing) {}
 
         public override void Remove()
@@ -227,8 +249,8 @@ namespace Subsurface
 
             foreach (MapEntity e in mapEntityList)
             {
-                if (highLightedEntity == null || e.sprite == null ||
-                    (highLightedEntity.sprite!=null && e.sprite.Depth < highLightedEntity.sprite.Depth))
+                if (highLightedEntity == null || e.Sprite == null ||
+                    (highLightedEntity.Sprite!=null && e.Sprite.Depth < highLightedEntity.Sprite.Depth))
                 {
                     if (e.Contains(position)) highLightedEntity = e;
                 }
@@ -448,7 +470,7 @@ namespace Subsurface
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
-        public static void LinkAll()
+        public static void OnMapLoaded()
         {
             foreach (MapEntity e in mapEntityList)
             {
@@ -465,7 +487,15 @@ namespace Subsurface
                         e.linkedTo.Add(linked);
                 }
             }
+
+            //mapEntityList.Sort((x, y) =>
+            //{
+            //    return x.Name.CompareTo(y.Name);
+            //});
+
         }
+    
+        
 
         public void RemoveLinked(MapEntity e)
         {

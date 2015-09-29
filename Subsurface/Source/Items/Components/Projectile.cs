@@ -205,7 +205,7 @@ namespace Subsurface.Items.Components
             stickJoint.MaxMotorForce = 30.0f;
 
             stickJoint.LimitEnabled = true;
-            stickJoint.UpperLimit = ConvertUnits.ToSimUnits(item.sprite.size.X*0.7f);
+            stickJoint.UpperLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X*0.7f);
 
             item.body.FarseerBody.IgnoreCollisionWith(targetBody);
             stickTarget = targetBody;

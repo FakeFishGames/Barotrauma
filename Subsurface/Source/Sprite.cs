@@ -80,9 +80,9 @@ namespace Subsurface
                 if (!path.EndsWith("/")) path += "/";
             }
 
-            file = path + file;
-
-            texture = LoadTexture(file);
+            this.file = path + file;
+            
+            texture = LoadTexture(this.file);
 
             if (texture == null) return;
             

@@ -436,9 +436,6 @@ namespace Subsurface.Networking
                 userID = inc.ReadInt32();
                 userPassword = inc.ReadString();
                 version = inc.ReadString();
-#if DEBUG
-                version = GameMain.Version.ToString();
-#endif
                 packageName = inc.ReadString();
                 packageHash = inc.ReadString();
                 name = inc.ReadString();
@@ -449,6 +446,8 @@ namespace Subsurface.Networking
                 DebugConsole.NewMessage("Connection error - server failed to read the ConnectionApproval message", Color.Red);
                 return;
             }
+
+#if !DEBUG
 
             if (userPassword != password)
             {
@@ -480,6 +479,8 @@ namespace Subsurface.Networking
                 DebugConsole.NewMessage(name + " couldn't join the server (name already in use)", Color.Red);
                 return;
             }
+
+#endif
 
             //existing user re-joining
             if (userID > 0)

@@ -307,16 +307,22 @@ namespace Subsurface
             if (GameMain.DebugDraw)
             {
                 spriteBatch.DrawString(Font,
-                    "Physics: " + GameMain.World.UpdateTime
-                    + " - bodies: " + GameMain.World.BodyList.Count 
-                    + " Camera pos: " + GameMain.GameScreen.Cam.Position,
+                    "Physics: " + GameMain.World.UpdateTime,
                     new Vector2(10, 30), Color.White);
+
+                spriteBatch.DrawString(Font,
+                    "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
+                    new Vector2(10, 50), Color.White);
+
+                spriteBatch.DrawString(Font,
+                    "Camera pos: " + GameMain.GameScreen.Cam.Position,
+                    new Vector2(10, 70), Color.White);
 
                 if (Submarine.Loaded!=null)
                 {
                     spriteBatch.DrawString(Font,
                         "Sub pos: " + Submarine.Loaded.Position,
-                        new Vector2(10, 50), Color.White);
+                        new Vector2(10, 90), Color.White);
                 }
             }
             

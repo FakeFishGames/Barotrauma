@@ -73,7 +73,7 @@ namespace Subsurface
             FindHulls();
 
             GapList.Add(this);
-            mapEntityList.Add(this);
+            InsertToList();
         }
 
         public static void UpdateHulls()

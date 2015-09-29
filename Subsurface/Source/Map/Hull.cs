@@ -146,8 +146,7 @@ namespace Subsurface
 
             Volume = 0.0f;
 
-            //add to list of entities as well
-            mapEntityList.Add(this);
+            InsertToList();
         }
 
         public override bool Contains(Vector2 position)

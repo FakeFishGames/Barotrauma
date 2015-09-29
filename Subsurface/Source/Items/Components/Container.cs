@@ -179,7 +179,7 @@ namespace Subsurface.Items.Components
             {
                 if (containedItem == null) continue;
 
-                containedItem.sprite.Draw(
+                containedItem.Sprite.Draw(
                     spriteBatch, 
                     new Vector2(transformedItemPos.X, -transformedItemPos.Y), 
                     -currentRotation, 
