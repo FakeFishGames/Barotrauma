@@ -601,11 +601,10 @@ namespace Subsurface
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            //if (isDead)
-            //{
-
-            //    return;
-            //}
+            if (PlayerInput.KeyHit(Keys.U))
+            {
+                AnimController.SimplePhysicsEnabled = !AnimController.SimplePhysicsEnabled;
+            }
 
             Limb head = AnimController.GetLimb(LimbType.Head);
 
@@ -747,6 +746,8 @@ namespace Subsurface
 
         public virtual void Update(Camera cam, float deltaTime)
         {
+            AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>2000.0f);
+            
             if (isDead) return;
             
             if (PressureProtection==0.0f && 
