@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace Subsurface
 {
@@ -48,6 +49,11 @@ namespace Subsurface
 
         public override void UpdateAnim(float deltaTime)
         {
+            if (PlayerInput.KeyHit(Keys.I))
+            {
+                SimplePhysicsEnabled = !SimplePhysicsEnabled;
+            }
+
             if (character.IsDead)
             {
                 UpdateDying(deltaTime);
@@ -68,6 +74,10 @@ namespace Subsurface
                 stunTimer -= deltaTime;
                 return;
             }
+            else if (SimplePhysicsEnabled)
+            {
+                UpdateSimpleAnim();
+            }
             else
             {
                 if (inWater)
@@ -79,7 +89,6 @@ namespace Subsurface
                     UpdateWalkAnim(deltaTime);
                 }
             }
-
 
             if (flip)
             {
@@ -206,6 +215,31 @@ namespace Subsurface
             else
             {
                 floorY = Limbs[0].SimPosition.Y;
+            }
+        }
+
+        void UpdateSimpleAnim()
+        {
+            movement = MathUtils.SmoothStep(movement, TargetMovement*swimSpeed, 1.0f);
+            if (movement == Vector2.Zero) return;
+
+            float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
+            
+            RefLimb.body.SmoothRotate(
+                (rotateTowardsMovement) ?
+                RefLimb.body.Rotation + MathUtils.GetShortestAngle(RefLimb.body.Rotation, movementAngle) :
+                HeadAngle*Dir);
+
+            RefLimb.pullJoint.Enabled = true;
+            RefLimb.pullJoint.WorldAnchorB =
+                RefLimb.SimPosition + movement * 0.1f;
+
+            RefLimb.body.SmoothRotate(0.0f);
+
+            foreach (Limb l in Limbs)
+            {
+                if (l == RefLimb) continue;
+                l.body.SetTransform(RefLimb.SimPosition, RefLimb.Rotation);
             }
         }
     

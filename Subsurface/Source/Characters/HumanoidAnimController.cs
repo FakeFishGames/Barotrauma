@@ -30,8 +30,8 @@ namespace Subsurface
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (character.IsDead)  return;            
-
+            if (character.IsDead)  return;   
+         
             Vector2 colliderPos = GetLimb(LimbType.Torso).SimPosition;
 
             //if (inWater) stairs = null;
@@ -136,6 +136,15 @@ namespace Subsurface
                 return;
             }
 
+            if (TargetDir != dir) Flip();
+
+            if (SimplePhysicsEnabled)
+            {
+                UpdateStandingSimple();
+                return;
+            }
+
+
             switch (Anim)
             {
                 case Animation.Climbing:
@@ -152,7 +161,6 @@ namespace Subsurface
                     break;
             }
 
-            if (TargetDir != dir) Flip();
 
             foreach (Limb limb in Limbs)
             {
@@ -387,6 +395,29 @@ namespace Subsurface
                 leg.body.ApplyTorque(-Dir * leg.Mass * 20.0f);
             }
 
+        }
+
+        void UpdateStandingSimple()
+        {
+            movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
+
+            if (inWater && movement != Vector2.Zero)
+            {
+                movement = Vector2.Normalize(movement);
+            }
+            
+            RefLimb.pullJoint.Enabled = true;
+            RefLimb.pullJoint.WorldAnchorB =
+                RefLimb.SimPosition + movement*0.15f;
+
+            RefLimb.body.SmoothRotate(0.0f);
+
+            foreach (Limb l in Limbs)
+            {
+                if (l==RefLimb) continue;
+                l.body.SetTransform(RefLimb.SimPosition, RefLimb.Rotation);
+            }
+                //new Vector2(movement.X, floorY + HeadPosition), 0.5f);
         }
 
         void UpdateSwimming()
