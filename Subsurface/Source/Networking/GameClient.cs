@@ -319,47 +319,7 @@ namespace Subsurface.Networking
                     case (byte)PacketTypes.StartGame:
                         if (gameStarted) continue;
 
-                        if (this.Character != null) Character.Remove();
-
-                        int seed = inc.ReadInt32();
-                        
-
-                        string levelSeed = inc.ReadString();
-
-                        string mapName = inc.ReadString();
-                        string mapHash = inc.ReadString();
-
-                        GameMain.NetLobbyScreen.TrySelectMap(mapName, mapHash);
-                        
-                        double durationMinutes = inc.ReadDouble();
-
-                        TimeSpan duration = new TimeSpan(0,(int)durationMinutes,0);
-                        Rand.SetSyncedSeed(seed);
-                        //int gameModeIndex = inc.ReadInt32();
-                        GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameMain.NetLobbyScreen.SelectedMode);
-                        GameMain.GameSession.StartShift(duration, levelSeed);
-
-                        //myCharacter = ReadCharacterData(inc);
-                        //Character.Controlled = myCharacter;                       
-
-                        List<Character> crew = new List<Character>();
-
-                        int count = inc.ReadInt32();
-                        for (int n = 0; n < count; n++)
-                        {
-                            int id = inc.ReadInt32();
-                            Character newCharacter = ReadCharacterData(inc, id == myID);
-
-                            crew.Add(newCharacter);
-                        }
-
-                        gameStarted = true;
-
-                        GameMain.GameScreen.Select();
-
-                        AddChatMessage("Press TAB to chat", ChatMessageType.Server);
-
-                        CreateCrewFrame(crew);
+                        GameMain.ShowLoading(StartGame(inc));
 
                         break;
                     case (byte)PacketTypes.EndGame:
@@ -415,6 +375,63 @@ namespace Subsurface.Networking
                 
             }
         }
+
+        private IEnumerable<object> StartGame(NetIncomingMessage inc)
+        {
+
+            if (this.Character != null) Character.Remove();
+
+            int seed = inc.ReadInt32();
+
+            string levelSeed = inc.ReadString();
+
+            string mapName = inc.ReadString();
+            string mapHash = inc.ReadString();
+
+            GameMain.NetLobbyScreen.TrySelectMap(mapName, mapHash);
+
+            yield return CoroutineStatus.Running;
+
+            double durationMinutes = inc.ReadDouble();
+
+            TimeSpan duration = new TimeSpan(0, (int)durationMinutes, 0);
+            Rand.SetSyncedSeed(seed);
+            //int gameModeIndex = inc.ReadInt32();
+            GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameMain.NetLobbyScreen.SelectedMode);
+
+            yield return CoroutineStatus.Running;
+
+            GameMain.GameSession.StartShift(duration, levelSeed);
+
+            yield return CoroutineStatus.Running;
+
+            //myCharacter = ReadCharacterData(inc);
+            //Character.Controlled = myCharacter;                       
+
+            List<Character> crew = new List<Character>();
+
+            int count = inc.ReadInt32();
+            for (int n = 0; n < count; n++)
+            {
+                int id = inc.ReadInt32();
+                Character newCharacter = ReadCharacterData(inc, id == myID);
+
+                crew.Add(newCharacter);
+
+                yield return CoroutineStatus.Running;
+            }
+
+            gameStarted = true;
+
+            GameMain.GameScreen.Select();
+
+            AddChatMessage("Press TAB to chat", ChatMessageType.Server);
+
+            CreateCrewFrame(crew);
+
+            yield return CoroutineStatus.Success;
+        }
+        
 
         public IEnumerable<object> EndGame(string endMessage)
         {

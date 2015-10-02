@@ -225,8 +225,9 @@ namespace Subsurface
                     }
                 }
 
-                dummyCharacter.ControlLocalPlayer((float)deltaTime, cam);
+                dummyCharacter.ControlLocalPlayer((float)deltaTime, cam, false);
                 dummyCharacter.Control((float)deltaTime, cam);
+                cam.TargetPos = Vector2.Zero;
             }
             else
             {

@@ -118,10 +118,7 @@ namespace Subsurface
                 }
 
                 Physics.Alpha = Physics.accumulator / Physics.step;
-            }
-
-
-                                                
+            }                                                
         }
 
         /// <summary>

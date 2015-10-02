@@ -22,6 +22,8 @@ namespace Subsurface
 
     class Submarine : Entity
     {
+        public const string SavePath = "Data/SavedSubs";
+
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
@@ -33,7 +35,6 @@ namespace Subsurface
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
 
-        static string SaveFolder;
         Md5Hash hash;
         
         private string filePath;
@@ -448,35 +449,34 @@ namespace Subsurface
             //doc.Save(filePath);
         }
 
-        public static void SaveCurrent(string savePath)
+        public static void SaveCurrent(string fileName)
         {
             if (loaded==null)
             {
-                loaded = new Submarine(savePath);
+                loaded = new Submarine(fileName);
                // return;
             }
 
-            loaded.SaveAs(savePath);
+            loaded.SaveAs(SavePath+"/"+fileName);
         }
 
-        public static void Preload(string folder)
+        public static void Preload()
         {
-            SaveFolder = folder;
 
             //string[] mapFilePaths;
             Unload();
             SavedSubmarines.Clear();
 
-            if (!Directory.Exists(SaveFolder))
+            if (!Directory.Exists(SavePath))
             {
                 try
                 {
-                    Directory.CreateDirectory(SaveFolder);
+                    Directory.CreateDirectory(SavePath);
                 }
-                catch
+                catch (Exception e)
                 {
 
-                    DebugConsole.ThrowError("Directory ''"+SaveFolder+"'' not found and creating the directory failed.");
+                    DebugConsole.ThrowError("Directory ''" + SavePath + "'' not found and creating the directory failed.", e);
                     return;
                 }
             }
@@ -485,11 +485,11 @@ namespace Subsurface
 
             try
             {
-                filePaths = Directory.GetFiles(SaveFolder);
+                filePaths = Directory.GetFiles(SavePath);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't open directory ''" + SaveFolder + "''!", e);
+                DebugConsole.ThrowError("Couldn't open directory ''" + SavePath + "''!", e);
                 return;
             }
 
@@ -618,11 +618,11 @@ namespace Subsurface
             loaded = this;
         }
 
-        public static Submarine Load(string file)
+        public static Submarine Load(string fileName)
         {
             Unload();            
 
-            Submarine sub = new Submarine(file);
+            Submarine sub = new Submarine(SavePath+"/"+fileName);
             sub.Load();
 
             //Entity.dictionary.Add(int.MaxValue, sub);

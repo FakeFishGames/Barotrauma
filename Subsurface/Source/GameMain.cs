@@ -57,10 +57,12 @@ namespace Subsurface
         
         public static World World;
 
-        public static TitleScreen TitleScreen;
-        private bool titleScreenOpen;
+        public static LoadingScreen TitleScreen;
+        private static bool titleScreenOpen;
 
         public static GameSettings Config;
+
+        private bool hasLoaded;
 
         //public static Random localRandom;
         //public static Random random;
@@ -98,6 +100,12 @@ namespace Subsurface
             Graphics = new GraphicsDeviceManager(this);
 
             Config = new GameSettings("config.xml");
+            if (Config.WasGameUpdated)
+            {
+                UpdaterUtil.CleanOldFiles();
+                Config.WasGameUpdated = false;
+                Config.Save("config.xml");
+            }
             
             graphicsWidth = Config.GraphicsWidth;
             graphicsHeight = Config.GraphicsHeight;
@@ -112,9 +120,7 @@ namespace Subsurface
 
             FrameCounter = new FrameCounter();
 
-            //renderTimer = new Stopwatch();
-
-            IsMouseVisible = true;
+            //IsMouseVisible = true;
 
             IsFixedTimeStep = false;
             //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
@@ -158,12 +164,11 @@ namespace Subsurface
             TextureLoader.Init(GraphicsDevice);
 
             titleScreenOpen = true;
-            TitleScreen = new TitleScreen(GraphicsDevice);
+            TitleScreen = new LoadingScreen(GraphicsDevice);
 
             CoroutineManager.StartCoroutine(Load());
         }
 
-        private float loadState = 0.0f;
         private IEnumerable<object> Load()
         {
             GUI.Init(Content);
@@ -173,42 +178,42 @@ namespace Subsurface
             LightManager = new Lights.LightManager(GraphicsDevice);
 
             Hull.renderer = new WaterRenderer(GraphicsDevice);
-        loadState = 1.0f;
+        TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
             GUI.LoadContent(GraphicsDevice);
-        loadState = 2.0f;
+            TitleScreen.LoadState = 2.0f;
         yield return CoroutineStatus.Running;
 
             MapEntityPrefab.Init();
-        loadState = 10.0f;
+            TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
-        loadState = 15.0f;
+            TitleScreen.LoadState = 15.0f;
         yield return CoroutineStatus.Running;
 
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
-        loadState = 25.0f;
+            TitleScreen.LoadState = 25.0f;
         yield return CoroutineStatus.Running;
 
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
-        loadState = 40.0f;
+            TitleScreen.LoadState = 40.0f;
         yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
             CoroutineManager.StartCoroutine(AmbientSoundManager.Init());
-        loadState = 70.0f;
+            TitleScreen.LoadState = 70.0f;
         yield return CoroutineStatus.Running;
 
             GameModePreset.Init();
 
-            Submarine.Preload("Content/SavedMaps");
-        loadState = 80.0f;
+            Submarine.Preload();
+            TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;
 
             GameScreen          =   new GameScreen(Graphics.GraphicsDevice);
-        loadState = 90.0f;
+            TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
             MainMenuScreen      =   new MainMenuScreen(this); 
@@ -233,8 +238,10 @@ namespace Subsurface
             MainMenuScreen.Select();
         yield return CoroutineStatus.Running;
 
-            loadState = 100.0f;
+        TitleScreen.LoadState = 100.0f;
+        hasLoaded = true;
         yield return CoroutineStatus.Success;
+
         }
 
         /// <summary>
@@ -259,7 +266,7 @@ namespace Subsurface
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
             PlayerInput.Update(deltaTime);
 
-            if (loadState >= 100.0f && !titleScreenOpen)
+            if (hasLoaded && !titleScreenOpen)
             {
                 if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
@@ -296,18 +303,18 @@ namespace Subsurface
 
             if (titleScreenOpen)
             {
-                TitleScreen.Draw(spriteBatch, GraphicsDevice, loadState, (float)deltaTime);
-                if (loadState>=100.0f && (PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
+                TitleScreen.Draw(spriteBatch, GraphicsDevice, (float)deltaTime);
+                if (TitleScreen.LoadState>=100.0f && (PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
                 {
                     titleScreenOpen = false;
                 }
             }
-            else if (loadState >= 100.0f)
+            else if (hasLoaded)
             {
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
             }
 
-            double elapsed =sw.Elapsed.TotalSeconds;
+            double elapsed = sw.Elapsed.TotalSeconds;
             if (elapsed < Physics.step)
             {
                 System.Threading.Thread.Sleep((int)((Physics.step - elapsed) * 1000.0));
@@ -316,6 +323,15 @@ namespace Subsurface
         }
 
         Stopwatch sw;
+
+        public static void ShowLoading(IEnumerable<object> loader)
+        {
+            titleScreenOpen = true;
+            CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
+
+        }
+
+
 
         protected override void OnExiting(object sender, EventArgs args)
         {

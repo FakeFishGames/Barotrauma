@@ -49,11 +49,6 @@ namespace Subsurface
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (PlayerInput.KeyHit(Keys.I))
-            {
-                SimplePhysicsEnabled = !SimplePhysicsEnabled;
-            }
-
             if (character.IsDead)
             {
                 UpdateDying(deltaTime);

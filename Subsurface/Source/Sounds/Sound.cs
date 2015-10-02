@@ -229,6 +229,9 @@ namespace Subsurface
                         
         public void Remove()
         {
+            //sound already removed?
+            if (!loadedSounds.Contains(this)) return;
+
             loadedSounds.Remove(this);
 
             System.Diagnostics.Debug.WriteLine("Removing sound " + filePath + " (buffer id" + AlBufferId + ")");

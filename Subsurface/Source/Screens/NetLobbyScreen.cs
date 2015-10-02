@@ -273,7 +273,7 @@ namespace Subsurface
             if (IsServer && GameMain.Server != null)
             {
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
-                startButton.OnClicked = GameMain.Server.StartGame;
+                startButton.OnClicked = GameMain.Server.StartGameClicked;
                 startButton.UserData = "startButton";
                 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
@@ -523,14 +523,7 @@ namespace Subsurface
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
-
-
-        public bool StartGame(object obj)
-        {
-            GameMain.Server.StartGame(null, obj);
-            return true;
-        }
-
+        
         public bool EnterChatMessage(GUITextBox textBox, string message)
         {
             if (String.IsNullOrEmpty(message)) return false;

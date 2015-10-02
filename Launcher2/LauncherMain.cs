@@ -66,7 +66,7 @@ namespace Launcher2
         {
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferWidth = 640;
-            graphics.PreferredBackBufferHeight = 360;
+            graphics.PreferredBackBufferHeight = 400;
 
             IsMouseVisible = true;
 
@@ -116,13 +116,13 @@ namespace Launcher2
             
             updateInfoText = new GUITextBlock(new Rectangle(0,y+30,100,20), "", GUI.Style, guiRoot);
 
-            updateInfoBox = new GUIListBox(new Rectangle(0, y + 55, 330, 150), GUI.Style, guiRoot);
+            updateInfoBox = new GUIListBox(new Rectangle(0, y + 55, 330, graphicsHeight-y-55-30-80), GUI.Style, guiRoot);
             updateInfoBox.Visible = false;
 
-            progressBar = new GUIProgressBar(new Rectangle(110,y+220,220,20), Color.Green, 0.0f, guiRoot);
+            progressBar = new GUIProgressBar(new Rectangle(110,0,220,20), Color.Green, 0.0f, Alignment.BottomLeft, guiRoot);
             progressBar.Visible = false;
 
-            downloadButton = new GUIButton(new Rectangle(0, y+220, 100, 20), "Download", GUI.Style, guiRoot);
+            downloadButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Download", Alignment.BottomLeft, GUI.Style, guiRoot);
             downloadButton.OnClicked = DownloadButtonClicked;
             downloadButton.Visible = false;
 
@@ -196,9 +196,14 @@ namespace Launcher2
                 Color.White);
 
             spriteBatch.Draw(titleTexture, new Vector2(40.0f, 20.0f), null, Color.White, 0.0f, Vector2.Zero, new Vector2(0.2f, 0.2f), SpriteEffects.None, 0.0f);
-
-
+            
             guiRoot.Draw(spriteBatch);
+
+            if (GUIMessageBox.MessageBoxes.Count > 0)
+            {
+                var messageBox = GUIMessageBox.MessageBoxes.Peek();
+                if (messageBox != null) messageBox.Draw(spriteBatch);
+            }
 
             spriteBatch.End();
         }
@@ -236,8 +241,31 @@ namespace Launcher2
         private bool LaunchClick(GUIButton button, object obj)
         {
             if (!TrySaveSettings(configPath)) return false;
+            
+            var executables = settings.SelectedContentPackage.GetFilesOfType(ContentType.Executable);
+            if (executables.Count == 0)
+            {
+                ShowError("Error", "The game executable isn't configured in the selected content package.");
+                return false;
+            }
 
-            Process.Start(new ProcessStartInfo(Directory.GetCurrentDirectory() + "//" + settings.SelectedContentPackage.GetFilesOfType(ContentType.Executable)[0]));
+            string exePath = Directory.GetCurrentDirectory() + "//" + executables[0];
+            if (!File.Exists(exePath))
+            {
+                ShowError("Error", "Couldn't find the executable ''" + exePath + "''!");
+                return false;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo(exePath));
+            }
+            catch (Exception exception)
+            {
+                ShowError("Error while opening executable ''" + exePath + "''", exception.Message);
+                return false;
+            }
+            
             Exit();
 
             return true;
@@ -428,12 +456,15 @@ namespace Launcher2
                 catch (Exception e)
                 {
                     updateInfoText.Text = "Update failed";
-                    SetUpdateInfoBox("Error while installing the update: "+e.Message);
+                    ShowError("Error while installing the update", e.Message);
+
                     launchButton.Enabled = true;
                     return;
-                }   
+                }
 
-                //UpdaterUtil.CleanUnnecessaryFiles(latestVersionFiles);
+                settings.WasGameUpdated = true;
+
+                UpdaterUtil.CleanUnnecessaryFiles(latestVersionFiles);
 
                 updateInfoText.Text = "The game was updated succesfully!";
                 launchButton.Enabled = true;
@@ -466,6 +497,13 @@ namespace Launcher2
             }
 
             webClient.DownloadFileAsync(new Uri(latestVersionFolder + filesToDownload[filesDownloaded]), @dir + "\\" + filesToDownload[filesDownloaded]);
+        }
+
+        private void ShowError(string header, string message)
+        {
+            GUIFrame dummyFrame = new GUIFrame(new Rectangle(0,0,graphicsWidth,graphicsHeight));
+
+            new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.TopLeft, dummyFrame);
         }
 
         private void Completed(object sender, AsyncCompletedEventArgs e)

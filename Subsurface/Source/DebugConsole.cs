@@ -282,13 +282,13 @@ namespace Subsurface
                         DebugConsole.ThrowError("Illegal symbols in filename (../)");
                         return;
                     }
-                    Submarine.SaveCurrent("Content/SavedMaps/" + fileName +".gz");
+                    Submarine.SaveCurrent(fileName +".gz");
                     NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":
                 case "loadsub":
                     if (commands.Length < 2) break;
-                    Submarine.Load("Content/SavedMaps/" + string.Join(" ", commands.Skip(1)));
+                    Submarine.Load(string.Join(" ", commands.Skip(1)));
                     break;
                 case "messagebox":
                     if (commands.Length < 3) break;
