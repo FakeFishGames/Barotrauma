@@ -190,6 +190,8 @@ namespace Subsurface
             var now = DateTime.Now;
             doc.Root.Add(new XAttribute("savetime", now.Hour + ":" + now.Minute + ", " + now.ToShortDateString()));
 
+            doc.Root.Add(new XAttribute("submarine", submarine==null ? "" : submarine.Name));
+
             ((SinglePlayerMode)gameMode).Save(doc.Root);
 
             try

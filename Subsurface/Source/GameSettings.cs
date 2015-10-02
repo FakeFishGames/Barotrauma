@@ -43,6 +43,12 @@ namespace Subsurface
             set;
         }
 
+        public bool WasGameUpdated
+        {
+            get;
+            set;
+        }
+
         public GameSettings(string filePath)
         {
             Load(filePath);
@@ -75,6 +81,7 @@ namespace Subsurface
             MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 
             AutoCheckUpdates = ToolBox.GetAttributeBool(doc.Root, "autocheckupdates", true);
+            WasGameUpdated = ToolBox.GetAttributeBool(doc.Root, "wasgameupdated", false);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -102,6 +109,11 @@ namespace Subsurface
             doc.Root.Add(
                 new XAttribute("masterserverurl", MasterServerUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates));
+
+            if (WasGameUpdated)
+            {
+                doc.Root.Add(new XAttribute("gamupdated", true));
+            }
             
 
             XElement gMode = doc.Root.Element("graphicsmode");

@@ -80,7 +80,7 @@ namespace Subsurface
 
 		public static Vector2 MousePosition
 		{
-			get { return new Vector2(mouseState.X, mouseState.Y); }
+			get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
 		}
 
 		public static MouseState GetMouseState

@@ -4,6 +4,7 @@ using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -444,11 +445,19 @@ namespace Subsurface
         }
 
         private bool StartShift(GUIButton button, object selection)
-        {           
-            GameMain.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
-            GameMain.GameScreen.Select();
+        {
+            GameMain.ShowLoading(ShiftLoading());
             
             return true;
+        }
+
+        private IEnumerable<object> ShiftLoading()
+        {          
+            
+            GameMain.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
+            GameMain.GameScreen.Select();
+
+            yield return CoroutineStatus.Success;
         }
 
         public bool QuitToMainMenu(GUIButton button, object selection)

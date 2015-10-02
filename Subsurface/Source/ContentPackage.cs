@@ -125,7 +125,7 @@ namespace Subsurface
             //{
             //    doc.Root.Add(new XElement("item", new XAttribute("file", itemFile)));
             //}
-            doc.Save(filePath+"//"+name+".xml");
+            doc.Save(System.IO.Path.Combine(filePath, name+".xml"));
         }
 
         private void CalculateHash()

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Subsurface
 {
-    class GUIMessageBox : GUIFrame
+    public class GUIMessageBox : GUIFrame
     {
         public static Queue<GUIMessageBox> MessageBoxes = new Queue<GUIMessageBox>();
 
@@ -38,18 +38,10 @@ namespace Subsurface
             this.Buttons[0].OnClicked = Close;
         }
         
-        public GUIMessageBox(string header, string text, string[] buttons, int width=DefaultWidth, int height=DefaultHeight, Alignment textAlignment = Alignment.TopLeft)
+        public GUIMessageBox(string header, string text, string[] buttons, int width=DefaultWidth, int height=DefaultHeight, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null)
             : base(new Rectangle(0,0, width, height),
-                null, Alignment.Center, GUI.Style, null)
+                null, Alignment.Center, GUI.Style, parent)
         {
-            //Padding = GUI.style.smallPadding;
-
-            //if (buttons == null || buttons.Length == 0)
-            //{
-            //    DebugConsole.ThrowError("Creating a message box with no buttons isn't allowed");
-            //    return;
-            //}
-
             new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, GUI.Style, this, true);
             new GUITextBlock(new Rectangle(0, 30, 0, height - 70), text, Color.Transparent, Color.White, textAlignment, GUI.Style, this, true);
 

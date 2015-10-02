@@ -232,7 +232,10 @@ namespace Subsurface.Items.Components
                     case "sound":
                         string filePath = ToolBox.GetAttributeString(subElement, "file", "");
                         if (filePath=="") continue;
-                        if (!filePath.Contains("/")) filePath = Path.GetDirectoryName(item.Prefab.ConfigFile)+"/"+filePath;
+                        if (!filePath.Contains("/") && !filePath.Contains("\\") && !filePath.Contains(Path.DirectorySeparatorChar))
+                        {
+                            filePath = Path.Combine(Path.GetDirectoryName(item.Prefab.ConfigFile), filePath);
+                        }
 
                         ActionType type;
 

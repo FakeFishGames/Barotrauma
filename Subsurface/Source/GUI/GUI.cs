@@ -23,6 +23,8 @@ namespace Subsurface
         static Texture2D t;
         public static SpriteFont Font, SmallFont, LargeFont;
 
+        private static Sprite cursor;
+
         private static GraphicsDevice graphicsDevice;        
 
         private static List<GUIMessage> messages = new List<GUIMessage>();
@@ -37,6 +39,8 @@ namespace Subsurface
             GUI.Font = ToolBox.TryLoadFont("SpriteFont1", content);
             GUI.SmallFont = ToolBox.TryLoadFont("SmallFont", content);
             GUI.LargeFont = ToolBox.TryLoadFont("LargeFont", content);
+
+            cursor = new Sprite("Content/UI/cursor.png" ,Vector2.Zero);
         }
 
         public static bool PauseMenuOpen
@@ -344,9 +348,10 @@ namespace Subsurface
             }
             
             DebugConsole.Draw(spriteBatch);
-
-
+            
             if (GUIComponent.MouseOn != null && !string.IsNullOrWhiteSpace(GUIComponent.MouseOn.ToolTip)) GUIComponent.MouseOn.DrawToolTip(spriteBatch);
+            
+            cursor.Draw(spriteBatch, PlayerInput.MousePosition);            
         }
 
         public static void Update(float deltaTime)

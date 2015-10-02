@@ -131,7 +131,30 @@ namespace Launcher
         {
             SaveSettings(configPath);
 
-            Process.Start(new ProcessStartInfo(Directory.GetCurrentDirectory() + "//"+settings.SelectedContentPackage.GetFilesOfType(ContentType.Executable)[0]));
+            var executables = settings.SelectedContentPackage.GetFilesOfType(ContentType.Executable);
+            if (executables.Count == 0)
+            {
+                MessageBox.Show("Error", "The game executable isn't configured in the selected content package.");
+                return;
+            }
+
+            string exePath = Directory.GetCurrentDirectory() + "//" + executables[0];
+            if (!File.Exists(exePath))
+            {
+                MessageBox.Show("Error", "Couldn't find the executable ''" + exePath + "''!");
+                return;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo(exePath));
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show("Error while opening executable ''" + exePath + "''", exception.Message);
+                return;
+            }
+
             Application.Exit();
         }
 
@@ -294,6 +317,7 @@ namespace Launcher
                 updateLabel.Visible = false;
 
                 MessageBox.Show("Download completed!");
+                settings.WasGameUpdated = true;
                 return;
             }
 

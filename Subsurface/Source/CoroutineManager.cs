@@ -24,6 +24,14 @@ namespace Subsurface
             Coroutines.Add(func.GetEnumerator());
         }
 
+        public static bool IsCoroutineRunning(string name)
+        {
+            IEnumerator<object> coroutine = Coroutines.FirstOrDefault(
+                c => c.ToString().Contains(name));
+
+            return coroutine!=null;
+        }
+        
         public static void StopCoroutine(string name)
         {
             IEnumerator<object> coroutine = Coroutines.FirstOrDefault(c => c.ToString().Contains(name));

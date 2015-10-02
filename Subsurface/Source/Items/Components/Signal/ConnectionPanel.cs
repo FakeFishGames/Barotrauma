@@ -82,20 +82,9 @@ namespace Subsurface.Items.Components
             }
 
             float degreeOfSuccess = DegreeOfSuccess(character);
-            if (Rand.Range(0.0f, 0.5f) < degreeOfSuccess) return false;
+            if (Rand.Range(0.0f, 50.0f) < degreeOfSuccess) return false;
 
             item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
-
-            //Vector2 baseVel = Rand.Vector(300.0f);
-            //for (int i = 0; i < 10; i++)
-            //{
-            //    var particle = GameMain.ParticleManager.CreateParticle("spark", item.Position,
-            //        baseVel + Rand.Vector(100.0f), 0.0f);
-
-            //    if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
-            //}
-            
-            //character.AddDamage(item.SimPosition, DamageType.None, Math.Abs(degreeOfSuccess-100.0f)/10.0f, 0.0f, 3.0f, false);
 
             return true;
         }

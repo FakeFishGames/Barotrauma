@@ -227,7 +227,7 @@
             this.Controls.Add(this.pictureBox1);
             this.DoubleBuffered = true;
             this.Name = "LauncherMain";
-            this.Text = "Form1";
+            this.Text = "Launcher";
             this.Load += new System.EventHandler(this.LauncherMain_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);

@@ -78,7 +78,6 @@ namespace Subsurface.Items.Components
             if (sparkSounds == null)
             {
                 sparkSounds = new Sound[4];
-                string dir = Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\";
                 for (int i = 0; i < 4; i++)
                 {
                     sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap" + (i + 1) + ".ogg", false);

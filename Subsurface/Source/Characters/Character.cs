@@ -601,11 +601,6 @@ namespace Subsurface
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            if (PlayerInput.KeyHit(Keys.U))
-            {
-                AnimController.SimplePhysicsEnabled = !AnimController.SimplePhysicsEnabled;
-            }
-
             Limb head = AnimController.GetLimb(LimbType.Head);
 
             Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(head.SimPosition);

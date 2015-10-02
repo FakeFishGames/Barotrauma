@@ -10,7 +10,7 @@ namespace Subsurface
 {
     public class SaveUtil
     {
-        private const string SaveFolder = "Content/Data/Saves/";
+        private const string SaveFolder = "Data/Saves/";
 
         public delegate void ProgressDelegate(string sMessage);
 
@@ -18,10 +18,8 @@ namespace Subsurface
         {
             fileName = SaveFolder + fileName;
 
-            string tempPath = SaveFolder + "\\temp";
-
-
-
+            string tempPath = Path.Combine(SaveFolder, "temp");
+            
             if (Directory.Exists(tempPath))
             {
                 Directory.Delete(tempPath, true);                
@@ -34,11 +32,11 @@ namespace Subsurface
             {
                 if (Submarine.Loaded!=null)
                 {
-                    Submarine.Loaded.SaveAs(tempPath + "\\map.gz");
+                    Submarine.Loaded.SaveAs(Path.Combine(tempPath, "map.gz"));
                 }
                 else
                 {
-                    File.Copy(GameMain.GameSession.Submarine.FilePath, tempPath + "\\map.gz");
+                    File.Copy(GameMain.GameSession.Submarine.FilePath, Path.Combine(tempPath, "map.gz"));
                 }
             }
             catch (Exception e)
@@ -48,7 +46,7 @@ namespace Subsurface
 
             try
             {
-                GameMain.GameSession.Save(tempPath + "\\gamesession.xml");
+                GameMain.GameSession.Save(Path.Combine(tempPath, "gamesession.xml"));
             }
 
             catch (Exception e)
@@ -69,32 +67,31 @@ namespace Subsurface
 
         public static void LoadGame(string fileName)
         {
-            string filePath = SaveFolder + fileName+".save";
-
-            string tempPath = SaveFolder + "\\temp";
+            string filePath = Path.Combine(SaveFolder, fileName+".save");
+            string tempPath = Path.Combine(SaveFolder, "temp");
 
             DecompressToDirectory(filePath, tempPath, null);
 
-            Submarine selectedMap = Submarine.Load(tempPath +"\\map.gz");
-            GameMain.GameSession = new GameSession(selectedMap, fileName, tempPath + "\\gamesession.xml");
+            Submarine selectedMap = new Submarine(Path.Combine(tempPath, "map.gz"), "");// Submarine.Load();
+            GameMain.GameSession = new GameSession(selectedMap, fileName, Path.Combine(tempPath, "gamesession.xml"));
 
             //Directory.Delete(tempPath, true);
         }
 
         public static XDocument LoadGameSessionDoc(string fileName)
         {
-            string filePath = SaveFolder + fileName + ".save";
+            string filePath = Path.Combine(SaveFolder, fileName + ".save");
 
-            string tempPath = SaveFolder + "\\temp";
+            string tempPath = Path.Combine(SaveFolder, "temp");
 
             DecompressToDirectory(filePath, tempPath, null);
 
-            return ToolBox.TryLoadXml(tempPath + "\\gamesession.xml");            
+            return ToolBox.TryLoadXml(Path.Combine(tempPath, "gamesession.xml"));            
         }
 
         public static void DeleteSave(string fileName)
         {
-            fileName = SaveFolder + fileName + ".save";
+            fileName = Path.Combine(SaveFolder, fileName + ".save");
 
             try
             {
@@ -142,9 +139,10 @@ namespace Subsurface
             }
 
             string extension = ".save";
+            string pathWithoutExtension = Path.Combine(SaveFolder, fileName);
 
             int i = 0;
-            while (File.Exists(SaveFolder + fileName + i + extension))
+            while (File.Exists(pathWithoutExtension + i + extension))
             {
                 i++;
             }

@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Subsurface
 {
-    class TitleScreen
+    class LoadingScreen
     {
         private Texture2D backgroundTexture,monsterTexture,titleTexture;
 
@@ -20,6 +20,8 @@ namespace Subsurface
         public Vector2 CenterPosition;
 
         public Vector2 TitlePosition;
+        
+        private float? loadState;
 
         public Vector2 TitleSize
         {
@@ -32,7 +34,24 @@ namespace Subsurface
             private set;
         }
 
-        public TitleScreen(GraphicsDevice graphics)
+        public float? LoadState
+        {
+            get { return loadState; }        
+            set 
+            {
+                loadState = value;
+                DrawLoadingText = true;
+            }
+        }
+
+        public bool DrawLoadingText
+        {
+            get;
+            set;
+        }
+        
+
+        public LoadingScreen(GraphicsDevice graphics)
         {
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
             monsterTexture = TextureLoader.FromFile("Content/UI/titleMonster.png");
@@ -40,30 +59,26 @@ namespace Subsurface
 
             renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
+            DrawLoadingText = true;
         }
 
-        public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float loadState, float deltaTime)
+        
+        public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
-            //if (stopwatch == null)
-            //{
-            //    stopwatch = new Stopwatch();
-            //    stopwatch.Start();
-            //}
+            drawn = true;
 
             graphics.SetRenderTarget(renderTarget);
-            //Debug.WriteLine(stopwatch.Elapsed.TotalMilliseconds);
 
             Scale = GameMain.GraphicsHeight/1500.0f;
 
             state += deltaTime;
 
-            if (loadState>-1)
+            if (DrawLoadingText)
             {
                 CenterPosition = new Vector2(GameMain.GraphicsWidth*0.3f, GameMain.GraphicsHeight/2.0f); 
                 TitlePosition = CenterPosition + new Vector2(-0.0f + (float)Math.Sqrt(state) * 220.0f, 0.0f) * Scale;
                 TitlePosition.X = Math.Min(TitlePosition.X, (float)GameMain.GraphicsWidth / 2.0f);
             }
-
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
             graphics.Clear(Color.Black);
@@ -92,21 +107,51 @@ namespace Subsurface
                 TitlePosition, null,
                 Color.White * Math.Min((state - 3.0f) / 5.0f, 1.0f), 0.0f, new Vector2(titleTexture.Width / 2.0f, titleTexture.Height / 2.0f), Scale, SpriteEffects.None, 0.0f);
 
-            string loadText = "";
-            if (loadState == 100.0f)
+            if (DrawLoadingText)
             {
-                loadText = "Press any key to continue";
+                string loadText = "";
+                if (loadState == 100.0f)
+                {
+                    loadText = "Press any key to continue";
+                }
+                else
+                {
+                    loadText = "Loading... ";
+                    if (loadState!=null)
+                    {
+                        loadText += (int)loadState + " %";
+                    }
+                }
 
+                spriteBatch.DrawString(GUI.LargeFont, loadText, 
+                    new Vector2(GameMain.GraphicsWidth/2.0f - GUI.LargeFont.MeasureString(loadText).X/2.0f, GameMain.GraphicsHeight*0.8f), 
+                    Color.White);            
             }
-            else if (loadState > 0.0f)
-            {
-                loadText = "Loading... " + (int)loadState + " %";
-            }
-
-            spriteBatch.DrawString(GUI.Font, loadText, new Vector2(GameMain.GraphicsWidth/2.0f - 50.0f, GameMain.GraphicsHeight*0.8f), Color.White);
-            
             spriteBatch.End();
 
+        }
+
+        bool drawn;
+        public IEnumerable<object> DoLoading(IEnumerable<object> loader)
+        {
+            drawn = false;
+            LoadState = null;            
+
+            while (!drawn)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            CoroutineManager.StartCoroutine(loader);
+            
+            yield return CoroutineStatus.Running;
+
+            while (CoroutineManager.IsCoroutineRunning(loader.ToString()))
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            loadState = 100.0f;
         }
     }
 }

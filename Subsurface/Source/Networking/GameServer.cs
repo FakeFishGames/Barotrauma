@@ -578,25 +578,33 @@ namespace Subsurface.Networking
         }
 
 
-        public bool StartGame(GUIButton button, object obj)
+        public bool StartGameClicked(GUIButton button, object obj)
         {
-            Submarine selectedMap = GameMain.NetLobbyScreen.SelectedMap as Submarine;
+            Submarine selectedSub = GameMain.NetLobbyScreen.SelectedMap as Submarine;
 
-            if (selectedMap == null)
+            if (selectedSub == null)
             {
                 GameMain.NetLobbyScreen.SubList.Flash();
                 return false;
             }
-            
-            AssignJobs();            
-           
+
+            GameMain.ShowLoading(StartGame(selectedSub));
+ 
+            return true;
+        }
+
+        private IEnumerable<object> StartGame(Submarine selectedSub)
+        {
+            AssignJobs();
+
             //selectedMap.Load();
 
             int seed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(seed);
-            GameMain.GameSession = new GameSession(selectedMap, "", GameMain.NetLobbyScreen.SelectedMode);
+            GameMain.GameSession = new GameSession(selectedSub, "", GameMain.NetLobbyScreen.SelectedMode);
             GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.GameDuration, GameMain.NetLobbyScreen.LevelSeed);
-            //EventManager.SelectEvent(Game1.netLobbyScreen.SelectedEvent);
+
+            yield return CoroutineStatus.Running;
 
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
 
@@ -622,7 +630,7 @@ namespace Subsurface.Networking
             List<Character> crew = new List<Character>();
             WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
 
-            for (int i = 0; i < connectedClients.Count; i++ )
+            for (int i = 0; i < connectedClients.Count; i++)
             {
                 connectedClients[i].character = new Character(
                     connectedClients[i].characterInfo, assignedWayPoints[i], true);
@@ -633,14 +641,16 @@ namespace Subsurface.Networking
 
             if (characterInfo != null)
             {
-                myCharacter = new Character(characterInfo, assignedWayPoints[assignedWayPoints.Length-1]);
+                myCharacter = new Character(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1]);
                 Character.Controlled = myCharacter;
 
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
 
                 crew.Add(myCharacter);
             }
-            
+
+            yield return CoroutineStatus.Running;
+
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.StartGame);
 
@@ -650,10 +660,10 @@ namespace Subsurface.Networking
 
             msg.Write(GameMain.NetLobbyScreen.SelectedMap.Name);
             msg.Write(GameMain.NetLobbyScreen.SelectedMap.MD5Hash.Hash);
-                
+
             msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
-            msg.Write((myCharacter == null) ? connectedClients.Count : connectedClients.Count+1);
+            msg.Write((myCharacter == null) ? connectedClients.Count : connectedClients.Count + 1);
             foreach (Client client in connectedClients)
             {
                 msg.Write(client.ID);
@@ -666,7 +676,9 @@ namespace Subsurface.Networking
                 WriteCharacterData(msg, myCharacter.Info.Name, Character.Controlled);
             }
 
-            SendMessage(msg, NetDeliveryMethod.ReliableUnordered, null);            
+            SendMessage(msg, NetDeliveryMethod.ReliableUnordered, null);
+
+            yield return CoroutineStatus.Running;
 
             gameStarted = true;
 
@@ -676,7 +688,8 @@ namespace Subsurface.Networking
 
             CreateCrewFrame(crew);
 
-            return true;
+            yield return CoroutineStatus.Success;
+
         }
 
         private bool EndButtonHit(GUIButton button, object obj)

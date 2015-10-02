@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
 using System.IO;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -231,6 +232,7 @@ namespace Subsurface
             return true;
         }
 
+
         private bool QuitClicked(GUIButton button, object obj)
         {
             game.Exit();
@@ -261,7 +263,6 @@ namespace Subsurface
 
             var button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, GUI.Style, menuTabs[(int)Tabs.LoadGame]);
             button.OnClicked = LoadGame;
-
         }
 
         private bool SelectSaveFile(GUIComponent component, object obj)
@@ -278,6 +279,8 @@ namespace Subsurface
 
             RemoveSaveFrame();
 
+            string subName = ToolBox.GetAttributeString(doc.Root, "submarine", "");
+
             string saveTime = ToolBox.GetAttributeString(doc.Root, "savetime", "unknown");
 
             XElement modeElement = null;
@@ -291,17 +294,20 @@ namespace Subsurface
 
             string mapseed = ToolBox.GetAttributeString(modeElement, "mapseed", "unknown");
 
-            GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 200), Color.Black*0.4f, GUI.Style, menuTabs[(int)Tabs.LoadGame]);
+            GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 230), Color.Black*0.4f, GUI.Style, menuTabs[(int)Tabs.LoadGame]);
             saveFileFrame.UserData = "savefileframe";
             saveFileFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0,0,0,20), fileName, GUI.Style, saveFileFrame);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 20), "Last saved: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 45, 0, 20), saveTime, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 30, 0, 20), subName, GUI.Style, saveFileFrame);
 
-            new GUITextBlock(new Rectangle(0, 65, 0, 20), "Map seed: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 80, 0, 20), mapseed, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+
+            new GUITextBlock(new Rectangle(0, 50, 0, 20), "Last saved: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 65, 0, 20), saveTime, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+
+            new GUITextBlock(new Rectangle(0, 85, 0, 20), "Map seed: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 100, 0, 20), mapseed, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
 
             var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Delete", Alignment.BottomCenter, GUI.Style, saveFileFrame);
             deleteSaveButton.UserData = fileName;
@@ -353,7 +359,8 @@ namespace Subsurface
         {
             graphics.Clear(Color.CornflowerBlue);
 
-            GameMain.TitleScreen.Draw(spriteBatch, graphics, -1.0f, (float)deltaTime);
+            GameMain.TitleScreen.DrawLoadingText = false;
+            GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
 
             //Game1.GameScreen.DrawMap(graphics, spriteBatch);
             
@@ -406,7 +413,6 @@ namespace Subsurface
 
         private bool LoadGame(GUIButton button, object obj)
         {
-
             string saveFile = saveList.SelectedData as string;
             if (string.IsNullOrWhiteSpace(saveFile)) return false;
 

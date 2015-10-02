@@ -70,11 +70,23 @@ namespace Subsurface.Items.Components
 
             for (int i = 0; i < 2; i++)
             {
+                if (connections[i] != null && connections[i].Item == newConnection.Item)
+                {
+                    addNode = false;
+                    break;
+                }
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
                 if (connections[i] != null) continue;
 
                 connections[i] = newConnection;
 
                 if (!addNode) break;
+
+                if (Nodes.Count>0&&Nodes[0] == newConnection.Item.Position) break;
+                if (Nodes.Count > 1 && Nodes[Nodes.Count-1] == newConnection.Item.Position) break;
 
                 if (i == 0)
                 {

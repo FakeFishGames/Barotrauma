@@ -58,14 +58,7 @@ namespace Subsurface
             //http://gafferongames.com/game-physics/fix-your-timestep/
             Physics.accumulator += deltaTime;
 
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
             AmbientSoundManager.Update();
-
-            sw.Stop();
-            Debug.WriteLine("**************  abupdate: "+sw.ElapsedTicks);
-            sw.Restart();
 
             //if (Game1.GameSession != null && Game1.GameSession.Level != null)
             //{
@@ -81,38 +74,17 @@ namespace Subsurface
             if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);
 
-            sw.Stop();
-            Debug.WriteLine("gamesession update: " + sw.ElapsedTicks);
-            sw.Restart();
-
             Character.UpdateAll(cam, (float)deltaTime);
-
-            sw.Stop();
-            Debug.WriteLine("characterupdate: " + sw.ElapsedTicks);
-            sw.Restart();
 
             BackgroundSpriteManager.Update(cam, (float)deltaTime);
 
-            sw.Stop();
-            Debug.WriteLine("bgsprite: " + sw.ElapsedTicks);
-            sw.Restart();
-
             GameMain.ParticleManager.Update((float)deltaTime);
-
-            sw.Stop();
-            Debug.WriteLine("particlemanager: " + sw.ElapsedTicks);
-            sw.Restart();
 
             StatusEffect.UpdateAll((float)deltaTime);
 
-            sw.Stop();
-            Debug.WriteLine("statuseff: " + sw.ElapsedTicks);
-
-            
             Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 4);
             while (Physics.accumulator >= Physics.step)
             {
-            sw.Restart();
                 cam.MoveCamera((float)Physics.step);
 
                 foreach (PhysicsBody pb in PhysicsBody.list)
@@ -122,15 +94,7 @@ namespace Subsurface
                     
                 MapEntity.UpdateAll(cam, (float)Physics.step);
 
-                sw.Stop();
-                Debug.WriteLine("   mapentity: " + sw.ElapsedTicks);
-                sw.Restart();
-
                 Character.UpdateAnimAll((float)Physics.step);
-
-                sw.Stop();
-                Debug.WriteLine("   char: " + sw.ElapsedTicks);
-                sw.Restart();
 
                 Ragdoll.UpdateAll(cam, (float)Physics.step);
 
@@ -139,15 +103,7 @@ namespace Subsurface
                     GameMain.GameSession.Submarine.Update((float)Physics.step);
                 }
 
-                sw.Stop();
-                Debug.WriteLine("   sub: " + sw.ElapsedTicks);
-                sw.Restart();
-
                 GameMain.World.Step((float)Physics.step);
-
-                sw.Stop();
-                Debug.WriteLine("   worldstep: " + sw.ElapsedTicks);
-                sw.Restart();
 
                 Level.AfterWorldStep();
 

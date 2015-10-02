@@ -126,7 +126,7 @@ namespace Subsurface
                     distFactor = 1.0f - Vector2.Distance(limb.SimPosition, simPosition)/attack.Range;
                     
                     c.AddDamage(limb.SimPosition, DamageType.None, 
-                        attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 0.0f, attack.Stun * distFactor, true);
+                        attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 0.0f, attack.Stun * distFactor, false);
                     if (force>0.0f)
                     {
                         limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.SimPosition - simPosition) * distFactor * force);

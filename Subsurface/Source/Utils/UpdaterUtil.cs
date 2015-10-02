@@ -136,17 +136,25 @@ namespace Subsurface
                         File.Delete(fileRelPath);
                     }
 
+                    //couldn't delete file, probably because it's already in use
                     catch
                     {
-                        string oldFileName = currentDir+"\\"+Path.GetDirectoryName(fileRelPath)+"\\OLD_"+Path.GetFileName(fileRelPath);
+                        string oldFileName =  Path.Combine(currentDir, Path.GetDirectoryName(fileRelPath), "OLD_"+Path.GetFileName(fileRelPath));
 
                         if (File.Exists(oldFileName)) File.Delete(oldFileName);
-
-                        //couldn't delete file, probably because it's already in use
+                        
                         File.Move(fileRelPath, oldFileName);
                     }
                 }
 
+                string directoryName = Path.GetDirectoryName(fileRelPath);
+                if (!string.IsNullOrWhiteSpace(directoryName))
+                {
+                    Directory.CreateDirectory(directoryName);
+                }
+
+
+                System.Diagnostics.Debug.WriteLine("moving: "+file+"  ->    "+fileRelPath);
                 File.Move(file, fileRelPath);
             }
 
@@ -161,13 +169,20 @@ namespace Subsurface
 
             foreach (string file in files)
             {
-                if (filesToKeep.Contains(GetRelativePath(file, currentDir))) continue;
+                string relativePath = GetRelativePath(file, currentDir);
+
+                string dirRoot = relativePath.Split(Path.DirectorySeparatorChar).First();
+                if (dirRoot == "Data") continue;
+
+                if (filesToKeep.Contains(relativePath)) continue;
+
+                if (Path.GetFileName(file).Split('_').First() == "OLD") continue;
 
                 System.Diagnostics.Debug.WriteLine("deleting file "+file);
 
                 try
                 {
-                    File.Delete(currentDir + "\\" + file);
+                    File.Delete(file);
                 }
 
                 catch (Exception e)
@@ -187,13 +202,13 @@ namespace Subsurface
 
             foreach (string file in files)
             {
-                if (file.Length<4 || file.Substring(0,4)!="OLD_") continue;
+                if (Path.GetFileName(file).Split('_').First() != "OLD") continue;
 
                 System.Diagnostics.Debug.WriteLine("deleting file " + file);
 
                 try
                 {
-                    File.Delete(currentDir + "\\" + file);
+                    File.Delete(file);
                 }
 
                 catch (Exception e)
