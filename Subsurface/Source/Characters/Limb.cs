@@ -364,11 +364,11 @@ namespace Subsurface
         {
             if (LinearVelocity.X>100.0f)
             {
-                DebugConsole.ThrowError("CHARACTER EXPLODED");
+                //DebugConsole.ThrowError("CHARACTER EXPLODED");
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
                     limb.body.ResetDynamics();
-                    limb.body.SetTransform(body.SimPosition, 0.0f);
+                    limb.body.SetTransform(character.AnimController.RefLimb.SimPosition, 0.0f);
                 }                
             }
 
@@ -390,15 +390,15 @@ namespace Subsurface
                 Vector2 dragForce = Vector2.Zero;
                 if (dragDot > 0)
                 {
-                    float vel = LinearVelocity.Length();
+                    float vel = LinearVelocity.Length()*2.0f;
                     float drag = dragDot * vel * vel
                         * ConvertUnits.ToSimUnits(sprite.size.Y);
                     dragForce = drag * -velDir;
-                    if (dragForce.Length() > 100.0f) { }
+                    //if (dragForce.Length() > 100.0f) { }
                 }
 
                 body.ApplyForce(dragForce + buoyancy);
-                body.ApplyTorque(body.AngularVelocity * body.Mass * -0.05f);
+                body.ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
             }
 
             if (character.IsDead) return;

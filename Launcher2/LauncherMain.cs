@@ -181,6 +181,17 @@ namespace Launcher2
 
             PlayerInput.Update(deltaTime);
 
+            if (GUIMessageBox.MessageBoxes.Count > 0)
+            {
+                var messageBox = GUIMessageBox.MessageBoxes.Peek();
+                if (messageBox != null)
+                {
+                    GUIComponent.MouseOn = messageBox;
+                    messageBox.Update(deltaTime);
+                    return;
+                }
+            }
+
             guiRoot.Update(deltaTime);
         }
 
@@ -297,6 +308,15 @@ namespace Launcher2
 
         private bool CheckForUpdates()
         {
+            if (string.IsNullOrWhiteSpace(settings.MasterServerUrl))
+            {
+                updateInfoText.Text = "Checking updates failed";
+                updateInfoBox.Visible = true;
+                SetUpdateInfoBox("Update server URL not set");
+                return false;
+            
+            }
+
             updateInfoText.Text = "Checking for updates...";
 
             XDocument doc = null;
@@ -308,6 +328,9 @@ namespace Launcher2
 
             catch (Exception e)
             {
+                updateInfoText.Text = "Checking updates failed";
+                updateInfoBox.Visible = true;
+
                 SetUpdateInfoBox("Error while checking for updates: " + e.Message);
                 return false;
             }
@@ -416,6 +439,12 @@ namespace Launcher2
             latestVersionFiles = UpdaterUtil.GetFileList(doc);
             filesToDownload = UpdaterUtil.GetRequiredFiles(doc);
 
+            string updaterVersion = ToolBox.GetAttributeString(doc.Root, "updaterversion", "1.0");
+            if (updaterVersion!=UpdaterUtil.Version || true)
+            {
+                ShowError("Warning", "The update may contain changes which can't be installed by the autoupdater. If you receive any error messages during the install, please download and install the update manually.");
+            }
+
             string dir = Directory.GetCurrentDirectory();
 
             filesToDownloadCount = filesToDownload.Count;
@@ -503,7 +532,8 @@ namespace Launcher2
         {
             GUIFrame dummyFrame = new GUIFrame(new Rectangle(0,0,graphicsWidth,graphicsHeight));
 
-            new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.TopLeft, dummyFrame);
+            GUIMessageBox errorBox = new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.TopLeft, dummyFrame);
+            errorBox.Buttons[0].OnClicked = errorBox.Close;
         }
 
         private void Completed(object sender, AsyncCompletedEventArgs e)

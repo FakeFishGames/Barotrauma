@@ -273,7 +273,7 @@ namespace Subsurface
             {
                 if (i == selectedSound)
                 {
-                    Debug.WriteLine(s.sound.Play(1.0f, 2000.0f, position));
+                    s.sound.Play(1.0f, 2000.0f, position);
                     Debug.WriteLine("playing: " + s.sound);
                     return;
                 }

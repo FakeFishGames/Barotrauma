@@ -38,7 +38,8 @@ namespace Subsurface.Items.Components
     /// <summary>
     /// The base class for components holding the different functionalities of the item
     /// </summary>
-    class ItemComponent : IPropertyObject
+    class 
+        ItemComponent : IPropertyObject
     {
         protected Item item;
 
@@ -86,8 +87,7 @@ namespace Subsurface.Items.Components
             {
                 if (!value && isActive)
                 {
-                    StopSounds(ActionType.OnActive);
-                    StopSounds(ActionType.OnUse);
+                    StopSounds(ActionType.OnActive);                    
                 }
 
                 isActive = value; 
@@ -181,7 +181,10 @@ namespace Subsurface.Items.Components
 
             //    initableProperty.TrySetValue(value);
             //}
-
+            if (item.Name=="Welding Tool")
+            {
+                int a = 1;
+            }
 
             properties = ObjectProperty.InitProperties(this, element);
             

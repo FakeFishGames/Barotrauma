@@ -152,6 +152,8 @@ namespace Subsurface
             }
 
             loadState = 100.0f;
+
+            yield return CoroutineStatus.Success;
         }
     }
 }

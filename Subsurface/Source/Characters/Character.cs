@@ -741,7 +741,7 @@ namespace Subsurface
 
         public virtual void Update(Camera cam, float deltaTime)
         {
-            AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>2000.0f);
+            AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>5000.0f);
             
             if (isDead) return;
             

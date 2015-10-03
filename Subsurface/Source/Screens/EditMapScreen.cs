@@ -250,7 +250,7 @@ namespace Subsurface
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            //cam.UpdateTransform();
+            cam.UpdateTransform();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend,
