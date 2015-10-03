@@ -446,14 +446,15 @@ namespace Subsurface
 
         private bool StartShift(GUIButton button, object selection)
         {
-            GameMain.ShowLoading(ShiftLoading());
+            //GameMain.ShowLoading(ShiftLoading());
+            GameMain.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
+            GameMain.GameScreen.Select();
             
             return true;
         }
 
         private IEnumerable<object> ShiftLoading()
-        {          
-            
+        {
             GameMain.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
             GameMain.GameScreen.Select();
 

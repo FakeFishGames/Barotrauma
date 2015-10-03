@@ -34,6 +34,11 @@ namespace Subsurface
          
             Vector2 colliderPos = GetLimb(LimbType.Torso).SimPosition;
 
+            if (!MathUtils.IsValid(RefLimb.body.SimPosition))
+            {
+                int a = 1;
+            }
+
             //if (inWater) stairs = null;
 
             Vector2 rayStart = colliderPos; // at the bottom of the player sprite
@@ -405,12 +410,22 @@ namespace Subsurface
             {
                 movement = Vector2.Normalize(movement);
             }
+
+            if (!MathUtils.IsValid(movement))
+            {
+                int a = 1;
+            }
             
             RefLimb.pullJoint.Enabled = true;
             RefLimb.pullJoint.WorldAnchorB =
                 RefLimb.SimPosition + movement*0.15f;
 
             RefLimb.body.SmoothRotate(0.0f);
+
+            if (!MathUtils.IsValid(RefLimb.body.SimPosition))
+            {
+                int a = 1;
+            }
 
             foreach (Limb l in Limbs)
             {
@@ -458,25 +473,30 @@ namespace Subsurface
                     TargetDir = Direction.Right;
             }
 
-            if (TargetMovement == Vector2.Zero) return;
-
             float targetSpeed = TargetMovement.Length();
             if (targetSpeed > 0.0f) TargetMovement /= targetSpeed;
-
-            //if trying to head to the opposite direction, apply torque
-            //to the torso to flip the ragdoll around
-            //if (Math.Sign(TargetMovement.X) != Dir && TargetMovement.X != 0.0f)
-            //{
-            //    float torque = torso.Mass * 10.0f;
-            //    torque *= (rotation > 90 && rotation < 270) ? -Dir : Dir;
-
-            //    torso.body.ApplyTorque(torque);
-            //}
-
-            if (targetSpeed > 0.1f && !aiming)
+            
+            if (targetSpeed > 0.1f)
             {
-                torso.body.SmoothRotate(MathUtils.VectorToAngle(TargetMovement)-MathHelper.PiOver2);
+                if (!aiming)
+                {
+                    torso.body.SmoothRotate(MathUtils.VectorToAngle(TargetMovement)-MathHelper.PiOver2);
+                }
             }
+            else
+            {
+                if (aiming)
+                {
+                    Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
+                    Vector2 diff = (mousePos - torso.SimPosition) * Dir;
+
+                    TargetMovement = new Vector2(0.0f, -0.1f);
+
+                    torso.body.SmoothRotate(MathUtils.VectorToAngle(diff));
+                }
+            }
+
+            if (TargetMovement == Vector2.Zero) return;
 
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
 
@@ -503,9 +523,11 @@ namespace Subsurface
                 movement.Y = movement.Y - (surfaceLimiter - 1.0f) * 0.01f;
             }
 
+            movement.Y -= 0.05f;
+
             head.body.ApplyForce((new Vector2(movement.X,
                     movement.Y / surfaceLimiter + 0.2f) - head.body.LinearVelocity * 0.2f) * 
-                    20.0f * head.body.Mass);
+                    30.0f * head.body.Mass);
 
             torso.body.ApplyForce((new Vector2(movement.X,
                     movement.Y / surfaceLimiter + 0.2f) - torso.body.LinearVelocity * 0.2f) * 10.0f * torso.body.Mass);
@@ -513,30 +535,25 @@ namespace Subsurface
             walkPos += movement.Length() * 0.15f;
             footPos = (leftFoot.SimPosition + rightFoot.SimPosition) / 2.0f;
 
-            Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * 0.3f, 0.0f);
+            var rightThigh = GetLimb(LimbType.RightThigh);
+            var leftThigh = GetLimb(LimbType.LeftThigh);
+
+            rightThigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(walkPos) * 0.3f, 2.0f);
+            leftThigh.body.SmoothRotate(torso.Rotation - (float)Math.Sin(walkPos) * 0.3f, 2.0f);
+
+            Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * 0.5f, 0.0f);
             transformedFootPos = Vector2.Transform(
                 transformedFootPos,
                 Matrix.CreateRotationZ(torso.body.Rotation));
 
-            MoveLimb(leftFoot, footPos + transformedFootPos, 2.5f);
-            MoveLimb(rightFoot, footPos - transformedFootPos, 2.5f);
-
-            //float legCorrection = MathUtils.GetShortestAngle(leftLeg.Rotation, torso.body.Rotation);
-
-            //leftLeg.body.ApplyTorque(legCorrection);
-
-            //legCorrection = MathUtils.GetShortestAngle(rightLeg.Rotation, torso.body.Rotation);
-
-            //rightLeg.body.ApplyTorque(legCorrection);
-            Vector2 feetExtendForce = new Vector2(
-                (float)-Math.Sin(torso.body.Rotation),
-                (float)Math.Cos(torso.body.Rotation));
-
-            leftFoot.body.ApplyForce(feetExtendForce);
-            rightFoot.body.ApplyForce(feetExtendForce);
-            
-            leftFoot.body.ApplyTorque(leftFoot.body.Mass * -Dir);
-            rightFoot.body.ApplyTorque(rightFoot.body.Mass * -Dir);
+            if (Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, rightThigh.Rotation))<0.3f)
+            {
+                MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
+            }
+            if (Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, leftThigh.Rotation)) < 0.3f)
+            {
+                MoveLimb(leftFoot, footPos + transformedFootPos, 1.0f);
+            }
             
             handPos = (torso.SimPosition + head.SimPosition) / 2.0f;
 
@@ -571,8 +588,8 @@ namespace Subsurface
 
             float handCyclePos = walkPos / 2.0f;
             float handPosX = (float)Math.Cos(handCyclePos * Dir) * 0.4f;
-            float handPosY = (float)Math.Sin(handCyclePos * Dir) * 0.7f;
-            handPosY = MathHelper.Clamp(handPosY, -0.6f, 0.6f);
+            float handPosY = (float)Math.Sin(handCyclePos * Dir) * 1.0f;
+            handPosY = MathHelper.Clamp(handPosY, -0.8f, 0.8f);
 
             Matrix rotationMatrix = Matrix.CreateRotationZ(torso.Rotation);
 
@@ -582,7 +599,9 @@ namespace Subsurface
                 rightHandPos.X = (Dir == 1.0f) ? Math.Max(0.2f, rightHandPos.X) : Math.Min(-0.2f, rightHandPos.X);
                 rightHandPos = Vector2.Transform(rightHandPos, rotationMatrix);
 
-                MoveLimb(rightHand, handPos + rightHandPos, 3.5f);
+                //MoveLimb(rightHand, handPos + rightHandPos, 1.5f);
+
+                HandIK(rightHand, handPos + rightHandPos, 0.5f);
             }
 
             if (!leftHand.Disabled)
@@ -591,7 +610,8 @@ namespace Subsurface
                 leftHandPos.X = (Dir == 1.0f) ? Math.Max(0.2f, leftHandPos.X) : Math.Min(-0.2f, leftHandPos.X);
                 leftHandPos = Vector2.Transform(leftHandPos, rotationMatrix);
 
-                MoveLimb(leftHand, handPos + leftHandPos, 3.5f);
+                //MoveLimb(leftHand, handPos + leftHandPos,1.5f);
+                HandIK(leftHand, handPos + leftHandPos, 0.5f);
             }            
         }
 

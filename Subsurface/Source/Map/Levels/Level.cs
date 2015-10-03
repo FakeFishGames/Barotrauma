@@ -218,7 +218,7 @@ namespace Subsurface
                     cell.edges.Add(ge);
                 }
             }
-
+            
             Debug.WriteLine("find cells: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
 
@@ -590,7 +590,7 @@ int currentTargetIndex = 1;
                 tempVertices.Clear();
                 foreach (GraphEdge ge in cell.edges)
                 {
-                    if (ge.point1 == ge.point2) continue;
+                    if (Math.Abs(Vector2.Distance(ge.point1, ge.point2))<0.1f) continue;
                     if (!tempVertices.Contains(ge.point1)) tempVertices.Add(ge.point1);
                     if (!tempVertices.Contains(ge.point2)) tempVertices.Add(ge.point2);
 
@@ -686,7 +686,6 @@ int currentTargetIndex = 1;
             int i = 0;
             foreach (Body body in bodies)
             {
-                System.Diagnostics.Debug.WriteLine(i);
                 i++;
                 body.SetTransform(body.Position + simAmount, body.Rotation);
             }
@@ -823,25 +822,28 @@ int currentTargetIndex = 1;
             pos.X += Position.X;
             pos.Y = -pos.Y - Position.Y;
 
-            int shaftWidth = 10000;
+            if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y-512) return;
+
+            float x = GameMain.GameScreen.Cam.WorldView.X-512.0f;
+            int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width/512.0f + 2.0f)*512.0f);
 
             spriteBatch.Draw(shaftTexture,
-                new Rectangle((int)(pos.X - shaftWidth / 2), (int)pos.Y, shaftWidth, 512), 
-                new Rectangle(0, 0, shaftWidth, 256),
+                new Rectangle((int)(MathUtils.Round(x, 512.0f)), (int)pos.Y, width, 512),
+                new Rectangle(0, 0, width, 256),
                 Color.White, 0.0f,
                 Vector2.Zero,
                 SpriteEffects.None, 0.0f);
 
-            pos = startPosition;
-            pos.X += Position.X;
-            pos.Y = -pos.Y - Position.Y;
+            //pos = startPosition;
+            //pos.X += Position.X;
+            //pos.Y = -pos.Y - Position.Y;
 
-            spriteBatch.Draw(shaftTexture,
-                new Rectangle((int)(pos.X - shaftWidth/2), (int)pos.Y, shaftWidth, 512), 
-                new Rectangle(0, 0, shaftWidth, 256),
-                Color.White, 0.0f,
-                Vector2.Zero,
-                SpriteEffects.None, 0.0f);
+            //spriteBatch.Draw(shaftTexture,
+            //    new Rectangle((int)(pos.X - shaftWidth/2), (int)pos.Y, shaftWidth, 512), 
+            //    new Rectangle(0, 0, shaftWidth, 256),
+            //    Color.White, 0.0f,
+            //    Vector2.Zero,
+            //    SpriteEffects.None, 0.0f);
 
             //List<Vector2[]> edges = GetCellEdges(observerPosition, 1, false);
 

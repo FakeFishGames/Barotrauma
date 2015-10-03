@@ -1,17 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-  name="Oxygen Tank"
-  Tags="smallitem"
-  pickdistance="150"
-  price="50">
+    name="Oxygen Tank"
+    Tags="smallitem"
+    pickdistance="150"
+    price="50">
 
     <Sprite texture ="oxygentank.png" depth="0.5"/>
 
     <Body radius="6" height="22" density="5"/>
 
-    <Holdable holdpos="30,-15" handle1="0,5" handle2="0,-5"/>
-    <Pickable slots="RightHand,Any"/>
+    <Pickable holdpos="30,-15" handle1="0,1" slots="RightHand,LeftHand,Any">
+      <StatusEffect type="OnWearing" target="This" Condition="-0.5"/>
+      <StatusEffect type="OnWearing" target="Character" Oxygen="20.0"/>
+    </Pickable>
   </Item>
   
   <Item
@@ -26,8 +28,6 @@
 
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
-      <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Oxygen Tank,human" Condition="-0.5" Oxygen="20.0"/>
-      <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Welding Fuel Tank,human" Condition="-0.7" Oxygen="-20.0"/>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
@@ -61,7 +61,6 @@
       <sprite texture="DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.02" hidelimb="true"/>
       <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.02" hidelimb="true"/>
       
-      <StatusEffect type="OnWearing" target="Contained,Character" targetnames="Oxygen Tank,human" Condition="-0.5" Oxygen="20.0"/>
       <StatusEffect type="OnWearing" target="Character" PressureProtection="100.0" SpeedMultiplier="0.7" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
     </Wearable>
 

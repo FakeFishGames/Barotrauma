@@ -546,11 +546,8 @@ namespace Subsurface
         {
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
-            GameMain.Client.SendCharacterData();
+            if (GameMain.Client != null) GameMain.Client.SendCharacterData();
                 
-            //CreatePreviewCharacter();
-           
-            
             UpdatePreviewPlayer(GameMain.NetworkMember.CharacterInfo);
             return true;
         }

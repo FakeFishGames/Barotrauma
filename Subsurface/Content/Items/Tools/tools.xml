@@ -93,8 +93,10 @@
 
     <Body radius="6" height="22" density="5"/>
 
-    <Holdable slots="RightHand,Any" 
-              holdpos="30,-15" handle1="0,5" handle2="0,-5"/>
+    <Holdable slots="RightHand,Any" holdpos="30,-15" handle1="0,5" handle2="0,-5">
+      <StatusEffect type="OnWearing" target="This" Condition="-0.5"/>
+      <StatusEffect type="OnWearing" target="Character" Oxygen="-40.0"/>
+    </Holdable>
   </Item>
 
   <Item

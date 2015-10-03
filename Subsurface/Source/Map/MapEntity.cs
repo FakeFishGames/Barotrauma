@@ -332,7 +332,6 @@ namespace Subsurface
                     }
                     
                     selectionPos = Vector2.Zero;
-                    Debug.WriteLine("zero");
                     selectionSize = Vector2.Zero;
                 }
             }
@@ -350,7 +349,6 @@ namespace Subsurface
                     }
 
                     selectionPos = position;
-                    Debug.WriteLine("pos");
                 }
 
 

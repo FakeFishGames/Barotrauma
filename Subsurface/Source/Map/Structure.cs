@@ -599,8 +599,6 @@ namespace Subsurface
 
             string name = element.Attribute("name").Value;
             
-            Debug.WriteLine(name+" - "+rect);
-
             Structure s = null;
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)

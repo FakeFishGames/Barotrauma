@@ -474,6 +474,8 @@ namespace Subsurface
             {
                 if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;
 
+                if (ic.WasUsed) ic.StopSounds(ActionType.OnUse);
+
                 if (!ic.IsActive) continue;
 
                 if (condition > 0.0f)
@@ -745,7 +747,7 @@ namespace Subsurface
             foreach (Item item in itemList)
             {
                 if (ignoredItems!=null && ignoredItems.Contains(item)) continue;
-                if (hull != item.CurrentHull) continue;
+                if (hull != item.CurrentHull && (hull==null || (item.Rect.Height<hull.Rect.Height && item.rect.Width < hull.Rect.Width))) continue;
                 if (item.body != null && !item.body.Enabled) continue;
 
                 Pickable pickableComponent = item.GetComponent<Pickable>();

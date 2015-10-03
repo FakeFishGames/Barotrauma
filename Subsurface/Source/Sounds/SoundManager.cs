@@ -218,7 +218,6 @@ namespace Subsurface.Sounds
             if (AL.GetSourceState(alSources[sourceIndex]) != ALSourceState.Paused)
                 return;
 
-            Debug.WriteLine("sourceplay");
             AL.SourcePlay(alSources[sourceIndex]);
             ALHelper.Check();
         }

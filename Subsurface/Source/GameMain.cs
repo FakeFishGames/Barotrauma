@@ -314,11 +314,11 @@ namespace Subsurface
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
             }
 
-            double elapsed = sw.Elapsed.TotalSeconds;
-            if (elapsed < Physics.step)
-            {
-                System.Threading.Thread.Sleep((int)((Physics.step - elapsed) * 1000.0));
-            }
+            //double elapsed = sw.Elapsed.TotalSeconds;
+            //if (elapsed < Physics.step)
+            //{
+            //    System.Threading.Thread.Sleep((int)((Physics.step - elapsed) * 1000.0));
+            //}
             sw.Restart();
         }
 

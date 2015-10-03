@@ -158,6 +158,8 @@ namespace Subsurface
         {
             base.Select();
 
+            Submarine.Unload();
+
             SelectTab(null, 0);
             //selectedTab = 0;
         }

@@ -10,6 +10,8 @@ namespace Subsurface
 {
     public static class UpdaterUtil
     {
+        public const string Version = "1.0";
+
         public static void SaveFileList(string filePath)
         {
             XDocument doc = new XDocument(CreateFileList());

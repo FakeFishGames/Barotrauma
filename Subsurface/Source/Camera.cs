@@ -52,7 +52,7 @@ namespace Subsurface
                     (int)newWidth,
                     (int)newHeight);
 
-                UpdateTransform();
+                //UpdateTransform();
             }
         }
 
@@ -126,10 +126,10 @@ namespace Subsurface
             position += amount;
             Sound.CameraPos = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
 
-            UpdateTransform();
+            //UpdateTransform();
         }
 
-        private void UpdateTransform()
+        public void UpdateTransform()
         {
             Vector2 interpolatedPosition = Physics.Interpolate(prevPosition, position);
 
@@ -148,15 +148,15 @@ namespace Subsurface
                     -interpolatedPosition.X - resolution.X / interpolatedZoom / 2.0f,
                     -interpolatedPosition.Y - resolution.Y / interpolatedZoom / 2.0f, 0)) *
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
-                viewMatrix;            
+                viewMatrix;
+
+            prevPosition = position;
+            prevZoom = zoom;
         }
 
         public void MoveCamera(float deltaTime)
         {
             float moveSpeed = 20.0f/zoom;
-
-            prevPosition = position;
-            prevZoom = zoom;
 
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
@@ -189,19 +189,10 @@ namespace Subsurface
 
                 Vector2 diff = (targetPos + offset) - position;
 
-                if (diff == Vector2.Zero)
-                {
-                    moveCam = Vector2.Zero;
-                }
-                else
-                {
-                    float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
-
-                    moveCam = Vector2.Normalize(diff) * Math.Min(dist, (dist * deltaTime * 60.0f) / MoveSmoothness);
-                }
+                moveCam = diff / MoveSmoothness;                
             }
 
-            shakeTargetPosition = Rand.Vector(Shake);            
+            shakeTargetPosition = Rand.Vector(Shake);
             shakePosition = Vector2.Lerp(shakePosition, shakeTargetPosition, 0.5f);
             Shake = MathHelper.Lerp(Shake, 0.0f, 0.03f);
 

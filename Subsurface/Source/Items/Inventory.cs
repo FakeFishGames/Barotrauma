@@ -306,20 +306,6 @@ namespace Subsurface
                 TryPutItem(item, i, false);
             }
 
-
-
-            //System.Diagnostics.Debug.WriteLine("Inventory update: "+itemId+"  -  "+slotIndex);
-
-            //if (slotIndex==-1)
-            //{
-            //    if (item.inventory == this) item.Drop();
-            //}
-            //else
-            //{
-            //    TryPutItem(item, slotIndex, false);
-            //}
-
-
         }
     }
 }

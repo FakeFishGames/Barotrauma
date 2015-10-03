@@ -60,9 +60,7 @@ namespace Subsurface
                 foreach (XElement el in doc.Root.Elements())
                 {        
                     StructurePrefab sp = Load(el);
-
-                    Debug.WriteLine(sp.name);
-
+                    
                     list.Add(sp);
                 }
             }

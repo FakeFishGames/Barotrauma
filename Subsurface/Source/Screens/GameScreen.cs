@@ -83,6 +83,7 @@ namespace Subsurface
             StatusEffect.UpdateAll((float)deltaTime);
 
             Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 4);
+            //Physics.accumulator = Physics.step;
             while (Physics.accumulator >= Physics.step)
             {
                 cam.MoveCamera((float)Physics.step);
@@ -118,6 +119,8 @@ namespace Subsurface
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             //if (!Physics.updated) return;
+
+            cam.UpdateTransform();
 
             DrawMap(graphics, spriteBatch);
 
@@ -282,12 +285,12 @@ namespace Subsurface
             Submarine.DrawFront(spriteBatch);
 
             foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
-            
-            //if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
-            //{
-            //    GameMain.GameSession.Level.Draw(spriteBatch);
-            //    //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
-            //}
+
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+            {
+                GameMain.GameSession.Level.Draw(spriteBatch);
+                //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
+            }
 
             spriteBatch.End();
 

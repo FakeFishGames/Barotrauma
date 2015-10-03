@@ -81,8 +81,6 @@ namespace Subsurface.Items.Components
 
             //ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
 
-            Debug.WriteLine(item.body.Rotation);
-
             Launch(new Vector2(
                 (float)Math.Cos(item.body.Rotation),
                 (float)Math.Sin(item.body.Rotation)) * launchImpulse * item.body.Mass);
