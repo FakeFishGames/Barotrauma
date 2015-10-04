@@ -47,10 +47,14 @@ namespace Subsurface.Sounds
 
         public static void Check()
         {
+#if !DEBUG
+            return;
+#endif
+
             ALError error;
             if ((error = AL.GetError()) != ALError.NoError)
             {
-                DebugConsole.ThrowError(AL.GetErrorString(error));
+                DebugConsole.ThrowError("OpenAL error: "+AL.GetErrorString(error));
             }
         }
     }

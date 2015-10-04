@@ -312,8 +312,12 @@ namespace Subsurface
                         //limb.body.ApplyTorque(limb.Mass * -20.0f * character.animController.Dir * dir);
                     }
 
-                    limb.body.ApplyLinearImpulse(limb.Mass * 10.0f *
-                        Vector2.Normalize(attackPosition - limb.SimPosition));
+                    Vector2 diff = attackPosition - limb.SimPosition;
+                    if (diff.LengthSquared() > 0.00001f)
+                    {
+                        limb.body.ApplyLinearImpulse(limb.Mass * 10.0f *
+                            Vector2.Normalize(attackPosition - limb.SimPosition));
+                    }
 
                     steeringManager.SteeringSeek(attackPosition + (limb.SimPosition-Position), 5.0f);
 

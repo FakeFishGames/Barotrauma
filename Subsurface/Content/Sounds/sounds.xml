@@ -32,6 +32,8 @@
   
 
   <music file="Content/Sounds/Music/Simplex.ogg" type="default"/>
-  <music file="Content/Sounds/Music/Enter the Maze.ogg" type="repair" priorityrange="40,100"/>
+  <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
+  <music file="Content/Sounds/Music/Enter the Maze.ogg" type="repair" priorityrange="30,60"/>
+  <music file="Content/Sounds/Music/Static Motion.ogg" type="repair" priorityrange="50,80"/>
   <music file="Content/Sounds/Music/Unseen Horrors.ogg" type="monster" priorityrange="40,100"/>
 </sounds>

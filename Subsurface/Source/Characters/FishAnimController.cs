@@ -132,7 +132,7 @@ namespace Subsurface
         void UpdateSineAnim(float deltaTime)
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement*swimSpeed, 1.0f);
-            if (movement == Vector2.Zero) return;
+            if (movement.LengthSquared() < 0.00001f) return;
 
             if (!inWater) movement.Y = Math.Min(0.0f, movement.Y);
 

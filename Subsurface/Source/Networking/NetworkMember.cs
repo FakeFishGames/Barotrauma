@@ -216,6 +216,12 @@ namespace Subsurface.Networking
                 inGameHUD.Update(deltaTime);
 
                 if (crewFrameOpen) crewFrame.Update(deltaTime);
+
+                if (Character.Controlled != null && Character.Controlled.IsDead)
+                {
+                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    GameMain.LightManager.LosEnabled = false;
+                }
             }
 
             if (PlayerInput.KeyHit(Keys.Tab))

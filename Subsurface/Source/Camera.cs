@@ -48,7 +48,7 @@ namespace Subsurface
 
                 worldView = new Rectangle(
                     (int)(center.X - newWidth / 2.0f),
-                    (int)(center.Y - newHeight / 2.0f),
+                    (int)(center.Y + newHeight / 2.0f),
                     (int)newWidth,
                     (int)newHeight);
 

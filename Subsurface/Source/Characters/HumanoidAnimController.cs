@@ -401,14 +401,14 @@ namespace Subsurface
                 }
             }
 
-            for (int i = 0; i < 2; i++)
-            {
-                Limb leg = (i == 0) ? rightFoot : leftFoot;
+            //for (int i = 0; i < 2; i++)
+            //{
+            //    Limb leg = (i == 0) ? rightLeg : leftLeg;
 
-                if (leg.SimPosition.Y < torso.SimPosition.Y) continue;
+            //    if (leg.SimPosition.Y < waist.SimPosition.Y) continue;
 
-                leg.body.ApplyTorque(-Dir * leg.Mass * 20.0f);
-            }
+            //    //leg.body.ApplyTorque(Dir * leg.Mass * 50.0f);
+            //}
 
         }
 
@@ -416,26 +416,16 @@ namespace Subsurface
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
 
-            if (inWater && movement != Vector2.Zero)
+            if (inWater && movement.LengthSquared()>0.00001f)
             {
                 movement = Vector2.Normalize(movement);
             }
-
-            if (!MathUtils.IsValid(movement))
-            {
-                int a = 1;
-            }
-            
+                        
             RefLimb.pullJoint.Enabled = true;
             RefLimb.pullJoint.WorldAnchorB =
                 RefLimb.SimPosition + movement*0.15f;
 
             RefLimb.body.SmoothRotate(0.0f);
-
-            if (!MathUtils.IsValid(RefLimb.body.SimPosition))
-            {
-                int a = 1;
-            }
 
             foreach (Limb l in Limbs)
             {

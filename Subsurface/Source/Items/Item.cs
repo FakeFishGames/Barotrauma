@@ -482,7 +482,11 @@ namespace Subsurface
             {
                 if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;
 
-                if (ic.WasUsed) ic.StopSounds(ActionType.OnUse);
+                if (!ic.WasUsed)
+                {
+                    ic.StopSounds(ActionType.OnUse);
+                }
+                ic.WasUsed = false;
 
                 if (!ic.IsActive) continue;
 
@@ -861,8 +865,8 @@ namespace Subsurface
                 {
                     ic.WasUsed = true;
 
-                    ic.PlaySound(ActionType.OnUse, Position);
-
+                    ic.PlaySound(ActionType.OnUse, body==null ? Position : ConvertUnits.ToDisplayUnits(body.SimPosition));
+    
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
 
                     if (ic.DeleteOnUse) remove = true;

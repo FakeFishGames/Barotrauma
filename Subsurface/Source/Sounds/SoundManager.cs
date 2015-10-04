@@ -44,7 +44,7 @@ namespace Subsurface.Sounds
                 //alFilters.Add(alFilterId);
                 ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilteri.FilterType, (int)OpenTK.Audio.OpenAL.EfxFilterType.Lowpass);
                                 
-                //LowPassHFGain = 1;
+                LowPassHFGain = 1.0f;
             }
 
 
@@ -115,7 +115,7 @@ namespace Subsurface.Sounds
             //return -1;
         }
 
-        public static int Play(Sound sound, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f)
+        public static int Play(Sound sound, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f, bool loop=false)
         {
             //for (int i = 2; i < DefaultSourceCount; i++)
             //{
@@ -137,25 +137,18 @@ namespace Subsurface.Sounds
                 //    position /= 1000.0f;
 
                 alBuffers[i] = sound.AlBufferId;
-                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourceb.Looping, false);
+                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourceb.Looping, loop);
 
                 OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcei.Buffer, sound.AlBufferId);
 
 
                 UpdateSoundPosition(i, position, volume);
 
-                //position /= 1000.0f;
-
-                ////System.Diagnostics.Debug.WriteLine("updatesoundpos: "+offset);
-                //OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcef.Gain, volume);
-                //OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
-
-                //ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain);
-                //ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
-                //ALHelper.Check();
-
                 //AL.Source(alSources[i], ALSource3f.Position, position.X, position.Y, 0.0f);
                 OpenTK.Audio.OpenAL.AL.SourcePlay(alSources[i]);
+
+
+
 
                 //sound.sourceIndex = i;
 
@@ -171,14 +164,19 @@ namespace Subsurface.Sounds
         }
         public static int Loop(Sound sound, int sourceIndex, Vector2 position, float volume = 1.0f)
         {
+            if (!MathUtils.IsValid(volume))
+            {
+                volume = 0.0f;
+            }
+
             if (sourceIndex<1)
             {
-                sourceIndex = Play(sound, position, volume);
-                if (sourceIndex>0)
-                {
-                    AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
-                    AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
-                }
+                sourceIndex = Play(sound, position, volume, 0.0f, true);
+                //if (sourceIndex>0)
+                //{
+                //    AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
+                //    AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
+                //}
                 ALHelper.Check();
                 return sourceIndex;
             }
@@ -233,7 +231,7 @@ namespace Subsurface.Sounds
         public static void Stop(int sourceIndex)
         {
             if (sourceIndex < 1) return;
-
+            
             var state = AL.GetSourceState(alSources[sourceIndex]);
             if (state == ALSourceState.Playing || state == ALSourceState.Paused)
             {
@@ -296,19 +294,25 @@ namespace Subsurface.Sounds
         {
             if (sourceIndex < 1) return;
 
+            if (!MathUtils.IsValid(position))
+            {
+                position = Vector2.Zero;
+            }
+
             //Resume(sourceIndex);
 
             position/= 1000.0f;
             
-            //System.Diagnostics.Debug.WriteLine("updatesoundpos: "+offset);
             OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourcef.Gain, baseVolume);
             OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
 
-            float lowPassGain = lowPassHfGain / Math.Max(position.Length()*5.0f,1.0f);
+            float lowPassGain = lowPassHfGain / Math.Max(position.Length() * 5.0f, 1.0f);
 
             ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassGain);
             ALHelper.Efx.BindFilterToSource(alSources[sourceIndex], lowpassFilterId);
             ALHelper.Check();
+
+
         }
 
         public static OggStream StartStream(string file, float volume = 1.0f)

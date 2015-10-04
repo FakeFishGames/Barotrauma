@@ -277,12 +277,12 @@ namespace Subsurface.Items.Components
         private int loopingSoundIndex;
         public void PlaySound(ActionType type, Vector2 position)
         {
+            List<ItemSound> matchingSounds = sounds.FindAll(x => x.Type == type);
+            if (matchingSounds.Count == 0) return;
+
             ItemSound itemSound = null;
             if (!Sounds.SoundManager.IsPlaying(loopingSoundIndex))
             {
-                List<ItemSound> matchingSounds = sounds.FindAll(x => x.Type == type);
-                if (matchingSounds.Count == 0) return;
-
                 int index = Rand.Int(matchingSounds.Count);
                 itemSound = matchingSounds[index];
             }

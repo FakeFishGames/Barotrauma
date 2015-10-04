@@ -64,6 +64,9 @@ namespace Subsurface
         private Vector2 DoSteeringSeek(Vector2 target, float speed = 1.0f)
         {
             Vector2 targetVel = target - host.Position;
+
+            if (targetVel.LengthSquared() < 0.00001f) return Vector2.Zero;
+
             targetVel = Vector2.Normalize(targetVel) * speed;
             Vector2 newSteering = targetVel - host.Steering;
 
