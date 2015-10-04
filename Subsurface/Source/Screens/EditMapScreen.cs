@@ -206,8 +206,11 @@ namespace Subsurface
         public override void Update(double deltaTime)
         {
 
-            if (GUIComponent.MouseOn == null) cam.MoveCamera((float)deltaTime);
-            cam.Zoom = MathHelper.Clamp(cam.Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f, 0.1f, 2.0f);
+            if (GUIComponent.MouseOn == null)
+            {
+                cam.MoveCamera((float)deltaTime);
+                //cam.Zoom = MathHelper.Clamp(cam.Zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f)*cam.Zoom, 0.1f, 2.0f);
+            }
 
             if (characterMode)
             {
@@ -278,12 +281,8 @@ namespace Subsurface
 
             if (selectedTab > -1) GUItabs[selectedTab].Draw(spriteBatch);
             
-            GUI.Draw((float)deltaTime, spriteBatch, cam);
-
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
-
-
-
+            
             if (characterMode)
             {
                 if (dummyCharacter != null)                     
@@ -312,17 +311,17 @@ namespace Subsurface
 
                 }
 
-                if (PlayerInput.GetMouseState.LeftButton != ButtonState.Pressed)
-                {
-                    Inventory.draggingItem = null;
-                }
+                //if (PlayerInput.GetMouseState.LeftButton != ButtonState.Pressed)
+                //{
+                //    Inventory.draggingItem = null;
+                //}
             }
             else
             {
                 MapEntity.Edit(spriteBatch, cam);
             }
 
-
+            GUI.Draw((float)deltaTime, spriteBatch, cam);
                                               
             spriteBatch.End();
 

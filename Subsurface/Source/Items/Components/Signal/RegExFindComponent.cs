@@ -48,7 +48,7 @@ namespace Subsurface.Items.Components
         public RegExFindComponent(Item item, XElement element)
             : base(item, element)
         {
-            isActive = true;
+            IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)

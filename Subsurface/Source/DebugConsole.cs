@@ -290,6 +290,23 @@ namespace Subsurface
                     if (commands.Length < 2) break;
                     Submarine.Load(string.Join(" ", commands.Skip(1)));
                     break;
+                case "cleansub":
+                    for (int i = MapEntity.mapEntityList.Count-1; i>=0; i--)
+                    {
+                        MapEntity me = MapEntity.mapEntityList[i];
+
+                        if (me.SimPosition.Length()>200.0f)
+                        {
+                            DebugConsole.NewMessage("Removed "+me.Name+" (simposition "+me.SimPosition+")", Color.Orange);
+                            MapEntity.mapEntityList.RemoveAt(i);
+                        }
+                        else if (me.MoveWithLevel)
+                        {
+                            DebugConsole.NewMessage("Removed " + me.Name + " (MoveWithLevel==true)", Color.Orange);
+                            MapEntity.mapEntityList.RemoveAt(i);
+                        }
+                    }
+                    break;
                 case "messagebox":
                     if (commands.Length < 3) break;
                     new GUIMessageBox(commands[1], commands[2]);

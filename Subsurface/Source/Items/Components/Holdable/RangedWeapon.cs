@@ -46,7 +46,7 @@ namespace Subsurface.Items.Components
             if (reload < 0.0f)
             {
                 reload = 0.0f;
-                isActive = false;
+                IsActive = false;
             }
         }
         
@@ -54,7 +54,7 @@ namespace Subsurface.Items.Components
         {
             if (character == null) return false;
             if (!character.GetInputState(InputType.SecondaryHeld) || reload > 0.0f) return false;
-            isActive = true;
+            IsActive = true;
             reload = 1.0f;
 
             List<Body> limbBodies = new List<Body>();

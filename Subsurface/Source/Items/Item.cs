@@ -78,6 +78,14 @@ namespace Subsurface
             get { return prefab.PickDistance; }
         }
 
+        public override Vector2 SimPosition
+        {
+            get
+            {
+                return (body==null) ? base.SimPosition : body.SimPosition;
+            }
+        }
+
         protected Color spriteColor;
         [Editable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
         public string SpriteColor

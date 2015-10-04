@@ -225,9 +225,19 @@ namespace Subsurface
 
             float footMid = waist.SimPosition.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
 
+            int limbsInWater = 0;
+            foreach (Limb limb in Limbs)
+            {
+                if (limb.inWater) limbsInWater++;
+            }
+
+            TargetMovement *= (1.0f - 0.5f*((float)limbsInWater/(float)Limbs.Count()));
+
             movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
             movement.Y = 0.0f;
 
+
+            
             //place the anchors of the head and the torso to make the ragdoll stand
             if (onGround && LowestLimb != null && (LowestLimb.SimPosition.Y-floorY < 0.5f || stairs != null) && head !=null)
             {
@@ -588,7 +598,7 @@ namespace Subsurface
 
             float handCyclePos = walkPos / 2.0f;
             float handPosX = (float)Math.Cos(handCyclePos * Dir) * 0.4f;
-            float handPosY = (float)Math.Sin(handCyclePos * Dir) * 1.0f;
+            float handPosY = (float)Math.Sin(handCyclePos) * 1.0f;
             handPosY = MathHelper.Clamp(handPosY, -0.8f, 0.8f);
 
             Matrix rotationMatrix = Matrix.CreateRotationZ(torso.Rotation);

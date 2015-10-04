@@ -30,7 +30,7 @@ namespace Subsurface.Items.Components
                 }
             }
 
-            isActive = true;
+            IsActive = true;
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -67,7 +67,7 @@ namespace Subsurface.Items.Components
         public override bool Select(Character picker)
         {
             user = picker;
-            isActive = true;
+            IsActive = true;
             return true;
         }
 

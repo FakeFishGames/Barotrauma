@@ -19,10 +19,16 @@ namespace Subsurface.Items.Components
             return (running && item.Condition>0.0f);
         }
 
+        public float CurrFlow
+        {
+            get;
+            private set;
+        }
+
         public OxygenGenerator(Item item, XElement element)
             : base(item, element)
         {
-            isActive = true;
+            IsActive = true;
 
             ventList = new List<Vent>();
 
@@ -34,6 +40,7 @@ namespace Subsurface.Items.Components
         {
             base.Update(deltaTime, cam);
 
+            CurrFlow = 0.0f;
             currPowerConsumption = powerConsumption;
 
             if (item.CurrentHull == null) return;
@@ -54,11 +61,11 @@ namespace Subsurface.Items.Components
             }
 
             running = true;
-            
-            float deltaOxygen = Math.Min(voltage, 1.0f) * 50000.0f;
-            item.CurrentHull.Oxygen += deltaOxygen * deltaTime;
 
-            UpdateVents(deltaOxygen);
+            CurrFlow = Math.Min(voltage, 1.0f) * 50000.0f;
+            item.CurrentHull.Oxygen += CurrFlow * deltaTime;
+
+            UpdateVents(CurrFlow);
 
 
             voltage = 0.0f;

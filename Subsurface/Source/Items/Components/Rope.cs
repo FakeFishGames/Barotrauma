@@ -179,7 +179,7 @@ namespace Subsurface.Items.Components
             {
                 item.Combine(projectile);
                 ropeBodies[ropeBodies.Length - 1].Enabled = false;
-                isActive = false;
+                IsActive = false;
             }
         }
         
@@ -235,7 +235,7 @@ namespace Subsurface.Items.Components
                 {
                     if (joint != null) joint.Enabled = false;
                 }
-                isActive = false;
+                IsActive = false;
             }
         }
 
@@ -243,7 +243,7 @@ namespace Subsurface.Items.Components
         {
             base.Draw(spriteBatch);
 
-            if (!isActive) return;
+            if (!IsActive) return;
 
             RevoluteJoint firstJoint = null;
 
@@ -279,7 +279,7 @@ namespace Subsurface.Items.Components
         public void Attach(Item projectile)
         {
             reload = 0.5f;
-            isActive = true;
+            IsActive = true;
 
             this.projectile = projectile;
             //Projectile projectileComponent = projectile.GetComponent<Projectile>();

@@ -97,12 +97,14 @@ namespace Subsurface
 
             body.CollisionCategories = Physics.CollisionMisc;
             body.CollidesWith = Physics.CollisionLevel;
+            body.Restitution = 0.0f;
             body.FixedRotation = true;
             body.Awake = true;
             body.SleepingAllowed = false;
-            body.GravityScale = 0.0f;
+            body.IgnoreGravity = true;
             body.OnCollision += OnCollision;
-            body.OnSeparation += OnSeparation;
+            //body.OnSeparation += OnSeparation;
+            body.UserData = this;
         }
 
 
@@ -194,28 +196,9 @@ namespace Subsurface
             //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
 
             //hullBody.SetTransform(Vector2.Zero , 0.0f);
-            body.LinearVelocity = -body.Position / (float)Physics.step;
+            body.SetTransform(Vector2.Zero, 0.0f);// .LinearVelocity = -body.Position / (float)Physics.step;
+            body.LinearVelocity = Vector2.Zero;
 
-            if (collidingCell == null)
-            {
-                collisionRigidness = MathHelper.Lerp(collisionRigidness, 1.0f, 0.1f);
-                return;
-            }
-
-            foreach (GraphEdge ge in collidingCell.edges)
-            {
-                Body wallBody = Submarine.PickBody(
-                    ConvertUnits.ToSimUnits(ge.point1 + GameMain.GameSession.Level.Position),
-                    ConvertUnits.ToSimUnits(ge.point2 + GameMain.GameSession.Level.Position), new List<Body>() { collidingCell.body });
-                if (wallBody == null || wallBody.UserData == null) continue;
-
-                Structure structure = wallBody.UserData as Structure;
-                if (structure == null) continue;
-                structure.AddDamage(
-                    structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition)), 50.0f);
-            }
-
-            collidingCell = null;
         }
 
         private Vector2 CalculateBuoyancy()
@@ -244,7 +227,6 @@ namespace Subsurface
             speed += force / mass;
         }
 
-        VoronoiCell collidingCell;
         public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
             VoronoiCell cell = f2.Body.UserData as VoronoiCell;
@@ -255,7 +237,7 @@ namespace Subsurface
             }
 
             Vector2 normal = contact.Manifold.LocalNormal;
-            Vector2 simSpeed = ConvertUnits.ToSimUnits(speed);
+            Vector2 simSpeed = ConvertUnits.ToSimUnits(speed) + body.LinearVelocity;
             float impact = Vector2.Dot(simSpeed, normal);
 
             Vector2 u = Vector2.Dot(simSpeed, -normal) * -normal;
@@ -292,27 +274,53 @@ namespace Subsurface
             }
 
             System.Diagnostics.Debug.WriteLine("IMPACT: " + impact + " normal: " + normal + " simspeed: " + simSpeed + " u: " + u + " w: " + w);
-            if (impact < 4.0f)
+            if (impact < 3.0f)
             {
-                speed = ConvertUnits.ToDisplayUnits(w * 0.9f - u * 0.2f);
+                speed = ConvertUnits.ToDisplayUnits(w * 0.45f - u * 0.25f);
                 return true;
             }
             else
             {
                 speed = ConvertUnits.ToDisplayUnits(w * 0.9f + u * 0.5f);
+
+                //FixedArray2<Vector2> worldPoints;
+                //contact.GetWorldManifold(out normal, out worldPoints);
+
+                //if (contact.Manifold.PointCount >= 1)
+                //{
+                //    Vector2 contactPoint = worldPoints[0];
+
+                //    Body wallBody = Submarine.PickBody(contactPoint, contactPoint + normal, new List<Body>() { cell.body });
+
+                //    if (wallBody!=null && wallBody.UserData!=null)
+                //    {
+                //        Structure s = wallBody.UserData as Structure;
+                //    }
+                //}
+
+                foreach (GraphEdge ge in cell.edges)
+                {
+                    Body wallBody = Submarine.PickBody(
+                        ConvertUnits.ToSimUnits(ge.point1 + GameMain.GameSession.Level.Position + normal),
+                        ConvertUnits.ToSimUnits(ge.point2 + GameMain.GameSession.Level.Position + normal), new List<Body>() { cell.body });
+                    if (wallBody == null || wallBody.UserData == null) continue;
+
+                    Structure structure = wallBody.UserData as Structure;
+                    if (structure == null) continue;
+                    structure.AddDamage(
+                        structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition)), impact*50.0f);
+                }
             }
 
 
             collisionRigidness = 0.8f;
 
-            collidingCell = cell;
-
             return true;
         }
 
-        public void OnSeparation(Fixture f1, Fixture f2)
-        {
-            collidingCell = null;
-        }
+        //public void OnSeparation(Fixture f1, Fixture f2)
+        //{
+        //    collidingCell = null;
+        //}
     }
 }

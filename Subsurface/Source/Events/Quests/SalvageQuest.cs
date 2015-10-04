@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,15 +10,15 @@ namespace Subsurface
 {
     class SalvageQuest : Quest
     {
-        ItemPrefab itemPrefab;
+        private ItemPrefab itemPrefab;
 
-        Item item;
+        private Item item;
 
         public override Vector2 RadarPosition
         {
             get
             {
-                return item.Position;
+                return ConvertUnits.ToDisplayUnits(item.SimPosition);
             }
         }
 
@@ -39,17 +40,18 @@ namespace Subsurface
             Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count)];
 
             item = new Item(itemPrefab, position + level.Position);
+            item.MoveWithLevel = true;
             //item.MoveWithLevel = true;
         }
 
         public override void End()
         {
+            item.Remove();
             if (item.CurrentHull == null)
             {
                 new GUIMessageBox("Quest failed", failureMessage);
                 return;
-            }
-            item.Remove();
+            }            
 
             GiveReward();
 

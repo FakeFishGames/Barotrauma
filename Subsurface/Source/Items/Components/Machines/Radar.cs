@@ -77,7 +77,7 @@ namespace Subsurface.Items.Components
 
             if (voltage < minVoltage) return;
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x+20, y+20, 200, 30), "Activate Radar")) isActive = !isActive;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x+20, y+20, 200, 30), "Activate Radar")) IsActive = !IsActive;
 
             int radius = GuiFrame.Rect.Height / 2 - 10;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
@@ -92,7 +92,7 @@ namespace Subsurface.Items.Components
             //lineEnd += new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Math.Min(width, height) / 2.0f;
             //GUI.DrawLine(spriteBatch, GuiFrame.Center, lineEnd, Color.Green);
 
-            if (!isActive) return;
+            if (!IsActive) return;
 
             if (pingCircle!=null)
             {

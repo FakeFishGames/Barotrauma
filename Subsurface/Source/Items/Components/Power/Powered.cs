@@ -45,11 +45,11 @@ namespace Subsurface.Items.Components
         [HasDefaultValue(false,true)]
         public override bool IsActive
         {
-            get { return isActive; }
+            get { return base.IsActive; }
             set 
             { 
-                isActive = value;
-                if (!isActive) currPowerConsumption = 0.0f;
+                base.IsActive = value;
+                if (!value) currPowerConsumption = 0.0f;
             }
         }
 
@@ -101,7 +101,6 @@ namespace Subsurface.Items.Components
                     powerOnSound.Play(1.0f, 600.0f, item.Position);
                     powerOnSoundPlayed = true;
                 }
-                ApplyStatusEffects(ActionType.OnActive, deltaTime);
             }
             else if (voltage < 0.1f)            
             {

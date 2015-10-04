@@ -72,7 +72,7 @@ namespace Subsurface.Items.Components
             //maxRechargeSpeed = ToolBox.GetAttributeFloat(element, "maxinput", 10.0f);
             //maxOutput = ToolBox.GetAttributeFloat(element, "maxoutput", 10.0f);
             
-            isActive = true;
+            IsActive = true;
         }
 
         public override bool Pick(Character picker)

@@ -124,8 +124,6 @@ namespace Subsurface
         public void Translate(Vector2 amount)
         {
             position += amount;
-            Sound.CameraPos = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
-
             //UpdateTransform();
         }
 
@@ -152,6 +150,10 @@ namespace Subsurface
 
             prevPosition = position;
             prevZoom = zoom;
+
+
+            Sound.CameraPos = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
+
         }
 
         public void MoveCamera(float deltaTime)
@@ -161,7 +163,6 @@ namespace Subsurface
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
-
                 if (PlayerInput.KeyDown(Keys.A)) moveCam.X -= moveSpeed;
                 if (PlayerInput.KeyDown(Keys.D)) moveCam.X += moveSpeed;
                 if (PlayerInput.KeyDown(Keys.S)) moveCam.Y -= moveSpeed;
@@ -169,7 +170,8 @@ namespace Subsurface
 
                 moveCam = moveCam * deltaTime * 60.0f;
 
-                Zoom = MathHelper.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f, 0.1f, 2.0f);
+
+                Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, 0.1f, 2.0f); 
             }
             else
             {

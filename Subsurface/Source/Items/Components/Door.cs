@@ -148,7 +148,7 @@ namespace Subsurface.Items.Components
 
             UpdateConvexHulls();
 
-            isActive = true;
+            IsActive = true;
         }
 
         private void UpdateConvexHulls()
@@ -240,7 +240,7 @@ namespace Subsurface.Items.Components
         {
             if (!isStuck)
             {
-                OpenState += deltaTime * ((isOpen) ? 3.0f : -3.0f);
+                OpenState += deltaTime * ((isOpen) ? 2.0f : -1.0f);
                 LinkedGap.Open = openState;
             }
 
@@ -327,10 +327,13 @@ namespace Subsurface.Items.Components
             if (connection.Name=="toggle")
             {
                 isOpen = !isOpen;
+                PlaySound(ActionType.OnUse, item.Position);
             }
             else if (connection.Name == "set_state")
             {
-                isOpen = (signal!="0");                
+                bool newState = (signal!="0");
+                if (isOpen!=newState) PlaySound(ActionType.OnUse, item.Position);
+                isOpen = newState;             
             }
 
             //opening a partially stuck door makes it less stuck

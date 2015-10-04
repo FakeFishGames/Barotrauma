@@ -157,7 +157,7 @@ namespace Subsurface.Items.Components
             itemList.Enabled = false;
 
             fabricatedItem = obj as FabricableItem;
-            isActive = true;
+            IsActive = true;
 
             timeUntilReady = fabricatedItem.RequiredTime;
 
@@ -179,7 +179,7 @@ namespace Subsurface.Items.Components
             
             new Item(fabricatedItem.TargetItem, item.Position);
 
-            isActive = false;
+            IsActive = false;
             fabricatedItem = null;
         }
 

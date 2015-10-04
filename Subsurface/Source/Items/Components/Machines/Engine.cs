@@ -49,7 +49,7 @@ namespace Subsurface.Items.Components
         public Engine(Item item, XElement element)
             : base(item, element)
         {
-            isActive = true;
+            IsActive = true;
         }
 
         public float CurrentVolume

@@ -24,7 +24,7 @@ namespace Subsurface
         private static Texture2D shaftTexture;
 
         //how close the sub has to be to start/endposition to exit
-        const float ExitDistance = 3000.0f;
+        const float ExitDistance = 6000.0f;
 
         private string seed;
 

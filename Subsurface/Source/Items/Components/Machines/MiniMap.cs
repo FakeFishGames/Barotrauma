@@ -11,7 +11,7 @@ namespace Subsurface.Items.Components
         public MiniMap(Item item, XElement element)
             : base(item, element)
         {
-            isActive = true;
+            IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam) 

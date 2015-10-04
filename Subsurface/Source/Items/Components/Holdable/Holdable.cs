@@ -118,7 +118,7 @@ namespace Subsurface.Items.Components
             if (picker.Inventory == null) return;
 
             item.body.Enabled = true;
-            isActive = false;
+            IsActive = false;
 
             //item.Unequip();
 
@@ -140,7 +140,7 @@ namespace Subsurface.Items.Components
             if (picker.TrySelectItem(item))
             {
                 item.body.Enabled = true;
-                isActive = true;
+                IsActive = true;
             }
         }
 
@@ -151,7 +151,7 @@ namespace Subsurface.Items.Components
             picker.DeselectItem(item);
             
             item.body.Enabled = false;
-            isActive = false;
+            IsActive = false;
         }
 
         public override bool Pick(Character picker)
@@ -213,7 +213,7 @@ namespace Subsurface.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {         
             if (!item.body.Enabled) return;
-            if (!picker.HasSelectedItem(item)) isActive = false;
+            if (!picker.HasSelectedItem(item)) IsActive = false;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
             

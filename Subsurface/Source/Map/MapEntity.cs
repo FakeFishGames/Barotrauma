@@ -90,7 +90,7 @@ namespace Subsurface
                     rect.X + rect.Width / 2.0f,
                     rect.Y - rect.Height / 2.0f);
 
-                if (MoveWithLevel) rectPos += Level.Loaded.Position;
+                //if (MoveWithLevel) rectPos += Level.Loaded.Position;
                 return rectPos;
             }
         }

@@ -183,9 +183,9 @@ namespace Subsurface
                 }
 
                 return sourceIndex;
-            }           
+            }
 
-            return SoundManager.Loop(this, sourceIndex, position, volume, volume);
+            return SoundManager.Loop(this, sourceIndex, relativePos, volume);
 
         }
 
