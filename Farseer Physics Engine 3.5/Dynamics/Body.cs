@@ -779,6 +779,8 @@ namespace FarseerPhysics.Dynamics
         /// <param name="rotation">The world rotation in radians.</param>
         public void SetTransform(Vector2 position, float rotation)
         {
+            Debug.Assert(position.IsValid());
+
             SetTransform(ref position, rotation);
         }
 
@@ -823,6 +825,8 @@ namespace FarseerPhysics.Dynamics
         /// <param name="point">The world position of the point of application.</param>
         public void ApplyForce(Vector2 force, Vector2 point)
         {
+            Debug.Assert(force.IsValid());
+
             ApplyForce(ref force, ref point);
         }
 
@@ -841,6 +845,8 @@ namespace FarseerPhysics.Dynamics
         /// <param name="force">The force.</param>
         public void ApplyForce(Vector2 force)
         {
+            Debug.Assert(force.IsValid());
+
             ApplyForce(ref force, ref _xf.p);
         }
 
@@ -898,6 +904,8 @@ namespace FarseerPhysics.Dynamics
         /// <param name="impulse">The world impulse vector, usually in N-seconds or kg-m/s.</param>
         public void ApplyLinearImpulse(Vector2 impulse)
         {
+            Debug.Assert(impulse.IsValid());
+
             ApplyLinearImpulse(ref impulse);
         }
 
@@ -911,6 +919,8 @@ namespace FarseerPhysics.Dynamics
         /// <param name="point">The world position of the point of application.</param>
         public void ApplyLinearImpulse(Vector2 impulse, Vector2 point)
         {
+            Debug.Assert(impulse.IsValid());
+
             ApplyLinearImpulse(ref impulse, ref point);
         }
 

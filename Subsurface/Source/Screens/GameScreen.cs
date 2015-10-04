@@ -47,6 +47,13 @@ namespace Subsurface
                 entity.IsHighlighted = false;
         }
 
+        public override void Deselect()
+        {
+            base.Deselect();
+
+            Sounds.SoundManager.LowPassHFGain = 1.0f;
+        }
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -60,16 +67,16 @@ namespace Subsurface
 
             AmbientSoundManager.Update();
 
-            //if (Game1.GameSession != null && Game1.GameSession.Level != null)
-            //{
-            //    Vector2 targetMovement = Vector2.Zero;
-            //    if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
-            //    if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
-            //    if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
-            //    if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+            {
+                Vector2 targetMovement = Vector2.Zero;
+                if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
+                if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
+                if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
+                if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
-            //    Game1.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
-            //}
+                GameMain.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
+            }
 
             if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);
@@ -99,7 +106,7 @@ namespace Subsurface
 
                 Ragdoll.UpdateAll(cam, (float)Physics.step);
 
-                if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+                if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine!=null)
                 {
                     GameMain.GameSession.Submarine.Update((float)Physics.step);
                 }

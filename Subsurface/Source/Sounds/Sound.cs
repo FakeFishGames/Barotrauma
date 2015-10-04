@@ -77,6 +77,8 @@ namespace Subsurface
 
         public int Play(float volume = 1.0f)
         {
+            if (volume <= 0.0f) return -1;
+
             alSourceId = SoundManager.Play(this, volume);
             return alSourceId;
         }
@@ -90,7 +92,9 @@ namespace Subsurface
             Vector2 relativePos = GetRelativePosition(position);
             float volume = GetVolume(relativePos, range, baseVolume);
 
-            alSourceId = SoundManager.Play(this, relativePos, volume, volume);
+            if (volume <= 0.0f) return -1;
+
+            alSourceId = SoundManager.Play(this, relativePos, volume);
 
             return alSourceId;
 

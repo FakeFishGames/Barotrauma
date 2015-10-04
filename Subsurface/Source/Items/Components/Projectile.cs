@@ -151,7 +151,6 @@ namespace Subsurface.Items.Components
                 }
             }
 
-
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
             item.body.FarseerBody.IsBullet = false;
@@ -181,17 +180,21 @@ namespace Subsurface.Items.Components
             }
 
             var containedItems = item.ContainedItems;
-            if (containedItems == null) return true;
-            foreach (Item contained in containedItems)
+            if (containedItems != null)
             {
-                if (contained.body != null)
+                foreach (Item contained in containedItems)
                 {
-                    contained.SetTransform(item.SimPosition, contained.body.Rotation);
+                    if (contained.body != null)
+                    {
+                        contained.SetTransform(item.SimPosition, contained.body.Rotation);
+                    }
+                    contained.Condition = 0.0f;
                 }
-                contained.Condition = 0.0f;
             }
 
-            return false;
+            return (f2.CollisionCategories != Physics.CollisionCharacter);
+
+            //return false;
         }
 
         private bool StickToTarget(Body targetBody, Vector2 axis)

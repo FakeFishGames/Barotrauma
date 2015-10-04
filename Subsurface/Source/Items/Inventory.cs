@@ -108,7 +108,12 @@ namespace Subsurface
 
         protected void PutItem(Item item, int i, bool createNetworkEvent, bool removeItem = true)
         {
-            if (item.inventory != null && removeItem) item.inventory.RemoveItem(item);
+            if (item.inventory != null && removeItem)
+            {
+                item.Drop();
+                item.inventory.RemoveItem(item);
+            }
+
             items[i] = item;
             item.inventory = this;
             if (item.body!=null)

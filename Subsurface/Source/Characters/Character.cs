@@ -862,7 +862,6 @@ namespace Subsurface
                 {
                     sounds[i].Play(1.0f, 2000.0f,
                             AnimController.Limbs[0].body.FarseerBody);
-                    Debug.WriteLine("playing: " + sounds[i]);
                     return;
                 }
                 n++;
@@ -944,7 +943,7 @@ namespace Subsurface
             {
                 joint.LimitEnabled = false;
             }
-            Kill(true);
+            Kill();
         }
 
         private IEnumerable<object> DeathAnim(Camera cam)
@@ -955,6 +954,7 @@ namespace Subsurface
             float timer = 0.0f;
 
             Color prevAmbientLight = GameMain.LightManager.AmbientLight;
+            Color darkLight = new Color(0.2f,0.2f,0.2f, 1.0f);
 
             while (timer < dimDuration)
             {
@@ -968,7 +968,7 @@ namespace Subsurface
                         cam.OffsetAmount = 0.0f;
                     }
 
-                    GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, Color.DarkGray, timer / dimDuration);
+                    GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, darkLight, timer / dimDuration);
                 }
 
                 yield return CoroutineStatus.Running;
@@ -984,7 +984,7 @@ namespace Subsurface
             {
                 lerpLightBack = Math.Min(lerpLightBack + 0.05f, 1.0f);
 
-                GameMain.LightManager.AmbientLight = Color.Lerp(Color.DarkGray, prevAmbientLight, lerpLightBack);
+                GameMain.LightManager.AmbientLight = Color.Lerp(darkLight, prevAmbientLight, lerpLightBack);
                 yield return CoroutineStatus.Running;
             }
 
@@ -996,17 +996,7 @@ namespace Subsurface
             if (isDead) return;
 
             //if the game is run by a client, characters are only killed when the server says so
-            if (GameMain.Client != null)
-            {
-                if (networkMessage)
-                {
-                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true);
-                }
-                else
-                {
-                    return;
-                }
-            }
+            if (GameMain.Client != null && GameMain.Server==null && !networkMessage) return;               
 
             CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
 
@@ -1052,7 +1042,6 @@ namespace Subsurface
             if (type == NetworkEventType.PickItem)
             {
                 message.Write((int)data);
-                Debug.WriteLine("pickitem");
                 return;
             }
             else if (type == NetworkEventType.KillCharacter)
@@ -1140,7 +1129,6 @@ namespace Subsurface
                 Item item = FindEntityByID(itemId) as Item;
                 if (item != null)
                 {
-                    Debug.WriteLine("pickitem "+itemId );
                     item.Pick(this);
                 }
 
@@ -1151,7 +1139,7 @@ namespace Subsurface
                 Kill(true);
                 if (GameMain.NetworkMember != null && controlled == this)
                 {
-                    GameMain.Client.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
+                    GameMain.NetworkMember.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
                     GameMain.LightManager.LosEnabled = false;
                 }
                 return;

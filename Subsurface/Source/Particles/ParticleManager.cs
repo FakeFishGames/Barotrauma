@@ -54,8 +54,8 @@ namespace Subsurface.Particles
 
         public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation=0.0f)
         {
-            //if (!Submarine.RectContains(cam.WorldView, position)) return null;
-            if (!cam.WorldView.Contains(position)) return null;
+            if (!Submarine.RectContains(cam.WorldView, position)) return null;
+            //if (!cam.WorldView.Contains(position)) return null;
 
             if (particleCount >= MaxParticles) return null;
 

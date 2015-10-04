@@ -314,21 +314,21 @@ namespace Subsurface
             return closestBody;
         }
 
-        public static Body PickBody(Vector2 point)
-        {
-            Body foundBody = null;
-            AABB aabb = new AABB(point, point);
+        //public static Body PickBody(Vector2 point)
+        //{
+        //    Body foundBody = null;
+        //    AABB aabb = new AABB(point, point);
 
-            GameMain.World.QueryAABB(p =>
-            {
-                foundBody = p.Body;
+        //    GameMain.World.QueryAABB(p =>
+        //    {
+        //        foundBody = p.Body;
 
-                return true;
+        //        return true;
 
-            }, ref aabb);
+        //    }, ref aabb);
 
-            return foundBody;
-        }
+        //    return foundBody;
+        //}
 
         //public static bool InsideWall(Vector2 point)
         //{
@@ -348,7 +348,7 @@ namespace Subsurface
         {
             if (Level.Loaded == null) return;
 
-            subBody.Update(deltaTime);
+            if (subBody!=null) subBody.Update(deltaTime);
         }
 
         public void ApplyForce(Vector2 force)

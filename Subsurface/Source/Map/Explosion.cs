@@ -85,30 +85,7 @@ namespace Subsurface
             
             if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
-                List<Structure> structureList = new List<Structure>();
-            
-                float dist = 600.0f;
-                foreach (MapEntity entity in MapEntity.mapEntityList)
-                {
-                    Structure structure = entity as Structure;
-                    if (structure == null) continue;
-
-                    if (structure.HasBody && 
-                        !structure.IsPlatform &&
-                        Vector2.Distance(structure.Position, displayPosition) < dist*3.0f)
-                    {
-                        structureList.Add(structure);
-                    }
-                }
-
-                foreach (Structure structure in structureList)
-                {
-                    for (int i = 0; i < structure.SectionCount; i++)
-                    {
-                        float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i), displayPosition) / displayRange);
-                        if (distFactor > 0.0f) structure.AddDamage(i, attack.GetStructureDamage(1.0f)*distFactor);
-                    }
-                }
+                RangedStructureDamage(displayPosition, displayRange, attack.GetStructureDamage(1.0f));
             }
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
@@ -153,6 +130,35 @@ namespace Subsurface
             light.Remove();
             
             yield return CoroutineStatus.Success;
+        }
+
+        public static void RangedStructureDamage(Vector2 displayPosition, float displayRange, float damage)
+        {
+            List<Structure> structureList = new List<Structure>();
+
+
+            float dist = 600.0f;
+            foreach (MapEntity entity in MapEntity.mapEntityList)
+            {
+                Structure structure = entity as Structure;
+                if (structure == null) continue;
+
+                if (structure.HasBody &&
+                    !structure.IsPlatform &&
+                    Vector2.Distance(structure.Position, displayPosition) < dist * 3.0f)
+                {
+                    structureList.Add(structure);
+                }
+            }
+
+            foreach (Structure structure in structureList)
+            {
+                for (int i = 0; i < structure.SectionCount; i++)
+                {
+                    float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i), displayPosition) / displayRange);
+                    if (distFactor > 0.0f) structure.AddDamage(i, damage * distFactor);
+                }
+            }
         }
     }
 }

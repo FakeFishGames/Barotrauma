@@ -111,11 +111,11 @@ namespace Subsurface.Items.Components
             Vector2 targetPosition = item.body.SimPosition;
             //targetPosition = targetPosition.X, -targetPosition.Y);
 
-            float degreeOfSuccess = DegreeOfSuccess(character);
+            float degreeOfSuccess = DegreeOfSuccess(character)/100.0f;
 
-            if (Rand.Range(0.0f, 1.0f) > degreeOfSuccess * degreeOfSuccess)
+            if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess)
             {
-                ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+                ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
                 return false;
             }
 
@@ -147,7 +147,7 @@ namespace Subsurface.Items.Components
 
                 targetStructure.HighLightSection(sectionIndex);
 
-                targetStructure.AddDamage(sectionIndex, -structureFixAmount);
+                targetStructure.AddDamage(sectionIndex, -structureFixAmount*degreeOfSuccess);
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
@@ -155,7 +155,7 @@ namespace Subsurface.Items.Components
                 if (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f)
                 {
                     targetStructure.HighLightSection(sectionIndex + 1);
-                    targetStructure.AddDamage(sectionIndex + 1, -structureFixAmount);
+                    targetStructure.AddDamage(sectionIndex + 1, -structureFixAmount * degreeOfSuccess);
                 }
 
             }
@@ -163,7 +163,7 @@ namespace Subsurface.Items.Components
             {
                 if (character.GetInputState(InputType.SecondaryHeld))
                 {
-                    targetLimb.character.Health += limbFixAmount;
+                    targetLimb.character.Health += limbFixAmount * degreeOfSuccess;
                     //isActive = true;
                 }
             }

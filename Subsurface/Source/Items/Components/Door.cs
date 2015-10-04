@@ -240,7 +240,7 @@ namespace Subsurface.Items.Components
         {
             if (!isStuck)
             {
-                OpenState += deltaTime * ((isOpen) ? 2.0f : -1.0f);
+                OpenState += deltaTime * ((isOpen) ? 2.0f : -2.0f);
                 LinkedGap.Open = openState;
             }
 
