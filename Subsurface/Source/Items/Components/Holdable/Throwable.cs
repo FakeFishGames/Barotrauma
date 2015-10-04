@@ -48,7 +48,7 @@ namespace Subsurface.Items.Components
 
             throwing = true;
 
-            isActive = true;
+            IsActive = true;
             return true;
         }
 
@@ -73,7 +73,7 @@ namespace Subsurface.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (!item.body.Enabled) return;
-            if (!picker.HasSelectedItem(item)) isActive = false;
+            if (!picker.HasSelectedItem(item)) IsActive = false;
 
             if (!picker.GetInputState(InputType.SecondaryHeld) && !throwing) throwPos = 0.0f;
 

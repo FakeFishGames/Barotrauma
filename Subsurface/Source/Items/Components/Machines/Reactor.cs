@@ -132,7 +132,7 @@ namespace Subsurface.Items.Components
 
             powerPerTemp = 1.0f;
 
-            isActive = true;
+            IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam) 
@@ -288,7 +288,7 @@ namespace Subsurface.Items.Components
         bool valueChanged = false;
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            isActive = true;
+            IsActive = true;
 
 
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;

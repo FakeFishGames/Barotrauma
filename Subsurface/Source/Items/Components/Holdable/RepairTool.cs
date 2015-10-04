@@ -106,7 +106,7 @@ namespace Subsurface.Items.Components
 
             //if (DoesUseFail(character)) return false;
 
-            isActive = true;
+            IsActive = true;
 
             Vector2 targetPosition = item.body.SimPosition;
             //targetPosition = targetPosition.X, -targetPosition.Y);
@@ -200,7 +200,7 @@ namespace Subsurface.Items.Components
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (!isActive) return;
+            if (!IsActive) return;
 
             //Vector2 particleSpeed =  new Vector2(
             //    (float)Math.Cos(item.body.Rotation),
@@ -219,7 +219,7 @@ namespace Subsurface.Items.Components
 
             //GUI.DrawLine(spriteBatch, startPos, endPos, Color.Orange, 0.0f);
 
-            isActive = false;
+            IsActive = false;
         }
 
 

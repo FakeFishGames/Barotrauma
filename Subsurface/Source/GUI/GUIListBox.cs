@@ -157,6 +157,11 @@ namespace Subsurface
             base.Update(deltaTime);
             
             scrollBar.Update(deltaTime);
+            
+            if ((MouseOn==this || MouseOn==scrollBar || IsParentOf(MouseOn) )&& PlayerInput.ScrollWheelSpeed!=0)
+            {
+                scrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed/500.0f) * BarSize;
+            }
         }
 
         public void Select(int childIndex)
@@ -237,7 +242,7 @@ namespace Subsurface
             if (!scrollBarHidden) Rect = new Rectangle(rect.X, rect.Y, rect.Width + scrollBar.Rect.Width, rect.Height);
             scrollBarHidden = true;
         }
-
+        
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;

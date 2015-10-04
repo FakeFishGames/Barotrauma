@@ -60,12 +60,12 @@ namespace Subsurface.Items.Components
                 case "signal_in1":
                     if (signal == "0") return;
                     timeSinceReceived[0] = 0.0f;
-                    isActive = true;
+                    IsActive = true;
                     break;
                 case "signal_in2":
                     if (signal == "0") return;
                     timeSinceReceived[1] = 0.0f;
-                    isActive = true;
+                    IsActive = true;
                     break;
                 case "set_output":
                     output = signal;

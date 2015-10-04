@@ -7,7 +7,7 @@
 
   <Pump canbeselected = "true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
     <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
-    <sound file="pump.ogg" type="OnActive" range="800.0" volume="CurrPowerConsumption" volumemultiplier="0.003"/>
+    <sound file="pump.ogg" type="OnActive" range="800.0" volume="CurrFlow" volumemultiplier="0.01" loop="true"/>
   </Pump>
 
   <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">

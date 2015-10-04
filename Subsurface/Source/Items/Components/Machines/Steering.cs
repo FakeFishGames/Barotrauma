@@ -62,7 +62,7 @@ namespace Subsurface.Items.Components
         public Steering(Item item, XElement element)
             : base(item, element)
         {
-            isActive = true;
+            IsActive = true;
         }
         
         public override void Update(float deltaTime, Camera cam)

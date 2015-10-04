@@ -249,7 +249,10 @@ namespace Subsurface
             Body closestBody = null;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null || fixture.CollisionCategories == Category.None) return -1;                
+                if (fixture == null || 
+                    fixture.CollisionCategories == Category.None || 
+                    fixture.CollisionCategories == Physics.CollisionMisc) return -1;          
+      
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
 
                 Structure structure = fixture.Body.UserData as Structure;                
@@ -430,6 +433,7 @@ namespace Subsurface
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
+                if (e.MoveWithLevel) continue;
                 e.Save(doc);
             }
 

@@ -519,9 +519,7 @@ namespace Subsurface
         public void Update(Camera cam, float deltaTime)
         {
             UpdateNetplayerPosition();
-
-
-
+            
             Vector2 flowForce = Vector2.Zero;
 
             FindLowestLimb();
@@ -543,8 +541,7 @@ namespace Subsurface
 
                 if (currentHull.Volume > currentHull.FullVolume * 0.95f || 
                     ConvertUnits.ToSimUnits(currentHull.Surface) - floorY > HeadPosition * 0.95f)
-                    inWater = true;
-                
+                    inWater = true;                
             }
                        
             foreach (Limb limb in Limbs)

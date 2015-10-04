@@ -161,14 +161,14 @@ namespace Subsurface
                 startDrone = null;                
             }
 
-            float ambienceVolume = 0.6f;
+            float ambienceVolume = 0.8f;
             float lowpassHFGain = 1.0f;
             if (Character.Controlled != null)
             {
                 AnimController animController = Character.Controlled.AnimController;
                 if (animController.HeadInWater)
                 {
-                    ambienceVolume = 0.8f;
+                    ambienceVolume = 1.0f;
                     ambienceVolume += animController.Limbs[0].LinearVelocity.Length();
 
                     lowpassHFGain = 0.2f;
@@ -262,7 +262,7 @@ namespace Subsurface
 
         public static void PlayDamageSound(DamageSoundType damageType, float damage, Vector2 position)
         {
-            damage = MathHelper.Clamp(damage, 0.0f, 100.0f);
+            damage = MathHelper.Clamp(damage+Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
             var sounds = damageSounds.Where(x => damage >= x.damageRange.X && damage <= x.damageRange.Y && x.damageType == damageType).ToList();
             if (!sounds.Any()) return;
 

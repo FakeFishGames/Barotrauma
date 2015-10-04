@@ -123,12 +123,12 @@ namespace Subsurface.Items.Components
                     GameMain.World.RemoveJoint(stickJoint);
                     stickJoint = null;
 
-                    isActive = false;
+                    IsActive = false;
                 }
             }
             else
             {
-                isActive = false;
+                IsActive = false;
             }
         }
 
@@ -209,7 +209,7 @@ namespace Subsurface.Items.Components
             stickTarget = targetBody;
             GameMain.World.AddJoint(stickJoint);
 
-            isActive = true;
+            IsActive = true;
 
             return false;
         }

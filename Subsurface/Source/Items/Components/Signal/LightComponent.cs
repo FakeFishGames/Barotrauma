@@ -75,7 +75,7 @@ namespace Subsurface.Items.Components
 
             light = new LightSource(item.Position, 100.0f, Color.White);
 
-            isActive = true;
+            IsActive = true;
 
             //lightColor = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
         }
@@ -124,7 +124,7 @@ namespace Subsurface.Items.Components
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (!isActive)
+            if (!IsActive)
             {
                 light.Color = Color.Transparent;
             }   
@@ -144,10 +144,10 @@ namespace Subsurface.Items.Components
             switch (connection.Name)
             {
                 case "toggle":
-                    isActive = !isActive;
+                    IsActive = !IsActive;
                     break;
                 case "set_state":           
-                    isActive = (signal != "0");                   
+                    IsActive = (signal != "0");                   
                     break;
             }
         }

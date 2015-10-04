@@ -209,7 +209,7 @@ namespace Subsurface.Items.Components
             
             if (inventory.TryPutItem(item))
             {            
-                isActive = true;
+                IsActive = true;
                 if (hideItems || (item.body!=null && !item.body.Enabled)) item.body.Enabled = false;
 
                 item.container = this.item;

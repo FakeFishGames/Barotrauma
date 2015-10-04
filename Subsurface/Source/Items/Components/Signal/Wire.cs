@@ -115,7 +115,7 @@ namespace Subsurface.Items.Components
 
                 item.body.Enabled = false;
 
-                isActive = false;
+                IsActive = false;
 
                 //Nodes = prevNodes;
                 CleanNodes();
@@ -128,21 +128,21 @@ namespace Subsurface.Items.Components
         {
             ClearConnections();
 
-            isActive = true;
+            IsActive = true;
         }
 
         public override void Unequip(Character character)
         {
             ClearConnections();
 
-            isActive = false;
+            IsActive = false;
         }
 
         public override void Drop(Character dropper)
         {
             ClearConnections();
 
-            isActive = false;   
+            IsActive = false;   
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -289,7 +289,7 @@ namespace Subsurface.Items.Components
                 DrawSection(spriteBatch, Nodes[i], Nodes[i - 1], item.Color);
             }
 
-            if (isActive && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
+            if (IsActive && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
             {
                 DrawSection(spriteBatch, Nodes[Nodes.Count - 1], newNodePos, item.Color * 0.5f);
                 //nodes.Add(newNodePos);

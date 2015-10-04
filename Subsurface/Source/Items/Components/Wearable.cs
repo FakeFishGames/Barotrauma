@@ -114,7 +114,7 @@ namespace Subsurface.Items.Components
 
                 item.body.Enabled = false;
 
-                isActive = true;
+                IsActive = true;
 
                 limb[i] = equipLimb;
                 equipLimb.WearingItem = this;
@@ -129,7 +129,7 @@ namespace Subsurface.Items.Components
             base.Drop(dropper);
 
             picker = null;
-            isActive = false;
+            IsActive = false;
         }
 
         public override void Unequip(Character character)
@@ -147,7 +147,7 @@ namespace Subsurface.Items.Components
                 equipLimb.WearingItemSprite = null;
             }
 
-            isActive = false;
+            IsActive = false;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

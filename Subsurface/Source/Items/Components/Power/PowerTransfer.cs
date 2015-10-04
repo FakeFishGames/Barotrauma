@@ -27,7 +27,7 @@ namespace Subsurface.Items.Components
         public PowerTransfer(Item item, XElement element)
             : base(item, element)
         {
-            isActive = true;
+            IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam) 

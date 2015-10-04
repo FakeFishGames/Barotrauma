@@ -16,13 +16,13 @@ namespace Subsurface.Sounds
         private static int[] alBuffers = new int[DefaultSourceCount];
         private static int lowpassFilterId;
 
-        private static float overrideLowPassGain;
+        //private static float overrideLowPassGain;
 
-        public static float OverrideLowPassGain
-        {
-            get { return overrideLowPassGain; }
-            set { overrideLowPassGain = MathHelper.Clamp(overrideLowPassGain, 0.0f, 1.0f); }
-        }
+        //public static float OverrideLowPassGain
+        //{
+        //    get { return overrideLowPassGain; }
+        //    set { overrideLowPassGain = MathHelper.Clamp(overrideLowPassGain, 0.0f, 1.0f); }
+        //}
 
         static AudioContext AC;
 
@@ -139,17 +139,20 @@ namespace Subsurface.Sounds
                 alBuffers[i] = sound.AlBufferId;
                 OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourceb.Looping, false);
 
-                position /= 1000.0f;
-
-                //System.Diagnostics.Debug.WriteLine("updatesoundpos: "+offset);
-                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcef.Gain, volume);
-                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
-
                 OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcei.Buffer, sound.AlBufferId);
 
-                ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain = Math.Min(lowPassGain, overrideLowPassGain));
-                ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
-                ALHelper.Check();
+
+                UpdateSoundPosition(i, position, volume);
+
+                //position /= 1000.0f;
+
+                ////System.Diagnostics.Debug.WriteLine("updatesoundpos: "+offset);
+                //OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcef.Gain, volume);
+                //OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
+
+                //ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain);
+                //ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
+                //ALHelper.Check();
 
                 //AL.Source(alSources[i], ALSource3f.Position, position.X, position.Y, 0.0f);
                 OpenTK.Audio.OpenAL.AL.SourcePlay(alSources[i]);
@@ -164,13 +167,13 @@ namespace Subsurface.Sounds
 
         public static int Loop(Sound sound, int sourceIndex, float volume = 1.0f)
         {
-            return Loop(sound,sourceIndex, Vector2.Zero, volume, 0.0f);
+            return Loop(sound,sourceIndex, Vector2.Zero, volume);
         }
-        public static int Loop(Sound sound, int sourceIndex, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f)
+        public static int Loop(Sound sound, int sourceIndex, Vector2 position, float volume = 1.0f)
         {
             if (sourceIndex<1)
             {
-                sourceIndex = Play(sound, position, volume, lowPassGain);
+                sourceIndex = Play(sound, position, volume);
                 if (sourceIndex>0)
                 {
                     AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
@@ -181,8 +184,13 @@ namespace Subsurface.Sounds
             }
             else
             {
+                UpdateSoundPosition(sourceIndex, position, volume);
+
+                //position /= 1000.0f;
+
+                //OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
                 AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
-                AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
+                //AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
                 ALHelper.Check();
                 return sourceIndex;
             }
@@ -257,7 +265,7 @@ namespace Subsurface.Sounds
             {
                 if (ALHelper.Efx.IsInitialized)
                 {
-                    overrideLowPassGain = value;
+                    lowPassHfGain = value;
                     for (int i = 0; i < DefaultSourceCount; i++)
                     {
                         //find a source that's free to use (not playing or paused)
@@ -284,7 +292,7 @@ namespace Subsurface.Sounds
         //    }
         //}
 
-        public static void UpdateSoundPosition(int sourceIndex, Vector2 position, float baseVolume = 1.0f, float lowPassGain = 0.0f)
+        public static void UpdateSoundPosition(int sourceIndex, Vector2 position, float baseVolume = 1.0f)
         {
             if (sourceIndex < 1) return;
 
@@ -296,7 +304,9 @@ namespace Subsurface.Sounds
             OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourcef.Gain, baseVolume);
             OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
 
-            ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain = Math.Min(lowPassGain, overrideLowPassGain));
+            float lowPassGain = lowPassHfGain / Math.Max(position.Length()*5.0f,1.0f);
+
+            ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassGain);
             ALHelper.Efx.BindFilterToSource(alSources[sourceIndex], lowpassFilterId);
             ALHelper.Check();
         }

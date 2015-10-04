@@ -4,7 +4,9 @@
   <damagesound file="Content/Sounds/Damage/StructureBlunt2.ogg" damagerange="20.0,30.0" damagesoundtype="StructureBlunt"/>
   <damagesound file="Content/Sounds/Damage/StructureBlunt3.ogg" damagerange="25.0,50.0" damagesoundtype="StructureBlunt"/>
   <damagesound file="Content/Sounds/Damage/StructureBlunt4.ogg" damagerange="40.0,80.0" damagesoundtype="StructureBlunt"/>
-  <damagesound file="Content/Sounds/Damage/StructureBlunt5.ogg" damagerange="70.0,100.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt5.ogg" damagerange="60.0,80.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt6.ogg" damagerange="60.0,100.0" damagesoundtype="StructureBlunt"/>
+  <damagesound file="Content/Sounds/Damage/StructureBlunt7.ogg" damagerange="80.0,100.0" damagesoundtype="StructureBlunt"/>
 
   <damagesound file="Content/Sounds/Damage/StructureCrunch1.ogg" damagerange="0.0,40.0" damagesoundtype="StructureSlash"/>
   <damagesound file="Content/Sounds/Damage/StructureCrunch2.ogg" damagerange="5.0,70.0" damagesoundtype="StructureSlash"/>

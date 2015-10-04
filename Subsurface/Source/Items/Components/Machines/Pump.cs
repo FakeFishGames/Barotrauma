@@ -35,6 +35,16 @@ namespace Subsurface.Items.Components
             set { maxFlow = value; } 
         }
 
+        float currFlow;
+        public float CurrFlow
+        {
+            get 
+            {
+                if (!IsActive) return 0.0f;
+                return Math.Abs(currFlow); 
+            }
+        }
+
         public Pump(Item item, XElement element)
             : base(item, element)
         {
@@ -55,6 +65,8 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            currFlow = 0.0f;
+
             if (targetLevel != null)
             {
                 float hullPercentage = 0.0f;
@@ -71,14 +83,14 @@ namespace Subsurface.Items.Components
             float powerFactor = (currPowerConsumption==0.0f) ? 1.0f : voltage;
             //flowPercentage = maxFlow * powerFactor;
 
-            float deltaVolume = (flowPercentage/100.0f) * maxFlow * powerFactor;
-            
-            hull1.Volume += deltaVolume;
+            currFlow = (flowPercentage / 100.0f) * maxFlow * powerFactor;
+
+            hull1.Volume += currFlow;
             if (hull1.Volume > hull1.FullVolume) hull1.Pressure += 0.5f;
 
             if (hull2 != null)
             {
-                hull2.Volume -= deltaVolume;
+                hull2.Volume -= currFlow;
                 if (hull2.Volume > hull1.FullVolume) hull2.Pressure += 0.5f;
             }
 
@@ -90,28 +102,6 @@ namespace Subsurface.Items.Components
             hull1 = Hull.FindHull(item.Position, item.CurrentHull);
         }
         
-        //private void GetHulls()
-        //{
-        //    hull1 = null;
-        //    hull2 = null;
-
-        //    foreach (MapEntity e in item.linkedTo)
-        //    {
-        //        Hull hull = e as Hull;
-        //        if (hull == null) continue;
-
-        //        if (hull1 == null)
-        //        {
-        //            hull1 = hull;
-        //        }
-        //        else if (hull2 == null && hull != hull1)
-        //        {
-        //            hull2 = hull;
-        //            break;
-        //        }
-        //    }
-        //}
-
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
@@ -120,11 +110,11 @@ namespace Subsurface.Items.Components
 
             GuiFrame.Draw(spriteBatch);
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 100, 40), ((isActive) ? "TURN OFF" : "TURN ON")))
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 100, 40), ((IsActive) ? "TURN OFF" : "TURN ON")))
             {
                 targetLevel = null;
-                isActive = !isActive;
-                if (!isActive) currPowerConsumption = 0.0f;
+                IsActive = !IsActive;
+                if (!IsActive) currPowerConsumption = 0.0f;
                 item.NewComponentEvent(this, true);
             }
             
@@ -148,11 +138,11 @@ namespace Subsurface.Items.Components
             
             if (connection.Name == "toggle")
             {
-                isActive = !isActive;
+                IsActive = !IsActive;
             }
             else if (connection.Name == "set_active")
             {
-                isActive = (signal != "0");                
+                IsActive = (signal != "0");                
             }
             else if (connection.Name == "set_speed")
             {
@@ -171,13 +161,13 @@ namespace Subsurface.Items.Components
                 }
             }
 
-            if (!isActive) currPowerConsumption = 0.0f;
+            if (!IsActive) currPowerConsumption = 0.0f;
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
             message.Write(Convert.ToByte(flowPercentage+100));
-            message.Write(isActive);
+            message.Write(IsActive);
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
@@ -200,7 +190,7 @@ namespace Subsurface.Items.Components
             }
 
             FlowPercentage = newFlow;
-            isActive = newActive;
+            IsActive = newActive;
         }
     }
 }

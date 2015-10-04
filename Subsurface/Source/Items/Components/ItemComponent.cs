@@ -25,7 +25,7 @@ namespace Subsurface.Items.Components
 
         public readonly bool Loop;
         
-        public ItemSound(Sound sound, ActionType type, float range, bool loop = true)
+        public ItemSound(Sound sound, ActionType type, float range, bool loop = false)
         {
             this.Sound = sound;
             this.Type = type;
@@ -45,7 +45,7 @@ namespace Subsurface.Items.Components
 
         protected string name;
 
-        protected bool isActive;
+        private bool isActive;
 
         protected bool characterUsable;
 
@@ -255,7 +255,8 @@ namespace Subsurface.Items.Components
                         Sound sound = Sound.Load(filePath);
 
                         float range = ToolBox.GetAttributeFloat(subElement, "range", 800.0f);
-                        ItemSound itemSound = new ItemSound(sound, type, range);
+                        bool loop = ToolBox.GetAttributeBool(subElement, "loop", false);
+                        ItemSound itemSound = new ItemSound(sound, type, range, loop);
                         itemSound.VolumeProperty = ToolBox.GetAttributeString(subElement, "volume", "");
                         itemSound.VolumeMultiplier = ToolBox.GetAttributeFloat(subElement, "volumemultiplier", 1.0f);
                         sounds.Add(itemSound);
@@ -299,7 +300,9 @@ namespace Subsurface.Items.Components
                 }
                 else
                 {
-                    itemSound.Sound.Play(GetSoundVolume(itemSound), itemSound.Range, position); 
+                    float volume = GetSoundVolume(itemSound);
+                    if (volume == 0.0f) return;
+                    itemSound.Sound.Play(volume, itemSound.Range, position); 
                 } 
             } 
         }
@@ -322,14 +325,21 @@ namespace Subsurface.Items.Components
 
         private float GetSoundVolume(ItemSound sound)
         {
+            if (sound == null) return 0.0f;
             if (sound.VolumeProperty == "") return 1.0f;
             
             ObjectProperty op = null;
             if (properties.TryGetValue(sound.VolumeProperty.ToLower(), out op))
             {
                 float newVolume = 0.0f;
-                float.TryParse(op.GetValue().ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out newVolume);
-
+                try
+                {
+                    newVolume = (float)op.GetValue();
+                }
+                catch
+                {
+                    return 0.0f;
+                }
                 newVolume *= sound.VolumeMultiplier;
 
                 return MathHelper.Clamp(newVolume, 0.0f, 1.0f);

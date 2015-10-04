@@ -300,16 +300,16 @@ namespace Subsurface
             saveFileFrame.UserData = "savefileframe";
             saveFileFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0,0,0,20), fileName, GUI.Style, saveFileFrame);
+            new GUITextBlock(new Rectangle(0,0,0,20), fileName, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, saveFileFrame, false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 20), subName, GUI.Style, saveFileFrame);
+            new GUITextBlock(new Rectangle(0, 35, 0, 20), "Submarine: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 52, 0, 20), subName, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
 
+            new GUITextBlock(new Rectangle(0, 70, 0, 20), "Last saved: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 85, 0, 20), saveTime, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
 
-            new GUITextBlock(new Rectangle(0, 50, 0, 20), "Last saved: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 65, 0, 20), saveTime, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
-
-            new GUITextBlock(new Rectangle(0, 85, 0, 20), "Map seed: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 100, 0, 20), mapseed, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 105, 0, 20), "Map seed: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 120, 0, 20), mapseed, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
 
             var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Delete", Alignment.BottomCenter, GUI.Style, saveFileFrame);
             deleteSaveButton.UserData = fileName;

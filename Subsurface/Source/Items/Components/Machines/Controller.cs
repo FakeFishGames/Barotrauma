@@ -59,7 +59,7 @@ namespace Subsurface.Items.Components
                 limbPositions.Add(lp);
             }
 
-            isActive = true;
+            IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam) 
@@ -76,7 +76,7 @@ namespace Subsurface.Items.Components
                     character.AnimController.Anim = AnimController.Animation.None;
                     character = null;
                 }
-                isActive = false;
+                IsActive = false;
                 return;
             }
 
@@ -131,9 +131,9 @@ namespace Subsurface.Items.Components
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            if (activator.SelectedConstruction != item)
+            if (character==null || activator!=character || character.SelectedConstruction != item)
             {
-                activator = null;
+                character = null;
                 return false;
             }
 
@@ -146,8 +146,7 @@ namespace Subsurface.Items.Components
 
         public override void SecondaryUse(float deltaTime, Character character = null)
         {
-            if (character == null) return;
-            if (character.SelectedConstruction!=item)
+            if (this.character == null || this.character!=character || this.character.SelectedConstruction!=item)
             {
                 character = null;
                 return;
@@ -186,6 +185,9 @@ namespace Subsurface.Items.Components
         public override bool Pick(Character picker)
         {
             item.SendSignal("1", "signal_out");
+
+            PlaySound(ActionType.OnUse, item.Position);
+
             return true;
         }
 
@@ -194,7 +196,7 @@ namespace Subsurface.Items.Components
             if (character!=null && character.SelectedConstruction == item)
             {
                 character = null;
-                isActive = false;
+                IsActive = false;
                 if (activator != null) activator.AnimController.Anim = AnimController.Animation.None;
 
                 return false;
@@ -204,7 +206,7 @@ namespace Subsurface.Items.Components
                 character = activator;
                 if (activator == null) return false;
                     
-                isActive = true;
+                IsActive = true;
             }
 
             item.SendSignal("1", "signal_out");

@@ -19,7 +19,7 @@
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems name="Welding Fuel Tank" type="Contained" msg="Welding fuel required"/>
 
-      <sound file="weldingTool.ogg" type="OnUse" range="500.0"/>
+      <sound file="weldingTool.ogg" type="OnUse" range="500.0" loop="true"/>
 
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-0.7"/>
@@ -64,7 +64,7 @@
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-0.7"/>
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-20.0" Condition="-3.0"/>
 
-      <sound file="plasmaCutter.ogg" type="OnUse" range="500.0"/>
+      <sound file="plasmaCutter.ogg" type="OnUse" range="500.0" loop="true"/>
 
       <Fixable name="structure"/>
 

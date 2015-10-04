@@ -9,6 +9,7 @@
     <Door>
       <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture ="door.png" sourcerect="104,0,48,208" depth="0.0" origin="0.0,0.0"/>
+      <sound file="door.ogg" type="OnUse" range="500.0"/>
     </Door>
 
     <AiTarget sightrange="5000.0"/>
@@ -32,6 +33,7 @@
     <Door window="0,-18,10,89">
       <Sprite texture ="door.png" sourcerect="56,0,19,208" depth="0.0" origin="0.5,0.0"/>
       <WeldedSprite texture ="door.png" sourcerect="104,0,48,208" depth="0.0" origin="0.0,0.0"/>
+      <sound file="door.ogg" type="OnUse" range="500.0"/>
     </Door>
 
     <AiTarget sightrange="5000.0"/>

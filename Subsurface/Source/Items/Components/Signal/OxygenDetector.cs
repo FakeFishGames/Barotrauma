@@ -11,7 +11,7 @@ namespace Subsurface.Items.Components
         {
             hull = Hull.FindHull(item.Position);
 
-            isActive = true;
+            IsActive = true;
         }
 
         public override void OnMapLoaded()

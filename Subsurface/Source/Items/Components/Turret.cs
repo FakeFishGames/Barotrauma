@@ -73,7 +73,7 @@ namespace Subsurface.Items.Components
         public Turret(Item item, XElement element)
             : base(item, element)
         {
-            isActive = true;
+            IsActive = true;
 
             barrelSprite = new Sprite(Path.GetDirectoryName(item.Prefab.ConfigFile) + "/" +element.Attribute("barrelsprite").Value,
                 ToolBox.GetAttributeVector2(element, "origin", Vector2.Zero));
@@ -81,7 +81,10 @@ namespace Subsurface.Items.Components
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            barrelSprite.Draw(spriteBatch, new Vector2(item.Rect.X, -item.Rect.Y) + barrelPos, rotation + MathHelper.PiOver2, 1.0f);
+            barrelSprite.Draw(spriteBatch, 
+                new Vector2(item.Rect.X, -item.Rect.Y) + barrelPos, Color.White,
+                rotation + MathHelper.PiOver2, 1.0f, 
+                SpriteEffects.None, item.Sprite.Depth+0.01f);
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -198,7 +201,7 @@ namespace Subsurface.Items.Components
                    
                     targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
 
-                    isActive = true;
+                    IsActive = true;
 
                     break;
                 case "trigger_in":
