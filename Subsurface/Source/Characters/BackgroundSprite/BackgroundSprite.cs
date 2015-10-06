@@ -37,7 +37,7 @@ namespace Subsurface
             get { return drawPosition; }
         }
 
-        public Vector2 Position
+        public Vector2 SimPosition
         {
             get { return position; }
         }
@@ -179,7 +179,7 @@ namespace Subsurface
 
             foreach (BackgroundSprite member in Members)
             {
-                midPoint += member.Position;
+                midPoint += member.SimPosition;
             }
 
             midPoint /= Members.Count;

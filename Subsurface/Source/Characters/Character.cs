@@ -72,7 +72,7 @@ namespace Subsurface
 
         protected bool isDead;
         
-        bool isHumanoid;
+        public readonly bool IsHumanoid;
 
         //the name of the species (e.q. human)
         public readonly string SpeciesName;
@@ -200,7 +200,7 @@ namespace Subsurface
             get { return bleeding; }
             set 
             {
-                if (MathUtils.IsValid(value)) return;
+                if (!MathUtils.IsValid(value)) return;
                 bleeding = Math.Max(value, 0.0f); 
             }
         }
@@ -344,9 +344,9 @@ namespace Subsurface
             
             SpeciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
 
-            isHumanoid = ToolBox.GetAttributeBool(doc.Root, "humanoid", false);
+            IsHumanoid = ToolBox.GetAttributeBool(doc.Root, "humanoid", false);
             
-            if (isHumanoid)
+            if (IsHumanoid)
             {
                 AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
                 AnimController.TargetDir = Direction.Right;
@@ -660,7 +660,7 @@ namespace Subsurface
                 if (closestCharacter != null)
                 {
                     if (closestCharacter != selectedCharacter) selectedCharacter = null;
-                    if (!closestCharacter.isHumanoid) closestCharacter = null;
+                    if (!closestCharacter.IsHumanoid) closestCharacter = null;
                 }
 
                 closestItem = FindClosestItem(mouseSimPos);
@@ -706,7 +706,7 @@ namespace Subsurface
                 {
                     selectedCharacter = null;
                 }
-                else if (closestCharacter != null && closestCharacter.isDead && closestCharacter.isHumanoid)
+                else if (closestCharacter != null && closestCharacter.isDead && closestCharacter.IsHumanoid)
                 {
                     selectedCharacter = closestCharacter;
                 }
@@ -758,7 +758,7 @@ namespace Subsurface
                 ControlLocalPlayer(deltaTime, cam);
             }
 
-            Control(deltaTime, cam);
+            if (!(this is AICharacter)) Control(deltaTime, cam);
 
             UpdateSightRange();
             aiTarget.SoundRange = 0.0f;
@@ -820,7 +820,7 @@ namespace Subsurface
             CharacterHUD.Draw(spriteBatch, this, cam);
         }
 
-        public void DrawFront(SpriteBatch spriteBatch)
+        public virtual void DrawFront(SpriteBatch spriteBatch)
         {
             Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
             pos.Y = -pos.Y;

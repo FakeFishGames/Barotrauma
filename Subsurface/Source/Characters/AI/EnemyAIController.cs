@@ -6,6 +6,7 @@ using FarseerPhysics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using FarseerPhysics.Dynamics;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface
 {
@@ -264,6 +265,9 @@ namespace Subsurface
 
         public override void OnAttacked(IDamageable attacker, float amount)
         {
+            updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
+            coolDownTimer *= 0.1f;
+
             if (attacker==null || attacker.AiTarget==null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
             targetMemory.Priority += amount;
@@ -319,7 +323,7 @@ namespace Subsurface
                             Vector2.Normalize(attackPosition - limb.SimPosition));
                     }
 
-                    steeringManager.SteeringSeek(attackPosition + (limb.SimPosition-Position), 5.0f);
+                    steeringManager.SteeringSeek(attackPosition + (limb.SimPosition-SimPosition), 5.0f);
 
                     break;
                 default:
@@ -329,6 +333,7 @@ namespace Subsurface
 
             if (attackTimer >= limb.attack.Duration)
             {
+                wallAttackPos = Vector2.Zero;
                 attackTimer = 0.0f;
                 if (Vector2.Distance(limb.SimPosition, attackPosition)<5.0) coolDownTimer = attackCoolDown;
                 
@@ -475,6 +480,32 @@ namespace Subsurface
             {
                 targetMemories.Remove(target);
             }
+        }
+
+        public override void DebugDraw(SpriteBatch spriteBatch)
+        {
+            if (Character.IsDead) return;
+
+            Vector2 pos = Character.Position;
+            pos.Y = -pos.Y;
+
+            if (selectedAiTarget!=null)
+            {
+                GUI.DrawLine(spriteBatch, pos, ConvertUnits.ToDisplayUnits(new Vector2(selectedAiTarget.Position.X, -selectedAiTarget.Position.Y)), Color.Red);
+
+                if (wallAttackPos!=Vector2.Zero)
+                {
+                    GUI.DrawRectangle(spriteBatch, ConvertUnits.ToDisplayUnits(new Vector2(wallAttackPos.X, -wallAttackPos.Y)) - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Red, false);
+                }
+
+                spriteBatch.DrawString(GUI.Font, targetValue.ToString(), pos - Vector2.UnitY*20.0f, Color.Red);
+
+            }
+
+            spriteBatch.DrawString(GUI.Font, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
+
+            spriteBatch.DrawString(GUI.Font, "updatetargets: "+updateTargetsTimer, pos - Vector2.UnitY * 100.0f, Color.Red);
+            spriteBatch.DrawString(GUI.Font, "cooldown: " + coolDownTimer, pos - Vector2.UnitY * 120.0f, Color.Red);
         }
 
         public override void FillNetworkData(NetOutgoingMessage message)

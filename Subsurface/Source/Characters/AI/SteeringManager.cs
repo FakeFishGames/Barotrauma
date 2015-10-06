@@ -63,7 +63,7 @@ namespace Subsurface
 
         private Vector2 DoSteeringSeek(Vector2 target, float speed = 1.0f)
         {
-            Vector2 targetVel = target - host.Position;
+            Vector2 targetVel = target - host.SimPosition;
 
             if (targetVel.LengthSquared() < 0.00001f) return Vector2.Zero;
 
@@ -111,12 +111,12 @@ namespace Subsurface
 
             float maxDistance = 2.0f;
 
-            Vector2 ahead = host.Position + Vector2.Normalize(host.Steering)*maxDistance;
+            Vector2 ahead = host.SimPosition + Vector2.Normalize(host.Steering)*maxDistance;
 
             if (rayCastTimer <= 0.0f)
             {
                 rayCastTimer = RayCastInterval;
-                Body closestBody = Submarine.CheckVisibility(host.Position, ahead);
+                Body closestBody = Submarine.CheckVisibility(host.SimPosition, ahead);
                 if (closestBody == null)
                 {
                     avoidSteering = Vector2.Zero;

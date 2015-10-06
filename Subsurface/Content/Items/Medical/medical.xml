@@ -11,7 +11,7 @@
     <Body width="24" height="5"/>
 
     <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
-      <StatusEffect type="OnUse" target="This, Character" Condition="-100.0" health="30.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="This, Character" health="30.0" Condition="-100.0" disabledeltatime="true"/>
     </Holdable>
   </Item>
 
@@ -26,7 +26,7 @@
     <Body width="9" height="15"/>
 
     <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
-      <StatusEffect type="OnUse" target="This, Character" Condition="-100.0" bleeding="-10.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="This, Character" bleeding="-10.0" Condition="-100.0" disabledeltatime="true"/>      
     </Holdable>
   </Item>
 

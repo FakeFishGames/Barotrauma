@@ -59,6 +59,13 @@ namespace Subsurface
             aiController.Update(deltaTime);
         }
 
+        public override void DrawFront(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        {
+            base.DrawFront(spriteBatch);
+
+            if (GameMain.DebugDraw) aiController.DebugDraw(spriteBatch);
+        }
+
         public override AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
         {
             AttackResult result = base.AddDamage(attacker, position, attack, deltaTime, playSound);
@@ -113,7 +120,7 @@ namespace Subsurface
                 LargeUpdateTimer = Math.Max(0, LargeUpdateTimer - 1);
             }
         }
-
+        
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
             if (type == NetworkEventType.KillCharacter)

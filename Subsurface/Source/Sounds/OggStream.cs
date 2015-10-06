@@ -69,7 +69,7 @@ namespace Subsurface.Sounds
         internal readonly int alSourceId;
         internal readonly int[] alBufferIds;
 
-        readonly int alFilterId;
+        //readonly int alFilterId;
         readonly Stream underlyingStream;
 
         internal VorbisReader Reader { get; private set; }
@@ -99,15 +99,15 @@ namespace Subsurface.Sounds
 
             if (ALHelper.Efx.IsInitialized)
             {
-                alFilterId = ALHelper.Efx.GenFilter();
-                ALHelper.Efx.Filter(alFilterId, EfxFilteri.FilterType, (int)EfxFilterType.Lowpass);
-                ALHelper.Efx.Filter(alFilterId, EfxFilterf.LowpassGain, 1);
-                LowPassHFGain = 1;
+                //alFilterId = ALHelper.Efx.GenFilter();
+                //ALHelper.Efx.Filter(alFilterId, EfxFilteri.FilterType, (int)EfxFilterType.Lowpass);
+                //ALHelper.Efx.Filter(alFilterId, EfxFilterf.LowpassGain, 1);
+                //ALHelper.Efx.BindFilterToSource(alSourceId, alFilterId);
+                //LowPassHFGain = 1;
             }
 
             underlyingStream = stream;
 
-            Volume = 1;
             IsLooped = true;
 
         }
@@ -154,7 +154,7 @@ namespace Subsurface.Sounds
             }
         }
 
-        public void Play()
+        public void Play(float volume)
         {
             var state = AL.GetSourceState(alSourceId);
 
@@ -172,6 +172,8 @@ namespace Subsurface.Sounds
 //            LogHandler("{", logX++, logY);
 //#endif
             AL.SourcePlay(alSourceId);
+            this.Volume = volume;
+
             try
             {
                 ALHelper.Check();
@@ -229,20 +231,20 @@ namespace Subsurface.Sounds
             }
         }
 
-        float lowPassHfGain;
-        public float LowPassHFGain
-        {
-            get { return lowPassHfGain; }
-            set
-            {
-                if (ALHelper.Efx.IsInitialized)
-                {
-                    ALHelper.Efx.Filter(alFilterId, EfxFilterf.LowpassGainHF, lowPassHfGain = value);
-                    ALHelper.Efx.BindFilterToSource(alSourceId, alFilterId);
-                    ALHelper.Check();
-                }
-            }
-        }
+        //float lowPassHfGain;
+        //public float LowPassHFGain
+        //{
+        //    get { return lowPassHfGain; }
+        //    set
+        //    {
+        //        if (ALHelper.Efx.IsInitialized)
+        //        {
+        //            ALHelper.Efx.Filter(alFilterId, EfxFilterf.LowpassGainHF, lowPassHfGain = value);
+        //            ALHelper.Efx.BindFilterToSource(alSourceId, alFilterId);
+        //            ALHelper.Check();
+        //        }
+        //    }
+        //}
 
         float volume;
         public float Volume
@@ -288,8 +290,8 @@ namespace Subsurface.Sounds
                 AL.DeleteSource(alSourceId);
                 AL.DeleteBuffers(alBufferIds);
 
-                if (ALHelper.Efx.IsInitialized)
-                    ALHelper.Efx.DeleteFilter(alFilterId);
+                //if (ALHelper.Efx.IsInitialized)
+                //    ALHelper.Efx.DeleteFilter(alFilterId);
 
                 ALHelper.Check();
     #if TRACE

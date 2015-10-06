@@ -5,32 +5,55 @@ namespace Subsurface
 {
     class SteeringPath
     {
-        private Queue<WayPoint> nodes;
-        
-        WayPoint currentNode;
+        private List<WayPoint> nodes;
+
+        int currentIndex;
 
         public SteeringPath()
         {
-            nodes = new Queue<WayPoint>();
+            nodes = new List<WayPoint>();
         }
 
         public void AddNode(WayPoint node)
         {
             if (node == null) return;
-            nodes.Enqueue(node);
+            nodes.Add(node);
         }
 
         public WayPoint CurrentNode
         {
-            get { return currentNode; }
+            get 
+            {
+                if (currentIndex < 0 || currentIndex > nodes.Count - 1) return null;
+                return nodes[currentIndex]; 
+            }
         }
 
-        public WayPoint GetNode(Vector2 pos, float minDistance = 0.1f)
+        public List<WayPoint> Nodes
         {
-            if (nodes.Count == 0) return null;
-            if (currentNode == null || Vector2.Distance(pos, currentNode.SimPosition) < minDistance) currentNode = nodes.Dequeue();
+            get { return nodes; }
+        }
 
-            return currentNode;
+        public WayPoint NextNode
+        {
+            get
+            {
+                if (currentIndex+1 < 0 || currentIndex+1 > nodes.Count - 1) return null;
+                return nodes[currentIndex+1];
+            }
+        }
+
+        public void SkipToNextNode()
+        {
+            currentIndex++;
+        }
+
+        public WayPoint CheckProgress(Vector2 pos, float minSimDistance = 0.1f)
+        {
+            if (nodes.Count == 0 || currentIndex>nodes.Count-1) return null;
+            if (Vector2.Distance(pos, nodes[currentIndex].SimPosition) < minSimDistance) currentIndex++;
+
+            return CurrentNode;
         }
 
         public void ClearPath()

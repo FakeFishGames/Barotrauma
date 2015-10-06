@@ -9,29 +9,29 @@
 
   <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 
-           swimspeed="2.0" walkspeed="1.0"
+           swimspeed="2.0" walkspeed="1.5"
            stepsize ="20.0,20.0"
            legtorque="10"
            footrotation ="180.0"
            flip="true">
 
     <!-- head -->
-    <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="10.0">
+    <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armor="10.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53"/>
     </limb>
 
     <!-- middle part -->
-    <limb id = "1" width="42" height="61"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="10.0">
+    <limb id = "1" width="42" height="61"  mass = "6" flip="true" armorsector="0.0,180.0" armor="10.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="3,168,59,64" depth="0.021" origin="0.3,0.65"/>
     </limb>
 
     <!-- middle part -->
-    <limb id = "2" width="35" height="52"  mass = "6" flip="true" armorsector="0.0,180.0" armorvalue="10.0">
+    <limb id = "2" width="35" height="52"  mass = "6" flip="true" armorsector="0.0,180.0" armor="10.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65"/>
     </limb>
 
     <!-- tail -->
-    <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true" armorsector="0.0,180.0" armorvalue="10.0">
+    <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true" armorsector="0.0,180.0" armor="10.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="130,158,46,93" depth="0.023" origin="0.37,0.3"/>
     </limb>
       
@@ -46,7 +46,7 @@
     <!-- ""claw" -->
     <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" refjoint="0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
-      <attack type="PinchCW" range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="5" structuredamage="50" damagetype="slash"/>
+      <attack type="PinchCW" range="200" duration="0.5" damage="30" stun="0.1" bleedingdamage="5" structuredamage="50" damagetype="slash"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
 
@@ -74,7 +74,7 @@
 
 
     <joint limb1="0" limb1anchor="16,2" limb2="4" limb2anchor="-5,-20" lowerlimit="-90" upperlimit="0"/>
-    <joint limb1="4" limb1anchor="-2,21" limb2="5" limb2anchor="-5,-20" lowerlimit="-350" upperlimit="-280"/>
+    <joint limb1="4" limb1anchor="-2,21" limb2="5" limb2anchor="-5,-20" lowerlimit="-290" upperlimit="-190"/>
     <joint limb1="5" limb1anchor="-2,27" limb2="6" limb2anchor="0,-30" lowerlimit="-190" upperlimit="-30"/>
 
     <joint limb1="0" limb1anchor="52,-34" limb2="7" limb2anchor="-4,-19" lowerlimit="-90" upperlimit="0"/>
@@ -87,6 +87,6 @@
 
   <ai attackhumans="500" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
       sight="0.5" hearing="1.0"
-      attackcooldown="5.0"/>
+      attackcooldown="3.0"/>
 </character>
 

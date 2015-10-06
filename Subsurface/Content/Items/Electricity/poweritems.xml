@@ -14,7 +14,7 @@
     </fixrequirement>
 
     <PowerTransfer canbeselected = "true">
-      <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+      <GuiFrame rect="0,0,350,160" alignment="Center" color="0.0,0.0,0.0,0.6"/>
     </PowerTransfer>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
@@ -41,7 +41,7 @@
     <Sprite texture ="battery.png" depth="0.8"/>
 
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected = "true">
-      <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+      <GuiFrame rect="0,0,350,160" alignment="Center" color="0.0,0.0,0.0,0.6"/>
     </PowerContainer>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">

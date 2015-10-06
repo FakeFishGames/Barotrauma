@@ -146,8 +146,6 @@ namespace Subsurface.Items.Components
 
             GuiFrame.Draw(spriteBatch);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
-
             spriteBatch.DrawString(GUI.Font, "Power: " + (int)(-currPowerConsumption), new Vector2(x + 30, y + 30), Color.White);
             spriteBatch.DrawString(GUI.Font, "Load: " + (int)powerLoad, new Vector2(x + 30, y + 100), Color.White);
         }

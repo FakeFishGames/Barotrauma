@@ -102,7 +102,7 @@ namespace Subsurface
 
         public string DurationText()
         {
-            return "Game duration: " + GameDuration + " min";
+            return "Duration: " + GameDuration.Minutes + " min";
         }
                 
         public NetLobbyScreen()
@@ -138,6 +138,7 @@ namespace Subsurface
                 new Rectangle((int)(panelRect.Width * 0.7f + 20), 0,
                     (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.6f)),
                 GUI.Style, menu);
+            playerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             //player list ------------------------------------------------------------------
 
@@ -153,7 +154,7 @@ namespace Subsurface
             int columnWidth = infoFrame.Rect.Width / 5 - 30;
             int columnX = 0;
 
-            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Selected submarine:", GUI.Style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Submarine:", GUI.Style, infoFrame);
             subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), Color.White, GUI.Style, infoFrame);
             subList.OnSelected = SelectMap;
 
@@ -180,7 +181,7 @@ namespace Subsurface
 
             //gamemode ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Selected game mode: ", GUI.Style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Game mode: ", GUI.Style, infoFrame);
             modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), GUI.Style, infoFrame);
 
 
@@ -204,7 +205,8 @@ namespace Subsurface
 
             var modeDescription = new GUITextBlock(
                 new Rectangle(columnX, 150, (int)(columnWidth * 1.5f), infoFrame.Rect.Height - 150 - 80), 
-                "", Color.Black*0.3f, Color.White, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame, true);
+                "", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, infoFrame, true, GameMain.GraphicsWidth>1024 ? GUI.Font : GUI.SmallFont);
+            modeDescription.Color = Color.Black * 0.3f;
 
             modeList.UserData = modeDescription;
 
@@ -213,7 +215,7 @@ namespace Subsurface
             //duration ------------------------------------------------------------------
             
             GUITextBlock durationText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 20),
-                "Game duration: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
+                "Duration: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
             durationText.TextGetter = DurationText;
 
             durationBar = new GUIScrollBar(new Rectangle(columnX, 150, columnWidth, 20),
@@ -272,7 +274,7 @@ namespace Subsurface
 
             if (IsServer && GameMain.Server != null)
             {
-                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 200, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
+                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
                 startButton.OnClicked = GameMain.Server.StartGameClicked;
                 startButton.UserData = "startButton";
                 
@@ -285,7 +287,7 @@ namespace Subsurface
 
                 if (playerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(-30, -30, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
@@ -307,34 +309,34 @@ namespace Subsurface
 
                 if (IsServer && GameMain.Server != null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(-30, -30, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
 
-                new GUITextBlock(new Rectangle(60, 0, 200, 30), "Name: ", GUI.Style, playerFrame);
+                new GUITextBlock(new Rectangle(60, 30, 200, 30), "Name: ", GUI.Style, playerFrame);
 
-                GUITextBox playerName = new GUITextBox(new Rectangle(60, 30, 0, 20),
+                GUITextBox playerName = new GUITextBox(new Rectangle(60, 55, 0, 20),
                     Alignment.TopLeft, GUI.Style, playerFrame);
                 playerName.Text = characterInfo.Name;
                 playerName.OnEnter += ChangeCharacterName;
 
-                new GUITextBlock(new Rectangle(0, 70, 200, 30), "Gender: ", GUI.Style, playerFrame);
+                new GUITextBlock(new Rectangle(0, 100, 200, 30), "Gender: ", GUI.Style, playerFrame);
 
-                GUIButton maleButton = new GUIButton(new Rectangle(0, 100, 70, 20), "Male",
+                GUIButton maleButton = new GUIButton(new Rectangle(70, 100, 60, 20), "Male",
                     Alignment.TopLeft, GUI.Style, playerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
-                GUIButton femaleButton = new GUIButton(new Rectangle(90, 100, 70, 20), "Female",
+                GUIButton femaleButton = new GUIButton(new Rectangle(140, 100, 60, 20), "Female",
                     Alignment.TopLeft, GUI.Style, playerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
                 new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.Style, playerFrame);
 
-                jobList = new GUIListBox(new Rectangle(0, 180, 250, 0), GUI.Style, playerFrame);
+                jobList = new GUIListBox(new Rectangle(0, 180, 0, 0), GUI.Style, playerFrame);
                 jobList.Enabled = false;
 
 
@@ -393,12 +395,12 @@ namespace Subsurface
         {
             if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(obj);
 
-            Submarine sub = (Submarine)obj;
+            //Submarine sub = (Submarine)obj;
 
             //submarine already loaded
-            if (Submarine.Loaded != null && sub.FilePath == Submarine.Loaded.FilePath) return true;
+            //if (Submarine.Loaded != null && sub.FilePath == Submarine.Loaded.FilePath) return true;
 
-            sub.Load();
+            //sub.Load();
 
             return true;
         }
@@ -538,7 +540,7 @@ namespace Subsurface
             GUIComponent existing = playerFrame.FindChild("playerhead");
             if (existing != null) playerFrame.RemoveChild(existing);
 
-            GUIImage image = new GUIImage(new Rectangle(0, 0, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, playerFrame);
+            GUIImage image = new GUIImage(new Rectangle(0, 40, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, playerFrame);
             image.UserData = "playerhead";
         }
 
@@ -609,7 +611,7 @@ namespace Subsurface
             if (jobPrefab == null) return false;
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
-            GUIButton closeButton = new GUIButton(new Rectangle(0,0,100,20), "Close", Alignment.BottomRight, GUI.Style, jobInfoFrame);
+            GUIButton closeButton = new GUIButton(new Rectangle(0,0,100,20), "Close", Alignment.BottomRight, GUI.Style, jobInfoFrame.children[0]);
             closeButton.OnClicked = CloseJobInfo;
             return true;
         }
@@ -663,17 +665,17 @@ namespace Subsurface
             Submarine map = Submarine.SavedSubmarines.Find(m => m.Name == mapName);
             if (map == null)
             {
-                DebugConsole.ThrowError("The map ''" + mapName + "'' has been selected by the server.");
-                DebugConsole.ThrowError("Matching map not found in your map folder.");
+                new GUIMessageBox("Submarine not found!","The submarine ''" + mapName + "'' has been selected by the server. Matching file not found in your map folder.");
                 return false;
             }
             else
             {
                 if (map.MD5Hash.Hash != md5Hash)
                 {
-                    DebugConsole.ThrowError("Your version of the map file ''" + map.Name + "'' doesn't match the server's version!");
-                    DebugConsole.ThrowError("Your file: " + map.Name + "(MD5 hash : " + map.MD5Hash.Hash + ")");
-                    DebugConsole.ThrowError("Server's file: " + mapName + "(MD5 hash : " + md5Hash + ")");
+                    new GUIMessageBox("Submarine not found!", 
+                    "Your version of the map file ''" + map.Name + "'' doesn't match the server's version!"
+                    +"\nYour file: " + map.Name + "(MD5 hash : " + map.MD5Hash.Hash + ")"
+                    +"\nServer's file: " + mapName + "(MD5 hash : " + md5Hash + ")");
                     return false;
                 }
                 else

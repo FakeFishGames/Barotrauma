@@ -34,12 +34,11 @@ namespace Subsurface
 
 
 
-            buttonsTab = new GUIFrame(new Rectangle(50, 200, 200, 500), Color.Transparent, Alignment.Left);
+            buttonsTab = new GUIFrame(new Rectangle(50, 0, 200, 360), Color.Transparent, Alignment.Left | Alignment.CenterY);
             //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
             Rectangle panelRect = new Rectangle(
-                GameMain.GraphicsWidth / 2 - 250,
-                buttonsTab.Rect.Y,
+                290, buttonsTab.Rect.Y,
                 500, 360);
 
             GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.Style, buttonsTab);

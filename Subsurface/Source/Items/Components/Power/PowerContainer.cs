@@ -184,24 +184,24 @@ namespace Subsurface.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            int width = 300, height = 200;
-            int x = GameMain.GraphicsWidth / 2 - width / 2;
-            int y = GameMain.GraphicsHeight / 2 - height / 2;
+            GuiFrame.Draw(spriteBatch);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
+            int x = GuiFrame.Rect.X;
+            int y = GuiFrame.Rect.Y;
+            //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
             spriteBatch.DrawString(GUI.Font,
                 "Charge: " + (int)charge + "/" + (int)capacity + " (" + (int)((charge / capacity) * 100.0f) + " %)",
                 new Vector2(x + 30, y + 30), Color.White);
 
-            spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (rechargeSpeed / maxRechargeSpeed), new Vector2(x + 30, y + 100), Color.White);
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 50, y + 150, 40, 40), "+"))
+            spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed)*100.0f)+" %", new Vector2(x + 30, y + 100), Color.White);
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 90, 40, 40), "+"))
             {
                rechargeSpeed = Math.Min(rechargeSpeed + maxRechargeSpeed*0.1f, maxRechargeSpeed);
                item.NewComponentEvent(this, true);
             }
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 150, 40, 40), "-"))
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 90, 40, 40), "-"))
             {
                 rechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);                
                 item.NewComponentEvent(this, true);

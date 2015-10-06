@@ -9,7 +9,7 @@
     <Sprite texture ="engine.png" depth="0.8"/>
 
     <Engine minvoltage="0.5" powerperforce="10.0" maxforce="500" canbeselected = "true">
-      <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+      <GuiFrame rect="0,0,350,160" alignment="Center" color="0.0,0.0,0.0,0.6"/>
       <sound file="engine.ogg" type="OnActive" range="3000.0" volume="CurrentVolume" loop="true"/>
     </Engine>
     
@@ -28,7 +28,7 @@
     <Sprite texture ="fabricator.png" depth="0.8"/>
 
     <Steering minvoltage="0.5" canbeselected = "true">
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.6"/>
     </Steering>
 
     <Radar canbeselected = "true" powerconsumption="100">

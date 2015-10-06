@@ -172,6 +172,31 @@ namespace Subsurface.Items.Components
                         quest.RadarPosition, displayScale, center, (rect.Width * 0.55f));
                 }
             }
+
+            if (!GameMain.DebugDraw) return;
+
+            var steering = item.GetComponent<Steering>();
+            if (steering == null || steering.SteeringPath == null) return;
+
+            Vector2 prevPos = Vector2.Zero;
+
+            foreach (WayPoint wp in steering.SteeringPath.Nodes)
+            {
+                Vector2 pos = (wp.Position - Submarine.Loaded.Position) * displayScale;
+                if (pos.Length() > radius) continue;
+
+                pos.Y = -pos.Y;
+                pos += center;
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X -3 / 2, (int)pos.Y - 3, 6, 6), (steering.SteeringPath.CurrentNode==wp) ? Color.LightGreen : Color.Green, false);
+
+                if (prevPos!=Vector2.Zero)
+                {
+                    GUI.DrawLine(spriteBatch, pos, prevPos, Color.Green);
+                }
+
+                prevPos = pos;
+            }
         }
 
         private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, float scale, Vector2 center, float radius)

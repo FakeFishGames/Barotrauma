@@ -16,7 +16,7 @@ namespace Subsurface
             get;
         }
         
-        Vector2 Position 
+        Vector2 SimPosition 
         {
             get;
         }

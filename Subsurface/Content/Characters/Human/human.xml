@@ -3,7 +3,7 @@
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
   
-  <ragdoll headposition="156" torsoposition="120" 
+  <ragdoll headposition="154" torsoposition="118" 
            stepsize="42.0, 12.0"
            walkanimspeed="4.58"
            movementlerp="0.4"
