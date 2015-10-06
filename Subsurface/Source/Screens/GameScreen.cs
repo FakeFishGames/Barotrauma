@@ -265,7 +265,17 @@ namespace Subsurface
             }
 
             Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
-            
+
+            spriteBatch.Begin(SpriteSortMode.BackToFront,
+    BlendState.AlphaBlend, SamplerState.LinearWrap,
+    null, null, null,
+    cam.Transform);
+
+            Submarine.DrawFront(spriteBatch);
+
+            spriteBatch.End();
+
+
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
             {
                 GameMain.GameSession.Level.Render(graphics, cam);
@@ -288,8 +298,6 @@ namespace Subsurface
                 BlendState.AlphaBlend, SamplerState.LinearWrap,
                 null, null, null,
                 cam.Transform);
-
-            Submarine.DrawFront(spriteBatch);
 
             foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
 

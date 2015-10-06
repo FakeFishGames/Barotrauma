@@ -207,11 +207,16 @@ namespace Subsurface.Items.Components
                         statusEffects.Add(StatusEffect.Load(subElement));
                         break;
                     case "guiframe":
+                        string rectStr = ToolBox.GetAttributeString(subElement, "rect", "0.0,0.0,0.5,0.5");
+
+                        string[] components = rectStr.Split(',');
+                        if (components.Length < 4) continue;
+
                         Vector4 rect = ToolBox.GetAttributeVector4(subElement, "rect", Vector4.One);
-                        rect.X *= GameMain.GraphicsWidth;
-                        rect.Y *= GameMain.GraphicsHeight;
-                        rect.Z *= GameMain.GraphicsWidth;
-                        rect.W *= GameMain.GraphicsHeight;
+                        if (components[0].Contains(".")) rect.X *= GameMain.GraphicsWidth;
+                        if (components[1].Contains(".")) rect.Y *= GameMain.GraphicsHeight;
+                        if (components[2].Contains(".")) rect.Z *= GameMain.GraphicsWidth;
+                        if (components[3].Contains(".")) rect.W *= GameMain.GraphicsHeight;
 
                         Vector4 color = ToolBox.GetAttributeVector4(subElement, "color", Vector4.One);
 
@@ -228,7 +233,7 @@ namespace Subsurface.Items.Components
 
                         guiFrame = new GUIFrame(
                             new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W), 
-                            new Color(color.X, color.Y, color.Z, color.W), alignment, GUI.Style);
+                            new Color(color.X, color.Y, color.Z) * color.W, alignment, GUI.Style);
                         //guiFrame.Alpha = color.W;
 
                         break;

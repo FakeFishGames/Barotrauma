@@ -103,7 +103,9 @@ namespace Subsurface
         {
             int width = 500, height = 400;
 
-            GUIFrame frame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+            GUIFrame backFrame = new GUIFrame(Rectangle.Empty, Color.Black*0.5f);
+
+            GUIFrame frame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style, backFrame);
             frame.Padding = new Vector4(30.0f, 30.0f, 30.0f, 30.0f);
             
             new GUITextBlock(new Rectangle(0,0,100,20), name, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
@@ -142,7 +144,7 @@ namespace Subsurface
 
 
 
-            return frame;
+            return backFrame;
         }
 
         public static void LoadAll(List<string> filePaths)

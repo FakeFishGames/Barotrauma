@@ -388,7 +388,10 @@ namespace Subsurface.Networking
             string mapName = inc.ReadString();
             string mapHash = inc.ReadString();
 
-            GameMain.NetLobbyScreen.TrySelectMap(mapName, mapHash);
+            if (!GameMain.NetLobbyScreen.TrySelectMap(mapName, mapHash))
+            {
+                yield return CoroutineStatus.Success;
+            }
 
             yield return CoroutineStatus.Running;
 
@@ -397,7 +400,8 @@ namespace Subsurface.Networking
             TimeSpan duration = new TimeSpan(0, (int)durationMinutes, 0);
             Rand.SetSyncedSeed(seed);
             //int gameModeIndex = inc.ReadInt32();
-            GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameMain.NetLobbyScreen.SelectedMode);
+
+            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedMap, "", GameMain.NetLobbyScreen.SelectedMode);
 
             yield return CoroutineStatus.Running;
 

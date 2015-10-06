@@ -12,6 +12,8 @@ namespace Subsurface.Items.Components
 {
     class Steering : Powered
     {
+        private const float AutopilotRayCastInterval = 5.0f;
+
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
 
@@ -23,6 +25,8 @@ namespace Subsurface.Items.Components
 
         private float networkUpdateTimer;
         private bool valueChanged;
+
+        private float autopilotRayCastTimer;
 
         bool AutoPilot
         {
@@ -37,7 +41,7 @@ namespace Subsurface.Items.Components
                 {
                     if (pathFinder==null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
                     steeringPath = pathFinder.FindPath(
-                        ConvertUnits.ToSimUnits(Level.Loaded.Position),
+                        ConvertUnits.ToSimUnits(Submarine.Loaded.Position),
                         ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
                 }
             }
@@ -57,6 +61,11 @@ namespace Subsurface.Items.Components
         public Vector2 CurrTargetVelocity
         {
             get { return targetVelocity; }
+        }
+
+        public SteeringPath SteeringPath
+        {
+            get { return steeringPath; }
         }
 
         public Steering(Item item, XElement element)
@@ -81,21 +90,7 @@ namespace Subsurface.Items.Components
                 //        ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
                 //}
 
-                steeringPath.GetNode(Vector2.Zero, 20.0f);
-
-                if (steeringPath.CurrentNode!=null)
-                {
-                    float prediction = 10.0f;
-
-                    Vector2 futurePosition = Submarine.Loaded.Speed * prediction;
-
-                    Vector2 targetSpeed = (steeringPath.CurrentNode.Position - futurePosition);
-
-                    //float dist = targetSpeed.Length();
-                    targetSpeed = Vector2.Normalize(targetSpeed);
-
-                    TargetVelocity = targetSpeed*100.0f;
-                }
+                UpdateAutoPilot(deltaTime);
             }
             else if (valueChanged)
             {
@@ -157,6 +152,51 @@ namespace Subsurface.Items.Components
 
                     valueChanged = true;
                 }
+            }
+        }
+
+        private void UpdateAutoPilot(float deltaTime)
+        {
+            autopilotRayCastTimer -= deltaTime;
+
+            steeringPath.CheckProgress(ConvertUnits.ToSimUnits(Submarine.Loaded.Position), 10.0f);
+
+            if (autopilotRayCastTimer<=0.0f && steeringPath.NextNode != null)
+            {
+                Vector2 diff = steeringPath.NextNode.Position - Submarine.Loaded.Position;
+
+                bool nextVisible = true;
+                for (int x = -1; x < 2; x += 2)
+                {
+                    for (int y = -1; y < 2; y += 2)
+                    {
+                        Vector2 cornerPos =
+                            new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
+
+                        cornerPos = ConvertUnits.ToSimUnits(cornerPos*1.2f);
+
+                        if (Submarine.PickBody(cornerPos, cornerPos + diff, null, Physics.CollisionLevel) == null) continue;
+                        
+                        nextVisible = false;
+                        x = 2;
+                        y = 2;                        
+                    }
+                }
+
+                if (nextVisible) steeringPath.SkipToNextNode();
+
+                autopilotRayCastTimer = AutopilotRayCastInterval;                
+            }
+
+            if (steeringPath.CurrentNode != null)
+            {
+                float prediction = 5.0f;
+
+                Vector2 futurePosition = Submarine.Loaded.Speed * prediction;
+                Vector2 targetSpeed = ((steeringPath.CurrentNode.Position - Submarine.Loaded.Position) - futurePosition);
+
+                targetSpeed = Vector2.Normalize(targetSpeed);
+                TargetVelocity = targetSpeed * 100.0f;
             }
         }
 

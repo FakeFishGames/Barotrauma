@@ -30,14 +30,9 @@ namespace Subsurface
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (character.IsDead)  return;   
-         
-            Vector2 colliderPos = GetLimb(LimbType.Torso).SimPosition;
+            if (character.IsDead) return;
 
-            if (!MathUtils.IsValid(RefLimb.body.SimPosition))
-            {
-                int a = 1;
-            }
+            Vector2 colliderPos = GetLimb(LimbType.Torso).SimPosition;
 
             //if (inWater) stairs = null;
 
@@ -57,7 +52,7 @@ namespace Subsurface
                     case Physics.CollisionStairs:
                         if (inWater && TargetMovement.Y < 0.5f) return -1;
                         Structure structure = fixture.Body.UserData as Structure;
-                        if (stairs == null && structure!=null)
+                        if (stairs == null && structure != null)
                         {
                             if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
                             {
@@ -70,7 +65,7 @@ namespace Subsurface
                         }
                         break;
                     case Physics.CollisionPlatform:
-                         Structure platform = fixture.Body.UserData as Structure;
+                        Structure platform = fixture.Body.UserData as Structure;
                         if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
@@ -118,12 +113,12 @@ namespace Subsurface
             if (closestFraction == 1) //raycast didn't hit anything
             {
                 floorY = (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
-            }                
+            }
             else
             {
                 floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
             }
-                          
+
 
             IgnorePlatforms = (TargetMovement.Y < 0.0f);
 
@@ -175,18 +170,20 @@ namespace Subsurface
             aiming = false;
         }
 
-        
+
 
         void UpdateStanding()
         {
             Vector2 handPos;
+
+            //if you're allergic to magic numbers, stop reading now
 
             Limb leftFoot   = GetLimb(LimbType.LeftFoot);
             Limb rightFoot  = GetLimb(LimbType.RightFoot);
             Limb head       = GetLimb(LimbType.Head);
             Limb torso      = GetLimb(LimbType.Torso);
 
-            Limb waist = GetLimb(LimbType.Waist);
+            Limb waist      = GetLimb(LimbType.Waist);
 
             Limb leftHand   = GetLimb(LimbType.LeftHand);
             Limb rightHand  = GetLimb(LimbType.RightHand);
@@ -198,31 +195,31 @@ namespace Subsurface
             float walkCycleSpeed = head.LinearVelocity.X * walkAnimSpeed;
             if (stairs != null)
             {
-                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -2.0f, 2.0f), TargetMovement.Y) ;
+                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.5f, 1.5f), TargetMovement.Y);
 
-                if ((TargetMovement.X>0.0f && stairs.StairDirection == Direction.Right) ||
+                if ((TargetMovement.X > 0.0f && stairs.StairDirection == Direction.Right) ||
                     TargetMovement.X < 0.0f && stairs.StairDirection == Direction.Left)
                 {
-                    TargetMovement *= 1.35f;
+                    TargetMovement *= 1.7f;
+                    walkCycleSpeed *= 1.7f;
                 }
-                else                    
+                else
                 {
-                    TargetMovement /= 1.2f;
-                }
-
-                walkCycleSpeed *= 1.5f;
+                    TargetMovement /= 1.0f;
+                    walkCycleSpeed *= 1.5f;
+                }                
             }
 
             Vector2 colliderPos = new Vector2(torso.SimPosition.X, floorY);
 
             float walkPosX = (float)Math.Cos(walkPos);
             float walkPosY = (float)Math.Sin(walkPos);
-            float runningModifier = (float)Math.Max(Math.Abs(movement.X) / 1.5f, 1.0);
+            float runningModifier = (float)Math.Max(Math.Abs(TargetMovement.X) / 1.5f, 1.0);
 
             Vector2 stepSize = new Vector2(
                 this.stepSize.X * walkPosX * runningModifier,
                 this.stepSize.Y * walkPosY * runningModifier * runningModifier);
-
+            
             float footMid = waist.SimPosition.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
 
             int limbsInWater = 0;
@@ -231,184 +228,169 @@ namespace Subsurface
                 if (limb.inWater) limbsInWater++;
             }
 
-            TargetMovement *= (1.0f - 0.5f*((float)limbsInWater/(float)Limbs.Count()));
+            TargetMovement *= (1.0f - 0.5f * ((float)limbsInWater / (float)Limbs.Count()));
 
             movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
             movement.Y = 0.0f;
 
-
-            
-            //place the anchors of the head and the torso to make the ragdoll stand
-            if (onGround && LowestLimb != null && (LowestLimb.SimPosition.Y-floorY < 0.5f || stairs != null) && head !=null)
+            for (int i = 0; i < 2; i++)
             {
-                getUpSpeed = getUpSpeed * (head.SimPosition.Y - colliderPos.Y);//, 0.25f);
+                Limb leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);// : leftLeg;
 
-                if (stairs != null)
-                {
-                    if (LowestLimb.SimPosition.Y < stairs.SimPosition.Y) IgnorePlatforms = true;
-                    
-                    torso.pullJoint.Enabled = true;
-                    torso.pullJoint.WorldAnchorB = new Vector2(
-                        MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.35f, getUpSpeed * 0.8f),
-                        MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 3.0f));
+                if (leg.SimPosition.Y < torso.SimPosition.Y) continue;
 
-
-                    head.pullJoint.Enabled = true;
-                    head.pullJoint.WorldAnchorB = new Vector2(
-                        MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * 0.4f, getUpSpeed * 0.8f),
-                        MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 3.0f));
-                }
-                else
-                {
-                    torso.pullJoint.Enabled = true;
-                    torso.pullJoint.WorldAnchorB =
-                        MathUtils.SmoothStep(torso.SimPosition,
-                        new Vector2(footMid + movement.X * 0.3f, colliderPos.Y + TorsoPosition), getUpSpeed);
-
-                    head.pullJoint.Enabled = true;
-                    head.pullJoint.WorldAnchorB =
-                        MathUtils.SmoothStep(head.SimPosition,
-                        new Vector2(footMid + movement.X * (0.2f + runningModifier / 10.0f), colliderPos.Y + HeadPosition), getUpSpeed);
-
-                    waist.pullJoint.Enabled = true;
-                    waist.pullJoint.WorldAnchorB = waist.SimPosition + movement*0.1f;
-                        //MathUtils.SmoothStep(waist.SimPosition,
-                        //new Vector2(footMid + movement.X * 0.4f, colliderPos.Y + HeadPosition), getUpSpeed);
-                }
-
-
-                //moving horizontally
-                if (TargetMovement.X != 0.0f)
-                {
-                    //progress the walking animation
-                    walkPos -= (walkCycleSpeed / runningModifier)*0.8f;
-
-                    MoveLimb(leftFoot,
-                        colliderPos + new Vector2(
-                            stepSize.X,
-                            (stepSize.Y > 0.0f) ? stepSize.Y : -0.15f),
-                        15.0f, true);
-
-                    MoveLimb(rightFoot,
-                        colliderPos + new Vector2(
-                            -stepSize.X,
-                            (-stepSize.Y > 0.0f) ? -stepSize.Y : -0.15f),
-                        15.0f, true);
-
-                    leftFoot.body.SmoothRotate(leftLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
-                    rightFoot.body.SmoothRotate(rightLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
-
-                    if (runningModifier>1.0f)
-                    {
-                        if (walkPosY > 0.0f)
-                        {
-                            GetLimb(LimbType.LeftThigh).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * thighTorque);
-                        }
-                        else
-                        {
-                            GetLimb(LimbType.RightThigh).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * thighTorque);
-                        }
-                    }
-
-                    if (legTorque>0.0f)
-                    {
-                        if (Math.Sign(walkPosX) != Math.Sign(movement.X))
-                        {
-                            GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * legTorque / runningModifier);
-                        }
-                        else
-                        {
-                            GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * legTorque / runningModifier);
-                        }
-                    }
-
-                    //calculate the positions of hands
-                    handPos = torso.SimPosition;
-                    handPos.X = -walkPosX * 0.2f;// *runningModifier;
-
-                    float lowerY = -0.6f + runningModifier/3.5f;
-                    
-                    handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * 0.05)) / runningModifier;
-
-                    Vector2 posAdditon = new Vector2(movement.X*0.07f, 0.0f);
-                    if (stairs!=null)
-                    {
-                        if ((stairs.StairDirection == Direction.Right && movement.X < 0.0f) ||
-                        (stairs.StairDirection == Direction.Left && movement.X > 0.0f))
-                        {
-                            posAdditon.Y -= 0.1f;
-                        }
-                        else
-                        {
-                           posAdditon.Y += 0.1f;
-                        }
-                    }
-                    
-                    if (!rightHand.Disabled)
-                    {
-                        rightHand.body.ApplyTorque(walkPosY * runningModifier * Dir);
-                        MoveLimb(rightHand, torso.SimPosition + posAdditon +
-                            new Vector2(
-                                -handPos.X,
-                                (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY),
-                            15.0f, true);
-                    }
-
-                    if (!leftHand.Disabled)
-                    {
-                        leftHand.body.ApplyTorque(-walkPosY * runningModifier * Dir);
-                        MoveLimb(leftHand, torso.SimPosition + posAdditon +
-                            new Vector2(
-                                handPos.X,
-                                (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY),
-                            15.0f, true);
-                    }
-
-                }
-                else
-                {
-                    float movementFactor = (movement.X / 4.0f) * movement.X * Math.Sign(movement.X);
-
-                    Vector2 footPos = new Vector2(
-                        colliderPos.X + movementFactor - Dir * 0.05f,
-                        colliderPos.Y - 0.2f - Math.Abs(movementFactor));
-
-                    MoveLimb(leftFoot, footPos, 2.5f);
-                    MoveLimb(rightFoot, footPos, 2.5f);
-
-                    leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
-                    rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
-                                      
-                    if (!rightHand.Disabled)
-                    {
-                        // MoveLimb(rightHand, handPos, 0.05f, true);
-                        //rightHand.body.ApplyLinearImpulse((handPos - rightHand.Position));
-                        rightHand.body.SmoothRotate(0.0f, 5.0f);
-
-                        var rightArm = GetLimb(LimbType.RightArm);
-                        rightArm.body.SmoothRotate(0.0f, 20.0f);
-                    }
-
-                    if (!leftHand.Disabled)
-                    {
-                        //MoveLimb(leftHand, handPos, 0.05f, true);
-                        //leftHand.body.ApplyLinearImpulse((handPos - leftHand.Position));
-                        leftHand.body.SmoothRotate(0.0f, 5.0f);
-
-                        var leftArm = GetLimb(LimbType.LeftArm);
-                        leftArm.body.SmoothRotate(0.0f, 20.0f);
-                    }
-                }
+                leg.body.ApplyTorque(-Dir * leg.Mass * 10.0f);
             }
 
-            //for (int i = 0; i < 2; i++)
-            //{
-            //    Limb leg = (i == 0) ? rightLeg : leftLeg;
+            //place the anchors of the head and the torso to make the ragdoll stand
 
-            //    if (leg.SimPosition.Y < waist.SimPosition.Y) continue;
+            if (LowestLimb == null) return;
 
-            //    //leg.body.ApplyTorque(Dir * leg.Mass * 50.0f);
-            //}
+            if (!onGround || (LowestLimb.SimPosition.Y - floorY > 0.5f && stairs == null)) return;
+
+            getUpSpeed = getUpSpeed * (head.SimPosition.Y - colliderPos.Y);
+
+            if (stairs != null)
+            {
+                if (LowestLimb.SimPosition.Y < stairs.SimPosition.Y) IgnorePlatforms = true;
+
+                torso.pullJoint.Enabled = true;
+                torso.pullJoint.WorldAnchorB = new Vector2(
+                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.35f, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+
+
+                head.pullJoint.Enabled = true;
+                head.pullJoint.WorldAnchorB = new Vector2(
+                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * 0.4f, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+
+                waist.pullJoint.Enabled = true;
+                waist.pullJoint.WorldAnchorB = waist.SimPosition;// +movement * 0.3f;
+            }
+            else
+            {
+                torso.pullJoint.Enabled = true;
+                torso.pullJoint.WorldAnchorB =
+                    MathUtils.SmoothStep(torso.SimPosition,
+                    new Vector2(footMid + movement.X * 0.3f, colliderPos.Y + TorsoPosition), getUpSpeed);
+
+
+                head.pullJoint.Enabled = true;
+                head.pullJoint.WorldAnchorB =
+                    MathUtils.SmoothStep(head.SimPosition,
+                    new Vector2(footMid + movement.X * 0.3f, colliderPos.Y + HeadPosition), getUpSpeed*1.2f);
+
+                waist.pullJoint.Enabled = true;
+                waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.1f;
+                //MathUtils.SmoothStep(waist.SimPosition,
+                //new Vector2(footMid + movement.X * 0.4f, colliderPos.Y + HeadPosition), getUpSpeed);
+            }
+
+
+            //moving horizontally
+            if (TargetMovement.X != 0.0f)
+            {
+                //progress the walking animation
+                walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
+
+                MoveLimb(leftFoot,
+                    colliderPos + new Vector2(
+                        stepSize.X,
+                        (stepSize.Y > 0.0f) ? stepSize.Y : -0.15f),
+                    15.0f, true);
+
+                MoveLimb(rightFoot,
+                    colliderPos + new Vector2(
+                        -stepSize.X,
+                        (-stepSize.Y > 0.0f) ? -stepSize.Y : -0.15f),
+                    15.0f, true);
+
+                leftFoot.body.SmoothRotate(leftLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
+                rightFoot.body.SmoothRotate(rightLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
+
+                if (runningModifier > 1.0f)
+                {
+                    if (walkPosY > 0.0f)
+                    {
+                        GetLimb(LimbType.LeftThigh).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * thighTorque);
+                    }
+                    else
+                    {
+                        GetLimb(LimbType.RightThigh).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * thighTorque);
+                    }
+                }
+
+                if (legTorque > 0.0f)
+                {
+                    if (Math.Sign(walkPosX) != Math.Sign(movement.X))
+                    {
+                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * legTorque / runningModifier);
+                    }
+                    else
+                    {
+                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * legTorque / runningModifier);
+                    }
+                }
+
+                //calculate the positions of hands
+                handPos = torso.SimPosition;
+                handPos.X = -walkPosX * 0.4f;
+
+                float lowerY = -1.0f + (runningModifier - 1.0f) * 0.8f;
+
+                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * 0.15 * runningModifier));
+
+                Vector2 posAddition = new Vector2(-movement.X * 0.015f * runningModifier, 0.0f);
+
+                if (!rightHand.Disabled)
+                {
+                    HandIK(rightHand, torso.SimPosition + posAddition +
+                        new Vector2(
+                            -handPos.X,
+                            (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY), 0.7f*runningModifier);
+                }
+
+                if (!leftHand.Disabled)
+                {
+                    HandIK(leftHand, torso.SimPosition + posAddition +
+                        new Vector2(
+                            handPos.X,
+                            (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), 0.7f * runningModifier);
+                }
+
+            }
+            else
+            {
+                float movementFactor = (movement.X / 4.0f) * movement.X * Math.Sign(movement.X);
+                
+                Vector2 footPos = new Vector2(
+                    colliderPos.X,
+                    colliderPos.Y - 0.2f);
+
+                MoveLimb(leftFoot, footPos, 2.5f);
+                MoveLimb(rightFoot, footPos, 2.5f);
+
+                leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
+                rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
+
+                if (!rightHand.Disabled)
+                {
+                    rightHand.body.SmoothRotate(0.0f, 5.0f);
+
+                    var rightArm = GetLimb(LimbType.RightArm);
+                    rightArm.body.SmoothRotate(0.0f, 20.0f);
+                }
+
+                if (!leftHand.Disabled)
+                {
+                    leftHand.body.SmoothRotate(0.0f, 5.0f);
+
+                    var leftArm = GetLimb(LimbType.LeftArm);
+                    leftArm.body.SmoothRotate(0.0f, 20.0f);
+                }
+            }           
+
 
         }
 
@@ -416,23 +398,23 @@ namespace Subsurface
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
 
-            if (inWater && movement.LengthSquared()>0.00001f)
+            if (inWater && movement.LengthSquared() > 0.00001f)
             {
                 movement = Vector2.Normalize(movement);
             }
-                        
+
             RefLimb.pullJoint.Enabled = true;
             RefLimb.pullJoint.WorldAnchorB =
-                RefLimb.SimPosition + movement*0.15f;
+                RefLimb.SimPosition + movement * 0.15f;
 
             RefLimb.body.SmoothRotate(0.0f);
 
             foreach (Limb l in Limbs)
             {
-                if (l==RefLimb) continue;
+                if (l == RefLimb) continue;
                 l.body.SetTransform(RefLimb.SimPosition, RefLimb.Rotation);
             }
-                //new Vector2(movement.X, floorY + HeadPosition), 0.5f);
+            //new Vector2(movement.X, floorY + HeadPosition), 0.5f);
         }
 
         void UpdateSwimming()
@@ -447,20 +429,20 @@ namespace Subsurface
 
             if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f) && !head.inWater)
             {
-                surfaceLimiter = (ConvertUnits.ToDisplayUnits(head.SimPosition.Y)-surfaceY);
+                surfaceLimiter = (ConvertUnits.ToDisplayUnits(head.SimPosition.Y) - surfaceY);
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
                 if (surfaceLimiter > 20.0f) return;
             }
 
-            Limb torso      = GetLimb(LimbType.Torso);
-            Limb leftHand   = GetLimb(LimbType.LeftHand);
-            Limb rightHand  = GetLimb(LimbType.RightHand);
+            Limb torso = GetLimb(LimbType.Torso);
+            Limb leftHand = GetLimb(LimbType.LeftHand);
+            Limb rightHand = GetLimb(LimbType.RightHand);
 
-            Limb leftFoot   = GetLimb(LimbType.LeftFoot);
-            Limb rightFoot  = GetLimb(LimbType.RightFoot);
-            Limb leftLeg    = GetLimb(LimbType.LeftLeg);
-            Limb rightLeg   = GetLimb(LimbType.RightLeg);
-            
+            Limb leftFoot = GetLimb(LimbType.LeftFoot);
+            Limb rightFoot = GetLimb(LimbType.RightFoot);
+            Limb leftLeg = GetLimb(LimbType.LeftLeg);
+            Limb rightLeg = GetLimb(LimbType.RightLeg);
+
             float rotation = MathHelper.WrapAngle(torso.Rotation);
             rotation = MathHelper.ToDegrees(rotation);
             if (rotation < 0.0f) rotation += 360;
@@ -475,12 +457,12 @@ namespace Subsurface
 
             float targetSpeed = TargetMovement.Length();
             if (targetSpeed > 0.0f) TargetMovement /= targetSpeed;
-            
+
             if (targetSpeed > 0.1f)
             {
                 if (!aiming)
                 {
-                    torso.body.SmoothRotate(MathUtils.VectorToAngle(TargetMovement)-MathHelper.PiOver2);
+                    torso.body.SmoothRotate(MathUtils.VectorToAngle(TargetMovement) - MathHelper.PiOver2);
                 }
             }
             else
@@ -526,7 +508,7 @@ namespace Subsurface
             movement.Y -= 0.05f;
 
             head.body.ApplyForce((new Vector2(movement.X,
-                    movement.Y / surfaceLimiter + 0.2f) - head.body.LinearVelocity * 0.2f) * 
+                    movement.Y / surfaceLimiter + 0.2f) - head.body.LinearVelocity * 0.2f) *
                     30.0f * head.body.Mass);
 
             torso.body.ApplyForce((new Vector2(movement.X,
@@ -546,7 +528,7 @@ namespace Subsurface
                 transformedFootPos,
                 Matrix.CreateRotationZ(torso.body.Rotation));
 
-            if (Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, rightThigh.Rotation))<0.3f)
+            if (Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, rightThigh.Rotation)) < 0.3f)
             {
                 MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
             }
@@ -554,14 +536,14 @@ namespace Subsurface
             {
                 MoveLimb(leftFoot, footPos + transformedFootPos, 1.0f);
             }
-            
+
             handPos = (torso.SimPosition + head.SimPosition) / 2.0f;
 
             //if (!rightHand.Disabled) rightHand.body.ApplyTorque(leftHand.body.Mass * Dir);
             //if (!leftHand.Disabled) leftHand.body.ApplyTorque(leftHand.body.Mass * Dir);
-            
+
             //at the surface, not moving sideways -> hands just float around
-            if (!headInWater && TargetMovement.X == 0.0f && TargetMovement.Y>0)
+            if (!headInWater && TargetMovement.X == 0.0f && TargetMovement.Y > 0)
             {
                 handPos.X = handPos.X + Dir * 0.6f;
 
@@ -612,12 +594,12 @@ namespace Subsurface
 
                 //MoveLimb(leftHand, handPos + leftHandPos,1.5f);
                 HandIK(leftHand, handPos + leftHandPos, 0.5f);
-            }            
+            }
         }
 
         void UpdateClimbing()
         {
-            if (character.SelectedConstruction == null || character.SelectedConstruction.GetComponent<Ladder>()==null)
+            if (character.SelectedConstruction == null || character.SelectedConstruction.GetComponent<Ladder>() == null)
             {
                 Anim = Animation.None;
                 return;
@@ -630,15 +612,15 @@ namespace Subsurface
 
             Vector2 footPos, handPos;
 
-            Limb leftFoot   = GetLimb(LimbType.LeftFoot);
-            Limb rightFoot  = GetLimb(LimbType.RightFoot);
-            Limb head       = GetLimb(LimbType.Head);
-            Limb torso      = GetLimb(LimbType.Torso);
+            Limb leftFoot = GetLimb(LimbType.LeftFoot);
+            Limb rightFoot = GetLimb(LimbType.RightFoot);
+            Limb head = GetLimb(LimbType.Head);
+            Limb torso = GetLimb(LimbType.Torso);
 
-            Limb waist      = GetLimb(LimbType.Waist);
+            Limb waist = GetLimb(LimbType.Waist);
 
-            Limb leftHand   = GetLimb(LimbType.LeftHand);
-            Limb rightHand  = GetLimb(LimbType.RightHand);
+            Limb leftHand = GetLimb(LimbType.LeftHand);
+            Limb rightHand = GetLimb(LimbType.RightHand);
 
             Vector2 ladderSimPos = ConvertUnits.ToSimUnits(
                 character.SelectedConstruction.Rect.X + character.SelectedConstruction.Rect.Width / 2.0f,
@@ -668,7 +650,7 @@ namespace Subsurface
             rightHand.body.ApplyTorque(Dir * 2.0f);
 
             footPos = new Vector2(
-                handPos.X - Dir*0.05f,
+                handPos.X - Dir * 0.05f,
                 head.SimPosition.Y - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
 
             //if (movement.Y < 0) footPos.Y += 0.05f;
@@ -712,7 +694,7 @@ namespace Subsurface
             //   - reached the top or bottom of the ladder
             if (Math.Abs(torso.LinearVelocity.Y) > 5.0f ||
                 TargetMovement.X != 0.0f ||
-                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition*1.5f) ||
+                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition * 1.5f) ||
                 (TargetMovement.Y > 0.0f && handPos.Y > 0.3f))
             {
                 Anim = Animation.None;
@@ -721,7 +703,7 @@ namespace Subsurface
             }
 
         }
-        
+
         //float punchTimer;
         //bool punching;
 
@@ -777,12 +759,12 @@ namespace Subsurface
             transformedHandlePos[0] = Vector2.Transform(handlePos[0], itemTransfrom);
             transformedHandlePos[1] = Vector2.Transform(handlePos[1], itemTransfrom);
 
-            Limb head       = GetLimb(LimbType.Head);
-            Limb torso      = GetLimb(LimbType.Torso);
-            Limb leftHand   = GetLimb(LimbType.LeftHand);
-            Limb rightHand  = GetLimb(LimbType.RightHand);
+            Limb head = GetLimb(LimbType.Head);
+            Limb torso = GetLimb(LimbType.Torso);
+            Limb leftHand = GetLimb(LimbType.LeftHand);
+            Limb rightHand = GetLimb(LimbType.RightHand);
 
-            Vector2 itemPos = aim ? aimPos : holdPos;       
+            Vector2 itemPos = aim ? aimPos : holdPos;
 
             float itemAngle;
             if (stunTimer <= 0.0f && aim && itemPos != Vector2.Zero)
@@ -810,7 +792,7 @@ namespace Subsurface
             {
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
             }
-            
+
             Vector2 shoulderPos = limbJoints[2].WorldAnchorA;
             Vector2 transformedHoldPos = shoulderPos;
 
@@ -847,7 +829,7 @@ namespace Subsurface
             }
 
             Vector2 bodyVelocity = torso.body.LinearVelocity / 60.0f;
-            
+
             item.body.ResetDynamics();
             item.body.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
 
@@ -859,7 +841,7 @@ namespace Subsurface
                 Limb hand = (i == 0) ? rightHand : leftHand;
 
                 HandIK(hand, transformedHoldPos + transformedHandlePos[i]);
-            }            
+            }
         }
 
         private void HandIK(Limb hand, Vector2 pos, float force = 1.0f)
@@ -883,20 +865,22 @@ namespace Subsurface
             float armAngle = MathUtils.SolveTriangleSSS(a, b, c);
             float handAngle = MathUtils.SolveTriangleSSS(b, a, c);
 
-            arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f*force);
-            hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f*force);
+            arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force);
+            hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force);
         }
 
         public override void Flip()
         {
             base.Flip();
 
+            walkPos = -walkPos;
+
             Limb torso = GetLimb(LimbType.Torso);
 
             Vector2 difference;
 
             Matrix torsoTransform = Matrix.CreateRotationZ(torso.Rotation);
-            
+
             for (int i = 0; i < character.SelectedItems.Length; i++)
             {
                 if (character.SelectedItems[i] != null)
@@ -926,7 +910,7 @@ namespace Subsurface
                         l.body.SetTransform(torso.SimPosition + Vector2.Transform(difference, -torsoTransform), -l.body.Rotation);
                         break;
                     default:
-                        if (!inWater) l.body.SetTransform(l.body.SimPosition, 
+                        if (!inWater) l.body.SetTransform(l.body.SimPosition,
                             MathUtils.WrapAnglePi(l.body.Rotation * (l.DoesFlip ? -1.0f : 1.0f)));
                         break;
                 }

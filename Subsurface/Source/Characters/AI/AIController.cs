@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Subsurface
 {
@@ -21,7 +22,7 @@ namespace Subsurface
             set { Character.AnimController.TargetMovement = value; }
         }
         
-        public Vector2 Position
+        public Vector2 SimPosition
         {
             get { return Character.AnimController.Limbs[0].SimPosition; }
         }
@@ -42,6 +43,11 @@ namespace Subsurface
             Character = c;
 
             steeringManager = new SteeringManager(this);
+        }
+
+        public virtual void DebugDraw(SpriteBatch spriteBatch)
+        {
+
         }
 
         public virtual void OnAttacked(IDamageable attacker, float amount) { }

@@ -111,6 +111,12 @@ namespace Subsurface
                         
             this.level = level;
 
+            if (submarine==null)
+            {
+                DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
+                return;
+            }
+
             if (reloadSub || Submarine.Loaded != submarine) submarine.Load();
 
             if (level != null)

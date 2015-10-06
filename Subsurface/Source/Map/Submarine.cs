@@ -241,7 +241,7 @@ namespace Subsurface
             }
         }
 
-        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null)
+        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null)
         {
 
 
@@ -251,7 +251,9 @@ namespace Subsurface
             {
                 if (fixture == null || 
                     fixture.CollisionCategories == Category.None || 
-                    fixture.CollisionCategories == Physics.CollisionMisc) return -1;          
+                    fixture.CollisionCategories == Physics.CollisionMisc) return -1;
+
+                if (collisionCategory != null && !fixture.CollisionCategories.HasFlag((Category)collisionCategory)) return -1;
       
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
 

@@ -212,6 +212,13 @@ namespace Subsurface
                 case "editchar":
                     GameMain.EditCharacterScreen.Select();
                     break;
+                case "heal":
+                    if (Character.Controlled!=null)
+                    {
+                        Character.Controlled.Health = Character.Controlled.MaxHealth;
+                        Character.Controlled.Bleeding = 0.0f;
+                    }
+                    break;
                 case "freecamera":
                 case "freecam":
                     Character.Controlled = null;

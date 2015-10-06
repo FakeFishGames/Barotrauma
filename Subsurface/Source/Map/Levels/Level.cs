@@ -818,17 +818,18 @@ int currentTargetIndex = 1;
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            Vector2 pos = endPosition;
-            pos.X += Position.X;
+            Vector2 pos = endPosition;            
             pos.Y = -pos.Y - Position.Y;
 
             if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y-512) return;
 
-            float x = GameMain.GameScreen.Cam.WorldView.X-512.0f;
+            pos.X = GameMain.GameScreen.Cam.WorldView.X-512.0f;
+            //pos.X += Position.X % 512;
+
             int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width/512.0f + 2.0f)*512.0f);
 
             spriteBatch.Draw(shaftTexture,
-                new Rectangle((int)(MathUtils.Round(x, 512.0f)), (int)pos.Y, width, 512),
+                new Rectangle((int)(MathUtils.Round(pos.X, 512.0f) + Position.X % 512) , (int)pos.Y, width, 512),
                 new Rectangle(0, 0, width, 256),
                 Color.White, 0.0f,
                 Vector2.Zero,

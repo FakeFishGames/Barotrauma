@@ -324,9 +324,7 @@ namespace Subsurface.Sounds
             
             oggStreamer.AddStream(oggStream);
 
-            oggStream.Volume = volume;
-
-            oggStream.Play();
+            oggStream.Play(volume);
 
             return oggStream;
         }
