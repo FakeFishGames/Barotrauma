@@ -82,12 +82,25 @@ namespace Subsurface.Networking
             outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
             outmsg.Write(name);
 
+
+            System.Net.IPEndPoint IPEndPoint = null;
+            try
+            {
+                IPEndPoint = new System.Net.IPEndPoint(NetUtility.Resolve(serverIP), Port);
+            }
+            catch (ArgumentNullException e)
+            {
+                new GUIMessageBox("Could not connect to server", "Failed to resolve address ''"+serverIP+":"+Port+"''. Please make sure you have entered a valid IP address.");
+                return;
+            }
+
+
             // Connect client, to ip previously requested from user 
             try
             {
-                client.Connect(serverIP, Port, outmsg);
+                client.Connect(IPEndPoint, outmsg);
             }
-            catch (ArgumentNullException e)
+            catch (Exception e)
             {
                 DebugConsole.ThrowError("Couldn't connect to "+hostIP+". Error message: "+e.Message);
                 Disconnect();
@@ -108,7 +121,10 @@ namespace Subsurface.Networking
             // Funtion that waits for connection approval info from server
             if (reconnectBox==null)
             {
-                reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[0]);                
+                reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[] { "Cancel" });
+
+                reconnectBox.Buttons[0].OnClicked += CancelConnect;
+                reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
             }
 
             CoroutineManager.StartCoroutine(WaitForStartingInfo());
@@ -136,17 +152,35 @@ namespace Subsurface.Networking
             return true;
         }
 
+        private bool connectCanceled;
+
+        private bool CancelConnect(GUIButton button, object obj)
+        {
+            connectCanceled = true;
+            return true;
+        }
+
         // Before main looping starts, we loop here and wait for approval message
         private IEnumerable<object> WaitForStartingInfo()
         {
+            connectCanceled = false;
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;
             
             DateTime timeOut = DateTime.Now + new TimeSpan(0,0,15);
 
             // Loop until we are approved
-            while (!CanStart)
+            while (!CanStart && !connectCanceled)
             {
+                int seconds = DateTime.Now.Second;
+
+                string connectingText = "Connecting to " + serverIP;
+                for (int i = 0; i < 1 + (seconds % 3); i++ )
+                {
+                    connectingText += ".";
+                }
+                reconnectBox.Text = connectingText;
+
                 yield return CoroutineStatus.Running;
 
                 if (DateTime.Now > timeOut) break;
@@ -235,6 +269,8 @@ namespace Subsurface.Networking
                 reconnectBox.Close(null, null);
                 reconnectBox = null;
             }
+
+            if (connectCanceled) yield return CoroutineStatus.Success;
 
             if (client.ConnectionStatus != NetConnectionStatus.Connected)
             {

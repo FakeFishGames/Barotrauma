@@ -20,7 +20,7 @@ namespace Launcher
 {
     public partial class LauncherMain : Form
     {
-        string version = AssemblyName.GetAssemblyName("subsurface.exe").Version.ToString();
+        string version = AssemblyName.GetAssemblyName("Barotrauma.exe").Version.ToString();
 
         private const string configPath = "config.xml";
         private Subsurface.GameSettings settings;
