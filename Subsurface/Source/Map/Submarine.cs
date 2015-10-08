@@ -380,7 +380,6 @@ namespace Subsurface
 
             message.Write(Speed.X);
             message.Write(Speed.Y);
-
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message)

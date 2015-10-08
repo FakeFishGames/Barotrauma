@@ -102,7 +102,7 @@ namespace Subsurface
 
         public string DurationText()
         {
-            return "Duration: " + GameDuration.Minutes + " min";
+            return "Duration: " + GameDuration.TotalMinutes + " min";
         }
                 
         public NetLobbyScreen()
@@ -423,33 +423,29 @@ namespace Subsurface
             return true;
         }
 
-        public void AddPlayer(Client client)
+        public void AddPlayer(string name)
         {
             GUITextBlock textBlock = new GUITextBlock(
-                new Rectangle(0, 0, 0, 25),
-                 client.name + ((client.assignedJob==null) ? "" : " (" + client.assignedJob.Name + ")"), 
+                new Rectangle(0, 0, 0, 25), name, 
                  GUI.Style, Alignment.Left, Alignment.Left,
                 playerList);
+
             textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-            textBlock.UserData = client;          
+            textBlock.UserData = name;          
         }
 
-        public void RemovePlayer(int clientID)
+        public void RemovePlayer(string name)
         {
-            GUIComponent child = playerList.children.Find(c =>
-                {
-                    Client client = c.UserData as Client;
-                    return (client.ID == clientID);
-                });
+            GUIComponent child = playerList.children.Find(c => c.UserData as string == name);
 
             if (child != null) playerList.RemoveChild(child);
         }
 
-        public void RemovePlayer(Client client)
-        {
-            if (client == null) return;
-            playerList.RemoveChild(playerList.GetChild(client));
-        }
+        //public void RemovePlayer(Client client)
+        //{
+        //    if (client == null) return;
+        //    playerList.RemoveChild(playerList.GetChild(client));
+        //}
 
         public void ClearPlayers()
         {
@@ -709,13 +705,12 @@ namespace Subsurface
             msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
-            //msg.Write(playerList.CountChildren - 1);
-            //for (int i = 1; i < playerList.CountChildren; i++)
-            //{
-            //    Client client = playerList.children[i].UserData as Client;
-            //    msg.Write(client.ID);
-            //    msg.Write(client.assignedJob==null ? "" : client.assignedJob.Name);
-            //}
+            msg.Write((byte)(playerList.CountChildren - 1));
+            for (int i = 0; i < playerList.CountChildren; i++)
+            {
+                string clientName = playerList.children[i].UserData as string;
+                msg.Write(clientName==null ? "" : clientName);
+            }
 
         }
 
@@ -742,6 +737,14 @@ namespace Subsurface
                 durationScroll = msg.ReadFloat();
 
                 levelSeed = msg.ReadString();
+
+                int playerCount = msg.ReadByte();
+                
+                playerList.ClearChildren();
+                for (int i = 0; i<playerCount; i++)
+                {
+                    AddPlayer(msg.ReadString());
+                }
             }
 
             catch

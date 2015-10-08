@@ -107,7 +107,7 @@ namespace Subsurface
 
                 aiController.FillNetworkData(message);
 
-                LargeUpdateTimer = 10;
+                LargeUpdateTimer = 50;
             }
             else
             {
@@ -123,7 +123,7 @@ namespace Subsurface
         
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            if (type == NetworkEventType.KillCharacter)
+          if (type == NetworkEventType.KillCharacter)
             {
                 Kill(true);
                 return;

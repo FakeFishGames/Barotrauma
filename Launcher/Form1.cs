@@ -285,7 +285,7 @@ namespace Launcher
             }
 
             filesToDownload = UpdaterUtil.GetRequiredFiles(doc);
-
+            
             string dir = Directory.GetCurrentDirectory();
 
             filesToDownloadCount = filesToDownload.Count;

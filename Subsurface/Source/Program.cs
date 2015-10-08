@@ -28,19 +28,19 @@ namespace Subsurface
         {
             using (var game = new GameMain())
             {
-#if !DEBUG
+//#if !DEBUG
                 try
                 {
-#endif
+//#endif
 
                     game.Run();
-#if !DEBUG
+//#if !DEBUG
                 }
                 catch (Exception e)
                 {
                     CrashDump(game, "crashreport.txt", e);
                 }
-#endif
+//#endif
             }
         }
 

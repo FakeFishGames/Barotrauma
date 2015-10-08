@@ -214,7 +214,7 @@ namespace Subsurface
 
             float walkPosX = (float)Math.Cos(walkPos);
             float walkPosY = (float)Math.Sin(walkPos);
-            float runningModifier = (float)Math.Max(Math.Abs(TargetMovement.X) / 1.5f, 1.0);
+            float runningModifier = (float)Math.Max(Math.Min(Math.Abs(TargetMovement.X),3.0f) / 1.5f, 1.0);
 
             Vector2 stepSize = new Vector2(
                 this.stepSize.X * walkPosX * runningModifier,
@@ -229,7 +229,7 @@ namespace Subsurface
             }
 
             TargetMovement *= (1.0f - 0.5f * ((float)limbsInWater / (float)Limbs.Count()));
-
+            
             movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
             movement.Y = 0.0f;
 

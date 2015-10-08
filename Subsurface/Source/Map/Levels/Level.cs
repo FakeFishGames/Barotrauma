@@ -447,6 +447,16 @@ int currentTargetIndex = 1;
 
                 for (int i = 0; i < pathCells.Count; i++)
                 {
+                    //clean "loops" from the path
+                    for (int n = 0; n < i; n++)
+                    {
+                        if (pathCells[n] != pathCells[i]) continue;
+
+                        pathCells.RemoveRange(n+1, i-n);                        
+                        break;
+                    }
+                    if (i >= pathCells.Count) break;
+
                     newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10));
                     newWaypoint.MoveWithLevel = true;
                     if (prevWaypoint != null)
@@ -460,11 +470,9 @@ int currentTargetIndex = 1;
                 newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, (int)(borders.Height + shaftHeight), 10, 10));
                 newWaypoint.MoveWithLevel = true;
 
-                if (prevWaypoint != null)
-                {
-                    prevWaypoint.linkedTo.Add(newWaypoint);
-                    newWaypoint.linkedTo.Add(prevWaypoint);
-                }
+                prevWaypoint.linkedTo.Add(newWaypoint);
+                newWaypoint.linkedTo.Add(prevWaypoint);
+                
             }
 
             Debug.WriteLine("genpath: " + sw2.ElapsedMilliseconds + " ms");
@@ -748,6 +756,13 @@ int currentTargetIndex = 1;
 
         private void ResetBodyVelocities()
         {
+            if (prevVelocity == Vector2.Zero) return;
+            if (!MathUtils.IsValid(prevVelocity))
+            {
+                prevVelocity = Vector2.Zero;
+                return;
+            }
+
             foreach (Character character in Character.CharacterList)
             {
                 if (character.AnimController.CurrentHull != null) continue;

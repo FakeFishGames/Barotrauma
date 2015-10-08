@@ -41,7 +41,8 @@ namespace Subsurface
 
             if (oggSound == null)
             {
-                oggSound = OggSound.Load(file);            
+                oggSound = OggSound.Load(file);
+                ALHelper.Check();
             }
 
             this.destroyOnGameEnd = destroyOnGameEnd;
@@ -240,7 +241,6 @@ namespace Subsurface
 
             if (alSourceId>0 && SoundManager.IsPlaying(alSourceId))
             {
-                ALHelper.Check();
                 SoundManager.Stop(alSourceId);
                 ALHelper.Check();
             }

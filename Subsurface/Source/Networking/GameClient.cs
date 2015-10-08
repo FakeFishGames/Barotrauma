@@ -61,7 +61,7 @@ namespace Subsurface.Networking
             NetPeerConfiguration config = new NetPeerConfiguration("subsurface");
 
 #if DEBUG
-            config.SimulatedLoss = 0.2f;
+            config.SimulatedLoss = 0.1f;
             config.SimulatedMinimumLatency = 0.3f;
 #endif 
 
@@ -90,11 +90,14 @@ namespace Subsurface.Networking
             catch (ArgumentNullException e)
             {
                 DebugConsole.ThrowError("Couldn't connect to "+hostIP+". Error message: "+e.Message);
+                Disconnect();
+
+                GameMain.NetLobbyScreen.Select();
                 return;
             }
 
-            // Create timespan of 30ms
-            updateInterval = new TimeSpan(0, 0, 0, 0, 200);
+
+            updateInterval = new TimeSpan(0, 0, 0, 0, 100);
 
             // Set timer to tick every 50ms
             //update = new System.Timers.Timer(50);
@@ -127,6 +130,9 @@ namespace Subsurface.Networking
             Disconnect();
             GameMain.NetworkMember = null;
             GameMain.MainMenuScreen.Select();
+
+            GameMain.MainMenuScreen.SelectTab(MainMenuScreen.Tab.LoadGame);
+
             return true;
         }
 
@@ -160,9 +166,19 @@ namespace Subsurface.Networking
                             if (packetType == (byte)PacketTypes.LoggedIn)
                             {
                                 myID = inc.ReadInt32();
-                                if (inc.ReadBoolean() && Screen.Selected != GameMain.GameScreen)
+                                bool gameStarted= inc.ReadBoolean();
+                                if (gameStarted && Screen.Selected != GameMain.GameScreen)
                                 {
                                     new GUIMessageBox("Please wait", "A round is already running. You will have to wait for a new round to start.");
+                                }
+
+                                bool hasCharacter = inc.ReadBoolean();
+
+                                if (gameStarted && !hasCharacter && myCharacter!=null)
+                                {
+                                    GameMain.NetLobbyScreen.Select();
+
+                                    new GUIMessageBox("Connection timed out", "You were disconnected for too long and your character was deleted. Please wait for another round to start.");
                                 }
 
                                 GameMain.NetLobbyScreen.ClearPlayers();
@@ -173,12 +189,12 @@ namespace Subsurface.Networking
                                 {
                                     Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
 
-                                    GameMain.NetLobbyScreen.AddPlayer(otherClient);
+                                    GameMain.NetLobbyScreen.AddPlayer(otherClient.name);
                                     otherClients.Add(otherClient);
                                 }
 
                                 //add the name of own client to the lobby screen
-                                GameMain.NetLobbyScreen.AddPlayer(new Client(name, myID));
+                                GameMain.NetLobbyScreen.AddPlayer(name);
 
                                 CanStart = true;
                             }
@@ -245,7 +261,7 @@ namespace Subsurface.Networking
             
             if (client.ConnectionStatus == NetConnectionStatus.Disconnected)
             {
-                GameMain.NetLobbyScreen.RemovePlayer(myID);
+                //GameMain.NetLobbyScreen.RemovePlayer(myID);
                 if (reconnectBox==null)
                 {
                     reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
@@ -330,7 +346,7 @@ namespace Subsurface.Networking
 
                         Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
 
-                        GameMain.NetLobbyScreen.AddPlayer(otherClient);
+                        GameMain.NetLobbyScreen.AddPlayer(otherClient.name);
                         otherClients.Add(otherClient);
 
                         AddChatMessage(otherClient.name + " has joined the server", ChatMessageType.Server);
@@ -340,13 +356,15 @@ namespace Subsurface.Networking
                         int leavingID = inc.ReadInt32();
 
                         AddChatMessage(inc.ReadString(), ChatMessageType.Server);
-                        GameMain.NetLobbyScreen.RemovePlayer(otherClients.Find(c => c.ID==leavingID));
+                        Client disconnectedClient = otherClients.Find(c => c.ID == leavingID);
+                        if (disconnectedClient != null) GameMain.NetLobbyScreen.RemovePlayer(disconnectedClient.name);
+
                         break;
 
                     case (byte)PacketTypes.KickedOut:
                         string msg = inc.ReadString();
 
-                        new GUIMessageBox("KICKED", msg);
+                        new GUIMessageBox("You have been kicked out from the server", msg);
 
                         GameMain.MainMenuScreen.Select();
 
@@ -370,9 +388,7 @@ namespace Subsurface.Networking
                         new GUIMessageBox("You are the Traitor!", "Your secret task is to assassinate " + targetName + "!");
 
                         break;
-                }
-
-                
+                }                
             }
         }
 
@@ -388,6 +404,16 @@ namespace Subsurface.Networking
             string mapName = inc.ReadString();
             string mapHash = inc.ReadString();
 
+            string modeName = inc.ReadString();
+
+            GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
+
+            if (gameMode == null)
+            {
+                DebugConsole.ThrowError("Game mode ''"+gameMode+"'' not found!");
+                yield return CoroutineStatus.Success;
+            }
+
             if (!GameMain.NetLobbyScreen.TrySelectMap(mapName, mapHash))
             {
                 yield return CoroutineStatus.Success;
@@ -401,7 +427,7 @@ namespace Subsurface.Networking
             Rand.SetSyncedSeed(seed);
             //int gameModeIndex = inc.ReadInt32();
 
-            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedMap, "", GameMain.NetLobbyScreen.SelectedMode);
+            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedMap, "", gameMode);
 
             yield return CoroutineStatus.Running;
 
@@ -508,6 +534,7 @@ namespace Subsurface.Networking
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
             client.Shutdown("");
+            GameMain.NetworkMember = null;
         }
 
         public void SendCharacterData()

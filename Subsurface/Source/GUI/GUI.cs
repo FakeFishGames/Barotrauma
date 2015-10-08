@@ -48,12 +48,15 @@ namespace Subsurface
             get { return pauseMenuOpen; }
         }
 
-        public static void LoadContent(GraphicsDevice graphics)
+        public static void LoadContent(GraphicsDevice graphics, bool loadSounds = true)
         {
             graphicsDevice = graphics;
 
-            sounds = new Sound[2];
-            sounds[0] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
+            if (loadSounds)
+            {
+                sounds = new Sound[2];
+                sounds[0] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
+            }
 
             // create 1x1 texture for line drawing
             t = new Texture2D(graphicsDevice, 1, 1);

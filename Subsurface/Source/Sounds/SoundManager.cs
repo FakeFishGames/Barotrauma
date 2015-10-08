@@ -37,7 +37,7 @@ namespace Subsurface.Sounds
             {
                 alSources.Add(OpenTK.Audio.OpenAL.AL.GenSource());
             }
-
+            ALHelper.Check();
             if (ALHelper.Efx.IsInitialized)
             {
                 lowpassFilterId = ALHelper.Efx.GenFilter();
@@ -162,6 +162,7 @@ namespace Subsurface.Sounds
         {
             return Loop(sound,sourceIndex, Vector2.Zero, volume);
         }
+
         public static int Loop(Sound sound, int sourceIndex, Vector2 position, float volume = 1.0f)
         {
             if (!MathUtils.IsValid(volume))
@@ -177,8 +178,6 @@ namespace Subsurface.Sounds
                 //    AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
                 //    AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
                 //}
-                ALHelper.Check();
-                return sourceIndex;
             }
             else
             {
@@ -189,9 +188,11 @@ namespace Subsurface.Sounds
                 //OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
                 AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
                 //AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
-                ALHelper.Check();
-                return sourceIndex;
+
             }
+
+            ALHelper.Check();
+            return sourceIndex;
         }
 
         //public static int Loop(int sourceIndex, float volume = 1.0f)
@@ -320,11 +321,12 @@ namespace Subsurface.Sounds
             if (oggStreamer == null)
                 oggStreamer = new OggStreamer();
 
-            oggStream = new OggStream(file);
-            
-            oggStreamer.AddStream(oggStream);
+            oggStream = new OggStream(file);            
+            oggStreamer.AddStream(oggStream);           
 
             oggStream.Play(volume);
+
+            ALHelper.Check();
 
             return oggStream;
         }
@@ -337,15 +339,12 @@ namespace Subsurface.Sounds
         public static void ClearAlSource(int bufferId)
         {
             for (int i = 1; i < DefaultSourceCount; i++)
-            { 
-                if (alBuffers[i] == bufferId)
-                {
-                    OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcei.Buffer, 0);
-                }
-            }
-
-
-             
+            {
+                if (alBuffers[i] != bufferId) continue;
+                
+                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourceb.Looping, false);
+                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcei.Buffer, 0);                
+            }             
         }
         
         public static void Dispose()

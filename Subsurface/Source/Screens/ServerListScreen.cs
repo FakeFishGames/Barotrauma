@@ -77,7 +77,6 @@ namespace Subsurface
             joinButton.OnClicked = JoinServer;
 
             GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.Style, menu);
-            button.UserData = 0;
             button.OnClicked = GameMain.MainMenuScreen.SelectTab;
             
 

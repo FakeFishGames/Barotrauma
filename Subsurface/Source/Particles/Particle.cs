@@ -113,36 +113,40 @@ namespace Subsurface.Particles
 
         private List<Hull> FindAdjacentHulls(List<Hull> adjacentHulls, Hull currentHull, bool isHorizontal)
         {
-                foreach (Gap gap in Gap.GapList)
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (gap.isHorizontal != isHorizontal) continue;
+                if (gap.Open < 0.01f) continue;
+                if (gap.linkedTo.Count==0)
                 {
-                    if (gap.isHorizontal != isHorizontal) continue;
-                    if (gap.Open < 0.01f) continue;
-                    if (gap.linkedTo.Count==1)
+                    continue;
+                }
+                else if (gap.linkedTo.Count==1)
+                {
+                    if (!adjacentHulls.Contains(gap.linkedTo[0] as Hull))
                     {
-                        if (!adjacentHulls.Contains(gap.linkedTo[0] as Hull))
-                        {
-                            adjacentHulls.Add(gap.linkedTo[0] as Hull);
-                        }
-                    }
-                    else if (gap.linkedTo[0] == currentHull && gap.linkedTo[1] != null)
-                    {
-                        if (!adjacentHulls.Contains(gap.linkedTo[1] as Hull))
-                        {
-                            adjacentHulls.Add(gap.linkedTo[1] as Hull);
-                            FindAdjacentHulls(adjacentHulls, gap.linkedTo[1] as Hull, isHorizontal);
-                        }
-                    }
-                    else if (gap.linkedTo[1] == currentHull && gap.linkedTo[0] != null)
-                    {
-                        if (!adjacentHulls.Contains(gap.linkedTo[0] as Hull))
-                        {
-                            adjacentHulls.Add(gap.linkedTo[0] as Hull);
-                            FindAdjacentHulls(adjacentHulls, gap.linkedTo[0] as Hull, isHorizontal);
-                        }
+                        adjacentHulls.Add(gap.linkedTo[0] as Hull);
                     }
                 }
+                else if (gap.linkedTo[0] == currentHull && gap.linkedTo[1] != null)
+                {
+                    if (!adjacentHulls.Contains(gap.linkedTo[1] as Hull))
+                    {
+                        adjacentHulls.Add(gap.linkedTo[1] as Hull);
+                        FindAdjacentHulls(adjacentHulls, gap.linkedTo[1] as Hull, isHorizontal);
+                    }
+                }
+                else if (gap.linkedTo[1] == currentHull && gap.linkedTo[0] != null)
+                {
+                    if (!adjacentHulls.Contains(gap.linkedTo[0] as Hull))
+                    {
+                        adjacentHulls.Add(gap.linkedTo[0] as Hull);
+                        FindAdjacentHulls(adjacentHulls, gap.linkedTo[0] as Hull, isHorizontal);
+                    }
+                }
+            }
 
-                return adjacentHulls;
+            return adjacentHulls;
         }
 
         public bool Update(float deltaTime)

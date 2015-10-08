@@ -543,10 +543,9 @@ namespace Subsurface
             messageBox.Buttons[0].OnClicked += Restart;
             messageBox.Buttons[0].OnClicked += messageBox.Close;
 
-            //messageBox.Buttons[1].UserData = MainMenuScreen.Tabs.Main;
+            
             messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.SelectTab;
             messageBox.Buttons[1].OnClicked += messageBox.Close;
-
 
             yield return CoroutineStatus.Success;
         }

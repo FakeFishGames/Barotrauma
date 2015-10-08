@@ -46,15 +46,15 @@
 
     <joint limb1="0" limb1anchor="112,77" limb2="1" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
     <joint limb1="1" limb1anchor="0,190" limb2="2" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="2" limb1anchor="0,100" limb2="3" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="2" limb1anchor="0,120" limb2="3" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
 
     <joint limb1="0" limb1anchor="0,0" limb2="4" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
     <joint limb1="4" limb1anchor="0,190" limb2="5" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="5" limb1anchor="0,100" limb2="6" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="5" limb1anchor="0,120" limb2="6" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
 
     <joint limb1="0" limb1anchor="-53,-164" limb2="7" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
     <joint limb1="7" limb1anchor="0,190" limb2="8" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="8" limb1anchor="0,100" limb2="9" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="8" limb1anchor="0,120" limb2="9" limb2anchor="-15,-250" lowerlimit="-50" upperlimit="0"/>
 
   </ragdoll>
 
