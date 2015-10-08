@@ -22,12 +22,12 @@ namespace Subsurface.Networking
         private NetServer server;
         private NetPeerConfiguration config;
         
-        private TimeSpan SparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
+        private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
         private DateTime sparseUpdateTimer;
 
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 40);
         private DateTime refreshMasterTimer;
-
+        
         private bool masterServerResponded;
 
         private bool registeredToMaster;
@@ -110,9 +110,8 @@ namespace Subsurface.Networking
             {
                 RegisterToMasterServer();
             }
-
-            
-            updateInterval = new TimeSpan(0, 0, 0, 0, 30);
+                        
+            updateInterval = new TimeSpan(0, 0, 0, 0, 60);
 
             DebugConsole.NewMessage("Server started", Color.Green);
                         
@@ -203,17 +202,15 @@ namespace Subsurface.Networking
                 return;
             }
         }
-
+        
         public override void Update(float deltaTime)
         {
             if (!started) return;
 
             base.Update(deltaTime);
-
+            
             if (gameStarted)
             {
-                if (myCharacter!=null) new NetworkEvent(myCharacter.ID, true);  
-
                 inGameHUD.Update((float)Physics.step);
             }
 
@@ -221,6 +218,13 @@ namespace Subsurface.Networking
             {
                 disconnectedClients[i].deleteDisconnectedTimer -= deltaTime;
                 if (disconnectedClients[i].deleteDisconnectedTimer > 0.0f) continue;
+
+                if (gameStarted && disconnectedClients[i].character!=null)
+                {
+                    disconnectedClients[i].character.Remove();
+                    disconnectedClients[i].character = null;
+                }
+
                 disconnectedClients.RemoveAt(i);
             }
 
@@ -240,6 +244,21 @@ namespace Subsurface.Networking
             // if 30ms has passed
             if (updateTimer < DateTime.Now)
             {
+                if (gameStarted)
+                {
+                    if (myCharacter != null) new NetworkEvent(myCharacter.ID, true);
+
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        if (c as AICharacter == null) continue;
+
+                        if (c.SimPosition == Vector2.Zero || c.SimPosition.Length() < 100.0f)
+                        {
+                            new NetworkEvent(c.ID, false);
+                        }
+                    }
+                }
+
                 if (server.ConnectionsCount > 0)
                 {
                     if (sparseUpdateTimer < DateTime.Now) SparseUpdate();
@@ -260,26 +279,9 @@ namespace Subsurface.Networking
 
         private void SparseUpdate()
         {
-            foreach (Character c in Character.CharacterList)
-            {
-                bool isClient = false;
-                foreach (Client client in connectedClients)
-                {
-                    if (client.character != c) continue;
-                    isClient = true;
-                    break;
-                }
-
-                if (!isClient && (c.SimPosition==Vector2.Zero || c.SimPosition.Length() < 300.0f))
-                {
-                    c.LargeUpdateTimer -= 2;
-                    new NetworkEvent(c.ID, false);
-                }
-            }
-
             if (gameStarted) new NetworkEvent(Submarine.Loaded.ID, false);
 
-            sparseUpdateTimer = DateTime.Now + SparseUpdateInterval;
+            sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
         }
 
         private void ReadMessage(NetIncomingMessage inc)
@@ -313,7 +315,7 @@ namespace Subsurface.Networking
                         {
                             //AssignJobs();
 
-                            GameMain.NetLobbyScreen.AddPlayer(sender);
+                            GameMain.NetLobbyScreen.AddPlayer(sender.name);
 
                             // Notify the client that they have logged in
                             outmsg = server.CreateMessage();
@@ -323,6 +325,8 @@ namespace Subsurface.Networking
                             outmsg.Write(sender.ID);
 
                             outmsg.Write(gameStarted);
+
+                            outmsg.Write(gameStarted && sender.character!=null);
 
                             //notify the client about other clients already logged in
                             outmsg.Write((characterInfo == null) ? connectedClients.Count - 1 : connectedClients.Count);
@@ -365,7 +369,8 @@ namespace Subsurface.Networking
                             disconnectedClients.Add(connectedClient);
                         }
 
-                        DisconnectClient(inc.SenderConnection);
+                        DisconnectClient(inc.SenderConnection, 
+                            connectedClient != null ? connectedClient.name+" has disconnected" : "");
                     }
                     
                     break;
@@ -392,9 +397,7 @@ namespace Subsurface.Networking
 
                             if (recipients.Count == 0) break;
                             server.SendMessage(outmsg, recipients, inc.DeliveryMethod, 0);
-
-                            System.Diagnostics.Debug.WriteLine("Sending networkevent (" + outmsg.LengthBytes+" bytes)");
-                            
+                                                        
                             break;
                         case (byte)PacketTypes.Chatmessage:
                             ChatMessageType messageType = (ChatMessageType)inc.ReadByte();
@@ -537,10 +540,9 @@ namespace Subsurface.Networking
         private void SendNetworkEvents()
         {
             if (NetworkEvent.events.Count == 0) return;
-                    
+
             foreach (NetworkEvent networkEvent in NetworkEvent.events)  
             {
-                //System.Diagnostics.Debug.WriteLine("networkevent "+networkEvent.ID);
 
                 List<NetConnection> recipients = new List<NetConnection>();
 
@@ -565,16 +567,13 @@ namespace Subsurface.Networking
                             
                 networkEvent.FillData(message);
 
-                System.Diagnostics.Debug.WriteLine("Sending networkevent " + Entity.FindEntityByID(networkEvent.ID).ToString() + " (" + message.LengthBytes + " bytes)");
-
                 if (server.ConnectionsCount>0)
                 {
                     server.SendMessage(message, recipients, 
                         (networkEvent.IsImportant) ? NetDeliveryMethod.Unreliable : NetDeliveryMethod.ReliableUnordered, 0);  
-                }
-                            
+                }                            
             }
-            NetworkEvent.events.Clear();                       
+            NetworkEvent.events.Clear();
         }
 
 
@@ -661,6 +660,8 @@ namespace Subsurface.Networking
             msg.Write(GameMain.NetLobbyScreen.SelectedMap.Name);
             msg.Write(GameMain.NetLobbyScreen.SelectedMap.MD5Hash.Hash);
 
+            msg.Write(GameMain.NetLobbyScreen.SelectedMode.Name);
+
             msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
             msg.Write((myCharacter == null) ? connectedClients.Count : connectedClients.Count + 1);
@@ -677,16 +678,17 @@ namespace Subsurface.Networking
             }
 
             SendMessage(msg, NetDeliveryMethod.ReliableUnordered, null);
+            
+            CreateCrewFrame(crew);
 
-            yield return CoroutineStatus.Running;
+            //give some time for the clients to load the map
+            yield return new WaitForSeconds(2.0f);
 
             gameStarted = true;
 
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             GameMain.GameScreen.Select();
-
-            CreateCrewFrame(crew);
 
             yield return CoroutineStatus.Success;
 
@@ -758,10 +760,10 @@ namespace Subsurface.Networking
 
         }
 
-        private void DisconnectClient(NetConnection senderConnection)
+        private void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
         {
             Client client = connectedClients.Find(x => x.Connection == senderConnection);
-            if (client != null) DisconnectClient(client);
+            if (client != null) DisconnectClient(client, msg, targetmsg);
         }
 
         private void DisconnectClient(Client client, string msg = "", string targetmsg = "")
@@ -770,8 +772,8 @@ namespace Subsurface.Networking
 
             if (gameStarted && client.character != null) client.character.ClearInputs();
 
-            if (msg == "") msg = client.name + " has left the server";
-            if (targetmsg == "") targetmsg = "You have left the server";
+            if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
+            if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
             
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.KickedOut);
@@ -785,7 +787,7 @@ namespace Subsurface.Networking
             outmsg.Write(client.ID);
             outmsg.Write(msg);
 
-            GameMain.NetLobbyScreen.RemovePlayer(client);
+            GameMain.NetLobbyScreen.RemovePlayer(client.name);
 
             if (server.Connections.Count > 0)
             {
@@ -1092,7 +1094,7 @@ namespace Subsurface.Networking
 
         public override void Disconnect()
         {
-            server.Shutdown("");
+            server.Shutdown("The server has shut down");
         }
     }
 

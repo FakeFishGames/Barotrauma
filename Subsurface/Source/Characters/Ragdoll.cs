@@ -384,8 +384,11 @@ namespace Subsurface
             foreach (Limb limb in Limbs)
             {
                 limb.Draw(spriteBatch);
-            }
-            
+            }  
+        }
+
+        public void DebugDraw(SpriteBatch spriteBatch)
+        {
             if (!GameMain.DebugDraw) return;
 
             foreach (Limb limb in Limbs)
@@ -416,15 +419,18 @@ namespace Subsurface
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);
             }
 
-            if (refLimb.body.TargetPosition != Vector2.Zero)
+            foreach (Limb limb in Limbs)
             {
-                Vector2 pos = ConvertUnits.ToDisplayUnits(refLimb.body.TargetPosition);
-                pos.Y = -pos.Y;
-                GUI.DrawLine(spriteBatch, pos+new Vector2(-30.0f,0.0f), pos+new Vector2(30.0f,0.0f), Color.LightBlue);
-                GUI.DrawLine(spriteBatch, pos + new Vector2(0.0f,-30.0f), pos + new Vector2(0.0f,30.0f), Color.LightBlue);
+                if (limb.body.TargetPosition != Vector2.Zero)
+                {
+                    Vector2 pos = ConvertUnits.ToDisplayUnits(limb.body.TargetPosition);
+                    pos.Y = -pos.Y;
 
-
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
+                    GUI.DrawLine(spriteBatch, pos, new Vector2(limb.Position.X, -limb.Position.Y), limb==RefLimb ? Color.Orange : Color.Cyan);
+                }
             }
+
 
         }
 
@@ -635,7 +641,7 @@ namespace Subsurface
             float resetDistance = NetConfig.ResetRagdollDistance;
 
             //if the limb is closer than alloweddistance, just ignore the difference
-            float allowedDistance = NetConfig.AllowedRagdollDistance;
+            float allowedDistance = NetConfig.AllowedRagdollDistance * ((inWater) ? 2.0f : 1.0f);
 
             float dist = Vector2.Distance(refLimb.body.SimPosition, refLimb.body.TargetPosition);
             bool resetAll = (dist > resetDistance && character.LargeUpdateTimer == 1);
@@ -645,6 +651,11 @@ namespace Subsurface
             if (newMovement == Vector2.Zero || newMovement.Length() < allowedDistance)
             {
                 refLimb.body.TargetPosition = Vector2.Zero;
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.TargetPosition = Vector2.Zero;
+                }
+
                 correctionMovement = Vector2.Zero;
                 return;
             }
@@ -656,14 +667,14 @@ namespace Subsurface
                     {
                         //if (limb.body.TargetPosition == Vector2.Zero) continue;
 
-                        limb.body.SetTransform(limb.SimPosition + newMovement * 0.1f, limb.Rotation);
+                        //limb.body.SetTransform(limb.SimPosition + newMovement * 0.1f, limb.Rotation);
                     }
 
-                    correctionMovement = Vector2.Normalize(newMovement) * Math.Min(0.1f + dist, 3.0f);
+                    correctionMovement = Vector2.Normalize(newMovement) * MathHelper.Clamp(dist*5.0f, 0.1f, 5.0f);
                 }
                 else
                 {
-                    correctionMovement = Vector2.Normalize(newMovement) * Math.Min(0.1f + dist, 3.0f);
+                    correctionMovement = Vector2.Normalize(newMovement) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f);
                     if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
                 }
             }

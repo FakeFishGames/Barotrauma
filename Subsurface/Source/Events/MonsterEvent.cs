@@ -31,7 +31,7 @@ namespace Subsurface
 
             for (int i = 0; i < amount; i++)
             {
-                Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
+                Vector2 position = (randomWayPoint == null) ? Vector2.Zero : FarseerPhysics.ConvertUnits.ToSimUnits(randomWayPoint.Position + Level.Loaded.Position);
                 position.X += Rand.Range(-0.5f, 0.5f);
                 position.Y += Rand.Range(-0.5f, 0.5f);
                 monsters[i] = new AICharacter(characterFile, position);

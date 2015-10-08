@@ -77,7 +77,11 @@ namespace Subsurface.Items.Components
 
             if (voltage < minVoltage) return;
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x+20, y+20, 200, 30), "Activate Radar")) IsActive = !IsActive;
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 200, 30), "Activate Radar"))
+            {
+                IsActive = !IsActive;
+                item.NewComponentEvent(this, true);
+            }
 
             int radius = GuiFrame.Rect.Height / 2 - 10;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
@@ -215,6 +219,23 @@ namespace Subsurface.Items.Components
 
             spriteBatch.DrawString(GUI.SmallFont, label, new Vector2(markerPos.X + 10, markerPos.Y), Color.LightGreen);
             spriteBatch.DrawString(GUI.SmallFont, (int)(dist / 80.0f) + " m", new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);                
+        }
+
+        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
+        {
+            message.Write(IsActive);
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        {
+            try
+            {
+                IsActive = message.ReadBoolean();
+            }
+            catch
+            {
+                return;
+            }
         }
 
     }

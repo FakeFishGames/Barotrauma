@@ -55,6 +55,8 @@ namespace Subsurface.Sounds
                 //alSourceId = AL.GenSource();
                 AL.BufferData(sound.alBufferId, reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16, sound.castBuffer,
                               readSamples * sizeof(short), reader.SampleRate);
+
+                ALHelper.Check();
             }
 
             //AL.Source(alSourceId, ALSourcei.Buffer, alBufferId);

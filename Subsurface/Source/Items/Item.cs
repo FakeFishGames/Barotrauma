@@ -517,24 +517,36 @@ namespace Subsurface
 
             body.SetToTargetPosition();
 
+            bool inWater = true;
+
             if (CurrentHull != null)
             {
                 float surfaceY = ConvertUnits.ToSimUnits(CurrentHull.Surface);
-                if (surfaceY > body.SimPosition.Y) return;
 
-                //the item has gone through the surface of the water -> apply an impulse which serves as surface tension
-                if ((body.SimPosition.Y - (body.LinearVelocity.Y / 60.0f)) < surfaceY)
+                if (body.SimPosition.Y < surfaceY )
                 {
-                    Vector2 impulse = -body.LinearVelocity * (body.Mass / body.Density);
-                    body.ApplyLinearImpulse(impulse);
-                    int n = (int)((ConvertUnits.ToDisplayUnits(body.SimPosition.X) - CurrentHull.Rect.X) / Hull.WaveWidth);
-                    CurrentHull.WaveVel[n] = impulse.Y * 10.0f;
+                    inWater = true;
+
+                    //the item has gone through the surface of the water -> apply an impulse which serves as surface tension
+                    //if (body.SimPosition.Y - (body.LinearVelocity.Y / 60.0f) < surfaceY)
+                    //{
+                    //    Vector2 impulse = -body.LinearVelocity * (body.Mass / body.Density);
+                    //    body.ApplyLinearImpulse(impulse);
+                    //    int n = (int)((ConvertUnits.ToDisplayUnits(body.SimPosition.X) - CurrentHull.Rect.X) / Hull.WaveWidth);
+                    //    CurrentHull.WaveVel[n] = impulse.Y * 10.0f;
+                    //}
+                }
+                else
+                {
+                    inWater = false;
                 }
             }
 
+            if (!inWater) return;
+
             //calculate (a rough approximation of) buoyancy
             float volume = body.Mass / body.Density;
-            Vector2 buoyancy = new Vector2(0, volume * 20.0f);
+            Vector2 buoyancy = new Vector2(0, volume * 10.0f);
 
             //apply buoyancy and drag
 
@@ -808,7 +820,7 @@ namespace Subsurface
 
         public bool Pick(Character picker, bool forcePick=false)
         {
-
+            System.Diagnostics.Debug.WriteLine("Item.Pick("+picker+", "+forcePick+")");
             bool hasRequiredSkills = true;
 
             bool picked = false, selected = false;

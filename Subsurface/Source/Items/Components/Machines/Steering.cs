@@ -163,7 +163,7 @@ namespace Subsurface.Items.Components
 
             if (autopilotRayCastTimer<=0.0f && steeringPath.NextNode != null)
             {
-                Vector2 diff = steeringPath.NextNode.Position - Submarine.Loaded.Position;
+                Vector2 diff = ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - Submarine.Loaded.Position);
 
                 bool nextVisible = true;
                 for (int x = -1; x < 2; x += 2)

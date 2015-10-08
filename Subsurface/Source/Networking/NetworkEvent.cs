@@ -18,7 +18,7 @@ namespace Subsurface.Networking
     {
         public static List<NetworkEvent> events = new List<NetworkEvent>();
 
-        private static bool[] isImportant = { false, true, false, true, true, true, true, false };
+        private static bool[] isImportant = { false, true, false, true, true, true, true };
 
         private int id;
 

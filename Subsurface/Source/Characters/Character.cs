@@ -741,7 +741,7 @@ namespace Subsurface
 
         public virtual void Update(Camera cam, float deltaTime)
         {
-            AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>5000.0f);
+            //AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>5000.0f);
             
             if (isDead) return;
             
@@ -837,6 +837,11 @@ namespace Subsurface
                 {
                     spriteBatch.DrawString(GUI.Font, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
                 }
+            }
+
+            if (GameMain.DebugDraw)
+            {
+                AnimController.DebugDraw(spriteBatch);
             }
 
             Vector2 healthBarPos = new Vector2(Position.X - 50, -Position.Y - 50.0f);
@@ -1100,7 +1105,7 @@ namespace Subsurface
                 message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
                 message.Write((byte)((health/maxHealth)*255.0f));
 
-                LargeUpdateTimer = 10;
+                LargeUpdateTimer = 50;
             }
             else
             {
@@ -1115,6 +1120,8 @@ namespace Subsurface
         {
             if (type == NetworkEventType.PickItem)
             {
+                System.Diagnostics.Debug.WriteLine("**************** PickItem networkevent received");
+
                 int itemId = -1;
 
                 try
@@ -1125,6 +1132,8 @@ namespace Subsurface
                 {
                     return;
                 }
+
+                System.Diagnostics.Debug.WriteLine("item id: "+itemId);
 
                 Item item = FindEntityByID(itemId) as Item;
                 if (item != null)

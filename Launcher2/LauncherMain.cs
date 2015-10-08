@@ -98,7 +98,7 @@ namespace Launcher2
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            GUI.LoadContent(GraphicsDevice);
+            GUI.LoadContent(GraphicsDevice, false);
 
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
             titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
@@ -550,12 +550,31 @@ namespace Launcher2
                 textBlock.TextColor = Color.Red;
                 //textBlock.CanBeFocused = false;
 
+                GUIFrame dummyFrame = new GUIFrame(new Rectangle(0, 0, graphicsWidth, graphicsHeight));
+                GUIMessageBox errorBox = new GUIMessageBox("Error while updating", "Downloading the update failed.",
+                    new string[] { "Retry", "Cancel" }, 400, 250, Alignment.TopLeft, dummyFrame);
+
+                errorBox.Buttons[0].OnClicked += DownloadButtonClicked;
+                errorBox.Buttons[0].OnClicked += errorBox.Close;
+
+                errorBox.Buttons[1].OnClicked = CancelUpdate;
+                errorBox.Buttons[1].OnClicked += errorBox.Close;
+
+                return;
             }
 
             filesDownloaded++;
             progressBar.BarSize = ((float)filesDownloaded / (float)filesToDownloadCount);//e.ProgressPercentage;
                         
             DownloadNextFile();
+        }
+
+        private bool CancelUpdate(GUIButton button, object obj)
+        {
+            downloadButton.Enabled = false;
+            launchButton.Enabled = true;
+
+            return true;
         }
     }
 
