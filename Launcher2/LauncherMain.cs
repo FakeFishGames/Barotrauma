@@ -22,7 +22,7 @@ namespace Launcher2
     /// </summary>
     public class LauncherMain : Game
     {
-        string version = AssemblyName.GetAssemblyName("subsurface.exe").Version.ToString();
+        string version = AssemblyName.GetAssemblyName("Barotrauma.exe").Version.ToString();
 
         private const string configPath = "config.xml";
         private Subsurface.GameSettings settings;
@@ -440,7 +440,7 @@ namespace Launcher2
             filesToDownload = UpdaterUtil.GetRequiredFiles(doc);
 
             string updaterVersion = ToolBox.GetAttributeString(doc.Root, "updaterversion", "1.0");
-            if (updaterVersion!=UpdaterUtil.Version || true)
+            if (updaterVersion!=UpdaterUtil.Version)
             {
                 ShowError("Warning", "The update may contain changes which can't be installed by the autoupdater. If you receive any error messages during the install, please download and install the update manually.");
             }
@@ -510,6 +510,8 @@ namespace Launcher2
                 Alignment.TopLeft, Alignment.TopLeft,
                 updateInfoBox, false, GUI.SmallFont);
             textBlock.CanBeFocused = false;
+
+            updateInfoBox.BarScroll = 1.0f;
             
             WebClient webClient = new WebClient();
             webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(Completed);

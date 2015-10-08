@@ -184,6 +184,8 @@ namespace Subsurface
                 otherButton.Selected = false;
             }
 
+            if (Screen.Selected != this) Select();
+
             return true;
         }
 

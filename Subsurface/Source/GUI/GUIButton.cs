@@ -15,6 +15,8 @@ namespace Subsurface
         public delegate bool OnPressedHandler();
         public OnPressedHandler OnPressed;
 
+        public bool CanBeSelected = true;
+
         public bool Enabled { get; set; }
 
         public override Color Color
@@ -119,7 +121,7 @@ namespace Subsurface
                 {
                     if (OnClicked != null)
                     {
-                        if (OnClicked(this, UserData)) state = ComponentState.Selected;
+                        if (OnClicked(this, UserData) && CanBeSelected) state = ComponentState.Selected;
                     }
                 }
             }
