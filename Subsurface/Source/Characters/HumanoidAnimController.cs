@@ -831,7 +831,7 @@ namespace Subsurface
             Vector2 bodyVelocity = torso.body.LinearVelocity / 60.0f;
 
             item.body.ResetDynamics();
-            item.body.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
+            item.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
 
             for (int i = 0; i < 2; i++)
             {

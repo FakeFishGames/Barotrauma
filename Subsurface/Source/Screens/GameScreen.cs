@@ -67,7 +67,8 @@ namespace Subsurface
 
             AmbientSoundManager.Update();
 
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+#if DEBUG
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null)
             {
                 Vector2 targetMovement = Vector2.Zero;
                 if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
@@ -77,6 +78,7 @@ namespace Subsurface
 
                 GameMain.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
             }
+#endif
 
             if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);

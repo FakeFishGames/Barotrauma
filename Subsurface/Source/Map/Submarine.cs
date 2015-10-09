@@ -623,11 +623,13 @@ namespace Subsurface
             loaded = this;
         }
 
-        public static Submarine Load(string fileName)
+        public static Submarine Load(string fileName, string folder = SavePath)
         {
-            Unload();            
+            Unload();
 
-            Submarine sub = new Submarine(SavePath+"/"+fileName);
+            string path = string.IsNullOrWhiteSpace(folder) ? fileName : System.IO.Path.Combine(SavePath, fileName);
+
+            Submarine sub = new Submarine(path);
             sub.Load();
 
             //Entity.dictionary.Add(int.MaxValue, sub);
