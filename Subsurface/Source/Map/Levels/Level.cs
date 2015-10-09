@@ -76,7 +76,10 @@ namespace Subsurface
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(cells[0].body.Position); }
+            get 
+            {                 
+                return cells==null ? Vector2.Zero : ConvertUnits.ToDisplayUnits(cells[0].body.Position); 
+            }
         }
 
         public List<Vector2> PositionsOfInterest

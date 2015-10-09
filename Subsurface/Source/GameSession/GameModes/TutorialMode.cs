@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Items.Components;
 using System;
@@ -16,7 +17,7 @@ namespace Subsurface
 
         public static void Start()
         {
-            Submarine.Load("Content/Map/TutorialSub.gz");
+            Submarine.Load("Content/Map/TutorialSub.gz", "");
 
             GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLower()=="tutorial"));
 
@@ -85,6 +86,8 @@ namespace Subsurface
 
         private IEnumerable<object> UpdateState()
         {
+
+            GameMain.GameScreen.BackgroundSpriteManager.SpawnSprites(1, Submarine.Loaded.Position + Character.Controlled.Position);
 
             yield return new WaitForSeconds(4.0f);
 
@@ -276,20 +279,20 @@ namespace Subsurface
                 yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(4.0f);
-
-            infoBox = CreateInfoFrame("The submarine moves up and down by pumping water in and out of the two ballast tanks at the bottom of the submarine. "
-                +"The engine at the back of the sub moves it forwards and backwards.");
-
-            yield return new WaitForSeconds(8.0f);
+            
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
-
+            
             while (Submarine.Loaded.Position.Y > 31000.0f)
             {
                 yield return CoroutineStatus.Running;
             }
-            
-            var moloch = new Character("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 25.0f);
+            yield return new WaitForSeconds(8.0f);      
+
+            infoBox = CreateInfoFrame("The submarine moves up and down by pumping water in and out of the two ballast tanks at the bottom of the submarine. "
+                +"The engine at the back of the sub moves it forwards and backwards.");
+      
+            var moloch = new AICharacter("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 25.0f);
             moloch.PlaySound(AIController.AiState.Attack);
 
             yield return new WaitForSeconds(1.0f);

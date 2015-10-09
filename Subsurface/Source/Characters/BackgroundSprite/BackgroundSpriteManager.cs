@@ -33,7 +33,7 @@ namespace Subsurface
             }
         }
 
-        public void SpawnSprites(int count)
+        public void SpawnSprites(int count, Vector2? position = null)
         {
             activeSprites.Clear();
 
@@ -45,17 +45,25 @@ namespace Subsurface
             {
                 Vector2 pos = Vector2.Zero;
 
-                if (WayPoint.WayPointList.Count>0)
+                if (position == null)
                 {
-                    WayPoint wp = WayPoint.WayPointList[Rand.Int(WayPoint.WayPointList.Count)];
+                    if (WayPoint.WayPointList.Count>0)
+                    {
+                        WayPoint wp = WayPoint.WayPointList[Rand.Int(WayPoint.WayPointList.Count)];
 
-                    pos = new Vector2(wp.Rect.X, wp.Rect.Y);
-                    pos += Rand.Vector(200.0f);
+                        pos = new Vector2(wp.Rect.X, wp.Rect.Y);
+                        pos += Rand.Vector(200.0f);
+                    }
+                    else
+                    {
+                        pos = Rand.Vector(2000.0f);
+                    } 
                 }
                 else
                 {
-                    pos = Rand.Vector(2000.0f);
-                } 
+                    pos = (Vector2)position;
+                }
+
 
                 var prefab = prefabs[Rand.Int(prefabs.Count)];
 
