@@ -852,37 +852,6 @@ int currentTargetIndex = 1;
                 Color.White, 0.0f,
                 Vector2.Zero,
                 SpriteEffects.None, 0.0f);
-
-            //pos = startPosition;
-            //pos.X += Position.X;
-            //pos.Y = -pos.Y - Position.Y;
-
-            //spriteBatch.Draw(shaftTexture,
-            //    new Rectangle((int)(pos.X - shaftWidth/2), (int)pos.Y, shaftWidth, 512), 
-            //    new Rectangle(0, 0, shaftWidth, 256),
-            //    Color.White, 0.0f,
-            //    Vector2.Zero,
-            //    SpriteEffects.None, 0.0f);
-
-            //List<Vector2[]> edges = GetCellEdges(observerPosition, 1, false);
-
-            //foreach (VoronoiCell cell in cells)
-            //{
-            //    for (int i = 0; i < cell.bodyVertices.Count - 1; i++)
-            //    {
-            //        Vector2 start = cell.bodyVertices[i];
-            //        start.X += Position.X;
-            //        start.Y = -start.Y - Position.Y;
-            //        start.X += Rand.Range(-10.0f, 10.0f);
-
-            //        Vector2 end = cell.bodyVertices[i + 1];
-            //        end.X += Position.X;
-            //        end.Y = -end.Y - Position.Y;
-            //        end.X += Rand.Range(-10.0f, 10.0f);
-
-            //        GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Red : Color.Red);
-            //    }
-            //}
         }
 
         public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)

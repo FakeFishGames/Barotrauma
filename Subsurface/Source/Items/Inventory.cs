@@ -116,7 +116,7 @@ namespace Subsurface
 
             items[i] = item;
             item.inventory = this;
-            if (item.body!=null)
+            if (item.body != null)
             {
                 item.body.Enabled = false;
             }

@@ -11,13 +11,26 @@ namespace Subsurface.Lights
     {
         private static Texture2D lightTexture;
 
+        public List<ConvexHull> hullsInRange;
+
         private Color color;
 
         private float range;
 
         private Texture2D texture;
 
-        public Vector2 Position;
+        private Vector2 position;
+        public Vector2 Position
+        {
+            get { return position; }
+            set
+            {
+                if (position == value) return;
+
+                position = value;
+                UpdateHullsInRange();
+            }
+        }
 
         public Color Color
         {
@@ -30,13 +43,19 @@ namespace Subsurface.Lights
             get { return range; }
             set
             {
-                range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+                float newRange = MathHelper.Clamp(value, 0.0f, 2048.0f);
+                if (range == newRange) return;
+                range = newRange;
+
+                UpdateHullsInRange();
             }
         }
 
         public LightSource(Vector2 position, float range, Color color)
         {
-            Position = position;
+            hullsInRange = new List<ConvexHull>();
+
+            this.position = position;
             this.range = range;
             this.color = color;
 
@@ -50,10 +69,21 @@ namespace Subsurface.Lights
             GameMain.LightManager.AddLight(this);
         }
 
+        public void UpdateHullsInRange()
+        {
+            hullsInRange.Clear();
+            if (range < 1.0f) return;
+
+            foreach (ConvexHull ch in ConvexHull.list)
+            {
+                if (MathUtils.CircleIntersectsRectangle(position, range, ch.BoundingBox)) hullsInRange.Add(ch);
+            }
+        }
+
         public void Draw(SpriteBatch spriteBatch)
         {
             Vector2 center = new Vector2(lightTexture.Width / 2, lightTexture.Height / 2);
-            float scale = range / ((float)lightTexture.Width / 2.0f);
+            float scale = range / (lightTexture.Width / 2.0f);
             spriteBatch.Draw(lightTexture, new Vector2(Position.X, -Position.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
         }
 

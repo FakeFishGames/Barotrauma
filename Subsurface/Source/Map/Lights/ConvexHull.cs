@@ -5,11 +5,30 @@ using System.Linq;
 
 namespace Subsurface.Lights
 {
+    class CachedShadow
+    {
+
+        public VertexPositionColor[] ShadowVertices;
+        public VertexPositionTexture[] PenumbraVertices;
+
+        public Vector2 LightPos;
+
+        public CachedShadow(VertexPositionColor[] shadowVertices, VertexPositionTexture[] penumbraVertices, Vector2 lightPos)
+        {
+            ShadowVertices = shadowVertices;
+            PenumbraVertices = penumbraVertices;
+
+            LightPos = lightPos;
+        }
+    }
+
     class ConvexHull
     {
         public static List<ConvexHull> list = new List<ConvexHull>();
         static BasicEffect shadowEffect;
         static BasicEffect penumbraEffect;
+
+        private Dictionary<LightSource, CachedShadow> cachedShadows;
                 
         private Vector2[] vertices;
         private int primitiveCount;
@@ -47,19 +66,14 @@ namespace Subsurface.Lights
                 penumbraEffect.LightingEnabled = false;
                 penumbraEffect.Texture = TextureLoader.FromFile("Content/Lights/penumbra.png");
             }
+
+            cachedShadows = new Dictionary<LightSource, CachedShadow>();
             
             vertices = points;
             primitiveCount = vertices.Length;
 
             CalculateDimensions();
-            //indices = new short[primitiveCount * 3];
-
-            //for (int i = 0; i < primitiveCount; i++)
-            //{
-            //    indices[3 * i] = (short)i;
-            //    indices[3 * i + 1] = (short)((i + 1) % vertexCount);
-            //    indices[3 * i + 2] = (short)vertexCount;
-            //}
+            
             backFacing = new bool[primitiveCount];
             
             Enabled = true;
@@ -90,6 +104,8 @@ namespace Subsurface.Lights
                 
         public void Move(Vector2 amount)
         {
+            cachedShadows.Clear();
+
             for (int i = 0; i < vertices.Count(); i++)
             {
                 vertices[i] += amount;
@@ -100,6 +116,8 @@ namespace Subsurface.Lights
 
         public void SetVertices(Vector2[] points)
         {
+            cachedShadows.Clear();
+
             vertices = points;
         }
 
@@ -222,25 +240,62 @@ namespace Subsurface.Lights
             }
         }
 
+        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, LightSource light, Matrix transform, bool los = true)
+        {
+            if (!Enabled) return;
+
+            CachedShadow cachedShadow = null;
+            if (cachedShadows.TryGetValue(light, out cachedShadow))
+            {
+                if (light.Position == cachedShadow.LightPos ||
+                    Vector2.DistanceSquared(light.Position, cachedShadow.LightPos) < 1.0f)
+                {
+                    shadowVertices = cachedShadow.ShadowVertices;
+                    penumbraVertices = cachedShadow.PenumbraVertices;
+
+                }
+                else
+                {
+                    CalculateShadowVertices(light.Position, los);
+                    cachedShadow.LightPos = light.Position;
+                    cachedShadow.ShadowVertices = shadowVertices;
+                    cachedShadow.PenumbraVertices = penumbraVertices;
+
+                }
+            }
+            else
+            {
+                CalculateShadowVertices(light.Position, los);
+                cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position);
+                cachedShadows.Add(light, cachedShadow);
+            }
+
+            DrawShadows(graphicsDevice, cam, transform, los);
+        }
+
         public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, Matrix transform, bool los = true)
         {
             if (!Enabled) return;
 
             CalculateShadowVertices(lightSourcePos, los);
-                           
 
+            DrawShadows(graphicsDevice, cam, transform, los);
+        }
+
+        private void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Matrix transform, bool los = true)
+        {
             shadowEffect.World = transform;
             shadowEffect.CurrentTechnique.Passes[0].Apply();
 
-            graphicsDevice.DrawUserPrimitives<VertexPositionColor>(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertices.Length - 2);
-
+            graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertices.Length - 2);
+            
             if (los)
             {
                 penumbraEffect.World = shadowEffect.World;
                 penumbraEffect.CurrentTechnique.Passes[0].Apply();
 
 #if WINDOWS
-                graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, penumbraVertices, 0, 2, VertexPositionTexture.VertexDeclaration);   
+                graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, penumbraVertices, 0, 2, VertexPositionTexture.VertexDeclaration);
 #endif
             }
         }

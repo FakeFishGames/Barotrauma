@@ -50,6 +50,14 @@ namespace Subsurface
 
         float lastSentVolume;
 
+        public override string Name
+        {
+            get
+            {
+                return "Hull";
+            }
+        }
+
         public override bool IsLinkable
         {
             get { return true; }
@@ -202,7 +210,7 @@ namespace Subsurface
                         waveY[(int)(position.X - rect.X) / WaveWidth] = 100.0f;
                         Volume = Volume + 1500.0f;
                     }
-                    else if (PlayerInput.GetMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
+                    else if (PlayerInput.RightButtonDown())
                     {
                         Volume = Volume - 1500.0f;
                     }
@@ -210,12 +218,11 @@ namespace Subsurface
             }
 
             //update client hulls if the amount of water has changed by >10%
-            if (Math.Abs(lastSentVolume-volume)>FullVolume*0.1f)
+            if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f)
             {
                 new Networking.NetworkEvent(ID, false);
                 lastSentVolume = volume;
             }
-
             if (!update) return;
 
             float surfaceY = rect.Y - rect.Height + Volume / rect.Width;

@@ -282,6 +282,12 @@ namespace Subsurface.Items.Components
         private int loopingSoundIndex;
         public void PlaySound(ActionType type, Vector2 position)
         {
+            if (loopingSound != null)
+            {
+                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
+                return;
+            }
+            
             List<ItemSound> matchingSounds = sounds.FindAll(x => x.Type == type);
             if (matchingSounds.Count == 0) return;
 
@@ -292,24 +298,18 @@ namespace Subsurface.Items.Components
                 itemSound = matchingSounds[index];
             }
 
+            if (itemSound == null) return;
 
-            if (loopingSound!=null)
+            if (itemSound.Loop)
             {
-                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
+                loopingSound = itemSound;
             }
-            else if (itemSound!=null)
+            else
             {
-                if (itemSound.Loop)
-                {
-                    loopingSound = itemSound;
-                }
-                else
-                {
-                    float volume = GetSoundVolume(itemSound);
-                    if (volume == 0.0f) return;
-                    itemSound.Sound.Play(volume, itemSound.Range, position); 
-                } 
-            } 
+                float volume = GetSoundVolume(itemSound);
+                if (volume == 0.0f) return;
+                itemSound.Sound.Play(volume, itemSound.Range, position); 
+            }            
         }
 
         public void StopSounds(ActionType type)

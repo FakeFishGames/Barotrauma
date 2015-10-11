@@ -127,7 +127,12 @@ namespace Subsurface
 				&& mouseState.LeftButton == ButtonState.Released);
 		}
 
-		public static bool RightButtonClicked()
+        public static bool RightButtonDown()
+        {
+            return mouseState.RightButton == ButtonState.Pressed;
+        }
+
+        public static bool RightButtonClicked()
 		{
 			return (oldMouseState.RightButton == ButtonState.Pressed
 				&& mouseState.RightButton == ButtonState.Released);

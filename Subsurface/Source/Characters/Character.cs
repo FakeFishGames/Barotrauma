@@ -578,14 +578,14 @@ namespace Subsurface
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             
-            foreach (Character c in Character.CharacterList)
+            foreach (Character c in CharacterList)
             {
                 if (c == this) continue;
 
                 if (Vector2.Distance(SimPosition, c.SimPosition) > maxDist) continue;
 
                 float dist = Vector2.Distance(mouseSimPos, c.SimPosition);
-                if (dist < maxDist && closestCharacter==null || dist<closestDist)
+                if (dist < maxDist && (closestCharacter==null || dist<closestDist))
                 {
                     closestCharacter = c;
                     closestDist = dist;
@@ -594,6 +594,22 @@ namespace Subsurface
             }
 
             return closestCharacter;
+        }
+
+        private void ToggleSelectedCharacter(Character selected)
+        {
+            if (selectedCharacter != null)
+            {                
+                foreach (Limb limb in selectedCharacter.AnimController.Limbs)
+                {
+                    limb.pullJoint.Enabled = false;
+                }
+                selectedCharacter = null;
+            }
+            else
+            {
+                selectedCharacter = selected;
+            }
         }
 
         /// <summary>
@@ -659,7 +675,7 @@ namespace Subsurface
                 closestCharacter = FindClosestCharacter(mouseSimPos);
                 if (closestCharacter != null)
                 {
-                    if (closestCharacter != selectedCharacter) selectedCharacter = null;
+                //    if (closestCharacter != selectedCharacter) selectedCharacter = null;
                     if (!closestCharacter.IsHumanoid) closestCharacter = null;
                 }
 
@@ -697,21 +713,25 @@ namespace Subsurface
             }
             else
             {
-                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f) selectedCharacter = null;
+                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f ||
+                    (!selectedCharacter.isDead && selectedCharacter.Stun <= 0.0f))
+                {
+                    ToggleSelectedCharacter(selectedCharacter);
+                }
             }
 
             if (GetInputState(InputType.Select))
             {
                 if (selectedCharacter != null)
                 {
-                    selectedCharacter = null;
+                    ToggleSelectedCharacter(selectedCharacter);
                 }
-                else if (closestCharacter != null && closestCharacter.isDead && closestCharacter.IsHumanoid)
+                else if (closestCharacter != null && closestCharacter.IsHumanoid &&
+                    (closestCharacter.isDead || closestCharacter.AnimController.StunTimer > 0.0f))
                 {
                     selectedCharacter = closestCharacter;
                 }
-            }
-            
+            }            
 
             DisableControls = false;
         }
@@ -741,7 +761,7 @@ namespace Subsurface
 
         public virtual void Update(Camera cam, float deltaTime)
         {
-            //AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>5000.0f);
+            AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>5000.0f);
             
             if (isDead) return;
             
@@ -825,7 +845,7 @@ namespace Subsurface
             Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
             pos.Y = -pos.Y;
             
-            if (this == Character.controlled) return;
+            if (this == controlled) return;
 
             if (IsNetworkPlayer)
             {

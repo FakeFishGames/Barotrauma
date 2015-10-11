@@ -12,6 +12,8 @@ namespace Subsurface.Items.Components
         List<RelatedItem> containableItems;
         public ItemInventory inventory;
 
+        private bool hasStatusEffects;
+
         //how many items can be contained
         [HasDefaultValue(5, false)]
         public int Capacity
@@ -89,12 +91,6 @@ namespace Subsurface.Items.Components
         {
             inventory = new ItemInventory(this, capacity, hudPos, slotsPerRow);            
             containableItems = new List<RelatedItem>();
-
-            //itemPos = ToolBox.GetAttributeVector2(element, "ItemPos", Vector2.Zero);
-            //itemPos = ConvertUnits.ToSimUnits(itemPos);
-
-            //itemInterval = ToolBox.GetAttributeVector2(element, "ItemInterval", Vector2.Zero);
-            //itemInterval = ConvertUnits.ToSimUnits(itemInterval);
             
             foreach (XElement subElement in element.Elements())
             {
@@ -102,7 +98,15 @@ namespace Subsurface.Items.Components
                 {
                     case "containable":
                         RelatedItem containable = RelatedItem.Load(subElement);
-                        if (containable!=null) containableItems.Add(containable);
+                        if (containable == null) continue;
+
+                        foreach (StatusEffect effect in containable.statusEffects)
+                        {
+                            if (effect.type == ActionType.OnContaining) hasStatusEffects = true;
+                        }
+
+                        containableItems.Add(containable);
+
                         break;
                 }
             }
@@ -121,11 +125,12 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (!hasStatusEffects) return;
+
             foreach (Item contained in inventory.items)
             {
-                if (contained == null || contained.Condition<=0.0f) continue;
-
-                if (contained.body!=null) contained.body.Enabled = false;
+                if (contained == null || contained.Condition <= 0.0f) continue;
+                //if (contained.body != null) contained.body.Enabled = false;
 
                 RelatedItem ri = containableItems.Find(x => x.MatchesItem(contained));
                 if (ri == null) continue;
@@ -136,16 +141,15 @@ namespace Subsurface.Items.Components
                     if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
                 }
 
-                contained.ApplyStatusEffects(ActionType.OnContained, deltaTime);
+                //contained.ApplyStatusEffects(ActionType.OnContained, deltaTime);
             }
-
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             base.Draw(spriteBatch);
 
-            if (hideItems || (item.body!=null && !item.body.Enabled)) return;
+            if (hideItems || (item.body != null && !item.body.Enabled)) return;
 
             Vector2 transformedItemPos = itemPos;
             Vector2 transformedItemInterval = itemInterval;

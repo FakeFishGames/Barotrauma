@@ -158,7 +158,7 @@ namespace Subsurface
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            GameMain.LightManager.DrawLightmap(graphics, spriteBatch, cam);
+            if (GameMain.LightManager.LightingEnabled) GameMain.LightManager.DrawLightmap(graphics, spriteBatch, cam);
 
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
@@ -267,17 +267,7 @@ namespace Subsurface
             }
 
             Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
-
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-    BlendState.AlphaBlend, SamplerState.LinearWrap,
-    null, null, null,
-    cam.Transform);
-
-            Submarine.DrawFront(spriteBatch);
-
-            spriteBatch.End();
-
-
+            
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
             {
                 GameMain.GameSession.Level.Render(graphics, cam);
@@ -302,6 +292,8 @@ namespace Subsurface
                 cam.Transform);
 
             foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
+
+            Submarine.DrawFront(spriteBatch);
 
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
             {

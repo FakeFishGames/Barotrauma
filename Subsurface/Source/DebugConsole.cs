@@ -141,7 +141,7 @@ namespace Subsurface
         public static void ExecuteCommand(string command, GameMain game)
         {
 #if !DEBUG
-            if (Game1.Client!=null)
+            if (GameMain.Client!=null)
             {
                 ThrowError("Console commands are disabled in multiplayer mode");
                 return;

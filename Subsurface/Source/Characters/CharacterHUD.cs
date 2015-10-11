@@ -54,7 +54,7 @@ namespace Subsurface
                 //if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f) selectedCharacter = null;
             }
 
-            if (character.ClosestCharacter != null && character.ClosestCharacter.IsDead)
+            if (character.ClosestCharacter != null && (character.ClosestCharacter.IsDead || character.ClosestCharacter.Stun > 0.0f))
             {
                 Vector2 startPos = character.Position + (character.ClosestCharacter.Position - character.Position) * 0.7f;
                 startPos = cam.WorldToScreen(startPos);

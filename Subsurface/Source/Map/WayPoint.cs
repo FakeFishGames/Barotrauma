@@ -29,6 +29,14 @@ namespace Subsurface
             set { spawnType = value; }
         }
 
+        public override string Name
+        {
+            get
+            {
+                return "WayPoint";
+            }
+        }
+
         public string[] IdCardTags
         {
             get { return idCardTags; }

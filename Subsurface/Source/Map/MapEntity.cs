@@ -192,6 +192,8 @@ namespace Subsurface
             }
         }
 
+        static Dictionary<string, float> timeElapsed = new Dictionary<string, float>();
+
         /// <summary>
         /// Call Update() on every object in Entity.list
         /// </summary>
@@ -202,10 +204,46 @@ namespace Subsurface
                 item.Updated = false;
             }
 
-            for (int i = 0; i < mapEntityList.Count; i++)
+            foreach (Hull hull in Hull.hullList)
             {
-                mapEntityList[i].Update(cam, deltaTime);
+                hull.Update(cam, deltaTime);
             }
+
+            foreach (Gap gap in Gap.GapList)
+            {
+                gap.Update(cam, deltaTime);
+            }
+
+            foreach (Item item in Item.itemList)
+            {
+                item.Update(cam, deltaTime);
+            }
+
+            //Stopwatch sw = new Stopwatch();
+
+            //for (int i = 0; i < mapEntityList.Count; i++)
+            //{
+            //    sw.Restart();
+            //    mapEntityList[i].Update(cam, deltaTime);
+            //    sw.Stop();
+
+            //    if (timeElapsed.ContainsKey(mapEntityList[i].Name))
+            //    {
+            //        float asd = 0.0f;
+            //        timeElapsed.TryGetValue(mapEntityList[i].Name, out asd);
+            //        asd += sw.ElapsedTicks;
+
+            //        timeElapsed.Remove(mapEntityList[i].Name);
+            //        timeElapsed.Add(mapEntityList[i].Name, asd);
+            //    }
+            //    else
+            //    {
+            //        timeElapsed.Add(mapEntityList[i].Name, sw.ElapsedTicks);
+            //    }
+            //}
+
+
+
         }
 
         public virtual void Update(Camera cam, float deltaTime) { }

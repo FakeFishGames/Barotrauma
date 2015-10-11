@@ -79,23 +79,22 @@ namespace Subsurface.Items.Components
 
             //lightColor = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
         }
-
+        
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
-
-            if (item.body != null)
-            {
-                light.Position = ConvertUnits.ToDisplayUnits(item.body.SimPosition);
-            }
-
-            Pickable pickable = item.GetComponent<Pickable>();
-            if (item.container!= null)
+            
+            if (item.container != null)
             {
                 light.Color = Color.Transparent;
                 return;
             }
 
+            if (item.body != null)
+            {
+                light.Position = ConvertUnits.ToDisplayUnits(item.body.SimPosition);
+            }
+            
             if (powerConsumption == 0.0f)
             {
                 voltage = 1.0f;
@@ -116,7 +115,6 @@ namespace Subsurface.Items.Components
             }
 
             light.Color = lightColor * lightBrightness * (1.0f-Rand.Range(0.0f,Flicker));
-
             light.Range = range * (float)Math.Sqrt(lightBrightness);
 
             voltage = 0.0f;
