@@ -488,6 +488,8 @@ namespace Subsurface
                 }
                 ic.WasUsed = false;
 
+                if (container != null) ic.ApplyStatusEffects(ActionType.OnContained, deltaTime);
+
                 if (!ic.IsActive) continue;
 
                 if (condition > 0.0f)
@@ -495,7 +497,7 @@ namespace Subsurface
                     ic.Update(deltaTime, cam);
                     
                     ic.PlaySound(ActionType.OnActive, Position);
-                    ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+                    ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                    
                 }
                 else
                 {
@@ -505,7 +507,7 @@ namespace Subsurface
             
             if (body == null || !body.Enabled) return;
 
-            if (body.LinearVelocity.Length() > 0.001f)
+            if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
             {
                 FindHull();
 
@@ -808,7 +810,7 @@ namespace Subsurface
                 if (body != null && body.UserData as Item != item) continue;
 
                 dist = Vector2.Distance(pickPosition, item.SimPosition);
-                if ((closest == null || dist < closestDist))
+                if (dist < item.prefab.PickDistance && (closest == null || dist < closestDist))
                 {
                     closest = item;
                     closestDist = dist;

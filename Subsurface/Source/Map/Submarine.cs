@@ -609,7 +609,7 @@ namespace Subsurface
             subBody = new SubmarineBody(this);            
             
             MapEntity.OnMapLoaded();
-            
+                        
             foreach (Item item in Item.itemList)
             {
                 foreach (ItemComponent ic in item.components)
@@ -617,6 +617,8 @@ namespace Subsurface
                     ic.OnMapLoaded();
                 }
             }
+
+            GameMain.LightManager.OnMapLoaded();
 
             ID = int.MaxValue-10;
 

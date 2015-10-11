@@ -57,12 +57,13 @@ namespace Subsurface.Lights
 
         public void DrawLOS(GraphicsDevice graphics, Camera cam, Vector2 pos)
         {
+            if (!LosEnabled) return;
+
             Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
 
             Matrix shadowTransform = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-            if (!LosEnabled) return;
             foreach (ConvexHull convexHull in ConvexHull.list)
             {
                 if (!camView.Intersects(convexHull.BoundingBox)) continue;
@@ -70,6 +71,14 @@ namespace Subsurface.Lights
                 convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
             }
 
+        }
+
+        public void OnMapLoaded()
+        {
+            foreach (LightSource light in lights)
+            {
+                light.UpdateHullsInRange();
+            }
         }
 
         public void DrawLightmap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
@@ -81,28 +90,28 @@ namespace Subsurface.Lights
 
             Rectangle viewRect = cam.WorldView;
             viewRect.Y -= cam.WorldView.Height;
-
+            
             //clear to some small ambient light
             graphics.Clear(AmbientLight);
             
             foreach (LightSource light in lights)
             {
-                if (light.Color.A < 0.01f || light.Range < 0.01f) continue;
-                //clear alpha to 1
-                ClearAlphaToOne(graphics, spriteBatch);   
-             
+                if (light.Color.A < 0.01f || light.Range < 0.01f || light.hullsInRange.Count == 0) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
-                
+                            
+                //clear alpha to 1
+                ClearAlphaToOne(graphics, spriteBatch);
+             
                 //draw all shadows
                 //write only to the alpha channel, which sets alpha to 0
                 graphics.RasterizerState = RasterizerState.CullNone;
                 graphics.BlendState = CustomBlendStates.WriteToAlpha;
 
-                foreach (ConvexHull ch in ConvexHull.list)
+                foreach (ConvexHull ch in light.hullsInRange)
                 {
-                    if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, ch.BoundingBox)) continue;
+                    //if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, ch.BoundingBox)) continue;
                     //draw shadow
-                    ch.DrawShadows(graphics, cam, light.Position, shadowTransform, false);
+                    ch.DrawShadows(graphics, cam, light, shadowTransform, false);
                 }
 
                 //draw the light shape
@@ -111,6 +120,20 @@ namespace Subsurface.Lights
                 light.Draw(spriteBatch);
                 spriteBatch.End();
             }
+
+            //ClearAlphaToOne(graphics, spriteBatch);
+            //spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);            
+
+            //foreach (LightSource light in lights)
+            //{
+            //    if (light.Color.A < 0.01f || light.Range < 0.01f || light.hullsInRange.Count > 0) continue;
+            //    if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
+
+            //    light.Draw(spriteBatch);
+            //}
+
+            //spriteBatch.End();
+
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);
             graphics.SetRenderTarget(null);

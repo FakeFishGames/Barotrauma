@@ -36,65 +36,76 @@ namespace Subsurface
 
             //if (inWater) stairs = null;
 
+            if (onFloorTimer <= 0.0f && !SimplePhysicsEnabled)
+            {
             Vector2 rayStart = colliderPos; // at the bottom of the player sprite
             Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
             if (stairs != null) rayEnd.Y -= 0.5f;
-            if (Anim != Animation.UsingConstruction) ResetPullJoints();
-
-            //do a raytrace straight down from the torso to figure 
-            //out whether the  ragdoll is standing on ground
-            float closestFraction = 1;
-            Structure closestStructure = null;
-            GameMain.World.RayCast((fixture, point, normal, fraction) =>
-            {
-                switch (fixture.CollisionCategories)
+                //do a raytrace straight down from the torso to figure 
+                //out whether the  ragdoll is standing on ground
+                float closestFraction = 1;
+                Structure closestStructure = null;
+                GameMain.World.RayCast((fixture, point, normal, fraction) =>
                 {
-                    case Physics.CollisionStairs:
-                        if (inWater && TargetMovement.Y < 0.5f) return -1;
+                    switch (fixture.CollisionCategories)
+                    {
+                        case Physics.CollisionStairs:
+                            if (inWater && TargetMovement.Y < 0.5f) return -1;
+                            Structure structure = fixture.Body.UserData as Structure;
+                            if (stairs == null && structure != null)
+                            {
+                                if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
+                                {
+                                    return -1;
+                                }
+                                else
+                                {
+                                    stairs = structure;
+                                }
+                            }
+                            break;
+                        case Physics.CollisionPlatform:
+                            Structure platform = fixture.Body.UserData as Structure;
+                            if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
+                            break;
+                        case Physics.CollisionWall:
+                            break;
+                        default:
+                            return -1;
+                    }
+
+                    onGround = true;
+                    if (fraction < closestFraction)
+                    {
+                        closestFraction = fraction;
+
                         Structure structure = fixture.Body.UserData as Structure;
-                        if (stairs == null && structure != null)
-                        {
-                            if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
-                            {
-                                return -1;
-                            }
-                            else
-                            {
-                                stairs = structure;
-                            }
-                        }
-                        break;
-                    case Physics.CollisionPlatform:
-                        Structure platform = fixture.Body.UserData as Structure;
-                        if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
-                        break;
-                    case Physics.CollisionWall:
-                        break;
-                    default:
-                        return -1;
+                        if (structure != null) closestStructure = structure;
+                    }
+                    onFloorTimer = 0.05f;
+                    return closestFraction;
                 }
+                , rayStart, rayEnd);
 
-                onGround = true;
-                if (fraction < closestFraction)
+                if (closestStructure != null && closestStructure.StairDirection != Direction.None)
                 {
-                    closestFraction = fraction;
-
-                    Structure structure = fixture.Body.UserData as Structure;
-                    if (structure != null) closestStructure = structure;
+                    stairs = closestStructure;
                 }
-                onFloorTimer = 0.05f;
-                return closestFraction;
-            }
-            , rayStart, rayEnd);
+                else
+                {
+                    stairs = null;
+                }
 
-            if (closestStructure != null && closestStructure.StairDirection != Direction.None)
-            {
-                stairs = closestStructure;
+                if (closestFraction == 1) //raycast didn't hit anything
+                {
+                    floorY = (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
+                }
+                else
+                {
+                    floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
+                }
             }
-            else
-            {
-                stairs = null;
-            }
+
 
             //the ragdoll "stays on ground" for 50 millisecs after separation
             if (onFloorTimer <= 0.0f)
@@ -110,15 +121,6 @@ namespace Subsurface
                 onFloorTimer -= deltaTime;
             }
 
-            if (closestFraction == 1) //raycast didn't hit anything
-            {
-                floorY = (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
-            }
-            else
-            {
-                floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-            }
-
 
             IgnorePlatforms = (TargetMovement.Y < 0.0f);
 
@@ -131,10 +133,11 @@ namespace Subsurface
 
             if (stunTimer > 0)
             {
-                //UpdateStruggling();
                 stunTimer -= deltaTime;
                 return;
             }
+
+            if (Anim != Animation.UsingConstruction) ResetPullJoints(); 
 
             if (TargetDir != dir) Flip();
 
@@ -190,6 +193,10 @@ namespace Subsurface
 
             Limb leftLeg    = GetLimb(LimbType.LeftLeg);
             Limb rightLeg   = GetLimb(LimbType.RightLeg);
+
+            if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
+
+
 
             float getUpSpeed = 0.3f;
             float walkCycleSpeed = head.LinearVelocity.X * walkAnimSpeed;
@@ -750,6 +757,27 @@ namespace Subsurface
         //        HandIK(rightHand, pos + new Vector2((0.3f + punchTimer) * Dir, 0.1f));
         //    }            
         //}
+
+        public override void DragCharacter(Character target)
+        {
+            Limb leftHand = GetLimb(LimbType.LeftHand);
+            Limb rightHand = GetLimb(LimbType.RightHand);
+
+            leftHand.Disabled = true;
+            rightHand.Disabled = true;
+
+            Limb targetLimb = target.AnimController.GetLimb(LimbType.LeftHand);
+
+            leftHand.pullJoint.Enabled = true;
+            leftHand.pullJoint.WorldAnchorB = targetLimb.SimPosition;
+            rightHand.pullJoint.Enabled = true;
+            rightHand.pullJoint.WorldAnchorB = targetLimb.SimPosition;
+
+            targetLimb.pullJoint.Enabled = true;
+            targetLimb.pullJoint.WorldAnchorB = leftHand.SimPosition;
+
+            target.AnimController.IgnorePlatforms = IgnorePlatforms;
+        }
 
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)
         {

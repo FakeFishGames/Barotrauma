@@ -148,7 +148,7 @@
     <Compile Include="Source\FrameCounter.cs" />
     <Compile Include="Source\GUI\GUIStyle.cs" />
     <Compile Include="Source\GUI\GUITextBox.cs" />
-    <Compile Include="Source\Items\Components\Container.cs" />
+    <Compile Include="Source\Items\Components\ItemContainer.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Items\Components\Door.cs" />
     <Compile Include="Source\Items\Components\Ladder.cs" />

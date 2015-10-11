@@ -35,6 +35,8 @@ namespace Subsurface.Items.Components
             Nodes = new List<Vector2>();
 
             connections = new Connection[2];
+
+            IsActive = false;
         }
         
         public override void Move(Vector2 amount)

@@ -225,11 +225,9 @@ namespace Subsurface
                 RefLimb.body.Rotation + MathUtils.GetShortestAngle(RefLimb.body.Rotation, movementAngle) :
                 HeadAngle*Dir);
 
-            RefLimb.pullJoint.Enabled = true;
-            RefLimb.pullJoint.WorldAnchorB =
-                RefLimb.SimPosition + movement * 0.1f;
+            RefLimb.body.LinearVelocity = movement;
 
-            RefLimb.body.SmoothRotate(0.0f);
+            //RefLimb.body.SmoothRotate(0.0f);
 
             foreach (Limb l in Limbs)
             {

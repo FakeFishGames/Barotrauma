@@ -128,7 +128,7 @@ namespace Subsurface
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
-            FarseerPhysics.Settings.VelocityIterations = 2;
+            FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
         }
 
