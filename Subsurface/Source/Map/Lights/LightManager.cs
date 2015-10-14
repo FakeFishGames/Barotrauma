@@ -12,7 +12,7 @@ namespace Subsurface.Lights
         public Color AmbientLight;
 
         RenderTarget2D lightMap;
-
+        
         private static Texture2D alphaClearTexture;
 
         private List<LightSource> lights;
@@ -21,10 +21,10 @@ namespace Subsurface.Lights
 
         public bool LightingEnabled = true;
 
-        public RenderTarget2D LightMap
-        {
-            get { return lightMap; }
-        }
+        //public RenderTarget2D LightMap
+        //{
+        //    get { return lightMap; }
+        //}
 
         public LightManager(GraphicsDevice graphics)
         {
@@ -34,7 +34,8 @@ namespace Subsurface.Lights
 
             var pp = graphics.PresentationParameters;
 
-            lightMap = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false,
+            lightMap = new RenderTarget2D(graphics, 
+                        GameMain.GraphicsWidth, GameMain.GraphicsHeight, false,
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
 
@@ -81,8 +82,10 @@ namespace Subsurface.Lights
             }
         }
 
-        public void DrawLightmap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
+        public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
+            if (!LightingEnabled) return;
+
             Matrix shadowTransform = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
@@ -96,7 +99,7 @@ namespace Subsurface.Lights
             
             foreach (LightSource light in lights)
             {
-                if (light.Color.A < 0.01f || light.Range < 0.01f || light.hullsInRange.Count == 0) continue;
+                if (light.hullsInRange.Count == 0 || light.Color.A < 0.01f || light.Range < 1.0f) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
                             
                 //clear alpha to 1
@@ -126,7 +129,7 @@ namespace Subsurface.Lights
 
             //foreach (LightSource light in lights)
             //{
-            //    if (light.Color.A < 0.01f || light.Range < 0.01f || light.hullsInRange.Count > 0) continue;
+            //    if (light.hullsInRange.Count > 0 || light.Color.A < 0.01f || light.Range < 1.0f) continue;
             //    if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
 
             //    light.Draw(spriteBatch);
@@ -144,6 +147,16 @@ namespace Subsurface.Lights
             spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.WriteToAlpha);
             spriteBatch.Draw(alphaClearTexture, new Rectangle(0, 0,graphics.Viewport.Width, graphics.Viewport.Height), Color.White);
             spriteBatch.End();
+        }
+
+        public void DrawLightMap(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (!LightingEnabled) return;
+            
+            //multiply scene with lightmap
+            spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
+            spriteBatch.Draw(lightMap, Vector2.Zero, Color.White);
+            spriteBatch.End();            
         }
     }
 

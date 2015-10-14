@@ -163,14 +163,7 @@ namespace Subsurface
                 if (ignorePlatforms == value) return;
                 ignorePlatforms = value;
 
-                foreach (Limb l in Limbs)
-                {
-                    if (l.ignoreCollisions) continue;
-
-                    l.body.CollidesWith = (ignorePlatforms) ?
-                        Physics.CollisionWall | Physics.CollisionProjectile | Physics.CollisionStairs
-                        : Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionMisc;                    
-                }
+                UpdateCollisionCategories();
 
             }
         }
@@ -514,12 +507,33 @@ namespace Subsurface
 
         public void FindHull()
         {
-            Limb torso = GetLimb(LimbType.Torso);
-            if (torso==null) torso = GetLimb(LimbType.Head);
-
-            currentHull = Hull.FindHull(
-                ConvertUnits.ToDisplayUnits(torso.SimPosition), 
+            Hull newHull = Hull.FindHull(
+                ConvertUnits.ToDisplayUnits(refLimb.SimPosition), 
                 currentHull);
+
+            if (newHull == currentHull) return;
+
+            currentHull = newHull;
+
+            UpdateCollisionCategories();
+        }
+
+        private void UpdateCollisionCategories()
+        {
+            Category wall = currentHull == null ? 
+                Physics.CollisionLevel | Physics.CollisionWall 
+                : Physics.CollisionWall;
+
+            Category collisionCategory = (ignorePlatforms) ?
+                wall | Physics.CollisionProjectile | Physics.CollisionStairs
+                : wall | Physics.CollisionPlatform | Physics.CollisionStairs;
+
+            foreach (Limb limb in Limbs)
+            {
+                if (limb.ignoreCollisions) continue;
+
+                limb.body.CollidesWith = collisionCategory;
+            }
         }
 
         public void Update(Camera cam, float deltaTime)

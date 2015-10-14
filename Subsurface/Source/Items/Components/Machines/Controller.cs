@@ -27,9 +27,10 @@ namespace Subsurface.Items.Components
 
         Character character;
 
-        [HasDefaultValue(1.0f,false)]
+        [HasDefaultValue(0.0f, false)]
         public float UserPos
         {
+            get { return userPos; }
             set { userPos = value; }
         }
 
@@ -80,25 +81,23 @@ namespace Subsurface.Items.Components
                 return;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, character);
-
             if (userPos != 0.0f && character.AnimController.Anim != AnimController.Animation.UsingConstruction)
             {
-                Limb torso = character.AnimController.GetLimb(LimbType.Torso);
-                float torsoX = ConvertUnits.ToDisplayUnits(torso.SimPosition.X);
+                float torsoX = ConvertUnits.ToDisplayUnits(character.AnimController.RefLimb.SimPosition.X);
 
-                if (Math.Abs(torsoX - item.Rect.X + userPos) > 10.0f)
+                Vector2 diff = new Vector2(item.Rect.X + UserPos - torsoX, 0.0f);
+
+                if (diff!= Vector2.Zero && diff.Length() > 10.0f)
                 {
                     character.AnimController.Anim = AnimController.Animation.None;
 
-                    character.AnimController.TargetMovement = 
-                        new Vector2(
-                            Math.Min(Math.Max(item.Rect.X + userPos - torsoX, -1.0f), 1.0f), 
-                            0.0f);
-                    character.AnimController.TargetDir = (Math.Sign(torsoX - item.Rect.X + userPos) == 1) ? Direction.Right : Direction.Left;
+                    character.AnimController.TargetMovement = new Vector2(Math.Sign(diff.X), 0.0f);
+                    character.AnimController.TargetDir = (Math.Sign(diff.X) == 1) ? Direction.Right : Direction.Left;
                     return;
                 }
             }
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, character);
 
             if (limbPositions.Count == 0) return;
 
@@ -118,20 +117,13 @@ namespace Subsurface.Items.Components
                 fmj.Enabled = true;
                 fmj.WorldAnchorB = position;
             }
-
-            //foreach (MapEntity e in item.linkedTo)
-            //{
-            //    Item linkedItem = e as Item;
-            //    if (linkedItem == null) continue;
-            //    linkedItem.Update(cam, deltaTime);
-            //}
-
+            
             item.SendSignal(ToolBox.Vector2ToString(character.CursorPosition), "position_out");
         }
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            if (character==null || activator!=character || character.SelectedConstruction != item)
+            if (character == null || activator != character || character.SelectedConstruction != item)
             {
                 character = null;
                 return false;

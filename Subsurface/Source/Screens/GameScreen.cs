@@ -158,7 +158,8 @@ namespace Subsurface
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            if (GameMain.LightManager.LightingEnabled) GameMain.LightManager.DrawLightmap(graphics, spriteBatch, cam);
+
+            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
 
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
@@ -166,7 +167,6 @@ namespace Subsurface
 
             graphics.SetRenderTarget(renderTarget);
             graphics.Clear(new Color(11, 18, 26, 255));
-
 
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
 
@@ -274,14 +274,7 @@ namespace Subsurface
                 GameMain.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
             }
 
-            if (GameMain.LightManager.LightingEnabled)
-            {
-                //multiply scene with lightmap
-                spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
-                spriteBatch.Draw(GameMain.LightManager.LightMap, Vector2.Zero, Color.White);
-                spriteBatch.End();
-            }
-
+            GameMain.LightManager.DrawLightMap(spriteBatch, cam);
             //----------------------------------------------------------------------------------------
             //3. draw the sections of the map that are on top of the water
             //----------------------------------------------------------------------------------------
@@ -294,12 +287,8 @@ namespace Subsurface
             foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
 
             Submarine.DrawFront(spriteBatch);
-
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
-            {
-                GameMain.GameSession.Level.Draw(spriteBatch);
-                //Game1.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
-            }
+            
+            GameMain.GameSession?.Level?.Draw(spriteBatch);            
 
             spriteBatch.End();
 

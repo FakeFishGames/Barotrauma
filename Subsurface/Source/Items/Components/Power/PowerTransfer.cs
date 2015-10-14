@@ -101,9 +101,10 @@ namespace Subsurface.Items.Components
 
             foreach (Connection c in connections)
             {
+                if (!c.IsPower) continue;
                 foreach (Connection recipient in c.Recipients)
                 {
-                    if (recipient == null) continue;
+                    if (recipient == null || !recipient.IsPower) continue;
 
                     Item it = recipient.Item;
                     if (it == null) continue;

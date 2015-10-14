@@ -252,7 +252,7 @@ namespace Subsurface
 
         protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot)
         {
-            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White)*((isSubSlot) ? 0.1f : 0.3f), true);
+            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.1f : 0.3f), true);
 
             if (item == null) return;
 
@@ -263,8 +263,8 @@ namespace Subsurface
                 Vector2 pos = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height + 20) - GUI.Font.MeasureString(item.Name) * 0.5f;
                 pos.X = (int)pos.X;
                 pos.Y = (int)pos.Y;
-                spriteBatch.DrawString(GUI.Font, item.Name + " - " + item.ID, pos - new Vector2(1.0f, 1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.Font, item.Name + " - " + item.ID, pos, Color.White);
+                spriteBatch.DrawString(GUI.Font, item.Name, pos - new Vector2(1.0f, 1.0f), Color.Black);
+                spriteBatch.DrawString(GUI.Font, item.Name, pos, Color.White);
             }
 
             if (item.Condition < 100.0f)

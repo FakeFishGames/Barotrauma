@@ -97,7 +97,7 @@ namespace Subsurface.Items.Components
             item.body.FarseerBody.IsBullet = true;
 
             item.body.CollisionCategories = Physics.CollisionProjectile;
-            item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
+            item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
 
             item.Drop();
 
@@ -155,7 +155,7 @@ namespace Subsurface.Items.Components
 
             item.body.FarseerBody.IsBullet = false;
             item.body.CollisionCategories = Physics.CollisionMisc;
-            item.body.CollidesWith = Physics.CollisionWall;
+            item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
 
             ignoredBodies.Clear();
 

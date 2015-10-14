@@ -42,7 +42,7 @@ namespace Subsurface.Networking
             this.name = name;
             this.password = password;
             
-            config = new NetPeerConfiguration("subsurface");
+            config = new NetPeerConfiguration("barotrauma");
 
 #if DEBUG
             config.SimulatedLoss = 0.2f;
@@ -82,7 +82,7 @@ namespace Subsurface.Networking
 
             if (config.EnableUPnP)
             {
-                server.UPnP.ForwardPort(config.Port, "subsurface");
+                server.UPnP.ForwardPort(config.Port, "barotrauma");
 
                 GUIMessageBox upnpBox = new GUIMessageBox("Please wait...", "Attempting UPnP port forwarding", new string[] {"Cancel"} );
                 upnpBox.Buttons[0].OnClicked = upnpBox.Close;
@@ -304,7 +304,7 @@ namespace Subsurface.Networking
                         if (sender.version != GameMain.Version.ToString())
                         {
                             DisconnectClient(sender, sender.name+" was unable to connect to the server (nonmatching game version)", 
-                                "Subsurface version " + GameMain.Version + " required to connect to the server (Your version: " + sender.version + ")");
+                                "Version " + GameMain.Version + " required to connect to the server (Your version: " + sender.version + ")");
                         }
                         else if (connectedClients.Find(x => x.name == sender.name && x != sender)!=null)
                         {
@@ -460,7 +460,7 @@ namespace Subsurface.Networking
             }
             else if (version != GameMain.Version.ToString())
             {
-                inc.SenderConnection.Deny("Subsurface version " + GameMain.Version + " required to connect to the server (Your version: " + version + ")");
+                inc.SenderConnection.Deny("Version " + GameMain.Version + " required to connect to the server (Your version: " + version + ")");
                 DebugConsole.NewMessage(name + " couldn't join the server (wrong game version)", Color.Red);
                 return;
             }
