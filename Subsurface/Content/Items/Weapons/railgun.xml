@@ -32,7 +32,7 @@
 
     <Sprite texture ="railguncontroller.png" depth="0.8"/>
     
-    <Controller userpos="-1" direction ="Right" canbeselected = "true">
+    <Controller UserPos="-1.0" direction ="Right" canbeselected = "true">
       <limbposition limb="Head" position="0,-124"/>
       <limbposition limb="LeftHand" position="38,-125"/>
       <limbposition limb="RightHand" position="38,-125"/>

@@ -664,7 +664,7 @@ int currentTargetIndex = 1;
                 edgeBody.UserData = cell;
                 edgeBody.SleepingAllowed = false;
                 edgeBody.BodyType = BodyType.Kinematic;
-                edgeBody.CollisionCategories = Physics.CollisionWall | Physics.CollisionLevel;
+                edgeBody.CollisionCategories = Physics.CollisionLevel;
 
                 cell.body = edgeBody;
                 bodies.Add(edgeBody);
@@ -674,7 +674,7 @@ int currentTargetIndex = 1;
             {
                 Body shaftBody = BodyFactory.CreateRectangle(GameMain.World, 100.0f, 10.0f, 5.0f);
                 shaftBody.BodyType = BodyType.Kinematic;
-                shaftBody.CollisionCategories = Physics.CollisionWall | Physics.CollisionLevel;
+                shaftBody.CollisionCategories = Physics.CollisionLevel;
                 shaftBody.SetTransform(ConvertUnits.ToSimUnits((i==0) ? startPosition : endPosition), 0.0f);
                 shaftBody.SleepingAllowed = false;
                 bodies.Add(shaftBody);

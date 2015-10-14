@@ -63,6 +63,21 @@ namespace Subsurface.Items.Components
             light.Position += amount;
         }
 
+        public override bool IsActive
+        {
+            get
+            {
+                return base.IsActive;
+            }
+
+            set
+            {
+                if (base.IsActive == value) return;
+                base.IsActive = value;
+                light.Color = value ? lightColor : Color.Transparent;                
+            }
+        }
+
         public LightComponent(Item item, XElement element)
             : base (item, element)
         {
@@ -122,10 +137,11 @@ namespace Subsurface.Items.Components
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (!IsActive)
-            {
-                light.Color = Color.Transparent;
-            }   
+            if (!editing) return;
+
+            //Vector2 center = new Vector2(item.Rect.Center.X, -item.Rect.Y + item.Rect.Height/2.0f);
+
+            //GUI.DrawLine(spriteBatch, center - Vector2.One * range, center + Vector2.One * range, lightColor);
         }
 
         public override void Remove()

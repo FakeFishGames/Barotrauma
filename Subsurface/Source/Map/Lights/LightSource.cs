@@ -72,7 +72,7 @@ namespace Subsurface.Lights
         public void UpdateHullsInRange()
         {
             hullsInRange.Clear();
-            if (range < 1.0f) return;
+            if (range < 1.0f || color.A < 0.01f) return;
 
             foreach (ConvexHull ch in ConvexHull.list)
             {

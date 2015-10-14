@@ -304,7 +304,7 @@ namespace Subsurface.Items.Components
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 3, (int)-Nodes[i].Y - 3, 6, 6), Color.Red, true, 0.0f);
 
                 if (GUIComponent.MouseOn != null ||
-                    Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) > 20.0f)
+                    Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) > 10.0f)
                 {
                     continue;
                 }

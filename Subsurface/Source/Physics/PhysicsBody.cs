@@ -220,15 +220,13 @@ namespace Subsurface
             this.radius = radius;
 
             dir = 1.0f;
-
-            //items only collide with the map
+            
             body.CollisionCategories = Physics.CollisionMisc;
-            body.CollidesWith = Physics.CollisionWall;
+            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
 
             body.Friction = ToolBox.GetAttributeFloat(element, "friction", 0.3f);
             body.Restitution = 0.05f;
-
-
+            
             body.BodyType = BodyType.Dynamic;
             //body.AngularDamping = Limb.LimbAngularDamping;
 

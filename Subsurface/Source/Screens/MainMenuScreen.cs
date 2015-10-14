@@ -2,9 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Subsurface.Networking;
-using System.IO;
 using System.Xml.Linq;
-using System.Collections.Generic;
 
 namespace Subsurface
 {
@@ -385,7 +383,7 @@ namespace Subsurface
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
-            spriteBatch.DrawString(GUI.Font, "Subsurface v"+GameMain.Version, new Vector2(10, GameMain.GraphicsHeight-20), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Barotrauma v"+GameMain.Version, new Vector2(10, GameMain.GraphicsHeight-20), Color.White);
 
             spriteBatch.End();
         }
@@ -410,7 +408,7 @@ namespace Subsurface
 
             GameMain.LobbyScreen.Select();
 
-            new GUIMessageBox("Welcome to Subsurface!", "Please note that the single player mode is very unfinished at the moment; "+
+            new GUIMessageBox("Welcome to Barotrauma!", "Please note that the single player mode is very unfinished at the moment; "+
             "for example, the NPCs don't have an AI yet and there are only a couple of different quests to complete. The multiplayer "+
             "mode should be much more enjoyable to play at the moment, so my recommendation is to try out and get a hang of the game mechanics "+
             "in the single player mode and then move on to multiplayer. Have fun!\n - Regalis, the main dev of Subsurface", 400, 350);

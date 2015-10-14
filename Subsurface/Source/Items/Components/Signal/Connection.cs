@@ -30,6 +30,12 @@ namespace Subsurface.Items.Components
 
         public readonly int[] wireId;
 
+        public bool IsPower
+        {
+            get;
+            private set;
+        }
+
         public List<Connection> Recipients
         {
             get
@@ -68,6 +74,8 @@ namespace Subsurface.Items.Components
 
             IsOutput = (element.Name.ToString() == "output");
             Name = ToolBox.GetAttributeString(element, "name", (IsOutput) ? "output" : "input");
+
+            IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
             effects = new List<StatusEffect>();
 

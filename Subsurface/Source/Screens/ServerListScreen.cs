@@ -208,7 +208,7 @@ namespace Subsurface
 
 
             var request = new RestRequest("masterserver.php", Method.GET);
-            request.AddParameter("gamename", "subsurface"); // adds to POST or URL querystring based on Method
+            request.AddParameter("gamename", "barotrauma"); // adds to POST or URL querystring based on Method
             request.AddParameter("action", "listservers"); // adds to POST or URL querystring based on Method
 
 
@@ -327,8 +327,6 @@ namespace Subsurface
 
         public override void Update(double deltaTime)
         {
-
-
             menu.Update((float)deltaTime);
 
             GUI.Update((float)deltaTime);

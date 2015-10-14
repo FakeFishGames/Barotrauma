@@ -587,7 +587,7 @@ namespace Subsurface
             
             foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
             
-            if (!editing || (body!=null && !body.Enabled))
+            if (!editing || (body != null && !body.Enabled))
             {
                 isHighlighted = false;
                 return;

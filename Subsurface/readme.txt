@@ -1,4 +1,4 @@
-﻿SUBSURFACE
+﻿BAROTRAUMA
 
 www.undertowgames.com/subsurface
 Copyright © Undertow Games 2015
@@ -29,9 +29,9 @@ guide for your particular router/application on portforward.com or by
 practicing your google-fu skills.
 
 These are the values that you should use when forwarding a port to your
-Subsurface server:
+Barotrauma server:
 
-Service/Application: subsurface
+Service/Application: barotrauma
 External Port: The port you have selected for your server (14242 by default)
 Internal Port: The port you have selected for your server (14242 by default)
 Protocol: UDP

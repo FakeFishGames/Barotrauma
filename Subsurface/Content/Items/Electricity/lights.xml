@@ -7,9 +7,9 @@
     Tags="smallitem"
     pickdistance="150">
 
-    <Sprite texture ="lamp.png" sourcerect="0,0,16,32"  depth="0.8"/>
+    <Sprite texture="lamp.png" sourcerect="0,0,16,32"  depth="0.8"/>
 
-    <LightComponent color="1.0,1.0,1.0,1.0" range ="1000.0" powerconsumption="50"/>
+    <LightComponent color="1.0,1.0,1.0,1.0" range ="800.0" powerconsumption="50"/>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>

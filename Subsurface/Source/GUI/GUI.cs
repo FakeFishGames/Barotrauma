@@ -160,39 +160,21 @@ namespace Subsurface
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f)
         {
-            if (isFilled)
-            {
-                sb.Draw(t, new Rectangle((int)start.X,(int)start.Y,(int)size.X,(int)size.Y),null,clr);
-            }
-            else
-            {
-                Vector2 p2 = new Vector2(start.X + size.X, start.Y);
-                Vector2 p4 = new Vector2(start.X, start.Y + size.Y);
-
-                DrawLine(sb, start, p2, clr, depth);
-                DrawLine(sb, p2, start + size, clr, depth);
-                DrawLine(sb, start + size, p4, clr, depth);
-                DrawLine(sb, p4, start, clr, depth);
-            }
+            DrawRectangle(sb, new Rectangle((int)start.X, (int)start.Y, (int)size.X, (int)size.Y), clr, isFilled, depth);
         }
 
         public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, bool isFilled = false, float depth = 0.0f)
         {
             if (isFilled)
             {
-                sb.Draw(t, rect, null, clr);
+                sb.Draw(t, rect, null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
             }
             else
             {
-                Vector2 p1 = new Vector2(rect.X, rect.Y);
-                Vector2 p2 = new Vector2(rect.X + rect.Width, rect.Y);
-                Vector2 p3 = new Vector2(rect.X + rect.Width, rect.Y + rect.Height);                
-                Vector2 p4 = new Vector2(rect.X, rect.Y + rect.Height);
-
-                DrawLine(sb, p1, p2, clr, depth);
-                DrawLine(sb, p2, p3, clr, depth);
-                DrawLine(sb, p3, p4, clr, depth);
-                DrawLine(sb, p4, p1, clr, depth);
+                sb.Draw(t, new Rectangle(rect.X, rect.Y, rect.Width, 1), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X, rect.Y+rect.Height-1, rect.Width, 1), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X, rect.Y, 1, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X+rect.Width-1, rect.Y, 1, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
             }
         }
 
