@@ -1,4 +1,4 @@
-﻿namespace Subsurface
+﻿namespace Barotrauma
 {
     class ScriptedTask : Task
     {

@@ -5,7 +5,7 @@ using EventInput;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public abstract class GUIComponent
     {

@@ -6,12 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class MonsterQuest : Quest
     {
-        //string monsterName;
-
         string monsterFile;
 
         Character monster;
@@ -33,7 +31,7 @@ namespace Subsurface
 
             monster = new AICharacter(monsterFile, ConvertUnits.ToSimUnits(position+level.Position));
         }
-
+        
         public override void End()
         {
             if (!monster.IsDead)

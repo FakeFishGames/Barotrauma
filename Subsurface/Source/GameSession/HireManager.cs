@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class HireManager
     {

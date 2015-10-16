@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace Subsurface
+namespace Barotrauma
 {
     interface IDamageable
     {

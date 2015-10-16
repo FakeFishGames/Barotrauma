@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public class SaveUtil
     {
@@ -32,11 +32,11 @@ namespace Subsurface
             {
                 if (Submarine.Loaded!=null)
                 {
-                    Submarine.Loaded.SaveAs(Path.Combine(tempPath, "map.gz"));
+                    Submarine.Loaded.SaveAs(Path.Combine(tempPath, "map.sub"));
                 }
                 else
                 {
-                    File.Copy(GameMain.GameSession.Submarine.FilePath, Path.Combine(tempPath, "map.gz"));
+                    File.Copy(GameMain.GameSession.Submarine.FilePath, Path.Combine(tempPath, "map.sub"));
                 }
             }
             catch (Exception e)
@@ -72,7 +72,7 @@ namespace Subsurface
 
             DecompressToDirectory(filePath, tempPath, null);
 
-            Submarine selectedMap = new Submarine(Path.Combine(tempPath, "map.gz"), "");// Submarine.Load();
+            Submarine selectedMap = new Submarine(Path.Combine(tempPath, "map.sub"), "");// Submarine.Load();
             GameMain.GameSession = new GameSession(selectedMap, fileName, Path.Combine(tempPath, "gamesession.xml"));
 
             //Directory.Delete(tempPath, true);

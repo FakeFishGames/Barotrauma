@@ -3,7 +3,7 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class WaterRenderer : IDisposable
     {

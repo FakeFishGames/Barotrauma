@@ -1,7 +1,7 @@
 ﻿using System.Xml.Linq;
 using System.Text.RegularExpressions;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class RegExFindComponent : ItemComponent
     {

@@ -62,9 +62,9 @@
     <MonoGameContentReference Include="Content\Content.mgcb" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Subsurface\Subsurface.csproj">
+    <ProjectReference Include="..\Subsurface\Barotrauma.csproj">
       <Project>{008c0f83-e914-4966-9135-ea885059edd8}</Project>
-      <Name>Subsurface</Name>
+      <Name>Barotrauma</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

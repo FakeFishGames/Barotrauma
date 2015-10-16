@@ -3,9 +3,9 @@ using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using Subsurface.Items.Components;
+using Barotrauma.Items.Components;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
@@ -120,22 +120,23 @@ namespace Subsurface
             {
                 onFloorTimer -= deltaTime;
             }
-
-
-            IgnorePlatforms = (TargetMovement.Y < 0.0f);
-
+            
             //stun (= disable the animations) if the ragdoll receives a large enough impact
             if (strongestImpact > 0.0f)
             {
                 character.StartStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
             }
             strongestImpact = 0.0f;
-
+            
             if (stunTimer > 0)
             {
                 stunTimer -= deltaTime;
                 return;
             }
+
+            IgnorePlatforms = (TargetMovement.Y < 0.0f);
+
+
 
             if (Anim != Animation.UsingConstruction) ResetPullJoints(); 
 
@@ -228,30 +229,35 @@ namespace Subsurface
                 this.stepSize.Y * walkPosY * runningModifier * runningModifier);
             
             float footMid = waist.SimPosition.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
-
-            int limbsInWater = 0;
-            foreach (Limb limb in Limbs)
+            
+            if (Math.Abs(TargetMovement.X)>1.0f)
             {
-                if (limb.inWater) limbsInWater++;
-            }
+                int limbsInWater = 0;
+                foreach (Limb limb in Limbs)
+                {
+                    if (limb.inWater) limbsInWater++;
+                }
 
-            TargetMovement *= (1.0f - 0.5f * ((float)limbsInWater / (float)Limbs.Count()));
+                float slowdownFactor = (float)limbsInWater / (float)Limbs.Count();
+
+                TargetMovement = Vector2.Normalize(TargetMovement) * Math.Max(TargetMovement.Length() - slowdownFactor, 1.0f);
+            }
             
             movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
             movement.Y = 0.0f;
 
+            bool legsUp = false;
             for (int i = 0; i < 2; i++)
             {
                 Limb leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);// : leftLeg;
 
                 if (leg.SimPosition.Y < torso.SimPosition.Y) continue;
 
-                leg.body.ApplyTorque(-Dir * leg.Mass * 10.0f);
+                leg.body.ApplyTorque(Dir * leg.Mass * 10.0f);
+                legsUp = true;
             }
 
-            //place the anchors of the head and the torso to make the ragdoll stand
-
-            if (LowestLimb == null) return;
+            if (legsUp || LowestLimb == null) return;
 
             if (!onGround || (LowestLimb.SimPosition.Y - floorY > 0.5f && stairs == null)) return;
 

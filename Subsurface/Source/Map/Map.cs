@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using Voronoi2;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class Map
     {

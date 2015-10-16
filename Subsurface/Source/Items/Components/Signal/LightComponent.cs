@@ -1,12 +1,12 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Lights;
+using Barotrauma.Lights;
 using System;
 using System.IO;
 using System.Xml.Linq;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class LightComponent : Powered
     {

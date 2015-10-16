@@ -5,15 +5,15 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Subsurface.Networking;
-using Subsurface.Particles;
+using Barotrauma.Networking;
+using Barotrauma.Particles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     
     class Character : Entity, IDamageable, IPropertyObject
@@ -31,6 +31,12 @@ namespace Subsurface
         {
             get { return controlled; }
             set { controlled = value; }
+        }
+
+        public bool Enabled
+        {
+            get;
+            set;
         }
 
         public readonly bool IsNetworkPlayer;
@@ -411,6 +417,8 @@ namespace Subsurface
             AnimController.FindHull();
 
             CharacterList.Add(this);
+
+            Enabled = true;
         }
 
         private static string humanConfigFile;
@@ -498,7 +506,7 @@ namespace Subsurface
 
         public void Control(float deltaTime, Camera cam)
         {
-            if (isDead) return;
+            if (isDead || AnimController.StunTimer>0.0f) return;
 
             Vector2 targetMovement = Vector2.Zero;
             if (GetInputState(InputType.Left))  targetMovement.X -= 1.0f;
@@ -741,17 +749,17 @@ namespace Subsurface
         {
             foreach (Character c in CharacterList)
             {
-                if (c.isDead) continue;
+                if (c.isDead || !c.Enabled) continue;
                 c.AnimController.UpdateAnim(deltaTime);
             }
         }
         
         public static void UpdateAll(Camera cam, float deltaTime)
         {
-            if (NewCharacterQueue.Count>0)
-            {
-                new Character(NewCharacterQueue.Dequeue(), Vector2.Zero);
-            }
+            //if (NewCharacterQueue.Count>0)
+            //{
+            //    new Character(NewCharacterQueue.Dequeue(), Vector2.Zero);
+            //}
 
             foreach (Character c in CharacterList)
             {
@@ -761,6 +769,8 @@ namespace Subsurface
 
         public virtual void Update(Camera cam, float deltaTime)
         {
+            if (!Enabled) return;
+
             AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>5000.0f);
             
             if (isDead) return;
@@ -828,6 +838,8 @@ namespace Subsurface
         
         public void Draw(SpriteBatch spriteBatch)
         {
+            if (!Enabled) return;
+
             AnimController.Draw(spriteBatch);
             
             //GUI.DrawLine(spriteBatch, ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y),
@@ -842,6 +854,8 @@ namespace Subsurface
 
         public virtual void DrawFront(SpriteBatch spriteBatch)
         {
+            if (!Enabled) return;
+
             Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
             pos.Y = -pos.Y;
             
@@ -868,9 +882,6 @@ namespace Subsurface
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f * (health / maxHealth)), 15), Color.Red, true);
         }
-
-
-
 
         public void PlaySound(AIController.AiState state)
         {
@@ -931,6 +942,7 @@ namespace Subsurface
         {
             if (stunTimer <= 0.0f) return;
 
+            AnimController.ResetPullJoints();
             AnimController.StunTimer = Math.Max(AnimController.StunTimer, stunTimer);
                 
             selectedConstruction = null;
@@ -1138,6 +1150,8 @@ namespace Subsurface
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
+            Enabled = true;
+
             if (type == NetworkEventType.PickItem)
             {
                 System.Diagnostics.Debug.WriteLine("**************** PickItem networkevent received");

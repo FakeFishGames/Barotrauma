@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public class GUITickBox : GUIComponent
     {

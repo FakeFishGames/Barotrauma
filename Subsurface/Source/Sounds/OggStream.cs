@@ -7,7 +7,7 @@ using System.Threading;
 using NVorbis;
 using OpenTK.Audio.OpenAL;
 
-namespace Subsurface.Sounds
+namespace Barotrauma.Sounds
 {
     internal static class ALHelper
     {

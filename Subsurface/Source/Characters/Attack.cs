@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
-using Subsurface.Particles;
+using Barotrauma.Particles;
 using System;
 using System.Xml.Linq;
 
 
-namespace Subsurface
+namespace Barotrauma
 {
 
     public enum DamageType { None, Blunt, Slash }

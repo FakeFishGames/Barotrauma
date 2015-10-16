@@ -5,7 +5,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class ItemContainer : ItemComponent
     {

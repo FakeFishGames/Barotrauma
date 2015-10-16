@@ -6,7 +6,7 @@ using OpenTK.Audio;
 
 using System;
 
-namespace Subsurface.Sounds
+namespace Barotrauma.Sounds
 {
     static class SoundManager
     {

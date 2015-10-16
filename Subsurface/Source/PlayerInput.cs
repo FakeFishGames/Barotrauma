@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace Subsurface
+namespace Barotrauma
 {
 
     public enum InputType 

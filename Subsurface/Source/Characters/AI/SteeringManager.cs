@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using FarseerPhysics.Dynamics;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class SteeringManager
     {

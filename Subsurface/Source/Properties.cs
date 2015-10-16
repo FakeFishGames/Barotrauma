@@ -8,7 +8,7 @@ using System.Xml.Linq;
 using System.ComponentModel;
 
 
-namespace Subsurface
+namespace Barotrauma
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class Editable : System.Attribute

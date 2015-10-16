@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class Gap : MapEntity
     {

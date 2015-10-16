@@ -5,7 +5,7 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     struct LimbPos
     {
@@ -163,15 +163,6 @@ namespace Subsurface.Items.Components
                     break;
                 }
             }
-
-            //foreach (MapEntity e in item.linkedTo)
-            //{
-            //    Item linkedItem = e as Item;
-            //    if (linkedItem == null) continue;
-            //    linkedItem.SecondaryUse(deltaTime, character);
-            //}
-
-
         }
 
         public override bool Pick(Character picker)

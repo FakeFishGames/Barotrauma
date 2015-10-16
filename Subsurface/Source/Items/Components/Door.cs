@@ -6,9 +6,9 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Lights;
+using Barotrauma.Lights;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Door : ItemComponent
     {

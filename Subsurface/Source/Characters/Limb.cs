@@ -5,9 +5,9 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Items.Components;
+using Barotrauma.Items.Components;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public enum LimbType
     {

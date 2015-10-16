@@ -1,6 +1,6 @@
 ﻿using System.Xml.Linq;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class OrComponent : AndComponent
     {

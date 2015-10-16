@@ -5,7 +5,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.Xml.Linq;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Pump : Powered
     {
@@ -77,6 +77,8 @@ namespace Subsurface.Items.Components
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
 
             if (voltage < minVoltage) return;
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             if (hull2 == null && hull1 == null) return;
             

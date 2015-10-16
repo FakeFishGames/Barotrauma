@@ -1,10 +1,10 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {

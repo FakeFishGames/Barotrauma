@@ -3,7 +3,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Holdable : Pickable
     {

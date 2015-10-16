@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Subsurface.Networking
+namespace Barotrauma.Networking
 {
     static class NetConfig
     {

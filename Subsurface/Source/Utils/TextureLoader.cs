@@ -6,7 +6,7 @@ using Color = Microsoft.Xna.Framework.Color;
 using System;
 using Microsoft.Xna.Framework;
 
-namespace Subsurface
+namespace Barotrauma
 {
     /// <summary>
     /// Based on http://jakepoz.com/jake_poznanski__background_load_xna.html 

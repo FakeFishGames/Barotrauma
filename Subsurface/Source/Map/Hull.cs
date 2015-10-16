@@ -7,7 +7,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface
+namespace Barotrauma
 {
 
     class Hull : MapEntity

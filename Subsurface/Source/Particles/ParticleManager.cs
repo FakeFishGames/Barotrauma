@@ -5,7 +5,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface.Particles
+namespace Barotrauma.Particles
 {
     class ParticleManager
     {

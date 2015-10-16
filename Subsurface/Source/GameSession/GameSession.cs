@@ -8,7 +8,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class GameSession
     {

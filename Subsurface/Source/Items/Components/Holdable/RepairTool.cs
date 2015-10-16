@@ -5,9 +5,9 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Particles;
+using Barotrauma.Particles;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class RepairTool : ItemComponent
     {

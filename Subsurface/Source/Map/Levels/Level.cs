@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Voronoi2;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class Level
     {

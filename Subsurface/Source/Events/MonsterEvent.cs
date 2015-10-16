@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class MonsterEvent : ScriptedEvent
     {

@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public enum ContentType
     {

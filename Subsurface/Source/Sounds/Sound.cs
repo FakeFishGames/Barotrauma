@@ -4,9 +4,9 @@ using System.IO;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
-using Subsurface.Sounds;
+using Barotrauma.Sounds;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public class Sound
     {

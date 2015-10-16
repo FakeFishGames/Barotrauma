@@ -6,11 +6,11 @@ using System.Xml.Linq;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 using System.IO;
 using System.Globalization;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class ItemSound
     {
@@ -644,7 +644,7 @@ namespace Subsurface.Items.Components
             try
             {
                 // Get the type of a specified class.                
-                t = Type.GetType("Subsurface.Items.Components." + type + "", false, true);
+                t = Type.GetType("Barotrauma.Items.Components." + type + "", false, true);
                 if (t == null)
                 {
                     if (errorMessages) DebugConsole.ThrowError("Could not find the component ''" + type + "'' (" + file + ")");

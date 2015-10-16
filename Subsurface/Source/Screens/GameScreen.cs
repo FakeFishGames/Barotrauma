@@ -2,10 +2,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Subsurface.Lights;
+using Barotrauma.Lights;
 using System.Diagnostics;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class GameScreen : Screen
     {
@@ -288,7 +288,7 @@ namespace Subsurface
 
             Submarine.DrawFront(spriteBatch);
             
-            GameMain.GameSession?.Level?.Draw(spriteBatch);            
+            if (Level.Loaded!=null) Level.Loaded.Draw(spriteBatch);            
 
             spriteBatch.End();
 

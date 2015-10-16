@@ -6,14 +6,14 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 using System;
-using Subsurface.Items.Components;
+using Barotrauma.Items.Components;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using FarseerPhysics.Dynamics;
 
-namespace Subsurface
+namespace Barotrauma
 {
 
     public enum ActionType
@@ -429,7 +429,17 @@ namespace Subsurface
                     foreach (Item containedItem in containedItems)
                     {
                         if (containedItem == null) continue;
-                        if (effect.TargetNames != null && !effect.TargetNames.Contains(containedItem.Name)) continue;
+                        if (effect.TargetNames != null && !effect.TargetNames.Contains(containedItem.Name))
+                        {
+                            bool tagFound = false;
+                            foreach (string targetName in effect.TargetNames)
+                            {
+                                if (!containedItem.HasTag(targetName)) continue;
+                                tagFound = true;
+                                break;
+                            }
+                            if (!tagFound) continue;
+                        }
 
                         hasTargets = true;
                         targets.Add(containedItem);
@@ -440,30 +450,30 @@ namespace Subsurface
             }
 
 
-            if (hasTargets)
+            if (!hasTargets) return;
+            
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+                foreach (var pobject in AllPropertyObjects)
                 {
-                    foreach (var pobject in AllPropertyObjects)
-                    {
-                        targets.Add(pobject);
-                    }
+                    targets.Add(pobject);
                 }
-                    //effect.Apply(type, deltaTime, this);
-                    //ApplyStatusEffect(effect, type, deltaTime, this);
+            }
+                //effect.Apply(type, deltaTime, this);
+                //ApplyStatusEffect(effect, type, deltaTime, this);
 
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
-                    //effect.Apply(type, deltaTime, null, character);
-                    //ApplyStatusEffect(effect, type, deltaTime, null, character, limb);
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
+                //effect.Apply(type, deltaTime, null, character);
+                //ApplyStatusEffect(effect, type, deltaTime, null, character, limb);
 
-                if (container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(container);
-                //{
-                //    effect.Apply(type, deltaTime, container);
-                //    //container.ApplyStatusEffect(effect, type, deltaTime, container);
-                //}
+            if (container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(container);
+            //{
+            //    effect.Apply(type, deltaTime, container);
+            //    //container.ApplyStatusEffect(effect, type, deltaTime, container);
+            //}
 
-                effect.Apply(type, deltaTime, this, targets);
-            }       
+            effect.Apply(type, deltaTime, this, targets);
+            
         }
 
 
@@ -497,7 +507,7 @@ namespace Subsurface
                     ic.Update(deltaTime, cam);
                     
                     ic.PlaySound(ActionType.OnActive, Position);
-                    ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                    
+                    //ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                    
                 }
                 else
                 {

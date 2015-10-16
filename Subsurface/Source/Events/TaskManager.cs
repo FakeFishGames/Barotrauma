@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class TaskManager
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Subsurface;
+using Barotrauma;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -25,7 +25,7 @@ namespace Launcher2
         string version = AssemblyName.GetAssemblyName("Barotrauma.exe").Version.ToString();
 
         private const string configPath = "config.xml";
-        private Subsurface.GameSettings settings;
+        private Barotrauma.GameSettings settings;
 
         private string latestVersionFileList, latestVersionFolder;
         

@@ -8,7 +8,7 @@
     <ProjectGuid>{008C0F83-E914-4966-9135-EA885059EDD8}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Subsurface</RootNamespace>
+    <RootNamespace>Barotrauma</RootNamespace>
     <AssemblyName>Barotrauma</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -382,6 +382,9 @@
     <Content Include="Content\Items\Weapons\explosives.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Content\Items\Weapons\stunbaton.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Jobs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -845,6 +848,12 @@
     <None Include="Content\Items\Engine\radarPing.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Items\Medical\bandage.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Medical\syringe.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Items\OxygenGenerator\oxygengenerator.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -873,6 +882,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Weapons\railgun.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Weapons\stunbaton.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Weapons\stunGrenade.ogg">

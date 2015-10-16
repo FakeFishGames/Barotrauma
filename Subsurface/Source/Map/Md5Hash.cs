@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public class Md5Hash
     {

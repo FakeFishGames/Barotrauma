@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class StatusEffect
     {
@@ -182,7 +182,8 @@ namespace Subsurface
                 ObjectProperty property;
                 foreach (IPropertyObject target in targets)
                 {
-                    if (targetNames!=null && !targetNames.Contains(target.Name)) continue;
+                    //if (targetNames!=null && !targetNames.Contains(target.Name)) continue;
+
                     if (!target.ObjectProperties.TryGetValue(propertyNames[i], out property)) continue;
                     
                     ApplyToProperty(property, propertyEffects[i], deltaTime);                    

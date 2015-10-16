@@ -41,7 +41,8 @@
     <Sprite texture ="battery.png" depth="0.8"/>
 
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected = "true">
-      <GuiFrame rect="0,0,350,160" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <GuiFrame rect="0,-100,350,160" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <StatusEffect type="OnActive" target="Contained" targetnames="loadable" Condition="2.0"/>
     </PowerContainer>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
@@ -50,7 +51,11 @@
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power"/>
-    </ConnectionPanel>		
+    </ConnectionPanel>
+
+    <ItemContainer capacity="3" hideitems="true">
+      <Containable name="loadable"/>      
+    </ItemContainer>
   </Item>
 
   <Item

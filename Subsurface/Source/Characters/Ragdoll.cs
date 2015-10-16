@@ -8,9 +8,9 @@ using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class Ragdoll
     {
@@ -491,8 +491,7 @@ namespace Subsurface
         {
             for (int i = 0; i < Limbs.Count(); i++)
             {
-                if (Limbs[i] == null) continue;
-                if (Limbs[i].pullJoint == null) continue;
+                if (Limbs[i] == null || Limbs[i].pullJoint == null) continue;
                 Limbs[i].pullJoint.Enabled = false;
             }
         }
@@ -526,7 +525,7 @@ namespace Subsurface
 
             Category collisionCategory = (ignorePlatforms) ?
                 wall | Physics.CollisionProjectile | Physics.CollisionStairs
-                : wall | Physics.CollisionPlatform | Physics.CollisionStairs;
+                : wall | Physics.CollisionProjectile | Physics.CollisionPlatform | Physics.CollisionStairs;
 
             foreach (Limb limb in Limbs)
             {
@@ -538,6 +537,8 @@ namespace Subsurface
 
         public void Update(Camera cam, float deltaTime)
         {
+            if (!character.Enabled) return;
+
             UpdateNetplayerPosition();
             
             Vector2 flowForce = Vector2.Zero;
@@ -605,7 +606,7 @@ namespace Subsurface
                     {
 
                         //create a splash particle
-                        Subsurface.Particles.Particle splash = GameMain.ParticleManager.CreateParticle("watersplash",
+                        Barotrauma.Particles.Particle splash = GameMain.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.Position.X, limbHull.Surface),
                             new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 10.0f)),
                             0.0f);

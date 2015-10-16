@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class Entity
     {

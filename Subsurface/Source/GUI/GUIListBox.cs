@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public class GUIListBox : GUIComponent
     {

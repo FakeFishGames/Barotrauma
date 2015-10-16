@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class ScriptedEvent
     {
@@ -137,7 +137,7 @@ namespace Subsurface
 
                     try
                     {
-                        t = Type.GetType("Subsurface." + type, true, true);
+                        t = Type.GetType("Barotrauma." + type, true, true);
                         if (t == null)
                         {
                             DebugConsole.ThrowError("Error in " + configFile + "! Could not find an event class of the type ''" + type + "''.");

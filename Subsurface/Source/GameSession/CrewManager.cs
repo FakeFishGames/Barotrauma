@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class CrewManager
     {

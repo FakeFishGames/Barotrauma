@@ -1,11 +1,11 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using Subsurface.Lights;
+using Barotrauma.Lights;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class Explosion
     {
@@ -21,17 +21,6 @@ namespace Subsurface
 
         private bool sparks, shockwave, flames;
 
-        //public Explosion(Vector2 position, float range, float damage, float structureDamage, float stun = 0.0f, float force = 0.0f)
-        //{
-        //    this.position = position;
-
-        //    attack = new Attack(,);
-
-        //    this.force = force;
-
-
-        //}
-
         public Explosion(XElement element)
         {
             attack = new Attack(element);
@@ -42,7 +31,7 @@ namespace Subsurface
             shockwave   = ToolBox.GetAttributeBool(element, "shockwave", true);
             flames      = ToolBox.GetAttributeBool(element, "flames", true); 
 
-            CameraShake = attack.Range*10.0f;
+            CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range*10.0f);
         }
 
         public void Explode()

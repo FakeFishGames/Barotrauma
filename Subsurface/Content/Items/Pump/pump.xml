@@ -3,7 +3,7 @@
   linkable="true"
   pickdistance="200">
 
-  <Sprite texture ="pump.png" depth="0.08"/>
+  <Sprite texture ="pump.png" depth="0.8"/>
 
   <Pump canbeselected = "true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
     <GuiFrame rect="0,0,330,145" alignment="Center" color="0.0,0.0,0.0,0.6"/>

@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class LoadingScreen
     {

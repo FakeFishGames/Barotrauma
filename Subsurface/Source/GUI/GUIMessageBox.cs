@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public class GUIMessageBox : GUIFrame
     {

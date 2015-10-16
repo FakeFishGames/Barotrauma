@@ -49,7 +49,7 @@
 
     <Body width="11" height="24" density="15" friction="0.8f"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="5.0" aimpos="35,-10">
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stunGrenade.ogg">
         <Explosion range="500" damage="5" stun="10" force="0.1"/>
       </StatusEffect>
@@ -62,16 +62,34 @@
     pickdistance="150"
     price="100">
 
-    <Sprite texture="harpoongun.png"  depth="0.5"/>
+    <Sprite texture="stunbaton.png" sourcerect="0,12,77,23" depth="0.5"/>
     
     <Body width="90" height="30" density="10"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="50,0" handle1="-15,-6" holdangle="100">
-      <Attack stun="10.0" sound="Content/Items/Electricity/zap1.ogg">
-        <ParticleEmitter particle="spark" velocitymin="100" velocitymax="200" anglemin="0" anglemax="360" particleamount="10"/>
-      </Attack>
+      <RequiredItems name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>
+      <Attack stun="10.0" sound="Content/Items/Electricity/zap1.ogg"/>      
+      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
+        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" camerashake="5.0"/>
+      </StatusEffect>
     </MeleeWeapon>
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Battery Cell"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+  name="Battery Cell"
+  pickdistance="150"
+  tags="smallitem,loadable">
+
+    <Sprite texture ="stunbaton.png" sourcerect="0,0,20,9" depth="0.8"/>
+
+    <Body width="20" height="9" density="15"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
   </Item>
 </Items>
 

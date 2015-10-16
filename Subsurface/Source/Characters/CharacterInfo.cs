@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public enum Gender { None, Male, Female };        
 

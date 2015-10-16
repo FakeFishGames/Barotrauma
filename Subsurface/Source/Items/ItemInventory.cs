@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using Subsurface.Items.Components;
+using Barotrauma.Items.Components;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class ItemInventory : Inventory
     {

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Subsurface.Lights
+namespace Barotrauma.Lights
 {
     class LightSource
     {

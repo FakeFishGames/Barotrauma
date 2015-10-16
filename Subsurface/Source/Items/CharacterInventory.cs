@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Subsurface
+namespace Barotrauma
 {
     [Flags]
     public enum LimbSlot
@@ -279,7 +279,7 @@ namespace Subsurface
                 {                    
                     DropItem(draggingItem);
 
-                    new Networking.NetworkEvent(Subsurface.Networking.NetworkEventType.DropItem, draggingItem.ID, true);
+                    new Networking.NetworkEvent(Barotrauma.Networking.NetworkEventType.DropItem, draggingItem.ID, true);
                     //draggingItem = null;
                 }
             }                       

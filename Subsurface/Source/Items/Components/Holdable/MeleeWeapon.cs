@@ -4,7 +4,7 @@ using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class MeleeWeapon : Holdable
     {
@@ -74,7 +74,7 @@ namespace Subsurface.Items.Components
             hitting = true;
 
             IsActive = true;
-            return true;
+            return false;
         }
         
         public override void Drop(Character dropper)
@@ -186,6 +186,8 @@ namespace Subsurface.Items.Components
 
             RestoreCollision();
             hitting = false;
+
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, picker);
 
             return true;
         }

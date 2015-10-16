@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public class GUIImage : GUIComponent
     {
