@@ -335,6 +335,8 @@ namespace Launcher2
                 return false;
             }
 
+            if (doc == null) return false;
+
             CheckUpdateXML(doc);
 
             return true;
@@ -348,8 +350,14 @@ namespace Launcher2
 
             IRestResponse response = client.Execute(request);
 
-            if (response.ResponseStatus != ResponseStatus.Completed) return null;
-            if (response.StatusCode != HttpStatusCode.OK) return null;
+            if (response.ResponseStatus != ResponseStatus.Completed)
+            {
+                throw new Exception("Couldn't connect to update server");               
+            }
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Couldn't connect to update server ("+response.StatusCode+")");
+            }
 
             string xml = response.Content;
 
@@ -542,7 +550,7 @@ namespace Launcher2
         {
             if (e.Error!=null)
             {
-                string errorMsg = "Error while downloading: " + e.Error.InnerException.Message;
+                string errorMsg = "Error while downloading: " + e.Error;
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 0),
