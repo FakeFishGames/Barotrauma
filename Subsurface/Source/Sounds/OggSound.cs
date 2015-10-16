@@ -2,7 +2,7 @@
 using NVorbis;
 using OpenTK.Audio.OpenAL;
 
-namespace Subsurface.Sounds
+namespace Barotrauma.Sounds
 {
     class OggSound : IDisposable
     {

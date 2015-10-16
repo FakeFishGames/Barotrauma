@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Subsurface.Lights
+namespace Barotrauma.Lights
 {
     class LightManager
     {
@@ -124,18 +124,18 @@ namespace Subsurface.Lights
                 spriteBatch.End();
             }
 
-            //ClearAlphaToOne(graphics, spriteBatch);
-            //spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);            
+            ClearAlphaToOne(graphics, spriteBatch);
+            spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
 
-            //foreach (LightSource light in lights)
-            //{
-            //    if (light.hullsInRange.Count > 0 || light.Color.A < 0.01f || light.Range < 1.0f) continue;
-            //    if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
+            foreach (LightSource light in lights)
+            {
+                if (light.hullsInRange.Count > 0 || light.Color.A < 0.01f || light.Range < 1.0f) continue;
+                if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
 
-            //    light.Draw(spriteBatch);
-            //}
+                light.Draw(spriteBatch);
+            }
 
-            //spriteBatch.End();
+            spriteBatch.End();
 
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);

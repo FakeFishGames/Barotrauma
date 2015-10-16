@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 #endregion
 
-namespace Subsurface
+namespace Barotrauma
 {
 #if WINDOWS || LINUX
     /// <summary>

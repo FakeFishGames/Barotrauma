@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class MapEntity : Entity
     {

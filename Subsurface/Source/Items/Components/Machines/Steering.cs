@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Steering : Powered
     {

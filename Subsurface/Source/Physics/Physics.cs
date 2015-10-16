@@ -2,7 +2,7 @@
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 
-namespace Subsurface
+namespace Barotrauma
 {
     static class Physics
     {

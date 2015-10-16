@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using FarseerPhysics;
 
-namespace Subsurface.Particles
+namespace Barotrauma.Particles
 {
     class ParticlePrefab
     {

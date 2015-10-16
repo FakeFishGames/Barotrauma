@@ -1,5 +1,5 @@
 ﻿using RestSharp;
-using Subsurface;
+using Barotrauma;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,7 +23,7 @@ namespace Launcher
         string version = AssemblyName.GetAssemblyName("Barotrauma.exe").Version.ToString();
 
         private const string configPath = "config.xml";
-        private Subsurface.GameSettings settings;
+        private Barotrauma.GameSettings settings;
 
         private string latestVersionFileList, latestVersionFolder;
 

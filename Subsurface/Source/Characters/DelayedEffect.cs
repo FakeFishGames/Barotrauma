@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class DelayedEffect : StatusEffect
     {

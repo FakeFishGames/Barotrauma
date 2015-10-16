@@ -196,11 +196,6 @@ namespace FarseerPhysics.Collision.Shapes
                 I += (0.25f * k_inv3 * D) * (intx2 + inty2);
             }
 
-            if (area <= Settings.Epsilon)
-            {
-                int alsmfkldsmfdkasf = 1;
-            }
-
             //The area is too small for the engine to handle.
             Debug.Assert(area > Settings.Epsilon);
 

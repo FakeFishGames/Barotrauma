@@ -2,7 +2,7 @@
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class AnimController : Ragdoll
     {

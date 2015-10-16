@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Globalization;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class PowerTransfer : Powered
     {

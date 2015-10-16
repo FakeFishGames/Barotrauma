@@ -5,10 +5,10 @@ using System.Xml.Linq;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
-using Subsurface.Sounds;
+using Barotrauma.Sounds;
 using System.Collections.Generic;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public enum DamageSoundType { 
         None, 

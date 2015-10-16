@@ -10,10 +10,10 @@ using FarseerPhysics.Factories;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Networking;
-using Subsurface.Lights;
+using Barotrauma.Networking;
+using Barotrauma.Lights;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class WallSection
     {

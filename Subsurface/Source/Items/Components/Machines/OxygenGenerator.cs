@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class OxygenGenerator : Powered
     {
@@ -59,6 +59,8 @@ namespace Subsurface.Items.Components
             {
                 powerDownTimer = 0.0f;
             }
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             running = true;
 

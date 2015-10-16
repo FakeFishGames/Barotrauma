@@ -4,7 +4,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
-namespace Subsurface.Networking
+namespace Barotrauma.Networking
 {
     class GameClient : NetworkMember
     {

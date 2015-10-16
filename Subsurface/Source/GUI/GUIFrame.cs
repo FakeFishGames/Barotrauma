@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public class GUIFrame : GUIComponent
     {        

@@ -52,7 +52,7 @@
 
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
-using Subsurface;
+using Barotrauma;
 using System;
 using System.Collections.Generic;
 

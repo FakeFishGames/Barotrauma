@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FarseerPhysics;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Turret : Powered
     {

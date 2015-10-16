@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class GameModePreset
     {

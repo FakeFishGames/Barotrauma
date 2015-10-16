@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public enum SpawnType { None, Human, Enemy, Cargo };
     class WayPoint : MapEntity

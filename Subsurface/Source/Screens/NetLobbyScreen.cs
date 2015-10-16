@@ -2,14 +2,14 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics;
 using System.IO;
 using System.Collections.Generic;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class NetLobbyScreen : Screen
     {

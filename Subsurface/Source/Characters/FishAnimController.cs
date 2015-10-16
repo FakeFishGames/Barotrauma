@@ -6,7 +6,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class FishAnimController : AnimController
     {

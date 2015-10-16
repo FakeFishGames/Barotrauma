@@ -4,9 +4,9 @@ using System.Xml.Linq;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Reactor : Powered
     {
@@ -106,6 +106,7 @@ namespace Subsurface.Items.Components
         public bool AutoTemp
         {
             get { return autoTemp; }
+            set { autoTemp = value; }
         }
 
         public float ExtraCooling { get; set; }
@@ -115,7 +116,7 @@ namespace Subsurface.Items.Components
         public float ShutDownTemp
         {
             get { return shutDownTemp; }
-            private set { shutDownTemp = MathHelper.Clamp(value, 0.0f, 10000.0f); }
+            set { shutDownTemp = MathHelper.Clamp(value, 0.0f, 10000.0f); }
         }
 
         public Reactor(Item item, XElement element)
@@ -137,7 +138,7 @@ namespace Subsurface.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
-            //ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             
             fissionRate = Math.Min(fissionRate, AvailableFuel);
             

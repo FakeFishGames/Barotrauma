@@ -5,7 +5,7 @@ using FarseerPhysics.Dynamics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Items.Components;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     public enum Direction : byte
     {
@@ -516,11 +516,17 @@ namespace Subsurface
             }
             catch
             {
-                DebugConsole.ThrowError("Couldn't load submarine ''" + file + "! (Unrecognized file extension)");
-                return null;
+                //no file extension specified: try using the default one
+                file += ".sub";
             }
 
-            if (extension == ".gz")
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                extension = ".sub";
+                file += ".sub";
+            }
+
+            if (extension == ".sub")
             {
                 Stream stream = SaveUtil.DecompressFiletoStream(file);
                 if (stream == null)
@@ -580,8 +586,7 @@ namespace Subsurface
                 Type t;
                 try
                 {
-                    // Get the type of a specified class.
-                    t = Type.GetType("Subsurface." + typeName, true, true);
+                    t = Type.GetType("Barotrauma." + typeName, true, true);
                     if (t == null)
                     {
                         DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type ''" + typeName + "''.");

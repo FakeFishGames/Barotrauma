@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
 
-namespace Subsurface.Networking
+namespace Barotrauma.Networking
 {
     enum NetworkEventType
     {

@@ -1,18 +1,23 @@
 ﻿using Lidgren.Network;
 using Microsoft.Xna.Framework;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class AICharacter : Character
     {
         const float AttackBackPriority = 1.0f;
 
         private AIController aiController;
+
+        public override AIController AIController
+        {
+            get { return aiController; }
+        }
 
         public AICharacter(string file) : this(file, Vector2.Zero, null)
         {
@@ -37,7 +42,10 @@ namespace Subsurface
         public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
             : base(file, position, characterInfo, isNetworkPlayer)
         {
-            aiController = new EnemyAIController(this, file);            
+            aiController = new EnemyAIController(this, file);
+
+
+            if (GameMain.Client != null && GameMain.Server == null) Enabled = false;
         }
 
         public override void Update(Camera cam, float deltaTime)

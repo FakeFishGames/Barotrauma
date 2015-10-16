@@ -5,14 +5,14 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Subsurface.Networking;
-using Subsurface.Particles;
+using Barotrauma.Networking;
+using Barotrauma.Particles;
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using System.Xml;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class GameMain : Game
     {

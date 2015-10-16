@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Xml.Linq;
 using System.Linq;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class JobPrefab
     {
@@ -20,13 +20,15 @@ namespace Subsurface
         //(i.e. if one captain is required, one captain is chosen even if all the players have set captain to lowest preference)
         private int minNumber;
 
+        private float commonness;
+
         //if set to true, a client that has chosen this as their preferred job will get it no matter what
         public bool AllowAlways
         {
             get;
             private set;
         }
-        
+                       
         //names of the items the character spawns with
         public List<string> ItemNames;
         public List<bool> EquipItem;
@@ -53,6 +55,11 @@ namespace Subsurface
             get { return minNumber; }
         }
 
+        public float Commonness
+        {
+            get { return commonness; }
+        }
+
         public JobPrefab(XElement element)
         {
             name = ToolBox.GetAttributeString(element, "name", "name not found");
@@ -61,6 +68,8 @@ namespace Subsurface
 
             minNumber = ToolBox.GetAttributeInt(element, "minnumber", 0);
             maxNumber = ToolBox.GetAttributeInt(element, "maxnumber", 10);
+
+            commonness = ToolBox.GetAttributeInt(element, "commonness", 10);
 
             AllowAlways = ToolBox.GetAttributeBool(element, "allowalways", false);
 

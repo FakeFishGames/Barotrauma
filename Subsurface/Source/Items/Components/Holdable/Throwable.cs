@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Throwable : Holdable
     {

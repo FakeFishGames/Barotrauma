@@ -3,7 +3,7 @@ using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class PowerContainer : Powered
     {
@@ -92,9 +92,6 @@ namespace Subsurface.Items.Components
 
             //if (item.linkedTo.Count == 0) return;
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-            
-
             foreach (Connection c in item.Connections)
             {
                 foreach (Connection c2 in c.Recipients)
@@ -106,22 +103,13 @@ namespace Subsurface.Items.Components
                 }
             }
 
-            //foreach (MapEntity e in item.linkedTo)
-            //{
-            //    Item it = e as Item;
-            //    if (it == null) continue;
-
-            //    PowerTransfer pt = it.GetComponent<PowerTransfer>();
-            //    if (pt==null) continue;
-            //    //gridPower -= pt.PowerConsumption;
-            //    gridLoad += pt.PowerLoad;                    
-                
-            //    //gridPower = -jb.PowerConsumption;
-            //    //gridLoad = jb.load;
-            //    break;
-            //}
 
             float gridRate = voltage;
+
+            if (gridRate>minVoltage)
+            {
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);            
+            }
 
             //recharge
             if (gridRate >= chargeRate)

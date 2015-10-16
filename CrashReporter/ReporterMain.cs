@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Subsurface;
+using Barotrauma;
 using System.IO;
 
 namespace CrashReporter

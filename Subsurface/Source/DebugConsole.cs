@@ -4,9 +4,9 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 
-namespace Subsurface
+namespace Barotrauma
 {
     struct ColoredText
     {
@@ -289,7 +289,7 @@ namespace Subsurface
                         DebugConsole.ThrowError("Illegal symbols in filename (../)");
                         return;
                     }
-                    Submarine.SaveCurrent(fileName +".gz");
+                    Submarine.SaveCurrent(fileName +".sub");
                     NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using Subsurface.Networking;
+using Barotrauma.Networking;
 
-namespace Subsurface
+namespace Barotrauma
 {
     class TraitorMode : GameMode
     {

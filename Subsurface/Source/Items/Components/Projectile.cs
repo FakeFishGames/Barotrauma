@@ -8,7 +8,7 @@ using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Projectile : ItemComponent
     {

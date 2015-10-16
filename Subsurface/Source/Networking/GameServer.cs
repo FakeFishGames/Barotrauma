@@ -6,7 +6,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
 
-namespace Subsurface.Networking
+namespace Barotrauma.Networking
 {
     class GameServer : NetworkMember
     {
@@ -1002,6 +1002,15 @@ namespace Subsurface.Networking
                 }
             }
 
+            //share the rest of the jobs according to the ''commonness'' of the job
+            float totalCommonness = 0.0f;
+            for (int i = 0; i < JobPrefab.List.Count; i++)
+            {
+                if (JobPrefab.List[i].AllowAlways || JobPrefab.List[i].MaxNumber == 0) continue;
+
+                totalCommonness += JobPrefab.List[i].Commonness;
+            }
+
             for (int preferenceIndex = 0; preferenceIndex < 3; preferenceIndex++)
             {
                 for (int i = unassigned.Count - 1; i >= 0; i--)
@@ -1018,7 +1027,7 @@ namespace Subsurface.Networking
                 }
             }
 
-            //UpdateNetLobby(null);
+            UpdateNetLobby(null);
 
         }
 

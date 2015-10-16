@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using FarseerPhysics;
 using System;
 
-namespace Subsurface.Particles
+namespace Barotrauma.Particles
 {
     class ParticleEmitterPrefab
     {        

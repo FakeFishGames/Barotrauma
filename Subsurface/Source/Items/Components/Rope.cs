@@ -11,7 +11,7 @@ using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Subsurface.Items.Components
+namespace Barotrauma.Items.Components
 {
     class Rope : ItemComponent
     {
