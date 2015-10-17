@@ -20,15 +20,15 @@ namespace Barotrauma.Items.Components
 
         float powerPerForce;
 
-        [Editable, HasDefaultValue(1.0f, true)]
-        public float PowerPerForce
-        {
-            get { return powerPerForce; }
-            set
-            {
-                powerPerForce = Math.Max(0.0f, value);
-            }
-        }
+        //[Editable, HasDefaultValue(1.0f, true)]
+        //public float PowerPerForce
+        //{
+        //    get { return powerPerForce; }
+        //    set
+        //    {
+        //        powerPerForce = Math.Max(0.0f, value);
+        //    }
+        //}
 
         [Editable, HasDefaultValue(2000.0f, true)]
         public float MaxForce
@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            currPowerConsumption = Math.Abs(targetForce) * powerPerForce;
+            currPowerConsumption = Math.Abs(targetForce)/100.0f * powerConsumption;
 
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Force != 0.0f)

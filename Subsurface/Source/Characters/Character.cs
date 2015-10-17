@@ -112,7 +112,7 @@ namespace Barotrauma
         {
             get
             {
-                return SpeciesName;
+                return (info != null && !string.IsNullOrWhiteSpace(info.Name)) ? info.Name : SpeciesName;
             }
         }
 
@@ -604,20 +604,30 @@ namespace Barotrauma
             return closestCharacter;
         }
 
-        private void ToggleSelectedCharacter(Character selected)
+        private void SelectCharacter(Character character, bool createNetworkEvent = true)
         {
-            if (selectedCharacter != null)
-            {                
-                foreach (Limb limb in selectedCharacter.AnimController.Limbs)
-                {
-                    limb.pullJoint.Enabled = false;
-                }
-                selectedCharacter = null;
-            }
-            else
+            if (character == null) return;
+
+            selectedCharacter = character;
+
+           if (createNetworkEvent) 
+                new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, selectedCharacter.ID);
+
+        }
+
+        private void DeselectCharacter(bool createNetworkEvent = true)
+        {
+            if (selectedCharacter == null) return;
+            
+            foreach (Limb limb in selectedCharacter.AnimController.Limbs)
             {
-                selectedCharacter = selected;
+                limb.pullJoint.Enabled = false;
             }
+
+            selectedCharacter = null;
+
+            if (createNetworkEvent)
+                new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, -1);
         }
 
         /// <summary>
@@ -724,7 +734,7 @@ namespace Barotrauma
                 if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f ||
                     (!selectedCharacter.isDead && selectedCharacter.Stun <= 0.0f))
                 {
-                    ToggleSelectedCharacter(selectedCharacter);
+                    DeselectCharacter();
                 }
             }
 
@@ -732,12 +742,12 @@ namespace Barotrauma
             {
                 if (selectedCharacter != null)
                 {
-                    ToggleSelectedCharacter(selectedCharacter);
+                    DeselectCharacter();
                 }
                 else if (closestCharacter != null && closestCharacter.IsHumanoid &&
                     (closestCharacter.isDead || closestCharacter.AnimController.StunTimer > 0.0f))
                 {
-                    selectedCharacter = closestCharacter;
+                    SelectCharacter(closestCharacter);
                 }
             }            
 
@@ -1081,6 +1091,11 @@ namespace Barotrauma
                 message.Write((int)data);
                 return;
             }
+            else if (type== NetworkEventType.SelectCharacter)
+            {
+                message.Write((int)data);
+                return;
+            }
             else if (type == NetworkEventType.KillCharacter)
             {
                 return;            
@@ -1177,6 +1192,20 @@ namespace Barotrauma
 
                 return;
             } 
+            else if (type == NetworkEventType.SelectCharacter)
+            {
+                int characterId = message.ReadInt32();
+                if (characterId==-1)
+                {
+                    DeselectCharacter(false);
+                }
+                else
+                {
+                    Character character = FindEntityByID(characterId) as Character;
+                    if (character != null) SelectCharacter(character, false);
+                }
+                return;
+            }
             else if (type == NetworkEventType.KillCharacter)
             {
                 Kill(true);

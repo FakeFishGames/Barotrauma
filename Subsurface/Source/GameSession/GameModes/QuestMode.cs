@@ -32,9 +32,9 @@ namespace Barotrauma
             quest = Quest.LoadRandom(locations, rand);
         }
 
-        public override void Start(TimeSpan duration)
+        public override void Start()
         {
-            base.Start(duration);
+            base.Start();
 
             new GUIMessageBox(quest.Name, quest.Description, 400, 400);
 

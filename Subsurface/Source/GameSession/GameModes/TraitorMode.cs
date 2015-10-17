@@ -15,9 +15,9 @@ namespace Barotrauma
 
         }
 
-        public override void Start(TimeSpan duration)
+        public override void Start()
         {
-            base.Start(duration);
+            base.Start();
 
             traitor = null;
             target = null;
@@ -56,7 +56,7 @@ namespace Barotrauma
                 {
                     string endMessage = traitor.character.Info.Name + " was a traitor! ";
                     endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
-                    endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was succesful.";
+                    endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was successful.";
                     End(endMessage);
                 }
                 else if (traitor.character.IsDead)
@@ -76,14 +76,6 @@ namespace Barotrauma
                     endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
                     endMessage += " task was to assassinate " + target.character.Info.Name + ". ";
                     endMessage += "The task was unsuccessful - the has submarine reached its destination.";
-                    End(endMessage);
-                    return;
-                }
-                else if (DateTime.Now >= endTime)
-                {
-                    string endMessage = traitor.character.Info.Name + " was a traitor! ";
-                    endMessage += (traitor.character.Info.Gender == Gender.Male) ? "His" : "Her";
-                    endMessage += " task was to assassinate " + target.character.Info.Name + ". The task was unsuccesful.";
                     End(endMessage);
                     return;
                 }    

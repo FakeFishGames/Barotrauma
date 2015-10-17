@@ -2,6 +2,7 @@
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -18,11 +19,22 @@ namespace Barotrauma.Items.Components
 
         private Character user;
 
+        private float reload;
+
+        private float reloadTimer;
+
         [HasDefaultValue(0.0f, false)]
         public float Range
         {
             get { return ConvertUnits.ToDisplayUnits(range); }
             set { range = ConvertUnits.ToSimUnits(value); }
+        }
+
+        [HasDefaultValue(0.5f, false)]
+        public float Reload
+        {
+            get { return reload; }
+            set { reload = Math.Max(0.0f, value); }
         }
 
         public MeleeWeapon(Item item, XElement element)
@@ -35,21 +47,18 @@ namespace Barotrauma.Items.Components
                 if (subElement.Name.ToString().ToLower() != "attack") continue;
                 attack = new Attack(subElement);
             }
-
-            if (attack==null)
-            {
-                DebugConsole.ThrowError("Item ''"+item.Name+"'' doesn't have an attack configured");
-            }
         }
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null) return false;
+            if (character == null || reloadTimer>0.0f) return false;
             if (!character.GetInputState(InputType.SecondaryHeld) || hitting) return false;
 
             user = character;
 
             if (hitPos < MathHelper.Pi * 0.69f) return false;
+
+            reloadTimer = reload;
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
@@ -95,6 +104,8 @@ namespace Barotrauma.Items.Components
             if (!item.body.Enabled) return;
             if (!picker.HasSelectedItem(item)) IsActive = false;
 
+            reloadTimer -= deltaTime;
+
             if (!picker.GetInputState(InputType.SecondaryHeld) && !hitting) hitPos = 0.0f;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
@@ -117,8 +128,6 @@ namespace Barotrauma.Items.Components
                 {
                     ac.HoldItem(deltaTime, item, handlePos, new Vector2(hitPos, 0.0f), aimPos, false, 0.0f);
                 }
-
-
             }
             else
             {
@@ -174,20 +183,24 @@ namespace Barotrauma.Items.Components
                 if (limb.character == picker) return false;
                 target = limb.character;
             }
+            else
+            {
+                return false;
+            }
 
-            if (target==null)
+            if (target == null)
             {
                 target = f2.Body.UserData as IDamageable;
             }
 
             if (target == null) return false;
 
-            attack.DoDamage(user, target, item.Position, 1.0f);
+            if (attack!=null) attack.DoDamage(user, target, item.Position, 1.0f);
 
             RestoreCollision();
             hitting = false;
 
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, picker);
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, limb.character);
 
             return true;
         }

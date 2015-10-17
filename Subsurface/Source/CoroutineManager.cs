@@ -95,10 +95,7 @@ namespace Barotrauma
         {
             timer -= deltaTime;
             return timer<=0.0f;
-
         }
-
-
     }
 
 

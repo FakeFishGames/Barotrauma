@@ -37,7 +37,7 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count)];
+            Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
 
             item = new Item(itemPrefab, position + level.Position);
             item.MoveWithLevel = true;

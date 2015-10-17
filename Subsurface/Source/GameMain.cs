@@ -268,6 +268,8 @@ namespace Barotrauma
 
             if (hasLoaded && !titleScreenOpen)
             {
+                AmbientSoundManager.Update();
+
                 if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
                 DebugConsole.Update(this, (float)deltaTime);

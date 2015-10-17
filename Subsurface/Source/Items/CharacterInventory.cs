@@ -155,7 +155,12 @@ namespace Barotrauma
                 if (items[i].Combine(item))
                 {
                     //PutItem(items[i], i, false, false);
-                    new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, items[i].ID, true);
+                    Inventory otherInventory = items[i].inventory;
+                    if (otherInventory!=null)
+                    {
+                        new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.ID, true);
+                    }
+
                     combined = true;
                 }
 

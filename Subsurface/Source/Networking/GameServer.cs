@@ -601,7 +601,7 @@ namespace Barotrauma.Networking
             int seed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(seed);
             GameMain.GameSession = new GameSession(selectedSub, "", GameMain.NetLobbyScreen.SelectedMode);
-            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.GameDuration, GameMain.NetLobbyScreen.LevelSeed);
+            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
 
             yield return CoroutineStatus.Running;
 
@@ -662,7 +662,7 @@ namespace Barotrauma.Networking
 
             msg.Write(GameMain.NetLobbyScreen.SelectedMode.Name);
 
-            msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
+            //msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
             msg.Write((myCharacter == null) ? connectedClients.Count : connectedClients.Count + 1);
             foreach (Client client in connectedClients)
@@ -703,8 +703,7 @@ namespace Barotrauma.Networking
 
         public IEnumerable<object> EndGame(string endMessage)
         {
-
-            var messageBox = new GUIMessageBox("The round has ended", endMessage);
+            var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
             
             Character.Controlled = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
@@ -753,6 +752,8 @@ namespace Barotrauma.Networking
             } while (secondsLeft > 0.0f);
 
             Submarine.Unload();
+
+            messageBox.Close(null, null);
 
             GameMain.NetLobbyScreen.Select();
 
@@ -1003,17 +1004,18 @@ namespace Barotrauma.Networking
             }
 
             //share the rest of the jobs according to the ''commonness'' of the job
-            float totalCommonness = 0.0f;
-            for (int i = 0; i < JobPrefab.List.Count; i++)
-            {
-                if (JobPrefab.List[i].AllowAlways || JobPrefab.List[i].MaxNumber == 0) continue;
+            //float totalCommonness = 0.0f;
+            //for (int i = 0; i < JobPrefab.List.Count; i++)
+            //{
+            //    if (JobPrefab.List[i].AllowAlways || JobPrefab.List[i].MaxNumber == 0) continue;
 
-                totalCommonness += JobPrefab.List[i].Commonness;
-            }
+            //    totalCommonness += JobPrefab.List[i].Commonness;
+            //}
 
-            for (int preferenceIndex = 0; preferenceIndex < 3; preferenceIndex++)
+            //find a suitable job for the rest of the players
+            for (int i = unassigned.Count - 1; i >= 0; i--)
             {
-                for (int i = unassigned.Count - 1; i >= 0; i--)
+                for (int preferenceIndex = 0; preferenceIndex < 3; preferenceIndex++)
                 {
                     int jobIndex = JobPrefab.List.FindIndex(jp => jp == unassigned[i].jobPreferences[preferenceIndex]);
 
@@ -1024,6 +1026,7 @@ namespace Barotrauma.Networking
 
                     assignedClientCount[jobIndex]++;
                     unassigned.RemoveAt(i);
+                    break;
                 }
             }
 
@@ -1038,6 +1041,7 @@ namespace Barotrauma.Networking
             foreach (Client c in clients)
             {
                 int index = c.jobPreferences.FindIndex(jp => jp == job);
+                if (index == -1) index = 1000;
                 if (preferredClient == null || index < bestPreference)
                 {
                     bestPreference = index;

@@ -15,13 +15,13 @@ namespace Barotrauma
                 
         private GUIComponent infoBox;
 
-        public static void Start()
+        public static void StartTutorial()
         {
             Submarine.Load("Content/Map/TutorialSub.sub", "");
 
             GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLower()=="tutorial"));
 
-            GameMain.GameSession.StartShift(TimeSpan.Zero, "tutorial");
+            GameMain.GameSession.StartShift("tutorial");
 
             GameMain.GameSession.taskManager.Tasks.Clear();
 
@@ -34,9 +34,9 @@ namespace Barotrauma
             CrewManager = new CrewManager();
         }
 
-        public override void Start(TimeSpan duration)
+        public override void Start()
         {
-            base.Start(duration);
+            base.Start();
 
             WayPoint wayPoint = WayPoint.GetRandom(SpawnType.Cargo, null);
             if (wayPoint==null)
@@ -273,8 +273,15 @@ namespace Barotrauma
             yield return new WaitForSeconds(2.0f);
 
             infoBox = CreateInfoFrame("You can now move the other end of the wire around, and attach it on the wall by left clicking or "
-                + "remove the previous attachment by right clicking. Or you can just run the wire straight to the junction box and attach it "
-                + " the same way you did to the navigation terminal.");  
+                + "remove the previous attachment by right clicking. Or if you don't care for neatly laid out wiring, you can just "
+                +"run it straight to the junction box.");
+
+            while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.GetComponent<PowerTransfer>()==null)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            infoBox = CreateInfoFrame("Connect the wire to the junction box by pulling it to the power connection, the same way you did with the navigation terminal.");
 
             while (radar.Voltage<0.1f)
             {
@@ -346,10 +353,10 @@ namespace Barotrauma
                 Vector2 steeringDir = windows[0].Position - moloch.Position;
                 if (steeringDir != Vector2.Zero) steeringDir = Vector2.Normalize(steeringDir);
 
-                foreach (Limb limb in moloch.AnimController.Limbs)
-                {
-                    limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X*2.0f, limb.LinearVelocity.Y + steeringDir.Y*10.0f);
-                }
+                //foreach (Limb limb in moloch.AnimController.Limbs)
+                //{
+                //    limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X*2.0f, limb.LinearVelocity.Y + steeringDir.Y*10.0f);
+                //}
 
                 moloch.AIController.Steering = steeringDir;
 
@@ -365,11 +372,12 @@ namespace Barotrauma
                 }
 
 
-                yield return new WaitForSeconds(1.0f);
+                yield return new WaitForSeconds(0.1f);
             } while (!broken);
 
             yield return new WaitForSeconds(0.5f);
-            
+
+            Submarine.Loaded.GodMode = true;            
 
             var capacitor1 = Item.itemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
             var capacitor2 = Item.itemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
@@ -469,6 +477,8 @@ namespace Barotrauma
             {
                 yield return CoroutineStatus.Running;
             }
+
+            Submarine.Loaded.GodMode = false;
 
             infoBox = CreateInfoFrame("The creature has died. Now you should fix the damages in the control room: "+
                 "Grab a welding tool from the closet in the railgun room.");
@@ -584,7 +594,7 @@ namespace Barotrauma
 
         private bool Restart(GUIButton button, object obj)
         {
-            TutorialMode.Start();
+            TutorialMode.StartTutorial();
 
             return true;
         }

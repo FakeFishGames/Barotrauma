@@ -65,8 +65,6 @@ namespace Barotrauma
             //http://gafferongames.com/game-physics/fix-your-timestep/
             Physics.accumulator += deltaTime;
 
-            AmbientSoundManager.Update();
-
 #if DEBUG
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null)
             {

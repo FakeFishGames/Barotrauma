@@ -11,14 +11,17 @@ namespace Barotrauma.Networking
         DropItem = 3,
         InventoryUpdate = 4,
         PickItem = 5,
-        UpdateProperty = 6
+        UpdateProperty = 6,
+        WallDamage = 7,
+        SelectCharacter = 8
     }
 
     class NetworkEvent
     {
         public static List<NetworkEvent> events = new List<NetworkEvent>();
 
-        private static bool[] isImportant = { false, true, false, true, true, true, true };
+        private static bool[] isImportant = { false, true, false, true, true, true, true, true, true };
+        private static bool[] overridePrevious = { true, false, true, false, false, false, true, true, true };
 
         private int id;
 
@@ -68,7 +71,7 @@ namespace Barotrauma.Networking
 
             eventType = type;
 
-            if (!isImportant[(int)type])
+            if (overridePrevious[(int)type])
             {
                 if (events.Find(e => e.id == id && e.eventType == type) != null) return;
             }

@@ -61,6 +61,12 @@ namespace Barotrauma
             get { return lastPickedFraction; }
         }
 
+        public bool GodMode
+        {
+            get;
+            set;
+        }
+
         public Md5Hash MD5Hash
         {
             get

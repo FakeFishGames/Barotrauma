@@ -14,10 +14,14 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
+        bool hasPower;
+
         public override void Update(float deltaTime, Camera cam) 
         {
             currPowerConsumption = powerConsumption;
-            
+
+            hasPower = voltage > minVoltage;
+
             voltage = 0.0f;
         }
         
@@ -37,6 +41,8 @@ namespace Barotrauma.Items.Components
             int y = GuiFrame.Rect.Y;
 
             GuiFrame.Draw(spriteBatch);
+
+            if (!hasPower) return;
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x,y,width,height), Color.Black, true);
 

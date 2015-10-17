@@ -130,7 +130,7 @@ namespace Barotrauma
             return files;
         }
 
-        public static string CreateSavePath(string fileName="save")
+        public static string CreateSavePath(string fileName="Save")
         {
             if (!Directory.Exists(SaveFolder))
             {
@@ -142,12 +142,12 @@ namespace Barotrauma
             string pathWithoutExtension = Path.Combine(SaveFolder, fileName);
 
             int i = 0;
-            while (File.Exists(pathWithoutExtension + i + extension))
+            while (File.Exists(pathWithoutExtension + " " + i + extension))
             {
                 i++;
             }
 
-            return fileName + i;
+            return fileName + " " + i;
         }
 
         public static void CompressStringToFile(string fileName, string value)
