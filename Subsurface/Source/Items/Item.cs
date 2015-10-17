@@ -816,8 +816,11 @@ namespace Barotrauma
                 if (item.prefab.PickDistance == 0.0f) continue;  
                 if (Vector2.Distance(position, item.SimPosition) > item.prefab.PickDistance) continue;
 
-                Body body = Submarine.CheckVisibility(position, item.SimPosition);
-                if (body != null && body.UserData as Item != item) continue;
+                if (!item.prefab.PickThroughWalls)
+                {
+                    Body body = Submarine.CheckVisibility(position, item.SimPosition);
+                    if (body != null && body.UserData as Item != item) continue;
+                }
 
                 dist = Vector2.Distance(pickPosition, item.SimPosition);
                 if (dist < item.prefab.PickDistance && (closest == null || dist < closestDist))

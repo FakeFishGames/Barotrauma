@@ -53,7 +53,7 @@
   </Item>
 
   <Item
-    name="Body Armour"
+    name="Body Armor"
     pickdistance="150"
     tags="smallitem">
 

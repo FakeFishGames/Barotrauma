@@ -131,7 +131,9 @@ namespace Barotrauma
         
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-          if (type == NetworkEventType.KillCharacter)
+            Enabled = true;
+
+            if (type == NetworkEventType.KillCharacter)
             {
                 Kill(true);
                 return;

@@ -23,7 +23,7 @@ namespace Barotrauma
 
         private GUITextBox textBox, seedBox;
 
-        private GUIScrollBar durationBar;
+        //private GUIScrollBar durationBar;
 
         private GUIFrame playerFrame;
 
@@ -60,16 +60,7 @@ namespace Barotrauma
         {
             return ServerMessage;
         }
-
-        public TimeSpan GameDuration
-        {
-            get 
-            {
-                int minutes = (int)(durationBar.BarScroll* 60.0f);
-                return new TimeSpan(0, minutes, 0);
-            }
-        }
-
+        
         public List<JobPrefab> JobPreferences
         {
             get
@@ -100,10 +91,10 @@ namespace Barotrauma
             }
         }
 
-        public string DurationText()
-        {
-            return "Duration: " + GameDuration.TotalMinutes + " min";
-        }
+        //public string DurationText()
+        //{
+        //    return "Duration: " + GameDuration.TotalMinutes + " min";
+        //}
                 
         public NetLobbyScreen()
         {
@@ -214,20 +205,20 @@ namespace Barotrauma
 
             //duration ------------------------------------------------------------------
             
-            GUITextBlock durationText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 20),
-                "Duration: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
-            durationText.TextGetter = DurationText;
+            //GUITextBlock durationText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 20),
+            //    "Duration: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
+            //durationText.TextGetter = DurationText;
 
-            durationBar = new GUIScrollBar(new Rectangle(columnX, 150, columnWidth, 20),
-                GUI.Style, 0.1f, infoFrame);
-            durationBar.BarSize = 0.1f;
+            //durationBar = new GUIScrollBar(new Rectangle(columnX, 150, columnWidth, 20),
+            //    GUI.Style, 0.1f, infoFrame);
+            //durationBar.BarSize = 0.1f;
 
             //seed ------------------------------------------------------------------
             
-            new GUITextBlock(new Rectangle(columnX, 190, columnWidth, 20),
+            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 20),
                 "Level Seed: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
 
-            seedBox = new GUITextBox(new Rectangle(columnX, 220, columnWidth, 20),
+            seedBox = new GUITextBox(new Rectangle(columnX, 150, columnWidth, 20),
                 Alignment.TopLeft, GUI.Style, infoFrame);
             seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
@@ -262,8 +253,7 @@ namespace Barotrauma
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             
             subList.Enabled         = GameMain.Server != null;
-            modeList.Enabled        = GameMain.Server != null;
-            durationBar.Enabled     = GameMain.Server != null;                      
+            modeList.Enabled        = GameMain.Server != null;                  
             seedBox.Enabled         = GameMain.Server != null;                       
             serverMessage.Enabled   = GameMain.Server != null;
             ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
@@ -279,8 +269,7 @@ namespace Barotrauma
                 startButton.UserData = "startButton";
                 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
-                modeList.OnSelected += GameMain.Server.UpdateNetLobby;                
-                durationBar.OnMoved = GameMain.Server.UpdateNetLobby;
+                modeList.OnSelected += GameMain.Server.UpdateNetLobby;   
 
                 if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(-1);
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(-1);
@@ -702,10 +691,10 @@ namespace Barotrauma
             msg.Write(ServerMessage);
 
             msg.Write(modeList.SelectedIndex-1);
-            msg.Write(durationBar.BarScroll);
+            //msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
-            msg.Write((byte)(playerList.CountChildren - 1));
+            msg.Write((byte)(playerList.CountChildren));
             for (int i = 0; i < playerList.CountChildren; i++)
             {
                 string clientName = playerList.children[i].UserData as string;
@@ -721,7 +710,7 @@ namespace Barotrauma
             string mapName="", md5Hash="";
             
             int modeIndex = 0;
-            float durationScroll = 0.0f;
+            //float durationScroll = 0.0f;
             string levelSeed = "";
 
             try
@@ -734,7 +723,7 @@ namespace Barotrauma
 
                 modeIndex = msg.ReadInt32();
 
-                durationScroll = msg.ReadFloat();
+                //durationScroll = msg.ReadFloat();
 
                 levelSeed = msg.ReadString();
 
@@ -756,7 +745,7 @@ namespace Barotrauma
 
             modeList.Select(modeIndex);
 
-            durationBar.BarScroll = durationScroll;
+            //durationBar.BarScroll = durationScroll;
 
             LevelSeed = levelSeed;
         }

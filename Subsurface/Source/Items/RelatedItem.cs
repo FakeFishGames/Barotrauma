@@ -71,6 +71,42 @@ namespace Barotrauma
             statusEffects = new List<StatusEffect>();
         }
 
+        public bool CheckRequirements(Character character, Item parentItem)
+        {
+            switch (type)
+            {
+                case RelationType.Contained:
+                    if (parentItem == null) return false;
+                    foreach (Item contained in parentItem.ContainedItems)
+                    {
+                        if (contained.Condition>0.0f && MatchesItem(contained)) return true;
+                    }
+                    break;
+                case RelationType.Equipped:
+                    if (character == null) return false;
+                    foreach (Item equippedItem in character.SelectedItems)
+                    {
+                        if (equippedItem == null) continue;
+
+                        if (equippedItem.Condition>0.0f && MatchesItem(equippedItem)) return true;
+                    }
+                    break;
+                case RelationType.Picked:
+                    if (character == null || character.Inventory==null) return false;
+                    foreach (Item pickedItem in character.Inventory.items)
+                    {
+                        if (pickedItem == null) continue;
+
+                        if (MatchesItem(pickedItem)) return true;
+                    }
+                    break;
+                default:
+                    return true;
+            }
+
+            return false;
+        }
+
         public void Save(XElement element)
         {
             element.Add(

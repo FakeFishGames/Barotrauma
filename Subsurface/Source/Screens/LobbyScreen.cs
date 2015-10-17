@@ -447,7 +447,7 @@ namespace Barotrauma
         private bool StartShift(GUIButton button, object selection)
         {
             //GameMain.ShowLoading(ShiftLoading());
-            GameMain.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
+            GameMain.GameSession.StartShift(selectedLevel, false);
             GameMain.GameScreen.Select();
             
             return true;
@@ -455,7 +455,7 @@ namespace Barotrauma
 
         private IEnumerable<object> ShiftLoading()
         {
-            GameMain.GameSession.StartShift(TimeSpan.Zero, selectedLevel, false);
+            GameMain.GameSession.StartShift(selectedLevel, false);
             GameMain.GameScreen.Select();
 
             yield return CoroutineStatus.Success;

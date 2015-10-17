@@ -25,6 +25,8 @@ namespace Barotrauma
         //how close the character has to be to the item to pick it up
         private float pickDistance;
 
+        private bool pickThroughWalls;
+
         //an area next to the construction
         //the construction can be Activated() by a character inside the area
         public List<Rectangle> Triggers;
@@ -37,6 +39,11 @@ namespace Barotrauma
         public float PickDistance
         {
             get { return pickDistance; }
+        }
+
+        public bool PickThroughWalls
+        {
+            get { return pickThroughWalls; }
         }
 
 
@@ -146,6 +153,7 @@ namespace Barotrauma
             name = ToolBox.GetAttributeString(element, "name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
 
+            pickThroughWalls = ToolBox.GetAttributeBool(element, "pickthroughwalls", false);
             pickDistance = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f));
             
             isLinkable          = ToolBox.GetAttributeBool(element, "linkable", false);

@@ -423,6 +423,7 @@ namespace Barotrauma
 
         public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
         {
+            if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return new AttackResult(0.0f, 0.0f);
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
             int i = FindSectionIndex(ConvertUnits.ToDisplayUnits(position));
@@ -445,13 +446,13 @@ namespace Barotrauma
 
         private void SetDamage(int sectionIndex, float damage)
         {
+            if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return;
             if (!prefab.HasBody) return;
 
             if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage)>5.0f)
             {
-                new NetworkEvent(NetworkEventType.UpdateEntity, ID, false, sectionIndex);
+                new NetworkEvent(NetworkEventType.WallDamage, ID, false, sectionIndex);
                 sections[sectionIndex].lastSentDamage = damage;
-
             }
             
             if (damage < prefab.MaxHealth*0.5f)

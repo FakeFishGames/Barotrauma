@@ -88,6 +88,8 @@ namespace Barotrauma
                 
                 CrewManager = new CrewManager(subElement);                
             }
+
+            savedOnStart = true;
         }
 
         public void GenerateMap(string seed)
@@ -95,7 +97,7 @@ namespace Barotrauma
             Map = new Map(seed, 500);
         }
 
-        public override void Start(TimeSpan duration)
+        public override void Start()
         {
             CargoManager.CreateItems();
 
@@ -181,11 +183,13 @@ namespace Barotrauma
 
             isRunning = false;
 
+            GameMain.GameSession.EndShift("");
+
             //if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
 
 
             StringBuilder sb = new StringBuilder();
-            List<Character> casualties = CrewManager.characters.FindAll(c => c.IsDead);
+            List<Character> casualties = CrewManager.characters.FindAll(c => c.IsDead);            
 
             if (casualties.Count == CrewManager.characters.Count)
             {
@@ -226,8 +230,7 @@ namespace Barotrauma
                 Character.CharacterList[i].Remove();
             }
 
-            GameMain.GameSession.EndShift("");
-
+            Submarine.Unload();
         }
 
         private bool EndShift(GUIButton button, object obj)

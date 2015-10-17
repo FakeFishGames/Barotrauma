@@ -42,6 +42,7 @@ namespace Barotrauma
             Rectangle panelRect = new Rectangle(0, 0, width, height);
 
             menu = new GUIFrame(panelRect, null, Alignment.Center, GUI.Style);
+            menu.Padding = new Vector4(40.0f, 40.0f, 40.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0, -25, 0, 30), "Join Server", GUI.Style, Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
 
@@ -53,7 +54,7 @@ namespace Barotrauma
 
             int middleX = (int)(width * 0.4f);
 
-            serverList = new GUIListBox(new Rectangle(middleX,60,0,(int)(height*0.7f)), GUI.Style, menu);
+            serverList = new GUIListBox(new Rectangle(middleX,60,0,height-160), GUI.Style, menu);
             serverList.OnSelected = SelectServer;
 
             float[] columnRelativeX = new float[] { 0.15f, 0.55f, 0.15f, 0.15f };

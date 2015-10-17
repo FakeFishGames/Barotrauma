@@ -98,14 +98,14 @@ namespace Barotrauma
             }
         }
 
-        public void StartShift(TimeSpan duration, string levelSeed)
+        public void StartShift(string levelSeed)
         {
             Level level = Level.CreateRandom(levelSeed);
 
-            StartShift(duration, level);
+            StartShift(level);
         }
 
-        public void StartShift(TimeSpan duration, Level level, bool reloadSub = true)
+        public void StartShift(Level level, bool reloadSub = true)
         {
             GameMain.LightManager.LosEnabled = (GameMain.Server==null || GameMain.Server.CharacterInfo!=null);
                         
@@ -129,7 +129,7 @@ namespace Barotrauma
 
             if (Quest!=null) Quest.Start(Level.Loaded);
 
-            if (gameMode!=null) gameMode.Start(duration);
+            if (gameMode!=null) gameMode.Start();
             
             taskManager.StartShift(level);
         }
@@ -145,7 +145,7 @@ namespace Barotrauma
             }
             else if (GameMain.Client==null)
             {
-                Submarine.Unload();
+                //Submarine.Unload();
                 GameMain.LobbyScreen.Select();
             }
             

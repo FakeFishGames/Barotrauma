@@ -10,14 +10,10 @@ namespace Barotrauma
     {
         public static List<GameModePreset> PresetList = new List<GameModePreset>();
 
-        TimeSpan duration;
         protected DateTime startTime;
-        protected DateTime endTime;
 
         //public readonly bool IsSinglePlayer;
 
-        private GUIProgressBar timerBar;
-        
         protected bool isRunning;
 
         //protected string name;
@@ -29,16 +25,6 @@ namespace Barotrauma
         public virtual Quest Quest
         {
             get { return null; }
-        }
-
-        public DateTime StartTime
-        {
-            get { return startTime; }
-        }
-
-        public DateTime EndTime
-        {
-            get { return endTime; }
         }
 
         public bool IsRunning
@@ -68,19 +54,19 @@ namespace Barotrauma
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            if (timerBar != null) timerBar.Draw(spriteBatch);
+            //if (timerBar != null) timerBar.Draw(spriteBatch);
         }
 
-        public virtual void Start(TimeSpan duration)
+        public virtual void Start()
         {
             startTime = DateTime.Now;
-            if (duration!=TimeSpan.Zero)
-            {
-                endTime = startTime + duration;
-                this.duration = duration;
+            //if (duration!=TimeSpan.Zero)
+            //{
+            //    endTime = startTime + duration;
+            //    this.duration = duration;
 
-                timerBar = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth - 120, 20, 100, 25), Color.Gold, 0.0f, null);  
-            }
+            //    timerBar = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth - 120, 20, 100, 25), Color.Gold, 0.0f, null);  
+            //}
 
             endMessage = "The round has ended!";
 
@@ -89,13 +75,13 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime)
         {
-            if (!isRunning) return;
+            //if (!isRunning) return;
 
-            if (duration != TimeSpan.Zero)
-            {
-                double elapsedTime = (DateTime.Now - startTime).TotalSeconds;
-                timerBar.BarSize = (float)(elapsedTime / duration.TotalSeconds);
-            }
+            //if (duration != TimeSpan.Zero)
+            //{
+            //    double elapsedTime = (DateTime.Now - startTime).TotalSeconds;
+            //    timerBar.BarSize = (float)(elapsedTime / duration.TotalSeconds);
+            //}
             //if (DateTime.Now >= endTime)
             //{
             //    End(endMessage);                

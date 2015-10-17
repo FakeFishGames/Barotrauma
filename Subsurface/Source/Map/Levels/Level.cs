@@ -745,7 +745,7 @@ int currentTargetIndex = 1;
             }
 
             AtStartPosition = Vector2.Distance(startPosition, -Position) < ExitDistance;
-            AtEndPosition   = Vector2.Distance(endPosition, -Position) < ExitDistance;
+            AtEndPosition = Vector2.Distance(endPosition, -Position) < ExitDistance;
             
             prevVelocity = simVelocity;
         }

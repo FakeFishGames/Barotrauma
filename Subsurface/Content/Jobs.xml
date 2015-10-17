@@ -5,14 +5,14 @@
     <Item name="Captain's Cap" equip="true"/>
     <Item name="Captain's Jacket" equip="true"/>
     <Item name="Captain's Trousers" equip="true"/>
-    
+
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Construction" level="20,30"/>
       <Skill name="Electrical Engineering" level="20,30"/>
     </Skills>
   </Job>
-
+  
   <Job name="Engineer" description="Engineers have above-average construction and mechanic skills, but fixing complex mechanical devices is still usually out of their skill set. They are competent at fixing electrical devices however, and are the ones to turn to when the power grid starts failing." minnumber="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
@@ -41,9 +41,11 @@
       <Skill name="Construction" level="10,20"/>
       <Skill name="Electrical Engineering" level="10,20"/>
     </Skills>
+    <Item name="ID Card"/>
     <Item name="Stun Baton"/>
-    <Item name="Body Armor"/>
-    <Item name="Ballistic Helmet"/>
+    <Item name="Battery Cell"/>
+    <Item name="Body Armor" equip="true"/>
+    <Item name="Ballistic Helmet" equip="true"/>
   </Job>
 
   <Job name="Assistant" description="Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for." allowalways="true">

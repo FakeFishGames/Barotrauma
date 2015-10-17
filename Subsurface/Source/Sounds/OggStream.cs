@@ -529,7 +529,14 @@ namespace Barotrauma.Sounds
 
                         for (int i = 0; i < tempBuffers.Length; i++)
                         {
-                            finished |= FillBuffer(stream, tempBuffers[i]);
+                            try
+                            {
+                                finished |= FillBuffer(stream, tempBuffers[i]);
+                            }
+                            catch
+                            {
+                                continue;
+                            }
 
                             if (finished)
                             {

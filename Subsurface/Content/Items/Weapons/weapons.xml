@@ -4,6 +4,7 @@
   <Item
     name="Spear"
     pickdistance="200"
+    pickthroughwalls="true"
     price="50">
 
     <Sprite texture ="spear.png" depth="0.55"/>
@@ -67,12 +68,12 @@
     <Body width="90" height="30" density="10"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
-              aimpos="50,0" handle1="-15,-6" holdangle="100">
-      <RequiredItems name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>
-      <Attack stun="10.0" sound="Content/Items/Electricity/zap1.ogg"/>      
-      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
+              aimpos="50,0" handle1="-15,-6" holdangle="100" reload="1.0">
+      <Attack damage="2" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+      <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
+        <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
         <Explosion range="100.0" force="0.1" shockwave="false" flames="false" camerashake="5.0"/>
-      </StatusEffect>
+      </StatusEffect>         
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
@@ -81,9 +82,10 @@
   </Item>
 
   <Item
-  name="Battery Cell"
-  pickdistance="150"
-  tags="smallitem,loadable">
+    name="Battery Cell"
+    pickdistance="150"
+    tags="smallitem,loadable"
+    price="50">
 
     <Sprite texture ="stunbaton.png" sourcerect="0,0,20,9" depth="0.8"/>
 

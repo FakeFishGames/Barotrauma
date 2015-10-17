@@ -196,7 +196,7 @@ namespace Barotrauma
 
         private bool TutorialButtonClicked(GUIButton button, object obj)
         {
-            TutorialMode.Start();
+            TutorialMode.StartTutorial();
 
             return true;
         }

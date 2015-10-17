@@ -1,5 +1,68 @@
 
 ---------------------------------------------------------------------------------------------------------
+v0.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- major optimization and much better lag compensation
+	- tons of bugfixes that should fix most of the syncing issues
+	- admins can play on their own server without launching another instance of the game
+	- setting the job preferences actually does something now
+	- reconnecting to a server if the connection is temporarily lost works much better now
+	- proper error messages if UPnP port forwarding fails
+
+Items:
+	- security guard gear: ballistic vest, helmet & stun baton
+	- wifi components that can be used for transmitting signals between devices
+	- wall labels with a configurable text
+	- a bunch of new sprites and sounds
+	- wearing a diving suit slows the characters down
+	- supercapacitors
+	- attempting to fire the railgun when there are no shells loaded doesn't consume power anymore
+
+Submarine:
+	- improved version of Aegir
+	- a new submarine, "Vellamo"
+	- nuclear reactors overheat much more slowly and there are warning signals for overheating and a remote
+	shutdown button in both of the default subs
+	- ambient sounds change according to the speed of the sub
+	- fixed parts of the submarine getting stuck in the level on collision
+	- the autopilot is a much better driver now (although it may still crash at very tight spots)
+
+Crew:
+	- aiming underwater is much easier
+	- improved humanoid animations
+	- stunned/dead characters can be dragged
+	- all characters can now use plasma cutters and welders regardless of their skills, but insufficient
+	skill level will make them flicker and work much less efficiently
+	- same for the harpoon gun, anyone can shoot but lower levels will make the gun less accurate
+	- rewiring devices may cause electric shocks if the electrical engineering level is too low
+
+Creatures:
+	- some random "prop fish" swimming in the background
+	- a new hostile creature
+
+Misc:
+	- a tutorial going through all the basic tasks and game mechanics (more in-depth tutorials will be
+	added in future versions, including one for making custom subs)
+	- an auto-updater in the launcher
+	- the game generates a detailed report if it crashes
+	- physics optimization (i.e. using simplified physics & animation for off-screen characters and 
+	disabling them entirely if they're far enough)
+	- lighting optimization (caching the lights/shadows if a light source hasn't moved instead of 
+	recalculating them every frame)
+	- two new background music tracks
+	- better looking explosions
+	- better looking water particle effects
+	- minor UI improvements
+	- better UI scaling on different resolutions
+	- health/oxygen bar improvements and status icons for bleeding and water pressure	
+	- gap-hull connections are visible in the sub editor
+	- pumps don't have to be manually connected to a hull in the editor anymore, they automatically
+	empty/fill the hull they're inside
+
+
+---------------------------------------------------------------------------------------------------------
 v0.1.3.2
 ---------------------------------------------------------------------------------------------------------
 

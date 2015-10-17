@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -12,6 +13,8 @@ namespace Barotrauma.Items.Components
 
         bool running;
 
+        private float generatedAmount;
+
         List<Vent> ventList;
 
         public bool IsRunning()
@@ -23,6 +26,13 @@ namespace Barotrauma.Items.Components
         {
             get;
             private set;
+        }
+
+        [Editable, HasDefaultValue(100.0f, true)]
+        public float GeneratedAmount
+        {
+            get { return generatedAmount; }
+            set { generatedAmount = MathHelper.Clamp(value, -10000.0f, 10000.0f); }
         }
 
         public OxygenGenerator(Item item, XElement element)
@@ -64,7 +74,7 @@ namespace Barotrauma.Items.Components
 
             running = true;
 
-            CurrFlow = Math.Min(voltage, 1.0f) * 50000.0f;
+            CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount * 1000.0f;
             item.CurrentHull.Oxygen += CurrFlow * deltaTime;
 
             UpdateVents(CurrFlow);

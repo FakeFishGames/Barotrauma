@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -73,10 +74,16 @@ namespace Barotrauma
             }
 
             XElement graphicsMode = doc.Root.Element("graphicsmode");
-            GraphicsWidth = int.Parse(graphicsMode.Attribute("width").Value);
-            GraphicsHeight = int.Parse(graphicsMode.Attribute("height").Value);
-                
-            FullScreenEnabled = graphicsMode.Attribute("fullscreen").Value == "true";
+            GraphicsWidth = ToolBox.GetAttributeInt(graphicsMode, "width", 0);
+            GraphicsHeight = ToolBox.GetAttributeInt(graphicsMode, "height", 0);
+
+            if (GraphicsWidth==0 || GraphicsHeight==0)
+            {
+                GraphicsWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+                GraphicsHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+            }
+
+            FullScreenEnabled = ToolBox.GetAttributeBool(graphicsMode, "fullscreen", true);
 
             MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 

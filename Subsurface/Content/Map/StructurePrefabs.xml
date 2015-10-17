@@ -48,9 +48,6 @@
   <topwall sprite="Content/Map/testroom.png" sourcerect="144,464,496,32" depth ="0.06" castshadow="true"
   width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
 
-  <bottomwall sprite="Content/Map/testroom.png" flipvertical ="true" sourcerect="144,496,640,32" depth ="0.06" castshadow="true"
-  width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
-
   <topwindow sprite="Content/Map/testroom.png" sourcerect="208,352,128,80" depth ="0.05"
     width = "128" height ="80" body="true" health="100"/>
 
@@ -80,5 +77,8 @@
 
   <stairsleft sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="0,704,256,320" 
   width="256" height="320" depth = "0.1" stairdirection="Left"/>
+
+  <bunk sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="0,546,173,129"
+    width="173" height="129" depth = "0.9"/>
 
 </prefabs>

@@ -161,6 +161,22 @@ namespace Barotrauma
                 startDrone = null;                
             }
 
+            if (Submarine.Loaded==null)  
+            {
+
+
+                if (waterAmbienceIndexes[0] > 0)
+                {
+                    SoundManager.Stop(waterAmbienceIndexes[0]);
+                    SoundManager.Stop(waterAmbienceIndexes[1]);
+
+                    waterAmbienceIndexes[0] = 0;
+                    waterAmbienceIndexes[1] = 0;
+                }
+
+                return;
+            }
+
             float ambienceVolume = 0.8f;
             float lowpassHFGain = 1.0f;
             if (Character.Controlled != null)

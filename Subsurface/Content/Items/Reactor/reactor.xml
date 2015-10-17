@@ -50,7 +50,8 @@
   <Item
     name="Fuel Rod"
     Tags="smallitem"
-    pickdistance="150">
+    pickdistance="150"
+    price="200">
 
     <Sprite texture ="fuelrod.png"/>
 

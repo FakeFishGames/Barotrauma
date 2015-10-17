@@ -7,7 +7,7 @@
     reward="1000"
     radarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
-    successmessage="The artifact has been succesfully retrived"
+    successmessage="The artifact has been succesfully retrieved"
     itemname="Skyholder Artifact">    
   </SalvageQuest>
 

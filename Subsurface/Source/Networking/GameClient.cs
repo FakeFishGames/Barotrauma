@@ -247,12 +247,15 @@ namespace Barotrauma.Networking
                             if (connectionStatus != NetConnectionStatus.Connected)
                             {
                                 string denyMessage = inc.ReadString();
-                                DebugConsole.ThrowError(denyMessage);
+
+                                new GUIMessageBox("Couldn't connect to server", denyMessage);
+                                connectCanceled = true;
                             }
 
                             break;
                         default:
                             Console.WriteLine(inc.ReadString() + " Strange message");
+                            connectCanceled = true;
                             break;
                     }                
                 }
@@ -457,9 +460,6 @@ namespace Barotrauma.Networking
 
             yield return CoroutineStatus.Running;
 
-            double durationMinutes = inc.ReadDouble();
-
-            TimeSpan duration = new TimeSpan(0, (int)durationMinutes, 0);
             Rand.SetSyncedSeed(seed);
             //int gameModeIndex = inc.ReadInt32();
 
@@ -467,7 +467,7 @@ namespace Barotrauma.Networking
 
             yield return CoroutineStatus.Running;
 
-            GameMain.GameSession.StartShift(duration, levelSeed);
+            GameMain.GameSession.StartShift(levelSeed);
 
             yield return CoroutineStatus.Running;
 
@@ -501,9 +501,10 @@ namespace Barotrauma.Networking
 
         public IEnumerable<object> EndGame(string endMessage)
         {
+            var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
+
+            if (!gameStarted) yield return CoroutineStatus.Success;
             gameStarted = false;
-            
-            var messageBox = new GUIMessageBox("The round has ended", endMessage);
 
             Character.Controlled = null;
             GameMain.LightManager.LosEnabled = false;
@@ -529,7 +530,7 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Running;
             } while (secondsLeft > 0.0f);
 
-            messageBox.Text = endMessage;
+            messageBox.Close(null,null);
 
             Submarine.Unload();
 

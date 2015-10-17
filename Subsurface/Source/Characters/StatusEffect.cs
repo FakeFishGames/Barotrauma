@@ -18,6 +18,8 @@ namespace Barotrauma
         private TargetType targetTypes;
         private string[] targetNames;
 
+        private List<RelatedItem> requiredItems;
+
         public string[] propertyNames;
         private object[] propertyEffects;
 
@@ -62,10 +64,11 @@ namespace Barotrauma
                 
         protected StatusEffect(XElement element)
         {
+            requiredItems = new List<RelatedItem>();
+
             IEnumerable<XAttribute> attributes = element.Attributes();            
             List<XAttribute> propertyAttributes = new List<XAttribute>();
-
-
+            
             foreach (XAttribute attribute in attributes)
             {
                 switch (attribute.Name.ToString())
@@ -140,6 +143,14 @@ namespace Barotrauma
                     case "explosion":
                         explosion = new Explosion(subElement);
                         break;
+                    case "requireditem":
+                    case "requireditems":
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement);
+
+                        if (newRequiredItem == null) continue;
+                        
+                        requiredItems.Add(newRequiredItem);
+                        break;
                 }
             }
 
@@ -156,19 +167,42 @@ namespace Barotrauma
         //    if (this.type == type) Apply(deltaTime, character, item);
         //}
 
+        private bool HasRequiredItems(Entity entity)
+        {
+            if (requiredItems == null) return true;
+            foreach (RelatedItem requiredItem in requiredItems)
+            {
+                Item item = entity as Item;
+                if (item != null)
+                {
+                    if (!requiredItem.CheckRequirements(null, item)) return false;
+                }
+                Character character = entity as Character;
+                if (character != null)
+                {
+                    if (!requiredItem.CheckRequirements(character, null)) return false;
+                }
+            }
+            return true;
+        }
+
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, IPropertyObject target)
         {
+            if (this.type != type || !HasRequiredItems(entity)) return;
+
             if (targetNames != null && !targetNames.Contains(target.Name)) return;
 
             List<IPropertyObject> targets = new List<IPropertyObject>();
             targets.Add(target);
 
-            if (this.type == type) Apply(deltaTime, entity, targets);
+            Apply(deltaTime, entity, targets);
         }
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<IPropertyObject> targets)
         {
-            if (this.type == type) Apply(deltaTime, entity, targets);
+            if (this.type != type || !HasRequiredItems(entity)) return;
+
+            Apply(deltaTime, entity, targets);
         }
 
         protected virtual void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)

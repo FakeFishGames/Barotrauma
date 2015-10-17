@@ -273,7 +273,7 @@ namespace Barotrauma
                     }
                     break;
                 case "tutorial":
-                    TutorialMode.Start();
+                    TutorialMode.StartTutorial();
                     break;
                 case "lobbyscreen":
                 case "lobby":
@@ -281,6 +281,7 @@ namespace Barotrauma
                     break;
                 case "savemap":
                 case "savesub":
+                case "save":
                     if (commands.Length < 2) break;
 
                     string fileName = string.Join(" ", commands.Skip(1));
@@ -294,6 +295,7 @@ namespace Barotrauma
                     break;
                 case "loadmap":
                 case "loadsub":
+                case "load":
                     if (commands.Length < 2) break;
                     Submarine.Load(string.Join(" ", commands.Skip(1)));
                     break;
