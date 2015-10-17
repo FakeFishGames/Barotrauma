@@ -301,7 +301,14 @@ namespace Barotrauma
         {
             str = str.Substring(0, Math.Min(str.Length, 32));
 
+            str = str.PadLeft(4, 'a');
+
             byte[] asciiBytes = Encoding.ASCII.GetBytes(str);
+
+            for (int i = 4; i < asciiBytes.Length; i++)
+            {
+                asciiBytes[i % 4] |= asciiBytes[i];
+            }
 
             return BitConverter.ToInt32(asciiBytes, 0);
         }

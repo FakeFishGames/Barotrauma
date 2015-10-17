@@ -339,6 +339,8 @@ namespace Barotrauma
 
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+            FindHull();
         }
 
         public override void Move(Vector2 amount)
@@ -390,7 +392,7 @@ namespace Barotrauma
 
         public bool HasTag(string tag)
         {
-            return (tags.Contains(tag));
+            return (tags.Contains(tag) || tags.Contains(tag.ToLower()));
         }
 
 
@@ -863,7 +865,7 @@ namespace Barotrauma
             {
                 picker.SelectedConstruction = (picker.SelectedConstruction == this) ? null : this;
             }
-
+            
             if (!hasRequiredSkills && Character.Controlled==picker)
             {
                 GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);

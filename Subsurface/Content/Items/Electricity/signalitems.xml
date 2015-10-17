@@ -4,7 +4,7 @@
 
   <Item
     name="Wire"
-    Tags="smallitem"
+    Tags="smallitem,wire"
     pickdistance="150"
     linkable="true"
     canbepicked="true"
@@ -21,7 +21,7 @@
 
   <Item
     name="Red Wire"
-    Tags="smallitem"
+    Tags="smallitem,wire"
     spritecolor="1.0,0.0,0.0,1.0"
     pickdistance="150"
     linkable="true"
@@ -37,7 +37,7 @@
 
   <Item
     name="Blue Wire"
-    Tags="smallitem"
+    Tags="smallitem,wire"
     spritecolor="0.0,0.6,1.0,1.0"
     pickdistance="150"
     linkable="true"
@@ -53,7 +53,7 @@
 
   <Item
     name="Orange Wire"
-    Tags="smallitem"
+    Tags="smallitem,wire"
     spritecolor="1.0,0.5,0.0,1.0"
     pickdistance="150"
     linkable="true"

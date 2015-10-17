@@ -160,6 +160,8 @@ namespace Barotrauma
         public void GiveReward()
         {
             var mode = GameMain.GameSession.gameMode as SinglePlayerMode;
+            if (mode == null) return;
+
             mode.Money += reward;
 
             if (!string.IsNullOrWhiteSpace(successMessage))

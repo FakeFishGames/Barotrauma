@@ -23,11 +23,11 @@ namespace Barotrauma
 
         private GUITextBox textBox, seedBox;
 
-        //private GUIScrollBar durationBar;
-
-        private GUIFrame playerFrame;
+        private GUIFrame myPlayerFrame;
 
         private GUIFrame jobInfoFrame;
+
+        private GUIFrame playerFrame;
 
         private float camAngle;
 
@@ -125,11 +125,11 @@ namespace Barotrauma
 
             //player info panel ------------------------------------------------------------
 
-            playerFrame = new GUIFrame(
+            myPlayerFrame = new GUIFrame(
                 new Rectangle((int)(panelRect.Width * 0.7f + 20), 0,
                     (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.6f)),
                 GUI.Style, menu);
-            playerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            myPlayerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             //player list ------------------------------------------------------------------
 
@@ -139,6 +139,7 @@ namespace Barotrauma
                 GUI.Style, menu);
 
             playerList = new GUIListBox(new Rectangle(0,0,0,0), null, GUI.Style, playerListFrame);
+            playerList.OnSelected = SelectPlayer;
 
             //submarine list ------------------------------------------------------------------
 
@@ -203,16 +204,6 @@ namespace Barotrauma
 
             columnX += modeDescription.Rect.Width + 40;
 
-            //duration ------------------------------------------------------------------
-            
-            //GUITextBlock durationText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 20),
-            //    "Duration: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
-            //durationText.TextGetter = DurationText;
-
-            //durationBar = new GUIScrollBar(new Rectangle(columnX, 150, columnWidth, 20),
-            //    GUI.Style, 0.1f, infoFrame);
-            //durationBar.BarSize = 0.1f;
-
             //seed ------------------------------------------------------------------
             
             new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 20),
@@ -253,6 +244,7 @@ namespace Barotrauma
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             
             subList.Enabled         = GameMain.Server != null;
+            playerList.Enabled      = GameMain.Server != null;
             modeList.Enabled        = GameMain.Server != null;                  
             seedBox.Enabled         = GameMain.Server != null;                       
             serverMessage.Enabled   = GameMain.Server != null;
@@ -274,9 +266,9 @@ namespace Barotrauma
                 if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(-1);
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(-1);
 
-                if (playerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
+                if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
@@ -292,40 +284,40 @@ namespace Barotrauma
 
         private void UpdatePlayerFrame(CharacterInfo characterInfo)
         {
-            if (playerFrame.children.Count <= 1)
+            if (myPlayerFrame.children.Count <= 1)
             {
-                playerFrame.ClearChildren();
+                myPlayerFrame.ClearChildren();
 
                 if (IsServer && GameMain.Server != null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
 
-                new GUITextBlock(new Rectangle(60, 30, 200, 30), "Name: ", GUI.Style, playerFrame);
+                new GUITextBlock(new Rectangle(60, 30, 200, 30), "Name: ", GUI.Style, myPlayerFrame);
 
                 GUITextBox playerName = new GUITextBox(new Rectangle(60, 55, 0, 20),
-                    Alignment.TopLeft, GUI.Style, playerFrame);
+                    Alignment.TopLeft, GUI.Style, myPlayerFrame);
                 playerName.Text = characterInfo.Name;
                 playerName.OnEnter += ChangeCharacterName;
 
-                new GUITextBlock(new Rectangle(0, 100, 200, 30), "Gender: ", GUI.Style, playerFrame);
+                new GUITextBlock(new Rectangle(0, 100, 200, 30), "Gender: ", GUI.Style, myPlayerFrame);
 
                 GUIButton maleButton = new GUIButton(new Rectangle(70, 100, 60, 20), "Male",
-                    Alignment.TopLeft, GUI.Style, playerFrame);
+                    Alignment.TopLeft, GUI.Style, myPlayerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
                 GUIButton femaleButton = new GUIButton(new Rectangle(140, 100, 60, 20), "Female",
-                    Alignment.TopLeft, GUI.Style, playerFrame);
+                    Alignment.TopLeft, GUI.Style, myPlayerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.Style, playerFrame);
+                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.Style, myPlayerFrame);
 
-                jobList = new GUIListBox(new Rectangle(0, 180, 0, 0), GUI.Style, playerFrame);
+                jobList = new GUIListBox(new Rectangle(0, 180, 0, 0), GUI.Style, myPlayerFrame);
                 jobList.Enabled = false;
 
 
@@ -366,14 +358,14 @@ namespace Barotrauma
             }
             else
             {
-                playerFrame.ClearChildren();
+                myPlayerFrame.ClearChildren();
 
                 if (IsServer && GameMain.Server != null)
                 {
                     GameMain.Server.CharacterInfo = null;
                     GameMain.Server.Character = null;
 
-                    var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, playerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.OnSelected = TogglePlayYourself;
                 }
             }
@@ -430,11 +422,43 @@ namespace Barotrauma
             if (child != null) playerList.RemoveChild(child);
         }
 
-        //public void RemovePlayer(Client client)
-        //{
-        //    if (client == null) return;
-        //    playerList.RemoveChild(playerList.GetChild(client));
-        //}
+        private bool SelectPlayer(GUIComponent component, object obj)
+        {
+            playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.3f);
+
+            var playerFrameInner = new GUIFrame(new Rectangle(0,0,300,150), null, Alignment.Center, GUI.Style, playerFrame);
+            playerFrameInner.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+
+            new GUITextBlock(new Rectangle(0,0,200,20), component.UserData.ToString(), 
+                GUI.Style, Alignment.TopLeft, Alignment.TopLeft,
+                playerFrameInner, false, GUI.LargeFont);
+
+            var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+            kickButton.UserData = obj;
+            kickButton.OnClicked += KickPlayer;
+            kickButton.OnClicked += ClosePlayerFrame;
+
+            var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, playerFrameInner);
+            closeButton.OnClicked = ClosePlayerFrame;
+
+            return true;
+        }
+
+        private bool ClosePlayerFrame(GUIButton button, object userData)
+        {
+            playerFrame = null;
+
+            return true;
+        }
+
+        private bool KickPlayer(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null || userData == null) return false;
+
+            GameMain.Server.KickPlayer(userData.ToString());
+
+            return false;
+        }
 
         public void ClearPlayers()
         {
@@ -465,6 +489,8 @@ namespace Barotrauma
             menu.Update((float)deltaTime);
 
             if (jobInfoFrame != null) jobInfoFrame.Update((float)deltaTime);
+
+            if (playerFrame != null) playerFrame.Update((float)deltaTime);
                         
             //durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
@@ -482,6 +508,8 @@ namespace Barotrauma
             if (jobInfoFrame != null) jobInfoFrame.Draw(spriteBatch);
 
             //if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
+
+            if (playerFrame != null) playerFrame.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -522,10 +550,10 @@ namespace Barotrauma
 
         private void UpdatePreviewPlayer(CharacterInfo characterInfo)
         {
-            GUIComponent existing = playerFrame.FindChild("playerhead");
-            if (existing != null) playerFrame.RemoveChild(existing);
+            GUIComponent existing = myPlayerFrame.FindChild("playerhead");
+            if (existing != null) myPlayerFrame.RemoveChild(existing);
 
-            GUIImage image = new GUIImage(new Rectangle(0, 40, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, playerFrame);
+            GUIImage image = new GUIImage(new Rectangle(0, 40, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, myPlayerFrame);
             image.UserData = "playerhead";
         }
 
