@@ -404,7 +404,8 @@ namespace Barotrauma.Networking
                         string msg = inc.ReadString();
 
                         new GUIMessageBox("You have been kicked out from the server", msg);
-
+                        
+                        Disconnect();
                         GameMain.MainMenuScreen.Select();
 
                         break;
@@ -433,7 +434,6 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> StartGame(NetIncomingMessage inc)
         {
-
             if (this.Character != null) Character.Remove();
 
             int seed = inc.ReadInt32();

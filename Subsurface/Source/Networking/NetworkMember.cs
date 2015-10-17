@@ -115,7 +115,7 @@ namespace Barotrauma.Networking
             crewFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
             crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 200, 300), Color.White * 0.7f, GUI.Style, crewFrame);
+            GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 300, 300), Color.White * 0.7f, GUI.Style, crewFrame);
             crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             crewList.OnSelected = SelectCharacter;
 

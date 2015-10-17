@@ -181,6 +181,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (!attachable || item.body==null) return true;
+            if (character != null && !character.GetInputState(InputType.SecondaryHeld)) return false;
 
             item.Drop();
 
@@ -201,6 +202,8 @@ namespace Barotrauma.Items.Components
             Msg = prevMsg;
 
             attached = true;
+
+            item.NewComponentEvent(this, true);
 
             return true;
         }
@@ -246,6 +249,30 @@ namespace Barotrauma.Items.Components
                 requiredItems.Clear();
                 Msg = "";
             }
+        }
+
+        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
+        {
+            message.Write(item.SimPosition.X);
+            message.Write(item.SimPosition.Y);
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        {
+            Vector2 newPos = Vector2.Zero;
+
+            try
+            {
+                newPos = new Vector2(message.ReadFloat(), message.ReadFloat());
+            }
+
+            catch
+            { 
+                return;
+            }
+
+            item.SetTransform(newPos, 0.0f);
+            if (!attached) Use(1.0f);
         }
     }
 }

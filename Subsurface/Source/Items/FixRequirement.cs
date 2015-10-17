@@ -53,7 +53,7 @@ namespace Barotrauma
                 GUIComponent component = reqFrame.children.Find(c => c.UserData as string == itemName);
                 
                 GUITextBlock text = component as GUITextBlock;
-                Item item = character.Inventory.items.FirstOrDefault(i => i !=null && i.Name == itemName);
+                Item item = character.Inventory.items.FirstOrDefault(i => i !=null && (i.Name == itemName || i.HasTag(itemName)));
                 bool itemFound = (item != null);
                
                 if (!itemFound) success = false;

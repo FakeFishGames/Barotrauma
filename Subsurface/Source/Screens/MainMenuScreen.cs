@@ -155,6 +155,12 @@ namespace Barotrauma
         {
             base.Select();
 
+            if (GameMain.NetworkMember != null)
+            {
+                GameMain.NetworkMember.Disconnect();
+                GameMain.NetworkMember = null;
+            }
+
             Submarine.Unload();
 
             SelectTab(null, 0);

@@ -131,6 +131,11 @@ namespace Barotrauma
                 SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
             }
 
+            if (GameMain.NetworkMember!=null)
+            {
+                GameMain.NetworkMember.Disconnect();
+                GameMain.NetworkMember = null;
+            }
 
             GameMain.MainMenuScreen.Select();
             //Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);

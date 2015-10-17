@@ -46,6 +46,21 @@ namespace Barotrauma.Items.Components
                     item.linkedTo[i].RemoveLinked(item);
                 item.linkedTo.Clear();
 
+                var connectionPanel = item.GetComponent<ConnectionPanel>();
+                if (connectionPanel!=null)
+                {
+                    foreach (Connection c in connectionPanel.connections)
+                    {
+                        foreach (Wire w in c.Wires)
+                        {
+                            if (w == null) continue;
+
+                            w.Item.Drop(picker);
+                            w.Item.SetTransform(item.SimPosition, 0.0f);
+                        }
+                    }
+                }
+
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 
                 //foreach (StatusEffect effect in item.Prefab.statusEffects)
