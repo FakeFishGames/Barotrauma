@@ -6,7 +6,7 @@ namespace Lidgren.Network
 	/// <summary>
 	/// Base for a non-threadsafe encryption class
 	/// </summary>
-	public abstract class NetBlockEncryptionBase : INetEncryption
+	public abstract class NetBlockEncryptionBase : NetEncryption
 	{
 		// temporary space for one block to avoid reallocating every time
 		private byte[] m_tmp;
@@ -19,7 +19,8 @@ namespace Lidgren.Network
 		/// <summary>
 		/// NetBlockEncryptionBase constructor
 		/// </summary>
-		public NetBlockEncryptionBase()
+		public NetBlockEncryptionBase(NetPeer peer)
+			: base(peer)
 		{
 			m_tmp = new byte[BlockSize];
 		}
@@ -27,7 +28,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Encrypt am outgoing message with this algorithm; no writing can be done to the message after encryption, or message will be corrupted
 		/// </summary>
-		public bool Encrypt(NetOutgoingMessage msg)
+		public override bool Encrypt(NetOutgoingMessage msg)
 		{
 			int payloadBitLength = msg.LengthBits;
 			int numBytes = msg.LengthBytes;
@@ -55,7 +56,7 @@ namespace Lidgren.Network
 		/// </summary>
 		/// <param name="msg">message to decrypt</param>
 		/// <returns>true if successful; false if failed</returns>
-		public bool Decrypt(NetIncomingMessage msg)
+		public override bool Decrypt(NetIncomingMessage msg)
 		{
 			int numEncryptedBytes = msg.LengthBytes - 4; // last 4 bytes is true bit length
 			int blockSize = BlockSize;

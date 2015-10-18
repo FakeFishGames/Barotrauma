@@ -16,6 +16,8 @@ namespace Barotrauma.Networking
         //for keeping track of disconnected clients in case the reconnect shortly after
         private List<Client> disconnectedClients = new List<Client>();
 
+        private NetStats netStats;
+
         //is the server running
         bool started;
 
@@ -34,6 +36,20 @@ namespace Barotrauma.Networking
 
         private string password;
 
+        private bool autoRestart;
+
+        public bool AutoRestart
+        {
+            get { return (connectedClients.Count==0) ? false : autoRestart; }
+            set
+            {
+                autoRestart = value;
+
+                AutoRestartTimer = autoRestart ? 20.0f : 0.0f;
+            }
+        }
+        public float AutoRestartTimer;
+
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
@@ -44,9 +60,13 @@ namespace Barotrauma.Networking
             
             config = new NetPeerConfiguration("barotrauma");
 
+            netStats = new NetStats();
+
 #if DEBUG
             config.SimulatedLoss = 0.2f;
             config.SimulatedMinimumLatency = 0.3f;
+            config.SimulatedDuplicatesChance = 0.05f;
+            config.SimulatedMinimumLatency = 0.1f;
 #endif 
             config.Port = port;
             Port = port;
@@ -61,9 +81,9 @@ namespace Barotrauma.Networking
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | 
                 NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
                 NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
-                        
+                                    
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
-
+            
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
 
@@ -190,21 +210,23 @@ namespace Barotrauma.Networking
 
             if (response.ErrorException != null)
             {
-                DebugConsole.ThrowError("Error while connecting to master server", response.ErrorException);
+                DebugConsole.ThrowError("Error while registering to master server", response.ErrorException);
                 registeredToMaster = false;
                 return;
             }
 
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                DebugConsole.ThrowError("Error while connecting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")");
-                registeredToMaster = false;
+                DebugConsole.NewMessage("Error while reporting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")", Color.Red);
+                //registeredToMaster = false;
                 return;
             }
         }
         
         public override void Update(float deltaTime)
         {
+            if (GameMain.DebugDraw) netStats.Update(deltaTime);
+
             if (!started) return;
 
             base.Update(deltaTime);
@@ -212,6 +234,24 @@ namespace Barotrauma.Networking
             if (gameStarted)
             {
                 inGameHUD.Update((float)Physics.step);
+
+                //if all characters dead
+                if (AutoRestart &&
+                    connectedClients.Find(c => c.character != null && !c.character.IsDead)==null &&
+                   (myCharacter == null || myCharacter.IsDead))
+                {
+                    EndButtonHit(null, null);
+                    AutoRestartTimer = 20.0f;
+                    return;
+                }
+            }
+            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count>0)
+            {
+                AutoRestartTimer -= deltaTime;
+                if (AutoRestartTimer < 0.0f)
+                {
+                    StartGameClicked(null,null);
+                }
             }
 
             for (int i = disconnectedClients.Count - 1; i >= 0; i-- )
@@ -628,7 +668,7 @@ namespace Barotrauma.Networking
 
             List<Character> crew = new List<Character>();
             WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
-
+            
             for (int i = 0; i < connectedClients.Count; i++)
             {
                 connectedClients[i].character = new Character(
@@ -817,7 +857,7 @@ namespace Barotrauma.Networking
 
         public void NewTraitor(Client traitor, Client target)
         {
-            new GUIMessageBox("New traitor", traitor.name + " is the traitor and the target is " + target.name+".");
+            //new GUIMessageBox("New traitor", traitor.name + " is the traitor and the target is " + target.name+".");
 
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.Traitor);
@@ -846,15 +886,27 @@ namespace Barotrauma.Networking
 
             spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + server.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
             spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + server.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
-            
+
+            int resentMessages = 0;
+
             y += 110;
             foreach (Client c in connectedClients)
             {
                 spriteBatch.DrawString(GUI.SmallFont, c.name + ":", new Vector2(x + 10, y), Color.White);
                 spriteBatch.DrawString(GUI.SmallFont, "- avg roundtrip " + c.Connection.AverageRoundtripTime+" s", new Vector2(x + 20, y + 15), Color.White);
-                y += 50;
-            
+                spriteBatch.DrawString(GUI.SmallFont, "- resent messages " + c.Connection.Statistics.ResentMessages, new Vector2(x + 20, y + 30), Color.White);
+
+                resentMessages += (int)c.Connection.Statistics.ResentMessages;
+                
+                y += 50;            
             }
+
+            netStats.AddValue(NetStats.NetStatType.ResentMessages, resentMessages);
+            netStats.AddValue(NetStats.NetStatType.SentBytes, server.Statistics.SentBytes);
+            netStats.AddValue(NetStats.NetStatType.ReceivedBytes, server.Statistics.ReceivedBytes);
+
+            netStats.Draw(spriteBatch, new Rectangle(200,0,800,200));
+
         }
 
         public bool UpdateNetLobby(object obj)

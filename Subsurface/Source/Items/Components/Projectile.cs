@@ -103,7 +103,11 @@ namespace Barotrauma.Items.Components
 
             if (stickJoint != null && doesStick)
             {
-                if (stickTarget!=null) item.body.FarseerBody.RestoreCollisionWith(stickTarget);
+                if (stickTarget != null)
+                {
+                    item.body.FarseerBody.RestoreCollisionWith(stickTarget);
+                    stickTarget = null;
+                }
                 GameMain.World.RemoveJoint(stickJoint);
                 stickJoint = null;
             }
@@ -111,25 +115,19 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            if (stickJoint != null)
+            if (stickJoint != null && stickJoint.JointTranslation < 0.01f)  
             {
-                if (stickJoint.JointTranslation < 0.01f)
+                if (stickTarget!=null)
                 {
-                    if (stickTarget!=null)
-                    {
-                        item.body.FarseerBody.RestoreCollisionWith(stickTarget);
-                    }
-
-                    GameMain.World.RemoveJoint(stickJoint);
-                    stickJoint = null;
-
-                    IsActive = false;
+                    item.body.FarseerBody.RestoreCollisionWith(stickTarget);
+                    stickTarget = null;
                 }
-            }
-            else
-            {
-                IsActive = false;
-            }
+
+                GameMain.World.RemoveJoint(stickJoint);
+                stickJoint = null; 
+             
+                IsActive = false; 
+            }           
         }
 
         private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)

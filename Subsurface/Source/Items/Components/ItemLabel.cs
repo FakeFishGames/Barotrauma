@@ -41,6 +41,7 @@ namespace Barotrauma.Items.Components
                         null, null, true);
                     textBlock.Font = GUI.SmallFont;
                     textBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                    textBlock.TextDepth = item.Sprite.Depth - 0.0001f;
                 }
                 return textBlock; 
             }

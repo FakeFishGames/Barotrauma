@@ -78,13 +78,16 @@ namespace Lidgren.Network
 
 			foreach (PropertyInfo fi in fields)
 			{
-				MethodInfo getMethod = fi.GetGetMethod((flags & BindingFlags.NonPublic) == BindingFlags.NonPublic);
-				object value = getMethod.Invoke(ob, null);
+				MethodInfo getMethod = fi.GetGetMethod();
+				if (getMethod != null)
+				{
+					object value = getMethod.Invoke(ob, null);
 
-				// find the appropriate Write method
-				MethodInfo writeMethod;
-				if (s_writeMethods.TryGetValue(fi.PropertyType, out writeMethod))
-					writeMethod.Invoke(this, new object[] { value });
+					// find the appropriate Write method
+					MethodInfo writeMethod;
+					if (s_writeMethods.TryGetValue(fi.PropertyType, out writeMethod))
+						writeMethod.Invoke(this, new object[] { value });
+				}
 			}
 		}
 	}

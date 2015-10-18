@@ -131,6 +131,18 @@ namespace Barotrauma.Items.Components
         {
             picker = character;
 
+            if (item.body == null)
+            {
+                if (body!=null)
+                {
+                    item.body = body;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
             if (!item.body.Enabled)
             {
                 Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);

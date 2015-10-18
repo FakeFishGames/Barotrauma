@@ -61,7 +61,8 @@
   
   <Item
     name="Railgun Shell"
-    pickdistance="200">
+    pickdistance="200"
+    price="100">
 
     <Sprite texture ="railgunshell.png" depth ="0.5"/>
 

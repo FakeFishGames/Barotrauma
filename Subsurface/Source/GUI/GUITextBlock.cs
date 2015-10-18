@@ -21,6 +21,8 @@ namespace Barotrauma
 
         public bool Wrap;
 
+        private float textDepth;
+
         public override Vector4 Padding
         {
             get { return padding; }
@@ -39,6 +41,12 @@ namespace Barotrauma
                 text = value;
                 SetTextPos();
             }
+        }
+
+        public float TextDepth
+        {
+            get { return textDepth; }
+            set { textDepth = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
         public bool LimitText
@@ -221,7 +229,7 @@ namespace Barotrauma
                     new Vector2(rect.X, rect.Y) + textPos,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, 1.0f,
-                    SpriteEffects.None, 0.0f);
+                    SpriteEffects.None, textDepth);
             }
 
             DrawChildren(spriteBatch);

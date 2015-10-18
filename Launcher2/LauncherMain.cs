@@ -542,7 +542,7 @@ namespace Launcher2
         {
             if (e.Error!=null)
             {
-                string errorMsg = "Error while downloading: " + e.Error.InnerException.Message;
+                string errorMsg = "Error while downloading: " + e.Error;
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 0),

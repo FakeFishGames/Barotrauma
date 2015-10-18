@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2010 Michael Lidgren
+ /* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -37,7 +37,8 @@ namespace Lidgren.Network
 		public void ReadAllFields(object target, BindingFlags flags)
 		{
 			if (target == null)
-				return;
+				throw new ArgumentNullException("target");
+
 			Type tp = target.GetType();
 
 			FieldInfo[] fields = tp.GetFields(flags);
@@ -76,8 +77,6 @@ namespace Lidgren.Network
 			if (target == null)
 				throw new ArgumentNullException("target");
 
-			if (target == null)
-				return;
 			Type tp = target.GetType();
 
 			PropertyInfo[] fields = tp.GetProperties(flags);
@@ -94,8 +93,9 @@ namespace Lidgren.Network
 					value = readMethod.Invoke(this, null);
 
 					// set the value
-					MethodInfo setMethod = fi.GetSetMethod((flags & BindingFlags.NonPublic) == BindingFlags.NonPublic);
-					setMethod.Invoke(target, new object[] { value });
+					var setMethod = fi.GetSetMethod();
+					if (setMethod != null)
+						setMethod.Invoke(target, new object[] { value });
 				}
 			}
 		}

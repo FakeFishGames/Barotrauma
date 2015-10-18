@@ -124,8 +124,15 @@ namespace Barotrauma.Networking
             System.Diagnostics.Debug.WriteLine("Networkevent entity: "+e.ToString());
 
             //System.Diagnostics.Debug.WriteLine("new message: " + eventType +" - "+e);
-
-            e.ReadNetworkData(eventType, message);
+            try
+            {
+                e.ReadNetworkData(eventType, message);
+            }
+            catch
+            {
+                DebugConsole.ThrowError("Received invalid network message");
+                return false;
+            }
 
             return true;
         }

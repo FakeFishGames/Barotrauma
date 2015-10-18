@@ -230,6 +230,13 @@ namespace Barotrauma
                 int itemCapacity = item.Capacity;
                 if (itemCapacity == 0) return;
 
+#if DEBUG
+                System.Diagnostics.Debug.Assert(slotIndex>=0 && slotIndex<items.Length);
+#else
+                if (slotIndex<0 || slotIndex>=items.Length) return;
+#endif
+
+
                 Rectangle containerRect = new Rectangle(rect.X - 5, rect.Y - (rect.Height + 10) * itemCapacity - 5,
                         rect.Width + 10, rect.Height + (rect.Height + 10) * itemCapacity + 10);
 
@@ -253,6 +260,7 @@ namespace Barotrauma
         protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot)
         {
             GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.1f : 0.3f), true);
+            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.2f : 0.4f), false);
 
             if (item == null) return;
 
