@@ -244,7 +244,7 @@ namespace Barotrauma.Networking
                             NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
                             Debug.WriteLine(connectionStatus);
 
-                            if (connectionStatus != NetConnectionStatus.Connected)
+                            if (connectionStatus == NetConnectionStatus.Disconnected)
                             {
                                 string denyMessage = inc.ReadString();
 

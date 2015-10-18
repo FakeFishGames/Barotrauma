@@ -69,7 +69,7 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), "Name", GUI.Style, menu);
             new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), "Players", GUI.Style, menu);
-            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Running", GUI.Style, menu);
+            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Round started", GUI.Style, menu);
 
             joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, GUI.Style, menu);
             joinButton.OnClicked = RefreshServers;
@@ -90,8 +90,7 @@ namespace Barotrauma
             base.Select();
 
 
-            //RefreshServers(null, null);
-            //UpdateServerList();
+            RefreshServers(null, null);
         }
 
         private bool SelectServer(GUIComponent component, object obj)

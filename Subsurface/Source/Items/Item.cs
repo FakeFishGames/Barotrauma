@@ -1163,11 +1163,19 @@ namespace Barotrauma
             switch (type)
             {
                 case NetworkEventType.DropItem:
-                    if (body != null) body.FillNetworkData(type, message);
+                    if (body != null)
+                    {
+                        message.Write(body.SimPosition.X);
+                        message.Write(body.SimPosition.Y);
+                    }
                     break;
                 case NetworkEventType.UpdateComponent:
-                    message.Write((int)data);
-                    components[(int)data].FillNetworkData(type, message);
+
+                    int componentIndex = (int)data;
+                    if (componentIndex < 0 || componentIndex >= components.Count) return;
+                    
+                    message.Write((byte)componentIndex);
+                    components[componentIndex].FillNetworkData(type, message);
                     break;
                 case NetworkEventType.UpdateProperty:                                       
                     var allProperties = GetProperties<InGameEditable>();
@@ -1215,11 +1223,16 @@ namespace Barotrauma
             switch (type)
             {
                 case NetworkEventType.DropItem:
-                    if (body != null) body.ReadNetworkData(type, message);
+                    Vector2 newSimPos = Vector2.Zero;
+                    if (body != null)
+                    {
+                        newSimPos = new Vector2(message.ReadFloat(), message.ReadFloat());
+                    }
+                    SetTransform(newSimPos, body.Rotation);
                     Drop(null, false);
                     break;
                 case NetworkEventType.UpdateComponent:
-                    int componentIndex = message.ReadInt32();
+                    int componentIndex = message.ReadByte();
                     if (componentIndex < 0 || componentIndex > components.Count - 1) return;
                     components[componentIndex].ReadNetworkData(type, message);
                     break;
@@ -1272,7 +1285,7 @@ namespace Barotrauma
             base.Remove();
 
             //sprite.Remove();
-            if (body != null) body.Remove();
+            //if (body != null) body.Remove();
 
             foreach (ItemComponent ic in components)
             {

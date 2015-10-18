@@ -21,7 +21,7 @@ namespace Barotrauma
 
             GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLower()=="tutorial"));
 
-            GameMain.GameSession.StartShift("tutorial");
+            GameMain.GameSession.StartShift("tuto");
 
             GameMain.GameSession.taskManager.Tasks.Clear();
 
@@ -164,6 +164,7 @@ namespace Barotrauma
             
             while (Math.Abs(reactor.Temperature-3000.0f) > 100.0f)
             {
+                reactor.AutoTemp = false;
                 reactor.ShutDownTemp = Math.Min(reactor.ShutDownTemp, 5000.0f);
                 yield return CoroutineStatus.Running;
             }

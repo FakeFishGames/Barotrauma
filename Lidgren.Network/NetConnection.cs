@@ -3,12 +3,16 @@ using System.Net;
 using System.Threading;
 using System.Diagnostics;
 
+#if !__NOIPENDPOINT__
+using NetEndPoint = System.Net.IPEndPoint;
+#endif
+
 namespace Lidgren.Network
 {
 	/// <summary>
 	/// Represents a connection to a remote peer
 	/// </summary>
-	[DebuggerDisplay("RemoteUniqueIdentifier={RemoteUniqueIdentifier} RemoteEndPoint={remoteEndPoint}")]
+	[DebuggerDisplay("RemoteUniqueIdentifier={RemoteUniqueIdentifier} RemoteEndPoint={m_remoteEndPoint}")]
 	public partial class NetConnection
 	{
 		private const int m_infrequentEventsSkipFrames = 8; // number of heartbeats to skip checking for infrequent events (ping, timeout etc)
@@ -16,9 +20,10 @@ namespace Lidgren.Network
 
 		internal NetPeer m_peer;
 		internal NetPeerConfiguration m_peerConfiguration;
-		internal NetConnectionStatus m_status;
-		internal NetConnectionStatus m_visibleStatus;
-		internal IPEndPoint m_remoteEndPoint;
+		internal NetConnectionStatus m_status; // actual status
+		internal NetConnectionStatus m_outputtedStatus; // status that has been sent as StatusChanged message
+		internal NetConnectionStatus m_visibleStatus; // status visible by querying the Status property
+		internal NetEndPoint m_remoteEndPoint;
 		internal NetSenderChannelBase[] m_sendChannels;
 		internal NetReceiverChannelBase[] m_receiveChannels;
 		internal NetOutgoingMessage m_localHailMessage;
@@ -57,7 +62,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Gets the remote endpoint for the connection
 		/// </summary>
-		public IPEndPoint RemoteEndPoint { get { return m_remoteEndPoint; } }
+		public NetEndPoint RemoteEndPoint { get { return m_remoteEndPoint; } }
 
 		/// <summary>
 		/// Gets the unique identifier of the remote NetPeer for this connection
@@ -70,19 +75,20 @@ namespace Lidgren.Network
 		public NetOutgoingMessage LocalHailMessage { get { return m_localHailMessage; } }
 
 		// gets the time before automatically resending an unacked message
-		internal float GetResendDelay()
+		internal double GetResendDelay()
 		{
-			float avgRtt = m_averageRoundtripTime;
+			double avgRtt = m_averageRoundtripTime;
 			if (avgRtt <= 0)
-				avgRtt = 0.1f; // "default" resend is based on 100 ms roundtrip time
-			return 0.02f + (avgRtt * 2.0f); // 20 ms + double rtt
+				avgRtt = 0.1; // "default" resend is based on 100 ms roundtrip time
+			return 0.025 + (avgRtt * 2.1); // 25 ms + double rtt
 		}
 
-		internal NetConnection(NetPeer peer, IPEndPoint remoteEndPoint)
+		internal NetConnection(NetPeer peer, NetEndPoint remoteEndPoint)
 		{
 			m_peer = peer;
 			m_peerConfiguration = m_peer.Configuration;
 			m_status = NetConnectionStatus.None;
+			m_outputtedStatus = NetConnectionStatus.None;
 			m_visibleStatus = NetConnectionStatus.None;
 			m_remoteEndPoint = remoteEndPoint;
 			m_sendChannels = new NetSenderChannelBase[NetConstants.NumTotalChannels];
@@ -97,17 +103,19 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Change the internal endpoint to this new one. Used when, during handshake, a switch in port is detected (due to NAT)
 		/// </summary>
-		internal void MutateEndPoint(IPEndPoint endPoint)
+		internal void MutateEndPoint(NetEndPoint endPoint)
 		{
 			m_remoteEndPoint = endPoint;
+		}
+
+		internal void ResetTimeout(double now)
+		{
+			m_timeoutDeadline = now + m_peerConfiguration.m_connectionTimeout;
 		}
 
 		internal void SetStatus(NetConnectionStatus status, string reason)
 		{
 			// user or library thread
-
-			if (status == m_status)
-				return;
 
 			m_status = status;
 			if (reason == null)
@@ -115,27 +123,32 @@ namespace Lidgren.Network
 
 			if (m_status == NetConnectionStatus.Connected)
 			{
-				m_timeoutDeadline = (float)NetTime.Now + m_peerConfiguration.m_connectionTimeout;
+				m_timeoutDeadline = NetTime.Now + m_peerConfiguration.m_connectionTimeout;
 				m_peer.LogVerbose("Timeout deadline initialized to  " + m_timeoutDeadline);
 			}
 
 			if (m_peerConfiguration.IsMessageTypeEnabled(NetIncomingMessageType.StatusChanged))
 			{
-				NetIncomingMessage info = m_peer.CreateIncomingMessage(NetIncomingMessageType.StatusChanged, 4 + reason.Length + (reason.Length > 126 ? 2 : 1));
-				info.m_senderConnection = this;
-				info.m_senderEndPoint = m_remoteEndPoint;
-				info.Write((byte)m_status);
-				info.Write(reason);
-				m_peer.ReleaseMessage(info);
+				if (m_outputtedStatus != status)
+				{
+					NetIncomingMessage info = m_peer.CreateIncomingMessage(NetIncomingMessageType.StatusChanged, 4 + reason.Length + (reason.Length > 126 ? 2 : 1));
+					info.m_senderConnection = this;
+					info.m_senderEndPoint = m_remoteEndPoint;
+					info.Write((byte)m_status);
+					info.Write(reason);
+					m_peer.ReleaseMessage(info);
+					m_outputtedStatus = status;
+				}
 			}
 			else
 			{
 				// app dont want those messages, update visible status immediately
+				m_outputtedStatus = m_status;
 				m_visibleStatus = m_status;
 			}
 		}
 
-		internal void Heartbeat(float now, uint frameCounter)
+		internal void Heartbeat(double now, uint frameCounter)
 		{
 			m_peer.VerifyNetworkThread();
 
@@ -150,6 +163,7 @@ namespace Lidgren.Network
 					//
 					m_peer.LogVerbose("Connection timed out at " + now + " deadline was " + m_timeoutDeadline);
 					ExecuteDisconnect("Connection timed out", true);
+					return;
 				}
 
 				// send ping?
@@ -164,7 +178,7 @@ namespace Lidgren.Network
 
 				if (m_disconnectRequested)
 				{
-					ExecuteDisconnect(m_disconnectMessage, true);
+					ExecuteDisconnect(m_disconnectMessage, m_disconnectReqSendBye);
 					return;
 				}
 			}
@@ -233,8 +247,11 @@ namespace Lidgren.Network
 				{
 					//m_peer.LogVerbose("Received ack for " + acktp + "#" + seqNr);
 					NetSenderChannelBase chan = m_sendChannels[(int)incAck.Item1 - 1];
+
+					// If we haven't sent a message on this channel there is no reason to ack it
 					if (chan == null)
-						chan = CreateSenderChannel(incAck.Item1);
+						continue;
+
 					chan.ReceiveAcknowledge(now, incAck.Item2);
 				}
 			}
@@ -249,7 +266,11 @@ namespace Lidgren.Network
 					var channel = m_sendChannels[i];
 					NetException.Assert(m_sendBufferWritePtr < 1 || m_sendBufferNumMessages > 0);
 					if (channel != null)
+					{
 						channel.SendQueuedMessages(now);
+						if (channel.NeedToSendMessages())
+							m_peer.m_needFlushSendQueue = true; // failed to send all queued sends; likely a full window - need to try again
+					}
 					NetException.Assert(m_sendBufferWritePtr < 1 || m_sendBufferNumMessages > 0);
 				}
 			}
@@ -275,24 +296,41 @@ namespace Lidgren.Network
 			m_peer.VerifyNetworkThread();
 
 			int sz = om.GetEncodedSize();
-			if (sz > m_currentMTU)
-				m_peer.LogWarning("Message larger than MTU! Fragmentation must have failed!");
+			//if (sz > m_currentMTU)
+			//	m_peer.LogWarning("Message larger than MTU! Fragmentation must have failed!");
 
+			bool connReset; // TODO: handle connection reset
+
+			// can fit this message together with previously written to buffer?
 			if (m_sendBufferWritePtr + sz > m_currentMTU)
 			{
-				bool connReset; // TODO: handle connection reset
-				NetException.Assert(m_sendBufferWritePtr > 0 && m_sendBufferNumMessages > 0); // or else the message should have been fragmented earlier
+				if (m_sendBufferWritePtr > 0 && m_sendBufferNumMessages > 0)
+				{
+					// previous message in buffer; send these first
+					m_peer.SendPacket(m_sendBufferWritePtr, m_remoteEndPoint, m_sendBufferNumMessages, out connReset);
+					m_statistics.PacketSent(m_sendBufferWritePtr, m_sendBufferNumMessages);
+					m_sendBufferWritePtr = 0;
+					m_sendBufferNumMessages = 0;
+				}
+			}
+
+			// encode it into buffer regardless if it (now) fits within MTU or not
+			m_sendBufferWritePtr = om.Encode(m_peer.m_sendBuffer, m_sendBufferWritePtr, seqNr);
+			m_sendBufferNumMessages++;
+
+			if (m_sendBufferWritePtr > m_currentMTU)
+			{
+				// send immediately; we're already over MTU
 				m_peer.SendPacket(m_sendBufferWritePtr, m_remoteEndPoint, m_sendBufferNumMessages, out connReset);
 				m_statistics.PacketSent(m_sendBufferWritePtr, m_sendBufferNumMessages);
 				m_sendBufferWritePtr = 0;
 				m_sendBufferNumMessages = 0;
 			}
 
-			m_sendBufferWritePtr = om.Encode(m_peer.m_sendBuffer, m_sendBufferWritePtr, seqNr);
-			m_sendBufferNumMessages++;
+			if (m_sendBufferWritePtr > 0)
+				m_peer.m_needFlushSendQueue = true; // flush in heartbeat
 
-			NetException.Assert(m_sendBufferWritePtr > 0, "Encoded zero size message?");
-			NetException.Assert(m_sendBufferNumMessages > 0);
+			Interlocked.Decrement(ref om.m_recyclingCount);
 		}
 
 		/// <summary>
@@ -321,12 +359,12 @@ namespace Lidgren.Network
 			if (chan == null)
 				chan = CreateSenderChannel(tp);
 
-			if (msg.GetEncodedSize() > m_currentMTU)
-				throw new NetException("Message too large! Fragmentation failure?");
+			if ((method != NetDeliveryMethod.Unreliable && method != NetDeliveryMethod.UnreliableSequenced) && msg.GetEncodedSize() > m_currentMTU)
+				m_peer.ThrowOrLog("Reliable message too large! Fragmentation failure?");
 
 			var retval = chan.Enqueue(msg);
-			if (retval == NetSendResult.Sent && m_peerConfiguration.m_autoFlushSendQueue == false)
-				retval = NetSendResult.Queued; // queued since we're not autoflushing
+			//if (retval == NetSendResult.Sent && m_peerConfiguration.m_autoFlushSendQueue == false)
+			//	retval = NetSendResult.Queued; // queued since we're not autoflushing
 			return retval;
 		}
 
@@ -347,12 +385,11 @@ namespace Lidgren.Network
 				}
 				else
 				{
-
 					switch (method)
 					{
 						case NetDeliveryMethod.Unreliable:
 						case NetDeliveryMethod.UnreliableSequenced:
-							chan = new NetUnreliableSenderChannel(this, NetUtility.GetWindowSize(method));
+							chan = new NetUnreliableSenderChannel(this, NetUtility.GetWindowSize(method), method);
 							break;
 						case NetDeliveryMethod.ReliableOrdered:
 							chan = new NetReliableSenderChannel(this, NetUtility.GetWindowSize(method));
@@ -375,13 +412,34 @@ namespace Lidgren.Network
 		{
 			m_peer.VerifyNetworkThread();
 
-			float now = (float)NetTime.Now;
+			double now = NetTime.Now;
 
 			switch (tp)
 			{
+				case NetMessageType.Connect:
+					m_peer.LogDebug("Received handshake message (" + tp + ") despite connection being in place");
+					break;
+
+				case NetMessageType.ConnectResponse:
+					// handshake message must have been lost
+					HandleConnectResponse(now, tp, ptr, payloadLength);
+					break;
+
+				case NetMessageType.ConnectionEstablished:
+					// do nothing, all's well
+					break;
+
+				case NetMessageType.LibraryError:
+					m_peer.ThrowOrLog("LibraryError received by ReceivedLibraryMessage; this usually indicates a malformed message");
+					break;
+
 				case NetMessageType.Disconnect:
 					NetIncomingMessage msg = m_peer.SetupReadHelperMessage(ptr, payloadLength);
-					ExecuteDisconnect(msg.ReadString(), false);
+
+					m_disconnectRequested = true;
+					m_disconnectMessage = msg.ReadString();
+					m_disconnectReqSendBye = false;
+					//ExecuteDisconnect(msg.ReadString(), false);
 					break;
 				case NetMessageType.Acknowledge:
 					for (int i = 0; i < payloadLength; i+=3)
@@ -408,6 +466,11 @@ namespace Lidgren.Network
 					SendMTUSuccess(payloadLength);
 					break;
 				case NetMessageType.ExpandMTUSuccess:
+					if (m_peer.Configuration.AutoExpandMTU == false)
+					{
+						m_peer.LogDebug("Received ExpandMTURequest altho AutoExpandMTU is turned off!");
+						break;
+					}
 					NetIncomingMessage emsg = m_peer.SetupReadHelperMessage(ptr, payloadLength);
 					int size = emsg.ReadInt32();
 					HandleExpandMTUSuccess(now, size);
@@ -492,8 +555,17 @@ namespace Lidgren.Network
 			}
 
 			windowSize = chan.WindowSize;
-			freeWindowSlots = chan.GetAllowedSends() - chan.m_queuedSends.Count;
+			freeWindowSlots = chan.GetFreeWindowSlots();
 			return;
+		}
+
+		public bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel)
+		{
+			int channelSlot = (int)method - 1 + sequenceChannel;
+			var chan = m_sendChannels[channelSlot];
+			if (chan == null)
+				return true;
+			return chan.GetFreeWindowSlots() > 0;
 		}
 
 		internal void Shutdown(string reason)

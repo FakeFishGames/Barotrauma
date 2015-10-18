@@ -255,7 +255,15 @@ namespace Barotrauma
                 assignedWayPoints[i] = GetRandom(SpawnType.Human);
             }
 
-            
+            for (int i = 0; i < assignedWayPoints.Length; i++ )
+            {
+                if (assignedWayPoints[i]==null)
+                {
+                    DebugConsole.ThrowError("Couldn't find a waypoint for " + crew[i].Name + "!");
+                    assignedWayPoints[i] = WayPointList[0];
+                }
+            }
+
             return assignedWayPoints;
         }
 

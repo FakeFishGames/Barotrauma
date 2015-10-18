@@ -500,8 +500,7 @@ namespace Lidgren.Network
 			int num2 = 0;
 			while (true)
 			{
-				if (num2 == 0x23)
-					throw new FormatException("Bad 7-bit encoded integer");
+				NetException.Assert(num2 != 0x23, "Bad 7-bit encoded integer");
 
 				byte num3 = buffer[offset++];
 				num1 |= (num3 & 0x7f) << (num2 & 0x1f);

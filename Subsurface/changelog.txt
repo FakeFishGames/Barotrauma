@@ -1,4 +1,20 @@
+---------------------------------------------------------------------------------------------------------
+v0.2.1
+---------------------------------------------------------------------------------------------------------
 
+Multiplayer:
+	- fixed a bug that crashed the game after successfully retrieving an artifact in quest mode
+	- fixed client not disconnecting when going back to the main menu
+	- fixed a bug that caused some map seeds to throw an error
+	- players can be kicked out of the server by selecting them in the player list, not just through
+	the debug console
+
+Items:
+	- all wires can be used for electrical repairs, not just ones named ''Wire''
+	- broken doors can only be fixed by mechanics
+	- fixed a bug that sometimes made it impossible to pick/select items after reattaching them on a wall
+	- wires are disconnected and dropped if the item at either end is removed
+	
 ---------------------------------------------------------------------------------------------------------
 v0.2
 ---------------------------------------------------------------------------------------------------------

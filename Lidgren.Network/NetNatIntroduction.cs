@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
+
+#if !__NOIPENDPOINT__
+using NetEndPoint = System.Net.IPEndPoint;
+#endif
 
 namespace Lidgren.Network
 {
@@ -10,29 +15,31 @@ namespace Lidgren.Network
 		/// Send NetIntroduction to hostExternal and clientExternal; introducing client to host
 		/// </summary>
 		public void Introduce(
-			IPEndPoint hostInternal,
-			IPEndPoint hostExternal,
-			IPEndPoint clientInternal,
-			IPEndPoint clientExternal,
+			NetEndPoint hostInternal,
+			NetEndPoint hostExternal,
+			NetEndPoint clientInternal,
+			NetEndPoint clientExternal,
 			string token)
 		{
 			// send message to client
-			NetOutgoingMessage msg = CreateMessage(10 + token.Length + 1);
-			msg.m_messageType = NetMessageType.NatIntroduction;
-			msg.Write((byte)0);
-			msg.Write(hostInternal);
-			msg.Write(hostExternal);
-			msg.Write(token);
-			m_unsentUnconnectedMessages.Enqueue(new NetTuple<IPEndPoint, NetOutgoingMessage>(clientExternal, msg));
+			NetOutgoingMessage um = CreateMessage(10 + token.Length + 1);
+			um.m_messageType = NetMessageType.NatIntroduction;
+			um.Write((byte)0);
+			um.Write(hostInternal);
+			um.Write(hostExternal);
+			um.Write(token);
+			Interlocked.Increment(ref um.m_recyclingCount);
+			m_unsentUnconnectedMessages.Enqueue(new NetTuple<NetEndPoint, NetOutgoingMessage>(clientExternal, um));
 
 			// send message to host
-			msg = CreateMessage(10 + token.Length + 1);
-			msg.m_messageType = NetMessageType.NatIntroduction;
-			msg.Write((byte)1);
-			msg.Write(clientInternal);
-			msg.Write(clientExternal);
-			msg.Write(token);
-			m_unsentUnconnectedMessages.Enqueue(new NetTuple<IPEndPoint, NetOutgoingMessage>(hostExternal, msg));
+			um = CreateMessage(10 + token.Length + 1);
+			um.m_messageType = NetMessageType.NatIntroduction;
+			um.Write((byte)1);
+			um.Write(clientInternal);
+			um.Write(clientExternal);
+			um.Write(token);
+			Interlocked.Increment(ref um.m_recyclingCount);
+			m_unsentUnconnectedMessages.Enqueue(new NetTuple<NetEndPoint, NetOutgoingMessage>(hostExternal, um));
 		}
 
 		/// <summary>
@@ -46,8 +53,8 @@ namespace Lidgren.Network
 			NetIncomingMessage tmp = SetupReadHelperMessage(ptr, 1000); // never mind length
 
 			byte hostByte = tmp.ReadByte();
-			IPEndPoint remoteInternal = tmp.ReadIPEndPoint();
-			IPEndPoint remoteExternal = tmp.ReadIPEndPoint();
+			NetEndPoint remoteInternal = tmp.ReadIPEndPoint();
+			NetEndPoint remoteExternal = tmp.ReadIPEndPoint();
 			string token = tmp.ReadString();
 			bool isHost = (hostByte != 0);
 
@@ -63,20 +70,25 @@ namespace Lidgren.Network
 			punch.m_messageType = NetMessageType.NatPunchMessage;
 			punch.Write(hostByte);
 			punch.Write(token);
-			m_unsentUnconnectedMessages.Enqueue(new NetTuple<IPEndPoint, NetOutgoingMessage>(remoteInternal, punch));
+			Interlocked.Increment(ref punch.m_recyclingCount);
+			m_unsentUnconnectedMessages.Enqueue(new NetTuple<NetEndPoint, NetOutgoingMessage>(remoteInternal, punch));
+			LogDebug("NAT punch sent to " + remoteInternal);
 
 			// send external punch
 			punch = CreateMessage(1);
 			punch.m_messageType = NetMessageType.NatPunchMessage;
 			punch.Write(hostByte);
 			punch.Write(token);
-			m_unsentUnconnectedMessages.Enqueue(new NetTuple<IPEndPoint, NetOutgoingMessage>(remoteExternal, punch));
+			Interlocked.Increment(ref punch.m_recyclingCount);
+			m_unsentUnconnectedMessages.Enqueue(new NetTuple<NetEndPoint, NetOutgoingMessage>(remoteExternal, punch));
+			LogDebug("NAT punch sent to " + remoteExternal);
+
 		}
 
 		/// <summary>
 		/// Called when receiving a NatPunchMessage from a remote endpoint
 		/// </summary>
-		private void HandleNatPunch(int ptr, IPEndPoint senderEndPoint)
+		private void HandleNatPunch(int ptr, NetEndPoint senderEndPoint)
 		{
 			NetIncomingMessage tmp = SetupReadHelperMessage(ptr, 1000); // never mind length
 
@@ -92,7 +104,7 @@ namespace Lidgren.Network
 			LogDebug("NAT punch received from " + senderEndPoint + " we're client, so we've succeeded - token is " + token);
 
 			//
-			// Release punch success to client; enabling him to Connect() to msg.SenderIPEndPoint if token is ok
+			// Release punch success to client; enabling him to Connect() to msg.Sender if token is ok
 			//
 			NetIncomingMessage punchSuccess = CreateIncomingMessage(NetIncomingMessageType.NatIntroductionSuccess, 10);
 			punchSuccess.m_senderEndPoint = senderEndPoint;
@@ -104,7 +116,8 @@ namespace Lidgren.Network
 			punch.m_messageType = NetMessageType.NatPunchMessage;
 			punch.Write((byte)0);
 			punch.Write(token);
-			m_unsentUnconnectedMessages.Enqueue(new NetTuple<IPEndPoint, NetOutgoingMessage>(senderEndPoint, punch));
+			Interlocked.Increment(ref punch.m_recyclingCount);
+			m_unsentUnconnectedMessages.Enqueue(new NetTuple<NetEndPoint, NetOutgoingMessage>(senderEndPoint, punch));
 		}
 	}
 }

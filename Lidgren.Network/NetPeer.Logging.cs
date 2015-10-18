@@ -28,8 +28,6 @@ namespace Lidgren.Network
 #if __ANDROID__
 			Android.Util.Log.WriteLine(Android.Util.LogPriority.Verbose, "", message);
 #endif
-            Debug.WriteLine(message);
-
 			if (m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage))
 				ReleaseMessage(CreateIncomingMessage(NetIncomingMessageType.VerboseDebugMessage, message));
 		}
@@ -40,8 +38,6 @@ namespace Lidgren.Network
 #if __ANDROID__
 			Android.Util.Log.WriteLine(Android.Util.LogPriority.Debug, "", message);
 #endif
-            Debug.WriteLine(message);
-
 			if (m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.DebugMessage))
 				ReleaseMessage(CreateIncomingMessage(NetIncomingMessageType.DebugMessage, message));
 		}
@@ -51,8 +47,6 @@ namespace Lidgren.Network
 #if __ANDROID__
 			Android.Util.Log.WriteLine(Android.Util.LogPriority.Warn, "", message);
 #endif
-            Debug.WriteLine(message);
-
 			if (m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.WarningMessage))
 				ReleaseMessage(CreateIncomingMessage(NetIncomingMessageType.WarningMessage, message));
 		}
@@ -62,8 +56,6 @@ namespace Lidgren.Network
 #if __ANDROID__
 			Android.Util.Log.WriteLine(Android.Util.LogPriority.Error, "", message);
 #endif
-            Debug.WriteLine(message);
-
 			if (m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.ErrorMessage))
 				ReleaseMessage(CreateIncomingMessage(NetIncomingMessageType.ErrorMessage, message));
 		}

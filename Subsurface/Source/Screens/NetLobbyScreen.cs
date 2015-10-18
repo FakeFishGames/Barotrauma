@@ -18,7 +18,7 @@ namespace Barotrauma
         private GUIListBox playerList;
 
         private GUIListBox subList, modeList, chatBox;
-
+        
         private GUIListBox jobList;
 
         private GUITextBox textBox, seedBox;
@@ -28,6 +28,8 @@ namespace Barotrauma
         private GUIFrame jobInfoFrame;
 
         private GUIFrame playerFrame;
+
+        private GUITickBox autoRestartBox;
 
         private float camAngle;
 
@@ -91,10 +93,18 @@ namespace Barotrauma
             }
         }
 
-        //public string DurationText()
-        //{
-        //    return "Duration: " + GameDuration.TotalMinutes + " min";
-        //}
+        private float autoRestartTimer;
+
+        public string AutoRestartText()
+        {
+            if (GameMain.Server != null)
+            {
+                if (!GameMain.Server.AutoRestart) return "";
+                return "Restarting in " + (int)GameMain.Server.AutoRestartTimer;
+            }
+            if (autoRestartTimer == 0.0f) return "";            
+            return "Restarting in " + (int)autoRestartTimer;
+        }
                 
         public NetLobbyScreen()
         {
@@ -194,7 +204,6 @@ namespace Barotrauma
 
             //gamemode description ------------------------------------------------------------------
             
-
             var modeDescription = new GUITextBlock(
                 new Rectangle(columnX, 150, (int)(columnWidth * 1.5f), infoFrame.Rect.Height - 150 - 80), 
                 "", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, infoFrame, true, GameMain.GraphicsWidth>1024 ? GUI.Font : GUI.SmallFont);
@@ -214,6 +223,14 @@ namespace Barotrauma
             seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
 
+            //automatic restart ------------------------------------------------------------------
+
+            autoRestartBox = new GUITickBox(new Rectangle(columnX, 190, 20, 20), "Automatic restart", Alignment.TopLeft, infoFrame);
+            autoRestartBox.OnSelected = ToggleAutoRestart;
+
+            var restartText = new GUITextBlock(new Rectangle(columnX, 210, 20, 20), "", GUI.Style, infoFrame);
+            restartText.TextGetter = AutoRestartText;
+
             //server info ------------------------------------------------------------------
             
             var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
@@ -230,6 +247,8 @@ namespace Barotrauma
         public override void Deselect()
         {
             textBox.Deselect();
+
+            seedBox.Text = ToolBox.RandomSeed(8);
         }
 
         public override void Select()
@@ -372,6 +391,20 @@ namespace Barotrauma
             return false;
         }
 
+        private bool ToggleAutoRestart(object obj)
+        {
+            if (GameMain.Server == null) return false;
+            
+            GUITickBox tickBox = obj as GUITickBox;
+            if (tickBox==null) return false;
+
+            GameMain.Server.AutoRestart = tickBox.Selected;
+
+            GameMain.Server.UpdateNetLobby(obj);
+
+            return true;
+        }
+
         private bool SelectMap(GUIComponent component, object obj)
         {
             if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(obj);
@@ -491,6 +524,11 @@ namespace Barotrauma
             if (jobInfoFrame != null) jobInfoFrame.Update((float)deltaTime);
 
             if (playerFrame != null) playerFrame.Update((float)deltaTime);
+
+            if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
+            {
+                autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
+            }
                         
             //durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
@@ -722,13 +760,15 @@ namespace Barotrauma
             //msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
+            msg.Write(GameMain.Server==null ? false : GameMain.Server.AutoRestart);
+            msg.Write(GameMain.Server == null ? 0.0f : GameMain.Server.AutoRestartTimer);
+
             msg.Write((byte)(playerList.CountChildren));
             for (int i = 0; i < playerList.CountChildren; i++)
             {
                 string clientName = playerList.children[i].UserData as string;
                 msg.Write(clientName==null ? "" : clientName);
             }
-
         }
 
 
@@ -740,6 +780,10 @@ namespace Barotrauma
             int modeIndex = 0;
             //float durationScroll = 0.0f;
             string levelSeed = "";
+
+            bool autoRestart = false;
+
+            float restartTimer = 0.0f;
 
             try
             {
@@ -754,6 +798,9 @@ namespace Barotrauma
                 //durationScroll = msg.ReadFloat();
 
                 levelSeed = msg.ReadString();
+
+                autoRestart = msg.ReadBoolean();
+                restartTimer = msg.ReadFloat();
 
                 int playerCount = msg.ReadByte();
                 
@@ -772,6 +819,9 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(mapName)) TrySelectMap(mapName, md5Hash);
 
             modeList.Select(modeIndex);
+
+            autoRestartBox.Selected = autoRestart;
+            autoRestartTimer = restartTimer;
 
             //durationBar.BarScroll = durationScroll;
 
