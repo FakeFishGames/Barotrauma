@@ -613,6 +613,8 @@ namespace Barotrauma
         {
             do
             {
+                if (enemy == null) break;
+
                 enemy.Health = 50.0f;
 
                 enemy.AIController.State = AIController.AiState.None;

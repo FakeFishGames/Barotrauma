@@ -5,11 +5,13 @@ using System.Diagnostics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
+using Barotrauma.Networking.ReliableMessages;
 
 namespace Barotrauma.Networking
 {
     class GameServer : NetworkMember
     {
+        public bool ShowNetStats;
 
         public List<Client> connectedClients = new List<Client>();
 
@@ -64,7 +66,7 @@ namespace Barotrauma.Networking
 
 #if DEBUG
             config.SimulatedLoss = 0.2f;
-            config.SimulatedMinimumLatency = 0.3f;
+            config.SimulatedRandomLatency = 0.6f;
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
 #endif 
@@ -96,9 +98,9 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't start the server", e);                
+                DebugConsole.ThrowError("Couldn't start the server", e);
             }
-                            
+         
 
             if (config.EnableUPnP)
             {
@@ -225,7 +227,7 @@ namespace Barotrauma.Networking
         
         public override void Update(float deltaTime)
         {
-            if (GameMain.DebugDraw) netStats.Update(deltaTime);
+            if (ShowNetStats) netStats.Update(deltaTime);
 
             if (!started) return;
 
@@ -268,8 +270,13 @@ namespace Barotrauma.Networking
                 disconnectedClients.RemoveAt(i);
             }
 
-            NetIncomingMessage inc = server.ReadMessage();
-            if (inc != null)
+            foreach (Client c in connectedClients)
+            {
+                c.ReliableChannel.Update(deltaTime);
+            }
+
+            NetIncomingMessage inc = null; 
+            while ((inc = server.ReadMessage()) != null)
             {
                 try
                 {
@@ -277,7 +284,11 @@ namespace Barotrauma.Networking
                 }
                 catch
                 {
+#if DEBUG
+                    DebugConsole.ThrowError("Failed to read incoming message");
+#endif
 
+                    continue;
                 }
             }
 
@@ -416,7 +427,26 @@ namespace Barotrauma.Networking
                     break;
                 case NetIncomingMessageType.Data:
 
-                    switch (inc.ReadByte())
+                    Client dataSender = connectedClients.Find(c => c.Connection == inc.SenderConnection);
+                    if (dataSender == null) return;
+
+                    byte packetType = 0;
+                    try
+                    {
+                        packetType = inc.ReadByte();
+                    }
+                    catch
+                    {
+                        return;
+                    }
+
+                    if (packetType == (byte)PacketTypes.ReliableMessage)
+                    {
+                        if (!dataSender.ReliableChannel.CheckMessage(inc)) return;
+                        packetType = inc.ReadByte();
+                    }
+
+                    switch (packetType)
                     {
                         case (byte)PacketTypes.NetworkEvent:
                             if (!gameStarted) break;
@@ -451,6 +481,13 @@ namespace Barotrauma.Networking
                             break;
                         case (byte)PacketTypes.CharacterInfo:
                             ReadCharacterData(inc);
+                            break;
+                        case (byte)PacketTypes.ResendRequest:
+                            
+                            dataSender.ReliableChannel.HandleResendRequest(inc);
+                            break;
+                        case (byte)PacketTypes.Ack:
+                            dataSender.ReliableChannel.HandleAckMessage(inc);
                             break;
                     }
                     break;
@@ -552,7 +589,7 @@ namespace Barotrauma.Networking
                 userID++;
             }
 
-            Client newClient = new Client(name, userID);
+            Client newClient = new Client(server, name, userID);
             newClient.Connection = inc.SenderConnection;
             newClient.version = version;
 
@@ -581,25 +618,22 @@ namespace Barotrauma.Networking
         {
             if (NetworkEvent.events.Count == 0) return;
 
+            List<NetConnection> recipients = new List<NetConnection>();
+            foreach (Client c in connectedClients)
+            {
+                if (c.character == null) continue;
+                //if (networkEvent.Type == NetworkEventType.UpdateEntity && 
+                //    Vector2.Distance(e.SimPosition, c.character.SimPosition) > NetConfig.UpdateEntityDistance) continue;
+
+                recipients.Add(c.Connection);
+            }                
+
+            if (recipients.Count == 0) return;
+
             foreach (NetworkEvent networkEvent in NetworkEvent.events)  
             {
-
-                List<NetConnection> recipients = new List<NetConnection>();
-
                 Entity e = Entity.FindEntityByID(networkEvent.ID);
                 if (e == null) continue;
-
-                foreach (Client c in connectedClients)
-                {
-                    if (c.character == null) continue;
-                    //if (networkEvent.Type == NetworkEventType.UpdateEntity && 
-                    //    Vector2.Distance(e.SimPosition, c.character.SimPosition) > NetConfig.UpdateEntityDistance) continue;
-
-                    recipients.Add(c.Connection);
-                }
-                
-
-                if (recipients.Count == 0) return;
 
                 NetOutgoingMessage message = server.CreateMessage();
                 message.Write((byte)PacketTypes.NetworkEvent);
@@ -872,7 +906,7 @@ namespace Barotrauma.Networking
         {
             base.Draw(spriteBatch);
 
-            if (!GameMain.DebugDraw) return;
+            if (!ShowNetStats) return;
 
             int width = 200, height = 300;
             int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight*0.3f);
@@ -934,27 +968,22 @@ namespace Barotrauma.Networking
 
             if (server.Connections.Count == 0) return;
 
-            NetOutgoingMessage msg = server.CreateMessage();
-            msg.Write((byte)PacketTypes.Chatmessage);
-            msg.Write((byte)type);
-            msg.Write(message);
+            List<Client> recipients = new List<Client>();
 
-            if (type==ChatMessageType.Dead)
+            foreach (Client c in connectedClients)
             {
-                List<NetConnection> recipients = new List<NetConnection>();
-                foreach (Client c in connectedClients)
-                {
-                    if (c.character != null && c.character.IsDead) recipients.Add(c.Connection);                    
-                }
-                if (recipients.Count>0)
-                {
-                    server.SendMessage(msg, recipients, NetDeliveryMethod.ReliableUnordered, 0);
-                }                
+                if (type!=ChatMessageType.Dead || (c.character != null && c.character.IsDead)) recipients.Add(c);
             }
-            else
+
+            foreach (Client c in recipients)
             {
-                server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);
-            }
+                ReliableMessage msg = c.ReliableChannel.CreateMessage();
+                msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
+                msg.InnerMessage.Write((byte)type);
+                msg.InnerMessage.Write(message);            
+
+                c.ReliableChannel.SendMessage(msg, c.Connection);
+            }      
             
         }
 
@@ -1177,13 +1206,21 @@ namespace Barotrauma.Networking
         public List<JobPrefab> jobPreferences;
         public JobPrefab assignedJob;
 
+        public ReliableChannel ReliableChannel;
+
         public float deleteDisconnectedTimer;
+
+        public Client(NetPeer server, string name, int ID)
+            : this(name, ID)
+        {
+            ReliableChannel = new ReliableChannel(server);
+        }
 
         public Client(string name, int ID)
         {
             this.name = name;
             this.ID = ID;
-
+            
             jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0,3));
         }
     }

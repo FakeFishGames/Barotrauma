@@ -149,7 +149,7 @@ namespace Barotrauma
             }
 
             base.Remove();
-            ID = -1;
+            ID = -5;
         }
 
         //drawing ----------------------------------------------------
@@ -378,14 +378,18 @@ namespace Barotrauma
             Level.Loaded.Move(-amount);
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(Networking.NetworkEventType type, NetOutgoingMessage message, object data)
         {
+            if (subBody == null) return false;
+
             message.Write((float)NetTime.Now);
             message.Write(Position.X);
             message.Write(Position.Y);
 
             message.Write(Speed.X);
             message.Write(Speed.Y);
+
+            return true;
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message)

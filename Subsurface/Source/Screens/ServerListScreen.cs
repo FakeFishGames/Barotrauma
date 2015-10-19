@@ -287,8 +287,8 @@ namespace Barotrauma
 
             if (serverList.Selected!=null && (serverList.Selected.GetChild("password") as GUITickBox).Selected)
             {
-                var msgBox = new GUIMessageBox("Password required", "");
-                var passwordBox = new GUITextBox(new Rectangle(0,0,150,20), Alignment.BottomCenter, GUI.Style, msgBox);
+                var msgBox = new GUIMessageBox("Password required:", "");
+                var passwordBox = new GUITextBox(new Rectangle(0,40,150,25), Alignment.TopLeft, GUI.Style, msgBox);
                 passwordBox.UserData = "password";
 
                 var okButton = msgBox.GetChild<GUIButton>();                

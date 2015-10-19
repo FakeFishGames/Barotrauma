@@ -325,6 +325,11 @@ namespace Barotrauma
                     //Ragdoll.DebugDraw = !Ragdoll.DebugDraw;
                     GameMain.DebugDraw = !GameMain.DebugDraw;
                     break;
+                case "netstats":
+                    if (GameMain.Server == null) return;
+
+                    GameMain.Server.ShowNetStats = !GameMain.Server.ShowNetStats;
+                    break;
                 default:
                     NewMessage("Command not found", Color.Red);
                     break;

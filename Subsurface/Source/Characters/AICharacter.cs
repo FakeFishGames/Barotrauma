@@ -83,11 +83,11 @@ namespace Barotrauma
             return result;
         }
 
-        public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
             if (type == NetworkEventType.KillCharacter)
             {
-                return;
+                return true;
             }
 
             message.Write((float)NetTime.Now);
@@ -127,6 +127,9 @@ namespace Barotrauma
 
                 LargeUpdateTimer = Math.Max(0, LargeUpdateTimer - 1);
             }
+
+
+            return true;
         }
         
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)

@@ -471,9 +471,11 @@ namespace Barotrauma
             h.ID = int.Parse(element.Attribute("ID").Value);
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message, object data)
         {
             message.Write(volume);
+
+            return true;
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
