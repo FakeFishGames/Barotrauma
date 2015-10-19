@@ -1156,7 +1156,7 @@ namespace Barotrauma
             new NetworkEvent(NetworkEventType.UpdateComponent, ID, isClient, index);
         }
 
-        public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
             message.Write(condition);
 
@@ -1172,7 +1172,7 @@ namespace Barotrauma
                 case NetworkEventType.UpdateComponent:
 
                     int componentIndex = (int)data;
-                    if (componentIndex < 0 || componentIndex >= components.Count) return;
+                    if (componentIndex < 0 || componentIndex >= components.Count) return false;
                     
                     message.Write((byte)componentIndex);
                     components[componentIndex].FillNetworkData(type, message);
@@ -1214,6 +1214,8 @@ namespace Barotrauma
                     
                     break;
             }
+
+            return true;
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)

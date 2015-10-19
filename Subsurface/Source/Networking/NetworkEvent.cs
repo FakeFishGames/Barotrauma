@@ -93,7 +93,15 @@ namespace Barotrauma.Networking
 
             message.Write(id);
 
-            e.FillNetworkData(eventType, message, data);
+            try
+            {
+                if (!e.FillNetworkData(eventType, message, data)) return false;
+            }
+
+            catch
+            {
+                return false;
+            }
 
             return true;
         }

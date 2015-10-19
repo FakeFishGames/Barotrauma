@@ -1084,21 +1084,21 @@ namespace Barotrauma
             }
         }
 
-        public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
             if (type == NetworkEventType.PickItem)
             {
                 message.Write((int)data);
-                return;
+                return true;
             }
             else if (type== NetworkEventType.SelectCharacter)
             {
                 message.Write((int)data);
-                return;
+                return true;
             }
             else if (type == NetworkEventType.KillCharacter)
             {
-                return;            
+                return true;            
             }
 
             var hasInputs =  
@@ -1160,7 +1160,9 @@ namespace Barotrauma
                 message.Write(AnimController.RefLimb.SimPosition.Y);
 
                 LargeUpdateTimer = Math.Max(0, LargeUpdateTimer-1);
-            }            
+            }
+
+            return true;
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)

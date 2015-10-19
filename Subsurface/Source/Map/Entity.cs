@@ -64,7 +64,10 @@ namespace Barotrauma
             dictionary.Add(id, this);
         }
 
-        public virtual void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data) { }
+        public virtual bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data) 
+        {
+            return false;
+        }
         public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message) { }
 
         /// <summary>

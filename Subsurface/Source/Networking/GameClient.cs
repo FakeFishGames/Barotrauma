@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Barotrauma.Networking.ReliableMessages;
 
 namespace Barotrauma.Networking
 {
@@ -11,6 +12,8 @@ namespace Barotrauma.Networking
         private NetClient client;
 
         private GUIMessageBox reconnectBox;
+
+        private ReliableChannel reliableChannel;
 
         private bool connected;
 
@@ -33,6 +36,7 @@ namespace Barotrauma.Networking
             characterInfo.Job = null;
 
             otherClients = new List<Client>();
+
 
         }
 
@@ -63,6 +67,7 @@ namespace Barotrauma.Networking
 #if DEBUG
             config.SimulatedLoss = 0.1f;
             config.SimulatedMinimumLatency = 0.3f;
+            config.SimulatedRandomLatency = 0.5f;
 #endif 
 
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
@@ -70,6 +75,7 @@ namespace Barotrauma.Networking
 
             // Create new client, with previously created configs
             client = new NetClient(config);
+            reliableChannel = new ReliableChannel(client);
                       
             NetOutgoingMessage outmsg = client.CreateMessage();                        
             client.Start();
@@ -329,6 +335,8 @@ namespace Barotrauma.Networking
                     new NetworkEvent(myCharacter.ID, true);                    
                 }
             }
+
+            reliableChannel.Update(deltaTime);
                           
             foreach (NetworkEvent networkEvent in NetworkEvent.events)
             {
@@ -368,8 +376,17 @@ namespace Barotrauma.Networking
             while ((inc = client.ReadMessage()) != null)
             {
                 if (inc.MessageType != NetIncomingMessageType.Data) continue;
-                
-                switch (inc.ReadByte())
+
+                //todo: exception handling
+                byte packetType = inc.ReadByte();
+
+                if (packetType == (byte)PacketTypes.ReliableMessage)
+                {
+                    if (!reliableChannel.CheckMessage(inc)) continue;
+                    packetType = inc.ReadByte();
+                }
+
+                switch (packetType)
                 {
                     case (byte)PacketTypes.StartGame:
                         if (gameStarted) continue;
@@ -427,6 +444,12 @@ namespace Barotrauma.Networking
 
                         new GUIMessageBox("You are the Traitor!", "Your secret task is to assassinate " + targetName + "!");
 
+                        break;
+                    case (byte)PacketTypes.ResendRequest:
+                        reliableChannel.HandleResendRequest(inc);
+                        break;
+                    case (byte)PacketTypes.Ack:
+                        reliableChannel.HandleAckMessage(inc);
                         break;
                 }                
             }
@@ -652,13 +675,13 @@ namespace Barotrauma.Networking
             //AddChatMessage(message);
 
             type = (gameStarted && myCharacter != null && myCharacter.IsDead) ? ChatMessageType.Dead : ChatMessageType.Default;
+            
+            ReliableMessage msg = reliableChannel.CreateMessage();
+            msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
+            msg.InnerMessage.Write((byte)type);
+            msg.InnerMessage.Write(message);
 
-            NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.Chatmessage);
-            msg.Write((byte)type);
-            msg.Write(message);
-
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            reliableChannel.SendMessage(msg, client.ServerConnection);
         }
 
         /// <summary>

@@ -79,13 +79,13 @@ namespace Barotrauma.Networking
 
             graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, null, 0.0f, Color.Red);
 
-            spriteBatch.DrawString(GUI.SmallFont, "Max received: "+graphs[(int)NetStatType.ReceivedBytes].LargestValue()+" bytes/s", 
+            spriteBatch.DrawString(GUI.SmallFont, "Peak received: "+graphs[(int)NetStatType.ReceivedBytes].LargestValue()+" bytes/s", 
                 new Vector2(rect.X + 10, rect.Y+10), Color.Cyan);
 
-            spriteBatch.DrawString(GUI.SmallFont, "Max sent: " + graphs[(int)NetStatType.SentBytes].LargestValue() + " bytes/s",
+            spriteBatch.DrawString(GUI.SmallFont, "Peak sent: " + graphs[(int)NetStatType.SentBytes].LargestValue() + " bytes/s",
                 new Vector2(rect.X + 10, rect.Y + 30), Color.Orange);
 
-            spriteBatch.DrawString(GUI.SmallFont, "Max resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
+            spriteBatch.DrawString(GUI.SmallFont, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
                 new Vector2(rect.X + 10, rect.Y + 50), Color.Red);
         }
     }

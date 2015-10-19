@@ -636,7 +636,7 @@ namespace Barotrauma
 
         }
 
-        public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
             int sectionIndex = 0;
             byte byteIndex = 0;
@@ -648,12 +648,14 @@ namespace Barotrauma
             }
             catch
             {
-                return;
+                return false;
             }
 
             message.Write((float)NetTime.Now);
             message.Write(byteIndex);
             message.Write(sections[sectionIndex].damage);
+
+            return true;
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)

@@ -8,6 +8,8 @@ namespace Barotrauma.Networking
 {
     enum PacketTypes
     {
+        Unknown,
+
         Login,
         LoggedIn,
         LogOut,
@@ -26,7 +28,12 @@ namespace Barotrauma.Networking
 
         NetworkEvent,
 
-        Traitor
+        Traitor,
+
+        ResendRequest,
+        ReliableMessage,
+        Ack
+        
     }
 
     class NetworkMember

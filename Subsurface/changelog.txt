@@ -1,4 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
+v0.2.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- network statistics view which can be enabled by opening the debug console (F3) and entering "netstats"
+	(only works if you're running a server)
+	- updated to latest version of Lidgren networking library, which may or may not have an effect 
+	on the chat lag issues
+
+Items:
+	- fixed some game-crashing bugs related to detaching and attaching items (such as buttons)
+	- railgun shells can be bought in single player
+
+Submarine:
+	- more tools, diving suits and misc supplies in both default subs
+
+Misc:
+	- fixed Moloch spawning inside the level in the tutorial
+	- the launcher shows an error message instead of crashing if it can't connect to the update server
+
+---------------------------------------------------------------------------------------------------------
 v0.2.1
 ---------------------------------------------------------------------------------------------------------
 
