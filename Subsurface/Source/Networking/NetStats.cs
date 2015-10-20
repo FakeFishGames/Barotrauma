@@ -21,7 +21,7 @@ namespace Barotrauma.Networking
         private float[] totalValue;
         private float[] lastValue;
 
-        const float UpdateInterval = 1.0f;
+        const float UpdateInterval = 0.1f;
         float updateTimer;
 
         public NetStats()
@@ -54,11 +54,11 @@ namespace Barotrauma.Networking
             for (int i = 0; i<3; i++)
             {
 
-                graphs[i].Update(totalValue[i] * 10.0f);
+                graphs[i].Update(totalValue[i] / UpdateInterval);
                 totalValue[i] = 0.0f;
             }
 
-            updateTimer = UpdateInterval/10.0f;
+            updateTimer = UpdateInterval;
         }
 
         public void Draw(SpriteBatch spriteBatch, Rectangle rect)
@@ -71,10 +71,14 @@ namespace Barotrauma.Networking
 
             graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, null, 0.0f, Color.Red);
 
-            spriteBatch.DrawString(GUI.SmallFont, "Peak received: "+graphs[(int)NetStatType.ReceivedBytes].LargestValue()+" bytes/s", 
+            spriteBatch.DrawString(GUI.SmallFont, 
+                "Peak received: "+graphs[(int)NetStatType.ReceivedBytes].LargestValue()+" bytes/s      " +
+                "Avg received: " + graphs[(int)NetStatType.ReceivedBytes].LargestValue()/Graph.ArraySize + " bytes/s", 
                 new Vector2(rect.X + 10, rect.Y+10), Color.Cyan);
 
-            spriteBatch.DrawString(GUI.SmallFont, "Peak sent: " + graphs[(int)NetStatType.SentBytes].LargestValue() + " bytes/s",
+
+            spriteBatch.DrawString(GUI.SmallFont, "Peak sent: " + graphs[(int)NetStatType.SentBytes].LargestValue() + " bytes/s      " +
+                "Avg sent: " + graphs[(int)NetStatType.SentBytes].LargestValue()/Graph.ArraySize + " bytes/s",
                 new Vector2(rect.X + 10, rect.Y + 30), Color.Orange);
 
             spriteBatch.DrawString(GUI.SmallFont, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
@@ -84,7 +88,7 @@ namespace Barotrauma.Networking
 
     class Graph
     {
-        const int ArraySize = 100;
+        public const int ArraySize = 100;
 
         private float[] values;
 

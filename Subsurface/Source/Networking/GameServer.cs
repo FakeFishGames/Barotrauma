@@ -661,8 +661,7 @@ namespace Barotrauma.Networking
 
                     if (server.ConnectionsCount>0)
                     {
-                        server.SendMessage(message, recipientConnections, 
-                            (networkEvent.IsImportant) ? NetDeliveryMethod.Unreliable : NetDeliveryMethod.ReliableUnordered, 0);  
+                        server.SendMessage(message, recipientConnections, NetDeliveryMethod.Unreliable, 0);  
                     }  
                 }                          
             }

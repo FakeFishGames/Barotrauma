@@ -353,15 +353,29 @@ namespace Barotrauma.Networking
                           
             foreach (NetworkEvent networkEvent in NetworkEvent.events)
             {
-                NetOutgoingMessage message = client.CreateMessage();
-                message.Write((byte)PacketTypes.NetworkEvent);
-
-
-                if (networkEvent.FillData(message))
+                if (networkEvent.IsImportant)
                 {
-                    client.SendMessage(message,
-                        (networkEvent.IsImportant) ? NetDeliveryMethod.ReliableUnordered : NetDeliveryMethod.Unreliable);
+                    ReliableMessage reliableMessage = reliableChannel.CreateMessage();
+                    reliableMessage.InnerMessage.Write((byte)PacketTypes.NetworkEvent);
+
+                    if (networkEvent.FillData(reliableMessage.InnerMessage))
+                    {
+                        reliableChannel.SendMessage(reliableMessage, client.ServerConnection);
+                    }
                 }
+                else
+                {
+                    NetOutgoingMessage message = client.CreateMessage();
+                    message.Write((byte)PacketTypes.NetworkEvent);
+
+
+                    if (networkEvent.FillData(message))
+                    {
+                        client.SendMessage(message, NetDeliveryMethod.Unreliable);
+                    }
+                }
+
+
             }
                     
             NetworkEvent.events.Clear();
@@ -665,8 +679,8 @@ namespace Barotrauma.Networking
             }
 
             Character character = (closestWaypoint == null) ?
-                new Character(ch, position, true) :
-                new Character(ch, closestWaypoint, true);
+                new Character(ch, position, !isMyCharacter) :
+                new Character(ch, closestWaypoint, !isMyCharacter);
 
             character.ID = ID;
             character.Inventory.ID = inventoryID;
