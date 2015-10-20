@@ -8,10 +8,12 @@ using System;
 
 namespace Barotrauma
 {
-    class Inventory : Entity
+    class Inventory
     {
         public static Item draggingItem;
         public static Item doubleClickedItem;
+
+        public readonly Entity Owner;
 
         private int slotsPerRow;
 
@@ -39,9 +41,11 @@ namespace Barotrauma
 
         public Item[] items;
 
-        public Inventory(int capacity, Vector2? centerPos = null, int slotsPerRow=5)
+        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow=5)
         {
             this.capacity = capacity;
+
+            this.Owner = owner;
 
             this.slotsPerRow = slotsPerRow;
 
@@ -95,6 +99,7 @@ namespace Barotrauma
 
         public virtual bool TryPutItem(Item item, int i, bool createNetworkEvent = true)
         {
+            if (Owner == null) return false;
             if (CanBePut(item,i))
             {
                 PutItem(item, i, createNetworkEvent);
@@ -108,6 +113,8 @@ namespace Barotrauma
 
         protected void PutItem(Item item, int i, bool createNetworkEvent, bool removeItem = true)
         {
+            if (Owner == null) return;
+
             if (item.inventory != null && removeItem)
             {
                 item.Drop();
@@ -121,7 +128,7 @@ namespace Barotrauma
                 item.body.Enabled = false;
             }
 
-            if (createNetworkEvent) new NetworkEvent(NetworkEventType.InventoryUpdate, ID, true);            
+            if (createNetworkEvent) new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true);            
         }
 
         public void RemoveItem(Item item)
@@ -136,7 +143,6 @@ namespace Barotrauma
 
         protected virtual void DropItem(Item item)
         {
-
             item.Drop(null, false);
             return;
         }
@@ -185,8 +191,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    int[] data = { draggingItem.ID, -1 };
-                    new NetworkEvent(NetworkEventType.InventoryUpdate, ID, true, data);
+                    if (Owner!=null)
+                    {
+                        int[] data = { draggingItem.ID, -1 };
+                        new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true, data);
+                    }
 
                     DropItem(draggingItem);
                 }
@@ -279,7 +288,7 @@ namespace Barotrauma
                 spriteBatch.DrawString(GUI.Font, (int)item.Condition + " %", new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.Red);
         }
 
-        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
             for (int i = 0; i<capacity; i++)
             {
@@ -289,7 +298,7 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
             int[] newItemIDs = new int[capacity];
                         
@@ -315,7 +324,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                Item item = FindEntityByID(newItemIDs[i]) as Item;
+                Item item = Entity.FindEntityByID(newItemIDs[i]) as Item;
                 if (item == null) continue;
 
                 TryPutItem(item, i, false);

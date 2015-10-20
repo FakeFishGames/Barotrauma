@@ -282,10 +282,10 @@ namespace Barotrauma.Networking
                 {
                     ReadMessage(inc);
                 }
-                catch
+                catch (Exception e)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Failed to read incoming message");
+                    DebugConsole.ThrowError("Failed to read incoming message", e);
 #endif
 
                     continue;
@@ -440,10 +440,13 @@ namespace Barotrauma.Networking
                         return;
                     }
 
+                    bool isReliable = false;
                     if (packetType == (byte)PacketTypes.ReliableMessage)
                     {
                         if (!dataSender.ReliableChannel.CheckMessage(inc)) return;
                         packetType = inc.ReadByte();
+
+                        isReliable = true;
                     }
 
                     switch (packetType)
@@ -452,21 +455,40 @@ namespace Barotrauma.Networking
                             if (!gameStarted) break;
                             if (!NetworkEvent.ReadData(inc)) break;
 
-                            outmsg = server.CreateMessage();
-                            outmsg.Write(inc);
-
-                            List<NetConnection> recipients = new List<NetConnection>();
-
-                            foreach (Client client in connectedClients)
-                            {
-                                if (client.Connection == inc.SenderConnection) continue;
-                                if (!client.inGame) continue;
-
-                                recipients.Add(client.Connection);  
-                            }
-
+                            List<Client> recipients = connectedClients.FindAll(c => c.Connection != inc.SenderConnection && c.inGame);
                             if (recipients.Count == 0) break;
-                            server.SendMessage(outmsg, recipients, inc.DeliveryMethod, 0);
+                                
+                            //foreach (Client client in connectedClients)
+                            //{
+                            //    if (client.Connection == inc.SenderConnection) continue;
+                            //    if (!client.inGame) continue;
+
+                            //    recipients.Add(client.Connection);  
+                            //}
+
+                            if (isReliable)
+                            {
+                                Debug.WriteLine("receiver reliable networkevent");
+                                foreach (Client c in recipients)
+                                {
+                                    var reliableMessage = c.ReliableChannel.CreateMessage();
+                                    inc.Position = 8+16;
+                                    byte[] messageBytes = inc.ReadBytes(inc.LengthBytes-3);
+                                    reliableMessage.InnerMessage.Write(messageBytes);
+
+                                    c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
+                                }
+                            }
+                            else
+                            {
+                                outmsg = server.CreateMessage();
+                                outmsg.Write(inc);
+
+                                List<NetConnection> recipientConnections = new List<NetConnection>();
+                                foreach (Client c in recipients) recipientConnections.Add(c.Connection);
+
+                                server.SendMessage(outmsg, recipientConnections, inc.DeliveryMethod, 0);
+                            }
                                                         
                             break;
                         case (byte)PacketTypes.Chatmessage:
@@ -628,36 +650,35 @@ namespace Barotrauma.Networking
 
             if (recipients.Count == 0) return;
 
+
+
             foreach (NetworkEvent networkEvent in NetworkEvent.events)  
             {
-                Entity e = Entity.FindEntityByID(networkEvent.ID);
-                if (e == null) continue;
+                NetOutgoingMessage message = server.CreateMessage();
+                message.Write((byte)PacketTypes.NetworkEvent);
+                //if (!networkEvent.IsClient) continue;
 
+                if (!networkEvent.FillData(message))
+                {
+                    continue;
+                }
+
+                //Entity e = Entity.FindEntityByID(networkEvent.ID);
+                //if (e == null) continue;
                 if (networkEvent.IsImportant)
                 {
                     foreach (Client c in recipients)
                     {
                         ReliableMessage reliableMessage = c.ReliableChannel.CreateMessage();
-                        reliableMessage.InnerMessage.Write((byte)PacketTypes.NetworkEvent);
-
-                        if (!networkEvent.FillData(reliableMessage.InnerMessage))
-                        {
-                            break;
-                        }
+                        message.Position = 0;
+                        reliableMessage.InnerMessage.Write(message.ReadBytes(message.LengthBytes));
 
                         c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
                     }
                 }
                 else
                 {
-                    NetOutgoingMessage message = server.CreateMessage();
-                    message.Write((byte)PacketTypes.NetworkEvent);
-                    //if (!networkEvent.IsClient) continue;
-                            
-                    if (!networkEvent.FillData(message))
-                    {
-                        continue;
-                    }
+
 
                     if (server.ConnectionsCount>0)
                     {
@@ -1050,7 +1071,6 @@ namespace Barotrauma.Networking
             message.Write(name);
             message.Write(character.ID);
             message.Write(character.Info.Gender == Gender.Female);
-            message.Write(character.Inventory.ID);
 
             message.Write(character.Info.HeadSpriteId);
 

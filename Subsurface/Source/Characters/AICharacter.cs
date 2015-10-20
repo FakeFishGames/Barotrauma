@@ -95,8 +95,8 @@ namespace Barotrauma
             message.Write(LargeUpdateTimer <= 0);
             
             message.Write(AnimController.TargetDir == Direction.Right);
-            message.Write(AnimController.TargetMovement.X);
-            message.Write(AnimController.TargetMovement.Y);
+            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 16);
+            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 16);
             
             if (LargeUpdateTimer <= 0)
             {
@@ -165,8 +165,8 @@ namespace Barotrauma
             try
             {
                 targetDir = message.ReadBoolean();
-                targetMovement.X = message.ReadFloat();
-                targetMovement.Y = message.ReadFloat();
+                targetMovement.X = message.ReadRangedSingle(-10.0f, 10.0f, 8);
+                targetMovement.Y = message.ReadRangedSingle(-10.0f, 10.0f, 8);
                 
             }
             catch

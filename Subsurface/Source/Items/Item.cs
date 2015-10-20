@@ -1169,6 +1169,10 @@ namespace Barotrauma
                         message.Write(body.SimPosition.Y);
                     }
                     break;
+                case NetworkEventType.InventoryUpdate:
+                    var itemContainer = GetComponent<ItemContainer>();
+                    if (itemContainer == null || itemContainer.inventory == null) return false;
+                    return itemContainer.inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
                 case NetworkEventType.UpdateComponent:
 
                     int componentIndex = (int)data;
@@ -1232,6 +1236,11 @@ namespace Barotrauma
                     }
                     SetTransform(newSimPos, body.Rotation);
                     Drop(null, false);
+                    break;
+                case NetworkEventType.InventoryUpdate:
+                    var itemContainer = GetComponent<ItemContainer>();
+                    if (itemContainer == null || itemContainer.inventory == null) return;
+                    itemContainer.inventory.ReadNetworkData(NetworkEventType.DropItem, message);
                     break;
                 case NetworkEventType.UpdateComponent:
                     int componentIndex = message.ReadByte();
