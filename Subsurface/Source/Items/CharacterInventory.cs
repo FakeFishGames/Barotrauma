@@ -25,15 +25,14 @@ namespace Barotrauma
         private Vector2[] slotPositions;
 
         public CharacterInventory(int capacity, Character character)
-            : base(capacity)
+            : base(character, capacity)
         {
             this.character = character;
 
             if (icons == null) icons = TextureLoader.FromFile("Content/UI/inventoryIcons.png");
 
             slotPositions = new Vector2[limbSlots.Length];
-
-
+            
             int rectWidth = 40, rectHeight = 40;
             int spacing = 10;
             for (int i = 0; i < slotPositions.Length; i++)
@@ -123,15 +122,18 @@ namespace Barotrauma
                 if (allowedSlots.HasFlag(limbSlots[i]) && items[i]!=null) return false;
             }
 
+            bool placed = false;
             for (int i = 0; i < capacity; i++)
             {
                 if (allowedSlots.HasFlag(limbSlots[i]) && items[i] == null)
                 {
-                    PutItem(item, i, createNetworkEvent);
+                    PutItem(item, i, createNetworkEvent, !placed);
                     item.Equip(character);
-                    return true;
+                    placed = true;
                 }
             }
+
+            if (placed) return true;
 
             if (allowedSlots.HasFlag(LimbSlot.BothHands)) TryPutItem(item, 3, createNetworkEvent);
 
@@ -158,7 +160,7 @@ namespace Barotrauma
                     Inventory otherInventory = items[i].inventory;
                     if (otherInventory!=null)
                     {
-                        new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.ID, true);
+                        new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true);
                     }
 
                     combined = true;

@@ -79,16 +79,14 @@ namespace Barotrauma.Networking.ReliableMessages
 
         public ReliableMessage CreateMessage()
         {
-            if (messageCount == ushort.MaxValue) messageCount = 0;
-            messageCount++;
+            ushort messageID = (messageCount==ushort.MaxValue) ? (ushort)0 : (ushort)(messageCount + 1);
 
             NetOutgoingMessage message = sender.CreateMessage();
 
-            var reliableMessage = new ReliableMessage(message, messageCount);
-            messageBuffer.Add(reliableMessage.ID, reliableMessage);
+            var reliableMessage = new ReliableMessage(message, messageID);
 
             message.Write((byte)PacketTypes.ReliableMessage);
-            message.Write(messageCount);
+            message.Write(messageID);
             
             int bufferSize=100;
             if (messageBuffer.Count>bufferSize)
@@ -117,10 +115,7 @@ namespace Barotrauma.Networking.ReliableMessages
                     messageBuffer.Remove(i);
                     if (i == ushort.MaxValue) break;
                     Debug.WriteLine("removing message " + i);
-                }
-
-                    
-                
+                }  
             }
 
             return reliableMessage;
@@ -132,6 +127,11 @@ namespace Barotrauma.Networking.ReliableMessages
         {
             ackInterval = 0.0f;
             ackTimer = connection.AverageRoundtripTime;
+
+            messageBuffer.Add(message.ID, message);
+
+            if (messageCount == ushort.MaxValue) messageCount = 0;
+            messageCount++;
 
             message.SaveInnerMessage();
 
@@ -172,7 +172,7 @@ namespace Barotrauma.Networking.ReliableMessages
 
             if (ackTimer > 0.0f) return;
 
-            Debug.WriteLine("Sending ack message: "+messageCount);
+            //Debug.WriteLine("Sending ack message: "+messageCount);
 
             NetOutgoingMessage message = sender.CreateMessage();
             message.Write((byte)PacketTypes.Ack);
@@ -337,7 +337,7 @@ namespace Barotrauma.Networking.ReliableMessages
             //id matches, all good
             if (messageId == lastMessageID)
             {
-                Debug.WriteLine("Received ack message: " + messageId + ", all good");
+                //Debug.WriteLine("Received ack message: " + messageId + ", all good");
                 return;
             }
 

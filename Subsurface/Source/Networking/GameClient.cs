@@ -649,7 +649,6 @@ namespace Barotrauma.Networking
             string newName      = inc.ReadString();
             int ID              = inc.ReadInt32();
             bool isFemale       = inc.ReadBoolean();
-            int inventoryID     = inc.ReadInt32();
 
             int headSpriteID    = inc.ReadInt32();
             
@@ -683,7 +682,6 @@ namespace Barotrauma.Networking
                 new Character(ch, closestWaypoint, !isMyCharacter);
 
             character.ID = ID;
-            character.Inventory.ID = inventoryID;
             
             character.GiveJobItems(closestWaypoint);
 

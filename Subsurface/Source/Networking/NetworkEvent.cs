@@ -129,7 +129,7 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            System.Diagnostics.Debug.WriteLine("Networkevent entity: "+e.ToString());
+            //System.Diagnostics.Debug.WriteLine("Networkevent entity: "+e.ToString());
 
             //System.Diagnostics.Debug.WriteLine("new message: " + eventType +" - "+e);
             try

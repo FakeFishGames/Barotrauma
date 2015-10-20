@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
-            inventory = new ItemInventory(this, capacity, hudPos, slotsPerRow);            
+            inventory = new ItemInventory(item, this, capacity, hudPos, slotsPerRow);            
             containableItems = new List<RelatedItem>();
             
             foreach (XElement subElement in element.Elements())

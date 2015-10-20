@@ -1100,6 +1100,11 @@ namespace Barotrauma
             {
                 return true;            
             }
+            else if (type == NetworkEventType.InventoryUpdate)
+            {
+                if (inventory == null) return false;
+                return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
+            }
 
             var hasInputs =  
                     (GetInputState(InputType.Left) ||
@@ -1227,6 +1232,12 @@ namespace Barotrauma
                     GameMain.NetworkMember.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
                     GameMain.LightManager.LosEnabled = false;
                 }
+                return;
+            }
+            else if (type == NetworkEventType.InventoryUpdate)
+            {
+                if (inventory == null) return;
+                inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message);
                 return;
             }
 
@@ -1392,8 +1403,6 @@ namespace Barotrauma
             if (controlled == this) controlled = null;
 
             if (GameMain.Client!=null && GameMain.Client.Character == this) GameMain.Client.Character = null;
-
-            if (inventory != null) inventory.Remove();
 
             if (aiTarget != null)
                 aiTarget.Remove();
