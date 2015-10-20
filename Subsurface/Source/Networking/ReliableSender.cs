@@ -56,7 +56,7 @@ namespace Barotrauma.Networking.ReliableMessages
 
     internal class ReliableSender
     {
-        private List<ReliableMessage> messageBuffer;
+        private Dictionary<ushort, ReliableMessage> messageBuffer;
 
         private ushort messageCount;
 
@@ -66,11 +66,15 @@ namespace Barotrauma.Networking.ReliableMessages
 
         private float ackTimer;
 
+        private float ackInterval;
+
         public ReliableSender(NetPeer sender)
         {
             this.sender = sender;
-            
-            messageBuffer = new List<ReliableMessage>();
+
+            messageCount = ushort.MaxValue - 5;
+
+            messageBuffer = new Dictionary<ushort, ReliableMessage>();
         }
 
         public ReliableMessage CreateMessage()
@@ -81,14 +85,42 @@ namespace Barotrauma.Networking.ReliableMessages
             NetOutgoingMessage message = sender.CreateMessage();
 
             var reliableMessage = new ReliableMessage(message, messageCount);
-            messageBuffer.Add(reliableMessage);
+            messageBuffer.Add(reliableMessage.ID, reliableMessage);
 
             message.Write((byte)PacketTypes.ReliableMessage);
             message.Write(messageCount);
             
-            while (messageBuffer.Count>100)
+            int bufferSize=100;
+            if (messageBuffer.Count>bufferSize)
             {
-                messageBuffer.RemoveAt(0);
+                
+                int end = messageCount-bufferSize;
+                int start = end - (messageBuffer.Count - bufferSize);
+
+                if (start<=0)
+                {
+                    int wrappedStart = start + ushort.MaxValue;
+                    if (wrappedStart==0) wrappedStart = ushort.MaxValue;
+                    int wrappedEnd = end + ushort.MaxValue;
+                    if (wrappedEnd==0) wrappedEnd = ushort.MaxValue;
+
+                    for (ushort i = (ushort)wrappedStart; i <= (ushort)wrappedEnd; i++)
+                    {
+                        messageBuffer.Remove(i);
+                        if (i == ushort.MaxValue) break;
+                        Debug.WriteLine("removing message " + i);
+                    }
+                }
+
+                for (ushort i = (ushort)Math.Max(start,1); i <= (ushort)Math.Max(end,1); i++)
+                {
+                    messageBuffer.Remove(i);
+                    if (i == ushort.MaxValue) break;
+                    Debug.WriteLine("removing message " + i);
+                }
+
+                    
+                
             }
 
             return reliableMessage;
@@ -98,20 +130,15 @@ namespace Barotrauma.Networking.ReliableMessages
 
         public void SendMessage(ReliableMessage message, NetConnection connection)
         {
+            ackInterval = 0.0f;
+            ackTimer = connection.AverageRoundtripTime;
+
             message.SaveInnerMessage();
 
             sender.SendMessage(message.InnerMessage, connection, NetDeliveryMethod.Unreliable, 0);
 
             recipient = connection;
         }
-
-        //        NetOutgoingMessage msg = server.CreateMessage();
-        //reliableSender.CreateMessage(msg);
-        //msg.Write((byte)PacketTypes.Chatmessage);
-        //msg.Write((byte)type);
-        //msg.Write(message);
-
-
 
         public void HandleResendRequest(NetIncomingMessage inc)
         {
@@ -124,14 +151,15 @@ namespace Barotrauma.Networking.ReliableMessages
 
         private void ResendMessage(ushort messageId, NetConnection connection)
         {
-            ReliableMessage message = messageBuffer.Find(m => m.ID == messageId);
-            if (message == null) return;
+            ReliableMessage message;
+            if (!messageBuffer.TryGetValue(messageId, out message)) return;
 
             Debug.WriteLine("resending " + messageId);
 
-
             NetOutgoingMessage resendMessage = sender.CreateMessage();
             message.RestoreInnerMessage(resendMessage);
+
+            ackTimer = connection.AverageRoundtripTime;
 
             sender.SendMessage(resendMessage, connection, NetDeliveryMethod.Unreliable);
         }
@@ -152,7 +180,8 @@ namespace Barotrauma.Networking.ReliableMessages
 
             sender.SendMessage(message, recipient, NetDeliveryMethod.Unreliable);
 
-            ackTimer = Math.Max(recipient.AverageRoundtripTime, 1.0f);
+            ackTimer = Math.Max(recipient.AverageRoundtripTime, NetConfig.AckInterval+ackInterval);
+            ackInterval += 0.1f;
         }
     }
 
@@ -160,6 +189,7 @@ namespace Barotrauma.Networking.ReliableMessages
     {
         ushort lastMessageID;
 
+        Queue<ushort> missingMessageIds;
         Dictionary<ushort, MissingMessage> missingMessages;
 
         private NetPeer receiver;
@@ -169,15 +199,27 @@ namespace Barotrauma.Networking.ReliableMessages
         public ReliableReceiver(NetPeer receiver)
         {
             this.receiver = receiver;
+
+            lastMessageID  = ushort.MaxValue - 5;
             
             missingMessages = new Dictionary<ushort,MissingMessage>();
+            missingMessageIds = new Queue<ushort>();
         }
 
         public void Update(float deltaTime)
         {
-            foreach (var message in missingMessages.Where(m => m.Value.ResendRequestsSent>10).ToList())
+            foreach (var message in missingMessages.Where(m => m.Value.ResendRequestsSent > NetConfig.ResendAttempts).ToList())
             {
                 missingMessages.Remove(message.Key);
+            }
+
+            int bufferSize = 20;
+
+            while (missingMessageIds.Count>bufferSize)
+            {
+                ushort id = missingMessageIds.Dequeue();
+
+                missingMessages.Remove(id);
             }
 
             foreach (KeyValuePair<ushort, MissingMessage> valuePair in missingMessages)
@@ -186,21 +228,20 @@ namespace Barotrauma.Networking.ReliableMessages
 
                 missingMessage.ResendTimer -= deltaTime;
 
-                if (missingMessage.ResendRequestsSent==0
-                    || missingMessage.ResendTimer<0.0f)
-                {                    
-                    Debug.WriteLine("rerequest "+missingMessage.ID+" (try #"+missingMessage.ResendRequestsSent+")");
+                if (missingMessage.ResendTimer > 0.0f) continue;
+                
+                Debug.WriteLine("rerequest "+missingMessage.ID+" (try #"+missingMessage.ResendRequestsSent+")");
 
-                    NetOutgoingMessage resendRequest = receiver.CreateMessage();
-                    resendRequest.Write((byte)PacketTypes.ResendRequest);
-                    resendRequest.Write(missingMessage.ID);
+                NetOutgoingMessage resendRequest = receiver.CreateMessage();
+                resendRequest.Write((byte)PacketTypes.ResendRequest);
+                resendRequest.Write(missingMessage.ID);
 
-                    receiver.SendMessage(resendRequest, recipient, NetDeliveryMethod.Unreliable);
+                receiver.SendMessage(resendRequest, recipient, NetDeliveryMethod.Unreliable);
 
 
-                    missingMessage.ResendTimer = Math.Max(recipient.AverageRoundtripTime, 0.2f);
-                    missingMessage.ResendRequestsSent++;
-                }
+                missingMessage.ResendTimer = Math.Max(recipient.AverageRoundtripTime, NetConfig.RerequestInterval);
+                missingMessage.ResendRequestsSent++;
+                
             }
 
         }
@@ -217,23 +258,15 @@ namespace Barotrauma.Networking.ReliableMessages
             if (Math.Abs((int)lastMessageID - (int)id) > ushort.MaxValue / 2)
             {
                 //id wrapped around and we missed some messages in between, rerequest them
-                if (lastMessageID<=ushort.MaxValue && id>1)
+                if (lastMessageID>ushort.MaxValue/2 && id>=1)
                 {
                     for (ushort i = (ushort)(Math.Min(lastMessageID, (ushort)(ushort.MaxValue-1)) + 1); i < ushort.MaxValue; i++)
                     {
-                        //message already marked as missed, continue
-                        if (missingMessages.ContainsKey((i))) continue;
-
-                        Debug.WriteLine("added " + i + " to missed");
-                        missingMessages.Add(i, new MissingMessage((ushort)i));
+                        QueueMissingMessage(i);
                     }
                     for (ushort i = 1; i < id; i++)
                     {
-                        //message already marked as missed, continue
-                        if (missingMessages.ContainsKey((i))) continue;
-
-                        Debug.WriteLine("added " + i + " to missed");
-                        missingMessages.Add(i, new MissingMessage((ushort)i));
+                        QueueMissingMessage(i);
                     }
 
                     lastMessageID = id;
@@ -246,11 +279,7 @@ namespace Barotrauma.Networking.ReliableMessages
                 }
                 else
                 {
-                    if (missingMessages.ContainsKey(id))
-                    {
-                        Debug.WriteLine("remove " + id + " from missed");
-                        missingMessages.Remove(id);
-                    }
+                    RemoveMissingMessage(id);
                 }
             }
             else
@@ -259,11 +288,7 @@ namespace Barotrauma.Networking.ReliableMessages
                 {                
                     for (ushort i = (ushort)(lastMessageID+1); i < id; i++ )
                     {
-                        //message already marked as missed, continue
-                        if (missingMessages.ContainsKey((i))) continue;
-
-                        Debug.WriteLine("added "+i+" to missed");
-                        missingMessages.Add(i, new MissingMessage((ushort)i));  
+                        QueueMissingMessage(i); 
                     }
 
                 }
@@ -275,11 +300,7 @@ namespace Barotrauma.Networking.ReliableMessages
                 }
                 else
                 {
-                    if (missingMessages.ContainsKey(id))
-                    {
-                        Debug.WriteLine("remove "+id+" from missed");
-                        missingMessages.Remove(id);
-                    }
+                    RemoveMissingMessage(id);
                 }
 
                 lastMessageID = Math.Max(lastMessageID, id);
@@ -288,21 +309,39 @@ namespace Barotrauma.Networking.ReliableMessages
             return true;
         }
 
+        private void QueueMissingMessage(ushort id)
+        {
+            //message already marked as missed, continue
+            if (missingMessages.ContainsKey(id)) return;
+
+            Debug.WriteLine("added " + id + " to missed");
+            missingMessages.Add(id, new MissingMessage(id));
+
+            missingMessageIds.Enqueue(id);                    
+        }
+
+        private void RemoveMissingMessage(ushort id)
+        {
+            if (!missingMessages.ContainsKey(id)) return;
+            
+            Debug.WriteLine("remove " + id + " from missed");
+            missingMessages.Remove(id);            
+        }
+
         public void HandleAckMessage(NetIncomingMessage inc)
         {
-            int messageId = inc.ReadUInt16();
+            ushort messageId = inc.ReadUInt16();
 
             recipient = inc.SenderConnection;
 
             //id matches, all good
             if (messageId == lastMessageID)
             {
-
                 Debug.WriteLine("Received ack message: " + messageId + ", all good");
                 return;
             }
 
-            if (lastMessageID > messageId)
+            if (lastMessageID > messageId && Math.Abs((int)lastMessageID - (int)messageId) < ushort.MaxValue / 2)
             {
                 //shouldn't happen: we have somehow received messages that the other end hasn't sent
                 Debug.WriteLine("Reliable message error - recipient last sent: " + messageId + " (current count " + lastMessageID + ")");
@@ -315,11 +354,12 @@ namespace Barotrauma.Networking.ReliableMessages
             {
                 for (ushort i = (ushort)Math.Min((int)lastMessageID + 1, ushort.MaxValue); i <= ushort.MaxValue; i++)
                 {
-
-                    if (!missingMessages.ContainsKey(i)) missingMessages.Add(i, new MissingMessage(i));       
+                    if (i == ushort.MaxValue && lastMessageID == ushort.MaxValue) break;
+                    if (!missingMessages.ContainsKey(i)) missingMessages.Add(i, new MissingMessage(i));
+                    if (i == ushort.MaxValue) break;
                 }
 
-                for (ushort i = 1; i <= messageId; i++)
+                for (ushort i = 1; i < messageId; i++)
                 {
                     if (!missingMessages.ContainsKey(i)) missingMessages.Add(i, new MissingMessage(i));
                 }
@@ -328,22 +368,12 @@ namespace Barotrauma.Networking.ReliableMessages
             {
                 for (ushort i = (ushort)Math.Min((int)lastMessageID+1, ushort.MaxValue); i <= messageId; i++)
                 {
-
-                    if (!missingMessages.ContainsKey(i)) missingMessages.Add(i, new MissingMessage(i));  
+                    if (!missingMessages.ContainsKey(i)) missingMessages.Add(i, new MissingMessage(i));
+                    if (i == ushort.MaxValue) break;
                 }
             }
-
-
-
-            //    Debug.WriteLine("received recent request for msg id " + messageId);
-
-            //ReliableMessage message = messageBuffer.Find(m => m.ID == messageId);
-            //if (message == null) return;
-
-            //NetOutgoingMessage resendMessage = sender.CreateMessage();
-            //message.RestoreInnerMessage(resendMessage);
-
-            //sender.SendMessage(resendMessage, inc.SenderConnection, NetDeliveryMethod.Unreliable);
+            
+            lastMessageID = messageId;
         }
     }
 

@@ -238,8 +238,6 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            convexHull.Enabled = true;
-            if (convexHull2 != null) convexHull2.Enabled = true;
             if (!isStuck)
             {
                 OpenState += deltaTime * ((isOpen) ? 2.0f : -2.0f);
@@ -253,8 +251,6 @@ namespace Barotrauma.Items.Components
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             body.Enabled = false;
-            convexHull.Enabled = false;
-            if (convexHull2 != null) convexHull2.Enabled = false;
 
             linkedGap.Open = 1.0f;
         }

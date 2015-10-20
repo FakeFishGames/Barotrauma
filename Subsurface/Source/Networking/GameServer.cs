@@ -65,8 +65,8 @@ namespace Barotrauma.Networking
             netStats = new NetStats();
 
 #if DEBUG
-            config.SimulatedLoss = 0.2f;
-            config.SimulatedRandomLatency = 0.6f;
+            config.SimulatedLoss = 0.05f;
+            config.SimulatedRandomLatency = 0.3f;
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
 #endif 
@@ -618,15 +618,13 @@ namespace Barotrauma.Networking
         {
             if (NetworkEvent.events.Count == 0) return;
 
-            List<NetConnection> recipients = new List<NetConnection>();
-            foreach (Client c in connectedClients)
-            {
-                if (c.character == null) continue;
-                //if (networkEvent.Type == NetworkEventType.UpdateEntity && 
-                //    Vector2.Distance(e.SimPosition, c.character.SimPosition) > NetConfig.UpdateEntityDistance) continue;
+            List<Client> recipients = connectedClients.FindAll(c => c.character != null);
 
-                recipients.Add(c.Connection);
-            }                
+            List<NetConnection> recipientConnections = new List<NetConnection>();
+            foreach (Client c in recipients)
+            {
+                recipientConnections.Add(c.Connection);
+            }
 
             if (recipients.Count == 0) return;
 
@@ -635,17 +633,38 @@ namespace Barotrauma.Networking
                 Entity e = Entity.FindEntityByID(networkEvent.ID);
                 if (e == null) continue;
 
-                NetOutgoingMessage message = server.CreateMessage();
-                message.Write((byte)PacketTypes.NetworkEvent);
-                //if (!networkEvent.IsClient) continue;
-                            
-                networkEvent.FillData(message);
-
-                if (server.ConnectionsCount>0)
+                if (networkEvent.IsImportant)
                 {
-                    server.SendMessage(message, recipients, 
-                        (networkEvent.IsImportant) ? NetDeliveryMethod.Unreliable : NetDeliveryMethod.ReliableUnordered, 0);  
-                }                            
+                    foreach (Client c in recipients)
+                    {
+                        ReliableMessage reliableMessage = c.ReliableChannel.CreateMessage();
+                        reliableMessage.InnerMessage.Write((byte)PacketTypes.NetworkEvent);
+
+                        if (!networkEvent.FillData(reliableMessage.InnerMessage))
+                        {
+                            break;
+                        }
+
+                        c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
+                    }
+                }
+                else
+                {
+                    NetOutgoingMessage message = server.CreateMessage();
+                    message.Write((byte)PacketTypes.NetworkEvent);
+                    //if (!networkEvent.IsClient) continue;
+                            
+                    if (!networkEvent.FillData(message))
+                    {
+                        continue;
+                    }
+
+                    if (server.ConnectionsCount>0)
+                    {
+                        server.SendMessage(message, recipientConnections, 
+                            (networkEvent.IsImportant) ? NetDeliveryMethod.Unreliable : NetDeliveryMethod.ReliableUnordered, 0);  
+                    }  
+                }                          
             }
             NetworkEvent.events.Clear();
         }

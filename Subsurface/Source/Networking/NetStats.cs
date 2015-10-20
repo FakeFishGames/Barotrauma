@@ -18,9 +18,8 @@ namespace Barotrauma.Networking
 
         private Graph[] graphs;
 
-        private Queue<float>[] valueQueue;
-
-        private float[] lastValues;
+        private float[] totalValue;
+        private float[] lastValue;
 
         const float UpdateInterval = 1.0f;
         float updateTimer;
@@ -29,23 +28,21 @@ namespace Barotrauma.Networking
         {
             graphs = new Graph[3];
 
-            valueQueue = new Queue<float>[3];
+            totalValue = new float[3];
+            lastValue = new float[3];
             for (int i = 0; i < 3; i++ )
-            {
-                valueQueue[i] = new Queue<float>();
+            {                
                 graphs[i] = new Graph();
-            }
-
-            lastValues = new float[3];
+            }            
         }
 
         public void AddValue(NetStatType statType, float value)
         {
-            float valueChange = value - lastValues[(int)statType];
+            float valueChange = value - lastValue[(int)statType];
 
-            valueQueue[(int)statType].Enqueue(valueChange);
+            totalValue[(int)statType] += valueChange;
 
-            lastValues[(int)statType] = value;
+            lastValue[(int)statType] = value;
         }
 
         public void Update(float deltaTime)
@@ -56,17 +53,12 @@ namespace Barotrauma.Networking
 
             for (int i = 0; i<3; i++)
             {
-                int valueCount = valueQueue[i].Count;                
-                float totalValue = 0.0f;
-                while (valueQueue[i].Count>1)
-                {
-                    totalValue += valueQueue[i].Dequeue();
-                }
 
-                graphs[i].Update(valueCount==0 ? 0.0f : totalValue/valueCount);
+                graphs[i].Update(totalValue[i] * 10.0f);
+                totalValue[i] = 0.0f;
             }
 
-            updateTimer = UpdateInterval;
+            updateTimer = UpdateInterval/10.0f;
         }
 
         public void Draw(SpriteBatch spriteBatch, Rectangle rect)

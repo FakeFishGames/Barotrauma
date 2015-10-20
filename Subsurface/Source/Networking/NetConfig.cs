@@ -22,5 +22,10 @@ namespace Barotrauma.Networking
         public const float AllowedRagdollDistance = 0.1f;
 
         public const float DeleteDisconnectedTime = 10.0f;
+
+        public const float AckInterval = 0.2f;
+        public const float RerequestInterval = 0.2f;
+
+        public const int ResendAttempts = 8;
     }
 }
