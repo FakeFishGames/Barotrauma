@@ -267,6 +267,7 @@ namespace Barotrauma
             modeList.Enabled        = GameMain.Server != null;                  
             seedBox.Enabled         = GameMain.Server != null;                       
             serverMessage.Enabled   = GameMain.Server != null;
+            autoRestartBox.Enabled  = GameMain.Server != null;
             ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
 
             modeList.OnSelected += SelectMode;
