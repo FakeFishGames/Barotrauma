@@ -1107,18 +1107,22 @@ namespace Barotrauma
                     GetInputState(InputType.Up) ||
                     GetInputState(InputType.Down) ||
                     GetInputState(InputType.ActionHeld) ||
-                    GetInputState(InputType.SecondaryHeld));
+                    GetInputState(InputType.SecondaryHeld)) || LargeUpdateTimer <= 0;
+            
+            message.Write(hasInputs);
 
-            message.Write(hasInputs || LargeUpdateTimer <= 0);
+            if (!hasInputs) return true;
 
             message.Write((float)NetTime.Now);
                                    
             // Write byte = move direction
             //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
             //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-
+            
             message.Write(keys[(int)InputType.ActionHeld].Dequeue);
-            message.Write(keys[(int)InputType.SecondaryHeld].Dequeue);
+
+            bool secondaryHeld = keys[(int)InputType.SecondaryHeld].Dequeue;
+            message.Write(secondaryHeld);
                         
             message.Write(keys[(int)InputType.Left].Dequeue);
             message.Write(keys[(int)InputType.Right].Dequeue);
@@ -1128,8 +1132,15 @@ namespace Barotrauma
 
             message.Write(keys[(int)InputType.Run].Dequeue);
 
-            message.Write(cursorPosition.X);
-            message.Write(cursorPosition.Y);
+            if (secondaryHeld)
+            {
+                message.Write(cursorPosition.X);
+                message.Write(cursorPosition.Y);
+            }
+            else
+            {
+                message.Write(AnimController.Dir > 0.0f);
+            }
                         
             message.Write(LargeUpdateTimer <= 0);
 
@@ -1271,21 +1282,36 @@ namespace Barotrauma
 
             keys[(int)InputType.Run].State = runState;
 
+            float dir = 1.0f;
             bool isLargeUpdate;
 
             try
             {
-                cursorPos = new Vector2(
-                    message.ReadFloat(),
-                    message.ReadFloat());
+                if (secondaryKeyState)
+                {
+                    cursorPos = new Vector2(
+                        message.ReadFloat(),
+                        message.ReadFloat());
+                }
+                else
+                {
+                    dir = message.ReadBoolean() ? 1.0f : -1.0f;
+                }
+
                 isLargeUpdate = message.ReadBoolean();
             }
             catch
             {
                 return;
             }
-
-            cursorPosition = cursorPos;
+            if (secondaryKeyState)
+            {
+                cursorPosition = cursorPos;
+            }
+            else
+            {
+                cursorPos = Position + new Vector2(1000.0f, 0.0f) * dir;
+            }
                                       
             if (isLargeUpdate)
             {

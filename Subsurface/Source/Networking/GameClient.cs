@@ -116,7 +116,7 @@ namespace Barotrauma.Networking
             }
 
 
-            updateInterval = new TimeSpan(0, 0, 0, 0, 100);
+            updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
             // Set timer to tick every 50ms
             //update = new System.Timers.Timer(50);
@@ -302,7 +302,7 @@ namespace Barotrauma.Networking
         {
             base.Update(deltaTime);
 
-            if (!connected || updateTimer > DateTime.Now) return;
+            if (!connected) return;
             
             if (client.ConnectionStatus == NetConnectionStatus.Disconnected)
             {
@@ -323,6 +323,21 @@ namespace Barotrauma.Networking
                 reconnectBox = null;
             }
 
+            try
+            {
+                CheckServerMessages();
+            }
+            catch (Exception e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Error while receiving message from server", e);
+#endif            
+            }
+            
+            reliableChannel.Update(deltaTime);
+
+            if (updateTimer > DateTime.Now) return;
+
             if (myCharacter != null)
             {
                 if (myCharacter.IsDead)
@@ -335,8 +350,6 @@ namespace Barotrauma.Networking
                     new NetworkEvent(myCharacter.ID, true);                    
                 }
             }
-
-            reliableChannel.Update(deltaTime);
                           
             foreach (NetworkEvent networkEvent in NetworkEvent.events)
             {
@@ -353,11 +366,10 @@ namespace Barotrauma.Networking
                     
             NetworkEvent.events.Clear();
 
-            try
+            if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.B))
             {
-                CheckServerMessages();
+                SendChatMessage("asdfsdaf");
             }
-            catch { }
 
             // Update current time
             updateTimer = DateTime.Now + updateInterval;

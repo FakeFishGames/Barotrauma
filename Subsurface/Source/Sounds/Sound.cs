@@ -5,6 +5,7 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Barotrauma.Sounds;
+using System;
 
 namespace Barotrauma
 {
@@ -41,7 +42,14 @@ namespace Barotrauma
 
             if (oggSound == null)
             {
-                oggSound = OggSound.Load(file);
+                try
+                {
+                    oggSound = OggSound.Load(file);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to load sound "+file+"!", e);
+                }
                 ALHelper.Check();
             }
 
