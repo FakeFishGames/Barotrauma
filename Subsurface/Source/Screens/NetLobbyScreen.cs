@@ -467,10 +467,15 @@ namespace Barotrauma
                 GUI.Style, Alignment.TopLeft, Alignment.TopLeft,
                 playerFrameInner, false, GUI.LargeFont);
 
-            var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+            var kickButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, playerFrameInner);
             kickButton.UserData = obj;
             kickButton.OnClicked += KickPlayer;
             kickButton.OnClicked += ClosePlayerFrame;
+
+            var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+            banButton.UserData = obj;
+            banButton.OnClicked += BanPlayer;
+            banButton.OnClicked += ClosePlayerFrame;
 
             var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, playerFrameInner);
             closeButton.OnClicked = ClosePlayerFrame;
@@ -485,11 +490,20 @@ namespace Barotrauma
             return true;
         }
 
-        private bool KickPlayer(GUIButton button, object userData)
+        public bool KickPlayer(GUIButton button, object userData)
         {
             if (GameMain.Server == null || userData == null) return false;
 
             GameMain.Server.KickPlayer(userData.ToString());
+            
+            return false;
+        }
+
+        public bool BanPlayer(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null || userData == null) return false;
+
+            GameMain.Server.KickPlayer(userData.ToString(), true);
 
             return false;
         }

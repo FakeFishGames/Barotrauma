@@ -129,7 +129,7 @@ namespace Barotrauma
                 item.body.Enabled = false;
             }
 
-            if (createNetworkEvent) new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true);            
+            if (createNetworkEvent) new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true, true);            
         }
 
         public void RemoveItem(Item item)
@@ -203,11 +203,11 @@ namespace Barotrauma
             }                       
         }
 
-        protected void UpdateSlot(SpriteBatch spriteBatch, Rectangle rect, int slotIndex, Item item, bool isSubSlot)
+        protected void UpdateSlot(SpriteBatch spriteBatch, Rectangle rect, int slotIndex, Item item, bool isSubSlot, bool drawItem=true)
         {
             bool mouseOn = rect.Contains(PlayerInput.MousePosition);
 
-            DrawSlot(spriteBatch, rect, (draggingItem == item && !mouseOn) ? null : item, mouseOn, isSubSlot);
+            DrawSlot(spriteBatch, rect, (draggingItem == item && !mouseOn) ? null : item, mouseOn, isSubSlot, drawItem);
 
             if (mouseOn)
             {
@@ -267,12 +267,12 @@ namespace Barotrauma
             }
         }
 
-        protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot)
+        protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot, bool drawItem=true)
         {
             GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.1f : 0.3f), true);
             GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.2f : 0.4f), false);
 
-            if (item == null) return;
+            if (item == null || !drawItem) return;
 
             item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
 

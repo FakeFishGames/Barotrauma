@@ -31,6 +31,8 @@ namespace Barotrauma.Networking
 
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 40);
         private DateTime refreshMasterTimer;
+
+        private BanList banList;
         
         private bool masterServerResponded;
 
@@ -54,8 +56,10 @@ namespace Barotrauma.Networking
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
-            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 290, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
+            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
             endRoundButton.OnClicked = EndButtonHit;
+
+            banList = new BanList();
 
             this.name = name;
             this.password = password;
@@ -297,7 +301,7 @@ namespace Barotrauma.Networking
             {
                 if (gameStarted)
                 {
-                    if (myCharacter != null) myCharacter.SendNetworkEvent(true);
+                    if (myCharacter != null) new NetworkEvent(myCharacter.ID, true);
 
                     foreach (Character c in Character.CharacterList)
                     {
@@ -305,7 +309,7 @@ namespace Barotrauma.Networking
 
                         if (c.SimPosition == Vector2.Zero || c.SimPosition.Length() < 100.0f)
                         {
-                            c.SendNetworkEvent(false);
+                            new NetworkEvent(c.ID, false);
                         }
                     }
                 }
@@ -457,14 +461,6 @@ namespace Barotrauma.Networking
 
                             List<Client> recipients = connectedClients.FindAll(c => c.Connection != inc.SenderConnection && c.inGame);
                             if (recipients.Count == 0) break;
-                                
-                            //foreach (Client client in connectedClients)
-                            //{
-                            //    if (client.Connection == inc.SenderConnection) continue;
-                            //    if (!client.inGame) continue;
-
-                            //    recipients.Add(client.Connection);  
-                            //}
 
                             if (isReliable)
                             {
@@ -524,6 +520,13 @@ namespace Barotrauma.Networking
             if (inc.ReadByte() != (byte)PacketTypes.Login) return;
 
             DebugConsole.NewMessage("New player has joined the server", Color.White);
+
+            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+            {
+                inc.SenderConnection.Deny("You have been banned from the server");
+                DebugConsole.NewMessage("Banned player tried to join the server", Color.Red);
+                return;                
+            }
             
             if (connectedClients.Find(c => c.Connection == inc.SenderConnection)!=null)
             {
@@ -595,6 +598,8 @@ namespace Barotrauma.Networking
                     {
                         disconnectedClients.Remove(existingClient);
                         connectedClients.Add(existingClient);
+
+                        UpdateCrewFrame();
                     }
                 }
                 if (existingClient != null)
@@ -616,6 +621,8 @@ namespace Barotrauma.Networking
             newClient.version = version;
 
             connectedClients.Add(newClient);
+
+            UpdateCrewFrame();
 
             inc.SenderConnection.Approve();
         }
@@ -737,7 +744,6 @@ namespace Barotrauma.Networking
                 characterInfos.Add(characterInfo);
             }
 
-            List<Character> crew = new List<Character>();
             WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
             
             for (int i = 0; i < connectedClients.Count; i++)
@@ -745,8 +751,6 @@ namespace Barotrauma.Networking
                 connectedClients[i].character = new Character(
                     connectedClients[i].characterInfo, assignedWayPoints[i], true);
                 connectedClients[i].character.GiveJobItems(assignedWayPoints[i]);
-
-                crew.Add(connectedClients[i].character);
             }
 
             if (characterInfo != null)
@@ -755,8 +759,6 @@ namespace Barotrauma.Networking
                 Character.Controlled = myCharacter;
 
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
-
-                crew.Add(myCharacter);
             }
 
             yield return CoroutineStatus.Running;
@@ -789,8 +791,8 @@ namespace Barotrauma.Networking
             }
 
             SendMessage(msg, NetDeliveryMethod.ReliableUnordered, null);
-            
-            CreateCrewFrame(crew);
+
+            UpdateCrewFrame();
 
             //give some time for the clients to load the map
             yield return new WaitForSeconds(2.0f);
@@ -907,23 +909,51 @@ namespace Barotrauma.Networking
             }
 
             AddChatMessage(msg, ChatMessageType.Server);
+
+            UpdateCrewFrame();
         }
 
-        public void KickPlayer(string playerName)
+        private void UpdateCrewFrame()
         {
-            playerName = playerName.ToLower();
+            List<Character> crew = new List<Character>();
+
             foreach (Client c in connectedClients)
             {
-                if (c.name.ToLower() == playerName) KickClient(c);
-                break;               
+                if (c.character == null || !c.inGame) continue;
+
+                crew.Add(c.character);
             }
+
+            if (myCharacter != null) crew.Add(myCharacter);
+
+            CreateCrewFrame(crew);
         }
 
-        private void KickClient(Client client)
+        public void KickPlayer(string playerName, bool ban = false)
+        {
+            playerName = playerName.ToLower();
+
+            Client client = connectedClients.Find( c => c.name.ToLower() == playerName ||
+                    (c.character != null && c.character.Name.ToLower() == playerName));
+
+            if (client == null) return;
+
+            KickClient(client, ban);
+        }
+
+        private void KickClient(Client client, bool ban = false)
         {
             if (client == null) return;
 
-            DisconnectClient(client, client.name + " has been kicked from the server", "You have been kicked from the server");
+            if (ban)
+            {
+                DisconnectClient(client, client.name + " has been banned from the server", "You have been banned from the server");
+                banList.BanPlayer(client.name, client.Connection.RemoteEndPoint.Address.ToString());
+            }
+            else
+            {
+                DisconnectClient(client, client.name + " has been kicked from the server", "You have been kicked from the server");
+            }
         }
 
         public void NewTraitor(Client traitor, Client target)
@@ -997,6 +1027,32 @@ namespace Barotrauma.Networking
             }
 
             return true;
+        }
+
+        protected override bool SelectCrewCharacter(GUIComponent component, object obj)
+        {
+            base.SelectCrewCharacter(component, obj);
+
+            var characterFrame = crewFrame.FindChild("selectedcharacter");
+
+            Character character = obj as Character;
+            if (obj == null) return false;
+
+            if (character != myCharacter)
+            {
+                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                kickButton.UserData = character.Name;
+                kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
+
+                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, GUI.Style, characterFrame);
+                banButton.UserData = character.Name;
+                banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+            }
+
+
+
+            return true;
+
         }
 
         public override void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server)
@@ -1081,7 +1137,7 @@ namespace Barotrauma.Networking
         private void AssignJobs()
         {
             List<Client> unassigned = new List<Client>(connectedClients);
-
+            
             int[] assignedClientCount = new int[JobPrefab.List.Count];
 
             if (characterInfo!=null)
@@ -1201,7 +1257,7 @@ namespace Barotrauma.Networking
                     break;
                 case 1:
                     msg.Write((byte)PacketTypes.NetworkEvent);
-                    msg.Write((byte)NetworkEventType.UpdateComponent);
+                    msg.Write((byte)NetworkEventType.ComponentUpdate);
                     msg.Write((int)Item.itemList[Rand.Int(Item.itemList.Count)].ID);
                     msg.Write(Rand.Int(8));
                     break;
@@ -1224,6 +1280,7 @@ namespace Barotrauma.Networking
 
         public override void Disconnect()
         {
+            banList.Save();
             server.Shutdown("The server has shut down");
         }
     }

@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 200, 30), "Activate Radar"))
             {
                 IsActive = !IsActive;
-                item.NewComponentEvent(this, true);
+                item.NewComponentEvent(this, true, false);
             }
 
             int radius = GuiFrame.Rect.Height / 2 - 10;

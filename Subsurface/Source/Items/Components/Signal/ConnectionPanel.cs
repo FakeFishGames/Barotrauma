@@ -125,10 +125,9 @@ namespace Barotrauma.Items.Components
             {
                 Wire[] wires = Array.FindAll(c.Wires, w => w != null);
                 message.Write((byte)wires.Length);
-                for (int i = 0 ; i < c.Wires.Length; i++)
+                for (int i = 0 ; i < wires.Length; i++)
                 {
-                    if (c.Wires[i] == null) continue;
-                    message.Write(c.Wires[i].Item.ID);
+                    message.Write(wires[i].Item.ID);
                 }
             }
         }
@@ -140,26 +139,22 @@ namespace Barotrauma.Items.Components
             {
                 //int wireCount = c.Wires.Length;
                 c.ClearConnections();
-                try
+
+                byte wireCount = message.ReadByte();                
+
+                for (int i = 0; i < wireCount; i++)
                 {
-                    byte wireCount = message.ReadByte();                
-
-                    for (int i = 0; i < wireCount; i++)
-                    {
-                        ushort wireId = message.ReadUInt16();
+                    ushort wireId = message.ReadUInt16();
                         
-                        Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
-                        if (wireItem == null) continue;
+                    Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
+                    if (wireItem == null) continue;
 
-                        Wire wireComponent = wireItem.GetComponent<Wire>();
-                        if (wireComponent == null) continue;
+                    Wire wireComponent = wireItem.GetComponent<Wire>();
+                    if (wireComponent == null) continue;
 
-                        c.Wires[i] = wireComponent;
-                        wireComponent.Connect(c, false);
-                    }
+                    c.Wires[i] = wireComponent;
+                    wireComponent.Connect(c, false);
                 }
-
-                catch { }
             } 
         }
     }

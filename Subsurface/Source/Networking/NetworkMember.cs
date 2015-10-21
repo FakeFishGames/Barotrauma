@@ -54,7 +54,7 @@ namespace Barotrauma.Networking
 
         private bool crewFrameOpen;
         private GUIButton crewButton;
-        private GUIFrame crewFrame;
+        protected GUIFrame crewFrame;
 
         protected bool gameStarted;
 
@@ -117,20 +117,21 @@ namespace Barotrauma.Networking
 
         protected void CreateCrewFrame(List<Character> crew)
         {
-            int width = 500, height = 400;
+            int width = 600, height = 400;
 
             crewFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
             crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 300, 300), Color.White * 0.7f, GUI.Style, crewFrame);
+            GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 280, 300), Color.White * 0.7f, GUI.Style, crewFrame);
             crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            crewList.OnSelected = SelectCharacter;
+            crewList.OnSelected = SelectCrewCharacter;
 
             foreach (Character character in crew)
             {
                 GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, crewList);
                 frame.UserData = character;
                 frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                frame.Color = (myCharacter == character) ? Color.Gold * 0.2f : Color.Transparent;
                 frame.HoverColor = Color.LightGray * 0.5f;
                 frame.SelectedColor = Color.Gold * 0.5f;
 
@@ -142,14 +143,14 @@ namespace Barotrauma.Networking
                     null, frame);
                 textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-                new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
+                new GUIImage(new Rectangle(-10, 0, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
             }
             
             var closeButton = new GUIButton(new Rectangle(0,0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, crewFrame);
             closeButton.OnClicked = ToggleCrewFrame;
         }
 
-        private bool SelectCharacter(GUIComponent component, object obj)
+        protected virtual bool SelectCrewCharacter(GUIComponent component, object obj)
         {
             Character character = obj as Character;
             if (obj == null) return false;
@@ -173,6 +174,17 @@ namespace Barotrauma.Networking
             crewFrameOpen = !crewFrameOpen;
             return true;
         }
+
+        //protected void UpdateCrewFrame(List<Client> connectedClients)
+        //{
+        //    List<Character> characterList = new List<Character>();
+        //    foreach (Client c in connectedClients)
+        //    {
+        //        if (c.character != null && c.inGame) characterList.Add(c.character);
+        //    }
+
+        //    CreateCrewFrame(characterList);
+        //}
 
         public bool EnterChatMessage(GUITextBox textBox, string message)
         {

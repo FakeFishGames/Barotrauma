@@ -243,6 +243,8 @@ namespace Barotrauma
                 return false;
             }
 
+            GameMain.NetLobbyScreen = new NetLobbyScreen();
+
             GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
             
             GameMain.NetLobbyScreen.IsServer = true;

@@ -593,7 +593,25 @@ namespace Barotrauma
                 }
                 else if (body.Enabled)
                 {
-                    body.Draw(spriteBatch, prefab.sprite, color);
+                    var holdable = GetComponent<Holdable>();
+                    if (holdable!=null && holdable.Picker !=null)
+                    {
+                        float depth = Sprite.Depth;
+                        if (holdable.Picker.SelectedItems[0]==this)
+                        {
+                            depth = holdable.Picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.000001f;
+                        }
+                        else if (holdable.Picker.SelectedItems[1] == this)
+                        {
+                            depth = holdable.Picker.AnimController.GetLimb(LimbType.LeftArm).sprite.Depth - 0.000001f;
+                        }
+
+                        body.Draw(spriteBatch, prefab.sprite,  color, depth);
+                    }
+                    else
+                    {
+                        body.Draw(spriteBatch, prefab.sprite, color);
+                    }                    
                 }
             }
             
@@ -1149,11 +1167,12 @@ namespace Barotrauma
         }
         
 
-        public void NewComponentEvent(ItemComponent ic, bool isClient)
+        public void NewComponentEvent(ItemComponent ic, bool isClient, bool isImportant)
         {
             int index = components.IndexOf(ic);
 
-            new NetworkEvent(NetworkEventType.UpdateComponent, ID, isClient, index);
+            new NetworkEvent(isImportant ? 
+                NetworkEventType.ImportantComponentUpdate : NetworkEventType.ComponentUpdate, ID, isClient, index);
         }
 
         public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
@@ -1173,7 +1192,8 @@ namespace Barotrauma
                     var itemContainer = GetComponent<ItemContainer>();
                     if (itemContainer == null || itemContainer.inventory == null) return false;
                     return itemContainer.inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
-                case NetworkEventType.UpdateComponent:
+                case NetworkEventType.ComponentUpdate:
+                case NetworkEventType.ImportantComponentUpdate:
 
                     int componentIndex = (int)data;
                     if (componentIndex < 0 || componentIndex >= components.Count) return false;
@@ -1230,10 +1250,7 @@ namespace Barotrauma
             {
                 case NetworkEventType.DropItem:
                     Vector2 newSimPos = Vector2.Zero;
-                    if (body != null)
-                    {
-                        newSimPos = new Vector2(message.ReadFloat(), message.ReadFloat());
-                    }
+                    newSimPos = new Vector2(message.ReadFloat(), message.ReadFloat());                    
                     SetTransform(newSimPos, body.Rotation);
                     Drop(null, false);
                     break;
@@ -1242,7 +1259,8 @@ namespace Barotrauma
                     if (itemContainer == null || itemContainer.inventory == null) return;
                     itemContainer.inventory.ReadNetworkData(NetworkEventType.DropItem, message);
                     break;
-                case NetworkEventType.UpdateComponent:
+                case NetworkEventType.ComponentUpdate:
+                case NetworkEventType.ImportantComponentUpdate:
                     int componentIndex = message.ReadByte();
                     if (componentIndex < 0 || componentIndex > components.Count - 1) return;
                     components[componentIndex].ReadNetworkData(type, message);

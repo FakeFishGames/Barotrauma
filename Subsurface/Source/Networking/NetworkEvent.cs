@@ -7,24 +7,58 @@ namespace Barotrauma.Networking
     enum NetworkEventType
     {
         EntityUpdate = 0,
-        KillCharacter = 1,
-        UpdateComponent = 2,
-        DropItem = 3,
-        InventoryUpdate = 4,
-        PickItem = 5,
-        UpdateProperty = 6,
-        WallDamage = 7,
+        ImportantEntityUpdate = 1,
 
-        SelectCharacter = 8,
-        EntityUpdateLarge = 9
+        KillCharacter = 2,
+        SelectCharacter = 3,
+
+        ComponentUpdate = 4,
+        ImportantComponentUpdate = 5,
+
+        PickItem = 6,
+        DropItem = 7,
+        InventoryUpdate = 8,
+
+
+        UpdateProperty = 9,
+        WallDamage = 10,
+
+
     }
 
     class NetworkEvent
     {
         public static List<NetworkEvent> events = new List<NetworkEvent>();
 
-        private static bool[] isImportant = { false, true, false, true, true, true, true, true, true, false };
-        private static bool[] overridePrevious = { true, false, true, false, false, false, true, true, true, true };
+        private static bool[] isImportant;
+        private static bool[] overridePrevious;
+
+        static NetworkEvent()
+        {
+            isImportant = new bool[11];
+            isImportant[(int)NetworkEventType.ImportantEntityUpdate] = true;
+            isImportant[(int)NetworkEventType.ImportantComponentUpdate] = true;
+            isImportant[(int)NetworkEventType.KillCharacter] = true;
+            isImportant[(int)NetworkEventType.SelectCharacter] = true;
+
+            isImportant[(int)NetworkEventType.ImportantComponentUpdate] = true;
+            isImportant[(int)NetworkEventType.PickItem] = true;
+            isImportant[(int)NetworkEventType.DropItem] = true;
+            isImportant[(int)NetworkEventType.InventoryUpdate] = true;
+
+            isImportant[(int)NetworkEventType.UpdateProperty] = true;
+            isImportant[(int)NetworkEventType.WallDamage] = true;
+
+            overridePrevious = new bool[11];
+            for (int i = 0; i < 11; i++ )
+            {
+                overridePrevious[i] = true;
+            }
+            overridePrevious[(int)NetworkEventType.KillCharacter] = false;
+
+            overridePrevious[(int)NetworkEventType.PickItem] = false;
+            overridePrevious[(int)NetworkEventType.DropItem] = false;
+        }
 
         private ushort id;
 
@@ -103,6 +137,10 @@ namespace Barotrauma.Networking
 
             catch
             {
+#if DEBUG
+                DebugConsole.ThrowError("Failed to write network message for entity "+e.ToString());
+#endif
+
                 return false;
             }
 
@@ -121,7 +159,9 @@ namespace Barotrauma.Networking
             }
             catch
             {
+#if DEBUG
                 DebugConsole.ThrowError("Received invalid network message");
+#endif
                 return false;
             }
             

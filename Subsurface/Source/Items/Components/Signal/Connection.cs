@@ -280,7 +280,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!PlayerInput.LeftButtonDown())
                 {
-                    panel.Item.NewComponentEvent(panel, true);
+                    panel.Item.NewComponentEvent(panel, true, true);
                     draggingConnected = null;
                 }
             }

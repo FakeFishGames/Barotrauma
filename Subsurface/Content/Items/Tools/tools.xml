@@ -56,7 +56,7 @@
 
     <Body width="39" height="18" density="5"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" 
+    <Holdable slots="Any,BothHands" 
               aimpos="50,0" handle1="-12,4"/>
 
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="plasma">
@@ -110,7 +110,7 @@
     <Body width="30" height="8" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand" 
-              holdangle="30" handle1="0,0"/>
+              holdangle="30" handle1="-5,0"/>
 
   </Item>
 
@@ -124,8 +124,10 @@
 
     <Body width="30" height="8" density="20"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" 
-              holdangle="30" handle1="0,0"/>
+    <MeleeWeapon slots="Any,RightHand,LeftHand"
+          aimpos="50,0" handle1="0,0" holdangle="30" reload="1.0">
+      <Attack damage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+    </MeleeWeapon>
 
   </Item>
 

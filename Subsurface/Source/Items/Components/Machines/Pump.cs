@@ -117,7 +117,7 @@ namespace Barotrauma.Items.Components
                 targetLevel = null;
                 IsActive = !IsActive;
                 if (!IsActive) currPowerConsumption = 0.0f;
-                item.NewComponentEvent(this, true);
+                item.NewComponentEvent(this, true, true);
             }
             
             spriteBatch.DrawString(GUI.Font, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 20, y + 80), Color.White);
@@ -125,12 +125,12 @@ namespace Barotrauma.Items.Components
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "OUT", false))
             {
                 FlowPercentage -= 10.0f;
-                item.NewComponentEvent(this, true);
+                item.NewComponentEvent(this, true, false);
             }
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "IN", false))
             {
                 FlowPercentage += 10.0f;
-                item.NewComponentEvent(this, true);
+                item.NewComponentEvent(this, true, false);
             }            
         }
 
