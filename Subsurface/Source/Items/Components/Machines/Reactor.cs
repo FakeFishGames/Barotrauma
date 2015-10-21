@@ -371,7 +371,7 @@ namespace Barotrauma.Items.Components
 
             if (valueChanged)
             {
-                item.NewComponentEvent(this, true);
+                item.NewComponentEvent(this, true, false);
                 valueChanged = false;
             }
         }

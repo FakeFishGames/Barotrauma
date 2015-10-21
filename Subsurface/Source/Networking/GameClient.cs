@@ -37,7 +37,7 @@ namespace Barotrauma.Networking
 
             otherClients = new List<Client>();
 
-
+            GameMain.NetLobbyScreen = new NetLobbyScreen();
         }
 
         public void ConnectToServer(string hostIP, string password = "")
@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
             {
                 IPEndPoint = new System.Net.IPEndPoint(NetUtility.Resolve(serverIP), Port);
             }
-            catch (ArgumentNullException e)
+            catch (Exception e)
             {
                 new GUIMessageBox("Could not connect to server", "Failed to resolve address ''"+serverIP+":"+Port+"''. Please make sure you have entered a valid IP address.");
                 return;
@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Couldn't connect to "+hostIP+". Error message: "+e.Message);
                 Disconnect();
 
-                GameMain.NetLobbyScreen.Select();
+                GameMain.ServerListScreen.Select();
                 return;
             }
 
@@ -291,7 +291,11 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (Screen.Selected != GameMain.GameScreen) GameMain.NetLobbyScreen.Select();
+                if (Screen.Selected != GameMain.GameScreen)
+                {
+                    GameMain.NetLobbyScreen = new NetLobbyScreen();
+                    GameMain.NetLobbyScreen.Select();
+                }
                 connected = true;
             }
 
@@ -347,7 +351,7 @@ namespace Barotrauma.Networking
                 }
                 else if (gameStarted)
                 {
-                    myCharacter.SendNetworkEvent(true);               
+                    new NetworkEvent(myCharacter.ID, true);             
                 }
             }
                           
@@ -374,21 +378,12 @@ namespace Barotrauma.Networking
                         client.SendMessage(message, NetDeliveryMethod.Unreliable);
                     }
                 }
-
-
             }
                     
             NetworkEvent.events.Clear();
-
-            if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.B))
-            {
-                SendChatMessage("asdfsdaf");
-            }
-
+            
             // Update current time
-            updateTimer = DateTime.Now + updateInterval;
-            
-            
+            updateTimer = DateTime.Now + updateInterval;  
         }
 
         /// <summary>
@@ -440,13 +435,24 @@ namespace Barotrauma.Networking
                         AddChatMessage(inc.ReadString(), ChatMessageType.Server);
                         Client disconnectedClient = otherClients.Find(c => c.ID == leavingID);
                         if (disconnectedClient != null) GameMain.NetLobbyScreen.RemovePlayer(disconnectedClient.name);
+                        
+                        if (!gameStarted) return;
+
+                        List<Character> crew = new List<Character>();
+                        foreach (Character c in Character.CharacterList)
+                        {
+                            if (!c.IsNetworkPlayer || !c.IsHumanoid || c.Info==null) continue;
+                            crew.Add(c);
+                        }
+                        
+                        CreateCrewFrame(crew);
 
                         break;
 
                     case (byte)PacketTypes.KickedOut:
                         string msg = inc.ReadString();
 
-                        new GUIMessageBox("You have been kicked out from the server", msg);
+                        new GUIMessageBox("Disconnected from server", msg);
                         
                         Disconnect();
                         GameMain.MainMenuScreen.Select();
@@ -588,6 +594,10 @@ namespace Barotrauma.Networking
             if (GameMain.GameSession!=null) GameMain.GameSession.EndShift("");
 
             myCharacter = null;
+            foreach (Client c in otherClients)
+            {
+                c.character = null;
+            }
 
             yield return CoroutineStatus.Success;
 
@@ -698,6 +708,8 @@ namespace Barotrauma.Networking
         {
             //AddChatMessage(message);
 
+            if (client.ServerConnection == null) return;
+
             type = (gameStarted && myCharacter != null && myCharacter.IsDead) ? ChatMessageType.Dead : ChatMessageType.Default;
             
             ReliableMessage msg = reliableChannel.CreateMessage();
@@ -729,7 +741,7 @@ namespace Barotrauma.Networking
                     break;
                 case 2:
                     msg.Write((byte)PacketTypes.NetworkEvent);
-                    msg.Write((byte)NetworkEventType.UpdateComponent);
+                    msg.Write((byte)NetworkEventType.ComponentUpdate);
                     msg.Write((int)Item.itemList[Rand.Int(Item.itemList.Count)].ID);
                     msg.Write(Rand.Int(8));
                     break;

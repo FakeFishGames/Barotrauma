@@ -161,9 +161,9 @@ namespace Barotrauma
                 {
                     //PutItem(items[i], i, false, false);
                     Inventory otherInventory = items[i].inventory;
-                    if (otherInventory!=null)
+                    if (otherInventory!=null && createNetworkEvent)
                     {
-                        new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true);
+                        new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true, true);
                     }
 
                     combined = true;
@@ -263,16 +263,76 @@ namespace Barotrauma
                         SpriteEffects.None, 0.1f);
                 }
             }
-
+            
             for (int i = 0; i < capacity; i++)
             {
                 slotRect.X = (int)slotPositions[i].X;
                 slotRect.Y = (int)slotPositions[i].Y;
 
+                bool multiSlot = false;
+                //skip if the item is in multiple slots
+                if (items[i]!=null)
+                {                    
+                    for (int n = 0; n < capacity; n++ )
+                    {
+                        if (i==n || items[n] != items[i]) continue;
+                        multiSlot = true;
+                        break;
+                    }
+                }
 
-                UpdateSlot(spriteBatch, slotRect, i, items[i], i>4);
+                if (multiSlot) continue;
+
+                UpdateSlot(spriteBatch, slotRect, i, items[i], i > 4);
+                
                 if (draggingItem!=null && draggingItem == items[i]) draggingItemSlot = slotRect;
             }
+
+
+            for (int i = 0; i < capacity; i++)
+            {
+
+                //Rectangle multiSlotRect = Rectangle.Empty;
+                bool multiSlot = false;
+
+                //check if the item is in multiple slots
+                if (items[i] != null)
+                {
+                    slotRect.X = (int)slotPositions[i].X;
+                    slotRect.Y = (int)slotPositions[i].Y;
+                    slotRect.Width = 40;
+                    slotRect.Height = 40;
+
+                    for (int n = 0; n < capacity; n++)
+                    {
+                        if (items[n] != items[i]) continue;
+
+                        if (!multiSlot && i > n) break;
+                        
+                        if (i!=n)
+                        {
+                            multiSlot = true;
+                            slotRect = Rectangle.Union(
+                                new Rectangle((int)slotPositions[n].X, (int)slotPositions[n].Y, rectWidth, rectHeight), slotRect);
+                        }
+                    }
+                }
+
+                if (!multiSlot) continue;
+
+                UpdateSlot(spriteBatch, slotRect, i, items[i], i > 4);
+
+                //if (multiSlot && i == first)
+                //{
+                //    multiSlotPos = multiSlotPos / count;
+                //    items[i].Sprite.Draw(spriteBatch, new Vector2(multiSlotPos.X + rectWidth / 2, multiSlotPos.Y + rectHeight / 2), items[i].Color);
+                //}
+
+            }
+
+            slotRect.Width = rectWidth;
+            slotRect.Height = rectHeight;
+
 
             if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition))
             {

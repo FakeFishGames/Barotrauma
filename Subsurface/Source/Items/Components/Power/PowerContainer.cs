@@ -186,13 +186,13 @@ namespace Barotrauma.Items.Components
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 90, 40, 40), "+"))
             {
                rechargeSpeed = Math.Min(rechargeSpeed + maxRechargeSpeed*0.1f, maxRechargeSpeed);
-               item.NewComponentEvent(this, true);
+               item.NewComponentEvent(this, true, false);
             }
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 90, 40, 40), "-"))
             {
                 rechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);                
-                item.NewComponentEvent(this, true);
+                item.NewComponentEvent(this, true, false);
             }
         }
 

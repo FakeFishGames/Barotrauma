@@ -98,6 +98,7 @@
     <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\LocationType.cs" />
     <Compile Include="Source\Map\SubmarineHull.cs" />
+    <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
     <Compile Include="Source\Networking\ReliableSender.cs" />

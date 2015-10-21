@@ -123,7 +123,7 @@ namespace Barotrauma.Items.Components
                 CleanNodes();
             }
 
-            if (!loading) Item.NewComponentEvent(this, true);
+            if (!loading) Item.NewComponentEvent(this, true, true);
         }
 
         public override void Equip(Character character)
@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
             if (Nodes.Count > 1)
             {
                 Nodes.RemoveAt(Nodes.Count - 1);
-                item.NewComponentEvent(this, true);
+                item.NewComponentEvent(this, true, true);
             }
         }
 
@@ -409,8 +409,8 @@ namespace Barotrauma.Items.Components
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
-            message.Write(Nodes.Count);
-            for (int i = 0; i < Nodes.Count; i++)
+            message.Write((byte)Math.Min(Nodes.Count, 10));
+            for (int i = 0; i < Math.Min(Nodes.Count,10); i++)
             {
                 message.Write(Nodes[i].X);
                 message.Write(Nodes[i].Y);
@@ -420,8 +420,8 @@ namespace Barotrauma.Items.Components
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
         {
             Nodes.Clear();
-            int nodeCount = message.ReadInt32();
-            for (int i = 0; i < nodeCount; i++)
+            int nodeCount = message.ReadByte();
+            for (int i = 0; i<nodeCount; i++)
             {
                 Nodes.Add(new Vector2(message.ReadFloat(), message.ReadFloat()));
             }

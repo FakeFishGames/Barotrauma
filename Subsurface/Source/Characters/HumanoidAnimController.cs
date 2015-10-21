@@ -865,7 +865,13 @@ namespace Barotrauma
             Vector2 bodyVelocity = torso.body.LinearVelocity / 60.0f;
 
             item.body.ResetDynamics();
-            item.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
+
+            Vector2 currItemPos = (character.SelectedItems[0]==item) ?
+                rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0] :
+                leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
+            item.SetTransform(currItemPos, itemAngle);
+
+            //item.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
 
             for (int i = 0; i < 2; i++)
             {

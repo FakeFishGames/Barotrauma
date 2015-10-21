@@ -97,7 +97,7 @@ namespace Barotrauma.Items.Components
                 networkUpdateTimer -= deltaTime;
                 if (networkUpdateTimer<=0.0f)
                 {
-                    item.NewComponentEvent(this, true);
+                    item.NewComponentEvent(this, true, false);
                     networkUpdateTimer = 1.0f;
                     valueChanged = false;
                 }
@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
             {
                 AutoPilot = !AutoPilot;
 
-                item.NewComponentEvent(this, true);
+                item.NewComponentEvent(this, true, true);
             }
 
             GUI.DrawLine(spriteBatch,

@@ -73,12 +73,12 @@ namespace Barotrauma.Networking
 
             spriteBatch.DrawString(GUI.SmallFont, 
                 "Peak received: "+graphs[(int)NetStatType.ReceivedBytes].LargestValue()+" bytes/s      " +
-                "Avg received: " + graphs[(int)NetStatType.ReceivedBytes].LargestValue()/Graph.ArraySize + " bytes/s", 
+                "Avg received: " + graphs[(int)NetStatType.ReceivedBytes].Average() + " bytes/s", 
                 new Vector2(rect.X + 10, rect.Y+10), Color.Cyan);
 
 
             spriteBatch.DrawString(GUI.SmallFont, "Peak sent: " + graphs[(int)NetStatType.SentBytes].LargestValue() + " bytes/s      " +
-                "Avg sent: " + graphs[(int)NetStatType.SentBytes].LargestValue()/Graph.ArraySize + " bytes/s",
+                "Avg sent: " + graphs[(int)NetStatType.SentBytes].Average() + " bytes/s",
                 new Vector2(rect.X + 10, rect.Y + 30), Color.Orange);
 
             spriteBatch.DrawString(GUI.SmallFont, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
@@ -105,6 +105,11 @@ namespace Barotrauma.Networking
                 if (values[i] > maxValue) maxValue = values[i];
             }
             return maxValue;
+        }
+
+        public float Average()
+        {
+            return values.Average();
         }
 
         public void Update(float newValue)

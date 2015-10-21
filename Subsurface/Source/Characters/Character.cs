@@ -405,7 +405,7 @@ namespace Barotrauma
 
             if (Info.PickedItemIDs.Any())
             {
-                foreach (int id in Info.PickedItemIDs)
+                foreach (ushort id in Info.PickedItemIDs)
                 {
                     Item item = FindEntityByID(id) as Item;
                     if (item == null) continue;
@@ -627,7 +627,7 @@ namespace Barotrauma
             selectedCharacter = null;
 
             if (createNetworkEvent)
-                new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, -1);
+                new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, 0);
         }
 
         /// <summary>
@@ -1075,7 +1075,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                new NetworkEvent(NetworkEventType.KillCharacter, ID, false);
+                new NetworkEvent(NetworkEventType.KillCharacter, ID, false, true);
             }
 
             if (GameMain.GameSession != null)
@@ -1088,12 +1088,12 @@ namespace Barotrauma
         {
             if (type == NetworkEventType.PickItem)
             {
-                message.Write((int)data);
+                message.Write((ushort)data);
                 return true;
             }
             else if (type== NetworkEventType.SelectCharacter)
             {
-                message.Write((int)data);
+                message.Write((ushort)data);
                 return true;
             }
             else if (type == NetworkEventType.KillCharacter)
@@ -1115,10 +1115,10 @@ namespace Barotrauma
                     GetInputState(InputType.SecondaryHeld)) || LargeUpdateTimer <= 0;
             
             message.Write(hasInputs);
+            message.Write((float)NetTime.Now);
 
             if (!hasInputs) return true;
 
-            message.Write((float)NetTime.Now);
                                    
             // Write byte = move direction
             //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
@@ -1168,7 +1168,7 @@ namespace Barotrauma
                 message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
                 message.Write((byte)((health/maxHealth)*255.0f));
 
-                LargeUpdateTimer = 50;
+                LargeUpdateTimer = 30;
             }
             else
             {
@@ -1189,16 +1189,9 @@ namespace Barotrauma
             {
                 System.Diagnostics.Debug.WriteLine("**************** PickItem networkevent received");
 
-                int itemId = -1;
+                ushort itemId = 0;
 
-                try
-                {
-                    itemId = message.ReadInt32();
-                }
-                catch
-                {
-                    return;
-                }
+                itemId = message.ReadUInt16();
 
                 System.Diagnostics.Debug.WriteLine("item id: "+itemId);
 
@@ -1212,8 +1205,8 @@ namespace Barotrauma
             } 
             else if (type == NetworkEventType.SelectCharacter)
             {
-                int characterId = message.ReadInt32();
-                if (characterId==-1)
+                ushort characterId = message.ReadUInt16();
+                if (characterId==0)
                 {
                     DeselectCharacter(false);
                 }
@@ -1254,13 +1247,13 @@ namespace Barotrauma
             try
             {
                 bool hasInputs = message.ReadBoolean();
-                if (!hasInputs)
+                sendingTime         = message.ReadFloat();
+
+                if (!hasInputs && sendingTime > LastNetworkUpdate)
                 {
                     ClearInputs();
                     return;
                 }
-
-                sendingTime         = message.ReadFloat();
 
                 actionKeyState      = message.ReadBoolean();
                 secondaryKeyState   = message.ReadBoolean();
@@ -1321,7 +1314,7 @@ namespace Barotrauma
             }
             else
             {
-                cursorPos = Position + new Vector2(1000.0f, 0.0f) * dir;
+                cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
             }
                                       
             if (isLargeUpdate)
@@ -1383,9 +1376,7 @@ namespace Barotrauma
                 catch { return; }
 
 
-                Limb torso = AnimController.GetLimb(LimbType.Torso);
-                if (torso == null) torso = AnimController.GetLimb(LimbType.Head);
-                torso.body.TargetPosition = pos;
+                AnimController.RefLimb.body.TargetPosition = pos;
 
                 LargeUpdateTimer = 0;
             }

@@ -218,8 +218,7 @@ namespace Barotrauma
 
             MainMenuScreen      =   new MainMenuScreen(this); 
             LobbyScreen         =   new LobbyScreen();
-
-            NetLobbyScreen      =   new NetLobbyScreen();
+            
             ServerListScreen    =   new ServerListScreen();
 
             EditMapScreen       =   new EditMapScreen();
