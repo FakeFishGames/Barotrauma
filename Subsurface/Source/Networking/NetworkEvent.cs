@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
+using System;
 
 namespace Barotrauma.Networking
 {
     enum NetworkEventType
     {
-        UpdateEntity = 0,
+        EntityUpdate = 0,
         KillCharacter = 1,
         UpdateComponent = 2,
         DropItem = 3,
@@ -13,17 +14,19 @@ namespace Barotrauma.Networking
         PickItem = 5,
         UpdateProperty = 6,
         WallDamage = 7,
-        SelectCharacter = 8
+
+        SelectCharacter = 8,
+        EntityUpdateLarge = 9
     }
 
     class NetworkEvent
     {
         public static List<NetworkEvent> events = new List<NetworkEvent>();
 
-        private static bool[] isImportant = { false, true, false, true, true, true, true, true, true };
-        private static bool[] overridePrevious = { true, false, true, false, false, false, true, true, true };
+        private static bool[] isImportant = { false, true, false, true, true, true, true, true, true, false };
+        private static bool[] overridePrevious = { true, false, true, false, false, false, true, true, true, true };
 
-        private int id;
+        private ushort id;
 
         private NetworkEventType eventType;
 
@@ -33,7 +36,7 @@ namespace Barotrauma.Networking
 
         //private NetOutgoingMessage message;
 
-        public int ID
+        public ushort ID
         {
             get { return id; }
         }
@@ -53,12 +56,12 @@ namespace Barotrauma.Networking
             get { return eventType; } 
         }
 
-        public NetworkEvent(int id, bool isClient)
-            : this(NetworkEventType.UpdateEntity, id, isClient)
+        public NetworkEvent(ushort id, bool isClient)
+            : this(NetworkEventType.EntityUpdate, id, isClient)
         {
         }
 
-        public NetworkEvent(NetworkEventType type, int id, bool isClient, object data = null)
+        public NetworkEvent(NetworkEventType type, ushort id, bool isClient, object data = null)
         {
             if (isClient)
             {
@@ -109,12 +112,12 @@ namespace Barotrauma.Networking
         public static bool ReadData(NetIncomingMessage message)
         {
             NetworkEventType eventType;
-            int id;
+            ushort id;
 
             try
             {
                 eventType = (NetworkEventType)message.ReadByte();
-                id = message.ReadInt32();
+                id = message.ReadUInt16();
             }
             catch
             {
@@ -129,16 +132,15 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            //System.Diagnostics.Debug.WriteLine("Networkevent entity: "+e.ToString());
-
-            //System.Diagnostics.Debug.WriteLine("new message: " + eventType +" - "+e);
             try
             {
                 e.ReadNetworkData(eventType, message);
             }
-            catch
+            catch (Exception exception)
             {
-                DebugConsole.ThrowError("Received invalid network message");
+#if DEBUG   
+                DebugConsole.ThrowError("Received invalid network message", exception);
+#endif
                 return false;
             }
 

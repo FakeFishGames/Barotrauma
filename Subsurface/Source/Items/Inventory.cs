@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -193,7 +194,7 @@ namespace Barotrauma
                 {
                     if (Owner!=null)
                     {
-                        int[] data = { draggingItem.ID, -1 };
+                        ushort[] data = { draggingItem.ID, 0 };
                         new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true, data);
                     }
 
@@ -288,25 +289,27 @@ namespace Barotrauma
                 spriteBatch.DrawString(GUI.Font, (int)item.Condition + " %", new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.Red);
         }
 
-        public bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public virtual bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
             for (int i = 0; i<capacity; i++)
             {
-                message.Write((items[i] == null) ? -1 : items[i].ID);
+                if (items[i] == null) continue;
+                message.Write((ushort)items[i].ID);
             }
 
             return true;
         }
 
-        public void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            int[] newItemIDs = new int[capacity];
+            List<ushort> newItemIDs = new List<ushort>();
                         
             try
             {
-                for (int i = 0; i<capacity; i++)
+                
+                while (message.Position <= message.LengthBits - (sizeof(ushort) * 8))
                 {
-                    newItemIDs[i] = message.ReadInt32();
+                    newItemIDs.Add(message.ReadUInt16());
                 }
             }
             catch
@@ -316,20 +319,20 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (newItemIDs[i] == -1)
+                if (items[i] == null) continue;
+                if (!newItemIDs.Contains(items[i].ID))
                 {
-                    if (items[i] == null) continue;
-
                     items[i].Drop(null, false);
                     continue;
                 }
-
-                Item item = Entity.FindEntityByID(newItemIDs[i]) as Item;
+            }
+            foreach (ushort itemId in newItemIDs)
+            {
+                Item item = Entity.FindEntityByID(itemId) as Item;
                 if (item == null) continue;
 
-                TryPutItem(item, i, false);
+                TryPutItem(item, item.AllowedSlots, false);
             }
-
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
 
         private List<StatusEffect> effects;
 
-        public readonly int[] wireId;
+        public readonly ushort[] wireId;
 
         public bool IsPower
         {
@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
 
             effects = new List<StatusEffect>();
 
-            wireId = new int[MaxLinked];
+            wireId = new ushort[MaxLinked];
 
             foreach (XElement subElement in element.Elements())
             {
@@ -93,7 +93,9 @@ namespace Barotrauma.Items.Components
                         }
                         if (index == -1) break;
 
-                        wireId[index] = ToolBox.GetAttributeInt(subElement, "w", -1);
+                        int id = ToolBox.GetAttributeInt(subElement, "w", 0);
+                        if (id<0) id = 0;
+                        wireId[index] = (ushort)id;
 
                         break;
 
@@ -441,7 +443,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wireId[i] == -1) continue;
+                if (wireId[i] == 0) continue;
 
                 Item wireItem = MapEntity.FindEntityByID(wireId[i]) as Item;
 

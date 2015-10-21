@@ -297,7 +297,7 @@ namespace Barotrauma.Networking
             {
                 if (gameStarted)
                 {
-                    if (myCharacter != null) new NetworkEvent(myCharacter.ID, true);
+                    if (myCharacter != null) myCharacter.SendNetworkEvent(true);
 
                     foreach (Character c in Character.CharacterList)
                     {
@@ -305,7 +305,7 @@ namespace Barotrauma.Networking
 
                         if (c.SimPosition == Vector2.Zero || c.SimPosition.Length() < 100.0f)
                         {
-                            new NetworkEvent(c.ID, false);
+                            c.SendNetworkEvent(false);
                         }
                     }
                 }
@@ -678,8 +678,6 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-
-
                     if (server.ConnectionsCount>0)
                     {
                         server.SendMessage(message, recipientConnections, NetDeliveryMethod.Unreliable, 0);  
@@ -777,7 +775,7 @@ namespace Barotrauma.Networking
 
             //msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
-            msg.Write((myCharacter == null) ? connectedClients.Count : connectedClients.Count + 1);
+            msg.Write((myCharacter == null) ? (byte)connectedClients.Count : (byte)(connectedClients.Count + 1));
             foreach (Client client in connectedClients)
             {
                 msg.Write(client.ID);
@@ -1036,7 +1034,7 @@ namespace Barotrauma.Networking
             {
                 name         = message.ReadString();
                 gender       = message.ReadBoolean() ? Gender.Male : Gender.Female;
-                headSpriteId    = message.ReadInt32();
+                headSpriteId    = message.ReadByte();
             }
             catch
             {
@@ -1072,7 +1070,7 @@ namespace Barotrauma.Networking
             message.Write(character.ID);
             message.Write(character.Info.Gender == Gender.Female);
 
-            message.Write(character.Info.HeadSpriteId);
+            message.Write((byte)character.Info.HeadSpriteId);
 
             message.Write(character.SimPosition.X);
             message.Write(character.SimPosition.Y);

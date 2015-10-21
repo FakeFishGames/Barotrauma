@@ -607,7 +607,7 @@ namespace Barotrauma
                 int.Parse(element.Attribute("height").Value));
 
             Gap g = new Gap(rect);
-            g.ID = int.Parse(element.Attribute("ID").Value);
+            g.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             
             g.linkedToID = new List<int>();
             //int i = 0;

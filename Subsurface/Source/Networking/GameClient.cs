@@ -347,7 +347,7 @@ namespace Barotrauma.Networking
                 }
                 else if (gameStarted)
                 {
-                    new NetworkEvent(myCharacter.ID, true);                    
+                    myCharacter.SendNetworkEvent(true);               
                 }
             }
                           
@@ -525,7 +525,7 @@ namespace Barotrauma.Networking
 
             List<Character> crew = new List<Character>();
 
-            int count = inc.ReadInt32();
+            int count = inc.ReadByte();
             for (int n = 0; n < count; n++)
             {
                 int id = inc.ReadInt32();
@@ -631,7 +631,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)PacketTypes.CharacterInfo);
             msg.Write(characterInfo.Name);
             msg.Write(characterInfo.Gender == Gender.Male);
-            msg.Write(characterInfo.HeadSpriteId);
+            msg.Write((byte)characterInfo.HeadSpriteId);
 
             var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
             int count = Math.Min(jobPreferences.Count, 3);
@@ -647,10 +647,10 @@ namespace Barotrauma.Networking
         private Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter)
         {
             string newName      = inc.ReadString();
-            int ID              = inc.ReadInt32();
+            ushort ID           = inc.ReadUInt16();
             bool isFemale       = inc.ReadBoolean();
 
-            int headSpriteID    = inc.ReadInt32();
+            int headSpriteID    = inc.ReadByte();
             
             Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
@@ -719,7 +719,7 @@ namespace Barotrauma.Networking
             {
                 case 0:
                     msg.Write((byte)PacketTypes.NetworkEvent);
-                    msg.Write((byte)NetworkEventType.UpdateEntity);
+                    msg.Write((byte)NetworkEventType.EntityUpdate);
                     msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
                     break;
                 case 1:

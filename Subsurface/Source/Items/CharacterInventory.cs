@@ -2,6 +2,9 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Barotrauma.Networking;
+using Lidgren.Network;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -290,6 +293,72 @@ namespace Barotrauma
                     //draggingItem = null;
                 }
             }                       
+        }
+
+        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        {
+            for (int i = 0; i < 5; i++ )
+            {
+                message.Write(items[i]==null ? (ushort)0 : (ushort)items[i].ID);
+            }
+
+            for (int i = 5; i < capacity; i++)
+            {
+                if (items[i] == null) continue;
+                message.Write((ushort)items[i].ID);
+            }
+
+            return true;
+        }
+
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        {
+            for (int i = 0; i<5; i++)
+            {
+                ushort itemId = message.ReadUInt16();
+                if (itemId==0)
+                {
+                    if (items[i] != null) items[i].Drop(character, false);
+                }
+                else
+                {
+                    Item item = Entity.FindEntityByID(itemId) as Item;
+                    if (item == null) continue;
+
+                    TryPutItem(item, i, false);
+                }
+            }
+
+            List<ushort> newItemIDs = new List<ushort>();
+
+            try
+            {
+                while (message.Position <= message.LengthBits - (sizeof(ushort) * 8))
+                {
+                    newItemIDs.Add(message.ReadUInt16());
+                }
+            }
+            catch
+            {
+                return;
+            }
+
+            for (int i = 5; i < capacity; i++)
+            {
+                if (items[i] == null) continue;
+                if (!newItemIDs.Contains(items[i].ID))
+                {
+                    items[i].Drop(null, false);
+                    continue;
+                }
+            }
+            foreach (ushort itemId in newItemIDs)
+            {
+                Item item = Entity.FindEntityByID(itemId) as Item;
+                if (item == null) continue;
+
+                TryPutItem(item, LimbSlot.Any, false);
+            }
         }
 
     }

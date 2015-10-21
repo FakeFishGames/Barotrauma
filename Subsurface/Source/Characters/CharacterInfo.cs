@@ -17,7 +17,7 @@ namespace Barotrauma
         
         public Job Job;
 
-        private List<int> pickedItems;
+        private List<ushort> pickedItems;
 
         private Vector2[] headSpriteRange;
 
@@ -30,7 +30,7 @@ namespace Barotrauma
 
         public bool StartItemsGiven;
 
-        public List<int> PickedItemIDs
+        public List<ushort> PickedItemIDs
         {
             get { return pickedItems; }
         }
@@ -72,7 +72,7 @@ namespace Barotrauma
 
             headSpriteRange = new Vector2[2];
 
-            pickedItems = new List<int>();
+            pickedItems = new List<ushort>();
 
             //ID = -1;
 
@@ -218,7 +218,7 @@ namespace Barotrauma
             HeadSpriteId    = ToolBox.GetAttributeInt(element, "headspriteid", 1);
             StartItemsGiven = ToolBox.GetAttributeBool(element, "startitemsgiven", false);
 
-            pickedItems = new List<int>();
+            pickedItems = new List<ushort>();
 
             string pickedItemString = ToolBox.GetAttributeString(element, "items", "");
             if (!string.IsNullOrEmpty(pickedItemString))
@@ -226,7 +226,7 @@ namespace Barotrauma
                 string[] itemIds = pickedItemString.Split(',');
                 foreach (string s in itemIds)
                 {
-                    pickedItems.Add(int.Parse(s));
+                    pickedItems.Add((ushort)int.Parse(s));
                 }
             }
 

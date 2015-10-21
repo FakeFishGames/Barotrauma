@@ -515,7 +515,7 @@ namespace Barotrauma
 
                 e.linkedTo.Clear();
 
-                foreach (int i in e.linkedToID)
+                foreach (ushort i in e.linkedToID)
                 {
                     MapEntity linked = FindEntityByID(i) as MapEntity;
 
