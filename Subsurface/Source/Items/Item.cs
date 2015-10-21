@@ -1101,7 +1101,7 @@ namespace Barotrauma
                 }
 
                 Item item = new Item(rect, ip);
-                item.ID = int.Parse(element.Attribute("ID").Value);
+                item.ID = (ushort)int.Parse(element.Attribute("ID").Value);
                                 
                 item.linkedToID = new List<int>();
 

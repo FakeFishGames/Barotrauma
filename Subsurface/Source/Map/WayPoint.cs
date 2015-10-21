@@ -312,7 +312,7 @@ namespace Barotrauma
 
             WayPoint w = new WayPoint(rect);
 
-            w.ID = int.Parse(element.Attribute("ID").Value);
+            w.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             w.spawnType = (SpawnType)Enum.Parse(typeof(SpawnType), 
                 ToolBox.GetAttributeString(element, "spawn", "None"));
 

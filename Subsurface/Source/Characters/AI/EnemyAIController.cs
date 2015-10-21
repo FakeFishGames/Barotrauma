@@ -534,7 +534,7 @@ namespace Barotrauma
             //message.WriteRangedSingle(MathHelper.Clamp(raycastTimer, 0.0f, RaycastInterval), 0.0f, RaycastInterval, 8);
             //message.WriteRangedSingle(MathHelper.Clamp(coolDownTimer, 0.0f, attackCoolDown * 2.0f), 0.0f, attackCoolDown * 2.0f, 8);
 
-            message.Write(targetEntity==null ? -1 : (targetEntity as Entity).ID);
+            message.Write(targetEntity==null ? (ushort)0 : (targetEntity as Entity).ID);
         }
 
         public override void ReadNetworkData(NetIncomingMessage message)
@@ -548,7 +548,7 @@ namespace Barotrauma
 
             Vector2 targetPosition = Vector2.Zero;
 
-            int targetID;
+            ushort targetID;
 
             try
             {
@@ -571,7 +571,7 @@ namespace Barotrauma
                 //raycastTimer = message.ReadRangedSingle(0.0f, RaycastInterval, 8);
                 //coolDownTimer = message.ReadRangedSingle(0.0f, attackCoolDown*2.0f, 8);
 
-                targetID = message.ReadInt32();
+                targetID = message.ReadUInt16();
             }
 
             catch { return; }
@@ -583,8 +583,7 @@ namespace Barotrauma
             //this.raycastTimer = raycastTimer;
             //this.coolDownTimer = coolDownTimer;
 
-            if (targetID > -1)
-                targetEntity = Entity.FindEntityByID(targetID) as IDamageable;            
+            if (targetID > 0) targetEntity = Entity.FindEntityByID(targetID) as IDamageable;            
             
         }
     }

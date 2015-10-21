@@ -685,11 +685,14 @@ namespace Barotrauma
                         //limb.body.SetTransform(limb.SimPosition + newMovement * 0.1f, limb.Rotation);
                     }
 
-                    correctionMovement = Vector2.Normalize(newMovement) * MathHelper.Clamp(dist*5.0f, 0.1f, 5.0f);
+                    correctionMovement =
+                        Vector2.Lerp(targetMovement, Vector2.Normalize(newMovement) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
                 }
                 else
                 {
-                    correctionMovement = Vector2.Normalize(newMovement) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f);
+                    correctionMovement =
+                        Vector2.Lerp(targetMovement, Vector2.Normalize(newMovement) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
+                        
                     if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
                 }
             }

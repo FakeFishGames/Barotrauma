@@ -609,7 +609,7 @@ namespace Barotrauma
                 if (ep.Name == name)
                 {
                     s = new Structure(rect, (StructurePrefab)ep);
-                    s.ID = int.Parse(element.Attribute("ID").Value);
+                    s.ID = (ushort)int.Parse(element.Attribute("ID").Value);
                     break;
                 }
             }

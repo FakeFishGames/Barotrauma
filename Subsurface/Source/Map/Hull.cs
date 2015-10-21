@@ -468,7 +468,7 @@ namespace Barotrauma
 
             h.volume = ToolBox.GetAttributeFloat(element, "pressure", 0.0f);
 
-            h.ID = int.Parse(element.Attribute("ID").Value);
+            h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message, object data)

@@ -149,7 +149,7 @@ namespace Barotrauma
             }
 
             base.Remove();
-            ID = -5;
+            ID = ushort.MaxValue;
         }
 
         //drawing ----------------------------------------------------
@@ -635,7 +635,7 @@ namespace Barotrauma
 
             GameMain.LightManager.OnMapLoaded();
 
-            ID = int.MaxValue-10;
+            ID = ushort.MaxValue-10;
 
             loaded = this;
         }

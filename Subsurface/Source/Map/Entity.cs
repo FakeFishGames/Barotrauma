@@ -7,15 +7,16 @@ namespace Barotrauma
 {
     class Entity
     {
-        private static Dictionary<int, Entity> dictionary = new Dictionary<int, Entity>();
+        private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
 
-        private int id;
+
+        private ushort id;
 
         protected AITarget aiTarget;
         //protected float soundRange;
         //protected float sightRange;
         
-        public int ID
+        public ushort ID
         {
             get { return id; }
             set 
@@ -73,7 +74,7 @@ namespace Barotrauma
         /// <summary>
         /// Find an entity based on the ID
         /// </summary>
-        public static Entity FindEntityByID(int ID)
+        public static Entity FindEntityByID(ushort ID)
         {
             Entity matchingEntity;
             dictionary.TryGetValue(ID, out matchingEntity);

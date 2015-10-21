@@ -228,7 +228,7 @@ namespace Barotrauma.Items.Components
         {
             if (itemIds == null) return;
 
-            for (int i = 0; i < itemIds.Length; i++)
+            for (ushort i = 0; i < itemIds.Length; i++)
             {
                 Item item = MapEntity.FindEntityByID(itemIds[i]) as Item;
                 if (item == null) continue;
@@ -247,17 +247,17 @@ namespace Barotrauma.Items.Components
 
             string[] itemIdStrings = containedString.Split(',');
 
-            itemIds = new int[itemIdStrings.Length];
+            itemIds = new ushort[itemIdStrings.Length];
             for (int i = 0; i < itemIdStrings.Length; i++)
             {
-                int id = -1;
-                if (!int.TryParse(itemIdStrings[i], out id)) continue;
+                ushort id = 0;
+                if (!ushort.TryParse(itemIdStrings[i], out id)) continue;
 
                 itemIds[i] = id;
             }
         }
 
-        int[] itemIds;
+        ushort[] itemIds;
 
         public override XElement Save(XElement parentElement)
         {
@@ -266,7 +266,7 @@ namespace Barotrauma.Items.Components
             string[] itemIdStrings = new string[inventory.items.Length];
             for (int i = 0; i < inventory.items.Length; i++)
             {
-                itemIdStrings[i] = (inventory.items[i]==null) ? "-1" : inventory.items[i].ID.ToString();
+                itemIdStrings[i] = (inventory.items[i]==null) ? "0" : inventory.items[i].ID.ToString();
             }
 
             componentElement.Add(new XAttribute("contained",  string.Join(",",itemIdStrings)));

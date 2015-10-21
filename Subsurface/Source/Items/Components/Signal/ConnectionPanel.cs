@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
 
                     for (int i = 0; i < wireCount; i++)
                     {
-                        int wireId = message.ReadInt32();
+                        ushort wireId = message.ReadUInt16();
                         
                         Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
                         if (wireItem == null) continue;
