@@ -215,7 +215,7 @@ namespace Barotrauma.Items.Components
 
             attached = true;
 
-            item.NewComponentEvent(this, true, true);
+            if (character != null) item.NewComponentEvent(this, true, true);
 
             return true;
         }

@@ -305,7 +305,8 @@ namespace Barotrauma
             if (titleScreenOpen)
             {
                 TitleScreen.Draw(spriteBatch, GraphicsDevice, (float)deltaTime);
-                if (TitleScreen.LoadState>=100.0f && (PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
+                if (TitleScreen.LoadState>=100.0f && 
+                    (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
                 {
                     titleScreenOpen = false;
                 }
@@ -325,8 +326,10 @@ namespace Barotrauma
 
         Stopwatch sw;
 
-        public static void ShowLoading(IEnumerable<object> loader)
+        static bool waitForKeyHit = true;
+        public static void ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
+            waitForKeyHit = waitKeyHit;
             titleScreenOpen = true;
             CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
 

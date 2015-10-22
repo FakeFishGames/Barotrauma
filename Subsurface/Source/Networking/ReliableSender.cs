@@ -19,14 +19,23 @@ namespace Barotrauma.Networking.ReliableMessages
             receiver = new ReliableReceiver(host);
         }
 
-        public ReliableMessage CreateMessage(int lengthBytes = 0)
+        public ReliableMessage CreateMessage()
         {
             return sender.CreateMessage();
         }
 
         public void SendMessage(ReliableMessage message, NetConnection receiver)
         {
-            sender.SendMessage(message, receiver);
+            try
+            {
+                sender.SendMessage(message, receiver);
+            }
+            catch (Exception e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Sending a reliable message failed", e);
+#endif
+            }
         }
 
         public void HandleResendRequest(NetIncomingMessage inc)
@@ -348,27 +357,34 @@ namespace Barotrauma.Networking.ReliableMessages
                 return;
             }
 
-            Debug.WriteLine("Received ack message: " + messageId + ", need to rerequest messages");
+            Debug.WriteLine("Received ack message: " + messageId + ", need to rerequest messages (last id: "+lastMessageID+")");
 
             if (lastMessageID > ushort.MaxValue / 2 && messageId < short.MaxValue / 2)
             {
                 for (ushort i = (ushort)Math.Min((int)lastMessageID + 1, ushort.MaxValue); i <= ushort.MaxValue; i++)
                 {
                     if (i == ushort.MaxValue && lastMessageID == ushort.MaxValue) break;
-                    if (!missingMessages.ContainsKey(i)) missingMessages.Add(i, new MissingMessage(i));
+                    QueueMissingMessage(i);
                     if (i == ushort.MaxValue) break;
                 }
 
                 for (ushort i = 1; i < messageId; i++)
                 {
-                    if (!missingMessages.ContainsKey(i)) missingMessages.Add(i, new MissingMessage(i));
+                    QueueMissingMessage(i);
                 }
             }
             else
             {
+                //we already wrapped around but message hasn't, so it's an old message
+                if (lastMessageID < ushort.MaxValue / 2 && messageId > ushort.MaxValue / 2)
+                {
+                    Debug.WriteLine("old already received message, ignore");
+                    return;
+                }
+
                 for (ushort i = (ushort)Math.Min((int)lastMessageID+1, ushort.MaxValue); i <= messageId; i++)
                 {
-                    if (!missingMessages.ContainsKey(i)) missingMessages.Add(i, new MissingMessage(i));
+                    QueueMissingMessage(i);
                     if (i == ushort.MaxValue) break;
                 }
             }

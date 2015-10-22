@@ -108,6 +108,18 @@ namespace Barotrauma.Items.Components
             set { canBeSelected = value; }
         }
 
+        public InputType PickKey
+        {
+            get;
+            private set;
+        }
+
+        public InputType SelectKey
+        {
+            get;
+            private set;
+        }
+
         [HasDefaultValue(false, false)]
         public bool DeleteOnUse
         {
@@ -166,24 +178,26 @@ namespace Barotrauma.Items.Components
 
             statusEffects = new List<StatusEffect>();
 
-            //var initableProperties = ObjectProperty.GetProperties<Initable>(this);
-            //foreach (ObjectProperty initableProperty in initableProperties)
-            //{
-            //    object value = ToolBox.GetAttributeObject(element, initableProperty.Name.ToLower());
-            //    if (value==null)
-            //    {
-            //        foreach (var ini in initableProperty.Attributes.OfType<Initable>())
-            //        {
-            //            value = ini.defaultValue;
-            //            break;
-            //        }
-            //    }
+            SelectKey = InputType.Select;
 
-            //    initableProperty.TrySetValue(value);
-            //}
-            if (item.Name=="Welding Tool")
+            try
             {
-                int a = 1;
+                SelectKey = (InputType)Enum.Parse(typeof(InputType), ToolBox.GetAttributeString(element, "selectkey", "Select"), true);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Invalid select key in " + element + "!", e);
+            }
+
+            PickKey = InputType.Select;
+
+            try
+            {
+                PickKey = (InputType)Enum.Parse(typeof(InputType), ToolBox.GetAttributeString(element, "selectkey", "Select"), true);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
             }
 
             properties = ObjectProperty.InitProperties(this, element);

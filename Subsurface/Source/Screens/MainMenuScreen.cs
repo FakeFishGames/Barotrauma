@@ -391,7 +391,7 @@ namespace Barotrauma
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
-            spriteBatch.DrawString(GUI.Font, "Barotrauma chat lag test build", new Vector2(10, GameMain.GraphicsHeight-20), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Barotrauma v"+GameMain.Version, new Vector2(10, GameMain.GraphicsHeight-20), Color.White);
 
             spriteBatch.End();
         }

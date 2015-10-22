@@ -147,11 +147,11 @@ namespace Barotrauma
             item.Drop(null, false);
             return;
         }
-        public void DropItem(int i)
-        {
-            items[i].Drop();
-            items[i] = null;
-        }
+        //public void DropItem(int i)
+        //{
+        //    items[i].Drop();
+        //    items[i] = null;
+        //}
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
@@ -194,8 +194,7 @@ namespace Barotrauma
                 {
                     if (Owner!=null)
                     {
-                        ushort[] data = { draggingItem.ID, 0 };
-                        new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true, data);
+                        new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true);
                     }
 
                     DropItem(draggingItem);
@@ -281,8 +280,14 @@ namespace Barotrauma
                 Vector2 pos = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height + 20) - GUI.Font.MeasureString(item.Name) * 0.5f;
                 pos.X = (int)pos.X;
                 pos.Y = (int)pos.Y;
+#if DEBUG
+                spriteBatch.DrawString(GUI.Font, item.Name+" - "+item.ID, pos - new Vector2(1.0f, 1.0f), Color.Black);
+                spriteBatch.DrawString(GUI.Font, item.Name+" - "+item.ID, pos, Color.White);
+#else
                 spriteBatch.DrawString(GUI.Font, item.Name, pos - new Vector2(1.0f, 1.0f), Color.Black);
                 spriteBatch.DrawString(GUI.Font, item.Name, pos, Color.White);
+#endif
+
             }
 
             if (item.Condition < 100.0f)

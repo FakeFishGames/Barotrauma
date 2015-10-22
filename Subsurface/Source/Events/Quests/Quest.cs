@@ -159,15 +159,15 @@ namespace Barotrauma
 
         public void GiveReward()
         {
+            if (!string.IsNullOrWhiteSpace(successMessage))
+            {
+                new GUIMessageBox("Quest completed successfully", successMessage);
+            }
+
             var mode = GameMain.GameSession.gameMode as SinglePlayerMode;
             if (mode == null) return;
 
             mode.Money += reward;
-
-            if (!string.IsNullOrWhiteSpace(successMessage))
-            {
-                new GUIMessageBox("Quest completed", successMessage);
-            }
         }
     }
 }

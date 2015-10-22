@@ -173,7 +173,7 @@ namespace Barotrauma.Networking
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;
             
-            DateTime timeOut = DateTime.Now + new TimeSpan(0,0,15);
+            DateTime timeOut = DateTime.Now + new TimeSpan(0,0,20);
 
             // Loop until we are approved
             while (!CanStart && !connectCanceled)
@@ -247,9 +247,9 @@ namespace Barotrauma.Networking
                             }
                             break;
                         case NetIncomingMessageType.StatusChanged:
-                            NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
-                            Debug.WriteLine(connectionStatus);
+                            DebugConsole.NewMessage("Connection status changed: " + client.ConnectionStatus.ToString(), Color.Orange);
 
+                            NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
                             if (connectionStatus == NetConnectionStatus.Disconnected)
                             {
                                 string denyMessage = inc.ReadString();
@@ -284,6 +284,9 @@ namespace Barotrauma.Networking
             if (client.ConnectionStatus != NetConnectionStatus.Connected)
             {
                 var reconnect = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to server.", new string[] { "Retry", "Cancel" });
+
+                DebugConsole.NewMessage("Failed to connect to server - connection status: "+client.ConnectionStatus.ToString(), Color.Orange);
+
                 reconnect.Buttons[0].OnClicked += RetryConnection;
                 reconnect.Buttons[0].OnClicked += reconnect.Close;
                 reconnect.Buttons[1].OnClicked += SelectMainMenu;
@@ -412,7 +415,7 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.StartGame:
                         if (gameStarted) continue;
 
-                        GameMain.ShowLoading(StartGame(inc));
+                        GameMain.ShowLoading(StartGame(inc), false);
 
                         break;
                     case (byte)PacketTypes.EndGame:
