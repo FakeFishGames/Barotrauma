@@ -185,10 +185,10 @@ namespace Barotrauma
 
         public bool IsParentOf(GUIComponent component)
         {
-            foreach (GUIComponent child in children)
+            for(int i = children.Count - 1; i >= 0; i--)
             {
-                if (child == component) return true;
-                if (child.IsParentOf(component)) return true;
+                if (children[i] == component) return true;
+                if (children[i].IsParentOf(component)) return true;
             }
 
             return false;

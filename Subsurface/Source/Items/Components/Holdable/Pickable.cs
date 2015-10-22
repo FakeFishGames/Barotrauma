@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
             if (picker == null) return false;
             if (picker.Inventory == null) return false;
 
-            if (picker.Inventory.TryPutItem(item, allowedSlots))
+            if (picker.Inventory.TryPutItem(item, allowedSlots, picker==Character.Controlled))
             {
                 if (!picker.HasSelectedItem(item) && item.body!=null) item.body.Enabled = false;
                 this.picker = picker;

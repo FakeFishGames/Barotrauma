@@ -248,6 +248,7 @@ namespace Barotrauma.Networking
                 {
                     EndButtonHit(null, null);
                     AutoRestartTimer = 20.0f;
+                    UpdateNetLobby(null,null);
                     return;
                 }
             }
@@ -705,7 +706,7 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            GameMain.ShowLoading(StartGame(selectedSub));
+            GameMain.ShowLoading(StartGame(selectedSub), false);
  
             return true;
         }

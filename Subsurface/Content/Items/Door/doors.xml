@@ -19,7 +19,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
   
-    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -48,7 +48,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
 
-    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>

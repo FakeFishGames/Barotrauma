@@ -30,7 +30,7 @@
 
     <!-- front fins -->    
     <limb id = "4" width="50" height="200">
-      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="133,5,91,202" depth="0.01" origin="0.7,0.5"/>
+      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="133,5,91,202" depth="0.008" origin="0.7,0.5"/>
     </limb>
 
     <!-- back fins -->

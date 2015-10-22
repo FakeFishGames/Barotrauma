@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
 
             if (voltage < minVoltage) return;
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 200, 30), "Activate Radar"))
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 200, 30), "Activate Sonar"))
             {
                 IsActive = !IsActive;
                 item.NewComponentEvent(this, true, false);

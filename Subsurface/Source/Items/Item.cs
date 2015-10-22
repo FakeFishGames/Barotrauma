@@ -853,9 +853,9 @@ namespace Barotrauma
             return closest;
         }
 
-        public bool Pick(Character picker, bool forcePick=false)
+        public bool Pick(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)
         {
-            System.Diagnostics.Debug.WriteLine("Item.Pick("+picker+", "+forcePick+")");
+
             bool hasRequiredSkills = true;
 
             bool picked = false, selected = false;
@@ -864,13 +864,42 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
+                bool pickHit = false, selectHit = false;
+                if (Screen.Selected == GameMain.EditMapScreen)
+                {
+                    pickHit = picker.GetInputState(InputType.Select);
+                    selectHit = picker.GetInputState(InputType.Select);
+                }
+                else
+                {
+                    if (forceSelectKey)
+                    {
+                        if (ic.PickKey == InputType.Select) pickHit = true;
+                        if (ic.SelectKey == InputType.Select) selectHit = true;
+                    }
+                    else if (forceActionKey)
+                    {
+                        if (ic.PickKey == InputType.ActionHit) pickHit = true;
+                        if (ic.SelectKey == InputType.ActionHit) selectHit = true;
+                    }
+                    else
+                    {
+                        pickHit = picker.GetInputState(ic.PickKey);
+                        selectHit = picker.GetInputState(ic.SelectKey);
+                    }
+                }
+
+                
+                if (!pickHit && !selectHit) continue;
+
                 Skill tempRequiredSkill;
                 if (!ic.HasRequiredSkills(picker, out tempRequiredSkill)) hasRequiredSkills = false;
 
                 if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
-                if (!forcePick && !ic.HasRequiredItems(picker, picker == Character.Controlled)) continue;
-                if ((ic.CanBePicked && ic.Pick(picker)) || (ic.CanBeSelected && ic.Select(picker)))                     
+                if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, picker == Character.Controlled)) continue;
+                if ((ic.CanBePicked && pickHit && ic.Pick(picker)) || 
+                    (ic.CanBeSelected && selectHit && ic.Select(picker)))                     
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
@@ -879,9 +908,16 @@ namespace Barotrauma
             }
 
             if (!picked) return false;
-            if (selected)
+
+            System.Diagnostics.Debug.WriteLine("Item.Pick(" + picker + ", " + forceSelectKey + ")");
+
+            if (picker.SelectedConstruction == this)
             {
-                picker.SelectedConstruction = (picker.SelectedConstruction == this) ? null : this;
+                if (picker.GetInputState(InputType.Select)) picker.SelectedConstruction = null;
+            }
+            else if (selected)
+            {        
+                picker.SelectedConstruction = this;
             }
             
             if (!hasRequiredSkills && Character.Controlled==picker)
@@ -1177,7 +1213,7 @@ namespace Barotrauma
 
         public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
-            message.Write(condition);
+            message.Write((byte)MathHelper.Clamp(condition*2.55f,0.0f,255.0f));
 
             switch (type)
             {
@@ -1244,7 +1280,7 @@ namespace Barotrauma
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            Condition = message.ReadFloat();
+            Condition = (float)message.ReadByte()/2.55f;
 
             switch (type)
             {

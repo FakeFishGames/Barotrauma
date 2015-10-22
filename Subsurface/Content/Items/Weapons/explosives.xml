@@ -12,7 +12,7 @@
 
     <Pickable slots="Any">
       <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
-        <Explosion range="500.0" structuredamage="300" damage="200" stun="5" force="20.0"/>
+        <Explosion range="500.0" structuredamage="250" damage="200" stun="5" force="20.0"/>
       </StatusEffect>
     </Pickable>
   </Item>
@@ -27,7 +27,7 @@
 
     <Body width="16" height="9"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="ActionHit" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
 
@@ -35,7 +35,7 @@
       <Containable name="explosive"/>
     </ItemContainer>
 
-    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="activate">
         <StatusEffect type="OnUse" target="Contained" Condition="-100.0"/>        

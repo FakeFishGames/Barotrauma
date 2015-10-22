@@ -119,11 +119,31 @@ namespace Barotrauma.Items.Components
             {
                 if (stickTarget!=null)
                 {
-                    item.body.FarseerBody.RestoreCollisionWith(stickTarget);
+                    try
+                    {
+                        item.body.FarseerBody.RestoreCollisionWith(stickTarget);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);
+#endif
+                    }
+
                     stickTarget = null;
                 }
 
-                GameMain.World.RemoveJoint(stickJoint);
+                try
+                {
+                    GameMain.World.RemoveJoint(stickJoint);
+                }
+                catch (Exception e)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Failed to remove stickJoint", e);
+#endif
+                }
+
                 stickJoint = null; 
              
                 IsActive = false; 

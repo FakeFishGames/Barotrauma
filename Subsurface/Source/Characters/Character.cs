@@ -626,8 +626,7 @@ namespace Barotrauma
 
             selectedCharacter = null;
 
-            if (createNetworkEvent)
-                new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, 0);
+            if (createNetworkEvent) new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, (ushort)0);
         }
 
         /// <summary>
@@ -723,9 +722,10 @@ namespace Barotrauma
                 if (closestItem != null)
                 {
                     closestItem.IsHighlighted = true;
-                    if (GetInputState(InputType.Select) && closestItem.Pick(this, false))
+                    if (closestItem.Pick(this))
                     {
-                        new NetworkEvent(NetworkEventType.PickItem, ID, true, closestItem.ID);
+                        new NetworkEvent(NetworkEventType.PickItem, ID, true,
+                            new int[] { closestItem.ID, GetInputState(InputType.Select) ? 1 : 0, GetInputState(InputType.ActionHit) ? 1 : 0 });
                     }
                 }
             }
@@ -801,7 +801,7 @@ namespace Barotrauma
             if (!(this is AICharacter)) Control(deltaTime, cam);
 
             UpdateSightRange();
-            aiTarget.SoundRange = 0.0f;
+            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
@@ -830,6 +830,8 @@ namespace Barotrauma
 
         private void UpdateSightRange()
         {
+            if (aiTarget == null) return;
+
             aiTarget.SightRange = 0.0f;
 
             //distance is approximated based on the mass of the character 
@@ -1088,10 +1090,17 @@ namespace Barotrauma
         {
             if (type == NetworkEventType.PickItem)
             {
-                message.Write((ushort)data);
+                int[] pickData = (int[])data;
+                if (pickData.Length != 3) return false;
+
+                message.Write((ushort)pickData[0]);
+                message.Write((int)pickData[1] == 1);
+                message.Write((int)pickData[2] == 1);
+                message.WritePadBits();
+
                 return true;
             }
-            else if (type== NetworkEventType.SelectCharacter)
+            else if (type == NetworkEventType.SelectCharacter)
             {
                 message.Write((ushort)data);
                 return true;
@@ -1193,12 +1202,15 @@ namespace Barotrauma
 
                 itemId = message.ReadUInt16();
 
+                bool pickHit = message.ReadBoolean();
+                bool actionHit = message.ReadBoolean();
+
                 System.Diagnostics.Debug.WriteLine("item id: "+itemId);
 
                 Item item = FindEntityByID(itemId) as Item;
                 if (item != null)
                 {
-                    item.Pick(this);
+                    item.Pick(this, false, pickHit, actionHit);
                 }
 
                 return;
@@ -1249,9 +1261,9 @@ namespace Barotrauma
                 bool hasInputs = message.ReadBoolean();
                 sendingTime         = message.ReadFloat();
 
-                if (!hasInputs && sendingTime > LastNetworkUpdate)
+                if (!hasInputs)
                 {
-                    ClearInputs();
+                    if (sendingTime > LastNetworkUpdate) ClearInputs();
                     return;
                 }
 
@@ -1266,7 +1278,7 @@ namespace Barotrauma
                 runState            = message.ReadBoolean();
             }
 
-            catch
+            catch (Exception e)
             {
                 return;
             }
@@ -1310,7 +1322,7 @@ namespace Barotrauma
             }
             if (secondaryKeyState)
             {
-                cursorPosition = cursorPos;
+                cursorPosition = MathUtils.IsValid(cursorPos) ? cursorPos : Vector2.Zero;
             }
             else
             {

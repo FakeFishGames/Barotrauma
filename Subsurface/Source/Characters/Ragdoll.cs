@@ -531,7 +531,15 @@ namespace Barotrauma
             {
                 if (limb.ignoreCollisions) continue;
 
-                limb.body.CollidesWith = collisionCategory;
+                try
+                {
+                    limb.body.CollidesWith = collisionCategory;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to update ragdoll limb collisioncategories", e);
+                }
+
             }
         }
 

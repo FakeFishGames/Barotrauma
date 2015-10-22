@@ -13,7 +13,7 @@
       <sound file="engine.ogg" type="OnActive" range="3000.0" volume="CurrentVolume" loop="true"/>
     </Engine>
     
-    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="set_force"/>
@@ -38,12 +38,31 @@
       <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
     </Radar>
 
-    <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="velocity_in"/>
       <output name="velocity_x_out"/>
       <output name="velocity_y_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Sonar Monitor"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture ="fabricator.png" depth="0.8"/>
+
+    <Radar canbeselected = "true" powerconsumption="100">
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
+      <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
+    </Radar>
+
+    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power_in"/>
     </ConnectionPanel>
   </Item>
 </Items>

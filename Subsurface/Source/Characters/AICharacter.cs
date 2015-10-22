@@ -165,8 +165,8 @@ namespace Barotrauma
             try
             {
                 targetDir = message.ReadBoolean();
-                targetMovement.X = message.ReadRangedSingle(-10.0f, 10.0f, 8);
-                targetMovement.Y = message.ReadRangedSingle(-10.0f, 10.0f, 8);
+                targetMovement.X = message.ReadRangedSingle(-10.0f, 10.0f, 16);
+                targetMovement.Y = message.ReadRangedSingle(-10.0f, 10.0f, 16);
                 
             }
             catch
@@ -236,7 +236,7 @@ namespace Barotrauma
 
                 catch { return; }
 
-
+                //error
                 AnimController.RefLimb.body.TargetPosition = pos;
                 AnimController.RefLimb.body.TargetVelocity = vel;
 

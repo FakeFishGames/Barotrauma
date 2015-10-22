@@ -213,7 +213,7 @@ namespace Barotrauma
             yield return new WaitForSeconds(5.0f);
 
             infoBox = CreateInfoFrame("You need a screwdriver to check the wiring of the terminal."
-            + " Equip a screwdriver by pulling it to either of the slots with a hand symbol, and then select the terminal again by pressing E.");
+            + " Equip a screwdriver by pulling it to either of the slots with a hand symbol, and then use it on the terminal by left clicking.");
 
             while (Character.Controlled.SelectedConstruction != steering.Item ||
                 Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
