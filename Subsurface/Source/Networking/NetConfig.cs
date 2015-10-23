@@ -21,6 +21,8 @@ namespace Barotrauma.Networking
         //if the ragdoll is closer than this, don't try to correct its position
         public const float AllowedRagdollDistance = 0.1f;
 
+        public const float LargeCharacterUpdateInterval = 5.0f;
+
         public const float DeleteDisconnectedTime = 10.0f;
 
         public const float AckInterval = 0.2f;

@@ -266,8 +266,9 @@ namespace Barotrauma.Networking
                     }                
                 }
 
-                catch
-                {                    
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error while connecting to server", e);
                     break;
                 }
             }
@@ -354,7 +355,7 @@ namespace Barotrauma.Networking
                 }
                 else if (gameStarted)
                 {
-                    new NetworkEvent(myCharacter.ID, true);             
+                    myCharacter.CreateUpdateNetworkEvent(true);             
                 }
             }
                           

@@ -239,6 +239,17 @@ namespace Barotrauma.Items.Components
             itemIds = null;
         }
 
+        public override void Remove()
+        {
+            base.Remove();
+
+            foreach (Item item in inventory.items)
+            {
+                if (item == null) continue;
+                item.Remove();
+            }
+        }
+
         public override void Load(XElement componentElement)
         {
             base.Load(componentElement);

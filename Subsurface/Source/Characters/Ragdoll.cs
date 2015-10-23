@@ -667,11 +667,15 @@ namespace Barotrauma
             float allowedDistance = NetConfig.AllowedRagdollDistance * ((inWater) ? 2.0f : 1.0f);
 
             float dist = Vector2.Distance(refLimb.body.SimPosition, refLimb.body.TargetPosition);
-            bool resetAll = (dist > resetDistance && character.LargeUpdateTimer == 1);
+            bool resetAll = dist > resetDistance;
+            if (resetAll)
+            {
+                if (Limbs.FirstOrDefault(limb => !limb.ignoreCollisions && limb.body.TargetPosition == Vector2.Zero) != null) resetAll = false;
+            }
 
-            Vector2 newMovement = (refLimb.body.TargetPosition - refLimb.body.SimPosition);
+            Vector2 diff = (refLimb.body.TargetPosition - refLimb.body.SimPosition);
 
-            if (newMovement == Vector2.Zero || newMovement.Length() < allowedDistance)
+            if (diff == Vector2.Zero || diff.Length() < allowedDistance)
             {
                 refLimb.body.TargetPosition = Vector2.Zero;
                 foreach (Limb limb in Limbs)
@@ -694,12 +698,12 @@ namespace Barotrauma
                     }
 
                     correctionMovement =
-                        Vector2.Lerp(targetMovement, Vector2.Normalize(newMovement) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
+                        Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
                 }
                 else
                 {
                     correctionMovement =
-                        Vector2.Lerp(targetMovement, Vector2.Normalize(newMovement) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
+                        Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
                         
                     if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
                 }
@@ -711,7 +715,11 @@ namespace Barotrauma
 
                 foreach (Limb limb in Limbs)
                 {
-                    if (limb.body.TargetPosition == Vector2.Zero) continue;
+                    if (limb.body.TargetPosition == Vector2.Zero)
+                    {
+                        limb.body.SetTransform(limb.body.SimPosition + diff, limb.body.Rotation);
+                        continue;
+                    }
 
                     limb.body.LinearVelocity = limb.body.TargetVelocity;
                     limb.body.AngularVelocity = limb.body.TargetAngularVelocity;

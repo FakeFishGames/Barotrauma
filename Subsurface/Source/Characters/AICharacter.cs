@@ -85,50 +85,43 @@ namespace Barotrauma
 
         public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
-            if (type == NetworkEventType.KillCharacter)
+            switch (type)
             {
-                return true;
-            }
+                case NetworkEventType.KillCharacter:
+                    return true;
+                case NetworkEventType.ImportantEntityUpdate:
+                    int i = 0;
+                    foreach (Limb limb in AnimController.Limbs)
+                    {
+                        if (limb.ignoreCollisions) continue;
 
-            message.Write((float)NetTime.Now);
+                        message.Write(limb.body.SimPosition.X);
+                        message.Write(limb.body.SimPosition.Y);
 
-            message.Write(LargeUpdateTimer <= 0);
+                        message.Write(limb.body.Rotation);
+                        i++;
+                    }
+
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
+                    message.Write((byte)((health / maxHealth) * 255.0f));
+
+                    aiController.FillNetworkData(message);
+                    return true;
+                case NetworkEventType.EntityUpdate:
+                    message.Write((float)NetTime.Now);
+
+                    message.Write(AnimController.TargetDir == Direction.Right);
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 16);
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 16);
             
-            message.Write(AnimController.TargetDir == Direction.Right);
-            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 16);
-            message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 16);
+                    message.Write(AnimController.RefLimb.SimPosition.X);
+                    message.Write(AnimController.RefLimb.SimPosition.Y);
+
+                    message.Write(AnimController.RefLimb.LinearVelocity.X);
+                    message.Write(AnimController.RefLimb.LinearVelocity.Y);
+                    return true;                    
+            }
             
-            if (LargeUpdateTimer <= 0)
-            {
-                int i = 0;
-                foreach (Limb limb in AnimController.Limbs)
-                {
-                    message.Write(limb.body.SimPosition.X);
-                    message.Write(limb.body.SimPosition.Y);
-
-                    message.Write(limb.body.Rotation);
-                    i++;
-                }
-
-                message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
-                message.Write((byte)((health / maxHealth) * 255.0f));
-
-                aiController.FillNetworkData(message);
-
-                LargeUpdateTimer = 50;
-            }
-            else
-            {
-                message.Write(AnimController.RefLimb.SimPosition.X);
-                message.Write(AnimController.RefLimb.SimPosition.Y);
-
-                message.Write(AnimController.RefLimb.LinearVelocity.X);
-                message.Write(AnimController.RefLimb.LinearVelocity.Y);
-
-                LargeUpdateTimer = Math.Max(0, LargeUpdateTimer - 1);
-            }
-
-
             return true;
         }
         
@@ -136,115 +129,91 @@ namespace Barotrauma
         {
             Enabled = true;
 
-            if (type == NetworkEventType.KillCharacter)
+            switch (type)
             {
-                Kill(true);
-                return;
-            }
+                case NetworkEventType.KillCharacter:
+                    Kill(CauseOfDeath.Damage, true);
+                    return;
+                case NetworkEventType.ImportantEntityUpdate:
+                    foreach (Limb limb in AnimController.Limbs)
+                    {
+                        if (limb.ignoreCollisions) continue;
 
-            float sendingTime = 0.0f;
-            Vector2 targetMovement  = Vector2.Zero;
-            bool targetDir = false;
+                        Vector2 limbPos = limb.SimPosition;
+                        float rotation = limb.Rotation;
 
-            bool isLargeUpdate;
+                        try
+                        {
+                            limbPos.X = message.ReadFloat();
+                            limbPos.Y = message.ReadFloat();
 
-            
-            try
-            {
-                sendingTime = message.ReadFloat();
-                isLargeUpdate = message.ReadBoolean();
-            }
+                            rotation = message.ReadFloat();
+                        }
+                        catch
+                        {
+                            return;
+                        }
 
-            catch
-            {
-                return;
-            }
+                        if (limb.body != null)
+                        {
+                            limb.body.TargetVelocity = limb.body.LinearVelocity;
+                            limb.body.TargetPosition = limbPos;// +vel * (float)(deltaTime / 60.0);
+                            limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
+                            limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
+                        }
+                    }
 
-            if (sendingTime <= LastNetworkUpdate) return;
-
-            try
-            {
-                targetDir = message.ReadBoolean();
-                targetMovement.X = message.ReadRangedSingle(-10.0f, 10.0f, 16);
-                targetMovement.Y = message.ReadRangedSingle(-10.0f, 10.0f, 16);
-                
-            }
-            catch
-            {
-                return;
-            }
-
-            AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
-            AnimController.TargetMovement = targetMovement;
-
-
-            if (isLargeUpdate)
-            {
-                foreach (Limb limb in AnimController.Limbs)
-                {
-                    Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
-                    float rotation = 0.0f;
+                    float newStunTimer = 0.0f, newHealth = 0.0f;
 
                     try
                     {
+                        newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
+                        newHealth = (message.ReadByte() / 255.0f) * maxHealth;
+                    }
+                    catch { return; }
+
+                    AnimController.StunTimer = newStunTimer;
+                    health = newHealth;
+
+                    aiController.ReadNetworkData(message);
+                    return;
+                case NetworkEventType.EntityUpdate:
+                    float sendingTime = 0.0f;
+                    Vector2 targetMovement  = Vector2.Zero;
+                    bool targetDir = false;
+                                
+                    sendingTime = message.ReadFloat();                    
+                    if (sendingTime <= LastNetworkUpdate) return;
+
+                    Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
+
+                    try
+                    {
+                        targetDir = message.ReadBoolean();
+                        targetMovement.X = message.ReadRangedSingle(-10.0f, 10.0f, 16);
+                        targetMovement.Y = message.ReadRangedSingle(-10.0f, 10.0f, 16);
+
                         pos.X = message.ReadFloat();
                         pos.Y = message.ReadFloat();
 
-                        rotation = message.ReadFloat();
+                        vel.X = message.ReadFloat();
+                        vel.Y = message.ReadFloat();
+                
                     }
-                    catch
+                    catch (Exception e)
                     {
                         return;
                     }
 
-                    if (limb.body != null)
-                    {
-                        limb.body.TargetVelocity = limb.body.LinearVelocity;
-                        limb.body.TargetPosition = pos;// +vel * (float)(deltaTime / 60.0);
-                        limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
-                        limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
-                    }
-                }
-
-                float newStunTimer = 0.0f, newHealth = 0.0f;
-
-                try
-                {
-                    newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
-                    newHealth = (message.ReadByte() / 255.0f) * maxHealth;
-                }
-                catch { return; }
-
-                AnimController.StunTimer = newStunTimer;
-                Health = newHealth;
-
-                LargeUpdateTimer = 1;
-
-                aiController.ReadNetworkData(message);
+                    AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
+                    AnimController.TargetMovement = targetMovement;
+        
+                    AnimController.RefLimb.body.TargetPosition = pos;
+                    AnimController.RefLimb.body.TargetVelocity = vel;
+                      
+                    LastNetworkUpdate = sendingTime;
+                    return;
             }
-            else
-            {
-                Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
-                try
-                {
-                    pos.X = message.ReadFloat();
-                    pos.Y = message.ReadFloat();
-
-                    vel.X = message.ReadFloat();
-                    vel.Y = message.ReadFloat();
-                }
-
-                catch { return; }
-
-                //error
-                AnimController.RefLimb.body.TargetPosition = pos;
-                AnimController.RefLimb.body.TargetVelocity = vel;
-
-                LargeUpdateTimer = 0;
-            }
-
-            LastNetworkUpdate = sendingTime;
-
         }
 
 

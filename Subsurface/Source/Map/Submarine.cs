@@ -623,7 +623,7 @@ namespace Barotrauma
 
             subBody = new SubmarineBody(this);            
             
-            MapEntity.OnMapLoaded();
+            MapEntity.MapLoaded();
                         
             foreach (Item item in Item.itemList)
             {

@@ -176,6 +176,13 @@ namespace Barotrauma
             }
             else if (dummyCharacter != null)
             {     
+                foreach (Item item in dummyCharacter.Inventory.items)
+                {
+                    if (item == null) continue;
+
+                    item.Remove();
+                }
+
                 dummyCharacter.Remove();
                 dummyCharacter = null;
             }

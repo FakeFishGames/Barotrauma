@@ -6,6 +6,10 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    enum CauseOfDeath
+    {
+        Damage, Bloodloss, Pressure, Suffocation, Drowning
+    }
 
     public enum DamageType { None, Blunt, Slash }
 

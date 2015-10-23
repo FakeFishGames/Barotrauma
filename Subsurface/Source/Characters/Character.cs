@@ -15,9 +15,11 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    
+   
     class Character : Entity, IDamageable, IPropertyObject
     {
+        public static string[] DeathMsg = new string[Enum.GetNames(typeof(CauseOfDeath)).Length];
+
         public static List<Character> CharacterList = new List<Character>();
         
         public static Queue<CharacterInfo> NewCharacterQueue = new Queue<CharacterInfo>();
@@ -40,12 +42,13 @@ namespace Barotrauma
         }
 
         public readonly bool IsNetworkPlayer;
+        private int importantUpdateTimer;
 
         private CharacterInventory inventory;
 
         public float LastNetworkUpdate;
 
-        public int LargeUpdateTimer;
+        //public int LargeUpdateTimer;
 
         public readonly Dictionary<string, ObjectProperty> Properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
@@ -173,7 +176,7 @@ namespace Barotrauma
             set 
             {
                 oxygen = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (oxygen == 0.0f) Kill();
+                if (oxygen == 0.0f) Kill(CauseOfDeath.Suffocation);
             }
         }
 
@@ -185,17 +188,14 @@ namespace Barotrauma
 
         public float Health
         {
-            get 
-            {
-                return health;
-            }
-            set
-            {
+            get { return health; }
+            set 
+            { 
                 health = MathHelper.Clamp(value, 0.0f, maxHealth);
-                if (health == 0.0f) Kill();
+                if (health <= 0.0f) Kill(CauseOfDeath.Damage);
             }
-        }
-
+        }    
+    
         public float MaxHealth
         {
             get { return maxHealth; }
@@ -220,47 +220,6 @@ namespace Barotrauma
         public Item[] SelectedItems
         {
             get { return selectedItems; }
-        }
-        
-        public bool HasSelectedItem(Item item)
-        {
-            return selectedItems.Contains(item);
-        }
-
-        public bool TrySelectItem(Item item)
-        {
-            bool rightHand = ((CharacterInventory)inventory).IsInLimbSlot(item, LimbSlot.RightHand);
-            bool leftHand = ((CharacterInventory)inventory).IsInLimbSlot(item, LimbSlot.LeftHand);
-
-            bool selected = false;
-            if (rightHand && SelectedItems[0] == null)
-            {
-                selectedItems[0] = item;
-                selected = true;
-            }
-            if (leftHand && SelectedItems[1] == null)
-            {
-                selectedItems[1] = item;
-                selected = true;
-            }
-
-            return selected;
-        }
-
-        public bool TrySelectItem(Item item, int index)
-        {
-            if (selectedItems[index] != null) return false;
-
-            selectedItems[index] = item;
-            return true;
-        }
-
-        public void DeselectItem(Item item)
-        {
-            for (int i = 0; i < selectedItems.Length; i++)
-            {
-                if (selectedItems[i] == item) selectedItems[i] = null;
-            }
         }
 
         public Item SelectedConstruction
@@ -292,6 +251,15 @@ namespace Barotrauma
         public Vector2 Position
         {
             get { return ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition); }
+        }
+
+        static Character()
+        {
+            DeathMsg[(int)CauseOfDeath.Damage] = "died";
+            DeathMsg[(int)CauseOfDeath.Bloodloss] = "bled out";
+            DeathMsg[(int)CauseOfDeath.Drowning] = "drowned";
+            DeathMsg[(int)CauseOfDeath.Suffocation] = "suffocated";
+            DeathMsg[(int)CauseOfDeath.Pressure] = "been crushed by water pressure";
         }
 
         public Character(string file) : this(file, Vector2.Zero, null)
@@ -559,7 +527,7 @@ namespace Barotrauma
             if (selectedConstruction != null)
             {
                 if (GetInputState(InputType.ActionHeld)) selectedConstruction.Use(deltaTime, this);
-                if (GetInputState(InputType.SecondaryHeld)) selectedConstruction.SecondaryUse(deltaTime, this);
+                if (selectedConstruction != null && GetInputState(InputType.SecondaryHeld)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
                   
             if (IsNetworkPlayer)
@@ -568,6 +536,56 @@ namespace Barotrauma
                 {
                     key.Reset();
                 }
+            }
+        }
+
+        public void CreateUpdateNetworkEvent(bool isClient)
+        {
+            new NetworkEvent(importantUpdateTimer <= 0 ? NetworkEventType.ImportantEntityUpdate : NetworkEventType.EntityUpdate, ID, isClient);
+
+            importantUpdateTimer -= 1;
+            if (importantUpdateTimer < 0) importantUpdateTimer = (this is AICharacter) ? 40 : 25;
+        }
+
+
+        public bool HasSelectedItem(Item item)
+        {
+            return selectedItems.Contains(item);
+        }
+
+        public bool TrySelectItem(Item item)
+        {
+            bool rightHand = ((CharacterInventory)inventory).IsInLimbSlot(item, LimbSlot.RightHand);
+            bool leftHand = ((CharacterInventory)inventory).IsInLimbSlot(item, LimbSlot.LeftHand);
+
+            bool selected = false;
+            if (rightHand && SelectedItems[0] == null)
+            {
+                selectedItems[0] = item;
+                selected = true;
+            }
+            if (leftHand && SelectedItems[1] == null)
+            {
+                selectedItems[1] = item;
+                selected = true;
+            }
+
+            return selected;
+        }
+
+        public bool TrySelectItem(Item item, int index)
+        {
+            if (selectedItems[index] != null) return false;
+
+            selectedItems[index] = item;
+            return true;
+        }
+
+        public void DeselectItem(Item item)
+        {
+            for (int i = 0; i < selectedItems.Length; i++)
+            {
+                if (selectedItems[i] == item) selectedItems[i] = null;
             }
         }
 
@@ -824,6 +842,7 @@ namespace Barotrauma
             }
 
             Health = health - bleeding * deltaTime;
+            if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss, false);
         }
 
 
@@ -960,8 +979,14 @@ namespace Barotrauma
             selectedConstruction = null;
         }
 
-        private void Implode()
+        private void Implode(bool isNetworkMessage = false)
         {
+            if (!isNetworkMessage)
+            {
+                //if the game is run by a client, characters are only killed when the server says so
+                if (GameMain.Client != null && GameMain.Server == null) return; 
+            }
+
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
 
             health = 0.0f;
@@ -992,7 +1017,7 @@ namespace Barotrauma
             {
                 joint.LimitEnabled = false;
             }
-            Kill();
+            Kill(CauseOfDeath.Pressure, isNetworkMessage);
         }
 
         private IEnumerable<object> DeathAnim(Camera cam)
@@ -1040,7 +1065,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void Kill(bool networkMessage = false)
+        public void Kill(CauseOfDeath causeOfDeath, bool networkMessage = false)
         {
             if (isDead) return;
 
@@ -1077,7 +1102,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                new NetworkEvent(NetworkEventType.KillCharacter, ID, false, true);
+                new NetworkEvent(NetworkEventType.KillCharacter, ID, false, causeOfDeath);
             }
 
             if (GameMain.GameSession != null)
@@ -1088,313 +1113,311 @@ namespace Barotrauma
 
         public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
-            if (type == NetworkEventType.PickItem)
+            switch (type)
             {
-                int[] pickData = (int[])data;
-                if (pickData.Length != 3) return false;
+                case NetworkEventType.PickItem:
+                    int[] pickData = (int[])data;
+                    if (pickData.Length != 3) return false;
 
-                message.Write((ushort)pickData[0]);
-                message.Write((int)pickData[1] == 1);
-                message.Write((int)pickData[2] == 1);
-                message.WritePadBits();
+                    message.Write((ushort)pickData[0]);
+                    message.Write((int)pickData[1] == 1);
+                    message.Write((int)pickData[2] == 1);
+                    message.WritePadBits();
 
-                return true;
-            }
-            else if (type == NetworkEventType.SelectCharacter)
-            {
-                message.Write((ushort)data);
-                return true;
-            }
-            else if (type == NetworkEventType.KillCharacter)
-            {
-                return true;            
-            }
-            else if (type == NetworkEventType.InventoryUpdate)
-            {
-                if (inventory == null) return false;
-                return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
-            }
+                    return true;
+                case NetworkEventType.SelectCharacter:
+                    message.Write((ushort)data);
+                    return true;
+                case NetworkEventType.KillCharacter:
+                    CauseOfDeath causeOfDeath = CauseOfDeath.Damage;
+                    try
+                    {
+                        causeOfDeath = (CauseOfDeath)data;
+                    }
+                    catch
+                    {
+                        causeOfDeath = CauseOfDeath.Damage;
+                    }
 
-            var hasInputs =  
-                    (GetInputState(InputType.Left) ||
-                    GetInputState(InputType.Right) ||
-                    GetInputState(InputType.Up) ||
-                    GetInputState(InputType.Down) ||
-                    GetInputState(InputType.ActionHeld) ||
-                    GetInputState(InputType.SecondaryHeld)) || LargeUpdateTimer <= 0;
-            
-            message.Write(hasInputs);
-            message.Write((float)NetTime.Now);
+                    message.Write((byte)causeOfDeath);
 
-            if (!hasInputs) return true;
+                    return true;  
+                case NetworkEventType.InventoryUpdate:
+                    if (inventory == null) return false;
+                    return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
+                case NetworkEventType.ImportantEntityUpdate:
+                    int i = 0;
+                    foreach (Limb limb in AnimController.Limbs)
+                    {
+                        message.Write(limb.body.SimPosition.X);
+                        message.Write(limb.body.SimPosition.Y);
 
-                                   
-            // Write byte = move direction
-            //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-            //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-            
-            message.Write(keys[(int)InputType.ActionHeld].Dequeue);
+                        //message.Write(limb.body.LinearVelocity.X);
+                        //message.Write(limb.body.LinearVelocity.Y);
 
-            bool secondaryHeld = keys[(int)InputType.SecondaryHeld].Dequeue;
-            message.Write(secondaryHeld);
+                        message.Write(limb.body.Rotation);
+                        //message.WriteRangedSingle(MathHelper.Clamp(limb.body.AngularVelocity, -10.0f, 10.0f), -10.0f, 10.0f, 8);
+                        i++;
+                    }
+
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
+                    message.Write((byte)((health/maxHealth)*255.0f));
+                    message.Write((byte)(MathHelper.Clamp(oxygen * 2.55f, 0.0f, 255.0f)));
+
+
+                    return true;
+                case NetworkEventType.EntityUpdate:
+                    var hasInputs =  
+                        GetInputState(InputType.Left) ||
+                        GetInputState(InputType.Right) ||
+                        GetInputState(InputType.Up) ||
+                        GetInputState(InputType.Down) ||
+                        GetInputState(InputType.ActionHeld) ||
+                        GetInputState(InputType.SecondaryHeld);
+
+                    message.Write(hasInputs);
+                    message.Write((float)NetTime.Now);
+
+                    if (!hasInputs) return true;
+                    
+                    message.Write(keys[(int)InputType.ActionHeld].Dequeue);
+
+                    bool secondaryHeld = keys[(int)InputType.SecondaryHeld].Dequeue;
+                    message.Write(secondaryHeld);
                         
-            message.Write(keys[(int)InputType.Left].Dequeue);
-            message.Write(keys[(int)InputType.Right].Dequeue);
+                    message.Write(keys[(int)InputType.Left].Dequeue);
+                    message.Write(keys[(int)InputType.Right].Dequeue);
 
-            message.Write(keys[(int)InputType.Up].Dequeue);
-            message.Write(keys[(int)InputType.Down].Dequeue);
+                    message.Write(keys[(int)InputType.Up].Dequeue);
+                    message.Write(keys[(int)InputType.Down].Dequeue);
 
-            message.Write(keys[(int)InputType.Run].Dequeue);
+                    message.Write(keys[(int)InputType.Run].Dequeue);
 
-            if (secondaryHeld)
-            {
-                message.Write(cursorPosition.X);
-                message.Write(cursorPosition.Y);
+                    if (secondaryHeld)
+                    {
+                        message.Write(cursorPosition.X);
+                        message.Write(cursorPosition.Y);
+                    }
+                    else
+                    {
+                        message.Write(AnimController.Dir > 0.0f);
+                    }
+
+                    message.Write(AnimController.RefLimb.SimPosition.X);
+                    message.Write(AnimController.RefLimb.SimPosition.Y);
+
+                    return true;
+                default:
+#if DEBUG
+                    DebugConsole.ThrowError("Character "+this+" tried to fill a networkevent of the wrong type: "+type);
+#endif
+                    return false;
             }
-            else
-            {
-                message.Write(AnimController.Dir > 0.0f);
-            }
-                        
-            message.Write(LargeUpdateTimer <= 0);
-
-            if (LargeUpdateTimer<=0)
-            {
-                int i = 0;
-                foreach (Limb limb in AnimController.Limbs)
-                {
-                    message.Write(limb.body.SimPosition.X);
-                    message.Write(limb.body.SimPosition.Y);
-
-                    //message.Write(limb.body.LinearVelocity.X);
-                    //message.Write(limb.body.LinearVelocity.Y);
-
-                    message.Write(limb.body.Rotation);
-                    //message.WriteRangedSingle(MathHelper.Clamp(limb.body.AngularVelocity, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-                    i++;
-                }
-
-                message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
-                message.Write((byte)((health/maxHealth)*255.0f));
-
-                LargeUpdateTimer = 30;
-            }
-            else
-            {
-                message.Write(AnimController.RefLimb.SimPosition.X);
-                message.Write(AnimController.RefLimb.SimPosition.Y);
-
-                LargeUpdateTimer = Math.Max(0, LargeUpdateTimer-1);
-            }
-
-            return true;
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
             Enabled = true;
 
-            if (type == NetworkEventType.PickItem)
+            switch (type)
             {
-                System.Diagnostics.Debug.WriteLine("**************** PickItem networkevent received");
+                case NetworkEventType.PickItem:
+                    System.Diagnostics.Debug.WriteLine("**************** PickItem networkevent received");
 
-                ushort itemId = 0;
+                    ushort itemId = message.ReadUInt16();
 
-                itemId = message.ReadUInt16();
+                    bool pickHit = message.ReadBoolean();
+                    bool actionHit = message.ReadBoolean();
 
-                bool pickHit = message.ReadBoolean();
-                bool actionHit = message.ReadBoolean();
+                    System.Diagnostics.Debug.WriteLine("item id: "+itemId);
 
-                System.Diagnostics.Debug.WriteLine("item id: "+itemId);
+                    Item item = FindEntityByID(itemId) as Item;
+                    if (item != null) item.Pick(this, false, pickHit, actionHit);                    
 
-                Item item = FindEntityByID(itemId) as Item;
-                if (item != null)
-                {
-                    item.Pick(this, false, pickHit, actionHit);
-                }
-
-                return;
-            } 
-            else if (type == NetworkEventType.SelectCharacter)
-            {
-                ushort characterId = message.ReadUInt16();
-                if (characterId==0)
-                {
-                    DeselectCharacter(false);
-                }
-                else
-                {
-                    Character character = FindEntityByID(characterId) as Character;
-                    if (character != null) SelectCharacter(character, false);
-                }
-                return;
-            }
-            else if (type == NetworkEventType.KillCharacter)
-            {
-                Kill(true);
-                if (GameMain.NetworkMember != null && controlled == this)
-                {
-                    GameMain.NetworkMember.AddChatMessage("YOU HAVE DIED. Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
-                    GameMain.LightManager.LosEnabled = false;
-                }
-                return;
-            }
-            else if (type == NetworkEventType.InventoryUpdate)
-            {
-                if (inventory == null) return;
-                inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message);
-                return;
-            }
-
-            bool actionKeyState     = false;
-            bool secondaryKeyState  = false;
-            float sendingTime       = 0.0f;
-            Vector2 cursorPos       = Vector2.Zero;
-
-            bool leftKeyState = false, rightKeyState = false;
-            bool upKeyState = false, downKeyState = false;
-
-            bool runState = false;
-
-            try
-            {
-                bool hasInputs = message.ReadBoolean();
-                sendingTime         = message.ReadFloat();
-
-                if (!hasInputs)
-                {
-                    if (sendingTime > LastNetworkUpdate) ClearInputs();
                     return;
-                }
+                case NetworkEventType.SelectCharacter:
+                    ushort characterId = message.ReadUInt16();
+                    if (characterId==0)
+                    {
+                        DeselectCharacter(false);
+                    }
+                    else
+                    {
+                        Character character = FindEntityByID(characterId) as Character;
+                        if (character != null) SelectCharacter(character, false);
+                    }
+                    return;
+                case NetworkEventType.KillCharacter:
+                    CauseOfDeath causeOfDeath = CauseOfDeath.Damage;                    
+                    try
+                    {
+                        byte causeOfDeathByte = message.ReadByte();
+                        causeOfDeath = (CauseOfDeath)causeOfDeathByte;
+                    }
+                    catch
+                    {
+                        causeOfDeath = CauseOfDeath.Damage;
+                    }
 
-                actionKeyState      = message.ReadBoolean();
-                secondaryKeyState   = message.ReadBoolean();
-            
-                leftKeyState        = message.ReadBoolean();
-                rightKeyState       = message.ReadBoolean();
-                upKeyState          = message.ReadBoolean();
-                downKeyState        = message.ReadBoolean();
+                    if (causeOfDeath==CauseOfDeath.Pressure)
+                    {
+                        Implode(true);
+                    }
+                    else
+                    {
+                        Kill(causeOfDeath, true);
+                    }
 
-                runState            = message.ReadBoolean();
-            }
+                    if (GameMain.NetworkMember != null && controlled == this)
+                    {
+                        GameMain.NetworkMember.AddChatMessage("You have "+DeathMsg[(int)causeOfDeath]+". Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
+                        GameMain.LightManager.LosEnabled = false;
+                    }
+                    return;
+                case NetworkEventType.InventoryUpdate:
+                    if (inventory == null) return;
+                    inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message);
+                    return;
+                case NetworkEventType.ImportantEntityUpdate:
+                    foreach (Limb limb in AnimController.Limbs)
+                    {
+                        Vector2 limbPos = limb.SimPosition, vel = Vector2.Zero;
+                        float rotation = limb.Rotation;
 
-            catch (Exception e)
-            {
-                return;
-            }
+                        try
+                        {
+                            limbPos.X = message.ReadFloat();
+                            limbPos.Y = message.ReadFloat();
+                            
+                            rotation = message.ReadFloat();
+                        }
+                        catch
+                        {
+                            return;
+                        }
 
-            AnimController.IsStanding = true;
+                        if (limb.body != null)
+                        {
+                            limb.body.TargetVelocity = limb.body.LinearVelocity;
+                            limb.body.TargetPosition = limbPos;// +vel * (float)(deltaTime / 60.0);
+                            limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
+                            limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
+                        }
 
-            keys[(int)InputType.ActionHeld].State       = actionKeyState;
-            keys[(int)InputType.SecondaryHeld].State    = secondaryKeyState;
+                    }
 
-            if (sendingTime <= LastNetworkUpdate) return;
-
-            keys[(int)InputType.Left].State     = leftKeyState;
-            keys[(int)InputType.Right].State    = rightKeyState;
-
-            keys[(int)InputType.Up].State       = upKeyState;
-            keys[(int)InputType.Down].State     = downKeyState;
-
-            keys[(int)InputType.Run].State = runState;
-
-            float dir = 1.0f;
-            bool isLargeUpdate;
-
-            try
-            {
-                if (secondaryKeyState)
-                {
-                    cursorPos = new Vector2(
-                        message.ReadFloat(),
-                        message.ReadFloat());
-                }
-                else
-                {
-                    dir = message.ReadBoolean() ? 1.0f : -1.0f;
-                }
-
-                isLargeUpdate = message.ReadBoolean();
-            }
-            catch
-            {
-                return;
-            }
-            if (secondaryKeyState)
-            {
-                cursorPosition = MathUtils.IsValid(cursorPos) ? cursorPos : Vector2.Zero;
-            }
-            else
-            {
-                cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
-            }
-                                      
-            if (isLargeUpdate)
-            {
-                foreach (Limb limb in AnimController.Limbs)
-                {
-                    Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
-                    float rotation = 0.0f;
+                    float newStunTimer = 0.0f, newHealth = 0.0f, newOxygen = 0.0f;
 
                     try
                     {
-                        pos.X = message.ReadFloat();
-                        pos.Y = message.ReadFloat();
-
-                        //vel.X = message.ReadFloat();
-                        //vel.Y = message.ReadFloat();
-
-                        rotation = message.ReadFloat();
-                        //angularVel = message.ReadFloat();
+                        newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
+                        newHealth = (message.ReadByte() / 255.0f) * maxHealth;
+                        newOxygen = (message.ReadByte() / 2.55f);
                     }
-                    catch
+                    catch { return; }
+
+                    StartStun(newStunTimer);
+                    Health = newHealth;
+                    oxygen = newOxygen;
+
+                    return;
+                case NetworkEventType.EntityUpdate:                    
+                    float sendingTime = 0.0f;
+                    Vector2 cursorPos = Vector2.Zero;
+
+                    bool actionKeyState, secondaryKeyState;
+                    bool leftKeyState, rightKeyState, upKeyState, downKeyState;
+                    bool runState;
+
+                    try
+                    {
+                        bool hasInputs = message.ReadBoolean();
+                        sendingTime         = message.ReadFloat();
+
+                        if (!hasInputs)
+                        {
+                            if (sendingTime > LastNetworkUpdate) ClearInputs();
+                            return;
+                        }
+
+                        actionKeyState      = message.ReadBoolean();
+                        secondaryKeyState   = message.ReadBoolean();
+            
+                        leftKeyState        = message.ReadBoolean();
+                        rightKeyState       = message.ReadBoolean();
+                        upKeyState          = message.ReadBoolean();
+                        downKeyState        = message.ReadBoolean();
+
+                        runState            = message.ReadBoolean();
+                    }
+
+                    catch (Exception e)
                     {
                         return;
                     }
 
-                    if (limb.body != null)
+                    AnimController.IsStanding = true;
+
+                    keys[(int)InputType.ActionHeld].State       = actionKeyState;
+                    keys[(int)InputType.SecondaryHeld].State    = secondaryKeyState;
+
+                    if (sendingTime <= LastNetworkUpdate) return;
+
+                    keys[(int)InputType.Left].State     = leftKeyState;
+                    keys[(int)InputType.Right].State    = rightKeyState;
+
+                    keys[(int)InputType.Up].State       = upKeyState;
+                    keys[(int)InputType.Down].State     = downKeyState;
+
+                    keys[(int)InputType.Run].State = runState;
+
+                    float dir = 1.0f;
+                    Vector2 pos = Vector2.Zero;
+
+                    try
                     {
-                        limb.body.TargetVelocity = limb.body.LinearVelocity;
-                        limb.body.TargetPosition = pos;// +vel * (float)(deltaTime / 60.0);
-                        limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
-                        limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
+                        if (secondaryKeyState)
+                        {
+                            cursorPos = new Vector2(
+                                message.ReadFloat(),
+                                message.ReadFloat());
+                        }
+                        else
+                        {
+                            dir = message.ReadBoolean() ? 1.0f : -1.0f;
+                        }
+
+                        pos.X = message.ReadFloat();
+                        pos.Y = message.ReadFloat();
+
                     }
+                    catch
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to read netowkrevent for "+this.ToString());
+#endif
+                        return;
+                    }
+                    if (secondaryKeyState)
+                    {
+                        cursorPosition = MathUtils.IsValid(cursorPos) ? cursorPos : Vector2.Zero;
+                    }
+                    else
+                    {
+                        cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
+                    }   
 
-                }
+                    AnimController.RefLimb.body.TargetPosition = pos;
 
-                float newStunTimer = 0.0f, newHealth = 0.0f;
+                    LastNetworkUpdate = sendingTime;
 
-                try
-                {
-                    newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
-                    newHealth = (message.ReadByte() / 255.0f) * maxHealth;
-                }
-                catch { return; }
-
-                StartStun(newStunTimer);
-                Health = newHealth;
-
-                LargeUpdateTimer = 1;
+                    return;
+                default:
+#if DEBUG
+                    DebugConsole.ThrowError("Character " + this + " tried to read a networkevent of the wrong type: " + type);
+#endif
+                    return;
             }
-            else
-            {
-                Vector2 pos = Vector2.Zero;
-                try
-                {
-                    pos.X = message.ReadFloat();
-                    pos.Y = message.ReadFloat();
-                }
-
-                catch { return; }
-
-
-                AnimController.RefLimb.body.TargetPosition = pos;
-
-                LargeUpdateTimer = 0;
-            }
-
-            LastNetworkUpdate = sendingTime;
-            
         }
 
         public override void Remove()

@@ -43,7 +43,7 @@ namespace Barotrauma
         public static void Init(GameWindow window)
         {            
             textBox = new GUITextBox(new Rectangle(30, 480,780, 30), Color.Black, Color.White, Alignment.Left, Alignment.Left);
-            NewMessage("Press F3 to open/close the debug console", Color.Green);        
+            NewMessage("Press F3 to open/close the debug console", Color.Cyan);        
         }
 
         public static void Update(GameMain game, float deltaTime)
@@ -212,8 +212,14 @@ namespace Barotrauma
                 case "editchar":
                     GameMain.EditCharacterScreen.Select();
                     break;
+                case "controlcharacter":
+                case "control":
+                    if (commands.Length < 2) break;
+                    commands[1] = commands[1].ToLower();
+                    Character.Controlled = Character.CharacterList.Find(c => c.Name.ToLower() == commands[1]);
+                    break;
                 case "heal":
-                    if (Character.Controlled!=null)
+                    if (Character.Controlled != null)
                     {
                         Character.Controlled.Health = Character.Controlled.MaxHealth;
                         Character.Controlled.Bleeding = 0.0f;
