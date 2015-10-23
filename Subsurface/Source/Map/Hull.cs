@@ -308,7 +308,6 @@ namespace Barotrauma
                 Color.Red*((100.0f-OxygenPercentage)/400.0f), true);
 
             spriteBatch.DrawString(GUI.Font, "Pressure: " + ((int)pressure - rect.Y).ToString() +
-                " - Lethality: " + lethalPressure +
                 " - Oxygen: "+((int)OxygenPercentage), new Vector2(rect.X+10, -rect.Y+10), Color.Black);
             spriteBatch.DrawString(GUI.Font, volume +" / "+ FullVolume, new Vector2(rect.X+10, -rect.Y+30), Color.Black);
 

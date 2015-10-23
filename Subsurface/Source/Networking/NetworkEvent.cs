@@ -18,8 +18,7 @@ namespace Barotrauma.Networking
         PickItem = 6,
         DropItem = 7,
         InventoryUpdate = 8,
-
-
+        
         UpdateProperty = 9,
         WallDamage = 10,
 

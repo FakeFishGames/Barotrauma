@@ -506,7 +506,7 @@ namespace Barotrauma
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
-        public static void OnMapLoaded()
+        public static void MapLoaded()
         {
             foreach (MapEntity e in mapEntityList)
             {
@@ -524,13 +524,19 @@ namespace Barotrauma
                 }
             }
 
+            foreach (MapEntity e in mapEntityList)
+            {
+                e.OnMapLoaded();
+            }
+
             //mapEntityList.Sort((x, y) =>
             //{
             //    return x.Name.CompareTo(y.Name);
             //});
-
         }
-    
+
+
+        public virtual void OnMapLoaded() { }
         
 
         public void RemoveLinked(MapEntity e)

@@ -302,16 +302,15 @@ namespace Barotrauma.Networking
             {
                 if (gameStarted)
                 {
-                    if (myCharacter != null) new NetworkEvent(myCharacter.ID, true);
+                    if (myCharacter != null) myCharacter.CreateUpdateNetworkEvent(false);  
 
                     foreach (Character c in Character.CharacterList)
                     {
                         if (c as AICharacter == null) continue;
 
-                        if (c.SimPosition == Vector2.Zero || c.SimPosition.Length() < 100.0f)
-                        {
-                            new NetworkEvent(c.ID, false);
-                        }
+                        if (c.SimPosition.Length() > 100.0f) continue;
+
+                        c.CreateUpdateNetworkEvent(false);  
                     }
                 }
 

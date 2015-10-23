@@ -1,4 +1,40 @@
 ---------------------------------------------------------------------------------------------------------
+v0.2.3.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed some broken items in Aegir Mark II which caused inventories to get messed up
+- fixed the gap at observation deck which vents water out from the lower level of the room
+
+---------------------------------------------------------------------------------------------------------
+v0.2.3
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- major changes to the way the game handles sending reliable messages through UDP, should get rid of
+	the occasional massive lag spikes
+	- fixed multiple issues in inventory syncing
+	- fixed attachable items occasionally crashing the game
+	- players can be banned from servers
+	- fixed not being able to kick players while a round is running
+	- misc optimization
+
+Items:
+	- screwdrivers and wrenches are used by left clicking now, so it's possible to start rewiring a
+	button without activating it for example
+	- the inventory slots are "combined" when equipping an item that takes up more than one slot
+	- door shadows aren't visible if the door is open when loading a map
+	- fixed projectiles crashing the game if they're stuck to a wall while a hole appears on it
+	- wrenches can be used as an ineffective melee weapon
+
+Submarine:
+	- another minimap and a sonar monitor at the "observation deck" on Aegir
+	- changed one of the cabins to a holding cell on Aegir
+
+Misc:
+	- fixed a bug in UI listboxes that may have caused crashes in the server list screen
+
+
+---------------------------------------------------------------------------------------------------------
 v0.2.2
 ---------------------------------------------------------------------------------------------------------
 
