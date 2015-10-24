@@ -427,7 +427,7 @@ namespace Barotrauma.Items.Components
         {
             message.Write(autoTemp);
             message.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
-            message.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 16);
+            message.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 7);
 
             message.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
             message.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
@@ -443,7 +443,8 @@ namespace Barotrauma.Items.Components
             {
                 newAutoTemp = message.ReadBoolean();
                 newTemperature = message.ReadRangedSingle(0.0f, 10000.0f, 16);
-                newShutDownTemp = message.ReadRangedSingle(0.0f, 10000.0f, 16);
+                newShutDownTemp = message.ReadRangedSingle(0.0f, 10000.0f, 7);
+                newShutDownTemp = MathUtils.Round(newShutDownTemp, 100.0f);
 
                 newCoolingRate = message.ReadRangedSingle(0.0f, 100.0f, 8);
                 newFissionRate = message.ReadRangedSingle(0.0f, 100.0f, 8);

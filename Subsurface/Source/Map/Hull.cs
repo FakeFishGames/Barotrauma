@@ -471,8 +471,8 @@ namespace Barotrauma
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message, object data)
-        {
-            message.Write(volume);
+        {            
+            message.WriteRangedSingle(MathHelper.Clamp(volume/FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 6);
 
             return true;
         }
@@ -483,7 +483,7 @@ namespace Barotrauma
 
             try
             {
-                newVolume = message.ReadFloat();
+                float newPercentage = message.ReadRangedSingle(0.0f, 1.5f, 6);
             }
 
             catch

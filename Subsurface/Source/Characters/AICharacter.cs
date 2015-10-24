@@ -95,8 +95,11 @@ namespace Barotrauma
                     {
                         if (limb.ignoreCollisions) continue;
 
-                        message.Write(limb.body.SimPosition.X);
-                        message.Write(limb.body.SimPosition.Y);
+                        if (limb.SimPosition.Length() > NetConfig.AllowedRagdollDistance) return false;
+
+                        message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.AllowedRagdollDistance, NetConfig.AllowedRagdollDistance, 16);
+                        message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.AllowedRagdollDistance, NetConfig.AllowedRagdollDistance, 16);
+
 
                         message.Write(limb.body.Rotation);
                         i++;
@@ -111,14 +114,14 @@ namespace Barotrauma
                     message.Write((float)NetTime.Now);
 
                     message.Write(AnimController.TargetDir == Direction.Right);
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -10.0f, 10.0f), -10.0f, 10.0f, 16);
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -10.0f, 10.0f), -10.0f, 10.0f, 16);
+                    message.WriteRangedSingle(AnimController.TargetMovement.X, -1.0f, 1.0f, 8);
+                    message.WriteRangedSingle(AnimController.TargetMovement.Y, -1.0f, 1.0f, 8);
             
-                    message.Write(AnimController.RefLimb.SimPosition.X);
-                    message.Write(AnimController.RefLimb.SimPosition.Y);
+                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.AllowedRagdollDistance, NetConfig.AllowedRagdollDistance, 16);
+                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.AllowedRagdollDistance, NetConfig.AllowedRagdollDistance, 16);
 
-                    message.Write(AnimController.RefLimb.LinearVelocity.X);
-                    message.Write(AnimController.RefLimb.LinearVelocity.Y);
+                    //message.Write(AnimController.RefLimb.LinearVelocity.X);
+                    //message.Write(AnimController.RefLimb.LinearVelocity.Y);
                     return true;                    
             }
             
@@ -144,9 +147,9 @@ namespace Barotrauma
 
                         try
                         {
-                            limbPos.X = message.ReadFloat();
-                            limbPos.Y = message.ReadFloat();
-
+                            limbPos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                            limbPos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                            
                             rotation = message.ReadFloat();
                         }
                         catch
@@ -190,14 +193,14 @@ namespace Barotrauma
                     try
                     {
                         targetDir = message.ReadBoolean();
-                        targetMovement.X = message.ReadRangedSingle(-10.0f, 10.0f, 16);
-                        targetMovement.Y = message.ReadRangedSingle(-10.0f, 10.0f, 16);
+                        targetMovement.X = message.ReadRangedSingle(-1.0f, 1.0f, 8);
+                        targetMovement.Y = message.ReadRangedSingle(-1.0f, 1.0f, 8);
 
-                        pos.X = message.ReadFloat();
-                        pos.Y = message.ReadFloat();
+                        pos.X = message.ReadRangedSingle(-1.0f, 1.0f, 8);
+                        pos.Y = message.ReadRangedSingle(-1.0f, 1.0f, 8);
 
-                        vel.X = message.ReadFloat();
-                        vel.Y = message.ReadFloat();
+                        //vel.X = message.ReadFloat();
+                        //vel.Y = message.ReadFloat();
                 
                     }
                     catch (Exception e)

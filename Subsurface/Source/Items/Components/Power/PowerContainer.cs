@@ -198,23 +198,25 @@ namespace Barotrauma.Items.Components
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
-            message.Write((byte)((int)(rechargeSpeed/maxRechargeSpeed*255.0f)));
-            message.Write(charge);
+            message.WriteRangedSingle(MathHelper.Clamp(rechargeSpeed/MaxRechargeSpeed, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(charge/capacity,0.0f, 1.0f), 0.0f, 1.0f, 8);
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
         {
-            byte newRechargeSpeed = 0;
+            float newRechargeSpeed = 0f;
             float newCharge = 0.0f;
 
             try
             {
-                newRechargeSpeed = message.ReadByte();
-                newCharge = message.ReadFloat();
+                newRechargeSpeed = message.ReadRangedSingle(0.0f, 1.0f, 8);
+                newRechargeSpeed *= MaxRechargeSpeed;
+                newCharge = message.ReadRangedSingle(0.0f, 1.0f, 8);
+                newCharge *= capacity;
             }
             catch { }
 
-            RechargeSpeed = (newRechargeSpeed/255.0f)*maxRechargeSpeed;
+            RechargeSpeed = newRechargeSpeed;
             Charge = newCharge;
         }
 

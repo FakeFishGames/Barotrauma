@@ -14,6 +14,10 @@ namespace Barotrauma.Networking
 
         public static string MasterServerUrl = GameMain.Config.MasterServerUrl;
 
+        //if a character is further than this from the sub, the server will ignore it
+        //(in sim units)
+        public const float CharacterIgnoreDistance = 100.0f;
+
         //if a ragdoll is further than this from the correct position, teleport it there
         //(in sim units)
         public const float ResetRagdollDistance = 2.0f;
