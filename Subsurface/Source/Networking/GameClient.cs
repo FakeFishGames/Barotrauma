@@ -484,8 +484,8 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.ResendRequest:
                         reliableChannel.HandleResendRequest(inc);
                         break;
-                    case (byte)PacketTypes.Ack:
-                        reliableChannel.HandleAckMessage(inc);
+                    case (byte)PacketTypes.LatestMessageID:
+                        reliableChannel.HandleLatestMessageID(inc);
                         break;
                 }                
             }

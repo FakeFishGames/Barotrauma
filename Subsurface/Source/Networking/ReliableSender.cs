@@ -43,10 +43,10 @@ namespace Barotrauma.Networking.ReliableMessages
             sender.HandleResendRequest(inc);
         }
 
-        public void HandleAckMessage(NetIncomingMessage inc)
+        public void HandleLatestMessageID(NetIncomingMessage inc)
         {
             //make sure we've received what's been sent to us, if not, rerequest
-            receiver.HandleAckMessage(inc);
+            receiver.HandleLatestMessageID(inc);
         }
 
         public bool CheckMessage(NetIncomingMessage inc)
@@ -73,9 +73,9 @@ namespace Barotrauma.Networking.ReliableMessages
 
         private NetConnection recipient;
 
-        private float ackTimer;
+        private float idSendTimer;
 
-        private float ackInterval;
+        private float idSendInterval;
 
         public ReliableSender(NetPeer sender)
         {
@@ -134,8 +134,8 @@ namespace Barotrauma.Networking.ReliableMessages
 
         public void SendMessage(ReliableMessage message, NetConnection connection)
         {
-            ackInterval = 0.0f;
-            ackTimer = connection.AverageRoundtripTime;
+            idSendInterval = 0.0f;
+            idSendTimer = connection.AverageRoundtripTime;
 
             messageBuffer.Add(message.ID, message);
 
@@ -168,7 +168,7 @@ namespace Barotrauma.Networking.ReliableMessages
             NetOutgoingMessage resendMessage = sender.CreateMessage();
             message.RestoreInnerMessage(resendMessage);
 
-            ackTimer = connection.AverageRoundtripTime;
+            idSendTimer = connection.AverageRoundtripTime;
 
             sender.SendMessage(resendMessage, connection, NetDeliveryMethod.Unreliable);
         }
@@ -177,20 +177,20 @@ namespace Barotrauma.Networking.ReliableMessages
         {
             if (recipient == null) return;
 
-            ackTimer -= deltaTime;
+            idSendTimer -= deltaTime;
 
-            if (ackTimer > 0.0f) return;
+            if (idSendTimer > 0.0f) return;
 
             //Debug.WriteLine("Sending ack message: "+messageCount);
 
             NetOutgoingMessage message = sender.CreateMessage();
-            message.Write((byte)PacketTypes.Ack);
+            message.Write((byte)PacketTypes.LatestMessageID);
             message.Write(messageCount);
 
             sender.SendMessage(message, recipient, NetDeliveryMethod.Unreliable);
 
-            ackTimer = Math.Max(recipient.AverageRoundtripTime, NetConfig.AckInterval+ackInterval);
-            ackInterval += 0.1f;
+            idSendTimer = Math.Max(recipient.AverageRoundtripTime, NetConfig.IdSendInterval+idSendInterval);
+            idSendInterval += 0.1f;
         }
     }
 
@@ -337,7 +337,7 @@ namespace Barotrauma.Networking.ReliableMessages
             missingMessages.Remove(id);            
         }
 
-        public void HandleAckMessage(NetIncomingMessage inc)
+        public void HandleLatestMessageID(NetIncomingMessage inc)
         {
             ushort messageId = inc.ReadUInt16();
 
@@ -357,7 +357,7 @@ namespace Barotrauma.Networking.ReliableMessages
                 return;
             }
 
-            Debug.WriteLine("Received ack message: " + messageId + ", need to rerequest messages (last id: "+lastMessageID+")");
+            Debug.WriteLine("Received id update message: " + messageId + ", need to rerequest messages (last id: "+lastMessageID+")");
 
             if (lastMessageID > ushort.MaxValue / 2 && messageId < short.MaxValue / 2)
             {

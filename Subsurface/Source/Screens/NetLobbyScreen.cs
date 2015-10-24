@@ -274,11 +274,17 @@ namespace Barotrauma
 
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
 
+            playerList.Parent.RemoveChild(playerList.Parent.children.Find(c => c.UserData as string == "banListButton"));
+
             if (IsServer && GameMain.Server != null)
             {
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
                 startButton.OnClicked = GameMain.Server.StartGameClicked;
                 startButton.UserData = "startButton";
+
+                var banListButton = new GUIButton(new Rectangle(0, 30, 100, 20), "Banned IPs", Alignment.BottomRight, GUI.Style, playerList.Parent);
+                banListButton.OnClicked = GameMain.Server.BanList.ToggleBanFrame;
+                banListButton.UserData = "banListButton";
                 
                 //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
                 modeList.OnSelected += GameMain.Server.UpdateNetLobby;   
@@ -544,6 +550,11 @@ namespace Barotrauma
             {
                 autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
             }
+
+            if (GameMain.Server != null && GameMain.Server.BanList != null)
+            {
+                if (GameMain.Server.BanList.BanFrame != null) GameMain.Server.BanList.BanFrame.Update((float)deltaTime);
+            }
                         
             //durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
@@ -563,6 +574,11 @@ namespace Barotrauma
             //if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
 
             if (playerFrame != null) playerFrame.Draw(spriteBatch);
+
+            if (GameMain.Server!=null && GameMain.Server.BanList!=null)
+            {
+                if (GameMain.Server.BanList.BanFrame != null) GameMain.Server.BanList.BanFrame.Draw(spriteBatch);
+            }
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 

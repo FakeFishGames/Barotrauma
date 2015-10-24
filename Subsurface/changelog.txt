@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.2.3.2
+---------------------------------------------------------------------------------------------------------
+
+- more reliable NPC position syncing
+- more reliable method of handling players dying in multiplayer, there should now be less cases of
+the server killing players who have equipped a diving suit or switched an oxygen tank just in time for example
+- the "you have died" message in multiplayer now also tells your cause of death
+- fixed incorrectly placed waypoints in Aegir
+
+---------------------------------------------------------------------------------------------------------
 v0.2.3.1
 ---------------------------------------------------------------------------------------------------------
 

@@ -255,7 +255,7 @@ namespace Barotrauma
 
         static Character()
         {
-            DeathMsg[(int)CauseOfDeath.Damage] = "died";
+            DeathMsg[(int)CauseOfDeath.Damage] = "succumbed to your injuries";
             DeathMsg[(int)CauseOfDeath.Bloodloss] = "bled out";
             DeathMsg[(int)CauseOfDeath.Drowning] = "drowned";
             DeathMsg[(int)CauseOfDeath.Suffocation] = "suffocated";
@@ -841,7 +841,7 @@ namespace Barotrauma
                 PressureProtection -= deltaTime*100.0f;
             }
 
-            Health = health - bleeding * deltaTime;
+            health = MathHelper.Clamp(health - bleeding * deltaTime, 0.0f, maxHealth);
             if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss, false);
         }
 
@@ -983,8 +983,7 @@ namespace Barotrauma
         {
             if (!isNetworkMessage)
             {
-                //if the game is run by a client, characters are only killed when the server says so
-                if (GameMain.Client != null && GameMain.Server == null) return; 
+                if (GameMain.NetworkMember != null && controlled != this) return; 
             }
 
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
@@ -1065,12 +1064,29 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void Kill(CauseOfDeath causeOfDeath, bool networkMessage = false)
+        public void Kill(CauseOfDeath causeOfDeath, bool isNetworkMessage = false)
         {
             if (isDead) return;
 
-            //if the game is run by a client, characters are only killed when the server says so
-            if (GameMain.Client != null && GameMain.Server==null && !networkMessage) return;               
+            if (GameMain.NetworkMember != null)
+            {
+                //if the character is controlled by this client/server, let others know that the character has died
+                if (Character.controlled == this)
+                {
+                    string chatMessage = "You have " + DeathMsg[(int)causeOfDeath] + ".";
+                    if (GameMain.Client!=null) chatMessage += " Your chat messages will only be visible to other dead players.";
+
+                    GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
+                    GameMain.LightManager.LosEnabled = false;                    
+
+                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);                    
+                }
+                //otherwise don't kill the character unless received a message about the character dying
+                else if (!isNetworkMessage)
+                {
+                    return;
+                }
+            }
 
             CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
 
@@ -1098,11 +1114,6 @@ namespace Barotrauma
             {
                 joint.MotorEnabled = false;
                 joint.MaxMotorTorque = 0.0f;
-            }
-
-            if (GameMain.Server != null)
-            {
-                new NetworkEvent(NetworkEventType.KillCharacter, ID, false, causeOfDeath);
             }
 
             if (GameMain.GameSession != null)
@@ -1248,6 +1259,13 @@ namespace Barotrauma
                     }
                     return;
                 case NetworkEventType.KillCharacter:
+                    if (GameMain.Server != null)
+                    {
+                        Client sender =GameMain.Server.connectedClients.Find(c => c.Connection == message.SenderConnection);
+                        if (sender ==null || sender.character != this) 
+                            throw new Exception("Received a KillCharacter message from someone else than the client controlling the character!");
+                    }
+
                     CauseOfDeath causeOfDeath = CauseOfDeath.Damage;                    
                     try
                     {
@@ -1266,12 +1284,6 @@ namespace Barotrauma
                     else
                     {
                         Kill(causeOfDeath, true);
-                    }
-
-                    if (GameMain.NetworkMember != null && controlled == this)
-                    {
-                        GameMain.NetworkMember.AddChatMessage("You have "+DeathMsg[(int)causeOfDeath]+". Your chat messages will only be visible to other dead players.", ChatMessageType.Dead);
-                        GameMain.LightManager.LosEnabled = false;
                     }
                     return;
                 case NetworkEventType.InventoryUpdate:

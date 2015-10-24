@@ -18,9 +18,10 @@ namespace Barotrauma.Networking
         PickItem = 6,
         DropItem = 7,
         InventoryUpdate = 8,
+        ItemFixed = 9,
         
-        UpdateProperty = 9,
-        WallDamage = 10,
+        UpdateProperty = 10,
+        WallDamage = 11,
 
 
     }
@@ -34,7 +35,7 @@ namespace Barotrauma.Networking
 
         static NetworkEvent()
         {
-            isImportant = new bool[11];
+            isImportant = new bool[Enum.GetNames(typeof(NetworkEventType)).Length];
             isImportant[(int)NetworkEventType.ImportantEntityUpdate] = true;
             isImportant[(int)NetworkEventType.ImportantComponentUpdate] = true;
             isImportant[(int)NetworkEventType.KillCharacter] = true;
@@ -44,12 +45,13 @@ namespace Barotrauma.Networking
             isImportant[(int)NetworkEventType.PickItem] = true;
             isImportant[(int)NetworkEventType.DropItem] = true;
             isImportant[(int)NetworkEventType.InventoryUpdate] = true;
+            isImportant[(int)NetworkEventType.ItemFixed] = true;
 
             isImportant[(int)NetworkEventType.UpdateProperty] = true;
             isImportant[(int)NetworkEventType.WallDamage] = true;
 
-            overridePrevious = new bool[11];
-            for (int i = 0; i < 11; i++ )
+            overridePrevious = new bool[isImportant.Length];
+            for (int i = 0; i < overridePrevious.Length; i++ )
             {
                 overridePrevious[i] = true;
             }
@@ -57,6 +59,7 @@ namespace Barotrauma.Networking
 
             overridePrevious[(int)NetworkEventType.PickItem] = false;
             overridePrevious[(int)NetworkEventType.DropItem] = false;
+            overridePrevious[(int)NetworkEventType.ItemFixed] = false;
         }
 
         private ushort id;

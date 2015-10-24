@@ -1224,6 +1224,11 @@ namespace Barotrauma
                         message.Write(body.SimPosition.Y);
                     }
                     break;
+                case NetworkEventType.ItemFixed:
+                    byte requirementIndex = (byte)data;
+
+                    message.Write(requirementIndex);
+                    break;
                 case NetworkEventType.InventoryUpdate:
                     var itemContainer = GetComponent<ItemContainer>();
                     if (itemContainer == null || itemContainer.inventory == null) return false;
@@ -1289,6 +1294,13 @@ namespace Barotrauma
                     newSimPos = new Vector2(message.ReadFloat(), message.ReadFloat());                    
                     SetTransform(newSimPos, body.Rotation);
                     Drop(null, false);
+                    break;
+                case NetworkEventType.ItemFixed:
+
+                    byte requirementIndex = message.ReadByte();
+                    if (requirementIndex>=FixRequirements.Count) return;
+
+                    FixRequirements[requirementIndex].Fixed = true;
                     break;
                 case NetworkEventType.InventoryUpdate:
                     var itemContainer = GetComponent<ItemContainer>();

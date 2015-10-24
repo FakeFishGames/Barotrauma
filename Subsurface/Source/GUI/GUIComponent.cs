@@ -359,6 +359,7 @@ namespace Barotrauma
 
         public virtual void RemoveChild(GUIComponent child)
         {
+            if (child == null) return;
             if (children.Contains(child)) children.Remove(child);            
         }
 
