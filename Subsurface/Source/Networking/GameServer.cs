@@ -314,7 +314,7 @@ namespace Barotrauma.Networking
                     {
                         if (c as AICharacter == null) continue;
 
-                        if (c.SimPosition.Length() > 100.0f) continue;
+                        if (c.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) continue;
 
                         c.CreateUpdateNetworkEvent(false);  
                     }

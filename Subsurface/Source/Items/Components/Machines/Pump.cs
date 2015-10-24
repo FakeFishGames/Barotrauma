@@ -168,8 +168,9 @@ namespace Barotrauma.Items.Components
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
         {
-            message.Write(Convert.ToByte(flowPercentage+100));
+            message.WriteRangedInteger(-10,10,(int)(flowPercentage/10.0f));
             message.Write(IsActive);
+            message.WritePadBits();
         }
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
@@ -179,7 +180,7 @@ namespace Barotrauma.Items.Components
 
             try
             {
-                newFlow = (float)(message.ReadByte()-100);
+                newFlow = message.ReadRangedInteger(-10,10)*10.0f;
                 newActive = message.ReadBoolean();
             }
 

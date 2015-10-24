@@ -653,7 +653,7 @@ namespace Barotrauma
 
             message.Write((float)NetTime.Now);
             message.Write(byteIndex);
-            message.Write(sections[sectionIndex].damage);
+            message.WriteRangedSingle(sections[sectionIndex].damage/Health, 0.0f, 1.0f, 8);
 
             return true;
         }
@@ -668,7 +668,7 @@ namespace Barotrauma
             {
                 updateTime = message.ReadFloat();
                 sectionIndex = message.ReadByte();
-                damage = message.ReadFloat();
+                damage = message.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
             }
             catch
             {

@@ -1157,11 +1157,14 @@ namespace Barotrauma
                     if (inventory == null) return false;
                     return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
                 case NetworkEventType.ImportantEntityUpdate:
+                    
                     int i = 0;
                     foreach (Limb limb in AnimController.Limbs)
                     {
-                        message.Write(limb.body.SimPosition.X);
-                        message.Write(limb.body.SimPosition.Y);
+                        if (limb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
+
+                        message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
                         //message.Write(limb.body.LinearVelocity.X);
                         //message.Write(limb.body.LinearVelocity.Y);
@@ -1174,7 +1177,6 @@ namespace Barotrauma
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
                     message.Write((byte)((health/maxHealth)*255.0f));
                     message.Write((byte)(MathHelper.Clamp(oxygen * 2.55f, 0.0f, 255.0f)));
-
 
                     return true;
                 case NetworkEventType.EntityUpdate:
@@ -1206,16 +1208,20 @@ namespace Barotrauma
 
                     if (secondaryHeld)
                     {
-                        message.Write(cursorPosition.X);
-                        message.Write(cursorPosition.Y);
+                        Vector2 relativeCursorPosition = cursorPosition - Position;
+
+                        message.WriteRangedSingle(relativeCursorPosition.X, -2000.0f, 2000.0f, 8);
+                        message.WriteRangedSingle(relativeCursorPosition.Y, -2000.0f, 2000.0f, 8);
                     }
                     else
                     {
                         message.Write(AnimController.Dir > 0.0f);
                     }
 
-                    message.Write(AnimController.RefLimb.SimPosition.X);
-                    message.Write(AnimController.RefLimb.SimPosition.Y);
+                    if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return true;
+                    
+                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
                     return true;
                 default:
@@ -1298,9 +1304,9 @@ namespace Barotrauma
 
                         try
                         {
-                            limbPos.X = message.ReadFloat();
-                            limbPos.Y = message.ReadFloat();
-                            
+                            limbPos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                            limbPos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+
                             rotation = message.ReadFloat();
                         }
                         catch
@@ -1335,7 +1341,7 @@ namespace Barotrauma
                     return;
                 case NetworkEventType.EntityUpdate:                    
                     float sendingTime = 0.0f;
-                    Vector2 cursorPos = Vector2.Zero;
+                    Vector2 relativeCursorPos = Vector2.Zero;
 
                     bool actionKeyState, secondaryKeyState;
                     bool leftKeyState, rightKeyState, upKeyState, downKeyState;
@@ -1390,29 +1396,38 @@ namespace Barotrauma
                     {
                         if (secondaryKeyState)
                         {
-                            cursorPos = new Vector2(
-                                message.ReadFloat(),
-                                message.ReadFloat());
+                            relativeCursorPos = new Vector2(
+                                message.ReadRangedSingle(-2000.0f, 2000.0f, 8),
+                                message.ReadRangedSingle(-2000.0f, 2000.0f, 8));
                         }
                         else
                         {
                             dir = message.ReadBoolean() ? 1.0f : -1.0f;
                         }
-
-                        pos.X = message.ReadFloat();
-                        pos.Y = message.ReadFloat();
-
                     }
                     catch
                     {
 #if DEBUG
-                        DebugConsole.ThrowError("Failed to read netowkrevent for "+this.ToString());
+                        DebugConsole.ThrowError("Failed to read networkevent for "+this.ToString());
 #endif
                         return;
                     }
+                    try
+                    {
+                        pos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        pos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    }
+
+                    catch
+                    {
+                        //failed to read position, character may be further than NetConfig.CharacterIgnoreDistance
+                        pos = SimPosition;
+                    }                    
+
                     if (secondaryKeyState)
                     {
-                        cursorPosition = MathUtils.IsValid(cursorPos) ? cursorPos : Vector2.Zero;
+                        cursorPosition = MathUtils.IsValid(relativeCursorPos) ? 
+                            ConvertUnits.ToDisplayUnits(pos)+relativeCursorPos : Vector2.Zero;
                     }
                     else
                     {
