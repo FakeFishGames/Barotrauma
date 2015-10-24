@@ -6,9 +6,6 @@ namespace Barotrauma
 {
     class TraitorMode : GameMode
     {
-        Client traitor;
-        Client target;
-
         private Character traitorCharacter, targetCharacter;
 
         public TraitorMode(GameModePreset preset)
@@ -21,8 +18,8 @@ namespace Barotrauma
         {
             base.Start();
 
-            traitor = null;
-            target = null;
+            traitorCharacter = null;
+            targetCharacter = null;
         }
 
         public override void Update(float deltaTime)
@@ -32,42 +29,24 @@ namespace Barotrauma
             base.Update(deltaTime);
 
             if (!isRunning) return;
-       
 
-            if (traitor==null || target ==null)
+
+            if (traitorCharacter == null || targetCharacter == null)
             {
-                int clientCount = GameMain.Server.connectedClients.Count();
-                if (clientCount < 2) return;
-
-                int traitorIndex = Rand.Int(clientCount, false);
-                traitor = GameMain.Server.connectedClients[traitorIndex];
-
-                int targetIndex = 0;
-                while (targetIndex == traitorIndex)
-                {
-                    targetIndex = Rand.Int(clientCount, false);
-                }
-                target = GameMain.Server.connectedClients[targetIndex];
-
-                traitorCharacter = traitor.character;
-                targetCharacter = target.character;
-
-
-                GameMain.Server.NewTraitor(traitor, target);
+                GameMain.Server.NewTraitor(out traitorCharacter, out targetCharacter);
             }
             else
             {
-                if (target.character == null || target.character.IsDead)
+                if (targetCharacter == null || targetCharacter.IsDead)
                 {
                     string endMessage = traitorCharacter.Name + " was a traitor! ";
                     endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
                     endMessage += " task was to assassinate " + targetCharacter.Name + ". The task was successful.";
                     End(endMessage);
                 }
-                else if (traitor.character == null || traitor.character.IsDead)
+                else if (traitorCharacter == null || traitorCharacter.IsDead)
                 {
                     string endMessage = traitorCharacter.Name + " was a traitor! ";
-                    //TODO: remove references to traitor.character
                     endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
                     endMessage += " task was to assassinate " + targetCharacter.Name + ", but ";
                     endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
@@ -86,6 +65,22 @@ namespace Barotrauma
                     return;
                 }    
 
+            }
+        }
+
+        public void CharacterLeft(Character character)
+        {
+            if (character != traitorCharacter && character != targetCharacter) return;
+
+            if (character == traitorCharacter)
+            {
+                string endMessage = "The traitor has disconnected from the server.";
+                End(endMessage);
+            }
+            else if (character == targetCharacter)
+            {
+                string endMessage = "The traitor's target has disconnected from the server.";
+                End(endMessage);
             }
         }
     }

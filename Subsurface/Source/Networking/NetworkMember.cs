@@ -32,7 +32,7 @@ namespace Barotrauma.Networking
 
         ResendRequest,
         ReliableMessage,
-        Ack
+        LatestMessageID
         
     }
 

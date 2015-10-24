@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -138,11 +139,18 @@ namespace Barotrauma
 
             requirement.Fixed = true;
 
+            Item item = frame.UserData as Item;
+            if (item == null) return true;
+
+            new NetworkEvent(NetworkEventType.ItemFixed, item.ID, true, (byte)item.FixRequirements.IndexOf(requirement) );
+
             return true;
         }
 
         private static void UpdateGUIFrame(Item item, Character character)
         {
+            if (frame == null) return;
+
             bool unfixedFound = false;
             foreach (GUIComponent child in frame.children)
             {

@@ -59,14 +59,21 @@ namespace Barotrauma.Networking
             return bannedPlayers.FirstOrDefault(bp => bp.IP == IP)!=null;
         }
 
+        public bool ToggleBanFrame(GUIButton button, object obj)
+        {
+            banFrame = CreateBanFrame();
+
+            return true;
+        }
+
         private GUIFrame CreateBanFrame()
         {
-            banFrame = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsHeight), Color.Black*0.3f);
+            banFrame = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsHeight), Color.Black*0.5f);
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,300,300), null, Alignment.Center, GUI.Style, banFrame);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,400,300), null, Alignment.Center, GUI.Style, banFrame);
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Banned IPs:", GUI.Style, Alignment.Left, Alignment.Left, innerFrame, false, GUI.LargeFont);
-            var banList = new GUIListBox(new Rectangle(0, 30, 200, 0), GUI.Style, innerFrame);
+            new GUITextBlock(new Rectangle(0, -10, 0, 30), "Banned IPs:", GUI.Style, Alignment.Left, Alignment.Left, innerFrame, false, GUI.LargeFont);
+            var banList = new GUIListBox(new Rectangle(0, 30, 0, 0), GUI.Style, innerFrame);
 
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
             {
@@ -78,12 +85,12 @@ namespace Barotrauma.Networking
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = banList;
 
-                var removeButton = new GUIButton(new Rectangle(0,0,100,20), "Remove", Alignment.Right, GUI.Style, textBlock);
+                var removeButton = new GUIButton(new Rectangle(0,00,100,20), "Remove", Alignment.Right | Alignment.CenterY, GUI.Style, textBlock);
                 removeButton.UserData = bannedPlayer;
                 removeButton.OnClicked = RemoveBan;
             }
 
-            var closeButton = new GUIButton(new Rectangle(0,0,100,20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
+            var closeButton = new GUIButton(new Rectangle(0,30,100,20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
             closeButton.OnClicked = CloseFrame;
 
 

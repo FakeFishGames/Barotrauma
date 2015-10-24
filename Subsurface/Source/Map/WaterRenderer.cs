@@ -45,7 +45,7 @@ namespace Barotrauma
             }
         }
 
-        public void RenderBack (SpriteBatch spriteBatch, RenderTarget2D texture, float blurAmount = 0.0007f)
+        public void RenderBack (SpriteBatch spriteBatch, RenderTarget2D texture, float blurAmount = 0.0f)
         {            
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap);
 

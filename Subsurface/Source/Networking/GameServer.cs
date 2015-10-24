@@ -54,6 +54,11 @@ namespace Barotrauma.Networking
         }
         public float AutoRestartTimer;
 
+        public BanList BanList
+        {
+            get { return banList; }
+        }
+
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
@@ -86,7 +91,8 @@ namespace Barotrauma.Networking
 
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | 
                 NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
-                NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
+                NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error |
+                NetIncomingMessageType.UnconnectedData);
                                     
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
             
@@ -137,7 +143,7 @@ namespace Barotrauma.Networking
                 RegisterToMasterServer();
             }
                         
-            updateInterval = new TimeSpan(0, 0, 0, 0, 60);
+            updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
             DebugConsole.NewMessage("Server started", Color.Green);
                         
@@ -504,8 +510,8 @@ namespace Barotrauma.Networking
                             
                             dataSender.ReliableChannel.HandleResendRequest(inc);
                             break;
-                        case (byte)PacketTypes.Ack:
-                            dataSender.ReliableChannel.HandleAckMessage(inc);
+                        case (byte)PacketTypes.LatestMessageID:
+                            dataSender.ReliableChannel.HandleLatestMessageID(inc);
                             break;
                     }
                     break;
@@ -884,7 +890,19 @@ namespace Barotrauma.Networking
         {
             if (client == null) return;
 
-            if (gameStarted && client.character != null) client.character.ClearInputs();
+            if (gameStarted && client.character != null)
+            {
+                if (GameMain.GameSession!=null && GameMain.GameSession.gameMode!=null)
+                {
+                    TraitorMode traitorMode = GameMain.GameSession.gameMode as TraitorMode;
+                    if (traitorMode!=null)
+                    {
+                        traitorMode.CharacterLeft(client.character);
+                    }
+                }
+
+                client.character.ClearInputs();
+            }
 
             if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
@@ -956,23 +974,66 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void NewTraitor(Client traitor, Client target)
+        public void NewTraitor(out Character traitor, out Character target)
         {
-            //new GUIMessageBox("New traitor", traitor.name + " is the traitor and the target is " + target.name+".");
+            List<Character> characters = new List<Character>();
+            foreach (Client client in connectedClients)
+            {
+                if (!client.inGame || client.character==null) continue;
+                characters.Add(client.character);
+            }
+            if (myCharacter!= null) characters.Add(myCharacter);
+
+            if (characters.Count < 2)
+            {
+                traitor = null;
+                target = null;
+                return;
+            }
+
+            int traitorIndex = Rand.Range(0, characters.Count);
+
+            int targetIndex = Rand.Range(0, characters.Count);
+            while (targetIndex==traitorIndex)
+            {
+                targetIndex = Rand.Range(0, characters.Count);
+            }
+
+
+            traitor = characters[traitorIndex];
+            target = characters[targetIndex];
+
+            if (myCharacter==null)
+            {               
+                new GUIMessageBox("New traitor", traitor.Info.Name + " is the traitor and the target is " + target.Info.Name+".");
+            }
+            else if (myCharacter == traitor)
+            {
+                new GUIMessageBox("You are the traitor!", "Your task is to assassinate " + target.Info.Name+".");
+                return;
+            }
+
+            Client traitorClient = null;
+            foreach (Client c in connectedClients)
+            {
+                if (c.character != traitor) continue;
+                traitorClient = c;
+                break;
+            }
 
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.Traitor);
-            msg.Write(target.name);
+            msg.Write(target.Info.Name);
             if (server.Connections.Count > 0)
             {
-                server.SendMessage(msg, traitor.Connection, NetDeliveryMethod.ReliableUnordered, 0);
+                server.SendMessage(msg, traitorClient.Connection, NetDeliveryMethod.ReliableUnordered, 0);
             }
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-
+            
             if (!ShowNetStats) return;
 
             int width = 200, height = 300;

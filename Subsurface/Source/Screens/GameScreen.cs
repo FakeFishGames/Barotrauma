@@ -16,6 +16,9 @@ namespace Barotrauma
         readonly RenderTarget2D renderTargetAir;
 
         readonly Sprite background, backgroundTop;
+        readonly Texture2D dustParticles;
+
+        Vector2 dustOffset;
 
         public BackgroundSpriteManager BackgroundSpriteManager;
 
@@ -35,7 +38,8 @@ namespace Barotrauma
 
             background = new Sprite("Content/Map/background.png", Vector2.Zero);
             backgroundTop = new Sprite("Content/Map/background2.png", Vector2.Zero);
-
+            dustParticles = Sprite.LoadTexture("Content/Map/dustparticles.png");
+            
             BackgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
         }
 
@@ -77,6 +81,9 @@ namespace Barotrauma
                 GameMain.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
             }
 #endif
+
+
+            //dustOffset -= Vector2.UnitY * 100.0f * (float)deltaTime;
 
             if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);
@@ -166,7 +173,7 @@ namespace Barotrauma
             graphics.SetRenderTarget(renderTarget);
             graphics.Clear(new Color(11, 18, 26, 255));
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap);
 
             Vector2 backgroundPos = cam.Position;
             if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
@@ -196,11 +203,26 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend,
-                null, null, null, null,
+                SamplerState.LinearWrap, null, null, null,
                 cam.Transform);
 
             BackgroundSpriteManager.Draw(spriteBatch);
 
+            backgroundPos = new Vector2(cam.WorldView.X, cam.WorldView.Y);
+            if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
+
+            Rectangle viewRect = cam.WorldView;
+            viewRect.Y = -viewRect.Y;
+
+            float multiplier = 0.8f;
+            for (int i = 1; i < 3; i++)
+            {
+                spriteBatch.Draw(dustParticles, viewRect,
+                    new Rectangle((int)((backgroundPos.X * multiplier)), (int)((-backgroundPos.Y * multiplier)), cam.WorldView.Width, cam.WorldView.Height),
+                    Color.LightGray * multiplier, 0.0f, Vector2.Zero, SpriteEffects.None, 1.0f-multiplier);
+                multiplier -= 0.15f;
+            }
+            
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
@@ -211,8 +233,11 @@ namespace Barotrauma
             Submarine.DrawBack(spriteBatch);
 
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
-            
+
             spriteBatch.End();
+
+
+            GameMain.LightManager.DrawLightMap(spriteBatch, cam);
 
             //----------------------------------------------------------------------------------------
             //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
@@ -272,7 +297,6 @@ namespace Barotrauma
                 GameMain.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
             }
 
-            GameMain.LightManager.DrawLightMap(spriteBatch, cam);
             //----------------------------------------------------------------------------------------
             //3. draw the sections of the map that are on top of the water
             //----------------------------------------------------------------------------------------
