@@ -36,6 +36,10 @@ namespace Barotrauma.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (character != Character.Controlled || character != user) return;
+
+            if (character.GetInputState(InputType.Select) && 
+                character.SelectedConstruction==this.item) character.SelectedConstruction = null;
+
             Connection.DrawConnections(spriteBatch, this, character);
         }
 

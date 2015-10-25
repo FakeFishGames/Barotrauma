@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
         private bool valueChanged;
 
         private float autopilotRayCastTimer;
-
+        
         bool AutoPilot
         {
             get { return autoPilot; }
@@ -104,6 +104,7 @@ namespace Barotrauma.Items.Components
             }
 
             item.SendSignal(targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out");
+
             item.SendSignal((-targetVelocity.Y).ToString(CultureInfo.InvariantCulture), "velocity_y_out");
         }
 

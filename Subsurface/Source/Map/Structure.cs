@@ -23,8 +23,6 @@ namespace Barotrauma
 
         public float lastSentDamage;
 
-        public float lastUpdate;
-
         public bool isHighLighted;
         
         public WallSection(Rectangle rect)
@@ -56,6 +54,8 @@ namespace Barotrauma
         private WallSection[] sections;
 
         bool isHorizontal;
+
+        public float lastUpdate;
         
         public override Sprite Sprite
         {
@@ -451,8 +451,8 @@ namespace Barotrauma
 
             if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage)>5.0f)
             {
-                new NetworkEvent(NetworkEventType.WallDamage, ID, false, sectionIndex);
-                sections[sectionIndex].lastSentDamage = damage;
+                new NetworkEvent(NetworkEventType.WallDamage, ID, false);
+                //sections[sectionIndex].lastSentDamage = damage;
             }
             
             if (damage < prefab.MaxHealth*0.5f)
@@ -638,48 +638,32 @@ namespace Barotrauma
 
         public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
         {
-            int sectionIndex = 0;
-            byte byteIndex = 0;
-
-            try
-            {
-                sectionIndex = (int)data;
-                byteIndex = (byte)sectionIndex;
-            }
-            catch
-            {
-                return false;
-            }
-
             message.Write((float)NetTime.Now);
-            message.Write(byteIndex);
-            message.WriteRangedSingle(sections[sectionIndex].damage/Health, 0.0f, 1.0f, 8);
+
+            for (int i = 0; i < sections.Length; i++)
+            {
+                if (Math.Abs(sections[i].damage - sections[i].lastSentDamage) < 0.1f) continue;
+                message.Write((byte)i);
+                message.WriteRangedSingle(sections[i].damage / Health, 0.0f, 1.0f, 8);
+
+                sections[i].lastSentDamage = sections[i].damage;
+            }
 
             return true;
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
         {
-            int sectionIndex = 0;
-            float damage = 0.0f;
-            float updateTime = 0.0f;
+            float updateTime = message.ReadFloat();
+            if (updateTime < lastUpdate) return;
 
-            try
+            while (message.Position <= message.LengthBits-8)
             {
-                updateTime = message.ReadFloat();
-                sectionIndex = message.ReadByte();
-                damage = message.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
-            }
-            catch
-            {
-                return;
-            }
+                byte sectionIndex = message.ReadByte();
+                float damage = message.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
 
-            if (sections[sectionIndex].lastUpdate != 0.0f && updateTime < sections[sectionIndex].lastUpdate) return;
-
-            sections[sectionIndex].lastUpdate = updateTime;
-            SetDamage(sectionIndex, damage);
-            
+                SetDamage(sectionIndex, damage);
+            }
         }
     
     }

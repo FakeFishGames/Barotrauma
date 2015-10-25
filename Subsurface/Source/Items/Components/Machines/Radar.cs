@@ -59,7 +59,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 pingState = 0.0f;
-            }            
+            }
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -201,6 +201,8 @@ namespace Barotrauma.Items.Components
 
                 prevPos = pos;
             }
+
+            voltage = 0.0f;
         }
 
         private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, float scale, Vector2 center, float radius)

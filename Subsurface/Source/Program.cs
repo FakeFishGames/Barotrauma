@@ -95,6 +95,8 @@ namespace Barotrauma
                 "Oops! Subsurface just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
     #endif
 
+            Sounds.SoundManager.Dispose();
+
                        
         }
     }

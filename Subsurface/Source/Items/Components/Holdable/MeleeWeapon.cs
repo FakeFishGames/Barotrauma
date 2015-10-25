@@ -68,6 +68,7 @@ namespace Barotrauma.Items.Components
             {
                 item.body.FarseerBody.IgnoreCollisionWith(l.body.FarseerBody);
 
+                if (character.AnimController.InWater) continue;
                 if (l.type == LimbType.LeftFoot || l.type == LimbType.LeftThigh || l.type == LimbType.LeftLeg) continue;
 
                 if (l.type == LimbType.Head || l.type == LimbType.Torso)

@@ -95,8 +95,10 @@ namespace Barotrauma.Items.Components
             if (item.body!= null && !item.body.Enabled)
             {
                 Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
+
                 item.SetTransform(rightHand.SimPosition, 0.0f);
                 item.body.Enabled = true;
+                
             }
             picker.Inventory.RemoveItem(item);
             picker = null;

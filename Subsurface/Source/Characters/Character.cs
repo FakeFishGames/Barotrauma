@@ -1077,9 +1077,14 @@ namespace Barotrauma
                     if (GameMain.Client!=null) chatMessage += " Your chat messages will only be visible to other dead players.";
 
                     GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
-                    GameMain.LightManager.LosEnabled = false;                    
+                    GameMain.LightManager.LosEnabled = false;
 
-                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);                    
+                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);
+                }
+                //if it's an ai character, only let the server kill it
+                else if (GameMain.Server != null && this is AICharacter)
+                {
+                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);
                 }
                 //otherwise don't kill the character unless received a message about the character dying
                 else if (!isNetworkMessage)
@@ -1210,8 +1215,13 @@ namespace Barotrauma
                     {
                         Vector2 relativeCursorPosition = cursorPosition - Position;
 
-                        message.WriteRangedSingle(relativeCursorPosition.X, -2000.0f, 2000.0f, 8);
-                        message.WriteRangedSingle(relativeCursorPosition.Y, -2000.0f, 2000.0f, 8);
+                        if (relativeCursorPosition.Length()>4950.0f)
+                        {
+                            relativeCursorPosition = Vector2.Normalize(relativeCursorPosition) * 4950.0f;
+                        }
+
+                        message.WriteRangedSingle(relativeCursorPosition.X, -5000.0f, 5000.0f, 16);
+                        message.WriteRangedSingle(relativeCursorPosition.Y, -5000.0f, 5000.0f, 16);
                     }
                     else
                     {
@@ -1397,8 +1407,8 @@ namespace Barotrauma
                         if (secondaryKeyState)
                         {
                             relativeCursorPos = new Vector2(
-                                message.ReadRangedSingle(-2000.0f, 2000.0f, 8),
-                                message.ReadRangedSingle(-2000.0f, 2000.0f, 8));
+                                message.ReadRangedSingle(-5000.0f, 5000.0f, 16),
+                                message.ReadRangedSingle(-5000.0f, 5000.0f, 16));
                         }
                         else
                         {

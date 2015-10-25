@@ -57,9 +57,23 @@ namespace Barotrauma.Items.Components
             return null;
         }
 
+        public void RemoveConnection(Item item)
+        {
+            for (int i = 0; i<2; i++)
+            {
+                if (connections[i]==null || connections[i].Item!=item) continue;
+                
+                for (int n = 0; n< connections[i].Wires.Length; n++)
+                {
+                    if (connections[i].Wires[n] == this) connections[i].Wires[n] = null;
+                }
+                connections[i] = null;
+            }
+        }
+
         public void RemoveConnection(Connection connection)
         {
-            if (connection == connections[0]) connections[0] = null;
+            if (connection == connections[0]) connections[0] = null;            
             if (connection == connections[1]) connections[1] = null;
         }
 
@@ -405,6 +419,13 @@ namespace Barotrauma.Items.Components
                 Nodes.Add(new Vector2(x, y));
             }
 
+        }
+
+        public override void Remove()
+        {
+            ClearConnections();
+
+            base.Remove();
         }
 
         public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)

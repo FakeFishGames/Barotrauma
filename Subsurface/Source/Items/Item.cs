@@ -333,7 +333,19 @@ namespace Barotrauma
 
         public void SetTransform(Vector2 simPosition, float rotation)
         {
-            if (body != null) body.SetTransform(simPosition, rotation);            
+            if (body != null)
+            {
+                try
+                {
+                    body.SetTransform(simPosition, rotation);
+                }
+                catch (Exception e)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Failed to set item transform", e);
+#endif
+                }
+            }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(simPosition);
 
@@ -803,7 +815,7 @@ namespace Barotrauma
             foreach (Item item in itemList)
             {
                 if (ignoredItems!=null && ignoredItems.Contains(item)) continue;
-                if (hull != item.CurrentHull && (hull==null || (item.Rect.Height<hull.Rect.Height && item.rect.Width < hull.Rect.Width))) continue;
+                //if (hull != item.CurrentHull && (hull==null || (item.Rect.Height<hull.Rect.Height && item.rect.Width < hull.Rect.Width))) continue;
                 if (item.body != null && !item.body.Enabled) continue;
 
                 Pickable pickableComponent = item.GetComponent<Pickable>();
@@ -813,7 +825,7 @@ namespace Barotrauma
                 {
                     Rectangle transformedTrigger = item.TransformTrigger(trigger);
                     
-                    if (!Submarine.RectContains(transformedTrigger, displayPos))continue;
+                    if (!Submarine.RectContains(transformedTrigger, displayPos)) continue;
                                         
                     Vector2 triggerCenter =
                         new Vector2(

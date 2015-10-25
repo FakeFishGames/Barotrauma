@@ -309,6 +309,7 @@ namespace Barotrauma
                         if (dummyCharacter.SelectedConstruction == dummyCharacter.ClosestItem)
                         {
                             dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, dummyCharacter);
+
                         }
                         else
                         {
@@ -329,6 +330,8 @@ namespace Barotrauma
             }
 
             GUI.Draw((float)deltaTime, spriteBatch, cam);
+
+                            if (!PlayerInput.LeftButtonDown()) Inventory.draggingItem = null;
                                               
             spriteBatch.End();
 

@@ -22,6 +22,11 @@ namespace Barotrauma
                 (float)Math.Floor(value / div) * div;
         }
 
+        public static float RoundTowardsClosest(float value, float div)
+        {
+            return (float)Math.Round(value / div) * div;
+        }
+
         public static float VectorToAngle(Vector2 vector)
         {
             return (float)Math.Atan2(vector.Y, vector.X);

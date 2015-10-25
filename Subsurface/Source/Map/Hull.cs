@@ -484,6 +484,7 @@ namespace Barotrauma
             try
             {
                 float newPercentage = message.ReadRangedSingle(0.0f, 1.5f, 6);
+                newVolume = newPercentage * FullVolume;
             }
 
             catch

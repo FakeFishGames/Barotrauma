@@ -832,15 +832,16 @@ namespace Barotrauma
 
             if (itemPos == Vector2.Zero)
             {
-                if (character.SelectedItems[0] == item)
-                {
-                    transformedHoldPos = rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0];
-                    itemAngle = (rightHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
-                }
+
                 if (character.SelectedItems[1] == item)
                 {
                     transformedHoldPos = leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
                     itemAngle = (leftHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
+                }
+                if (character.SelectedItems[0] == item)
+                {
+                    transformedHoldPos = rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0];
+                    itemAngle = (rightHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
                 }
             }
             else

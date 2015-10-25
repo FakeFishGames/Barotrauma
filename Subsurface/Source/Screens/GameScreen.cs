@@ -81,9 +81,7 @@ namespace Barotrauma
                 GameMain.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
             }
 #endif
-
-
-            //dustOffset -= Vector2.UnitY * 100.0f * (float)deltaTime;
+            dustOffset -= Vector2.UnitY * 10.0f * (float)deltaTime;
 
             if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
             //EventManager.Update(gameTime);
@@ -208,7 +206,7 @@ namespace Barotrauma
 
             BackgroundSpriteManager.Draw(spriteBatch);
 
-            backgroundPos = new Vector2(cam.WorldView.X, cam.WorldView.Y);
+            backgroundPos = new Vector2(cam.WorldView.X, cam.WorldView.Y) + dustOffset;
             if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
 
             Rectangle viewRect = cam.WorldView;
