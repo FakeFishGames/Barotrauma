@@ -95,10 +95,10 @@ namespace Barotrauma
                     {
                         if (limb.ignoreCollisions) continue;
 
-                        if (limb.SimPosition.Length() > NetConfig.AllowedRagdollDistance) return false;
+                        if (limb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
 
-                        message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.AllowedRagdollDistance, NetConfig.AllowedRagdollDistance, 16);
-                        message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.AllowedRagdollDistance, NetConfig.AllowedRagdollDistance, 16);
+                        message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
 
                         message.Write(limb.body.Rotation);
@@ -114,11 +114,11 @@ namespace Barotrauma
                     message.Write((float)NetTime.Now);
 
                     message.Write(AnimController.TargetDir == Direction.Right);
-                    message.WriteRangedSingle(AnimController.TargetMovement.X, -1.0f, 1.0f, 8);
-                    message.WriteRangedSingle(AnimController.TargetMovement.Y, -1.0f, 1.0f, 8);
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
             
-                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.AllowedRagdollDistance, NetConfig.AllowedRagdollDistance, 16);
-                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.AllowedRagdollDistance, NetConfig.AllowedRagdollDistance, 16);
+                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
                     //message.Write(AnimController.RefLimb.LinearVelocity.X);
                     //message.Write(AnimController.RefLimb.LinearVelocity.Y);
@@ -196,8 +196,8 @@ namespace Barotrauma
                         targetMovement.X = message.ReadRangedSingle(-1.0f, 1.0f, 8);
                         targetMovement.Y = message.ReadRangedSingle(-1.0f, 1.0f, 8);
 
-                        pos.X = message.ReadRangedSingle(-1.0f, 1.0f, 8);
-                        pos.Y = message.ReadRangedSingle(-1.0f, 1.0f, 8);
+                        pos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        pos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
                         //vel.X = message.ReadFloat();
                         //vel.Y = message.ReadFloat();

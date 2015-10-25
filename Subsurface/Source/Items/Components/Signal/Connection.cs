@@ -281,6 +281,7 @@ namespace Barotrauma.Items.Components
                 if (!PlayerInput.LeftButtonDown())
                 {
                     panel.Item.NewComponentEvent(panel, true, true);
+                    //draggingConnected.Drop(character);
                     draggingConnected = null;
                 }
             }
@@ -318,6 +319,8 @@ namespace Barotrauma.Items.Components
                     
                     if (index>-1 && wireComponent!=null && !Wires.Contains(wireComponent))
                     {
+                        wireComponent.RemoveConnection(item);
+
                         Wires[index] = wireComponent;
                         wireComponent.Connect(this);
                     }                    
@@ -325,15 +328,15 @@ namespace Barotrauma.Items.Components
                 //far away -> disconnect if the wire is linked to this connector
                 else
                 {
-                    int index = FindWireIndex(draggingConnected);
-                    if (index>-1)
-                    {
-                        Wires[index].RemoveConnection(this);
-                        //Wires[index].Item.SetTransform(item.SimPosition, 0.0f);
-                        //Wires[index].Item.Drop();
-                        //Wires[index].Item.body.Enabled = true;
-                        Wires[index] = null;
-                    }
+                    //int index = FindWireIndex(draggingConnected);
+                    //if (index>-1)
+                    //{
+                    //    Wires[index].RemoveConnection(this);
+                    //    //Wires[index].Item.SetTransform(item.SimPosition, 0.0f);
+                    //    //Wires[index].Item.Drop();
+                    //    //Wires[index].Item.body.Enabled = true;
+                    //    Wires[index] = null;
+                    //}
                 }                    
             }           
 

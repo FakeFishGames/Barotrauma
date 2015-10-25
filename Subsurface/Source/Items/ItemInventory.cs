@@ -17,7 +17,7 @@ namespace Barotrauma
         {
             item.Drop();
             item.body.Enabled = true;
-            item.body.SetTransform(container.Item.SimPosition, 0.0f);
+            item.SetTransform(container.Item.SimPosition, 0.0f);
         }
 
         public override int FindAllowedSlot(Item item)

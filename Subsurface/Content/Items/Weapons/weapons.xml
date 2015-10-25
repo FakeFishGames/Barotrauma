@@ -67,8 +67,8 @@
     
     <Body width="90" height="30" density="10"/>
 
-    <MeleeWeapon slots="Any,RightHand,LeftHand"
-              aimpos="50,0" handle1="-15,-6" holdangle="100" reload="1.0">
+    <MeleeWeapon slots="Any,RightHand"
+              aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
       <Attack damage="2" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
         <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        

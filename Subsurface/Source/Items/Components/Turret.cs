@@ -130,12 +130,13 @@ namespace Barotrauma.Items.Components
             Projectile projectileComponent = null;
             //search for a projectile from linked containers
             Item projectile = null;
+            Item projectileContainer = null;
             foreach (MapEntity e in item.linkedTo)
             {
-                Item container = e as Item;
-                if (container == null) continue;
+                projectileContainer = e as Item;
+                if (projectileContainer == null) continue;
 
-                ItemContainer containerComponent = container.GetComponent<ItemContainer>();
+                ItemContainer containerComponent = projectileContainer.GetComponent<ItemContainer>();
                 if (containerComponent == null) continue;
 
                 for (int i = 0; i < containerComponent.inventory.items.Length; i++)
@@ -182,7 +183,7 @@ namespace Barotrauma.Items.Components
             projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y)), -rotation);
 
             projectileComponent.Use(deltaTime);
-            item.RemoveContained(projectile);
+            projectileContainer.RemoveContained(projectile);
 
             return true;
         }

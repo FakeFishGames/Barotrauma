@@ -279,6 +279,8 @@ namespace Barotrauma
             {
                 limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
             }
+
+            FindLowestLimb();
         }
           
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)

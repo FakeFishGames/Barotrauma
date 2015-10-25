@@ -518,8 +518,8 @@ namespace Barotrauma
 
             if (wallAttack)
             {
-                message.WriteRangedSingle(wallAttackPos.X, -50.0f, 50.0f, 10);
-                message.WriteRangedSingle(wallAttackPos.Y, -50.0f, 50.0f, 10);
+                message.WriteRangedSingle(MathHelper.Clamp(wallAttackPos.X, -50.0f, 50.0f), -50.0f, 50.0f, 10);
+                message.WriteRangedSingle(MathHelper.Clamp(wallAttackPos.Y, -50.0f, 50.0f), -50.0f, 50.0f, 10);
             }
 
             //message.Write(Velocity.X);

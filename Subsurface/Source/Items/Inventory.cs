@@ -179,7 +179,7 @@ namespace Barotrauma
                 UpdateSlot(spriteBatch, slotRect, i, items[i], false);                
             }
 
-            if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition))
+            if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition) && draggingItem.container == this.Owner)
             {
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
                 {
@@ -198,6 +198,7 @@ namespace Barotrauma
                     }
 
                     DropItem(draggingItem);
+                    //draggingItem = null;
                 }
             }                       
         }
