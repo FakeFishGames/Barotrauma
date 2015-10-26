@@ -49,9 +49,11 @@ namespace Barotrauma
         }
     }
 
-    static class AmbientSoundManager
+    static class SoundPlayer
     {
         public static Sound[] flowSounds = new Sound[3];
+
+        public static float MusicVolume = 1.0f;
 
         private const float MusicLerpSpeed = 0.01f;
 
@@ -63,7 +65,7 @@ namespace Barotrauma
         private static BackgroundMusic currentMusic;
         private static BackgroundMusic targetMusic;
         private static BackgroundMusic[] musicClips;
-        private static float musicVolume;
+        private static float currMusicVolume;
 
         private static Sound startDrone;
         
@@ -251,20 +253,20 @@ namespace Barotrauma
 
             if (targetMusic == null || currentMusic == null || targetMusic.file != currentMusic.file)
             {
-                musicVolume = MathHelper.Lerp(musicVolume, 0.0f, MusicLerpSpeed);
-                if (currentMusic != null) Sound.StreamVolume(musicVolume);
+                currMusicVolume = MathHelper.Lerp(currMusicVolume, 0.0f, MusicLerpSpeed);
+                if (currentMusic != null) Sound.StreamVolume(currMusicVolume);
 
-                if (musicVolume < 0.01f)
+                if (currMusicVolume < 0.01f)
                 {
                     Sound.StopStream();
-                    if (targetMusic != null) Sound.StartStream(targetMusic.file, musicVolume);
+                    if (targetMusic != null) Sound.StartStream(targetMusic.file, currMusicVolume);
                     currentMusic = targetMusic;
                 }
             }
             else
             {
-                musicVolume = MathHelper.Lerp(musicVolume, 0.3f, MusicLerpSpeed);
-                Sound.StreamVolume(musicVolume);
+                currMusicVolume = MathHelper.Lerp(currMusicVolume, MusicVolume, MusicLerpSpeed);
+                Sound.StreamVolume(currMusicVolume);
             }
         }
 

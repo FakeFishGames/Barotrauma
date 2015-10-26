@@ -361,7 +361,7 @@ namespace Barotrauma
 
         public void ApplyForce(Vector2 force)
         {
-            subBody.ApplyForce(force);
+            if (subBody != null) subBody.ApplyForce(force);
         }
 
         public void SetPosition(Vector2 position)

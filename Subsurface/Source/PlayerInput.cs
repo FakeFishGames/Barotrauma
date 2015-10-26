@@ -10,7 +10,7 @@ namespace Barotrauma
         ActionHit, ActionHeld, 
         SecondaryHit, SecondaryHeld,
         Left, Right, Up, Down,
-        Run
+        Run, Chat
     }
 
 	class Key

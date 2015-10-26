@@ -1,3 +1,35 @@
+
+---------------------------------------------------------------------------------------------------------
+v0.2.4.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed rewiring not working in the editor
+- fixed a game-crashing projectile bug
+
+---------------------------------------------------------------------------------------------------------
+v0.2.4
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- fixed invincible NPCs
+	- the target in traitor mode is properly randomized and the host can be selected as a traitor/target
+	- the "fix list" when repairing items is synced between clients, so the reactor can actually be fixed now
+	- more networking optimization
+	- bans can be removed by using a button under the player list, not just by editing the bannedplayers.xml file
+		
+Items:
+	- wires are removed from connection panels when they're deleted in the editor
+	- doors can be rewired from either side
+	- the rewire screen can be deselect by pressing E
+	- sonar won't work anymore if the power wire is removed
+	- stun batons can't be double wielded or used for fast underwater movement
+
+Misc:
+	- some particles floating in the water, which make it easier to see if the sub is moving just by
+	looking out of a window
+	- fixed a bug which may have crashed the game if a character spawned on a platform or stairs
+
+
 ---------------------------------------------------------------------------------------------------------
 v0.2.3.2
 ---------------------------------------------------------------------------------------------------------

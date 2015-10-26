@@ -202,7 +202,7 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
-            CoroutineManager.StartCoroutine(AmbientSoundManager.Init());
+            CoroutineManager.StartCoroutine(SoundPlayer.Init());
             TitleScreen.LoadState = 70.0f;
         yield return CoroutineStatus.Running;
 
@@ -267,7 +267,7 @@ namespace Barotrauma
 
             if (hasLoaded && !titleScreenOpen)
             {
-                AmbientSoundManager.Update();
+                SoundPlayer.Update();
 
                 if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 

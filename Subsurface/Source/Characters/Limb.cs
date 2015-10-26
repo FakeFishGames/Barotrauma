@@ -319,7 +319,7 @@ namespace Barotrauma
 
             if (playSound)
             {
-                AmbientSoundManager.PlayDamageSound(damageSoundType, amount, ConvertUnits.ToDisplayUnits(simPosition));
+                SoundPlayer.PlayDamageSound(damageSoundType, amount, ConvertUnits.ToDisplayUnits(simPosition));
             }
 
             //Bleeding += bleedingAmount;

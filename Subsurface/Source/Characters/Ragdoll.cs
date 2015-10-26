@@ -368,7 +368,7 @@ namespace Barotrauma
                 character.Health -= (impact - l.impactTolerance * 0.1f);
                 strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
 
-                AmbientSoundManager.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body.FarseerBody);                
+                SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body.FarseerBody);                
 
                 if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
             }
