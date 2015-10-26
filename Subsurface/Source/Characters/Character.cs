@@ -998,7 +998,7 @@ namespace Barotrauma
                // limb.Damage = 100.0f;
             }
 
-            AmbientSoundManager.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body.FarseerBody);
+            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body.FarseerBody);
             
             for (int i = 0; i < 10; i++)
             {

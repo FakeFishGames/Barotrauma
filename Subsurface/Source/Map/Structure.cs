@@ -345,7 +345,7 @@ namespace Barotrauma
 
                     if (impact < 10.0f) return true;
 
-                    AmbientSoundManager.PlayDamageSound(DamageSoundType.StructureBlunt, impact,
+                    SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact,
                         new Vector2(
                             sections[section].rect.X + sections[section].rect.Width / 2, 
                             sections[section].rect.Y - sections[section].rect.Height / 2));
@@ -436,7 +436,7 @@ namespace Barotrauma
             if (playSound && !SectionHasHole(i))
             {
                 DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
-                AmbientSoundManager.PlayDamageSound(damageSoundType, damageAmount, position);
+                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, position);
             }
 
             AddDamage(i, damageAmount);

@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4 }
 
         GUIFrame buttonsTab;
 
@@ -42,23 +42,27 @@ namespace Barotrauma
             GUIButton button = new GUIButton(new Rectangle(0, 0, 0, 30), "Tutorial", Alignment.CenterX, GUI.Style, buttonsTab);
             button.OnClicked = TutorialButtonClicked;
 
-            button = new GUIButton(new Rectangle(0, 70, 0, 30), "New Game", Alignment.CenterX, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(0, 60, 0, 30), "New Game", Alignment.CenterX, GUI.Style, buttonsTab);
             button.UserData = Tab.NewGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 130, 0, 30), "Load Game", Alignment.CenterX, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(0, 100, 0, 30), "Load Game", Alignment.CenterX, GUI.Style, buttonsTab);
             button.UserData = Tab.LoadGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 200, 0, 30), "Join Server", Alignment.CenterX, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(0, 160, 0, 30), "Join Server", Alignment.CenterX, GUI.Style, buttonsTab);
             //button.UserData = (int)Tabs.JoinServer;
             button.OnClicked = JoinServerClicked;
 
-            button = new GUIButton(new Rectangle(0, 260, 0, 30), "Host Server", Alignment.CenterX, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(0, 200, 0, 30), "Host Server", Alignment.CenterX, GUI.Style, buttonsTab);
             button.UserData = Tab.HostServer;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 330, 0, 30), "Quit", Alignment.CenterX, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(0, 260, 0, 30), "Settings", Alignment.CenterX, GUI.Style, buttonsTab);
+            button.UserData = Tab.Settings;
+            button.OnClicked = SelectTab;
+
+            button = new GUIButton(new Rectangle(0, 320, 0, 30), "Quit", Alignment.CenterX, GUI.Style, buttonsTab);
             button.OnClicked = QuitClicked;
 
             //----------------------------------------------------------------------
@@ -197,7 +201,15 @@ namespace Barotrauma
         {
             selectedTab = (int)tab;
 
-            if (selectedTab == (int)Tab.LoadGame) UpdateLoadScreen();
+            switch (selectedTab)
+            {
+                case (int)Tab.LoadGame:
+                    UpdateLoadScreen();
+                    break;
+                case (int)Tab.Settings:
+                    menuTabs[(int)Tab.Settings] = GameMain.Config.SettingsFrame;
+                    break;
+            }
         }
 
         private bool TutorialButtonClicked(GUIButton button, object obj)

@@ -17,7 +17,7 @@ namespace Barotrauma
 
         private bool enabled;
 
-        public delegate bool OnMovedHandler(object obj);
+        public delegate bool OnMovedHandler(float barScroll);
         public OnMovedHandler OnMoved;
 
         public bool IsHorizontal
@@ -94,6 +94,8 @@ namespace Barotrauma
             //AddChild(frame);
 
             //System.Diagnostics.Debug.WriteLine(frame.rect);
+
+            this.barSize = barSize;
 
             bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, style, this);
             
@@ -172,7 +174,7 @@ namespace Barotrauma
                 barScroll = (float)newY / ((float)frame.Rect.Height - (float)bar.Rect.Height);
             }
 
-            if (moveAmount != 0 && OnMoved != null) OnMoved(moveAmount);
+            if (moveAmount != 0 && OnMoved != null) OnMoved(barScroll);
 
             bar.Rect = new Rectangle(newX + frame.Rect.X, newY + frame.Rect.Y, bar.Rect.Width, bar.Rect.Height);
 

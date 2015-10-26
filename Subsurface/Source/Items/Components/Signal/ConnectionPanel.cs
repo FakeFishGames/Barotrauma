@@ -37,7 +37,8 @@ namespace Barotrauma.Items.Components
         {
             if (character != Character.Controlled || character != user) return;
 
-            if (character.GetInputState(InputType.Select) && 
+            if (Screen.Selected != GameMain.EditMapScreen &&
+                character.GetInputState(InputType.Select) && 
                 character.SelectedConstruction==this.item) character.SelectedConstruction = null;
 
             Connection.DrawConnections(spriteBatch, this, character);

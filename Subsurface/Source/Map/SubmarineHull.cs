@@ -258,7 +258,7 @@ namespace Barotrauma
             
             if (lastContactPoint == null || lastContactCell==null || impact < 3.0f) return;
             
-            AmbientSoundManager.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits((Vector2)lastContactPoint));
+            SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits((Vector2)lastContactPoint));
             GameMain.GameScreen.Cam.Shake = impact * 2.0f;
 
             Vector2 limbForce = -normal * impact*0.5f;

@@ -234,7 +234,7 @@ namespace Barotrauma
             int index = (int)Math.Floor(flowForce.Length() / 100.0f);
             index = Math.Min(index,2);
 
-            soundIndex = AmbientSoundManager.flowSounds[index].Loop(soundIndex, soundVolume, Position, 2000.0f);
+            soundIndex = SoundPlayer.flowSounds[index].Loop(soundIndex, soundVolume, Position, 2000.0f);
             
             flowForce = Vector2.Zero;
             lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, 0.05f);

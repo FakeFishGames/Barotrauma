@@ -29,6 +29,8 @@ namespace Barotrauma.Sounds
         public static OggStreamer oggStreamer;
         public static OggStream oggStream;
 
+        public static float MasterVolume = 1.0f;
+
         public static void Init()
         {
             AC = new AudioContext();
@@ -250,7 +252,7 @@ namespace Barotrauma.Sounds
 
         public static void Volume(int sourceIndex, float volume)
         {
-            AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume);
+            AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume * MasterVolume);
             ALHelper.Check();
         }
 
@@ -303,8 +305,8 @@ namespace Barotrauma.Sounds
             //Resume(sourceIndex);
 
             position/= 1000.0f;
-            
-            OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourcef.Gain, baseVolume);
+
+            OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourcef.Gain, baseVolume * MasterVolume);
             OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
 
             float lowPassGain = lowPassHfGain / Math.Max(position.Length() * 5.0f, 1.0f);
