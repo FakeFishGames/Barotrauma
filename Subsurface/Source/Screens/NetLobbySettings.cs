@@ -93,6 +93,9 @@ namespace Barotrauma.Networking
                 selectionTick.OnSelected = SwitchModeSelection;
                 selectionTick.UserData = (SelectionMode)i;
             }
+
+            var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
+            closeButton.OnClicked = ToggleSettingsFrame;
         }
 
         private bool SwitchSubSelection(GUITickBox tickBox)

@@ -33,6 +33,8 @@ namespace Barotrauma
         public const int GridCellWidth = 2000;
         private List<VoronoiCell>[,] cellGrid;
 
+        private WrappingWall[,] wrappingWalls;
+
         private float shaftHeight;
 
         //List<Body> bodies;
@@ -41,7 +43,7 @@ namespace Barotrauma
         private static BasicEffect basicEffect;
 
         private VertexPositionTexture[] vertices;
-        private VertexBuffer vertexBuffer;
+        //private VertexBuffer vertexBuffer;
 
         private Vector2 startPosition;
         private Vector2 endPosition;
@@ -156,16 +158,14 @@ namespace Barotrauma
 
             bodies = new List<Body>();
 
-            Random rand = new Random(ToolBox.StringToInt(seed));
+            Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            float siteVariance = siteInterval * 0.8f;
+            float siteVariance = siteInterval * 0.4f;
             for (int x = siteInterval / 2; x < borders.Width; x += siteInterval)
             {
                 for (int y = siteInterval / 2; y < borders.Height; y += siteInterval)
                 {
-                    Vector2 site = new Vector2(
-                        x + (float)(rand.NextDouble() - 0.5) * siteVariance,
-                        y + (float)(rand.NextDouble() - 0.5) * siteVariance);
+                    Vector2 site = new Vector2(x, y) + Rand.Vector(siteVariance, false);
 
                     if (mirror) site.X = borders.Width - site.X;
 
@@ -232,8 +232,8 @@ namespace Barotrauma
 
             List<Vector2> pathNodes = new List<Vector2>();
 
-            startPosition = new Vector2((int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2));
-            endPosition = new Vector2(borders.Width - (int)minWidth * 2, rand.Next((int)minWidth * 2, borders.Height - (int)minWidth * 2));
+            startPosition = new Vector2((int)minWidth * 2, Rand.Range((int)minWidth * 2, borders.Height - (int)minWidth * 2, false));
+            endPosition = new Vector2(borders.Width - (int)minWidth * 2, Rand.Range((int)minWidth * 2, borders.Height - (int)minWidth * 2, false));
 
             pathNodes.Add(new Vector2(startPosition.X, borders.Height));
             pathNodes.Add(startPosition);            
@@ -245,13 +245,12 @@ namespace Barotrauma
                 pathNodes.Reverse();
             }
 
-            List<VoronoiCell> pathCells = GeneratePath(rand,
-                pathNodes, cells, pathBorders, minWidth, 0.3f, mirror, true);
+            List<VoronoiCell> pathCells = GeneratePath(pathNodes, cells, pathBorders, minWidth, 0.3f, mirror, true);
 
             //place some enemy spawnpoints at random points in the path
             for (int i = 0; i <3 ; i++ )
             {
-                Vector2 position = pathCells[rand.Next((int)(pathCells.Count * 0.5f), pathCells.Count - 2)].Center;
+                Vector2 position = pathCells[Rand.Range((int)(pathCells.Count * 0.5f), pathCells.Count - 2, false)].Center;
                 WayPoint wayPoint = new WayPoint(new Rectangle((int)position.X, (int)position.Y, 10, 10));
                 wayPoint.MoveWithLevel = true;
                 wayPoint.SpawnType = SpawnType.Enemy;
@@ -261,22 +260,22 @@ namespace Barotrauma
             endPosition = pathCells[pathCells.Count - 1].Center;
 
             //generate a couple of random paths
-            for (int i = 0; i <= rand.Next() % 3; i++)
+            for (int i = 0; i <= Rand.Range(1,4,false); i++)
             {
                 //pathBorders = new Rectangle(
                 //borders.X + siteInterval * 2, borders.Y - siteInterval * 2,
                 //borders.Right - siteInterval * 2, borders.Y + borders.Height - siteInterval * 2);
 
-                Vector2 start = pathCells[rand.Next(1, pathCells.Count - 2)].Center;
+                Vector2 start = pathCells[Rand.Range(1, pathCells.Count - 2,false)].Center;
 
-                float x = pathBorders.X + (float)rand.NextDouble() * (pathBorders.Right - pathBorders.X);
-                float y = pathBorders.Y + (float)rand.NextDouble() * (pathBorders.Bottom - pathBorders.Y);
+                float x = pathBorders.X + Rand.Range(0, pathBorders.Right - pathBorders.X, false);
+                float y = pathBorders.Y + Rand.Range(0,pathBorders.Bottom - pathBorders.Y, false);
 
                 if (mirror) x = borders.Width - x;
 
                 Vector2 end = new Vector2(x, y);
 
-                var newPathCells = GeneratePath(rand, new List<Vector2> { start, end }, cells, pathBorders, 0.0f, 0.8f, mirror);
+                var newPathCells = GeneratePath(new List<Vector2> { start, end }, cells, pathBorders, 0.0f, 0.8f, mirror);
 
                 for (int n = 0; n < newPathCells.Count-5; n += 3)
                 {
@@ -321,26 +320,29 @@ namespace Barotrauma
 
             startPosition.Y = borders.Height;
             endPosition.Y = borders.Height;
-            //for (int i = 0; i < 2; i++)
-            //{
-            //    Vector2 tunnelStart = (i == 0) ? startPosition : endPosition;
 
-            //    for (int n = -1; n < 2; n += 2)
-            //    {
-            //        int cellIndex = FindCellIndex(new Vector2(tunnelStart.X + minWidth * 0.5f * n, tunnelStart.Y), 3);
+            vertices = GeneratePolygons(cells, pathCells);
+            
+            wrappingWalls = new WrappingWall[2, 2];
 
-            //        foreach (GraphEdge ge in cells[cellIndex].edges)
-            //        {
-            //            if (ge.point1.Y > cells[cellIndex].Center.Y) ge.point1.Y = borders.Height + shaftHeight;
-            //            if (ge.point2.Y > cells[cellIndex].Center.Y) ge.point2.Y = borders.Height + shaftHeight;
-            //        }
-            //    }
-            //}
+            for (int side = 0; side < 2; side++)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    wrappingWalls[side, i] = new WrappingWall(pathCells, cells, borders.Height * 0.7f,
+                        (side == 0 ? -1 : 1) * (i == 0 ? 1 : 2));
 
-            //startPosition.Y += shaftHeight;
-            //endPosition.Y += shaftHeight;
+                    wrappingWalls[side, i].Vertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>());
+                }
 
-            GeneratePolygons(cells, pathCells);
+            }
+            for (int side = 0; side < 2; side++)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    cells.AddRange(wrappingWalls[side, i].Cells);
+                }
+            }
 
             foreach (VoronoiCell cell in cells)
             {
@@ -357,8 +359,8 @@ namespace Barotrauma
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
 
-            vertexBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-            vertexBuffer.SetData(vertices);
+            //vertexBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            //vertexBuffer.SetData(vertices);
 
             if (mirror)
             {
@@ -370,7 +372,7 @@ namespace Barotrauma
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
         }
 
-        private List<VoronoiCell> GeneratePath(Random rand, List<Vector2> points, List<VoronoiCell> cells, Microsoft.Xna.Framework.Rectangle limits, float minWidth, float wanderAmount = 0.3f, bool mirror=false, bool placeWaypoints=false)
+        private List<VoronoiCell> GeneratePath(List<Vector2> points, List<VoronoiCell> cells, Microsoft.Xna.Framework.Rectangle limits, float minWidth, float wanderAmount = 0.3f, bool mirror=false, bool placeWaypoints=false)
         {
             Stopwatch sw2 = new Stopwatch();
             sw2.Start();
@@ -390,15 +392,14 @@ namespace Barotrauma
             VoronoiCell currentCell = targetCells[0];
             pathCells.Add(currentCell);
 
-int currentTargetIndex = 1;
-            
+            int currentTargetIndex = 1;            
             
             do
             {
                 int edgeIndex = 0;
 
                 //steer towards target
-                if (rand.NextDouble() > wanderAmount)
+                if (Rand.Range(0.0f, 1.0f, false) > wanderAmount)
                 {
                     for (int i = 0; i < currentCell.edges.Count; i++)
                     {
@@ -420,11 +421,11 @@ int currentTargetIndex = 1;
                     }
                     if (allowedEdges.Count==0)
                     {
-                        edgeIndex = rand.Next() % currentCell.edges.Count;
+                        edgeIndex = Rand.Int(currentCell.edges.Count, false);
                     }
                     else
                     {
-                        edgeIndex = rand.Next() % allowedEdges.Count;
+                        edgeIndex = Rand.Int(allowedEdges.Count, false);
                         if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
                         edgeIndex = currentCell.edges.IndexOf(allowedEdges[edgeIndex]);
                     }
@@ -534,6 +535,7 @@ int currentTargetIndex = 1;
             return tooCloseCells;
         }
 
+
         /// <summary>
         /// remove all cells except those that are adjacent to the empty cells
         /// </summary>
@@ -579,13 +581,12 @@ int currentTargetIndex = 1;
                     }
                 }
             }
-
-
-
+            
             return cells.IndexOf(closestCell);
         }
 
-        private void GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells)
+
+        private VertexPositionTexture[] GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells)
         {
             List<VertexPositionTexture> verticeList = new List<VertexPositionTexture>();
             //bodies = new List<Body>();
@@ -606,7 +607,7 @@ int currentTargetIndex = 1;
                     if (!tempVertices.Contains(ge.point2)) tempVertices.Add(ge.point2);
 
                     VoronoiCell adjacentCell = ge.AdjacentCell(cell);
-                    if (!emptyCells.Contains(adjacentCell)) continue;
+                    if (adjacentCell!=null && !emptyCells.Contains(adjacentCell)) continue;
 
                     ge.isSolid = true;
 
@@ -680,7 +681,7 @@ int currentTargetIndex = 1;
                 bodies.Add(shaftBody);
             }
 
-                vertices = verticeList.ToArray();
+                return verticeList.ToArray();
         }
 
         public void SetPosition(Vector2 pos)
@@ -715,6 +716,8 @@ int currentTargetIndex = 1;
                     item.SetTransform(item.SimPosition+amount, item.body.Rotation);
                 }
             }
+
+            //WrappingWall.UpdateWallShift(Position, wrappingWalls);
         }
 
         Vector2 prevVelocity;
@@ -748,6 +751,8 @@ int currentTargetIndex = 1;
             AtEndPosition = Vector2.Distance(endPosition, -Position) < ExitDistance;
             
             prevVelocity = simVelocity;
+
+            WrappingWall.UpdateWallShift(-Position, wrappingWalls);
         }
 
         public static void AfterWorldStep()
@@ -802,38 +807,7 @@ int currentTargetIndex = 1;
 
             System.Diagnostics.Debug.WriteLine("pos: " + Position);
         }
-
-        Vector2 observerPosition;
-        public void SetObserverPosition(Vector2 position)
-        {
-            //observerPosition = position - this.Position;
-            //int gridPosX = (int)Math.Floor(observerPosition.X / GridCellWidth);
-            //int gridPosY = (int)Math.Floor(observerPosition.Y / GridCellWidth);
-            //int searchOffset = 2;
-
-            //int startX = Math.Max(gridPosX - searchOffset, 0);
-            //int endX = Math.Min(gridPosX + searchOffset, cellGrid.GetLength(0) - 1);
-
-            //int startY = Math.Max(gridPosY - searchOffset, 0);
-            //int endY = Math.Min(gridPosY + searchOffset, cellGrid.GetLength(1) - 1);
-
-            //for (int x = 0; x < cellGrid.GetLength(0); x++)
-            //{
-            //    for (int y = 0; y < cellGrid.GetLength(1); y++)
-            //    {
-            //        for (int i = 0; i < cellGrid[x, y].Count; i++)
-            //        {
-            //            //foreach (Body b in cellGrid[x, y][i].bodies)
-            //            //{
-            //            if (cellGrid[x, y][i].body == null) continue;
-            //            cellGrid[x, y][i].body.Enabled = true;// (x >= startX && x <= endX && y >= startY && y <= endY);
-            //            //}
-            //        }
-            //    }
-            //}
-        }
-
-
+        
         public void Draw(SpriteBatch spriteBatch)
         {
             Vector2 pos = endPosition;            
@@ -937,6 +911,22 @@ int currentTargetIndex = 1;
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
 
             graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, (int)Math.Floor(vertices.Length / 3.0f));
+
+
+            for (int side = 0; side < 2; side++)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    basicEffect.World = Matrix.CreateTranslation(new Vector3(Position + wrappingWalls[side, i].Offset, 0.0f)) * cam.ShaderTransform
+    * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+
+                    basicEffect.CurrentTechnique.Passes[0].Apply();
+
+                    graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList,
+                        wrappingWalls[side, i].Vertices, 0, (int)Math.Floor(wrappingWalls[side, i].Vertices.Length / 3.0f));
+
+                }
+            }
         }
 
         private void Unload()
@@ -961,8 +951,8 @@ int currentTargetIndex = 1;
             bodies.Clear();
             bodies = null;
 
-            vertexBuffer.Dispose();
-            vertexBuffer = null;
+            //vertexBuffer.Dispose();
+            //vertexBuffer = null;
         }
 
     }

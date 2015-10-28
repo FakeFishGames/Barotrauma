@@ -68,7 +68,7 @@ namespace Barotrauma.Items.Components
                             var particle = GameMain.ParticleManager.CreateParticle("spark", pt.item.Position,
                                 baseVel + Rand.Vector(100.0f), 0.0f);
 
-                            if (particle != null) particle.Size *= Rand.Range(0.5f,1.0f);
+                            if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                         }
                     }
                 }

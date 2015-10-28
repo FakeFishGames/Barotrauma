@@ -182,7 +182,9 @@ namespace Barotrauma.Items.Components
 
             try
             {
-                SelectKey = (InputType)Enum.Parse(typeof(InputType), ToolBox.GetAttributeString(element, "selectkey", "Select"), true);
+                string selectKeyStr = ToolBox.GetAttributeString(element, "selectkey", "Select");
+                selectKeyStr = ToolBox.ConvertInputType(selectKeyStr);
+                SelectKey = (InputType)Enum.Parse(typeof(InputType), selectKeyStr, true);
             }
             catch (Exception e)
             {
@@ -193,7 +195,9 @@ namespace Barotrauma.Items.Components
 
             try
             {
-                PickKey = (InputType)Enum.Parse(typeof(InputType), ToolBox.GetAttributeString(element, "selectkey", "Select"), true);
+                string pickKeyStr = ToolBox.GetAttributeString(element, "selectkey", "Select");
+                pickKeyStr = ToolBox.ConvertInputType(pickKeyStr);
+                PickKey = (InputType)Enum.Parse(typeof(InputType),pickKeyStr, true);
             }
             catch (Exception e)
             {

@@ -232,7 +232,7 @@ namespace Barotrauma
 
             File            = ToolBox.GetAttributeString(element, "file", "");
             Salary          = ToolBox.GetAttributeInt(element, "salary", 1000);
-            HeadSpriteId    = ToolBox.GetAttributeInt(element, "headspriteid", 1);
+            headSpriteId    = ToolBox.GetAttributeInt(element, "headspriteid", 1);
             StartItemsGiven = ToolBox.GetAttributeBool(element, "startitemsgiven", false);
 
             pickedItems = new List<ushort>();

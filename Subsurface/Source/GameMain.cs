@@ -39,7 +39,7 @@ namespace Barotrauma
         public static EditCharacterScreen   EditCharacterScreen;
 
         public static Lights.LightManager LightManager;
-
+        
         public static ContentPackage SelectedPackage
         {
             get { return Config.SelectedContentPackage; }

@@ -95,6 +95,7 @@
     <Compile Include="Source\Items\Components\Signal\SignalCheckComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\FixRequirement.cs" />
+    <Compile Include="Source\Map\Levels\WrappingWall.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\LocationType.cs" />
     <Compile Include="Source\Map\SubmarineHull.cs" />

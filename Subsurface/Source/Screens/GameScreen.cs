@@ -292,7 +292,7 @@ namespace Barotrauma
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
             {
                 GameMain.GameSession.Level.Render(graphics, cam);
-                GameMain.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
+                //GameMain.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
             }
 
             //----------------------------------------------------------------------------------------

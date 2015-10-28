@@ -339,10 +339,10 @@ namespace Barotrauma
                 playerName.Text = characterInfo.Name;
                 playerName.OnEnterPressed += ChangeCharacterName;
 
-                GUIButton toggleHead = new GUIButton(new Rectangle(00, 50, 20, 20), "<", GUI.Style, myPlayerFrame);
+                GUIButton toggleHead = new GUIButton(new Rectangle(0, 50, 20, 20), "<", GUI.Style, myPlayerFrame);
                 toggleHead.UserData = -1;
                 toggleHead.OnClicked = ToggleHead;
-                toggleHead = new GUIButton(new Rectangle(40, 50, 20, 20), ">", GUI.Style, myPlayerFrame);
+                toggleHead = new GUIButton(new Rectangle(60, 50, 20, 20), ">", GUI.Style, myPlayerFrame);
                 toggleHead.UserData = 1;
                 toggleHead.OnClicked = ToggleHead;
 
