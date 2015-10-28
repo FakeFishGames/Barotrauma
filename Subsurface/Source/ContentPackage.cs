@@ -173,6 +173,7 @@ namespace Barotrauma
             }
             return filePaths;
         }
+
         public static void LoadAll(string folder)
         {
             if (!Directory.Exists(folder))
@@ -188,6 +189,8 @@ namespace Barotrauma
             }
 
             string[] files = Directory.GetFiles(folder, "*.xml");
+
+            list.Clear();
 
             foreach (string filePath in files)
             {

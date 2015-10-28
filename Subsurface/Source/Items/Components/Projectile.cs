@@ -109,7 +109,7 @@ namespace Barotrauma.Items.Components
                     {
                         item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                     }
-                    catch
+                    catch (Exception e)
                     {
 #if DEBUG
                         DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);

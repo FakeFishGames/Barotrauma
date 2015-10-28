@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
-            if (!character.GetInputState(InputType.SecondaryHeld)) return false;
+            if (!character.IsKeyDown(InputType.Aim)) return false;
 
             //if (DoesUseFail(character)) return false;
 
@@ -161,7 +161,7 @@ namespace Barotrauma.Items.Components
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
-                if (character.GetInputState(InputType.SecondaryHeld))
+                if (character.IsKeyDown(InputType.Aim))
                 {
                     targetLimb.character.Health += limbFixAmount * degreeOfSuccess;
                     //isActive = true;

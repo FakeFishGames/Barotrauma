@@ -143,6 +143,11 @@ namespace Barotrauma
             set { selectedColor = value; }
         }
 
+        public static KeyboardDispatcher KeyboardDispatcher
+        {
+            get { return keyboardDispatcher; }
+        }
+
         protected GUIComponent(GUIStyle style)
         {
             Visible = true;
@@ -227,7 +232,7 @@ namespace Barotrauma
                 foreach (Sprite sprite in sprites)
                 {
                     Vector2 startPos = new Vector2(rect.X, rect.Y);
-                    Vector2 size = new Vector2(sprite.SourceRect.Width, sprite.SourceRect.Height);
+                    Vector2 size = new Vector2(Math.Min(sprite.SourceRect.Width,rect.Width), Math.Min(sprite.SourceRect.Height,rect.Height));
 
                     if (sprite.size.X == 0.0f) size.X = rect.Width;
                     if (sprite.size.Y == 0.0f) size.Y = rect.Height;

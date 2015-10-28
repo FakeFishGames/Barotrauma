@@ -90,7 +90,7 @@ namespace Barotrauma
                 parent.AddChild(this);
 
             isHorizontal = (rect.Width > rect.Height);
-            frame = new GUIFrame(new Rectangle(0,0,0,0), Color.White, style, this);
+            frame = new GUIFrame(new Rectangle(0,0,0,0), Color.Black*0.8f, style, this);
             //AddChild(frame);
 
             //System.Diagnostics.Debug.WriteLine(frame.rect);

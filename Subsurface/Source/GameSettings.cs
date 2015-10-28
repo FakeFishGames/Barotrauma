@@ -12,10 +12,15 @@ namespace Barotrauma
     public class GameSettings
     {
         private GUIFrame settingsFrame;
+        private GUIButton applyButton;
 
         private float soundVolume, musicVolume;
 
-        private Keys[] keyMapping;
+        private KeyOrMouse[] keyMapping;
+
+
+        private bool unsavedSettings;
+
 
         public GUIFrame SettingsFrame
         {
@@ -24,6 +29,11 @@ namespace Barotrauma
                 if (settingsFrame == null) CreateSettingsFrame();
                 return settingsFrame;
             }
+        }
+
+        public KeyOrMouse KeyBind(InputType inputType)
+        {
+            return keyMapping[(int)inputType];
         }
 
         public int GraphicsWidth { get; set; }
@@ -36,6 +46,19 @@ namespace Barotrauma
         public string   MasterServerUrl { get; set; }
         public bool     AutoCheckUpdates { get; set; }
         public bool     WasGameUpdated { get; set; }
+
+        public bool UnsavedSettings
+        {
+            get
+            {
+                return unsavedSettings;
+            }
+            private set
+            {
+                unsavedSettings = value;
+                if (applyButton != null) applyButton.Selected = unsavedSettings;
+            }
+        }
 
         public float SoundVolume
         {
@@ -59,6 +82,8 @@ namespace Barotrauma
 
         public GameSettings(string filePath)
         {
+            ContentPackage.LoadAll(ContentPackage.Folder);
+
             Load(filePath);
         }
 
@@ -79,7 +104,7 @@ namespace Barotrauma
 
                 return;
             }
-
+            
             XElement graphicsMode = doc.Root.Element("graphicsmode");
             GraphicsWidth = ToolBox.GetAttributeInt(graphicsMode, "width", 0);
             GraphicsHeight = ToolBox.GetAttributeInt(graphicsMode, "height", 0);
@@ -100,14 +125,17 @@ namespace Barotrauma
             SoundVolume = ToolBox.GetAttributeFloat(doc.Root, "soundvolume", 1.0f);
             MusicVolume = ToolBox.GetAttributeFloat(doc.Root, "musicvolume", 0.3f);
 
-            keyMapping = new Keys[Enum.GetNames(typeof(InputType)).Length];
-            keyMapping[(int)InputType.Up]       = Keys.W;
-            keyMapping[(int)InputType.Down]     = Keys.S;
-            keyMapping[(int)InputType.Left]     = Keys.A;
-            keyMapping[(int)InputType.Right]    = Keys.D;
-            keyMapping[(int)InputType.Run]      = Keys.LeftShift;
-            keyMapping[(int)InputType.Chat]     = Keys.Tab;
-            keyMapping[(int)InputType.Select]   = Keys.E;
+            keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
+            keyMapping[(int)InputType.Up]       = new KeyOrMouse(Keys.W);
+            keyMapping[(int)InputType.Down]     = new KeyOrMouse(Keys.S);
+            keyMapping[(int)InputType.Left]     = new KeyOrMouse(Keys.A);
+            keyMapping[(int)InputType.Right]    = new KeyOrMouse(Keys.D);
+            keyMapping[(int)InputType.Run]      = new KeyOrMouse(Keys.LeftShift);
+            keyMapping[(int)InputType.Chat]     = new KeyOrMouse(Keys.Tab);
+            keyMapping[(int)InputType.Select]   = new KeyOrMouse(Keys.E);
+
+            keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
+            keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -124,19 +152,31 @@ namespace Barotrauma
                         {
                             InputType inputType;
                             Keys key;
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out inputType) &&
-                                Enum.TryParse(attribute.Value.ToString(), true, out key))
+                            int mouseButton;
+                            if (Enum.TryParse(attribute.Name.ToString(), true, out inputType))
                             {
-                                keyMapping[(int)inputType] = key;
+                                if  (Enum.TryParse(attribute.Value.ToString(), true, out key))
+                                {
+                                    keyMapping[(int)inputType] = new KeyOrMouse(key);
+                                }
+                                else if (int.TryParse(attribute.Value.ToString(), out mouseButton))
+                                {
+                                    keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
+                                }
+                                
                             }
                         }
                         break;
                 }
-            }   
+            }
+
+            UnsavedSettings = false;
         }
 
         public void Save(string filePath)
         {
+            UnsavedSettings = false;
+
             XDocument doc = new XDocument();            
 
             if (doc.Root == null)
@@ -173,12 +213,12 @@ namespace Barotrauma
                     new XAttribute("path", SelectedContentPackage.Path)));
             }
 
-
             doc.Save(filePath);
         }
 
         private bool ChangeSoundVolume(float barScroll)
         {
+            UnsavedSettings = true;
             SoundVolume = MathHelper.Clamp(barScroll, 0.0f, 1.0f);
 
             return true;
@@ -186,47 +226,150 @@ namespace Barotrauma
 
         private bool ChangeMusicVolume(float barScroll)
         {
+            UnsavedSettings = true;
             MusicVolume = MathHelper.Clamp(barScroll, 0.0f, 1.0f);
 
             return true;
+        }
+
+        private bool ToggleFullScreen(object userData)
+        {
+            UnsavedSettings = true;
+            FullScreenEnabled = !FullScreenEnabled;
+            return true;
+        }
+
+        public void ResetSettingsFrame()
+        {
+            settingsFrame = null;
         }
 
         private void CreateSettingsFrame()
         {
             settingsFrame = new GUIFrame(new Rectangle(0, 0, 500, 500), null, Alignment.Center, GUI.Style);
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Sound volume:", GUI.Style, settingsFrame);
-            GUIScrollBar soundScrollBar = new GUIScrollBar(new Rectangle(0, 20, 150, 20), GUI.Style,0.1f, settingsFrame);
+            new GUITextBlock(new Rectangle(0,-30,0,30), "Settings",GUI.Style,Alignment.TopCenter,  Alignment.TopCenter, settingsFrame, false, GUI.LargeFont);
+
+            int x=0, y = 10;
+
+            new GUITextBlock(new Rectangle(0, y, 20, 20), "Resolution", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            var resolutionDD = new GUIDropDown(new Rectangle(0, y + 20, 180, 20), "", GUI.Style, settingsFrame);
+
+            var supportedModes = new List<DisplayMode>();
+            foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
+            {
+                if (supportedModes.FirstOrDefault(m => m.Width == mode.Width && m.Height == mode.Height) != null) continue;
+
+                resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
+                supportedModes.Add(mode);
+
+                if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
+            }
+
+            if (resolutionDD.SelectedItemData == null)
+            {
+                resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
+            }
+
+            y += 50;
+
+            var fullScreenTick = new GUITickBox(new Rectangle(x, y, 20, 20), "Fullscreen", Alignment.TopLeft, settingsFrame);
+            fullScreenTick.OnSelected = ToggleFullScreen;
+            fullScreenTick.Selected = FullScreenEnabled;
+
+            y += 50;
+
+            new GUITextBlock(new Rectangle(0, y, 100, 20), "Sound volume:", GUI.Style, settingsFrame);
+            GUIScrollBar soundScrollBar = new GUIScrollBar(new Rectangle(0, y+20, 150, 20), GUI.Style,0.1f, settingsFrame);
             soundScrollBar.BarScroll = SoundVolume;
             soundScrollBar.OnMoved = ChangeSoundVolume;
 
-            new GUITextBlock(new Rectangle(0, 40, 100, 20), "Music volume:", GUI.Style, settingsFrame);
-            GUIScrollBar musicScrollBar = new GUIScrollBar(new Rectangle(0, 60, 150, 20), GUI.Style, 0.1f, settingsFrame);
+            new GUITextBlock(new Rectangle(0, y+40, 100, 20), "Music volume:", GUI.Style, settingsFrame);
+            GUIScrollBar musicScrollBar = new GUIScrollBar(new Rectangle(0, y+60, 150, 20), GUI.Style, 0.1f, settingsFrame);
             musicScrollBar.BarScroll = MusicVolume;
             musicScrollBar.OnMoved = ChangeMusicVolume;
 
-            int x = 250;
-            int y = 60;
+            x = 200;
+            y = 10;
 
-            new GUITextBlock(new Rectangle(x, 40, 100, 20), "Controls:", GUI.Style, settingsFrame);
+            new GUITextBlock(new Rectangle(x, y, 20, 20), "Content package", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            var contentPackageDD = new GUIDropDown(new Rectangle(x, y + 20, 200, 20), "", GUI.Style, settingsFrame);
+
+            foreach (ContentPackage contentPackage in ContentPackage.list)
+            {
+                contentPackageDD.AddItem(contentPackage.Name, contentPackage);
+
+                if (SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
+            }
+
+            y += 50;
+            new GUITextBlock(new Rectangle(x, y, 100, 20), "Controls:", GUI.Style, settingsFrame);
+            y += 30;
             var inputNames = Enum.GetNames(typeof(InputType));
             for (int i = 0; i< inputNames.Length; i++)
             {
                 new GUITextBlock(new Rectangle(x, y, 100, 20), inputNames[i]+": ", GUI.Style, settingsFrame);
-                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 70, 15), GUI.Style, settingsFrame);
+                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 15), GUI.Style, settingsFrame);
                 keyBox.Text = keyMapping[i].ToString();
-                keyBox.OnTextChanged = MapKey;
+                keyBox.UserData = i;
+                keyBox.OnSelected += KeyBoxSelected;
+                keyBox.SelectedColor = Color.Gold * 0.3f;
 
                 y += 20;
             }
 
-            var applyButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Apply", GUI.Style, settingsFrame);
+            applyButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Apply", Alignment.BottomRight, GUI.Style, settingsFrame);
             applyButton.OnClicked = ApplyClicked;
         }
 
-        private bool MapKey(GUITextBox textBox, string text)
+        private void KeyBoxSelected(GUITextBox textBox, Keys key)
         {
+            textBox.Text = "";
+            CoroutineManager.StartCoroutine(WaitForKeyPress(textBox));
+        }
+
+        private bool MarkUnappliedChanges(GUIButton button, object obj)
+        {
+            UnsavedSettings = true;
+
             return true;
+        }
+
+        private bool SelectResolution(GUIComponent selected)
+        {
+            DisplayMode mode = selected.UserData as DisplayMode;
+            if (mode == null) return false;
+
+            GraphicsWidth = mode.Width;
+            GraphicsHeight = mode.Height;
+
+            UnsavedSettings = true;
+
+            return true;
+        }
+
+
+
+        private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox)
+        {
+            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length==0)
+            {
+                if (Screen.Selected != GameMain.MainMenuScreen) yield return CoroutineStatus.Success;
+
+                yield return CoroutineStatus.Running;
+            }
+
+            UnsavedSettings = true;
+
+            Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];
+
+            int keyIndex = (int)keyBox.UserData;
+            keyMapping[keyIndex] = new KeyOrMouse(key);
+
+            keyBox.Text = key.ToString("G");
+            keyBox.Deselect();
+
+            yield return CoroutineStatus.Success;
         }
 
         private bool ApplyClicked(GUIButton button, object userData)

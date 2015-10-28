@@ -53,7 +53,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
-            if (!character.GetInputState(InputType.SecondaryHeld) || reload > 0.0f) return false;
+            if (!character.IsKeyDown(InputType.Aim) || reload > 0.0f) return false;
             IsActive = true;
             reload = 1.0f;
 

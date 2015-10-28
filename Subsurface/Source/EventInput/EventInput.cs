@@ -169,8 +169,7 @@ namespace EventInput
 
         public static void OnCharEntered(char character)
         {
-            if (CharEntered != null)
-                CharEntered(null, new CharacterEventArgs(character, 0));
+            if (CharEntered != null) CharEntered(null, new CharacterEventArgs(character, 0));
         }
 
         static IntPtr HookProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
@@ -186,6 +185,7 @@ namespace EventInput
                 case WM_KEYDOWN:
                     if (KeyDown != null)
                         KeyDown(null, new KeyEventArgs((Keys)wParam));
+
                     break;
 
                 case WM_KEYUP:

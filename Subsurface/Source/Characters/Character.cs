@@ -286,18 +286,24 @@ namespace Barotrauma
         {
 
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
-            keys[(int)InputType.Select] = new Key(false);
-            keys[(int)InputType.ActionHeld] = new Key(true);
-            keys[(int)InputType.ActionHit] = new Key(false);
-            keys[(int)InputType.SecondaryHit] = new Key(false);
-            keys[(int)InputType.SecondaryHeld] = new Key(true);
 
-            keys[(int)InputType.Left] = new Key(true);
-            keys[(int)InputType.Right] = new Key(true);
-            keys[(int)InputType.Up] = new Key(true);
-            keys[(int)InputType.Down] = new Key(true);
+            for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
+            {
+                keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));
+            }
 
-            keys[(int)InputType.Run] = new Key(true);
+            //keys[(int)InputType.Select] = new Key(GameMain.Config.KeyBind(InputType.Select));
+            //keys[(int)InputType.ActionHeld] = new Key(true);
+            //keys[(int)InputType.ActionHit] = new Key(false);
+            //keys[(int)InputType.SecondaryHit] = new Key(false);
+            //keys[(int)InputType.SecondaryHeld] = new Key(true);
+
+            //keys[(int)InputType.Left] = new Key(true);
+            //keys[(int)InputType.Right] = new Key(true);
+            //keys[(int)InputType.Up] = new Key(true);
+            //keys[(int)InputType.Down] = new Key(true);
+
+            //keys[(int)InputType.Run] = new Key(true);
 
             selectedItems = new Item[2];
 
@@ -410,16 +416,22 @@ namespace Barotrauma
             }
         }
 
-        public bool GetInputState(InputType inputType)
+        public bool IsKeyHit(InputType inputType)
         {
-            return keys[(int)inputType].State;
+            return keys[(int)inputType].Hit;
+        }
+
+        public bool IsKeyDown(InputType inputType)
+        {
+            return keys[(int)inputType].Held;
         }
 
         public void ClearInputs()
         {
             foreach (Key key in keys)
             {
-                key.State = false;
+                key.Hit = false;
+                key.Held = false;
             }
         }
 
@@ -477,10 +489,10 @@ namespace Barotrauma
             if (isDead || AnimController.StunTimer>0.0f) return;
 
             Vector2 targetMovement = Vector2.Zero;
-            if (GetInputState(InputType.Left))  targetMovement.X -= 1.0f;
-            if (GetInputState(InputType.Right)) targetMovement.X += 1.0f;
-            if (GetInputState(InputType.Up))    targetMovement.Y += 1.0f;
-            if (GetInputState(InputType.Down))  targetMovement.Y -= 1.0f;
+            if (IsKeyDown(InputType.Left))  targetMovement.X -= 1.0f;
+            if (IsKeyDown(InputType.Right)) targetMovement.X += 1.0f;
+            if (IsKeyDown(InputType.Up)) targetMovement.Y += 1.0f;
+            if (IsKeyDown(InputType.Down)) targetMovement.Y -= 1.0f;
             
             //the vertical component is only used for falling through platforms and climbing ladders when not in water,
             //so the movement can't be normalized or the character would walk slower when pressing down/up
@@ -490,7 +502,7 @@ namespace Barotrauma
                 if (length > 0.0f) targetMovement = targetMovement / length;
             }
 
-            if (Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir) && GetInputState(InputType.Run))
+            if (Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir) && IsKeyDown(InputType.Run))
                 targetMovement *= 3.0f;
 
             targetMovement *= SpeedMultiplier;
@@ -519,22 +531,22 @@ namespace Barotrauma
             {
                 if (selectedItems[i] == null) continue;
                 if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
-                
-                if (GetInputState(InputType.ActionHeld)) selectedItems[i].Use(deltaTime, this);
-                if (GetInputState(InputType.SecondaryHeld) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+
+                if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
+                if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
             }
 
             if (selectedConstruction != null)
             {
-                if (GetInputState(InputType.ActionHeld)) selectedConstruction.Use(deltaTime, this);
-                if (selectedConstruction != null && GetInputState(InputType.SecondaryHeld)) selectedConstruction.SecondaryUse(deltaTime, this);
+                if (IsKeyDown(InputType.Use)) selectedConstruction.Use(deltaTime, this);
+                if (selectedConstruction != null && IsKeyDown(InputType.Aim)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
                   
             if (IsNetworkPlayer)
             {
                 foreach (Key key in keys)
                 {
-                    key.Reset();
+                    key.ResetHit();
                 }
             }
         }
@@ -658,24 +670,30 @@ namespace Barotrauma
 
             if (!DisableControls)
             {
-                keys[(int)InputType.Left].SetState(PlayerInput.KeyDown(Keys.A));
-                keys[(int)InputType.Right].SetState(PlayerInput.KeyDown(Keys.D));
-                keys[(int)InputType.Up].SetState(PlayerInput.KeyDown(Keys.W));
-                keys[(int)InputType.Down].SetState(PlayerInput.KeyDown(Keys.S));
+                for (int i = 0; i < keys.Length; i++ )
+                {
+                    keys[i].SetState();
+                }
 
-                keys[(int)InputType.Select].SetState(PlayerInput.KeyHit(Keys.E));
-                keys[(int)InputType.ActionHit].SetState(PlayerInput.LeftButtonClicked());
-                keys[(int)InputType.ActionHeld].SetState(PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
-                keys[(int)InputType.SecondaryHit].SetState(PlayerInput.RightButtonClicked());
-                keys[(int)InputType.SecondaryHeld].SetState(PlayerInput.GetMouseState.RightButton == ButtonState.Pressed);
+                //    keys[(int)InputType.Left].SetState(GameMain.Config.KeyBind(inpu));
+                //keys[(int)InputType.Right].SetState(PlayerInput.KeyDown(Keys.D));
+                //keys[(int)InputType.Up].SetState(PlayerInput.KeyDown(Keys.W));
+                //keys[(int)InputType.Down].SetState(PlayerInput.KeyDown(Keys.S));
 
-                keys[(int)InputType.Run].SetState(PlayerInput.KeyDown(Keys.LeftShift));
+                //keys[(int)InputType.Select].SetState(PlayerInput.KeyHit(Keys.E));
+                //keys[(int)InputType.ActionHit].SetState(PlayerInput.LeftButtonClicked());
+                //keys[(int)InputType.ActionHeld].SetState(PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
+                //keys[(int)InputType.SecondaryHit].SetState(PlayerInput.RightButtonClicked());
+                //keys[(int)InputType.SecondaryHeld].SetState(PlayerInput.GetMouseState.RightButton == ButtonState.Pressed);
+
+                //keys[(int)InputType.Run].SetState(PlayerInput.KeyDown(Keys.LeftShift));
             }
             else
             {
                 foreach (Key key in keys)
                 {
-                    key.SetState(false);
+                    if (key == null) continue;
+                    key.Reset();
                 }
             }
 
@@ -743,7 +761,12 @@ namespace Barotrauma
                     if (closestItem.Pick(this))
                     {
                         new NetworkEvent(NetworkEventType.PickItem, ID, true,
-                            new int[] { closestItem.ID, GetInputState(InputType.Select) ? 1 : 0, GetInputState(InputType.ActionHit) ? 1 : 0 });
+                            new int[] 
+                            { 
+                                closestItem.ID, 
+                                IsKeyHit(InputType.Select) ? 1 : 0, 
+                                IsKeyHit(InputType.Use) ? 1 : 0 
+                            });
                     }
                 }
             }
@@ -756,7 +779,7 @@ namespace Barotrauma
                 }
             }
 
-            if (GetInputState(InputType.Select))
+            if (IsKeyHit(InputType.Select))
             {
                 if (selectedCharacter != null)
                 {
@@ -1186,30 +1209,30 @@ namespace Barotrauma
                     return true;
                 case NetworkEventType.EntityUpdate:
                     var hasInputs =  
-                        GetInputState(InputType.Left) ||
-                        GetInputState(InputType.Right) ||
-                        GetInputState(InputType.Up) ||
-                        GetInputState(InputType.Down) ||
-                        GetInputState(InputType.ActionHeld) ||
-                        GetInputState(InputType.SecondaryHeld);
+                        IsKeyDown(InputType.Left)    ||
+                        IsKeyDown(InputType.Right) ||
+                        IsKeyDown(InputType.Up) ||
+                        IsKeyDown(InputType.Down) ||
+                        IsKeyDown(InputType.Use) ||
+                        IsKeyDown(InputType.Aim);
 
                     message.Write(hasInputs);
                     message.Write((float)NetTime.Now);
 
                     if (!hasInputs) return true;
                     
-                    message.Write(keys[(int)InputType.ActionHeld].Dequeue);
+                    message.Write(keys[(int)InputType.Use].DequeueHeld);
 
-                    bool secondaryHeld = keys[(int)InputType.SecondaryHeld].Dequeue;
+                    bool secondaryHeld = keys[(int)InputType.Aim].DequeueHeld;
                     message.Write(secondaryHeld);
                         
-                    message.Write(keys[(int)InputType.Left].Dequeue);
-                    message.Write(keys[(int)InputType.Right].Dequeue);
+                    message.Write(keys[(int)InputType.Left].Held);
+                    message.Write(keys[(int)InputType.Right].Held);
 
-                    message.Write(keys[(int)InputType.Up].Dequeue);
-                    message.Write(keys[(int)InputType.Down].Dequeue);
+                    message.Write(keys[(int)InputType.Up].Held);
+                    message.Write(keys[(int)InputType.Down].Held);
 
-                    message.Write(keys[(int)InputType.Run].Dequeue);
+                    message.Write(keys[(int)InputType.Run].Held);
 
                     if (secondaryHeld)
                     {
@@ -1386,18 +1409,18 @@ namespace Barotrauma
 
                     AnimController.IsStanding = true;
 
-                    keys[(int)InputType.ActionHeld].State       = actionKeyState;
-                    keys[(int)InputType.SecondaryHeld].State    = secondaryKeyState;
+                    keys[(int)InputType.Use].Held       = actionKeyState;
+                    keys[(int)InputType.Aim].Held    = secondaryKeyState;
 
                     if (sendingTime <= LastNetworkUpdate) return;
 
-                    keys[(int)InputType.Left].State     = leftKeyState;
-                    keys[(int)InputType.Right].State    = rightKeyState;
+                    keys[(int)InputType.Left].Held     = leftKeyState;
+                    keys[(int)InputType.Right].Held     = rightKeyState;
 
-                    keys[(int)InputType.Up].State       = upKeyState;
-                    keys[(int)InputType.Down].State     = downKeyState;
+                    keys[(int)InputType.Up].Held       = upKeyState;
+                    keys[(int)InputType.Down].Held     = downKeyState;
 
-                    keys[(int)InputType.Run].State = runState;
+                    keys[(int)InputType.Run].Held = runState;
 
                     float dir = 1.0f;
                     Vector2 pos = Vector2.Zero;

@@ -9,6 +9,10 @@ namespace Barotrauma
 {
     public class GUIDropDown : GUIComponent
     {
+
+        public delegate bool OnSelectedHandler(GUIComponent selected);
+        public OnSelectedHandler OnSelected;
+
         private GUIButton button;
         private GUIListBox listBox;
 
@@ -64,6 +68,8 @@ namespace Barotrauma
             button.Text = textBlock.Text;
 
             Dropped = false;
+
+            if (OnSelected != null) OnSelected(component);
 
             return true;
         }

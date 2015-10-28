@@ -9,10 +9,8 @@ using Barotrauma.Networking.ReliableMessages;
 
 namespace Barotrauma.Networking
 {
-    class GameServer : NetworkMember
+    partial class GameServer : NetworkMember
     {
-        public bool ShowNetStats;
-
         public List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
@@ -24,40 +22,12 @@ namespace Barotrauma.Networking
         bool started;
 
         private NetServer server;
-        private NetPeerConfiguration config;
-        
-        private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
-        private DateTime sparseUpdateTimer;
+        private NetPeerConfiguration config;        
 
-        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 40);
+        private DateTime sparseUpdateTimer;        
         private DateTime refreshMasterTimer;
 
-        private BanList banList;
-        
         private bool masterServerResponded;
-
-        private bool registeredToMaster;
-
-        private string password;
-
-        private bool autoRestart;
-
-        public bool AutoRestart
-        {
-            get { return (connectedClients.Count==0) ? false : autoRestart; }
-            set
-            {
-                autoRestart = value;
-
-                AutoRestartTimer = autoRestart ? 20.0f : 0.0f;
-            }
-        }
-        public float AutoRestartTimer;
-
-        public BanList BanList
-        {
-            get { return banList; }
-        }
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
@@ -238,6 +208,7 @@ namespace Barotrauma.Networking
         public override void Update(float deltaTime)
         {
             if (ShowNetStats) netStats.Update(deltaTime);
+            if (settingsFrame != null) settingsFrame.Update(deltaTime);
 
             if (!started) return;
 
@@ -1033,6 +1004,8 @@ namespace Barotrauma.Networking
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
+
+            if (settingsFrame != null) settingsFrame.Draw(spriteBatch);
             
             if (!ShowNetStats) return;
 
@@ -1290,16 +1263,6 @@ namespace Barotrauma.Networking
             }
 
             return preferredClient;
-        }
-
-
-        private byte PlayerCountToByte(int playerCount, int maxPlayers)
-        {
-            byte byteVal = (byte)playerCount;
-
-            byteVal |= (byte)((maxPlayers-1) << 4);
-
-            return byteVal;
         }
 
         /// <summary>

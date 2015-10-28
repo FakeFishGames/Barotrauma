@@ -141,7 +141,7 @@ namespace Barotrauma
         public static void ExecuteCommand(string command, GameMain game)
         {
 #if !DEBUG
-            if (GameMain.Client!=null)
+            if (GameMain.Client != null)
             {
                 ThrowError("Console commands are disabled in multiplayer mode");
                 return;
@@ -216,7 +216,7 @@ namespace Barotrauma
                 case "control":
                     if (commands.Length < 2) break;
                     commands[1] = commands[1].ToLower();
-                    Character.Controlled = Character.CharacterList.Find(c => c.Name.ToLower() == commands[1]);
+                    Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLower() == commands[1]);
                     break;
                 case "heal":
                     if (Character.Controlled != null)

@@ -46,18 +46,13 @@ namespace Barotrauma
         {
             try
             {
-#if WINDOWS
-                using (Stream fileStream = File.OpenRead(path))
-                    return FromStream(fileStream, preMultiplyAlpha);
-#endif
-#if LINUX
+
 			    using (Stream fileStream = File.OpenRead(path))
                 {
                     var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
                     texture = PreMultiplyAlpha(texture);
                     return texture;
                 }
-#endif
 
             }
             catch (Exception e)
@@ -67,36 +62,6 @@ namespace Barotrauma
             }
 
         }
-
-#if WINDOWS
- private static Texture2D FromStream(Stream stream, bool preMultiplyAlpha = true)
-        {
-            Texture2D texture;
-
-            if (_needsBmp)
-            {
-                // Load image using GDI because Texture2D.FromStream doesn't support BMP
-                using (Image image = Image.FromStream(stream))
-                {
-                    // Now create a MemoryStream which will be passed to Texture2D after converting to PNG internally
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        image.Save(ms, ImageFormat.Png);
-                        ms.Seek(0, SeekOrigin.Begin);
-                        texture = Texture2D.FromStream(_graphicsDevice, ms);
-                    }
-                }
-            }
-            else
-            {
-                texture = Texture2D.FromStream(_graphicsDevice, stream);
-            }
-
-            if (preMultiplyAlpha) texture = PreMultiplyAlpha(texture);
-
-            return texture;
-        }
-#endif
 
         private static Texture2D PreMultiplyAlpha(Texture2D texture)
         {

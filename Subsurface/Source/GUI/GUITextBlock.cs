@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Barotrauma
 {
@@ -120,7 +121,7 @@ namespace Barotrauma
             this.alignment = alignment;
 
             this.textAlignment = textAlignment;
-
+            
             if (parent != null)
                 parent.AddChild(this);
 
@@ -215,8 +216,8 @@ namespace Barotrauma
             Color currColor = color;
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
-            
-            GUI.DrawRectangle(spriteBatch, rect, currColor*(currColor.A/255.0f), true);
+
+            if (currColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
             base.Draw(spriteBatch);
 
@@ -233,6 +234,9 @@ namespace Barotrauma
             }
 
             DrawChildren(spriteBatch);
+
+            if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);
+
         }
     }
 }
