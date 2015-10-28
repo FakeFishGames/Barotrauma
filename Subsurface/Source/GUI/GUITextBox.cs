@@ -7,11 +7,11 @@ using Microsoft.Xna.Framework.Input;
 namespace Barotrauma
 {
 
-    delegate void TextBoxEvent(GUITextBox sender);
+    delegate void TextBoxEvent(GUITextBox sender, Keys key);
 
     class GUITextBox : GUIComponent, IKeyboardSubscriber
     {        
-        public event TextBoxEvent Clicked;
+        public event TextBoxEvent OnSelected;
 
         bool caretVisible;
         float caretTimer;
@@ -19,11 +19,13 @@ namespace Barotrauma
         GUITextBlock textBlock;
 
         public delegate bool OnEnterHandler(GUITextBox textBox, string text);
-        public OnEnterHandler OnEnter;
+        public OnEnterHandler OnEnterPressed;
+
+        public event TextBoxEvent OnKeyHit;
 
         public delegate bool OnTextChangedHandler(GUITextBox textBox, string text);
         public OnTextChangedHandler OnTextChanged;
-
+        
         public GUITextBlock.TextGetterHandler TextGetter
         {
             get { return textBlock.TextGetter; }
@@ -68,6 +70,8 @@ namespace Barotrauma
             }
         }
 
+        public bool CaretEnabled;
+
         public String Text
         {
             get
@@ -97,6 +101,7 @@ namespace Barotrauma
                         //ensure that text cannot be larger than the box
                         Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
                     }
+                    
                 }
             }
         }
@@ -130,10 +135,13 @@ namespace Barotrauma
                 parent.AddChild(this);
 
             textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
-            textBlock.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
+
             if (style != null) style.Apply(textBlock, this);
+            textBlock.Padding = new Vector4(3.0f, 0.0f, 3.0f, 0.0f);
 
             previousMouse = PlayerInput.GetMouseState;
+
+            CaretEnabled = true;
             //SetTextPos();
         }
 
@@ -141,7 +149,7 @@ namespace Barotrauma
         {
             Selected = true;
             keyboardDispatcher.Subscriber = this;
-            if (Clicked != null) Clicked(this);
+            //if (Clicked != null) Clicked(this);
         }
 
         public void Deselect()
@@ -158,27 +166,37 @@ namespace Barotrauma
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
 
-            caretTimer += deltaTime;
-            caretVisible = ((caretTimer*1000.0f) % 1000) < 500;
+            if (CaretEnabled)
+            {
+                caretTimer += deltaTime;
+                caretVisible = ((caretTimer*1000.0f) % 1000) < 500;
+            }
             
             if (rect.Contains(PlayerInput.MousePosition))
             {
-                state = ComponentState.Hover;
-                if (PlayerInput.LeftButtonClicked()) Select();                
+                state = ComponentState.Hover;                
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    Select();
+                    if (OnSelected != null) OnSelected(this, Keys.None);
+                }
             }
             else
             {
                 state = ComponentState.None;
+
             }
+
+            textBlock.State = state;
 
             if (keyboardDispatcher.Subscriber == this)
             {
                 Character.DisableControls = true;
-                if (OnEnter != null &&  PlayerInput.KeyHit(Keys.Enter))
+                if (OnEnterPressed != null &&  PlayerInput.KeyHit(Keys.Enter))
                 {
                     string input = Text;
                     Text = "";
-                    OnEnter(this, input);
+                    OnEnterPressed(this, input);
                     
                 }
             }
@@ -191,6 +209,8 @@ namespace Barotrauma
             if (!Visible) return;
 
             DrawChildren(spriteBatch);
+
+            if (!CaretEnabled) return;
             
             Vector2 caretPos = textBlock.CaretPos;
 
@@ -224,14 +244,14 @@ namespace Barotrauma
                     if (Text.Length > 0)
                         Text = Text.Substring(0, Text.Length - 1);
                     break;
-                case '\r': //return
-                    if (OnEnterPressed != null)
-                        OnEnterPressed(this);
-                    break;
-                case '\t': //tab
-                    if (OnTabPressed != null)
-                        OnTabPressed(this);
-                    break;
+                //case '\r': //return
+                //    if (OnEnterPressed != null)
+                //        OnEnterPressed(this);
+                //    break;
+                //case '\t': //tab
+                //    if (OnTabPressed != null)
+                //        OnTabPressed(this);
+                //    break;
             }
 
            if (OnTextChanged != null) OnTextChanged(this, Text);
@@ -239,10 +259,10 @@ namespace Barotrauma
 
         public void ReceiveSpecialInput(Keys key)
         {
+            if (OnKeyHit != null) OnKeyHit(this, key);
         }
 
-        public event TextBoxEvent OnEnterPressed;
-        public event TextBoxEvent OnTabPressed;
+        //public event TextBoxEvent OnTabPressed;
 
         public bool Selected
         {

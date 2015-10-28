@@ -179,7 +179,7 @@ namespace Barotrauma
             new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.Black, Alignment.TopLeft, null, editingHUD);
             GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
             propertyBox.Text = string.Join(", ", idCardTags);
-            propertyBox.OnEnter = EnterIDCardTags;
+            propertyBox.OnEnterPressed = EnterIDCardTags;
             propertyBox.OnTextChanged = TextBoxChanged;
             y = y + 30;
 
@@ -187,7 +187,7 @@ namespace Barotrauma
             propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
             propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
 
-            propertyBox.OnEnter = EnterAssignedJob;
+            propertyBox.OnEnterPressed = EnterAssignedJob;
             propertyBox.OnTextChanged = TextBoxChanged;
             y = y + 30;
             

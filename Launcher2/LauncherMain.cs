@@ -243,7 +243,7 @@ namespace Launcher2
             return true;
         }
 
-        private bool ToggleFullScreen(object obj)
+        private bool ToggleFullScreen(GUITickBox tickBox)
         {
             settings.FullScreenEnabled = !settings.FullScreenEnabled;
             return true;

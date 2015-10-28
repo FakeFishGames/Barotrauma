@@ -63,6 +63,8 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = Math.Abs(targetForce)/100.0f * powerConsumption;
 
+            if (powerConsumption == 0.0f) voltage = 1.0f;
+
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Force != 0.0f)
             {

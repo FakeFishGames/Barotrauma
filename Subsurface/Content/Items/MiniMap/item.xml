@@ -10,7 +10,7 @@
     <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.8"/>
   </MiniMap>
 
-  <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+  <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
     <requireditem name="Screwdriver" type="Equipped"/>
     <input name="power_in"/>
   </ConnectionPanel>

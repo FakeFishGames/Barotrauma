@@ -193,7 +193,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (!attachable || item.body==null) return true;
-            if (character != null && !character.GetInputState(InputType.SecondaryHeld)) return false;
+            if (character != null && !character.IsKeyDown(InputType.Aim)) return false;
 
             item.Drop();
 
@@ -238,7 +238,7 @@ namespace Barotrauma.Items.Components
 
             //item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;            
 
-            ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.GetInputState(InputType.SecondaryHeld), holdAngle);
+            ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);
         }    
     
         protected void Flip(Item item)

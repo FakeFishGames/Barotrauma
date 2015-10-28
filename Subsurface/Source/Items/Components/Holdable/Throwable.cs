@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
-            if (!character.GetInputState(InputType.SecondaryHeld) || throwing) return false;
+            if (!character.IsKeyDown(InputType.Aim) || throwing) return false;
 
             //Vector2 diff = Vector2.Normalize(character.CursorPosition - character.AnimController.RefLimb.Position);
 
@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
             if (!item.body.Enabled) return;
             if (!picker.HasSelectedItem(item)) IsActive = false;
 
-            if (!picker.GetInputState(InputType.SecondaryHeld) && !throwing) throwPos = 0.0f;
+            if (!picker.IsKeyDown(InputType.Aim) && !throwing) throwPos = 0.0f;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
 
             if (!throwing)
             {
-                if (picker.GetInputState(InputType.SecondaryHeld))
+                if (picker.IsKeyDown(InputType.Aim))
                 {
                     throwPos = (float)System.Math.Min(throwPos+deltaTime*5.0f, MathHelper.Pi*0.7f);
 

@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || reloadTimer>0.0f) return false;
-            if (!character.GetInputState(InputType.SecondaryHeld) || hitting) return false;
+            if (!character.IsKeyDown(InputType.Aim) || hitting) return false;
 
             user = character;
 
@@ -66,7 +66,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Limb l in character.AnimController.Limbs)
             {
-                item.body.FarseerBody.IgnoreCollisionWith(l.body.FarseerBody);
+                //item.body.FarseerBody.IgnoreCollisionWith(l.body.FarseerBody);
 
                 if (character.AnimController.InWater) continue;
                 if (l.type == LimbType.LeftFoot || l.type == LimbType.LeftThigh || l.type == LimbType.LeftLeg) continue;
@@ -107,7 +107,7 @@ namespace Barotrauma.Items.Components
 
             reloadTimer -= deltaTime;
 
-            if (!picker.GetInputState(InputType.SecondaryHeld) && !hitting) hitPos = 0.0f;
+            if (!picker.IsKeyDown(InputType.Aim) && !hitting) hitPos = 0.0f;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
@@ -119,7 +119,7 @@ namespace Barotrauma.Items.Components
 
             if (!hitting)
             {
-                if (picker.GetInputState(InputType.SecondaryHeld))
+                if (picker.IsKeyDown(InputType.Aim))
                 {
                     hitPos = (float)System.Math.Min(hitPos+deltaTime*5.0f, MathHelper.Pi*0.7f);
 
@@ -167,10 +167,10 @@ namespace Barotrauma.Items.Components
             item.body.CollisionCategories = Physics.CollisionMisc;
             item.body.CollidesWith = Physics.CollisionWall;
 
-            foreach (Limb l in picker.AnimController.Limbs)
-            {
-                item.body.FarseerBody.RestoreCollisionWith(l.body.FarseerBody);
-            }
+            //foreach (Limb l in picker.AnimController.Limbs)
+            //{
+            //    item.body.FarseerBody.RestoreCollisionWith(l.body.FarseerBody);
+            //}
         }
 
 

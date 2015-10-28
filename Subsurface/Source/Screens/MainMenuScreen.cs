@@ -199,6 +199,23 @@ namespace Barotrauma
 
         public void SelectTab(Tab tab)
         {
+            int oldTab = selectedTab;
+
+
+            if (GameMain.Config.UnsavedSettings)
+            {
+                var applyBox = new GUIMessageBox("Apply changes?", "Do you want to apply the settings or discard the changes?", 
+                    new string[] {"Apply", "Discard"});
+                applyBox.Buttons[0].OnClicked += applyBox.Close;
+                applyBox.Buttons[0].OnClicked += ApplySettings;
+                applyBox.Buttons[0].UserData = tab;
+                applyBox.Buttons[1].OnClicked += applyBox.Close;
+                applyBox.Buttons[1].OnClicked += DiscardSettings;
+                applyBox.Buttons[1].UserData = tab;
+
+                return;
+            }
+
             selectedTab = (int)tab;
 
             switch (selectedTab)
@@ -207,10 +224,28 @@ namespace Barotrauma
                     UpdateLoadScreen();
                     break;
                 case (int)Tab.Settings:
+                    GameMain.Config.ResetSettingsFrame();
                     menuTabs[(int)Tab.Settings] = GameMain.Config.SettingsFrame;
                     break;
             }
         }
+
+        private bool ApplySettings(GUIButton button, object obj)
+        {
+            GameMain.Config.Save("config.xml");
+            selectedTab = (int)obj;
+
+            return true;
+        }
+
+        private bool DiscardSettings(GUIButton button, object obj)
+        {
+            GameMain.Config.Load("config.xml");
+            selectedTab = (int)obj;
+
+            return true;
+        }
+
 
         private bool TutorialButtonClicked(GUIButton button, object obj)
         {

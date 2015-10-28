@@ -727,7 +727,7 @@ namespace Barotrauma
 
                         namesBox.Text = relatedItem.JoinedNames;
                         namesBox.UserData = new ObjectProperty(property, relatedItem);
-                        namesBox.OnEnter = EnterProperty;
+                        namesBox.OnEnterPressed = EnterProperty;
                         namesBox.OnTextChanged = PropertyChanged;
 
                         y += 30;
@@ -754,7 +754,7 @@ namespace Barotrauma
                 }
 
                 propertyBox.UserData = objectProperty;
-                propertyBox.OnEnter = EnterProperty;
+                propertyBox.OnEnterPressed = EnterProperty;
                 propertyBox.OnTextChanged = PropertyChanged;
                 y = y + height+10;
             }
@@ -879,8 +879,8 @@ namespace Barotrauma
                 bool pickHit = false, selectHit = false;
                 if (Screen.Selected == GameMain.EditMapScreen)
                 {
-                    pickHit = picker.GetInputState(InputType.Select);
-                    selectHit = picker.GetInputState(InputType.Select);
+                    pickHit = picker.IsKeyHit(InputType.Select);
+                    selectHit = picker.IsKeyHit(InputType.Select);
                 }
                 else
                 {
@@ -891,13 +891,13 @@ namespace Barotrauma
                     }
                     else if (forceActionKey)
                     {
-                        if (ic.PickKey == InputType.ActionHit) pickHit = true;
-                        if (ic.SelectKey == InputType.ActionHit) selectHit = true;
+                        if (ic.PickKey == InputType.Use) pickHit = true;
+                        if (ic.SelectKey == InputType.Use) selectHit = true;
                     }
                     else
                     {
-                        pickHit = picker.GetInputState(ic.PickKey);
-                        selectHit = picker.GetInputState(ic.SelectKey);
+                        pickHit = picker.IsKeyHit(ic.PickKey);
+                        selectHit = picker.IsKeyHit(ic.SelectKey);
                     }
                 }
 
@@ -925,7 +925,7 @@ namespace Barotrauma
 
             if (picker.SelectedConstruction == this)
             {
-                if (picker.GetInputState(InputType.Select)) picker.SelectedConstruction = null;
+                if (picker.IsKeyHit(InputType.Select)) picker.SelectedConstruction = null;
             }
             else if (selected)
             {        

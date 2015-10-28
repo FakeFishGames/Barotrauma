@@ -109,7 +109,7 @@ namespace Barotrauma.Networking
                 new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
                 Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, GUI.Style, inGameHUD);
             chatMsgBox.Font = GUI.SmallFont;
-            chatMsgBox.OnEnter = EnterChatMessage;
+            chatMsgBox.OnEnterPressed = EnterChatMessage;
 
             crewButton = new GUIButton(new Rectangle(chatBox.Rect.Right-80, chatBox.Rect.Y-30, 80, 20), "Crew", GUI.Style, inGameHUD);
             crewButton.OnClicked = ToggleCrewFrame;
@@ -174,17 +174,6 @@ namespace Barotrauma.Networking
             crewFrameOpen = !crewFrameOpen;
             return true;
         }
-
-        //protected void UpdateCrewFrame(List<Client> connectedClients)
-        //{
-        //    List<Character> characterList = new List<Character>();
-        //    foreach (Client c in connectedClients)
-        //    {
-        //        if (c.character != null && c.inGame) characterList.Add(c.character);
-        //    }
-
-        //    CreateCrewFrame(characterList);
-        //}
 
         public bool EnterChatMessage(GUITextBox textBox, string message)
         {
@@ -267,6 +256,15 @@ namespace Barotrauma.Networking
         }
 
         public virtual void Disconnect() { }
+
+        protected byte PlayerCountToByte(int playerCount, int maxPlayers)
+        {
+            byte byteVal = (byte)playerCount;
+
+            byteVal |= (byte)((maxPlayers - 1) << 4);
+
+            return byteVal;
+        }
 
         public static int ByteToPlayerCount(byte byteVal, out int maxPlayers)
         {

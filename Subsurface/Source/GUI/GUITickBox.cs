@@ -9,7 +9,7 @@ namespace Barotrauma
         GUIFrame box;
         GUITextBlock text;
 
-        public delegate bool OnSelectedHandler(object obj);
+        public delegate bool OnSelectedHandler(GUITickBox obj);
         public OnSelectedHandler OnSelected;
 
         private bool selected;

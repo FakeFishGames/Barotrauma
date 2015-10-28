@@ -13,7 +13,7 @@
       <sound file="engine.ogg" type="OnActive" range="3000.0" volume="CurrentVolume" loop="true"/>
     </Engine>
     
-    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="set_force"/>
@@ -38,7 +38,7 @@
       <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
     </Radar>
 
-    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="velocity_in"/>
@@ -60,7 +60,7 @@
       <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
     </Radar>
 
-    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
     </ConnectionPanel>

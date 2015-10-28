@@ -31,7 +31,7 @@
       </StatusEffect>
     </Reactor>
 
-    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_out"/>
       <output name="temperature_out"/>

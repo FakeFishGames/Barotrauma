@@ -69,7 +69,7 @@ namespace Barotrauma
 
         //private Stopwatch renderTimer;
         //public static int renderTimeElapsed;
-                
+                        
         public Camera Cam
         {
             get { return GameScreen.Cam; }

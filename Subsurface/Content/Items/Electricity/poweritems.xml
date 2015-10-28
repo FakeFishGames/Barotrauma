@@ -17,7 +17,7 @@
       <GuiFrame rect="0,0,350,160" alignment="Center" color="0.0,0.0,0.0,0.6"/>
     </PowerTransfer>
 
-    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <RequiredSkill name="Electrical Engineering" level="30"/>
       <StatusEffect type="OnFailure" target="Character">
         <Explosion range="100.0" damage="5" stun="10" force="2.0" flames="false" shockwave="false" sparks="true"/>
@@ -45,7 +45,7 @@
       <StatusEffect type="OnActive" target="Contained" targetnames="loadable" Condition="2.0"/>
     </PowerContainer>
 
-    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <StatusEffect type="OnFailure" target="Character">
         <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
       </StatusEffect>
@@ -69,7 +69,7 @@
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
     </PowerContainer>
 
-    <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <StatusEffect type="OnFailure" target="Character">
         <Explosion range="100.0" damage="30" stun="20" force="5.0" shockwave="false" sparks="true"/>
       </StatusEffect>

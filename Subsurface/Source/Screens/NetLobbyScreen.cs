@@ -119,7 +119,7 @@ namespace Barotrauma
             //server info panel ------------------------------------------------------------
 
             infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.7f), (int)(panelRect.Height * 0.6f)), GUI.Style, menu);
-            //infoFrame.Padding = GUI.style.smallPadding;
+            infoFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f); ;
             
             //chatbox ----------------------------------------------------------------------
             GUIFrame chatFrame = new GUIFrame(
@@ -127,11 +127,12 @@ namespace Barotrauma
                     (int)(panelRect.Width * 0.7f),
                     (int)(panelRect.Height * 0.4f - 20)),
                 GUI.Style, menu);
+            chatFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 40.0f);
 
             chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, GUI.Style, chatFrame);            
             textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, GUI.Style, chatFrame);
             textBox.Font = GUI.SmallFont;
-            textBox.OnEnter = EnterChatMessage;
+            textBox.OnEnterPressed = EnterChatMessage;
 
             //player info panel ------------------------------------------------------------
 
@@ -147,6 +148,8 @@ namespace Barotrauma
                 new Rectangle((int)(panelRect.Width * 0.7f + 20), (int)(panelRect.Height * 0.6f + 20),
                     (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.4f - 20)),
                 GUI.Style, menu);
+
+            playerListFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 40.0f);
 
             playerList = new GUIListBox(new Rectangle(0,0,0,0), null, GUI.Style, playerListFrame);
             playerList.OnSelected = SelectPlayer;
@@ -278,9 +281,13 @@ namespace Barotrauma
 
             if (IsServer && GameMain.Server != null)
             {
-                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
+                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
                 startButton.OnClicked = GameMain.Server.StartGameClicked;
                 startButton.UserData = "startButton";
+
+                GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, GUI.Style, infoFrame);
+                settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
+                settingsButton.UserData = "settingsButton";
 
                 var banListButton = new GUIButton(new Rectangle(0, 30, 100, 20), "Banned IPs", Alignment.BottomRight, GUI.Style, playerList.Parent);
                 banListButton.OnClicked = GameMain.Server.BanList.ToggleBanFrame;
@@ -299,6 +306,10 @@ namespace Barotrauma
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
+
+                if (GameMain.Server.RandomizeSeed) seedBox.Text = ToolBox.RandomSeed(8);
+                if (GameMain.Server.SubSelectionMode == SelectionMode.Random) subList.Select(Rand.Range(0,subList.CountChildren));
+                if (GameMain.Server.ModeSelectionMode == SelectionMode.Random) modeList.Select(Rand.Range(0, modeList.CountChildren));
             }
             else
             {
@@ -322,12 +333,18 @@ namespace Barotrauma
                     playYourself.UserData = "playyourself";
                 }
 
-                new GUITextBlock(new Rectangle(60, 30, 200, 30), "Name: ", GUI.Style, myPlayerFrame);
+                new GUITextBlock(new Rectangle(100, 30, 200, 30), "Name: ", GUI.Style, myPlayerFrame);
 
-                GUITextBox playerName = new GUITextBox(new Rectangle(60, 55, 0, 20),
-                    Alignment.TopLeft, GUI.Style, myPlayerFrame);
+                GUITextBox playerName = new GUITextBox(new Rectangle(100, 55, 0, 20), Alignment.TopLeft, GUI.Style, myPlayerFrame);
                 playerName.Text = characterInfo.Name;
-                playerName.OnEnter += ChangeCharacterName;
+                playerName.OnEnterPressed += ChangeCharacterName;
+
+                GUIButton toggleHead = new GUIButton(new Rectangle(00, 50, 20, 20), "<", GUI.Style, myPlayerFrame);
+                toggleHead.UserData = -1;
+                toggleHead.OnClicked = ToggleHead;
+                toggleHead = new GUIButton(new Rectangle(40, 50, 20, 20), ">", GUI.Style, myPlayerFrame);
+                toggleHead.UserData = 1;
+                toggleHead.OnClicked = ToggleHead;
 
                 new GUITextBlock(new Rectangle(0, 100, 200, 30), "Gender: ", GUI.Style, myPlayerFrame);
 
@@ -374,9 +391,8 @@ namespace Barotrauma
             }
         }
 
-        private bool TogglePlayYourself(object obj)
+        private bool TogglePlayYourself(GUITickBox tickBox)
         {
-            GUITickBox tickBox = obj as GUITickBox;
             if (tickBox.Selected)
             {
                 GameMain.Server.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.Server.Name);
@@ -398,16 +414,13 @@ namespace Barotrauma
             return false;
         }
 
-        private bool ToggleAutoRestart(object obj)
+        private bool ToggleAutoRestart(GUITickBox tickBox)
         {
             if (GameMain.Server == null) return false;
             
-            GUITickBox tickBox = obj as GUITickBox;
-            if (tickBox==null) return false;
-
             GameMain.Server.AutoRestart = tickBox.Selected;
 
-            GameMain.Server.UpdateNetLobby(obj);
+            GameMain.Server.UpdateNetLobby(tickBox);
 
             return true;
         }
@@ -622,8 +635,21 @@ namespace Barotrauma
             GUIComponent existing = myPlayerFrame.FindChild("playerhead");
             if (existing != null) myPlayerFrame.RemoveChild(existing);
 
-            GUIImage image = new GUIImage(new Rectangle(0, 40, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, myPlayerFrame);
+            GUIImage image = new GUIImage(new Rectangle(20, 40, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, myPlayerFrame);
             image.UserData = "playerhead";
+        }
+
+        private bool ToggleHead(GUIButton button, object userData)
+        {
+            int dir = (int)userData;
+
+            if (GameMain.NetworkMember.CharacterInfo == null) return true;
+
+            GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
+
+            UpdatePreviewPlayer(GameMain.NetworkMember.CharacterInfo);
+
+            return true;
         }
 
         private bool SwitchGender(GUIButton button, object obj)

@@ -15,12 +15,12 @@
     <sound file="beep.ogg" type="OnUse" range="500.0"/>
   </Controller>
 
-  <ConnectionPanel selectkey="ActionHit" canbeselected = "true" msg="Rewire [Screwdriver]">
+  <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
     <RequiredItem name="Screwdriver" type="Equipped"/>
     <output name="signal_out"/>
   </ConnectionPanel>
 
-  <Holdable selectkey="ActionHit" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]"
+  <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]"
             aimpos="35,-10" handle1="0,0" attachable="true" attachedbydefault="true" aimable="true">
     <requireditem name="Wrench" type="Equipped"/>
   </Holdable>
