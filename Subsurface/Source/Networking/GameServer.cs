@@ -223,8 +223,8 @@ namespace Barotrauma.Networking
                     connectedClients.Find(c => c.character != null && !c.character.IsDead)==null &&
                    (myCharacter == null || myCharacter.IsDead))
                 {
-                    EndButtonHit(null, null);
                     AutoRestartTimer = 20.0f;
+                    EndButtonHit(null, null);                    
                     UpdateNetLobby(null,null);
                     return;
                 }

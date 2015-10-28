@@ -118,7 +118,7 @@ namespace Barotrauma
 
                     Vector2[] points = new Vector2[] { edge.point1, edge.point2 };
 
-                    int positionIndex = Rand.Int(1,false);
+                    int positionIndex = Rand.Int(1, false);
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];

@@ -312,6 +312,16 @@ namespace Barotrauma
 
             return BitConverter.ToInt32(asciiBytes, 0);
         }
+        /// <summary>
+        /// a method for changing inputtypes with old names to the new ones to ensure backwards compatibility with older subs
+        /// </summary>
+        public static string ConvertInputType(string inputType)
+        {
+            if (inputType == "ActionHit" || inputType == "Action") return "Use";
+            if (inputType == "SecondarHit" || inputType == "Secondary") return "Aim";
+
+            return inputType;
+        }
         
         public static string WrapText(string text, float lineLength, SpriteFont font)
         {

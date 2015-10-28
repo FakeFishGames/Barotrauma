@@ -78,6 +78,11 @@ namespace Voronoi2
 	{
 		public Point coord;
 		public int sitenbr;
+
+        public void SetPoint(Vector2 point)
+        {
+            coord.setPoint(point.X, point.Y);
+        }
 		
 		public Site ()
 		{
@@ -128,6 +133,32 @@ namespace Voronoi2
         public Vector2 Center
         {
             get { return new Vector2((float)site.coord.x, (float)site.coord.y); }
+        }
+
+        public VoronoiCell(Vector2[] vertices)
+        {
+            edges = new List<GraphEdge>();
+            bodyVertices = new List<Vector2>();
+
+            Vector2 midPoint = Vector2.Zero;
+            foreach (Vector2 vertex in vertices)
+            {
+                midPoint += vertex;
+            }
+            midPoint /= vertices.Length;
+
+
+            for (int i = 1; i < vertices.Length; i++ )
+            {
+                GraphEdge ge = new GraphEdge();
+                ge.point1 = vertices[i-1];
+                ge.point2 = vertices[i];
+
+                edges.Add(ge);
+            }
+
+            site = new Site();
+            site.SetPoint(midPoint);
         }
 
         public VoronoiCell(Site site)
