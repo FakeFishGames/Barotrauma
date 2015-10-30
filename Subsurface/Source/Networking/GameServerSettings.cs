@@ -20,7 +20,7 @@ namespace Barotrauma.Networking
 
         private SelectionMode subSelectionMode, modeSelectionMode;
 
-        private bool randomizeSeed;
+        private bool randomizeSeed = true;
         
         private bool registeredToMaster;
 
@@ -108,6 +108,13 @@ namespace Barotrauma.Networking
                 ((GUITickBox)otherTickBox).Selected = false;
             }
 
+            Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
+
+            if (subSelectionMode==SelectionMode.Random)
+            {
+                GameMain.NetLobbyScreen.SubList.Select(Rand.Range(0, GameMain.NetLobbyScreen.SubList.CountChildren));
+            }
+
             return true;
         }
 
@@ -119,6 +126,13 @@ namespace Barotrauma.Networking
             {
                 if (otherTickBox == tickBox) continue;
                 ((GUITickBox)otherTickBox).Selected = false;
+            }
+
+            Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
+
+            if (modeSelectionMode == SelectionMode.Random)
+            {
+                GameMain.NetLobbyScreen.ModeList.Select(Rand.Range(0, GameMain.NetLobbyScreen.ModeList.CountChildren));
             }
 
             return true;

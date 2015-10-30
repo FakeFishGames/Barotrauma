@@ -16,6 +16,9 @@ namespace Barotrauma
 {
     class SubmarineBody
     {
+        const float DamageDepth = 0.0f;
+        const float PressureDamageMultiplier = 0.001f;
+
         //structure damage = impact * damageMultiplier
         const float DamageMultiplier = 50.0f;
 
@@ -26,6 +29,8 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        private float depthDamageTimer;
 
         private Submarine sub;
         
@@ -207,6 +212,8 @@ namespace Barotrauma
 
             ApplyForce(totalForce);
 
+            UpdateDepthDamage(deltaTime);
+
             //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
 
             //hullBody.SetTransform(Vector2.Zero , 0.0f);
@@ -238,6 +245,48 @@ namespace Barotrauma
         public void ApplyForce(Vector2 force)
         {
             Speed += force / mass;
+        }
+
+        private void UpdateDepthDamage(float deltaTime)
+        {
+            if (sub.Position.Y > DamageDepth) return;
+
+            float depth = DamageDepth - sub.Position.Y;
+            depth = Math.Max(depth, -40000.0f);
+
+           // float prevTimer = depthDamageTimer;
+
+            depthDamageTimer -= deltaTime*depth*PressureDamageMultiplier;
+
+            //if (prevTimer>5.0f && depthDamageTimer<=5.0f)
+            //{
+            //    SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f,);
+            //}
+
+            if (depthDamageTimer > 0.0f) return;
+
+            Vector2 damagePos = Vector2.Zero;
+            if (Rand.Int(2)==0)
+            {
+                damagePos = new Vector2(
+                    (Rand.Int(2) == 0) ? Borders.X : Borders.X+Borders.Width, 
+                    Rand.Range(Borders.Y - Borders.Height, Borders.Y));
+            }
+            else
+            {
+                damagePos = new Vector2(
+                    Rand.Range(Borders.X, Borders.X + Borders.Width),
+                    (Rand.Int(2) == 0) ? Borders.Y : Borders.Y - Borders.Height);
+            }
+
+            SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f, damagePos, 5000.0f);
+
+            GameMain.GameScreen.Cam.Shake = depth * PressureDamageMultiplier * 0.1f;
+
+            Explosion.RangedStructureDamage(damagePos, depth * PressureDamageMultiplier * 50.0f, depth * PressureDamageMultiplier);
+            //SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, Rand.Range(0.0f, 100.0f), damagePos, 5000.0f);
+            
+            depthDamageTimer = 10.0f;
         }
 
         private void UpdateColliding()

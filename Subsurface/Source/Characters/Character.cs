@@ -379,12 +379,15 @@ namespace Barotrauma
 
             if (Info.PickedItemIDs.Any())
             {
-                foreach (ushort id in Info.PickedItemIDs)
+                for (ushort i = 0; i < Info.PickedItemIDs.Count; i++ )
                 {
-                    Item item = FindEntityByID(id) as Item;
+                    if (i == 0) continue;
+
+                    Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
                     if (item == null) continue;
 
-                    item.Pick(this);
+                    item.Pick(this, true, true, true);
+                    inventory.TryPutItem(item, i, false);
                 }
             }
 

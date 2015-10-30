@@ -65,6 +65,11 @@ namespace Barotrauma
             private set;
         }
 
+        public Vector2 Size
+        {
+            get { return new Vector2(borders.Width, borders.Height); }
+        }
+
         public Vector2 EndPosition
         {
             get { return endPosition; }
@@ -277,7 +282,7 @@ namespace Barotrauma
 
                 var newPathCells = GeneratePath(new List<Vector2> { start, end }, cells, pathBorders, 0.0f, 0.8f, mirror);
 
-                for (int n = 0; n < newPathCells.Count-5; n += 3)
+                for (int n = 0; n < newPathCells.Count; n += 5)
                 {
                     positionsOfInterest.Add(newPathCells[n].Center);
                 }                
@@ -297,9 +302,13 @@ namespace Barotrauma
             //        GeneratePath(rand, tunnelStart, new Vector2(tunnelStart.X, borders.Height), cells, pathBorders, minWidth, 0.1f, mirror)
             //    );
             //}
-
-            cells = CleanCells(pathCells);
             
+            cells = CleanCells(pathCells);
+
+            pathCells.AddRange(CreateBottomHoles(1.0f, new Rectangle(
+                (int)(borders.Width * 0.2f), 0,
+                (int)(borders.Width * 0.6f), (int)(borders.Height * 0.3f))));
+
             foreach (VoronoiCell cell in pathCells)
             {
                 cells.Remove(cell);
@@ -344,6 +353,17 @@ namespace Barotrauma
                 }
             }
 
+
+            for (int i = 0; i < 2; i++)
+            {
+                Body shaftBody = BodyFactory.CreateRectangle(GameMain.World, 100.0f, 10.0f, 5.0f);
+                shaftBody.BodyType = BodyType.Kinematic;
+                shaftBody.CollisionCategories = Physics.CollisionLevel;
+                shaftBody.SetTransform(ConvertUnits.ToSimUnits((i == 0) ? startPosition : endPosition), 0.0f);
+                shaftBody.SleepingAllowed = false;
+                bodies.Add(shaftBody);
+            }
+
             foreach (VoronoiCell cell in cells)
             {
                 foreach (GraphEdge edge in cell.edges)
@@ -381,6 +401,7 @@ namespace Barotrauma
             //lower values will cause the path to "wander" more, higher will make it head straight to the end
             wanderAmount = MathHelper.Clamp(wanderAmount, 0.0f, 1.0f);
 
+            List<GraphEdge> allowedEdges = new List<GraphEdge>();
             List<VoronoiCell> pathCells = new List<VoronoiCell>();
 
             VoronoiCell[] targetCells = new VoronoiCell[points.Count];
@@ -398,12 +419,21 @@ namespace Barotrauma
             {
                 int edgeIndex = 0;
 
+                allowedEdges.Clear();
+                foreach (GraphEdge edge in currentCell.edges)
+                {
+                    if (!limits.Contains(edge.AdjacentCell(currentCell).Center)) continue;
+
+                    allowedEdges.Add(edge);
+                }
+
                 //steer towards target
-                if (Rand.Range(0.0f, 1.0f, false) > wanderAmount)
+                if (Rand.Range(0.0f, 1.0f, false) > wanderAmount || allowedEdges.Count == 0)
                 {
                     for (int i = 0; i < currentCell.edges.Count; i++)
                     {
-                        if (!MathUtils.LinesIntersect(currentCell.Center, targetCells[currentTargetIndex].Center, currentCell.edges[i].point1, currentCell.edges[i].point2)) continue;
+                        if (!MathUtils.LinesIntersect(currentCell.Center, targetCells[currentTargetIndex].Center, 
+                            currentCell.edges[i].point1, currentCell.edges[i].point2)) continue;
                         edgeIndex = i;
                         break;
                     }
@@ -411,24 +441,18 @@ namespace Barotrauma
                 //choose random edge (ignoring ones where the adjacent cell is outside limits)
                 else
                 {
-                    List<GraphEdge> allowedEdges = new List<GraphEdge>();
 
-                    foreach (GraphEdge edge in currentCell.edges)
-                    {
-                        if (!limits.Contains(edge.AdjacentCell(currentCell).Center)) continue;
 
-                        allowedEdges.Add(edge);
-                    }
-                    if (allowedEdges.Count==0)
-                    {
-                        edgeIndex = Rand.Int(currentCell.edges.Count, false);
-                    }
-                    else
-                    {
+                    //if (allowedEdges.Count==0)
+                    //{
+                    //    edgeIndex = Rand.Int(currentCell.edges.Count, false);
+                    //}
+                    //else
+                    //{
                         edgeIndex = Rand.Int(allowedEdges.Count, false);
                         if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
                         edgeIndex = currentCell.edges.IndexOf(allowedEdges[edgeIndex]);
-                    }
+                    //}
                 }
 
                 currentCell = currentCell.edges[edgeIndex].AdjacentCell(currentCell);
@@ -493,6 +517,26 @@ namespace Barotrauma
             sw2.Restart();
 
             return pathCells;
+        }
+
+        private List<VoronoiCell> CreateBottomHoles(float holeProbability, Rectangle limits)
+        {
+            List<VoronoiCell> toBeRemoved = new List<VoronoiCell>();
+            foreach (VoronoiCell cell in cells)
+            {
+                if (Rand.Range(0.0f, 1.0f, false) > holeProbability) continue;
+
+                if (!limits.Contains(cell.Center)) continue;
+
+                toBeRemoved.Add(cell);
+            }
+
+            return toBeRemoved;
+
+            //foreach (VoronoiCell cell in toBeRemoved)
+            //{
+            //    cells.Remove(cell);
+            //}
         }
 
         private List<VoronoiCell> GetTooCloseCells(List<VoronoiCell> emptyCells, float minDistance)
@@ -671,17 +715,7 @@ namespace Barotrauma
                 bodies.Add(edgeBody);
             }
 
-            for (int i = 0; i < 2; i++ )
-            {
-                Body shaftBody = BodyFactory.CreateRectangle(GameMain.World, 100.0f, 10.0f, 5.0f);
-                shaftBody.BodyType = BodyType.Kinematic;
-                shaftBody.CollisionCategories = Physics.CollisionLevel;
-                shaftBody.SetTransform(ConvertUnits.ToSimUnits((i==0) ? startPosition : endPosition), 0.0f);
-                shaftBody.SleepingAllowed = false;
-                bodies.Add(shaftBody);
-            }
-
-                return verticeList.ToArray();
+            return verticeList.ToArray();
         }
 
         public void SetPosition(Vector2 pos)
@@ -918,7 +952,7 @@ namespace Barotrauma
                 for (int i = 0; i < 2; i++)
                 {
                     basicEffect.World = Matrix.CreateTranslation(new Vector3(Position + wrappingWalls[side, i].Offset, 0.0f)) * cam.ShaderTransform
-    * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+                        * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
                     basicEffect.CurrentTechnique.Passes[0].Apply();
 

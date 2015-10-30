@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -186,25 +187,27 @@ namespace Barotrauma
         {
             GUIImage image = new GUIImage(new Rectangle(0,0,30,30), HeadSprite, Alignment.TopLeft, frame);
 
+            SpriteFont font = frame.Rect.Width<280 ? GUI.SmallFont : GUI.Font;
+
             int x = 0, y = 0;
-            new GUITextBlock(new Rectangle(x+80, y, 200, 20), Name, GUI.Style, frame);
+            new GUITextBlock(new Rectangle(x+60, y, 200, 20), Name, GUI.Style, frame, font);
             y += 20;
 
             if (Job!=null)
             {
-                new GUITextBlock(new Rectangle(x+80, y, 200, 20), Job.Name, GUI.Style, frame);
+                new GUITextBlock(new Rectangle(x + 60, y, 200, 20), Job.Name, GUI.Style, frame, font);
                 y += 30;
 
                 var skills = Job.Skills;
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
-                new GUITextBlock(new Rectangle(x, y, 200, 20), "Skills:", GUI.Style, frame);
+                new GUITextBlock(new Rectangle(x, y, 200, 20), "Skills:", GUI.Style, frame, font);
                 y += 20;
                 foreach (Skill skill in skills)
                 {
                     Color textColor = Color.White * (0.5f + skill.Level/200.0f);
-                    new GUITextBlock(new Rectangle(x+20, y, 200, 20), skill.Name, Color.Transparent, textColor, Alignment.Left, GUI.Style, frame);
-                    new GUITextBlock(new Rectangle(x + 20, y, 200, 20), skill.Level.ToString(), Color.Transparent, textColor, Alignment.Right, GUI.Style, frame);
+                    new GUITextBlock(new Rectangle(x, y, 200, 20), skill.Name, Color.Transparent, textColor, Alignment.Left, GUI.Style, frame).Font = font;
+                    new GUITextBlock(new Rectangle(x, y, 200, 20), skill.Level.ToString(), Color.Transparent, textColor, Alignment.Right, GUI.Style, frame).Font = font;
                     y += 20;
                 }
             }
@@ -218,8 +221,7 @@ namespace Barotrauma
             pickedItems.Clear();
             foreach (Item item in Character.Inventory.items)
             {
-                if (item == null) continue;
-                pickedItems.Add(item.ID);
+                pickedItems.Add(item == null ? (ushort)0 : item.ID);
             }
         }
 

@@ -223,7 +223,6 @@ namespace Barotrauma.Networking
                     connectedClients.Find(c => c.character != null && !c.character.IsDead)==null &&
                    (myCharacter == null || myCharacter.IsDead))
                 {
-                    AutoRestartTimer = 20.0f;
                     EndButtonHit(null, null);                    
                     UpdateNetLobby(null,null);
                     return;
@@ -484,6 +483,9 @@ namespace Barotrauma.Networking
                         case (byte)PacketTypes.LatestMessageID:
                             dataSender.ReliableChannel.HandleLatestMessageID(inc);
                             break;
+                        case (byte)PacketTypes.Vote:
+                            Voting.RegisterVote(inc, connectedClients);
+                            break;
                     }
                     break;
                 case NetIncomingMessageType.WarningMessage:
@@ -674,7 +676,8 @@ namespace Barotrauma.Networking
 
         public bool StartGameClicked(GUIButton button, object obj)
         {
-            Submarine selectedSub = GameMain.NetLobbyScreen.SelectedMap as Submarine;
+            Submarine selectedSub = Voting.AllowSubVoting ?             
+                Voting.HighestVoted<Submarine>(VoteType.Sub, connectedClients) : GameMain.NetLobbyScreen.SelectedSub;
 
             if (selectedSub == null)
             {
@@ -695,7 +698,11 @@ namespace Barotrauma.Networking
 
             int seed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(seed);
-            GameMain.GameSession = new GameSession(selectedSub, "", GameMain.NetLobbyScreen.SelectedMode);
+
+            GameModePreset selectedMode = Voting.HighestVoted<GameModePreset>(VoteType.Mode, connectedClients);                        
+            if (selectedMode==null) selectedMode=GameMain.NetLobbyScreen.SelectedMode;            
+
+            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode);
             GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
 
             yield return CoroutineStatus.Running;
@@ -747,10 +754,10 @@ namespace Barotrauma.Networking
 
             msg.Write(GameMain.NetLobbyScreen.LevelSeed);
 
-            msg.Write(GameMain.NetLobbyScreen.SelectedMap.Name);
-            msg.Write(GameMain.NetLobbyScreen.SelectedMap.MD5Hash.Hash);
+            msg.Write(selectedSub.Name);
+            msg.Write(selectedSub.MD5Hash.Hash);
 
-            msg.Write(GameMain.NetLobbyScreen.SelectedMode.Name);
+            msg.Write(selectedMode.Name);
 
             //msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
@@ -787,6 +794,8 @@ namespace Barotrauma.Networking
         private bool EndButtonHit(GUIButton button, object obj)
         {
             GameMain.GameSession.gameMode.End("Server admin has ended the round");
+
+            if (autoRestart) AutoRestartTimer = 20.0f;
 
             return true;
         }
@@ -1044,6 +1053,27 @@ namespace Barotrauma.Networking
 
         }
 
+        public void UpdateVoteStatus()
+        {
+            if (server.Connections.Count == 0) return;
+
+            try
+            {
+                NetOutgoingMessage msg = server.CreateMessage();
+                msg.Write((byte)PacketTypes.VoteStatus);
+                Voting.WriteData(msg, connectedClients);
+
+                server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0); 
+            }
+            catch (Exception e)
+            {
+#if DEBUG   
+                DebugConsole.ThrowError("Failed to update vote status", e);
+#endif
+            }
+
+        }
+
         public bool UpdateNetLobby(object obj)
         {
             return UpdateNetLobby(null, obj);
@@ -1051,14 +1081,13 @@ namespace Barotrauma.Networking
 
         public bool UpdateNetLobby(GUIComponent component, object obj)
         {
+            if (server.Connections.Count == 0) return true;
+
             NetOutgoingMessage msg = server.CreateMessage();
             msg.Write((byte)PacketTypes.UpdateNetLobby);
             GameMain.NetLobbyScreen.WriteData(msg);
 
-            if (server.Connections.Count > 0)
-            {
-                server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);
-            }
+            server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);            
 
             return true;
         }
@@ -1320,6 +1349,8 @@ namespace Barotrauma.Networking
         public string version;
         public bool inGame;
 
+        private object[] votes;
+
         public List<JobPrefab> jobPreferences;
         public JobPrefab assignedJob;
 
@@ -1337,8 +1368,20 @@ namespace Barotrauma.Networking
         {
             this.name = name;
             this.ID = ID;
+
+            votes = new object[Enum.GetNames(typeof(VoteType)).Length];
             
             jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0,3));
+        }
+
+        public object GetVote(VoteType voteType)
+        {
+            return votes[(int)voteType];
+        }
+
+        public void SetVote(VoteType voteType, object value)
+        {
+            votes[(int)voteType] = value;
         }
     }
 }

@@ -78,7 +78,7 @@ namespace Barotrauma
                 if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
                 if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
-                GameMain.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
+                GameMain.GameSession.Submarine.ApplyForce(targetMovement * 1000000.0f);
             }
 #endif
             dustOffset -= Vector2.UnitY * 10.0f * (float)deltaTime;
@@ -213,11 +213,11 @@ namespace Barotrauma
             viewRect.Y = -viewRect.Y;
 
             float multiplier = 0.8f;
-            for (int i = 1; i < 3; i++)
+            for (int i = 1; i < 4; i++)
             {
                 spriteBatch.Draw(dustParticles, viewRect,
                     new Rectangle((int)((backgroundPos.X * multiplier)), (int)((-backgroundPos.Y * multiplier)), cam.WorldView.Width, cam.WorldView.Height),
-                    Color.LightGray * multiplier, 0.0f, Vector2.Zero, SpriteEffects.None, 1.0f-multiplier);
+                    Color.White * multiplier, 0.0f, Vector2.Zero, SpriteEffects.None, 1.0f-multiplier);
                 multiplier -= 0.15f;
             }
             

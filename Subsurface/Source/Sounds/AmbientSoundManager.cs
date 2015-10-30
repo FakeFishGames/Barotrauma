@@ -14,7 +14,7 @@ namespace Barotrauma
         None, 
         StructureBlunt, StructureSlash, 
         LimbBlunt, LimbSlash, LimbArmor,
-        Implode }
+        Implode, Pressure }
 
     public struct DamageSound
     {
@@ -228,7 +228,11 @@ namespace Barotrauma
             }
 
             List<BackgroundMusic> suitableMusic = null;
-            if (criticalTask == null)
+            if (Submarine.Loaded!=null && Submarine.Loaded.Position.Y<0.0f)
+            {
+                suitableMusic = musicClips.Where(x => x != null && x.type == "deep").ToList();
+            }
+            else if (criticalTask == null)
             {
                 suitableMusic = musicClips.Where(x => x != null && x.type == "default").ToList();
             }
@@ -278,7 +282,7 @@ namespace Barotrauma
             PlayDamageSound(damageType, damage, bodyPosition);
         }
 
-        public static void PlayDamageSound(DamageSoundType damageType, float damage, Vector2 position)
+        public static void PlayDamageSound(DamageSoundType damageType, float damage, Vector2 position, float range = 2000.0f)
         {
             damage = MathHelper.Clamp(damage+Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
             var sounds = damageSounds.Where(x => damage >= x.damageRange.X && damage <= x.damageRange.Y && x.damageType == damageType).ToList();
@@ -291,7 +295,7 @@ namespace Barotrauma
             {
                 if (i == selectedSound)
                 {
-                    s.sound.Play(1.0f, 2000.0f, position);
+                    s.sound.Play(1.0f, range, position);
                     Debug.WriteLine("playing: " + s.sound);
                     return;
                 }

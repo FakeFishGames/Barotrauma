@@ -226,7 +226,6 @@ namespace Barotrauma
                 //try to give the crew member a spawnpoint that hasn't been assigned to anyone and matches their job                
                 for (int n = 0; n < unassignedWayPoints.Count; n++)
                 {
-
                     if (crew[i].Job.Prefab != unassignedWayPoints[n].assignedJob) continue;
                     assignedWayPoints[i] = unassignedWayPoints[n];
                     unassignedWayPoints.RemoveAt(n);

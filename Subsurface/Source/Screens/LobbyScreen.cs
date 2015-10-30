@@ -58,14 +58,14 @@ namespace Barotrauma
         {
             Rectangle panelRect = new Rectangle(
                 40, 40,
-                180,
+                GameMain.GraphicsWidth < 1000 ? 140 : 180,
                 GameMain.GraphicsHeight - 80);
 
             leftPanel = new GUIFrame(panelRect, GUI.Style);
-            //leftPanel.Padding = GUI.style.smallPadding;
+            leftPanel.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0, 0, 200, 25), 
-                "asdfdasfasdf", Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
+            //new GUITextBlock(new Rectangle(0, 0, 200, 25), 
+            //    save, Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
 
             GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 200, 25), 
                 "", Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
@@ -100,17 +100,18 @@ namespace Barotrauma
             rightPanel = new GUIFrame[4];
 
             rightPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.Style);
-            //rightPanel[(int)PanelTab.Crew].Padding = GUI.style.smallPadding;
+            rightPanel[(int)PanelTab.Crew].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, GUI.Style, rightPanel[(int)PanelTab.Crew]);
 
-            characterList = new GUIListBox(new Rectangle(0, 30, 300, 0), GUI.Style, rightPanel[(int)PanelTab.Crew]);
+            int crewColumnWidth = Math.Min(300, (panelRect.Width - 40) / 2);
+            characterList = new GUIListBox(new Rectangle(0, 30, crewColumnWidth, 0), GUI.Style, rightPanel[(int)PanelTab.Crew]);
             characterList.OnSelected = SelectCharacter;
 
             //---------------------------------------
 
             rightPanel[(int)PanelTab.Map] = new GUIFrame(panelRect, GUI.Style);
-            //rightPanel[(int)PanelTab.Map].Padding = GUI.style.smallPadding;
+            rightPanel[(int)PanelTab.Map].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",
                 Alignment.BottomRight, GUI.Style, rightPanel[(int)PanelTab.Map]);
@@ -124,17 +125,20 @@ namespace Barotrauma
             //---------------------------------------
 
             rightPanel[(int)PanelTab.Store] = new GUIFrame(panelRect, GUI.Style);
+            rightPanel[(int)PanelTab.Store].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            selectedItemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, GUI.Style, rightPanel[(int)PanelTab.Store]);
+            int sellColumnWidth = (panelRect.Width - 40) / 2 - 20;
+
+            selectedItemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, GUI.Style, rightPanel[(int)PanelTab.Store]);
             selectedItemList.OnSelected = DeselectItem;
 
-            var costText = new GUITextBlock(new Rectangle(0, 0, 200, 25), "Cost: ", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, rightPanel[(int)PanelTab.Store]);
+            var costText = new GUITextBlock(new Rectangle(0, 0, 100, 25), "Cost: ", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, rightPanel[(int)PanelTab.Store]);
             costText.TextGetter = CostTextGetter;
 
-            buyButton = new GUIButton(new Rectangle(150, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, rightPanel[(int)PanelTab.Store]);
+            buyButton = new GUIButton(new Rectangle(sellColumnWidth+20, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, rightPanel[(int)PanelTab.Store]);
             buyButton.OnClicked = BuyItems;
 
-            itemList = new GUIListBox(new Rectangle(0, 0, 300, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, rightPanel[(int)PanelTab.Store]);
+            itemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, rightPanel[(int)PanelTab.Store]);
             itemList.OnSelected = SelectItem;
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)
@@ -237,7 +241,7 @@ namespace Barotrauma
                     c.Name + " (" + c.Job.Name + ")", GUI.Style, 
                     Alignment.Left, 
                     Alignment.Left,
-                    characterList);
+                    characterList, false, GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = c;
             }
@@ -254,12 +258,15 @@ namespace Barotrauma
             frame.HoverColor = Color.Gold * 0.2f;
             frame.SelectedColor = Color.Gold * 0.5f;
 
+            SpriteFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(40, 0, 0, 25),
                 ep.Name,
                 Color.Transparent, Color.White,
                 Alignment.Left, Alignment.Left,
                 null, frame);
+            textBlock.Font = font;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
             textBlock = new GUITextBlock(
@@ -267,6 +274,7 @@ namespace Barotrauma
                 ep.Price.ToString(),
                 null, null,
                 Alignment.TopRight, GUI.Style, textBlock);
+            textBlock.Font = font;
 
             if (ep.sprite != null)
             {
@@ -410,7 +418,7 @@ namespace Barotrauma
 
             if (previewFrame == null || previewFrame.UserData != characterInfo)
             {
-                previewFrame = new GUIFrame(new Rectangle(350, 60, 300, 300),
+                previewFrame = new GUIFrame(new Rectangle(rightPanel[(int)PanelTab.Crew].Rect.Width/2, 60, Math.Min(300,rightPanel[(int)PanelTab.Crew].Rect.Width/2 - 40), 300),
                         new Color(0.0f, 0.0f, 0.0f, 0.8f),
                         Alignment.Top, GUI.Style, rightPanel[selectedRightPanel]);
                 previewFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
