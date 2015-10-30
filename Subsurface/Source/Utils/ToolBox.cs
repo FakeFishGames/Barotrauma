@@ -10,6 +10,21 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    public class Pair<T1, T2>
+    {
+        public T1 First { get; set; }
+        public T2 Second { get; set; }
+
+        public static Pair<T1, T2> Create(T1 first, T2 second)
+        {
+            Pair<T1, T2> pair = new Pair<T1, T2>();
+            pair.First  = first;
+            pair.Second = second;
+
+            return pair;
+        }
+    }
+
     public static class ToolBox
     {
         public static XDocument TryLoadXml(string filePath)

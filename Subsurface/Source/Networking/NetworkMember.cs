@@ -30,10 +30,20 @@ namespace Barotrauma.Networking
 
         Traitor,
 
+        Vote,
+        VoteStatus,
+
         ResendRequest,
         ReliableMessage,
-        LatestMessageID
-        
+        LatestMessageID        
+    }
+
+    enum VoteType
+    {
+        Unknown,
+        Sub,
+        Mode,
+        EndRound
     }
 
     class NetworkMember
@@ -60,6 +70,8 @@ namespace Barotrauma.Networking
 
         protected Character myCharacter;
         protected CharacterInfo characterInfo;
+
+        public Voting Voting;
 
         public Character Character
         {
@@ -113,6 +125,8 @@ namespace Barotrauma.Networking
 
             crewButton = new GUIButton(new Rectangle(chatBox.Rect.Right-80, chatBox.Rect.Y-30, 80, 20), "Crew", GUI.Style, inGameHUD);
             crewButton.OnClicked = ToggleCrewFrame;
+
+            Voting = new Voting();
         }
 
         protected void CreateCrewFrame(List<Character> crew)

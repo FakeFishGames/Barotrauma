@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace Barotrauma
     class WrappingWall
     {
 
-        const float wallWidth = 10000.0f;
+        const float wallWidth = 20000.0f;
 
         public VertexPositionTexture[] Vertices;
 
@@ -60,7 +61,7 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 wallSectionSize = new Vector2(2000.0f, 2000.0f);
+            Vector2 wallSectionSize = new Vector2(2300.0f, 2300.0f);
             Vector2 startPos = (dir < 0) ?
                 edgeCell.Center + Vector2.UnitX * wallWidth * dir :
                 edgeCell.Center + wallWidth * Vector2.UnitX * (dir - 1);
@@ -77,7 +78,7 @@ namespace Barotrauma
                 float normalizedDist = distFromEdge / (wallWidth / 2);
 
                 float variance = 1000.0f * normalizedDist;
-                bottomVertices.Add(center + new Vector2(Rand.Range(-variance, variance, false), Rand.Range(-variance, variance, false)*5.0f));
+                bottomVertices.Add(center + new Vector2(Rand.Range(-variance, variance, false), Rand.Range(-variance, variance, false)*2.0f));
             }
 
             for (int i = 1; i < bottomVertices.Count; i++)
@@ -127,6 +128,22 @@ namespace Barotrauma
                 walls[0, 0] = walls[0, 1];
                 walls[0, 1] = temp;
             }
+            else if (pos.X > walls[1, 1].midPos.X && walls[1,0].midPos.X < pos.X)
+            {
+                walls[1, 0].Shift(2);
+
+                var temp = walls[1, 0];
+                walls[1, 0] = walls[1, 1];
+                walls[1, 1] = temp;
+            }
+            else if (pos.X < walls[1, 0].midPos.X && walls[1, 1].midPos.X > pos.X && walls[1, 1].slot > 0)
+            {
+                walls[1, 1].Shift(-2);
+
+                var temp = walls[0, 0];
+                walls[1, 0] = walls[1, 1];
+                walls[1, 1] = temp;
+            }
         }
 
         public void Shift(int amount)
@@ -134,9 +151,11 @@ namespace Barotrauma
             slot += amount;
 
             Vector2 moveAmount = Vector2.UnitX * wallWidth * amount;
+
+            Vector2 simMoveAmount = ConvertUnits.ToSimUnits(moveAmount);
             foreach (VoronoiCell cell in cells)
             {
-                cell.body.SetTransform(cell.body.Position + moveAmount, 0.0f);
+                cell.body.SetTransform(cell.body.Position + simMoveAmount, 0.0f);
             }
 
             midPos += moveAmount;

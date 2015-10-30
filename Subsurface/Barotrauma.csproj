@@ -104,7 +104,8 @@
     <Compile Include="Source\Networking\NetStats.cs" />
     <Compile Include="Source\Networking\ReliableSender.cs" />
     <Compile Include="Source\Particles\ParticleEmitter.cs" />
-    <Compile Include="Source\Screens\NetLobbySettings.cs" />
+    <Compile Include="Source\Networking\GameServerSettings.cs" />
+    <Compile Include="Source\Screens\NetLobbyVoting.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Utils\Rand.cs" />
     <Compile Include="Source\Events\PropertyTask.cs" />
@@ -905,6 +906,21 @@
     <None Include="Content\SmallFont.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Sounds\Damage\creak1.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\creak2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\creak3.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\creak4.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\creak5.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Sounds\Damage\HitArmor1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -930,6 +946,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Damage\StructureBlunt7.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Music\amb_JD_drone_clattering_machine.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Music\Enter the Maze.ogg">

@@ -76,7 +76,13 @@ namespace Barotrauma
         {
             get { return caretPos; }
         }
-        
+
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, GUIComponent parent, SpriteFont font)
+            : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, false, font)
+        {
+        }
+
+
         public GUITextBlock(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null, bool wrap = false)
             : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, wrap)
         {

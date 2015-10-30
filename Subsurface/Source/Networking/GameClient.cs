@@ -438,7 +438,12 @@ namespace Barotrauma.Networking
 
                         AddChatMessage(inc.ReadString(), ChatMessageType.Server);
                         Client disconnectedClient = otherClients.Find(c => c.ID == leavingID);
-                        if (disconnectedClient != null) GameMain.NetLobbyScreen.RemovePlayer(disconnectedClient.name);
+
+                        if (disconnectedClient != null)
+                        {
+                            otherClients.Remove(disconnectedClient);
+                            GameMain.NetLobbyScreen.RemovePlayer(disconnectedClient.name);
+                        }
                         
                         if (!gameStarted) return;
 
@@ -487,6 +492,9 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.LatestMessageID:
                         reliableChannel.HandleLatestMessageID(inc);
                         break;
+                    case  (byte)PacketTypes.VoteStatus:
+                        Voting.ReadData(inc);
+                        break;
                 }                
             }
         }
@@ -512,7 +520,7 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-            if (!GameMain.NetLobbyScreen.TrySelectMap(mapName, mapHash))
+            if (!GameMain.NetLobbyScreen.TrySelectSub(mapName, mapHash))
             {
                 yield return CoroutineStatus.Success;
             }
@@ -522,7 +530,7 @@ namespace Barotrauma.Networking
             Rand.SetSyncedSeed(seed);
             //int gameModeIndex = inc.ReadInt32();
 
-            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedMap, "", gameMode);
+            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode);
 
             yield return CoroutineStatus.Running;
 
@@ -635,6 +643,25 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
             client.Shutdown("");
             GameMain.NetworkMember = null;
+        }
+
+        public void Vote(VoteType voteType, object userData)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)PacketTypes.Vote);
+            msg.Write((byte)voteType);
+
+            switch (voteType)
+            {
+                case VoteType.Sub:
+                    msg.Write(((Submarine)userData).Name);
+                    client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+                    break;
+                case VoteType.Mode:
+                    msg.Write(((GameModePreset)userData).Name);
+                    client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+                    break;
+            }
         }
 
         public void SendCharacterData()

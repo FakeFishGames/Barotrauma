@@ -370,12 +370,12 @@ namespace Barotrauma
 
         public GUIComponent FindChild(object userData)
         {
-            foreach (GUIComponent child in children)
-            {
-                if (child.userData == userData) return child;
-            }
+            return children.FirstOrDefault(c => c.userData == userData);
+        }
 
-            return null;
+        public List<GUIComponent> FindChildren(object userData)
+        {
+            return children .FindAll(c => c.userData == userData);
         }
 
         public virtual void ClearChildren()

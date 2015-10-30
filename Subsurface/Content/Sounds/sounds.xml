@@ -28,7 +28,11 @@
 
   <damagesound file="Content/Sounds/Damage/implode.ogg" damagerange="0.0,100.0" damagesoundtype="Implode"/>
 
-  <damagesound file="Content/Sounds/Damage/implode.ogg" damagerange="0.0,100.0" damagesoundtype="Implode"/>
+  <damagesound file="Content/Sounds/Damage/creak1.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/creak2.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/creak3.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/creak4.ogg" damagesoundtype="Pressure"/>
+  <damagesound file="Content/Sounds/Damage/creak5.ogg" damagesoundtype="Pressure"/>
   
 
   <music file="Content/Sounds/Music/Simplex.ogg" type="default"/>
@@ -36,4 +40,5 @@
   <music file="Content/Sounds/Music/Enter the Maze.ogg" type="repair" priorityrange="30,60"/>
   <music file="Content/Sounds/Music/Static Motion.ogg" type="repair" priorityrange="50,80"/>
   <music file="Content/Sounds/Music/Unseen Horrors.ogg" type="monster" priorityrange="40,100"/>
+  <music file="Content/Sounds/Music/amb_JD_drone_clattering_machine.ogg" type="deep"/>
 </sounds>

@@ -37,10 +37,35 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
+            Vector2 position = Vector2.Zero;
+
+            int tries = 0;
+            do
+            {
+                Vector2 tryPos = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
+                
+                if (Submarine.PickBody(
+                    tryPos + level.Position, 
+                    tryPos + level.Position - Vector2.UnitY*level.Size.Y, 
+                    null, Physics.CollisionLevel) != null)
+                {
+                    position = tryPos;
+                    break;
+                }
+
+                tries++;
+
+                if (tries==10)
+                {
+                    position = level.EndPosition - Vector2.UnitY*300.0f;
+                }
+
+            } while (tries < 10);
+
 
             item = new Item(itemPrefab, position + level.Position);
             item.MoveWithLevel = true;
+            item.body.FarseerBody.GravityScale = 0.5f;
             //item.MoveWithLevel = true;
         }
 

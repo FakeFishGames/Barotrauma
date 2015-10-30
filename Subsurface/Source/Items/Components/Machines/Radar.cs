@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            if (voltage>=minVoltage)
+            if (voltage >= minVoltage)
             {
                 pingState = (pingState + deltaTime * 0.5f);
                 if (pingState>1.0f)
