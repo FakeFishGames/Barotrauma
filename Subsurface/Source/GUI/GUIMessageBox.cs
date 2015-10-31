@@ -64,5 +64,10 @@ namespace Barotrauma
 
             return true;
         }
+
+        public static void CloseAll()
+        {
+            MessageBoxes.Clear();
+        }
     }
 }

@@ -117,6 +117,11 @@ namespace Barotrauma
             get { return filePath; }
         }
 
+        public bool AtDamageDepth
+        {
+            get { return subBody == null ? false : subBody.AtDamageDepth; }
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "")

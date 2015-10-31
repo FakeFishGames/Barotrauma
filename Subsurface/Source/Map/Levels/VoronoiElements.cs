@@ -157,6 +157,12 @@ namespace Voronoi2
                 edges.Add(ge);
             }
 
+            GraphEdge lastEdge = new GraphEdge();
+            lastEdge.point1 = vertices[0];
+            lastEdge.point2 = vertices[vertices.Length-1];
+
+            edges.Add(lastEdge);
+
             site = new Site();
             site.SetPoint(midPoint);
         }

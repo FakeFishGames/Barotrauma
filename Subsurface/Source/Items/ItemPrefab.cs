@@ -70,6 +70,12 @@ namespace Barotrauma
         public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam); 
+
+            if (PlayerInput.RightButtonClicked())
+            {
+                selected = null;
+                return;
+            }
             
             if (!resizeHorizontal && !resizeVertical)
             {
@@ -80,7 +86,7 @@ namespace Barotrauma
 
                     placePosition = Vector2.Zero;
 
-                    selected = null;
+                   // selected = null;
                     return;
                 }
 
@@ -106,7 +112,7 @@ namespace Barotrauma
                     {
                         new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this);
                         
-                        selected = null;
+                        //selected = null;
                         return;
                     }
 
@@ -116,7 +122,7 @@ namespace Barotrauma
                 if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, Color.White);
             }
             
-            if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
+            //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
 
         }
 

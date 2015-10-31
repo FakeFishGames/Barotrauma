@@ -1,5 +1,27 @@
 
 ---------------------------------------------------------------------------------------------------------
+v0.2.5
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- option to randomly select level seed, submarine and/or game mode
+	- players can be allowed to vote for the next sub and game mode
+	- option to choose character's head
+	
+Submarine:
+	- pressure damage if the submarine dives too deep
+	- added the missing mechanic spawnpoint missing to Aegir
+
+Creatures:
+	- a new enemy that only spawns deep below the level
+
+Misc:	
+	- the levels aren't just enclosed tunnels anymore and it's possible to dive much deeper
+	- settings menu
+	- better UI scaling on small resolutions
+	- fixed items occasionally disappearing from inventory after loading in single player
+
+---------------------------------------------------------------------------------------------------------
 v0.2.4.1
 ---------------------------------------------------------------------------------------------------------
 

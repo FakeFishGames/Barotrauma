@@ -13,7 +13,7 @@ namespace Barotrauma
     class WrappingWall
     {
 
-        const float wallWidth = 20000.0f;
+        public const float WallWidth = 20000.0f;
 
         public VertexPositionTexture[] Vertices;
 
@@ -32,6 +32,11 @@ namespace Barotrauma
         public List<VoronoiCell> Cells
         {
             get { return cells; }
+        }
+
+        public Vector2 MidPos
+        {
+            get { return midPos; }
         }
 
         public WrappingWall(List<VoronoiCell> pathCells, List<VoronoiCell> mapCells, float maxY, int dir = -1)
@@ -61,21 +66,21 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 wallSectionSize = new Vector2(2300.0f, 2300.0f);
+            Vector2 wallSectionSize = new Vector2(2000.0f, 2000.0f);
             Vector2 startPos = (dir < 0) ?
-                edgeCell.Center + Vector2.UnitX * wallWidth * dir :
-                edgeCell.Center + wallWidth * Vector2.UnitX * (dir - 1);
+                edgeCell.Center + Vector2.UnitX * WallWidth * dir :
+                edgeCell.Center + WallWidth * Vector2.UnitX * (dir - 1);
 
-            midPos = startPos + Vector2.UnitX * wallWidth/2;
+            midPos = startPos + Vector2.UnitX * WallWidth/2;
 
             List<Vector2> bottomVertices = new List<Vector2>();
 
-            for (float x = 0; x <= wallWidth; x += wallSectionSize.X)
+            for (float x = 0; x <= WallWidth; x += wallSectionSize.X)
             {
                 Vector2 center = new Vector2(startPos.X + x, edgeCell.Center.Y);
-                float distFromCenter = Math.Abs(x - wallWidth / 2);
-                float distFromEdge = wallWidth / 2 - distFromCenter;
-                float normalizedDist = distFromEdge / (wallWidth / 2);
+                float distFromCenter = Math.Abs(x - WallWidth / 2);
+                float distFromEdge = WallWidth / 2 - distFromCenter;
+                float normalizedDist = distFromEdge / (WallWidth / 2);
 
                 float variance = 1000.0f * normalizedDist;
                 bottomVertices.Add(center + new Vector2(Rand.Range(-variance, variance, false), Rand.Range(-variance, variance, false)*2.0f));
@@ -90,23 +95,16 @@ namespace Barotrauma
                 vertices[3] = vertices[0] + Vector2.UnitY * wallSectionSize.Y;
 
                 VoronoiCell wallCell = new VoronoiCell(vertices);
+                wallCell.edges[1].cell1 = wallCell;
+                wallCell.edges[3].cell1 = wallCell;
+                if (i > 1)
+                {
+                    wallCell.edges[1].cell2 = cells[i - 2];
+                    cells[i - 2].edges[3].cell2 = wallCell;
+                }
+
                 cells.Add(wallCell);
             }
-
-            //for (float x = 0; x<=wallWidth; x+=wallSectionSize.X)
-            //{
-            //    Vector2 center = new Vector2(startPos.X+x, edgeCell.Center.Y);
-
-            //    Vector2[] vertices = new Vector2[4];
-            //    vertices[0] = center - wallSectionSize / 2;
-            //    vertices[2] = center + wallSectionSize / 2;
-            //    vertices[1] = new Vector2(vertices[2].X, vertices[0].Y);
-            //    vertices[3] = new Vector2(vertices[0].X, vertices[2].Y);
-
-            //    VoronoiCell wallCell = new VoronoiCell(vertices);
-            //    wallCells.Add(wallCell);
-            //}
-
         }
 
 
@@ -150,7 +148,7 @@ namespace Barotrauma
         {
             slot += amount;
 
-            Vector2 moveAmount = Vector2.UnitX * wallWidth * amount;
+            Vector2 moveAmount = Vector2.UnitX * WallWidth * amount;
 
             Vector2 simMoveAmount = ConvertUnits.ToSimUnits(moveAmount);
             foreach (VoronoiCell cell in cells)
