@@ -154,7 +154,10 @@ namespace EventInput
         public static void Initialize(GameWindow window)
         {
             if (initialized)
-                throw new InvalidOperationException("TextInput.Initialize can only be called once!");
+            {
+                return;
+            }
+                //throw new InvalidOperationException("TextInput.Initialize can only be called once!");
 
             hookProcDelegate = HookProc;
 #if WINDOWS

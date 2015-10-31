@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<character name ="coelanth" humanoid="false" health="100.0">
+
+  <sound file="Content/Characters/Scorpion/scorpionattack1.ogg" state="Attack" />
+  <sound file="Content/Characters/Scorpion/scorpionidle1.ogg" state="None" />
+  <sound file="Content/Characters/Scorpion/scorpionidle2.ogg" state="None" />
+
+  <ragdoll waveamplitude="50.0" wavelength="2500" swimspeed="5.0" walkspeed="3.5">
+
+    <!-- head -->
+    <limb id = "0" radius="50" height="270" type="Head" steerforce="1.0" impacttolerance="50.0">
+      <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="267,171,162,392" depth="0.02" origin ="0.5,0.5"/>
+    </limb>
+
+    <!-- lower yaw -->
+    <limb id = "1" radius="20" height="240" impacttolerance="50.0">
+      <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="425,1,101,309" depth="0.025" origin="0.5,0.5"/>
+      <attack type="PinchCCW" range="200" duration="0.5" damage="200" bleedingdamage="50" structuredamage="150" damagetype="slash"/>
+    </limb>
+
+    <!-- body -->
+    <limb id = "2" radius="100" height="350" type="Torso" steerforce="0.1">
+      <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="0,0,268,570" depth="0.03" origin="0.5,0.5"/>
+    </limb>
+
+    <!-- tail -->
+    <limb id = "3" radius="30" height="180" type="Tail">
+      <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="441,321,96,301" depth="0.035" origin="0.5,0.5"/>
+    </limb>
+
+    <!-- front fins -->    
+    <limb id = "4" radius="30" height="250">
+      <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="532,0,92,382" depth="0.008" origin="0.5,0.5"/>
+    </limb>
+
+    <!-- back fins -->
+    <limb id = "5" width="80" height="150" ignorecollisions="true">
+      <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="303,5,94,163" depth="0.01" origin="0.5,0.5"/>
+    </limb>
+
+    <!-- body to head -->
+    <joint limb1="0" limb1anchor="-5,-133" limb2="2" limb2anchor="-30,225" lowerlimit="-10" upperlimit="10"/>
+    <!-- body to lower yaw -->
+    <joint limb1="1" limb1anchor="0,-119" limb2="2" limb2anchor="40,240" lowerlimit="10" upperlimit="40"/>    
+    
+    <!-- body to tail -->
+    <joint limb1="2" limb1anchor="20,-245" limb2="3" limb2anchor="0,118" lowerlimit="-20" upperlimit="20"/>
+    <!-- body to front fin -->
+    <joint limb1="2" limb1anchor="65,100" limb2="4" limb2anchor="0,160" lowerlimit="-50" upperlimit="0"/>
+
+    <!-- body to back fin -->
+    <joint limb1="2" limb1anchor="46,-48" limb2="5" limb2anchor="0,55" lowerlimit="-50" upperlimit="0"/>
+
+    
+  </ragdoll>
+
+  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="2.0" hearing="10.0"/>
+</character>

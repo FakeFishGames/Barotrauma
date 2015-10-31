@@ -25,4 +25,13 @@
     difficulty="25"
     minamount="1" maxamount="2"
     musictype="monster"/>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Coelanth/coelanth.xml"
+    spawndeep="true"
+    commonness="10"                
+    difficulty="5"
+    minamount="1" maxamount="1"
+    musictype="monster"/>
+  
 </Randomevents>

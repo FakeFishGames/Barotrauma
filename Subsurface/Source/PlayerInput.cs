@@ -18,6 +18,15 @@ namespace Barotrauma
         Keys keyBinding;
         int? mouseButton;
 
+        public Keys Key
+        {
+            get { return keyBinding; }
+        }
+        public int? MouseButton
+        {
+            get { return mouseButton; }
+        }
+
         public KeyOrMouse(Keys keyBinding)
         {
             this.keyBinding = keyBinding;
@@ -257,6 +266,16 @@ namespace Barotrauma
 		{
 			return doubleClicked;
 		}
+
+        public static bool KeyHit(InputType inputType)
+        {
+            return GameMain.Config.KeyBind(inputType).IsHit();
+        }
+
+        public static bool KeyDOwn(InputType inputType)
+        {
+            return GameMain.Config.KeyBind(inputType).IsDown();
+        }
 
 		public static bool KeyHit(Keys button)
 		{

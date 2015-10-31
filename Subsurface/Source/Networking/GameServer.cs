@@ -635,9 +635,7 @@ namespace Barotrauma.Networking
             }
 
             if (recipients.Count == 0) return;
-
-
-
+            
             foreach (NetworkEvent networkEvent in NetworkEvent.events)  
             {
                 NetOutgoingMessage message = server.CreateMessage();
@@ -676,8 +674,17 @@ namespace Barotrauma.Networking
 
         public bool StartGameClicked(GUIButton button, object obj)
         {
-            Submarine selectedSub = Voting.AllowSubVoting ?             
-                Voting.HighestVoted<Submarine>(VoteType.Sub, connectedClients) : GameMain.NetLobbyScreen.SelectedSub;
+            Submarine selectedSub = null;
+
+            if (Voting.AllowSubVoting)
+            {
+                Voting.HighestVoted<Submarine>(VoteType.Sub, connectedClients);
+                if (selectedSub == null) selectedSub = GameMain.NetLobbyScreen.SelectedSub;
+            }
+            else
+            {
+                selectedSub = GameMain.NetLobbyScreen.SelectedSub;
+            }            
 
             if (selectedSub == null)
             {
@@ -692,6 +699,8 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> StartGame(Submarine selectedSub)
         {
+            GUIMessageBox.CloseAll();
+
             AssignJobs();
 
             //selectedMap.Load();

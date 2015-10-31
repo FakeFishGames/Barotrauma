@@ -12,6 +12,8 @@ namespace Barotrauma
 
         private Character[] monsters;
 
+        private bool spawnDeep;
+
         public MonsterEvent(XElement element)
             : base (element)
         {
@@ -19,6 +21,8 @@ namespace Barotrauma
 
             minAmount = ToolBox.GetAttributeInt(element, "minamount", 1);
             maxAmount = Math.Max(ToolBox.GetAttributeInt(element, "maxamount", 1), minAmount);
+
+            spawnDeep = ToolBox.GetAttributeBool(element, "spawndeep", false);
         }
 
         private void SpawnMonsters()
@@ -32,6 +36,13 @@ namespace Barotrauma
             for (int i = 0; i < amount; i++)
             {
                 Vector2 position = (randomWayPoint == null) ? Vector2.Zero : FarseerPhysics.ConvertUnits.ToSimUnits(randomWayPoint.Position + Level.Loaded.Position);
+                
+
+                if (spawnDeep)
+                {
+                    position.Y = FarseerPhysics.ConvertUnits.ToSimUnits(Level.Loaded.Position.Y);
+                }
+
                 position.X += Rand.Range(-0.5f, 0.5f);
                 position.Y += Rand.Range(-0.5f, 0.5f);
                 monsters[i] = new AICharacter(characterFile, position);

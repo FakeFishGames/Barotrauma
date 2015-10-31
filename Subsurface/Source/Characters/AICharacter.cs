@@ -13,7 +13,7 @@ namespace Barotrauma
         const float AttackBackPriority = 1.0f;
 
         private AIController aiController;
-
+        
         public override AIController AIController
         {
             get { return aiController; }

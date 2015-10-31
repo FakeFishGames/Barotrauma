@@ -246,7 +246,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (PlayerInput.KeyHit(Keys.Tab))
+            if (PlayerInput.KeyHit(InputType.Chat))
             {
                 if (chatMsgBox.Selected)
                 {

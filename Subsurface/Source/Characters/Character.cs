@@ -825,15 +825,26 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
-            AnimController.SimplePhysicsEnabled = (Character.controlled!=this && Vector2.Distance(cam.WorldViewCenter, Position)>5000.0f);
+            AnimController.SimplePhysicsEnabled = (Character.controlled != this && Vector2.Distance(cam.WorldViewCenter, Position) > 5000.0f);
             
             if (isDead) return;
-            
-            if (PressureProtection==0.0f && 
-                (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 100.0f))
+
+            if (!(this is AICharacter))
             {
-                Implode();
-                return;
+                bool protectedFromPressure = PressureProtection > 0.0f;
+                
+                    if (Submarine.Loaded!=null && Level.Loaded !=null)
+                    {
+                        protectedFromPressure = protectedFromPressure && (Position-Level.Loaded.Position).Y > SubmarineBody.DamageDepth;
+                    }
+                
+
+                if (!protectedFromPressure && 
+                    (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 100.0f))
+                {
+                    Implode();
+                    return;
+                }
             }
 
             if (controlled == this)

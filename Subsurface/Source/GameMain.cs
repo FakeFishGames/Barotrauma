@@ -20,6 +20,8 @@ namespace Barotrauma
         static int graphicsWidth, graphicsHeight;
         static SpriteBatch spriteBatch;
 
+        public static GameMain Instance;
+
         public static bool DebugDraw;
 
         public static GraphicsDevice CurrGraphicsDevice;
@@ -99,6 +101,8 @@ namespace Barotrauma
         {
             Graphics = new GraphicsDeviceManager(this);
 
+            Instance = this;
+
             Config = new GameSettings("config.xml");
             if (Config.WasGameUpdated)
             {
@@ -169,7 +173,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(Load());
         }
 
-        private IEnumerable<object> Load()
+        public IEnumerable<object> Load()
         {
             GUI.Init(Content);
 

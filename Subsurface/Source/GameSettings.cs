@@ -36,8 +36,8 @@ namespace Barotrauma
             return keyMapping[(int)inputType];
         }
 
-        public int GraphicsWidth { get; set; }
-        public int GraphicsHeight { get; set; }
+        public int GraphicsWidth    { get; set; }
+        public int GraphicsHeight   { get; set; }
 
         public bool FullScreenEnabled { get; set; }
 
@@ -155,15 +155,14 @@ namespace Barotrauma
                             int mouseButton;
                             if (Enum.TryParse(attribute.Name.ToString(), true, out inputType))
                             {
-                                if  (Enum.TryParse(attribute.Value.ToString(), true, out key))
-                                {
-                                    keyMapping[(int)inputType] = new KeyOrMouse(key);
-                                }
-                                else if (int.TryParse(attribute.Value.ToString(), out mouseButton))
+                                if (int.TryParse(attribute.Value.ToString(), out mouseButton))
                                 {
                                     keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
                                 }
-                                
+                                else if  (Enum.TryParse(attribute.Value.ToString(), true, out key))
+                                {
+                                    keyMapping[(int)inputType] = new KeyOrMouse(key);
+                                }                                
                             }
                         }
                         break;
@@ -213,6 +212,22 @@ namespace Barotrauma
                     new XAttribute("path", SelectedContentPackage.Path)));
             }
 
+            var keyMappingElement = new XElement("keymapping");
+                doc.Root.Add(keyMappingElement);
+            for (int i = 0; i<keyMapping.Length;i++)
+            {
+                if (keyMapping[i].MouseButton==null)
+                {
+                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
+                }
+                else
+                {
+                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].MouseButton));
+                }
+
+
+            }
+
             doc.Save(filePath);
         }
 
@@ -236,6 +251,10 @@ namespace Barotrauma
         {
             UnsavedSettings = true;
             FullScreenEnabled = !FullScreenEnabled;
+
+            GameMain.Graphics.IsFullScreen = FullScreenEnabled;
+            GameMain.Graphics.ApplyChanges();
+
             return true;
         }
 
@@ -254,6 +273,7 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(0, y, 20, 20), "Resolution", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
             var resolutionDD = new GUIDropDown(new Rectangle(0, y + 20, 180, 20), "", GUI.Style, settingsFrame);
+            resolutionDD.OnSelected = SelectResolution;
 
             var supportedModes = new List<DisplayMode>();
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
@@ -340,8 +360,17 @@ namespace Barotrauma
             DisplayMode mode = selected.UserData as DisplayMode;
             if (mode == null) return false;
 
+            if (GraphicsWidth == mode.Width && GraphicsHeight == mode.Height) return false;
+
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
+
+
+            //GameMain.Graphics.PreferredBackBufferWidth = GraphicsWidth;
+            //GameMain.Graphics.PreferredBackBufferHeight = GraphicsHeight;
+            //GameMain.Graphics.ApplyChanges();
+
+            //CoroutineManager.StartCoroutine(GameMain.Instance.Load());
 
             UnsavedSettings = true;
 
@@ -352,7 +381,10 @@ namespace Barotrauma
 
         private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox)
         {
-            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length==0)
+            yield return CoroutineStatus.Running;
+
+            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length==0 
+                && !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked())
             {
                 if (Screen.Selected != GameMain.MainMenuScreen) yield return CoroutineStatus.Success;
 
@@ -361,12 +393,29 @@ namespace Barotrauma
 
             UnsavedSettings = true;
 
-            Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];
-
             int keyIndex = (int)keyBox.UserData;
-            keyMapping[keyIndex] = new KeyOrMouse(key);
 
-            keyBox.Text = key.ToString("G");
+            if (PlayerInput.LeftButtonClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(0);
+                keyBox.Text = "Mouse1";
+            }
+            else if (PlayerInput.LeftButtonClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(1);
+                keyBox.Text = "Mouse2";
+            }
+            else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
+            {
+                Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];
+                keyMapping[keyIndex] = new KeyOrMouse(key);
+                keyBox.Text = key.ToString("G");
+            }
+            else
+            {
+                yield return CoroutineStatus.Success;
+            }
+            
             keyBox.Deselect();
 
             yield return CoroutineStatus.Success;
@@ -375,6 +424,12 @@ namespace Barotrauma
         private bool ApplyClicked(GUIButton button, object userData)
         {
             Save("config.xml");
+            
+            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
+            {
+                new GUIMessageBox("Restart required", "You need to restart the game for the resolution changes to take effect.");
+            }
+
             return true;
         }
     }

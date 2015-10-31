@@ -305,9 +305,9 @@ namespace Barotrauma
             
             cells = CleanCells(pathCells);
 
-            pathCells.AddRange(CreateBottomHoles(1.0f, new Rectangle(
+            pathCells.AddRange(CreateBottomHoles(0.8f, new Rectangle(
                 (int)(borders.Width * 0.2f), 0,
-                (int)(borders.Width * 0.6f), (int)(borders.Height * 0.3f))));
+                (int)(borders.Width * 0.6f), (int)(borders.Height * 0.5f))));
 
             foreach (VoronoiCell cell in pathCells)
             {
@@ -338,7 +338,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < 2; i++)
                 {
-                    wrappingWalls[side, i] = new WrappingWall(pathCells, cells, borders.Height * 0.7f,
+                    wrappingWalls[side, i] = new WrappingWall(pathCells, cells, borders.Height * 0.5f,
                         (side == 0 ? -1 : 1) * (i == 0 ? 1 : 2));
 
                     wrappingWalls[side, i].Vertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>());
@@ -651,7 +651,7 @@ namespace Barotrauma
                     if (!tempVertices.Contains(ge.point2)) tempVertices.Add(ge.point2);
 
                     VoronoiCell adjacentCell = ge.AdjacentCell(cell);
-                    if (adjacentCell!=null && !emptyCells.Contains(adjacentCell)) continue;
+                    if (adjacentCell!=null && cells.Contains(adjacentCell)) continue;
 
                     ge.isSolid = true;
 
@@ -929,7 +929,30 @@ namespace Barotrauma
                 }
             }
 
-            return edges;
+            for (int side = 0; side < 2; side++ )
+            {
+                for (int n = 0 ; n<2; n++)
+                {
+                    if (Vector2.Distance(wrappingWalls[side, n].MidPos, refPos) > WrappingWall.WallWidth) continue;
+
+                    foreach (VoronoiCell cell in wrappingWalls[side, n].Cells)
+                    {
+                        for (int i = 0; i < cell.edges.Count; i++)
+                        {
+                            if (onlySolid && !cell.edges[i].isSolid) continue;
+                            Vector2 start = cell.edges[i].point1 + Position;
+                            start.Y = -start.Y;
+
+                            Vector2 end = cell.edges[i].point2 + Position;
+                            end.Y = -end.Y;
+
+                            edges.Add(new Vector2[] { start, end });
+                        }
+                    }
+                }
+            }
+
+                return edges;
         }
 
         public void Render(GraphicsDevice graphicsDevice, Camera cam)

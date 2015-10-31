@@ -305,7 +305,7 @@ namespace Barotrauma
                 modeList.OnSelected = VotableClicked;
                 modeList.OnSelected += SelectMode;
                 subList.OnSelected = VotableClicked;
-                subList.OnSelected += SelectMode;
+                subList.OnSelected += SelectMap;
 
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
                 startButton.OnClicked = GameMain.Server.StartGameClicked;

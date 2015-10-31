@@ -16,7 +16,7 @@ namespace Barotrauma
 {
     class SubmarineBody
     {
-        const float DamageDepth = 0.0f;
+        public const float DamageDepth = -10000.0f;
         const float PressureDamageMultiplier = 0.001f;
 
         //structure damage = impact * damageMultiplier
@@ -75,6 +75,11 @@ namespace Barotrauma
         public Vector2 Center
         {
             get { return new Vector2(Borders.X + Borders.Width / 2, Borders.Y - Borders.Height / 2); }
+        }
+
+        public bool AtDamageDepth
+        {
+            get { return sub.Position.Y < DamageDepth; }
         }
 
         public SubmarineBody(Submarine sub)

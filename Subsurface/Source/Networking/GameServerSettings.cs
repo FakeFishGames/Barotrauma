@@ -155,7 +155,7 @@ namespace Barotrauma.Networking
                 settingsFrame = null;
             }
 
-            return true;
+            return false;
         }
     }
 }
