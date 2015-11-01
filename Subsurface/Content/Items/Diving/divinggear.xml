@@ -28,6 +28,8 @@
 
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
+      <StatusEffect type="OnWearing" target="Character" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
+    
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
@@ -61,7 +63,7 @@
       <sprite texture="DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.02" hidelimb="true"/>
       <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.02" hidelimb="true"/>
       
-      <StatusEffect type="OnWearing" target="Character" PressureProtection="100.0" SpeedMultiplier="0.7" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
+      <StatusEffect type="OnWearing" target="Character" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">

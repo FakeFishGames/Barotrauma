@@ -11,7 +11,7 @@ namespace Barotrauma.Lights
 
         public Color AmbientLight;
 
-        RenderTarget2D lightMap;
+        RenderTarget2D lightMap, losTexture;
         
         private static Texture2D alphaClearTexture;
 
@@ -21,16 +21,17 @@ namespace Barotrauma.Lights
 
         public bool LightingEnabled = true;
 
-        //public RenderTarget2D LightMap
-        //{
-        //    get { return lightMap; }
-        //}
+        public bool ObstructVision;
+
+        private Texture2D visionCircle;
 
         public LightManager(GraphicsDevice graphics)
         {
             lights = new List<LightSource>();
 
             AmbientLight = new Color(80, 80, 80, 255);
+
+            visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
 
             var pp = graphics.PresentationParameters;
 
@@ -39,6 +40,7 @@ namespace Barotrauma.Lights
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
 
+            losTexture = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             if (alphaClearTexture==null)
             {
@@ -56,7 +58,7 @@ namespace Barotrauma.Lights
             lights.Remove(light);
         }
 
-        public void DrawLOS(GraphicsDevice graphics, Camera cam, Vector2 pos)
+        public void DrawLOS(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 pos)
         {
             if (!LosEnabled) return;
 
@@ -72,6 +74,11 @@ namespace Barotrauma.Lights
                 convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
             }
 
+            if (!ObstructVision) return;
+
+            spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
+            spriteBatch.Draw(losTexture, Vector2.Zero);
+            spriteBatch.End();
         }
 
         public void OnMapLoaded()
@@ -140,6 +147,38 @@ namespace Barotrauma.Lights
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);
             graphics.SetRenderTarget(null);
+
+
+        }
+
+        public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
+        {
+
+            if (!ObstructVision) return;
+            
+            graphics.SetRenderTarget(losTexture);
+            graphics.Clear(Color.Black);
+
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, null, null, cam.Transform);
+
+            Vector2 diff = lookAtPosition - ViewPos;
+            diff.Y = -diff.Y;
+            float rotation = MathUtils.VectorToAngle(diff);
+
+            Vector2 scale = new Vector2(3.0f, 1.0f);
+            
+            spriteBatch.Draw(LightSource.LightTexture, new Vector2(ViewPos.X, -ViewPos.Y), null, Color.White, rotation, 
+                new Vector2(LightSource.LightTexture.Width*0.2f, LightSource.LightTexture.Height/2), scale, SpriteEffects.None, 0.0f);
+            spriteBatch.End();
+
+            //ClearAlphaToOne(graphics, spriteBatch);
+
+            graphics.SetRenderTarget(null);
+
+            //spriteBatch.Begin();
+            //spriteBatch.Draw(lightMap, Vector2.Zero, Color.White);
+            //spriteBatch.End();
+            
         }
 
         private void ClearAlphaToOne(GraphicsDevice graphics, SpriteBatch spriteBatch)
