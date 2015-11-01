@@ -890,6 +890,19 @@ namespace Barotrauma
                 }
             }
 
+            for (int side = 0; side < 2; side++)
+            {
+                for (int n = 0; n < 2; n++)
+                {
+                    if (Vector2.Distance(wrappingWalls[side, n].MidPos, pos) > WrappingWall.WallWidth) continue;
+
+                    foreach (VoronoiCell cell in wrappingWalls[side, n].Cells)
+                    {
+                        cells.Add(cell);
+                    }
+                }
+            }
+
             return cells;
         }
 
@@ -921,7 +934,7 @@ namespace Barotrauma
 
                             Vector2 end = cell.edges[i].point2 + Position;
                             end.Y = -end.Y;
-
+                            
                             edges.Add(new Vector2[] { start, end });
                             //GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Green : Color.Red);
                         }

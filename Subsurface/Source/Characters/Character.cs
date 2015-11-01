@@ -152,9 +152,17 @@ namespace Barotrauma
             set { lowPassMultiplier = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        private float obstructVisionAmount;
         public bool ObstructVision
         {
-            get; set;
+            get
+            {
+                return obstructVisionAmount > 0.5f;
+            }
+            set
+            {
+                obstructVisionAmount = 1.0f;
+            }
         }
 
         public float SoundRange
@@ -831,6 +839,8 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
+            obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
+            
             AnimController.SimplePhysicsEnabled = (Character.controlled != this && Vector2.Distance(cam.WorldViewCenter, Position) > 5000.0f);
             
             if (isDead) return;
@@ -839,12 +849,11 @@ namespace Barotrauma
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
                 
-                    if (Submarine.Loaded!=null && Level.Loaded !=null)
-                    {
-                        protectedFromPressure = protectedFromPressure && (Position-Level.Loaded.Position).Y > SubmarineBody.DamageDepth;
-                    }
+                if (Submarine.Loaded!=null && Level.Loaded !=null)
+                {
+                    protectedFromPressure = protectedFromPressure && (Position-Level.Loaded.Position).Y > SubmarineBody.DamageDepth;
+                }
                 
-
                 if (!protectedFromPressure && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 100.0f))
                 {
@@ -865,7 +874,6 @@ namespace Barotrauma
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
-            ObstructVision = false;
 
             if (needsAir)
             {

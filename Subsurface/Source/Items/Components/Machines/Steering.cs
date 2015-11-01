@@ -119,7 +119,7 @@ namespace Barotrauma.Items.Components
             GuiFrame.Draw(spriteBatch);
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
-            GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
+            //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + width - 150, y + height - 30, 150, 30), "Autopilot"))
             {

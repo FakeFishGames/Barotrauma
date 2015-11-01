@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [HasDefaultValue(100.0f, false)]
+        [HasDefaultValue(80.0f, false)]
         public float MaxFlow
         {
             get { return maxFlow; }

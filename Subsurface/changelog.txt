@@ -15,6 +15,10 @@ Submarine:
 Creatures:
 	- a new enemy that only spawns deep below the level
 
+Items:
+	- diving suits and mask now obstruct vision when worn
+	- nicer looking sonar monitor
+
 Misc:	
 	- the levels aren't just enclosed tunnels anymore and it's possible to dive much deeper
 	- settings menu

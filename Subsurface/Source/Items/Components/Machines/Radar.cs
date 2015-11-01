@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {
@@ -27,6 +28,8 @@ namespace Barotrauma.Items.Components
         public Radar(Item item, XElement element)
             : base(item, element)
         {
+            radarBlips = new List<RadarBlip>();
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLower())
@@ -46,6 +49,12 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
+
+            for (int i = radarBlips.Count - 1; i >= 0; i-- )
+            {
+                radarBlips[i].FadeTimer -= deltaTime*0.5f;
+                if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
+            }
 
             if (voltage >= minVoltage)
             {
@@ -77,7 +86,7 @@ namespace Barotrauma.Items.Components
 
             if (voltage < minVoltage) return;
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 200, 30), "Activate Sonar"))
+            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 0, y + 0, 150, 30), "Activate Sonar"))
             {
                 IsActive = !IsActive;
                 item.NewComponentEvent(this, true, false);
@@ -89,6 +98,9 @@ namespace Barotrauma.Items.Components
             //voltage = 0.0f;
         }
 
+        private List<RadarBlip> radarBlips;
+        private float prevPingRadius;
+
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
 
@@ -98,10 +110,15 @@ namespace Barotrauma.Items.Components
 
             if (!IsActive) return;
 
-            if (pingCircle!=null)
-            {
+
+            //if (pingCircle!=null)
+            //{
+
+
+                float pingRadius = (rect.Width / 2) * pingState;
                 pingCircle.Draw(spriteBatch, center, Color.White * (1.0f-pingState), 0.0f, (rect.Width/pingCircle.size.X)*pingState);
-            }
+                
+            //}
 
             float radius = rect.Width / 2.0f;
             
@@ -110,17 +127,41 @@ namespace Barotrauma.Items.Components
 
             if (Level.Loaded != null)
             {
-                List<Vector2[]> edges = Level.Loaded.GetCellEdges(-Level.Loaded.Position, 7);
+                List<VoronoiCell> cells = Level.Loaded.GetCells(-Level.Loaded.Position, 7);
                 Vector2 offset = Vector2.Zero;
 
-                for (int i = 0; i < edges.Count; i++)
+                foreach (VoronoiCell cell in cells)
                 {
-                    if ((edges[i][0] * displayScale).Length() > radius) continue;
-                    if ((edges[i][1] * displayScale).Length() > radius) continue;
 
-                    GUI.DrawLine(spriteBatch,
-                        center + (edges[i][0] - offset) * displayScale,
-                        center + (edges[i][1] - offset) * displayScale, Color.White);
+                    foreach (GraphEdge edge in cell.edges)
+                    {
+                        //if (!edge.isSolid) continue;
+                        float cellDot = Vector2.Dot(cell.Center + Level.Loaded.Position, (edge.point1 + edge.point2) / 2.0f - cell.Center);
+                        if (cellDot > 0) continue;
+
+                        Vector2 point1 = (edge.point1 + Level.Loaded.Position);
+                        Vector2 point2 = (edge.point2 + Level.Loaded.Position);
+
+                        for (float x=0; x<(point1-point2).Length(); x+=Rand.Range(600.0f, 800.0f))
+                        {
+                            Vector2 point = point1 + Vector2.Normalize(point2 - point1) * x;
+
+                            float pointDist = point.Length() * displayScale;
+
+                            if (pointDist > radius) continue;
+                            if (pointDist > prevPingRadius && pointDist < pingRadius) {
+
+                                for (float z = 0; z<radius-pointDist;z+=10.0f)
+                                {
+                                    var blip = new RadarBlip(
+                                        point + Rand.Vector(150.0f) - Level.Loaded.Position + Vector2.Normalize(point) * z / displayScale,
+                                        Rand.Range(0.8f, 1.0f) / Math.Max(1.0f, z / 10.0f));
+
+                                    radarBlips.Add(blip);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
@@ -130,29 +171,63 @@ namespace Barotrauma.Items.Components
                     Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * simScale;
                     end.Y = -end.Y;
 
-                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.White);
+                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
                 }
+
             }
 
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null) continue;
 
-                Vector2 pos = c.Position * displayScale;
-                if (c.SimPosition == Vector2.Zero || pos.Length() > radius) continue;
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    Vector2 pos = limb.Position;
+                    float pointDist = pos.Length() * displayScale;
+
+                    if (limb.SimPosition == Vector2.Zero || pointDist > radius) continue;
+
+
+                    if (pointDist > radius) continue;
+                    if (pointDist > prevPingRadius && pointDist < pingRadius)
+                    {
+                        var blip = new RadarBlip(pos - Level.Loaded.Position, 1.0f);
+                        radarBlips.Add(blip);
+                    }
+                }
                 
-                int width = (int)MathHelper.Clamp(c.Mass / 20, 1, 10);
+                //int width = (int)MathHelper.Clamp(c.Mass / 20, 1, 10);
 
-                pos.Y = -pos.Y;
-                pos += center;
+                //pos.Y = -pos.Y;
+                //pos += center;
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - width / 2, (int)pos.Y - width / 2, width, width), Color.White, true);                
+                //GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - width / 2, (int)pos.Y - width / 2, width, width), Color.White, true);                
             }
+
+            foreach (RadarBlip radarBlip in radarBlips)
+            {
+                Vector2 pos = (radarBlip.Position + Level.Loaded.Position) * displayScale;
+                pos.Y = -pos.Y;
+
+                //spriteBatch.Draw(radarBlipSprite, center+pos,
+                //    new Rectangle((int)(radarBlip.SpriteIndex % 4 * 32), (int)(Math.Floor(radarBlip.SpriteIndex / 4.0f) * 32), 32, 32),
+                //    Color.White * radarBlip.FadeTimer, 0.0f, new Vector2(16.0f, 16.0f), 0.5f, SpriteEffects.None, 0.0f);
+
+                pos.X = MathUtils.Round(pos.X, 4);
+
+                pos.Y = MathUtils.Round(pos.Y, 2);
+
+                GUI.DrawRectangle(spriteBatch, center+pos, new Vector2(4, 2), Color.Green * radarBlip.FadeTimer, true);
+            }
+
+            prevPingRadius = pingRadius;
 
             if (screenOverlay!=null)
             {
                 screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width/screenOverlay.size.X);
             }
+
+            //prevPingRadius = pingRadius;
 
             if (GameMain.GameSession == null) return;
 
@@ -239,6 +314,17 @@ namespace Barotrauma.Items.Components
                 return;
             }
         }
+    }
 
+    class RadarBlip
+    {
+        public float FadeTimer;
+        public Vector2 Position;
+
+        public RadarBlip(Vector2 pos, float fadeTimer)
+        {
+            Position = pos;
+            FadeTimer = fadeTimer;
+        }
     }
 }
