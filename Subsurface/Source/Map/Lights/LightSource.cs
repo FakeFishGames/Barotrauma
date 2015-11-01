@@ -32,6 +32,19 @@ namespace Barotrauma.Lights
             }
         }
 
+        public static Texture2D LightTexture
+        {
+            get
+            {
+                if (lightTexture == null)
+                {
+                    lightTexture = TextureLoader.FromFile("Content/Lights/light.png");
+                }
+
+                return lightTexture;
+            }
+        }
+
         public Color Color
         {
             get { return color; }
@@ -59,11 +72,6 @@ namespace Barotrauma.Lights
             this.range = range;
             this.color = color;
 
-            if (lightTexture == null)
-            {
-                lightTexture = TextureLoader.FromFile("Content/Lights/light.png");
-            }
-
             texture = lightTexture;
 
             GameMain.LightManager.AddLight(this);
@@ -82,7 +90,7 @@ namespace Barotrauma.Lights
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            Vector2 center = new Vector2(lightTexture.Width / 2, lightTexture.Height / 2);
+            Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
             float scale = range / (lightTexture.Width / 2.0f);
             spriteBatch.Draw(lightTexture, new Vector2(Position.X, -Position.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
         }

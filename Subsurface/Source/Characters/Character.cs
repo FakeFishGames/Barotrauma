@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Lidgren.Network;
@@ -149,6 +150,11 @@ namespace Barotrauma
         {
             get { return lowPassMultiplier; }
             set { lowPassMultiplier = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
+        public bool ObstructVision
+        {
+            get; set;
         }
 
         public float SoundRange
@@ -859,6 +865,7 @@ namespace Barotrauma
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
+            ObstructVision = false;
 
             if (needsAir)
             {
