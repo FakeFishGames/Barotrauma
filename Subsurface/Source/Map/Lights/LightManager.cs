@@ -79,6 +79,8 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
             spriteBatch.Draw(losTexture, Vector2.Zero);
             spriteBatch.End();
+
+            ObstructVision = false;
         }
 
         public void OnMapLoaded()
@@ -164,8 +166,8 @@ namespace Barotrauma.Lights
             Vector2 diff = lookAtPosition - ViewPos;
             diff.Y = -diff.Y;
             float rotation = MathUtils.VectorToAngle(diff);
-
-            Vector2 scale = new Vector2(3.0f, 1.0f);
+            
+            Vector2 scale = new Vector2(MathHelper.Clamp(diff.Length()/256.0f, 2.0f, 5.0f), 2.0f);
             
             spriteBatch.Draw(LightSource.LightTexture, new Vector2(ViewPos.X, -ViewPos.Y), null, Color.White, rotation, 
                 new Vector2(LightSource.LightTexture.Width*0.2f, LightSource.LightTexture.Height/2), scale, SpriteEffects.None, 0.0f);

@@ -67,24 +67,24 @@ namespace Barotrauma
             //new GUITextBlock(new Rectangle(0, 0, 200, 25), 
             //    save, Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
 
-            GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 200, 25), 
-                "", Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
+            GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 0, 25),
+                "", Color.Transparent, Color.White, Alignment.TopCenter, GUI.Style, leftPanel);
             moneyText.TextGetter = GetMoney;
             
-            GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.Left, GUI.Style, leftPanel);
+            GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.TopCenter, GUI.Style, leftPanel);
             button.UserData = PanelTab.Map;
             button.OnClicked = SelectRightPanel;
             SelectRightPanel(button, button.UserData);
 
-            button = new GUIButton(new Rectangle(0, 110, 100, 30), "Crew", null, Alignment.Left, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 110, 100, 30), "Crew", null, Alignment.TopCenter, GUI.Style, leftPanel);
             button.UserData = PanelTab.Crew;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 150, 100, 30), "Hire", null, Alignment.Left, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 150, 100, 30), "Hire", null, Alignment.TopCenter, GUI.Style, leftPanel);
             button.UserData = PanelTab.CurrentLocation;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 190, 100, 30), "Store", null, Alignment.Left, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 190, 100, 30), "Store", null, Alignment.TopCenter, GUI.Style, leftPanel);
             button.UserData = PanelTab.Store;
             button.OnClicked = SelectRightPanel;
    
@@ -454,9 +454,10 @@ namespace Barotrauma
 
         private bool StartShift(GUIButton button, object selection)
         {
-            //GameMain.ShowLoading(ShiftLoading());
-            GameMain.GameSession.StartShift(selectedLevel, false);
-            GameMain.GameScreen.Select();
+            GameMain.ShowLoading(ShiftLoading());
+
+            //GameMain.GameSession.StartShift(selectedLevel, false);
+            //GameMain.GameScreen.Select();
             
             return true;
         }

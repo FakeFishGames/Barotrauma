@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
 {
     class BanList
     {
-        const string SavePath = "Data/bannedplayers.xml";
+        const string SavePath = "Data/bannedplayers.txt";
 
         private List<BannedPlayer> bannedPlayers;
 

@@ -699,6 +699,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
 
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
+            if (GameMain.Client != null) GameMain.Client.SendCharacterData();
 
             UpdatePreviewPlayer(GameMain.NetworkMember.CharacterInfo);
 

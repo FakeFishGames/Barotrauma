@@ -87,8 +87,12 @@ namespace Barotrauma
 
             DrawChildren(spriteBatch);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 2, box.Rect.Y + 2, box.Rect.Width - 4, box.Rect.Height - 4), 
-                selected ? Color.Green * 0.8f : Color.Black, true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 1, box.Rect.Y + 1, box.Rect.Width - 2, box.Rect.Height - 2),
+                box.State == ComponentState.Hover ? new Color(50,50,50,255) : Color.Black, true);
+
+            if (!selected) return;
+            GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 5, box.Rect.Y + 5, box.Rect.Width - 10, box.Rect.Height - 10), 
+                Color.Green * 0.8f, true);
             
         }
     }

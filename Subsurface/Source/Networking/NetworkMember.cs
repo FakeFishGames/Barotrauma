@@ -10,32 +10,23 @@ namespace Barotrauma.Networking
     {
         Unknown,
 
-        Login,
-        LoggedIn,
-        LogOut,
+        Login, LoggedIn, LogOut,
 
-        PlayerJoined,
-        PlayerLeft,
-        KickedOut,
+        PlayerJoined, PlayerLeft, KickedOut,
 
-        StartGame,
-        EndGame,
+        StartGame, EndGame,
 
         CharacterInfo,
 
-        Chatmessage,
-        UpdateNetLobby,
+        Chatmessage, UpdateNetLobby,
 
         NetworkEvent,
 
         Traitor,
 
-        Vote,
-        VoteStatus,
+        Vote, VoteStatus,
 
-        ResendRequest,
-        ReliableMessage,
-        LatestMessageID        
+        ResendRequest, ReliableMessage, LatestMessageID        
     }
 
     enum VoteType
