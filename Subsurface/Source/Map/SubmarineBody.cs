@@ -257,11 +257,11 @@ namespace Barotrauma
             if (sub.Position.Y > DamageDepth) return;
 
             float depth = DamageDepth - sub.Position.Y;
-            depth = Math.Max(depth, -40000.0f);
+            depth = Math.Min(depth, 40000.0f);
 
            // float prevTimer = depthDamageTimer;
 
-            depthDamageTimer -= deltaTime*depth*PressureDamageMultiplier;
+            depthDamageTimer -= deltaTime*Math.Min(depth,20000)*PressureDamageMultiplier;
 
             //if (prevTimer>5.0f && depthDamageTimer<=5.0f)
             //{
@@ -284,7 +284,7 @@ namespace Barotrauma
                     (Rand.Int(2) == 0) ? Borders.Y : Borders.Y - Borders.Height);
             }
 
-            SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f, damagePos, 5000.0f);
+            SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f, damagePos, 10000.0f);
 
             GameMain.GameScreen.Cam.Shake = depth * PressureDamageMultiplier * 0.1f;
 

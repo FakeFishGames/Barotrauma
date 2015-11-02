@@ -67,8 +67,8 @@ namespace Barotrauma
             //new GUITextBlock(new Rectangle(0, 0, 200, 25), 
             //    save, Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
 
-            GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 0, 25),
-                "", Color.Transparent, Color.White, Alignment.TopCenter, GUI.Style, leftPanel);
+            GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 0, 25), "", GUI.Style, 
+                Alignment.TopCenter, Alignment.Top, leftPanel);
             moneyText.TextGetter = GetMoney;
             
             GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.TopCenter, GUI.Style, leftPanel);

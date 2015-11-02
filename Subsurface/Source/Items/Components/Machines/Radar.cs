@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
 {
     class Radar : Powered
     {
+        const float displayScale = 0.015f;
+
         private float range;
 
         private float pingState;
@@ -110,20 +112,13 @@ namespace Barotrauma.Items.Components
 
             if (!IsActive) return;
 
-
-            //if (pingCircle!=null)
-            //{
-
-
-                float pingRadius = (rect.Width / 2) * pingState;
-                pingCircle.Draw(spriteBatch, center, Color.White * (1.0f-pingState), 0.0f, (rect.Width/pingCircle.size.X)*pingState);
+            float pingRadius = (rect.Width / 2) * pingState;
+            pingCircle.Draw(spriteBatch, center, Color.White * (1.0f-pingState), 0.0f, (rect.Width/pingCircle.size.X)*pingState);
                 
-            //}
 
             float radius = rect.Width / 2.0f;
             
             float simScale = 1.5f;
-            float displayScale = 0.015f;
 
             if (Level.Loaded != null)
             {
@@ -149,17 +144,20 @@ namespace Barotrauma.Items.Components
                             float pointDist = point.Length() * displayScale;
 
                             if (pointDist > radius) continue;
-                            if (pointDist > prevPingRadius && pointDist < pingRadius) {
+                            if (pointDist < prevPingRadius || pointDist > pingRadius) continue;
 
-                                for (float z = 0; z<radius-pointDist;z+=10.0f)
-                                {
-                                    var blip = new RadarBlip(
-                                        point + Rand.Vector(150.0f) - Level.Loaded.Position + Vector2.Normalize(point) * z / displayScale,
-                                        Rand.Range(0.8f, 1.0f) / Math.Max(1.0f, z / 10.0f));
 
-                                    radarBlips.Add(blip);
-                                }
+                            float step = 4.0f;
+                            for (float z = 0; z<radius-pointDist;z+=step)
+                            {
+                                var blip = new RadarBlip(
+                                    point + Rand.Vector(150.0f) - Level.Loaded.Position + Vector2.Normalize(point) * z / displayScale,
+                                    Rand.Range(0.8f, 1.0f) / (step-4.0f));
+
+                                radarBlips.Add(blip);
+                                step += 0.5f;
                             }
+                            
                         }
                     }
                 }
@@ -171,7 +169,12 @@ namespace Barotrauma.Items.Components
                     Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * simScale;
                     end.Y = -end.Y;
 
-                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
+                    Vector2 diff = end - start;
+                    Vector2 normalizedDiff = Vector2.Normalize(diff);
+                    for (float x = 0; x < diff.Length(); x+=4.0f )
+                    {
+                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
+                    }                        
                 }
 
             }
@@ -195,29 +198,11 @@ namespace Barotrauma.Items.Components
                         radarBlips.Add(blip);
                     }
                 }
-                
-                //int width = (int)MathHelper.Clamp(c.Mass / 20, 1, 10);
-
-                //pos.Y = -pos.Y;
-                //pos += center;
-
-                //GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - width / 2, (int)pos.Y - width / 2, width, width), Color.White, true);                
             }
 
             foreach (RadarBlip radarBlip in radarBlips)
             {
-                Vector2 pos = (radarBlip.Position + Level.Loaded.Position) * displayScale;
-                pos.Y = -pos.Y;
-
-                //spriteBatch.Draw(radarBlipSprite, center+pos,
-                //    new Rectangle((int)(radarBlip.SpriteIndex % 4 * 32), (int)(Math.Floor(radarBlip.SpriteIndex / 4.0f) * 32), 32, 32),
-                //    Color.White * radarBlip.FadeTimer, 0.0f, new Vector2(16.0f, 16.0f), 0.5f, SpriteEffects.None, 0.0f);
-
-                pos.X = MathUtils.Round(pos.X, 4);
-
-                pos.Y = MathUtils.Round(pos.Y, 2);
-
-                GUI.DrawRectangle(spriteBatch, center+pos, new Vector2(4, 2), Color.Green * radarBlip.FadeTimer, true);
+                DrawBlip(spriteBatch, center, radarBlip.Position, Color.Green * radarBlip.FadeTimer);
             }
 
             prevPingRadius = pingRadius;
@@ -278,6 +263,22 @@ namespace Barotrauma.Items.Components
             }
 
             voltage = 0.0f;
+        }
+
+        private void DrawBlip(SpriteBatch spriteBatch, Vector2 center, Vector2 pos, Color color)
+        {
+            pos = (pos + Level.Loaded.Position) * displayScale;
+            pos.Y = -pos.Y;
+
+            //spriteBatch.Draw(radarBlipSprite, center+pos,
+            //    new Rectangle((int)(radarBlip.SpriteIndex % 4 * 32), (int)(Math.Floor(radarBlip.SpriteIndex / 4.0f) * 32), 32, 32),
+            //    Color.White * radarBlip.FadeTimer, 0.0f, new Vector2(16.0f, 16.0f), 0.5f, SpriteEffects.None, 0.0f);
+
+            pos.X = MathUtils.Round(pos.X, 4);
+
+            pos.Y = MathUtils.Round(pos.Y, 2);
+
+            GUI.DrawRectangle(spriteBatch, center + pos, new Vector2(4, 2), color, true);
         }
 
         private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, float scale, Vector2 center, float radius)

@@ -98,7 +98,7 @@
     <Compile Include="Source\Map\Levels\WrappingWall.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\LocationType.cs" />
-    <Compile Include="Source\Map\SubmarineHull.cs" />
+    <Compile Include="Source\Map\SubmarineBody.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
@@ -234,7 +234,7 @@
     <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\OggStream.cs" />
     <Compile Include="Source\Sounds\Sound.cs" />
-    <Compile Include="Source\Sounds\AmbientSoundManager.cs" />
+    <Compile Include="Source\Sounds\SoundPlayer.cs" />
     <Compile Include="Source\Sprite.cs" />
     <Compile Include="Source\Utils\TextureLoader.cs" />
     <Compile Include="Source\Utils\ToolBox.cs" />
