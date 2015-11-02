@@ -288,7 +288,8 @@ namespace Barotrauma
             }
             else
             {
-                LethalPressure += 10.0f * deltaTime;
+                
+                LethalPressure += ( Submarine.Loaded!=null && Submarine.Loaded.AtDamageDepth) ? 100.0f*deltaTime : 10.0f * deltaTime;
             }
 
 
