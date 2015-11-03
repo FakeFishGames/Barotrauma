@@ -635,21 +635,41 @@ namespace Barotrauma.Networking
             }
 
             if (recipients.Count == 0) return;
-            
-            foreach (NetworkEvent networkEvent in NetworkEvent.events)  
+
+            for (int i = 0; i<2; i++)
             {
+                bool important = i==0;
+
+                var unreliableEvents = NetworkEvent.events.FindAll(e => e.IsImportant == important);
+                if (unreliableEvents.Count == 0) continue;
+
                 NetOutgoingMessage message = server.CreateMessage();
                 message.Write((byte)PacketTypes.NetworkEvent);
-                //if (!networkEvent.IsClient) continue;
 
-                if (!networkEvent.FillData(message))
+
+
+                List<byte[]> msgBytes = new List<byte[]>();
+
+                foreach (NetworkEvent unreliableEvent in unreliableEvents)
                 {
-                    continue;
+                    NetOutgoingMessage tempMessage = server.CreateMessage();
+                    if (!unreliableEvent.FillData(tempMessage)) continue;
+                    tempMessage.WritePadBits();
+
+                    tempMessage.Position = 0;
+                    msgBytes.Add(tempMessage.ReadBytes(tempMessage.LengthBytes));
                 }
 
-                //Entity e = Entity.FindEntityByID(networkEvent.ID);
-                //if (e == null) continue;
-                if (networkEvent.IsImportant)
+                message.Write((byte)msgBytes.Count);
+                foreach (byte[] msgData in msgBytes)
+                {
+                    if (msgData.Length > 255) DebugConsole.ThrowError("too large networkevent ("+msgData.Length+" bytes)");
+
+                    message.Write((byte)msgData.Length);
+                    message.Write(msgData);
+                }
+
+                if (important)
                 {
                     foreach (Client c in recipients)
                     {
@@ -666,8 +686,42 @@ namespace Barotrauma.Networking
                     {
                         server.SendMessage(message, recipientConnections, NetDeliveryMethod.Unreliable, 0);  
                     }  
-                }                          
+                }   
             }
+
+
+
+            //foreach (NetworkEvent networkEvent in NetworkEvent.events)  
+            //{
+            //    if (!networkEvent.IsImportant) co
+            //    //if (!networkEvent.IsClient) continue;
+
+            //    if (!networkEvent.FillData(message))
+            //    {
+            //        continue;
+            //    }
+
+            //    //Entity e = Entity.FindEntityByID(networkEvent.ID);
+            //    //if (e == null) continue;
+            //    if (networkEvent.IsImportant)
+            //    {
+            //        foreach (Client c in recipients)
+            //        {
+            //            ReliableMessage reliableMessage = c.ReliableChannel.CreateMessage();
+            //            message.Position = 0;
+            //            reliableMessage.InnerMessage.Write(message.ReadBytes(message.LengthBytes));
+
+            //            c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (server.ConnectionsCount>0)
+            //        {
+            //            server.SendMessage(message, recipientConnections, NetDeliveryMethod.Unreliable, 0);  
+            //        }  
+            //    }                          
+            //}
             NetworkEvent.events.Clear();
         }
 
