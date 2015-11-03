@@ -170,7 +170,9 @@ namespace Barotrauma.Networking
             Entity e = Entity.FindEntityByID(id);
             if (e == null)
             {
-                //DebugConsole.ThrowError("Couldn't find an entity matching the ID ''" + id + "''");                
+#if DEBUG   
+                DebugConsole.ThrowError("Couldn't find an entity matching the ID ''" + id + "''");   
+#endif
                 return false;
             }
 

@@ -120,8 +120,6 @@ namespace Barotrauma
                     message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
                     message.WriteRangedSingle(AnimController.RefLimb.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
-                    //message.Write(AnimController.RefLimb.LinearVelocity.X);
-                    //message.Write(AnimController.RefLimb.LinearVelocity.Y);
                     return true;                    
             }
             

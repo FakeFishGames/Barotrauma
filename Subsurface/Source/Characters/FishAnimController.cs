@@ -131,7 +131,7 @@ namespace Barotrauma
 
         void UpdateSineAnim(float deltaTime)
         {
-            movement = MathUtils.SmoothStep(movement, TargetMovement*swimSpeed, 1.0f);
+            movement = TargetMovement*swimSpeed;
             if (movement.LengthSquared() < 0.00001f) return;
 
             if (!inWater) movement.Y = Math.Min(0.0f, movement.Y);
@@ -183,7 +183,7 @@ namespace Barotrauma
                 //current * (float)alpha + previous * (1.0f - (float)alpha);
 
 
-                steerForce = (movement * 50.0f - head.LinearVelocity * 30.0f);
+                steerForce = (movement+correctionMovement) * 50.0f - head.LinearVelocity * 30.0f;
                // force += (headMovement - movement) * Math.Min(head.LinearVelocity.Length()/movement.Length(), 1.0f);
 
                 if (!inWater) steerForce.Y = 0.0f;
