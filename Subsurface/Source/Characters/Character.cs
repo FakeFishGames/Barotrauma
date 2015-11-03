@@ -501,16 +501,14 @@ namespace Barotrauma
 
         float findClosestTimer;
 
-        public void Control(float deltaTime, Camera cam)
+        public Vector2 GetTargetMovement()
         {
-            if (isDead || AnimController.StunTimer>0.0f) return;
-
             Vector2 targetMovement = Vector2.Zero;
             if (IsKeyDown(InputType.Left))  targetMovement.X -= 1.0f;
             if (IsKeyDown(InputType.Right)) targetMovement.X += 1.0f;
-            if (IsKeyDown(InputType.Up)) targetMovement.Y += 1.0f;
-            if (IsKeyDown(InputType.Down)) targetMovement.Y -= 1.0f;
-            
+            if (IsKeyDown(InputType.Up))    targetMovement.Y += 1.0f;
+            if (IsKeyDown(InputType.Down))  targetMovement.Y -= 1.0f;
+
             //the vertical component is only used for falling through platforms and climbing ladders when not in water,
             //so the movement can't be normalized or the character would walk slower when pressing down/up
             if (AnimController.InWater)
@@ -524,6 +522,15 @@ namespace Barotrauma
 
             targetMovement *= SpeedMultiplier;
             SpeedMultiplier = 1.0f;
+
+            return targetMovement;
+        }
+
+        public void Control(float deltaTime, Camera cam)
+        {
+            if (isDead || AnimController.StunTimer>0.0f) return;
+            
+            Vector2 targetMovement = GetTargetMovement();
 
             AnimController.TargetMovement = targetMovement;
             AnimController.IsStanding = true;
@@ -1439,15 +1446,15 @@ namespace Barotrauma
                     AnimController.IsStanding = true;
 
                     keys[(int)InputType.Use].Held       = actionKeyState;
-                    keys[(int)InputType.Aim].Held    = secondaryKeyState;
+                    keys[(int)InputType.Aim].Held       = secondaryKeyState;
 
                     if (sendingTime <= LastNetworkUpdate) return;
 
-                    keys[(int)InputType.Left].Held     = leftKeyState;
+                    keys[(int)InputType.Left].Held      = leftKeyState;
                     keys[(int)InputType.Right].Held     = rightKeyState;
 
-                    keys[(int)InputType.Up].Held       = upKeyState;
-                    keys[(int)InputType.Down].Held     = downKeyState;
+                    keys[(int)InputType.Up].Held        = upKeyState;
+                    keys[(int)InputType.Down].Held      = downKeyState;
 
                     keys[(int)InputType.Run].Held = runState;
 
@@ -1496,7 +1503,7 @@ namespace Barotrauma
                         cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
                     }   
 
-                    AnimController.RefLimb.body.TargetPosition = pos;
+                    AnimController.RefLimb.body.TargetPosition = AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now + message.SenderConnection.RemoteTimeOffset) - sendingTime);
 
                     LastNetworkUpdate = sendingTime;
 

@@ -42,7 +42,7 @@ namespace Barotrauma
 
         //a movement vector that overrides targetmovement if trying to steer
         //a character to the position sent by server in multiplayer mode
-        private Vector2 correctionMovement;
+        protected Vector2 correctionMovement;
         
         protected float floorY;
         protected float surfaceY;
@@ -692,15 +692,15 @@ namespace Barotrauma
             {
                 if (inWater)
                 {
-                    foreach (Limb limb in Limbs)
-                    {
-                        //if (limb.body.TargetPosition == Vector2.Zero) continue;
+                    //foreach (Limb limb in Limbs)
+                    //{
+                    //    //if (limb.body.TargetPosition == Vector2.Zero) continue;
 
-                        //limb.body.SetTransform(limb.SimPosition + newMovement * 0.1f, limb.Rotation);
-                    }
+                    //    limb.body.SetTransform(limb.SimPosition + Vector2.Normalize(diff) * 0.1f, limb.Rotation);
+                    //}
 
                     correctionMovement =
-                        Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
+                        Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 8.0f, 0.1f, 8.0f), 0.2f);
                 }
                 else
                 {
@@ -730,6 +730,11 @@ namespace Barotrauma
                     limb.body.TargetPosition = Vector2.Zero;
                 }
             } 
+        }
+
+        public virtual Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)
+        {
+            return prevPosition;
         }
 
 

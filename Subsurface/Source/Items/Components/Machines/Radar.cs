@@ -105,10 +105,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
-
             Vector2 center = new Vector2(rect.Center.X, rect.Center.Y);
-            //lineEnd += new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Math.Min(width, height) / 2.0f;
-            //GUI.DrawLine(spriteBatch, GuiFrame.Center, lineEnd, Color.Green);
 
             if (!IsActive) return;
 
