@@ -549,7 +549,7 @@ namespace Barotrauma
         {
             if (!character.Enabled) return;
 
-            UpdateNetplayerPosition();
+            UpdateNetPlayerPosition();
             
             Vector2 flowForce = Vector2.Zero;
 
@@ -654,7 +654,7 @@ namespace Barotrauma
             
         }
 
-        private void UpdateNetplayerPosition()
+        private void UpdateNetPlayerPosition()
         {
             if (refLimb.body.TargetPosition == Vector2.Zero)
             {
@@ -662,18 +662,13 @@ namespace Barotrauma
                 return;
             }
 
-            //if the limb is further away than resetdistance, all limbs are immediately snapped to their targetpositions
-            float resetDistance = NetConfig.ResetRagdollDistance;
-
             //if the limb is closer than alloweddistance, just ignore the difference
             float allowedDistance = NetConfig.AllowedRagdollDistance * ((inWater) ? 2.0f : 1.0f);
 
             float dist = Vector2.Distance(refLimb.body.SimPosition, refLimb.body.TargetPosition);
-            bool resetAll = dist > resetDistance;
-            if (resetAll)
-            {
-                if (Limbs.FirstOrDefault(limb => !limb.ignoreCollisions && limb.body.TargetPosition == Vector2.Zero) != null) resetAll = false;
-            }
+            
+            //if the limb is further away than resetdistance, all limbs are immediately snapped to their targetpositions
+            bool resetAll = dist > NetConfig.ResetRagdollDistance;
 
             Vector2 diff = (refLimb.body.TargetPosition - refLimb.body.SimPosition);
 
@@ -717,16 +712,16 @@ namespace Barotrauma
 
                 foreach (Limb limb in Limbs)
                 {
-                    if (limb.body.TargetPosition == Vector2.Zero)
-                    {
+                    //if (limb.body.TargetPosition == Vector2.Zero)
+                    //{
                         limb.body.SetTransform(limb.body.SimPosition + diff, limb.body.Rotation);
-                        continue;
-                    }
+                        //continue;
+                    //}
 
-                    limb.body.LinearVelocity = limb.body.TargetVelocity;
-                    limb.body.AngularVelocity = limb.body.TargetAngularVelocity;
+                    //limb.body.LinearVelocity = limb.body.TargetVelocity;
+                    //limb.body.AngularVelocity = limb.body.TargetAngularVelocity;
 
-                    limb.body.SetTransform(limb.body.TargetPosition, limb.body.TargetRotation);
+                    //limb.body.SetTransform(limb.body.TargetPosition, limb.body.TargetRotation);
                     limb.body.TargetPosition = Vector2.Zero;
                 }
             } 

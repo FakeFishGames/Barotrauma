@@ -1222,21 +1222,21 @@ namespace Barotrauma
                     return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
                 case NetworkEventType.ImportantEntityUpdate:
                     
-                    int i = 0;
-                    foreach (Limb limb in AnimController.Limbs)
-                    {
-                        if (limb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
+                    //int i = 0;
+                    //foreach (Limb limb in AnimController.Limbs)
+                    //{
+                    //    if (limb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
 
-                        message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                        message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    //    message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    //    message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
-                        //message.Write(limb.body.LinearVelocity.X);
-                        //message.Write(limb.body.LinearVelocity.Y);
+                    //    //message.Write(limb.body.LinearVelocity.X);
+                    //    //message.Write(limb.body.LinearVelocity.Y);
 
-                        message.Write(limb.body.Rotation);
-                        //message.WriteRangedSingle(MathHelper.Clamp(limb.body.AngularVelocity, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-                        i++;
-                    }
+                    //    message.Write(limb.body.Rotation);
+                    //    //message.WriteRangedSingle(MathHelper.Clamp(limb.body.AngularVelocity, -10.0f, 10.0f), -10.0f, 10.0f, 8);
+                    //    i++;
+                    //}
 
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
                     message.Write((byte)((health/maxHealth)*255.0f));
@@ -1366,32 +1366,32 @@ namespace Barotrauma
                     inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message);
                     return;
                 case NetworkEventType.ImportantEntityUpdate:
-                    foreach (Limb limb in AnimController.Limbs)
-                    {
-                        Vector2 limbPos = limb.SimPosition, vel = Vector2.Zero;
-                        float rotation = limb.Rotation;
+                    //foreach (Limb limb in AnimController.Limbs)
+                    //{
+                    //    Vector2 limbPos = limb.SimPosition, vel = Vector2.Zero;
+                    //    float rotation = limb.Rotation;
 
-                        try
-                        {
-                            limbPos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                            limbPos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    //    try
+                    //    {
+                    //        limbPos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    //        limbPos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
-                            rotation = message.ReadFloat();
-                        }
-                        catch
-                        {
-                            return;
-                        }
+                    //        rotation = message.ReadFloat();
+                    //    }
+                    //    catch
+                    //    {
+                    //        return;
+                    //    }
 
-                        if (limb.body != null)
-                        {
-                            limb.body.TargetVelocity = limb.body.LinearVelocity;
-                            limb.body.TargetPosition = limbPos;// +vel * (float)(deltaTime / 60.0);
-                            limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
-                            limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
-                        }
+                    //    if (limb.body != null)
+                    //    {
+                    //        limb.body.TargetVelocity = limb.body.LinearVelocity;
+                    //        limb.body.TargetPosition = limbPos;// +vel * (float)(deltaTime / 60.0);
+                    //        limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
+                    //        limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
+                    //    }
 
-                    }
+                    //}
 
                     float newStunTimer = 0.0f, newHealth = 0.0f, newOxygen = 0.0f;
 

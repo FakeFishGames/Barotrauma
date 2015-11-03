@@ -474,7 +474,34 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.NetworkEvent:
                         //read the data from the message and update client state accordingly
                         if (!gameStarted) break;
-                        NetworkEvent.ReadData(inc);
+
+                        byte msgCount = inc.ReadByte();
+
+                        long currPos = inc.PositionInBytes;
+
+                        System.Diagnostics.Debug.WriteLine("msgcount: " + msgCount + "    startpos: " + inc.PositionInBytes);
+                        for (int i = 0; i < msgCount; i++ )
+                        {
+
+                            byte msgLength = inc.ReadByte();
+
+                            System.Diagnostics.Debug.WriteLine("msglength: "+msgLength);
+                            try
+                            {
+                                NetworkEvent.ReadData(inc);
+                            }
+                            catch
+                            {
+                                int afghj = 1;
+                            }
+                            //+1 because msgLength is one additional byte
+                            currPos += msgLength+1;
+                            inc.Position = currPos*8;
+
+                            System.Diagnostics.Debug.WriteLine("currpos: " + currPos);
+                        }
+
+
                         break;
                     case (byte)PacketTypes.UpdateNetLobby:
                         if (gameStarted) continue;

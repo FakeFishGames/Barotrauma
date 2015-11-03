@@ -168,6 +168,7 @@ namespace Barotrauma.Networking
             }
             
             Entity e = Entity.FindEntityByID(id);
+            System.Diagnostics.Debug.WriteLine(e.ToString());
             if (e == null)
             {
 #if DEBUG   
