@@ -701,11 +701,11 @@ namespace Barotrauma.Items.Components
             return ic;
         }
 
-        public virtual void FillNetworkData(NetworkEventType type, NetOutgoingMessage message)
+        public virtual void FillNetworkData(NetworkEventType type, NetBuffer message)
         {
         }
 
-        public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message)
         {
         }
     }

@@ -209,7 +209,7 @@ namespace Barotrauma.Items.Components
             }  
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
+        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             message.Write(targetVelocity.X);
             message.Write(targetVelocity.Y);
@@ -217,7 +217,7 @@ namespace Barotrauma.Items.Components
             message.Write(autoPilot);
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             Vector2 newTargetVelocity   = Vector2.Zero;
             bool newAutoPilot           = false;

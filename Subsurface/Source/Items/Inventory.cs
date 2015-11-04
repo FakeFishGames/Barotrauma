@@ -295,7 +295,7 @@ namespace Barotrauma
                 spriteBatch.DrawString(GUI.Font, (int)item.Condition + " %", new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.Red);
         }
 
-        public virtual bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public virtual bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
             for (int i = 0; i<capacity; i++)
             {
@@ -306,7 +306,7 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message)
         {
             List<ushort> newItemIDs = new List<ushort>();
                         

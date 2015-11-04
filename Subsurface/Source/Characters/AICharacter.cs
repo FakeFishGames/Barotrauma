@@ -83,7 +83,7 @@ namespace Barotrauma
             return result;
         }
 
-        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
             switch (type)
             {
