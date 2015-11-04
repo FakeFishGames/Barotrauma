@@ -58,7 +58,7 @@ namespace Barotrauma
 
         //protected Structure lastStructurePicked;
 
-        public virtual void FillNetworkData(NetOutgoingMessage message) { }
+        public virtual void FillNetworkData(NetBuffer message) { }
         public virtual void ReadNetworkData(NetIncomingMessage message) { }
         
     }

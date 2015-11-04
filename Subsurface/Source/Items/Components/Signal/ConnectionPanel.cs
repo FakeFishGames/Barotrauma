@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
             base.Remove();
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
+        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             foreach (Connection c in connections)
             {
@@ -137,7 +137,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             System.Diagnostics.Debug.WriteLine("connectionpanel update");
             foreach (Connection c in connections)

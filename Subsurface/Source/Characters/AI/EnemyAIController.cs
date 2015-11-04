@@ -508,7 +508,7 @@ namespace Barotrauma
             spriteBatch.DrawString(GUI.Font, "cooldown: " + coolDownTimer, pos - Vector2.UnitY * 120.0f, Color.Red);
         }
 
-        public override void FillNetworkData(NetOutgoingMessage message)
+        public override void FillNetworkData(NetBuffer message)
         {
             message.Write((byte)state);
 

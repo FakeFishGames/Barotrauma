@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Lidgren.Network;
 
 namespace Barotrauma
 {
@@ -471,7 +472,7 @@ namespace Barotrauma
             h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
         }
 
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(Networking.NetworkEventType type, NetBuffer message, object data)
         {            
             message.WriteRangedSingle(MathHelper.Clamp(volume/FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 6);
 

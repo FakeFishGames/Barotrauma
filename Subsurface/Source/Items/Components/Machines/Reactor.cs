@@ -423,7 +423,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void FillNetworkData(NetworkEventType type, NetOutgoingMessage message)
+        public override void FillNetworkData(NetworkEventType type, NetBuffer message)
         {
             message.Write(autoTemp);
             message.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
@@ -433,7 +433,7 @@ namespace Barotrauma.Items.Components
             message.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public override void ReadNetworkData(NetworkEventType type, NetBuffer message)
         {
             bool newAutoTemp;
             float newTemperature, newShutDownTemp;

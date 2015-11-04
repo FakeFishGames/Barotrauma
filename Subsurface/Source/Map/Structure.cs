@@ -636,7 +636,7 @@ namespace Barotrauma
 
         }
 
-        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
             message.Write((float)NetTime.Now);
 

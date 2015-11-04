@@ -166,14 +166,14 @@ namespace Barotrauma.Items.Components
             if (!IsActive) currPowerConsumption = 0.0f;
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetOutgoingMessage message)
+        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             message.WriteRangedInteger(-10,10,(int)(flowPercentage/10.0f));
             message.Write(IsActive);
             message.WritePadBits();
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             float newFlow = 0.0f;
             bool newActive;

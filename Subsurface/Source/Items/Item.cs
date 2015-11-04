@@ -1223,7 +1223,7 @@ namespace Barotrauma
                 NetworkEventType.ImportantComponentUpdate : NetworkEventType.ComponentUpdate, ID, isClient, index);
         }
 
-        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
             message.Write((byte)MathHelper.Clamp(condition*2.55f,0.0f,255.0f));
 

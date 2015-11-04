@@ -383,7 +383,7 @@ namespace Barotrauma
             Level.Loaded.Move(-amount);
         }
 
-        public override bool FillNetworkData(Networking.NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(Networking.NetworkEventType type, NetBuffer message, object data)
         {
             if (subBody == null) return false;
 

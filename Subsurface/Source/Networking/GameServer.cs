@@ -645,14 +645,12 @@ namespace Barotrauma.Networking
 
                 NetOutgoingMessage message = server.CreateMessage();
                 message.Write((byte)PacketTypes.NetworkEvent);
-
-
-
+                
                 List<byte[]> msgBytes = new List<byte[]>();
 
                 foreach (NetworkEvent unreliableEvent in unreliableEvents)
                 {
-                    NetOutgoingMessage tempMessage = server.CreateMessage();
+                    NetBuffer tempMessage = new NetBuffer();// server.CreateMessage();
                     if (!unreliableEvent.FillData(tempMessage)) continue;
                     tempMessage.WritePadBits();
 

@@ -21,9 +21,7 @@ namespace Barotrauma.Networking
         ItemFixed = 9,
         
         UpdateProperty = 10,
-        WallDamage = 11,
-
-
+        WallDamage = 11
     }
 
     class NetworkEvent
@@ -123,7 +121,7 @@ namespace Barotrauma.Networking
             events.Add(this);
         }
 
-        public bool FillData(NetOutgoingMessage message)
+        public bool FillData(NetBuffer message)
         {
             message.Write((byte)eventType);
 

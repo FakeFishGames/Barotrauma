@@ -355,7 +355,7 @@ namespace Barotrauma
             }                       
         }
 
-        public override bool FillNetworkData(NetworkEventType type, NetOutgoingMessage message, object data)
+        public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
             for (int i = 0; i < 5; i++ )
             {
@@ -371,7 +371,7 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public override void ReadNetworkData(NetworkEventType type, NetBuffer message)
         {
             for (int i = 0; i<5; i++)
             {
