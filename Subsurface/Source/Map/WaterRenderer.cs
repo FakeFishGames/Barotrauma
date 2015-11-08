@@ -23,10 +23,10 @@ namespace Barotrauma
         public WaterRenderer(GraphicsDevice graphicsDevice)
         {
 #if WINDOWS
-			byte[] bytecode = File.ReadAllBytes("Content/watershader.mgfx");
+            byte[] bytecode = File.ReadAllBytes("Content/watershader.mgfx");
 #endif
 #if LINUX
-			byte[] bytecode = File.ReadAllBytes("Content/effects_linux.mgfx");
+			byte[] bytecode = File.ReadAllBytes("Content/watershader_opengl.mgfx");
 #endif
 
             waterEffect = new Effect(graphicsDevice, bytecode);
@@ -34,10 +34,15 @@ namespace Barotrauma
             waterTexture = TextureLoader.FromFile("Content/waterbump.png");
             waterEffect.Parameters["xWaveWidth"].SetValue(0.05f);
             waterEffect.Parameters["xWaveHeight"].SetValue(0.05f);
-            
+#if WINDOWS
+            waterEffect.Parameters["xTexture"].SetValue(waterTexture);
+#endif
+#if LINUX
+            waterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);
+#endif
 
-            if (basicEffect==null)
-            {                
+            if (basicEffect == null)
+            {
                 basicEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
                 basicEffect.VertexColorEnabled = false;
 
@@ -45,12 +50,11 @@ namespace Barotrauma
             }
         }
 
-        public void RenderBack (SpriteBatch spriteBatch, RenderTarget2D texture, float blurAmount = 0.0f)
-        {            
+        public void RenderBack(SpriteBatch spriteBatch, RenderTarget2D texture, float blurAmount = 0.0f)
+        {
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap);
 
             waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
-            waterEffect.Parameters["xTexture"].SetValue(texture);
             waterEffect.Parameters["xWavePos"].SetValue(wavePos);
             waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
             waterEffect.CurrentTechnique.Passes[0].Apply();
@@ -58,7 +62,13 @@ namespace Barotrauma
             wavePos.X += 0.0001f;
             wavePos.Y += 0.0001f;
 
-            spriteBatch.Draw(waterTexture, new Rectangle(0,0,GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+#if WINDOWS
+            waterEffect.Parameters["xTexture"].SetValue(texture);
+            spriteBatch.Draw(waterTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+#elif LINUX
+
+            spriteBatch.Draw(texture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+#endif
 
             spriteBatch.End();
         }
@@ -73,7 +83,7 @@ namespace Barotrauma
             basicEffect.View = Matrix.Identity;
             basicEffect.World = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-                        
+
             basicEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
@@ -89,7 +99,7 @@ namespace Barotrauma
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing) return;
-            
+
             if (waterEffect != null)
             {
                 waterEffect.Dispose();
@@ -100,7 +110,7 @@ namespace Barotrauma
             {
                 basicEffect.Dispose();
                 basicEffect = null;
-            }            
+            }
         }
 
     }

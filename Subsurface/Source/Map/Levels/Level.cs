@@ -145,7 +145,7 @@ namespace Barotrauma
             return new Level(seed, Rand.Range(30.0f,80.0f,false), 100000, 40000, 2000);
         }
 
-        public void Generate(float minWidth, bool mirror=false)
+        public void Generate(bool mirror=false)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -229,6 +229,8 @@ namespace Barotrauma
             
             Debug.WriteLine("find cells: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
+
+            float minWidth = Submarine.Loaded == null ? 3000.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
 
             //generate a path from the left edge of the map to right edge
             Rectangle pathBorders = new Rectangle(
@@ -775,7 +777,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Item item in Item.itemList)
+            foreach (Item item in Item.ItemList)
             {        
                 if (item.body==null || item.CurrentHull != null) continue;
                 item.body.LinearVelocity += simVelocity;                
@@ -815,7 +817,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Item item in Item.itemList)
+            foreach (Item item in Item.ItemList)
             {
                 if (item.body == null || item.CurrentHull != null) continue;
                 item.body.LinearVelocity -= prevVelocity;

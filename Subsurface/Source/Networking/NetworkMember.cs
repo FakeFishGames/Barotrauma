@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
@@ -41,7 +42,9 @@ namespace Barotrauma.Networking
     {
 
         protected static Color[] messageColor = { Color.White, Color.Red, Color.LightBlue, Color.LightGreen };
-        
+
+        protected NetPeer netPeer;
+
         protected string name;
 
         protected TimeSpan updateInterval;
@@ -119,6 +122,44 @@ namespace Barotrauma.Networking
 
             Voting = new Voting();
         }
+
+        protected NetOutgoingMessage ComposeNetworkEventMessage(bool isImportant, NetConnection excludedConnection = null)
+        {
+            if (netPeer == null) return null;
+
+            var events = NetworkEvent.Events.FindAll(e => e.IsImportant == isImportant);
+            if (events.Count == 0) return null;
+
+            List<byte[]> msgBytes = new List<byte[]>();
+
+            foreach (NetworkEvent networkEvent in events)
+            {
+                if (excludedConnection != null && networkEvent.SenderConnection == excludedConnection) continue;
+
+                NetBuffer tempMessage = new NetBuffer();// server.CreateMessage();
+                if (!networkEvent.FillData(tempMessage)) continue;
+                tempMessage.WritePadBits();
+
+                tempMessage.Position = 0;
+                msgBytes.Add(tempMessage.ReadBytes(tempMessage.LengthBytes));
+            }
+
+            if (msgBytes.Count == 0) return null;
+
+            NetOutgoingMessage message = netPeer.CreateMessage();
+            message.Write((byte)PacketTypes.NetworkEvent);
+
+            message.Write((byte)msgBytes.Count);
+            foreach (byte[] msgData in msgBytes)
+            {
+                if (msgData.Length > 255) DebugConsole.ThrowError("too large networkevent (" + msgData.Length + " bytes)");
+
+                message.Write((byte)msgData.Length);
+                message.Write(msgData);
+            }
+
+            return message;
+    }
 
         protected void CreateCrewFrame(List<Character> crew)
         {

@@ -111,7 +111,7 @@ namespace Barotrauma
                     if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
                     {
                         new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this);
-                        
+                        placePosition = Vector2.Zero;
                         //selected = null;
                         return;
                     }

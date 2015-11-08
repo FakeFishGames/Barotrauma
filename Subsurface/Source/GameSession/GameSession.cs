@@ -121,7 +121,7 @@ namespace Barotrauma
 
             if (level != null)
             {
-                level.Generate(submarine == null ? 100.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
+                level.Generate();
                 submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
 
                 GameMain.GameScreen.BackgroundSpriteManager.SpawnSprites(80);

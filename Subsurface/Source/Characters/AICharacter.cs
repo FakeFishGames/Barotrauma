@@ -91,19 +91,19 @@ namespace Barotrauma
                     return true;
                 case NetworkEventType.ImportantEntityUpdate:
                     int i = 0;
-                    foreach (Limb limb in AnimController.Limbs)
-                    {
-                        if (limb.ignoreCollisions) continue;
+                    //foreach (Limb limb in AnimController.Limbs)
+                    //{
+                        //if (RefLimb.ignoreCollisions) continue;
 
-                        if (limb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
+                        if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
 
-                        message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                        message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        message.WriteRangedSingle(AnimController.RefLimb.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
 
 
-                        message.Write(limb.body.Rotation);
-                        i++;
-                    }
+                        message.Write(AnimController.RefLimb.Rotation);
+                    //    i++;
+                    //}
 
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
                     message.Write((byte)((health / maxHealth) * 255.0f));
@@ -126,8 +126,9 @@ namespace Barotrauma
             return true;
         }
         
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data)
         {
+            data = null;
             Enabled = true;
 
             switch (type)
@@ -136,12 +137,12 @@ namespace Barotrauma
                     Kill(CauseOfDeath.Damage, true);
                     return;
                 case NetworkEventType.ImportantEntityUpdate:
-                    foreach (Limb limb in AnimController.Limbs)
-                    {
-                        if (limb.ignoreCollisions) continue;
+                    //foreach (Limb limb in AnimController.Limbs)
+                    //{
+                    //    if (limb.ignoreCollisions) continue;
 
-                        Vector2 limbPos = limb.SimPosition;
-                        float rotation = limb.Rotation;
+                        Vector2 limbPos = AnimController.RefLimb.SimPosition;
+                        float rotation = AnimController.RefLimb.Rotation;
 
                         try
                         {
@@ -155,14 +156,14 @@ namespace Barotrauma
                             return;
                         }
 
-                        if (limb.body != null)
+                        if (AnimController.RefLimb.body != null)
                         {
-                            limb.body.TargetVelocity = limb.body.LinearVelocity;
-                            limb.body.TargetPosition = limbPos;// +vel * (float)(deltaTime / 60.0);
-                            limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
-                            limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
+                            //AnimController.RefLimb.body.TargetVelocity = limb.body.LinearVelocity;
+                            AnimController.RefLimb.body.TargetPosition = limbPos;// +vel * (float)(deltaTime / 60.0);
+                            AnimController.RefLimb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
+                            //limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
                         }
-                    }
+                    //}
 
                     float newStunTimer = 0.0f, newHealth = 0.0f;
 

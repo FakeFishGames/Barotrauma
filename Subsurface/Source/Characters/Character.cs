@@ -443,6 +443,12 @@ namespace Barotrauma
             return keys[(int)inputType].Held;
         }
 
+        public void ClearInput(InputType inputType)
+        {
+            keys[(int)inputType].Hit = false;
+            keys[(int)inputType].Held = false;            
+        }
+
         public void ClearInputs()
         {
             foreach (Key key in keys)
@@ -577,10 +583,13 @@ namespace Barotrauma
 
         public void CreateUpdateNetworkEvent(bool isClient)
         {
-            new NetworkEvent(importantUpdateTimer <= 0 ? NetworkEventType.ImportantEntityUpdate : NetworkEventType.EntityUpdate, ID, isClient);
+            //new NetworkEvent(importantUpdateTimer <= 0 ? NetworkEventType.ImportantEntityUpdate : NetworkEventType.EntityUpdate, ID, isClient);
 
-            importantUpdateTimer -= 1;
-            if (importantUpdateTimer < 0) importantUpdateTimer = (this is AICharacter) ? 40 : 25;
+            new NetworkEvent(NetworkEventType.EntityUpdate, ID, isClient);
+
+
+            //importantUpdateTimer -= 1;
+            //if (importantUpdateTimer < 0) importantUpdateTimer = (this is AICharacter) ? 30 : 10;
         }
 
 
@@ -1301,9 +1310,10 @@ namespace Barotrauma
             }
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data)
         {
             Enabled = true;
+            data = null;
 
             switch (type)
             {
@@ -1315,6 +1325,8 @@ namespace Barotrauma
                     bool pickHit = message.ReadBoolean();
                     bool actionHit = message.ReadBoolean();
 
+                    data = new int[] { (int)itemId, pickHit ? 1 : 0, actionHit ? 1: 0 };
+
                     System.Diagnostics.Debug.WriteLine("item id: "+itemId);
 
                     Item item = FindEntityByID(itemId) as Item;
@@ -1323,6 +1335,8 @@ namespace Barotrauma
                     return;
                 case NetworkEventType.SelectCharacter:
                     ushort characterId = message.ReadUInt16();
+                    data = characterId;
+
                     if (characterId==0)
                     {
                         DeselectCharacter(false);
@@ -1351,6 +1365,8 @@ namespace Barotrauma
                     {
                         causeOfDeath = CauseOfDeath.Damage;
                     }
+
+                    data = causeOfDeath;
 
                     if (causeOfDeath==CauseOfDeath.Pressure)
                     {

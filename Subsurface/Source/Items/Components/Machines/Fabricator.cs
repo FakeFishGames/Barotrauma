@@ -73,34 +73,23 @@ namespace Barotrauma.Items.Components
                 
             }
 
-            int width = 400, height = 300;
-            itemList = new GUIListBox(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), Color.White * 0.7f);
+            int width = 500, height = 300;
+            itemList = new GUIListBox(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
             itemList.OnSelected = SelectItem;
             //structureList.CheckSelected = MapEntityPrefab.GetSelected;
 
             foreach (FabricableItem fi in fabricableItems)
             {
-                Color color = ((itemList.CountChildren % 2) == 0) ? Color.White : Color.LightGray;
-
-                //GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, itemList);
-                //frame.UserData = fi;
-                //frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                //frame.Color = color;
-                //frame.HoverColor = Color.Gold * 0.2f;
-                //frame.SelectedColor = Color.Gold * 0.5f;
-
+                Color color = ((itemList.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.3f;
+                
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),  fi.TargetItem.Name,
-                    color, Color.Black,
+                    color, Color.White,
                     Alignment.Left,  Alignment.Left, null, itemList);
                 textBlock.UserData = fi;
                 textBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-
-                //if (fi.TargetItem.sprite != null)
-                //{
-                //    GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), fi.TargetItem.sprite, Alignment.Left, frame);
-                //    img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
-                //}
+                textBlock.HoverColor = Color.Gold * 0.2f;
+                textBlock.SelectedColor = Color.Gold * 0.5f;
             }
         }
 
@@ -110,7 +99,7 @@ namespace Barotrauma.Items.Components
             if (targetItem == null) return false;
 
             int width = 200, height = 150;
-            selectedItemFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, itemList.Rect.Bottom+20, width, height), Color.Black*0.8f);
+            selectedItemFrame = new GUIFrame(new Rectangle(itemList.Rect.Right - width - 20, GameMain.GraphicsHeight/2-height/2, width, height), Color.Black*0.8f);
             //selectedItemFrame.Padding = GUI.style.smallPadding;
 
             if (targetItem.TargetItem.sprite != null)
@@ -177,7 +166,7 @@ namespace Barotrauma.Items.Components
                 container.inventory.RemoveItem(requiredItem);
             }
             
-            new Item(fabricatedItem.TargetItem, item.Position);
+            Item.Spawner.QueueItem(fabricatedItem.TargetItem, item.Position);
 
             IsActive = false;
             fabricatedItem = null;
@@ -198,7 +187,6 @@ namespace Barotrauma.Items.Components
                     break;
                 }
             }
-
 
             itemList.Update(0.016f);
             itemList.Draw(spriteBatch);

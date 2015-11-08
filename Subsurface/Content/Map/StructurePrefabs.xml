@@ -48,6 +48,18 @@
   <topwall sprite="Content/Map/testroom.png" sourcerect="144,464,496,32" depth ="0.06" castshadow="true"
     width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
 
+  <CornerUpperLeft sprite="Content/Map/testroom.png" sourcerect="192,512,224,160" depth ="0.03"
+    width = "224" height ="160"/>
+
+  <CornerUpperRight sprite="Content/Map/testroom.png" sourcerect="416,512,224,160" depth ="0.03"
+    width = "224" height ="160"/>
+
+  <CornerBottomLeft sprite="Content/Map/testroom.png" sourcerect="192,512,224,160" depth ="0.03"
+    width = "224" height ="160" flipvertical="true"/>
+
+  <CornerBottomRight sprite="Content/Map/testroom.png" sourcerect="416,512,224,160" depth ="0.03"
+    width = "224" height ="160" flipvertical="true"/>  
+  
   <topwindow sprite="Content/Map/testroom.png" sourcerect="208,352,128,80" depth ="0.05"
     width = "128" height ="80" body="true" health="100"/>
 
@@ -73,9 +85,12 @@
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
   <cleanbgwall sprite="Content/Map/testroom.png" sourcerect="448,96,448,224" depth = "1.0"
-    width="64" height="64" resizehorizontal="true" resizevertical="true"/>
+    width="64" height="64" resizehorizontal="true" resizevertical="true"/>    
 
   <bgpanels sprite="Content/Map/testroom.png" sourcerect="768,320,224,224" depth = "1.0"
+    width="64" height="64" resizehorizontal="true" resizevertical="true"/>
+
+  <bgpanelswindow sprite="Content/Map/testroom.png" sourcerect="768,544,224,224" depth = "1.0"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
   <stairsright sprite="Content/Map/testroom.png" sourcerect="0,704,256,320" 

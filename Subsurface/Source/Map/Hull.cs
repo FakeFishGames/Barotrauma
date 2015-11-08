@@ -479,8 +479,10 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, out object data)
         {
+            data = null;
+
             float newVolume = this.volume;
 
             try

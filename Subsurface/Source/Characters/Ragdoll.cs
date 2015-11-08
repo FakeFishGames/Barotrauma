@@ -649,9 +649,63 @@ namespace Barotrauma
                 }
 
                 limb.Update(deltaTime);
+            }            
+        }
 
+        public void SetPosition(Vector2 simPosition)
+        {
+            Vector2 moveAmount = simPosition - refLimb.SimPosition;
+
+            foreach (Limb limb in Limbs)
+            {
+                if (limb==refLimb)
+                {
+                    limb.body.SetTransform(simPosition, limb.Rotation);
+                    continue;
+                }
+
+                //check visibility from the new position of RefLimb to the new position of this limb
+                Vector2 movePos = limb.SimPosition + moveAmount;
+
+                TrySetLimbPosition(limb, simPosition, movePos);
             }
-            
+        }
+
+        private void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition)
+        {
+            if (original == simPosition) return;
+
+            Body body = Submarine.CheckVisibility(original, simPosition);
+            Vector2 movePos = simPosition;
+
+            //if there's something in between the limbs
+            if (body != null)
+            {
+                //move the limb close to the position where the raycast hit something
+                movePos = original + ((simPosition - original) * Submarine.LastPickedFraction * 0.9f);
+            }
+
+            limb.body.SetTransform(movePos, limb.Rotation);
+        }
+
+        public void SetRotation(float rotation)
+        {
+            float rotateAmount = rotation - refLimb.Rotation;
+
+            Matrix rotationMatrix = Matrix.CreateRotationZ(rotateAmount);
+
+            refLimb.body.SetTransform(refLimb.SimPosition, rotation);
+
+            foreach (Limb limb in Limbs)
+            {
+                if (limb == refLimb) continue;
+
+                Vector2 newPos = limb.SimPosition - refLimb.SimPosition;
+                newPos = Vector2.Transform(newPos, rotationMatrix);
+
+                TrySetLimbPosition(limb, refLimb.SimPosition, refLimb.SimPosition + newPos);
+                limb.body.SetTransform(limb.SimPosition, limb.Rotation + rotateAmount);
+            }
         }
 
         private void UpdateNetPlayerPosition()
@@ -708,22 +762,26 @@ namespace Barotrauma
 
             if (resetAll)
             {
-                System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
+               System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
 
-                foreach (Limb limb in Limbs)
-                {
-                    //if (limb.body.TargetPosition == Vector2.Zero)
-                    //{
-                        limb.body.SetTransform(limb.body.SimPosition + diff, limb.body.Rotation);
-                        //continue;
-                    //}
+                SetPosition(refLimb.body.TargetPosition);
 
-                    //limb.body.LinearVelocity = limb.body.TargetVelocity;
-                    //limb.body.AngularVelocity = limb.body.TargetAngularVelocity;
+                if (character is AICharacter) SetRotation(refLimb.body.TargetRotation);
 
-                    //limb.body.SetTransform(limb.body.TargetPosition, limb.body.TargetRotation);
-                    limb.body.TargetPosition = Vector2.Zero;
-                }
+                //foreach (Limb limb in Limbs)
+                //{
+                //    if (limb.body.TargetPosition == Vector2.Zero)
+                //    {
+                //        limb.body.SetTransform(limb.body.SimPosition + diff, limb.body.Rotation);
+                //        continue;
+                //    }
+
+                //    limb.body.LinearVelocity = limb.body.TargetVelocity;
+                //    limb.body.AngularVelocity = limb.body.TargetAngularVelocity;
+
+                //    limb.body.SetTransform(limb.body.TargetPosition, limb.body.TargetRotation);
+                //    limb.body.TargetPosition = Vector2.Zero;
+                //}
             } 
         }
 

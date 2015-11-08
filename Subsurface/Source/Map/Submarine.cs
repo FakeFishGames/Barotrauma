@@ -254,8 +254,6 @@ namespace Barotrauma
 
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null)
         {
-
-
             float closestFraction = 1.0f;
             Body closestBody = null;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
@@ -302,7 +300,8 @@ namespace Barotrauma
             
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null || fixture.CollisionCategories != Physics.CollisionWall) return -1;
+                if (fixture == null || 
+                    (fixture.CollisionCategories != Physics.CollisionWall && fixture.CollisionCategories != Physics.CollisionLevel)) return -1;
 
                 Structure structure = fixture.Body.UserData as Structure;
                 if (structure != null)
@@ -397,8 +396,10 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message, out object data)
         {
+            data = null;
+
             float sendingTime;
             Vector2 newTargetPosition, newSpeed;
             try
@@ -630,7 +631,7 @@ namespace Barotrauma
             
             MapEntity.MapLoaded();
                         
-            foreach (Item item in Item.itemList)
+            foreach (Item item in Item.ItemList)
             {
                 foreach (ItemComponent ic in item.components)
                 {

@@ -23,8 +23,10 @@ namespace Barotrauma
 
     class Item : MapEntity, IDamageable, IPropertyObject
     {
-        public static List<Item> itemList = new List<Item>();
+        public static List<Item> ItemList = new List<Item>();
         protected ItemPrefab prefab;
+
+        public static ItemSpawner Spawner = new ItemSpawner();
 
         private List<string> tags;
         
@@ -308,7 +310,7 @@ namespace Barotrauma
             }
 
             InsertToList();
-            itemList.Add(this);
+            ItemList.Add(this);
         }
 
         public T GetComponent<T>()
@@ -359,7 +361,7 @@ namespace Barotrauma
         {
             base.Move(amount);
 
-            if (itemList != null && body != null)
+            if (ItemList != null && body != null)
             {
                 amount = ConvertUnits.ToSimUnits(amount);
                 //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
@@ -387,7 +389,7 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateHulls()
         {
-            foreach (Item item in itemList) item.FindHull();
+            foreach (Item item in ItemList) item.FindHull();
         }
         
         public virtual Hull FindHull()
@@ -812,7 +814,7 @@ namespace Barotrauma
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(position);
             Vector2 displayPickPos = ConvertUnits.ToDisplayUnits(pickPosition);
 
-            foreach (Item item in itemList)
+            foreach (Item item in ItemList)
             {
                 if (ignoredItems!=null && ignoredItems.Contains(item)) continue;
                 //if (hull != item.CurrentHull && (hull==null || (item.Rect.Height<hull.Rect.Height && item.rect.Width < hull.Rect.Width))) continue;
@@ -1295,8 +1297,10 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data)
         {
+            data = null;
+
             Condition = (float)message.ReadByte()/2.55f;
 
             switch (type)
@@ -1310,11 +1314,14 @@ namespace Barotrauma
                 case NetworkEventType.ItemFixed:
 
                     byte requirementIndex = message.ReadByte();
+                    data = requirementIndex;
+
                     if (requirementIndex>=FixRequirements.Count) return;
 
                     FixRequirements[requirementIndex].Fixed = true;
                     break;
                 case NetworkEventType.InventoryUpdate:
+
                     var itemContainer = GetComponent<ItemContainer>();
                     if (itemContainer == null || itemContainer.inventory == null) return;
                     itemContainer.inventory.ReadNetworkData(NetworkEventType.DropItem, message);
@@ -1322,6 +1329,9 @@ namespace Barotrauma
                 case NetworkEventType.ComponentUpdate:
                 case NetworkEventType.ImportantComponentUpdate:
                     int componentIndex = message.ReadByte();
+
+                    data = componentIndex;
+
                     if (componentIndex < 0 || componentIndex > components.Count - 1) return;
                     components[componentIndex].ReadNetworkData(type, message);
                     break;
@@ -1331,6 +1341,7 @@ namespace Barotrauma
                     try
                     {
                         propertyName = message.ReadString();
+                        data = propertyName;
                     }
                     catch
                     {
@@ -1380,9 +1391,9 @@ namespace Barotrauma
             {
                 ic.Remove();
             }
-            itemList.Remove(this);
+            ItemList.Remove(this);
 
-            foreach (Item it in itemList)
+            foreach (Item it in ItemList)
             {
                 if (it.linkedTo.Contains(this))
                 {

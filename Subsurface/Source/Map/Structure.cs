@@ -449,6 +449,8 @@ namespace Barotrauma
             if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return;
             if (!prefab.HasBody) return;
 
+            if (!MathUtils.IsValid(damage)) return;
+
             if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage)>5.0f)
             {
                 new NetworkEvent(NetworkEventType.WallDamage, ID, false);
@@ -640,9 +642,16 @@ namespace Barotrauma
         {
             message.Write((float)NetTime.Now);
 
-            for (int i = 0; i < sections.Length; i++)
+            var updateSections = Array.FindAll(sections, s => s != null && Math.Abs(s.damage - s.lastSentDamage)/Health > 0.01f);
+
+            if (updateSections.Length == 0) return false;
+
+            Debug.Assert(updateSections.Length<255);
+
+            message.Write((byte)updateSections.Length);
+
+            for (int i = 0; i < updateSections.Length; i++)
             {
-                if (Math.Abs(sections[i].damage - sections[i].lastSentDamage) < 0.1f) continue;
                 message.Write((byte)i);
                 message.WriteRangedSingle(sections[i].damage / Health, 0.0f, 1.0f, 8);
 
@@ -652,15 +661,21 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data)
         {
+            data = null;
+
             float updateTime = message.ReadFloat();
             if (updateTime < lastUpdate) return;
 
-            while (message.Position <= message.LengthBits-8)
+            int sectionCount = message.ReadByte();
+
+            for (int i = 0; i<sectionCount; i++)
             {
                 byte sectionIndex = message.ReadByte();
                 float damage = message.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
+
+                if (sectionIndex < 0 || sectionIndex >= sections.Length) continue;
 
                 SetDamage(sectionIndex, damage);
             }

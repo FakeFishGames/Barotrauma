@@ -7,17 +7,17 @@ namespace Barotrauma
 {
     class EditMapScreen : Screen
     {
-        Camera cam;
+        private Camera cam;
 
-        GUIComponent GUIpanel;
+        private GUIComponent GUIpanel;
 
-        GUIComponent[] GUItabs;
-        int selectedTab;
+        private GUIComponent[] GUItabs;
+        private int selectedTab;
 
         //a character used for picking up and manipulating items
-        Character dummyCharacter;
+        private Character dummyCharacter;
         
-        bool characterMode;
+        private bool characterMode;
 
         public Camera Cam
         {
@@ -31,12 +31,12 @@ namespace Barotrauma
 
         private string GetItemCount()
         {
-            return "Items: " +Item.itemList.Count;
+            return "Items: " +Item.ItemList.Count;
         }
 
         private string GetStructureCount()
         {
-            return "Structures: " + (MapEntity.mapEntityList.Count - Item.itemList.Count);
+            return "Structures: " + (MapEntity.mapEntityList.Count - Item.ItemList.Count);
         }
 
         private string GetPhysicsBodyCount()
