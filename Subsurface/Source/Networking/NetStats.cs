@@ -109,7 +109,7 @@ namespace Barotrauma.Networking
 
         public float Average()
         {
-            return values.Average();
+            return values.Length == 0 ? 0.0f : values.Average();
         }
 
         public void Update(float newValue)
@@ -133,10 +133,12 @@ namespace Barotrauma.Networking
                 graphMaxVal = (float)maxVal;
             }
 
+            GUI.DrawRectangle(spriteBatch, rect, Color.White);
+
+            if (values.Length == 0) return;
+
             float lineWidth = (float)rect.Width / (float)(values.Length - 2);
             float yScale = (float)rect.Height / graphMaxVal;
-
-            GUI.DrawRectangle(spriteBatch, rect, Color.White);
 
             Vector2 prevPoint = new Vector2(rect.Right, rect.Bottom - (values[1] + (values[0] - values[1]) * xOffset) * yScale);
 

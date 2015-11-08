@@ -74,6 +74,7 @@ namespace Barotrauma.Networking
             try
             {
                 server = new NetServer(config);
+                netPeer = server;
                 server.Start();
             }
             catch (Exception e)
@@ -282,7 +283,7 @@ namespace Barotrauma.Networking
 
                     foreach (Character c in Character.CharacterList)
                     {
-                        if (c as AICharacter == null) continue;
+                        if (c as AICharacter == null || c.IsDead) continue;
 
                         if (c.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) continue;
 
@@ -311,6 +312,13 @@ namespace Barotrauma.Networking
         private void SparseUpdate()
         {
             if (gameStarted) new NetworkEvent(Submarine.Loaded.ID, false);
+
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c as AICharacter != null || c.IsDead) continue;
+
+                new NetworkEvent(NetworkEventType.ImportantEntityUpdate, c.ID, false);
+            }
 
             sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
         }
@@ -433,34 +441,34 @@ namespace Barotrauma.Networking
                     {
                         case (byte)PacketTypes.NetworkEvent:
                             if (!gameStarted) break;
-                            if (!NetworkEvent.ReadData(inc)) break;
+                            NetworkEvent.ReadMessage(inc, true);
 
-                            List<Client> recipients = connectedClients.FindAll(c => c.Connection != inc.SenderConnection && c.inGame);
-                            if (recipients.Count == 0) break;
+                            //List<Client> recipients = connectedClients.FindAll(c => c.Connection != inc.SenderConnection && c.inGame);
+                            //if (recipients.Count == 0) break;
 
-                            if (isReliable)
-                            {
-                                Debug.WriteLine("receiver reliable networkevent");
-                                foreach (Client c in recipients)
-                                {
-                                    var reliableMessage = c.ReliableChannel.CreateMessage();
-                                    inc.Position = 8+16;
-                                    byte[] messageBytes = inc.ReadBytes(inc.LengthBytes-3);
-                                    reliableMessage.InnerMessage.Write(messageBytes);
+                            //if (isReliable)
+                            //{
+                            //    Debug.WriteLine("receiver reliable networkevent");
+                            //    foreach (Client c in recipients)
+                            //    {
+                            //        var reliableMessage = c.ReliableChannel.CreateMessage();
+                            //        inc.Position = 8+16;
+                            //        byte[] messageBytes = inc.ReadBytes(inc.LengthBytes-3);
+                            //        reliableMessage.InnerMessage.Write(messageBytes);
 
-                                    c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
-                                }
-                            }
-                            else
-                            {
-                                outmsg = server.CreateMessage();
-                                outmsg.Write(inc);
+                            //        c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    outmsg = server.CreateMessage();
+                            //    outmsg.Write(inc);
 
-                                List<NetConnection> recipientConnections = new List<NetConnection>();
-                                foreach (Client c in recipients) recipientConnections.Add(c.Connection);
+                            //    List<NetConnection> recipientConnections = new List<NetConnection>();
+                            //    foreach (Client c in recipients) recipientConnections.Add(c.Connection);
 
-                                server.SendMessage(outmsg, recipientConnections, inc.DeliveryMethod, 0);
-                            }
+                            //    server.SendMessage(outmsg, recipientConnections, inc.DeliveryMethod, 0);
+                            //}
                                                         
                             break;
                         case (byte)PacketTypes.Chatmessage:
@@ -624,7 +632,7 @@ namespace Barotrauma.Networking
 
         private void SendNetworkEvents()
         {
-            if (NetworkEvent.events.Count == 0) return;
+            if (NetworkEvent.Events.Count == 0) return;
 
             List<Client> recipients = connectedClients.FindAll(c => c.character != null);
 
@@ -636,55 +644,85 @@ namespace Barotrauma.Networking
 
             if (recipients.Count == 0) return;
 
-            for (int i = 0; i<2; i++)
+            //foreach (Client c in recipients)
+            //{
+
+            //    for (int i = 0; i < 2; i++)
+            //    {
+            //        bool important = i == 0;
+
+            //        var events = NetworkEvent.Events.FindAll(e => e.IsImportant == important && e.SenderConnection != c.Connection);
+            //        if (events.Count == 0) continue;
+
+            //        List<byte[]> msgBytes = new List<byte[]>();
+
+            //        int totalLength = 1;
+
+            //        foreach (NetworkEvent unreliableEvent in events)
+            //        {
+            //            NetBuffer tempMessage = new NetBuffer();// server.CreateMessage();
+            //            if (!unreliableEvent.FillData(tempMessage)) continue;
+            //            tempMessage.WritePadBits();
+
+            //            tempMessage.Position = 0;
+            //            msgBytes.Add(tempMessage.ReadBytes(tempMessage.LengthBytes));
+
+            //            //one extra byte for writing the length
+            //            totalLength += 1 + tempMessage.LengthBytes;
+            //        }
+
+            //        //NetOutgoingMessage combinedMessage = null;
+            //        //reliableMessage = null;
+            //        if (important)
+            //        {
+            //            ReliableMessage reliableMessage = c.ReliableChannel.CreateMessage();
+
+            //            reliableMessage.InnerMessage.Write((byte)msgBytes.Count);
+            //            foreach (byte[] msgData in msgBytes)
+            //            {
+            //                if (msgData.Length > 255) DebugConsole.ThrowError("too large networkevent (" + msgData.Length + " bytes)");
+
+            //                reliableMessage.InnerMessage.Write((byte)msgData.Length);
+            //                reliableMessage.InnerMessage.Write(msgData);
+            //            }
+
+            //            c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
+            //        }
+            //        else
+            //        {
+            //            var combinedMessage = server.CreateMessage(totalLength);
+
+            //            combinedMessage.Write((byte)msgBytes.Count);
+            //            foreach (byte[] msgData in msgBytes)
+            //            {
+            //                if (msgData.Length > 255) DebugConsole.ThrowError("too large networkevent (" + msgData.Length + " bytes)");
+
+            //                combinedMessage.Write((byte)msgData.Length);
+            //                combinedMessage.Write(msgData);
+            //            }
+
+            //            server.SendMessage(combinedMessage, c.Connection, NetDeliveryMethod.Unreliable, 0);
+            //        }
+
+            //    }
+            //}
+            foreach (Client c in recipients)
             {
-                bool important = i==0;
-
-                var unreliableEvents = NetworkEvent.events.FindAll(e => e.IsImportant == important);
-                if (unreliableEvents.Count == 0) continue;
-
-                NetOutgoingMessage message = server.CreateMessage();
-                message.Write((byte)PacketTypes.NetworkEvent);
-                
-                List<byte[]> msgBytes = new List<byte[]>();
-
-                foreach (NetworkEvent unreliableEvent in unreliableEvents)
+                var message = ComposeNetworkEventMessage(true, c.Connection);
+                if (message != null)
                 {
-                    NetBuffer tempMessage = new NetBuffer();// server.CreateMessage();
-                    if (!unreliableEvent.FillData(tempMessage)) continue;
-                    tempMessage.WritePadBits();
+                    ReliableMessage reliableMessage = c.ReliableChannel.CreateMessage();
+                    message.Position = 0;
+                    reliableMessage.InnerMessage.Write(message.ReadBytes(message.LengthBytes));
 
-                    tempMessage.Position = 0;
-                    msgBytes.Add(tempMessage.ReadBytes(tempMessage.LengthBytes));
+                    c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
                 }
 
-                message.Write((byte)msgBytes.Count);
-                foreach (byte[] msgData in msgBytes)
+                message = ComposeNetworkEventMessage(false, c.Connection);
+                if (message != null)
                 {
-                    if (msgData.Length > 255) DebugConsole.ThrowError("too large networkevent ("+msgData.Length+" bytes)");
-
-                    message.Write((byte)msgData.Length);
-                    message.Write(msgData);
-                }
-
-                if (important)
-                {
-                    foreach (Client c in recipients)
-                    {
-                        ReliableMessage reliableMessage = c.ReliableChannel.CreateMessage();
-                        message.Position = 0;
-                        reliableMessage.InnerMessage.Write(message.ReadBytes(message.LengthBytes));
-
-                        c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
-                    }
-                }
-                else
-                {
-                    if (server.ConnectionsCount>0)
-                    {
-                        server.SendMessage(message, recipientConnections, NetDeliveryMethod.Unreliable, 0);  
-                    }  
-                }   
+                    server.SendMessage(message, c.Connection, NetDeliveryMethod.Unreliable, 0);                        
+                }                
             }
 
 
@@ -720,7 +758,7 @@ namespace Barotrauma.Networking
             //        }  
             //    }                          
             //}
-            NetworkEvent.events.Clear();
+            NetworkEvent.Events.Clear();
         }
 
 
@@ -1372,7 +1410,7 @@ namespace Barotrauma.Networking
                 case 1:
                     msg.Write((byte)PacketTypes.NetworkEvent);
                     msg.Write((byte)NetworkEventType.ComponentUpdate);
-                    msg.Write((int)Item.itemList[Rand.Int(Item.itemList.Count)].ID);
+                    msg.Write((int)Item.ItemList[Rand.Int(Item.ItemList.Count)].ID);
                     msg.Write(Rand.Int(8));
                     break;
                 case 2:

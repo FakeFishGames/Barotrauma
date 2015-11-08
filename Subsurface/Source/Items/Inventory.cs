@@ -297,10 +297,11 @@ namespace Barotrauma
 
         public virtual bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
-            for (int i = 0; i<capacity; i++)
+            var foundItems = Array.FindAll(items, i => i != null);
+            message.Write((byte)foundItems.Count());
+            foreach (Item item in foundItems)
             {
-                if (items[i] == null) continue;
-                message.Write((ushort)items[i].ID);
+                message.Write((ushort)item.ID);
             }
 
             return true;
@@ -309,20 +310,13 @@ namespace Barotrauma
         public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message)
         {
             List<ushort> newItemIDs = new List<ushort>();
-                        
-            try
-            {
-                
-                while (message.Position <= message.LengthBits - (sizeof(ushort) * 8))
-                {
-                    newItemIDs.Add(message.ReadUInt16());
-                }
-            }
-            catch
-            {
-                return;
-            }
 
+            byte count = message.ReadByte();
+            for (int i = 0; i<count; i++)
+            {            
+                newItemIDs.Add(message.ReadUInt16());
+            }
+           
             for (int i = 0; i < capacity; i++)
             {
                 if (items[i] == null) continue;

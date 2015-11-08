@@ -26,7 +26,7 @@ namespace Barotrauma.Networking
 
     class NetworkEvent
     {
-        public static List<NetworkEvent> events = new List<NetworkEvent>();
+        public static List<NetworkEvent> Events = new List<NetworkEvent>();
 
         private static bool[] isImportant;
         private static bool[] overridePrevious;
@@ -67,6 +67,8 @@ namespace Barotrauma.Networking
         private bool isClientEvent;
 
         private object data;
+
+        public NetConnection SenderConnection;
 
         //private NetOutgoingMessage message;
 
@@ -110,7 +112,7 @@ namespace Barotrauma.Networking
 
             if (overridePrevious[(int)type])
             {
-                if (events.Find(e => e.id == id && e.eventType == type) != null) return;
+                if (Events.Find(e => e.id == id && e.eventType == type) != null) return;
             }
 
             this.id = id;
@@ -118,7 +120,7 @@ namespace Barotrauma.Networking
 
             this.data = data;
 
-            events.Add(this);
+            Events.Add(this);
         }
 
         public bool FillData(NetBuffer message)
@@ -147,7 +149,31 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public static bool ReadData(NetIncomingMessage message)
+        public static void ReadMessage(NetIncomingMessage message, bool resend=false)
+        {
+            byte msgCount = message.ReadByte();
+            long currPos = message.PositionInBytes;
+
+            for (int i = 0; i < msgCount; i++)
+            {
+
+                byte msgLength = message.ReadByte();
+
+                try
+                {
+                    NetworkEvent.ReadData(message, resend);
+                }
+                catch
+                {
+                    int afghj = 1;
+                }
+                //+1 because msgLength is one additional byte
+                currPos += msgLength + 1;
+                message.Position = currPos * 8;
+            }
+        }
+
+        public static bool ReadData(NetIncomingMessage message, bool resend=false)
         {
             NetworkEventType eventType;
             ushort id;
@@ -175,9 +201,11 @@ namespace Barotrauma.Networking
                 return false;
             }
 
+            object data;
+
             try
             {
-                e.ReadNetworkData(eventType, message);
+                e.ReadNetworkData(eventType, message, out data);
             }
             catch (Exception exception)
             {
@@ -185,6 +213,12 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Received invalid network message", exception);
 #endif
                 return false;
+            }
+
+            if (resend)
+            {
+                var resendEvent = new NetworkEvent(eventType, id, false, data);
+                resendEvent.SenderConnection = message.SenderConnection;
             }
 
             return true;

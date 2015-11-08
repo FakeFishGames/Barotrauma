@@ -373,6 +373,8 @@ namespace Barotrauma
 
         public override void ReadNetworkData(NetworkEventType type, NetBuffer message)
         {
+            character.ClearInput(InputType.Use);
+
             for (int i = 0; i<5; i++)
             {
                 ushort itemId = message.ReadUInt16();
@@ -391,17 +393,11 @@ namespace Barotrauma
 
             List<ushort> newItemIDs = new List<ushort>();
 
-            try
+            for (int i = 5; i < capacity; i++)
             {
-                while (message.Position <= message.LengthBits - (sizeof(ushort) * 8))
-                {
-                    newItemIDs.Add(message.ReadUInt16());
-                }
+                newItemIDs.Add(message.ReadUInt16());
             }
-            catch
-            {
-                return;
-            }
+         
 
             for (int i = 5; i < capacity; i++)
             {

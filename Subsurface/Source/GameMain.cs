@@ -287,7 +287,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    NetworkEvent.events.Clear();
+                    NetworkEvent.Events.Clear();
                 }
             }
 

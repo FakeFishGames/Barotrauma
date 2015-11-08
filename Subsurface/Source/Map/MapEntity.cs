@@ -199,7 +199,7 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateAll(Camera cam, float deltaTime)
         {
-            foreach (Item item in Item.itemList)
+            foreach (Item item in Item.ItemList)
             {
                 item.Updated = false;
             }
@@ -214,36 +214,12 @@ namespace Barotrauma
                 gap.Update(cam, deltaTime);
             }
 
-            foreach (Item item in Item.itemList)
+            foreach (Item item in Item.ItemList)
             {
                 item.Update(cam, deltaTime);
             }
 
-            //Stopwatch sw = new Stopwatch();
-
-            //for (int i = 0; i < mapEntityList.Count; i++)
-            //{
-            //    sw.Restart();
-            //    mapEntityList[i].Update(cam, deltaTime);
-            //    sw.Stop();
-
-            //    if (timeElapsed.ContainsKey(mapEntityList[i].Name))
-            //    {
-            //        float asd = 0.0f;
-            //        timeElapsed.TryGetValue(mapEntityList[i].Name, out asd);
-            //        asd += sw.ElapsedTicks;
-
-            //        timeElapsed.Remove(mapEntityList[i].Name);
-            //        timeElapsed.Add(mapEntityList[i].Name, asd);
-            //    }
-            //    else
-            //    {
-            //        timeElapsed.Add(mapEntityList[i].Name, sw.ElapsedTicks);
-            //    }
-            //}
-
-
-
+            Item.Spawner.Update();
         }
 
         public virtual void Update(Camera cam, float deltaTime) { }

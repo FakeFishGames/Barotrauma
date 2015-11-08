@@ -75,6 +75,7 @@ namespace Barotrauma.Networking
 
             // Create new client, with previously created configs
             client = new NetClient(config);
+            netPeer = client;
             reliableChannel = new ReliableChannel(client);
                       
             NetOutgoingMessage outmsg = client.CreateMessage();                        
@@ -358,33 +359,46 @@ namespace Barotrauma.Networking
                     myCharacter.CreateUpdateNetworkEvent(true);             
                 }
             }
-                          
-            foreach (NetworkEvent networkEvent in NetworkEvent.events)
+
+            var message = ComposeNetworkEventMessage(true);
+            if (message != null)
             {
-                if (networkEvent.IsImportant)
-                {
-                    ReliableMessage reliableMessage = reliableChannel.CreateMessage();
-                    reliableMessage.InnerMessage.Write((byte)PacketTypes.NetworkEvent);
+                ReliableMessage reliableMessage = reliableChannel.CreateMessage();
+                message.Position = 0;
+                reliableMessage.InnerMessage.Write(message.ReadBytes(message.LengthBytes));
 
-                    if (networkEvent.FillData(reliableMessage.InnerMessage))
-                    {
-                        reliableChannel.SendMessage(reliableMessage, client.ServerConnection);
-                    }
-                }
-                else
-                {
-                    NetOutgoingMessage message = client.CreateMessage();
-                    message.Write((byte)PacketTypes.NetworkEvent);
-
-
-                    if (networkEvent.FillData(message))
-                    {
-                        client.SendMessage(message, NetDeliveryMethod.Unreliable);
-                    }
-                }
+                reliableChannel.SendMessage(reliableMessage, client.ServerConnection);
             }
+
+            message = ComposeNetworkEventMessage(false);
+            if (message != null) client.SendMessage(message, NetDeliveryMethod.Unreliable);
+                                      
+            //foreach (NetworkEvent networkEvent in NetworkEvent.Events)
+            //{
+            //    if (networkEvent.IsImportant)
+            //    {
+            //        ReliableMessage reliableMessage = reliableChannel.CreateMessage();
+            //        reliableMessage.InnerMessage.Write((byte)PacketTypes.NetworkEvent);
+
+            //        if (networkEvent.FillData(reliableMessage.InnerMessage))
+            //        {
+            //            reliableChannel.SendMessage(reliableMessage, client.ServerConnection);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        NetOutgoingMessage message = client.CreateMessage();
+            //        message.Write((byte)PacketTypes.NetworkEvent);
+
+
+            //        if (networkEvent.FillData(message))
+            //        {
+            //            client.SendMessage(message, NetDeliveryMethod.Unreliable);
+            //        }
+            //    }
+            //}
                     
-            NetworkEvent.events.Clear();
+            NetworkEvent.Events.Clear();
             
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
@@ -475,33 +489,8 @@ namespace Barotrauma.Networking
                         //read the data from the message and update client state accordingly
                         if (!gameStarted) break;
 
-                        byte msgCount = inc.ReadByte();
-
-                        long currPos = inc.PositionInBytes;
-
-                        System.Diagnostics.Debug.WriteLine("msgcount: " + msgCount + "    startpos: " + inc.PositionInBytes);
-                        for (int i = 0; i < msgCount; i++ )
-                        {
-
-                            byte msgLength = inc.ReadByte();
-
-                            System.Diagnostics.Debug.WriteLine("msglength: "+msgLength);
-                            try
-                            {
-                                NetworkEvent.ReadData(inc);
-                            }
-                            catch
-                            {
-                                int afghj = 1;
-                            }
-                            //+1 because msgLength is one additional byte
-                            currPos += msgLength+1;
-                            inc.Position = currPos*8;
-
-                            System.Diagnostics.Debug.WriteLine("currpos: " + currPos);
-                        }
-
-
+                        NetworkEvent.ReadMessage(inc);
+                        
                         break;
                     case (byte)PacketTypes.UpdateNetLobby:
                         if (gameStarted) continue;
@@ -800,7 +789,7 @@ namespace Barotrauma.Networking
                 case 2:
                     msg.Write((byte)PacketTypes.NetworkEvent);
                     msg.Write((byte)NetworkEventType.ComponentUpdate);
-                    msg.Write((int)Item.itemList[Rand.Int(Item.itemList.Count)].ID);
+                    msg.Write((int)Item.ItemList[Rand.Int(Item.ItemList.Count)].ID);
                     msg.Write(Rand.Int(8));
                     break;
                 case 3:

@@ -239,10 +239,10 @@ namespace Barotrauma
                     break;
                 case "generatelevel":
                     GameMain.Level = new Level("asdf", 50.0f, 500,500, 50);
-                    GameMain.Level.Generate(100.0f);
+                    GameMain.Level.Generate();
                     break;
                 case "fixitems":
-                    foreach (Item it in Item.itemList)
+                    foreach (Item it in Item.ItemList)
                     {
                         it.Condition = 100.0f;
                     }
