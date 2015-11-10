@@ -78,9 +78,8 @@ namespace Barotrauma.Items.Components
             return (pingState > 1.0f);
         }
 
-        public override void DrawHUD(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, Character character)
+        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
             
@@ -120,7 +119,6 @@ namespace Barotrauma.Items.Components
             if (Level.Loaded != null)
             {
                 List<VoronoiCell> cells = Level.Loaded.GetCells(-Level.Loaded.Position, 7);
-                Vector2 offset = Vector2.Zero;
 
                 foreach (VoronoiCell cell in cells)
                 {
@@ -174,7 +172,6 @@ namespace Barotrauma.Items.Components
                     end.Y = -end.Y;
 
                     Vector2 diff = end - start;
-                    Vector2 normalizedDiff = Vector2.Normalize(diff);
                     for (float x = 0; x < diff.Length(); x+=4.0f )
                     {
                         GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);

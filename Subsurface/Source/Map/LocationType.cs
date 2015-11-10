@@ -54,7 +54,7 @@ namespace Barotrauma
             nameFormats = new List<string>();
             foreach (XAttribute nameFormat in element.Element("nameformats").Attributes())
             {
-                nameFormats.Add(nameFormat.Value.ToString());
+                nameFormats.Add(nameFormat.Value);
             }
 
             string spritePath = ToolBox.GetAttributeString(element, "symbol", "Content/Map/beaconSymbol.png");

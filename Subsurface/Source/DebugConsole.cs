@@ -167,8 +167,8 @@ namespace Barotrauma
                         {
                             SinglePlayerMode mode = GameMain.GameSession.gameMode as SinglePlayerMode;
                             if (mode == null) break;
-                            mode.CrewManager.AddCharacter(Character.Controlled);
-                            mode.CrewManager.SelectCharacter(null, Character.Controlled);
+                            GameMain.GameSession.CrewManager.AddCharacter(Character.Controlled);
+                            GameMain.GameSession.CrewManager.SelectCharacter(null, Character.Controlled);
                         }
                     }
                     else
@@ -232,10 +232,12 @@ namespace Barotrauma
                     break;
                 case "editwater":
                 case "water":
-                    if (GameMain.Client== null)
-                    {
-                        Hull.EditWater = !Hull.EditWater;
-                    }
+                    if (GameMain.Client == null) Hull.EditWater = !Hull.EditWater;
+                    
+                    break;
+                case "fire":
+                    if (GameMain.Client == null) Hull.EditFire = !Hull.EditFire;
+                    
                     break;
                 case "generatelevel":
                     GameMain.Level = new Level("asdf", 50.0f, 500,500, 50);

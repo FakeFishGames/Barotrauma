@@ -7,9 +7,16 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Particles
 {
+    enum ParticleBlendState
+    {
+        AlphaBlend, Additive
+    }
+
     class ParticleManager
     {
         public static int particleCount;
+
+        private const int MaxOutOfViewDist = 500;
         
         private const int MaxParticles = 1500;
         private Particle[] particles;
@@ -45,23 +52,23 @@ namespace Barotrauma.Particles
             return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * speed, angle);
         }
 
-        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 speed, float rotation=0.0f)
+        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 speed, float rotation=0.0f, Hull hullGuess = null)
         {
             ParticlePrefab prefab = FindPrefab(prefabName);
 
-            return CreateParticle(prefab, position, speed, rotation);
+            return CreateParticle(prefab, position, speed, rotation, hullGuess);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation=0.0f)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation = 0.0f, Hull hullGuess = null)
         {
-            if (!Submarine.RectContains(cam.WorldView, position)) return null;
+            if (!Submarine.RectContains(MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist), position)) return null;
             //if (!cam.WorldView.Contains(position)) return null;
 
             if (particleCount >= MaxParticles) return null;
 
             if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
-            particles[particleCount].Init(prefab, position, speed, rotation);
+            particles[particleCount].Init(prefab, position, speed, rotation, hullGuess);
 
             particleCount++;
 
@@ -100,12 +107,13 @@ namespace Barotrauma.Particles
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool inWater)
+        public void Draw(SpriteBatch spriteBatch, bool inWater, ParticleBlendState blendState)
         {
             ParticlePrefab.DrawTargetType drawTarget = inWater ? ParticlePrefab.DrawTargetType.Water : ParticlePrefab.DrawTargetType.Air;
 
             for (int i = 0; i < particleCount; i++)
             {
+                if (particles[i].BlendState != blendState) continue;
                 if (!particles[i].DrawTarget.HasFlag(drawTarget)) continue;
                 
                 particles[i].Draw(spriteBatch);

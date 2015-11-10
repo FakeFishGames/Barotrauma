@@ -37,13 +37,13 @@ namespace Barotrauma
         //the duration is determined by the attackDuration of the attacking limb
         private float attackTimer;
         
-        //a "cooldown time" after an attack during which the character doesn't try to attack again
+        //a "cooldown time" after an attack during which the Character doesn't try to attack again
         private float attackCoolDown;
         private float coolDownTimer;
         
-        //a point in a wall which the character is currently targeting
+        //a point in a wall which the Character is currently targeting
         private Vector2 wallAttackPos;
-        //the entity (a wall) which the character is targeting
+        //the entity (a wall) which the Character is targeting
         private IDamageable targetEntity;
 
         //the limb selected for the current attack
@@ -226,7 +226,7 @@ namespace Barotrauma
         private void GetTargetEntity()
         {
             targetEntity = null;
-            //check if there's a wall between the target and the character   
+            //check if there's a wall between the target and the Character   
             Vector2 rayStart = Character.AnimController.Limbs[0].SimPosition;
             Vector2 rayEnd = selectedAiTarget.Position;
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
@@ -313,7 +313,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        //limb.body.ApplyTorque(limb.Mass * -20.0f * character.animController.Dir * dir);
+                        //limb.body.ApplyTorque(limb.Mass * -20.0f * Character.animController.Dir * dir);
                     }
 
                     Vector2 diff = attackPosition - limb.SimPosition;
@@ -341,7 +341,7 @@ namespace Barotrauma
         }
         
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
-        //whether the character can see/hear the target and chooses the most preferable target within
+        //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
         public void UpdateTargets(Character character)
         {
@@ -370,7 +370,7 @@ namespace Barotrauma
 
                 Character targetCharacter = target.Entity as Character;
 
-                //ignore the aitarget if it is the character itself
+                //ignore the aitarget if it is the Character itself
                 if (targetCharacter == character) continue;
                                 
                 if (targetCharacter!=null)
@@ -381,7 +381,7 @@ namespace Barotrauma
                 }
                 else if (target.Entity!=null && attackRooms!=0.0f)
                 {
-                    //skip the target if it's the room the character is inside of
+                    //skip the target if it's the room the Character is inside of
                     if (character.AnimController.CurrentHull != null && character.AnimController.CurrentHull == target.Entity as Hull) continue;
 
                     valueModifier = attackRooms;
@@ -407,7 +407,7 @@ namespace Barotrauma
                     
                     //if (targetCharacter != null)
                     //{
-                    //    //if target is a character that isn't visible, ignore
+                    //    //if target is a Character that isn't visible, ignore
                     //    if (closestStructure != null) continue;
 
                     //    //prefer targets with low health
@@ -542,11 +542,6 @@ namespace Barotrauma
             AiState newState = AiState.None;
             Vector2 newWallAttackPos = Vector2.Zero;
             float wanderAngle;
-            float updateTargetsTimer, raycastTimer, coolDownTimer;
-
-            Vector2 newVelocity = Vector2.Zero;
-
-            Vector2 targetPosition = Vector2.Zero;
 
             ushort targetID;
 
@@ -590,10 +585,10 @@ namespace Barotrauma
         }
     }
 
-    //the "memory" of the character 
+    //the "memory" of the Character 
     //keeps track of how preferable it is to attack a specific target
-    //(if the character can't inflict much damage the target, the priority decreases
-    //and if the target attacks the character, the priority increases)
+    //(if the Character can't inflict much damage the target, the priority decreases
+    //and if the target attacks the Character, the priority increases)
     class AITargetMemory
     {
         //private AITarget target;

@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
 {
     class Holdable : Pickable
     {
-        //the position(s) in the item that the character grabs
+        //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
 
         private List<RelatedItem> prevRequiredItems;
@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
         private bool attachable, attached, attachedByDefault;
         private PhysicsBody body;
 
-        //the angle in which the character holds the item
+        //the angle in which the Character holds the item
         protected float holdAngle;
 
         [HasDefaultValue(false, true)]

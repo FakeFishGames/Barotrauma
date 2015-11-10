@@ -141,7 +141,7 @@ namespace Barotrauma
                 if (startNode==null || endNode==null)
                 {
                     DebugConsole.ThrowError("Pathfinding error, couldn't find matching pathnodes to waypoints");
-                    return new SteeringPath();;
+                    return new SteeringPath();
                 }
             }
 

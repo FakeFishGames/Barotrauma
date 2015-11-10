@@ -24,7 +24,7 @@ namespace Barotrauma
 
                 if (GameMain.Server != null)
                 {
-                    UpdateVoteTexts(GameMain.Server.connectedClients, VoteType.Sub);
+                    UpdateVoteTexts(GameMain.Server.ConnectedClients, VoteType.Sub);
                     GameMain.Server.UpdateVoteStatus();
                 }
                 else
@@ -44,7 +44,7 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("modevotes").Visible = value;
                 if (GameMain.Server != null)
                 {
-                    UpdateVoteTexts(GameMain.Server.connectedClients, VoteType.Mode);
+                    UpdateVoteTexts(GameMain.Server.ConnectedClients, VoteType.Mode);
                     GameMain.Server.UpdateVoteStatus();
                 }
                 else

@@ -27,7 +27,9 @@ namespace Barotrauma.Networking
 
         Vote, VoteStatus,
 
-        ResendRequest, ReliableMessage, LatestMessageID        
+        ResendRequest, ReliableMessage, LatestMessageID,
+       
+        Spectate
     }
 
     enum VoteType
@@ -55,10 +57,6 @@ namespace Barotrauma.Networking
         protected GUITextBox chatMsgBox;
 
         public int Port;
-
-        private bool crewFrameOpen;
-        private GUIButton crewButton;
-        protected GUIFrame crewFrame;
 
         protected bool gameStarted;
 
@@ -117,8 +115,6 @@ namespace Barotrauma.Networking
             chatMsgBox.Font = GUI.SmallFont;
             chatMsgBox.OnEnterPressed = EnterChatMessage;
 
-            crewButton = new GUIButton(new Rectangle(chatBox.Rect.Right-80, chatBox.Rect.Y-30, 80, 20), "Crew", GUI.Style, inGameHUD);
-            crewButton.OnClicked = ToggleCrewFrame;
 
             Voting = new Voting();
         }
@@ -159,66 +155,6 @@ namespace Barotrauma.Networking
             }
 
             return message;
-    }
-
-        protected void CreateCrewFrame(List<Character> crew)
-        {
-            int width = 600, height = 400;
-
-            crewFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
-            crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-
-            GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 280, 300), Color.White * 0.7f, GUI.Style, crewFrame);
-            crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            crewList.OnSelected = SelectCrewCharacter;
-
-            foreach (Character character in crew)
-            {
-                GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, crewList);
-                frame.UserData = character;
-                frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                frame.Color = (myCharacter == character) ? Color.Gold * 0.2f : Color.Transparent;
-                frame.HoverColor = Color.LightGray * 0.5f;
-                frame.SelectedColor = Color.Gold * 0.5f;
-
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(40, 0, 0, 25),
-                    character.Info.Name + " ("+character.Info.Job.Name+")",
-                    Color.Transparent, Color.White,
-                    Alignment.Left, Alignment.Left,
-                    null, frame);
-                textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
-
-                new GUIImage(new Rectangle(-10, 0, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
-            }
-            
-            var closeButton = new GUIButton(new Rectangle(0,0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, crewFrame);
-            closeButton.OnClicked = ToggleCrewFrame;
-        }
-
-        protected virtual bool SelectCrewCharacter(GUIComponent component, object obj)
-        {
-            Character character = obj as Character;
-            if (obj == null) return false;
-
-            GUIComponent existingFrame = crewFrame.FindChild("selectedcharacter");
-            if (existingFrame != null) crewFrame.RemoveChild(existingFrame);
-            
-            var previewPlayer = new GUIFrame(
-                new Rectangle(0,0, 230, 300),
-                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, GUI.Style, crewFrame);
-            previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            previewPlayer.UserData = "selectedcharacter";
-
-            var infoFrame = character.Info.CreateInfoFrame(previewPlayer);
-
-            return true;
-        }
-
-        private bool ToggleCrewFrame(GUIButton button, object obj)
-        {
-            crewFrameOpen = !crewFrameOpen;
-            return true;
         }
 
         public bool EnterChatMessage(GUITextBox textBox, string message)
@@ -251,7 +187,6 @@ namespace Barotrauma.Networking
             //float prevScroll = chatBox.BarScroll;
 
             float prevSize = chatBox.BarSize;
-            float oldScroll = chatBox.BarScroll;
 
             msg.Padding = new Vector4(20, 0, 0, 0);
             chatBox.AddChild(msg);
@@ -265,13 +200,13 @@ namespace Barotrauma.Networking
 
         public virtual void Update(float deltaTime) 
         {
-            if (gameStarted)
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 inGameHUD.Update(deltaTime);
 
-                if (crewFrameOpen) crewFrame.Update(deltaTime);
+                //if (crewFrameOpen) crewFrame.Update(deltaTime);
 
-                if (Character.Controlled != null && Character.Controlled.IsDead)
+                if (Character.Controlled == null || Character.Controlled.IsDead)
                 {
                     GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
                     GameMain.LightManager.LosEnabled = false;
@@ -294,11 +229,14 @@ namespace Barotrauma.Networking
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted) return;
+            if (!gameStarted && Screen.Selected != GameMain.GameScreen) return;
 
             inGameHUD.Draw(spriteBatch);
+        }
 
-            if (crewFrameOpen) crewFrame.Draw(spriteBatch);
+        public virtual bool SelectCrewCharacter(GUIComponent component, object obj)
+        {
+            return false;
         }
 
         public virtual void Disconnect() { }

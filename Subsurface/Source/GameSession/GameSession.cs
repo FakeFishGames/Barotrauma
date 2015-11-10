@@ -12,23 +12,17 @@ namespace Barotrauma
 {
     class GameSession
     {
-        public readonly TaskManager taskManager;
-
-
-        //protected DateTime startTime;
-        //protected DateTime endTime;
-
-        public readonly GameMode gameMode;
+        public readonly TaskManager TaskManager;
         
+        public readonly GameMode gameMode;
+                
         private GUIFrame guiRoot;
-
-        //private GUIListBox chatBox;
-        //private GUITextBox textBox;
-
+        
         private string saveFile;
 
         private Submarine submarine;
 
+        public CrewManager CrewManager;
 
         public Quest Quest
         {
@@ -65,28 +59,29 @@ namespace Barotrauma
             get { return saveFile; }
         }
 
-        public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset)
-            :this(submarine, saveFile, gameModePreset.Instantiate())
+        public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset = null)
         {
+            GameMain.GameSession = this;
 
-        }
+            CrewManager = new CrewManager();
 
-        public GameSession(Submarine selectedSub, string saveFile, GameMode gameMode = null)
-        {
-            taskManager = new TaskManager(this);
+            TaskManager = new TaskManager(this);
 
             this.saveFile = saveFile;
 
             guiRoot = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsWidth), Color.Transparent);
 
-            this.gameMode = gameMode;
-            this.submarine = selectedSub;
-          
+            if (gameModePreset!=null) this.gameMode = gameModePreset.Instantiate();
+            this.submarine = submarine;
         }
-
+        
         public GameSession(Submarine selectedSub, string saveFile, string filePath)
             : this(selectedSub, saveFile)
         {
+            GameMain.GameSession = this;
+
+            CrewManager = new CrewManager();
+
             XDocument doc = ToolBox.TryLoadXml(filePath);
             if (doc == null) return;
 
@@ -131,7 +126,7 @@ namespace Barotrauma
 
             if (gameMode!=null) gameMode.Start();
             
-            taskManager.StartShift(level);
+            TaskManager.StartShift(level);
         }
 
         public void EndShift(string endMessage)
@@ -149,7 +144,7 @@ namespace Barotrauma
                 GameMain.LobbyScreen.Select();
             }
             
-            taskManager.EndShift();
+            TaskManager.EndShift();
             //gameMode.End();
 
             //return true;
@@ -158,9 +153,7 @@ namespace Barotrauma
         
         public void KillCharacter(Character character)
         {
-            SinglePlayerMode singlePlayerMode = gameMode as SinglePlayerMode;
-            if (singlePlayerMode == null) return;
-            singlePlayerMode.CrewManager.KillCharacter(character);
+            CrewManager.KillCharacter(character);
         }
 
         public bool LoadPrevious(GUIButton button, object obj)
@@ -174,7 +167,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            taskManager.Update(deltaTime);
+            TaskManager.Update(deltaTime);
             
             guiRoot.Update(deltaTime);
 

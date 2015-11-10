@@ -309,14 +309,14 @@ namespace Barotrauma
             {
                 if (!oldKeyboardState.IsKeyUp(key)) continue;
 
-                char character = (char)key;
+                char Character = (char)key;
 
                 if (keyboardState.IsKeyUp(Keys.LeftShift) && keyboardState.IsKeyUp(Keys.RightShift))
                 {
-                    character = char.ToLower(character);
+                    Character = char.ToLower(Character);
                 }
 
-                EventInput.EventInput.OnCharEntered(character);
+                EventInput.EventInput.OnCharEntered(Character);
             }
 #endif
 

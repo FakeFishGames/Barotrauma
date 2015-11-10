@@ -232,7 +232,7 @@ namespace Barotrauma
             {
                 ObjectProperty property = null;
                 if (!dictionary.TryGetValue(attribute.Name.ToString().ToLower(), out property)) continue;
-                if (property.Attributes.OfType<HasDefaultValue>().Count() == 0) continue;
+                if (!property.Attributes.OfType<HasDefaultValue>().Any()) continue;
                 property.TrySetValue(attribute.Value);
             }
             

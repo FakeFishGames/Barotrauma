@@ -130,8 +130,6 @@ namespace Barotrauma
 
         private void CalculateHash()
         {
-            StringBuilder sb = new StringBuilder();
-
             List<byte[]> hashes = new List<byte[]>();
 
             //foreach (ContentFile file in files)

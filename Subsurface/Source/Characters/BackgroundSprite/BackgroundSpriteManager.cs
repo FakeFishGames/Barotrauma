@@ -25,7 +25,7 @@ namespace Barotrauma
             prefabs = new List<BackgroundSpritePrefab>();
 
             XDocument doc = ToolBox.TryLoadXml(configPath);
-            if (doc == null) return;
+            if (doc == null || doc.Root == null) return;
 
             foreach (XElement element in doc.Root.Elements())
             {
@@ -78,7 +78,7 @@ namespace Barotrauma
                 }
                 if (amount > 0)
                 {
-                    Swarm swarm = new Swarm(swarmMembers, prefab.SwarmRadius);
+                    new Swarm(swarmMembers, prefab.SwarmRadius);
                 }
             }
         }

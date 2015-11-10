@@ -62,10 +62,6 @@ namespace Voronoi2
 	{
 		public double x, y;
 		
-		public Point ()
-		{
-		}
-		
 		public void setPoint ( double x, double y )
 		{
 			this.x = x;

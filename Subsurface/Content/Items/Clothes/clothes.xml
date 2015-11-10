@@ -4,7 +4,7 @@
     pickdistance="150"
     tags="smallitem">
 
-    <Sprite texture ="captainhat.png" depth="0.4"/>
+    <Sprite texture ="captainhat.png" depth="0.6"/>
 
     <Body radius="8" density="5"/>
 
@@ -18,7 +18,7 @@
     pickdistance="150"
     tags="smallitem">
 
-    <Sprite texture ="captainLegs.png" sourcerect="0,49,52,17" depth="0.4"/>
+    <Sprite texture ="captainLegs.png" sourcerect="0,49,52,17" depth="0.6"/>
 
     <Body width="52" height="17"/>
 
@@ -38,7 +38,7 @@
     pickdistance="150"
     tags="smallitem">
 
-    <Sprite texture ="captainLegs.png" sourcerect="0,67,51,13" depth="0.4"/>
+    <Sprite texture ="captainLegs.png" sourcerect="0,67,51,13" depth="0.6"/>
 
     <Body width="51" height="13"/>
 
@@ -57,7 +57,7 @@
     pickdistance="150"
     tags="smallitem">
 
-    <Sprite texture ="securitygear.png" sourcerect="68,0,60,31" depth="0.4"/>
+    <Sprite texture ="securitygear.png" sourcerect="68,0,60,31" depth="0.6"/>
 
     <Body width="52" height="17"/>
 
@@ -73,13 +73,36 @@
     pickdistance="150"
     tags="smallitem">
 
-    <Sprite texture ="securitygear.png" sourcerect="40,32,34,25" depth="0.4"/>
+    <Sprite texture ="securitygear.png" sourcerect="40,32,34,25" depth="0.6"/>
 
     <Body radius="12"/>
 
     <Wearable slots="Any,Head" armorvalue="20.0">
       <sprite texture="securitygear.png" limb="Head" sourcerect="39,31,29,22" origin="0.51,0.9"/>
     </Wearable>
+  </Item>
+
+  <Item
+    name="Orange Jumpsuit"
+    pickdistance="150"
+    tags="smallitem">
+
+    <Sprite texture = "engigear.png" sourcerect="0,52,50,26" depth="0.6"/>
+
+    <Body width="50" height="17"/>
+
+    <Wearable slots="Any,Torso,Legs">
+      <sprite texture="engigear.png" limb="Torso" sourcerect="0,0,32,51" origin="0.5,0.48" depth="0.01"/>
+
+      <sprite texture="engigear.png" limb="Waist" sourcerect="81,0,30,26" origin="0.5,0.45" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="RightThigh" sourcerect="53,0,27,49" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="LeftThigh" sourcerect="53,0,27,49" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+
+      <sprite texture="engigear.png" limb="RightLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>      
+    </Wearable>
+
+    <ItemContainer containableitems="smallitem" capacity="5"/>
   </Item>
 
 </Items>

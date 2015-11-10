@@ -85,9 +85,9 @@ namespace Barotrauma
 
                 if (textBlock.Text != "")
                 {
-                    //if you attempt to display a character that is not in your font
+                    //if you attempt to display a Character that is not in your font
                     //you will get an exception, so we filter the characters
-                    //remove the filtering if you're using a default character in your spritefont
+                    //remove the filtering if you're using a default Character in your spritefont
                     String filtered = "";
                     foreach (char c in value)
                     {

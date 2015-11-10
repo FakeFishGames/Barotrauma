@@ -162,9 +162,9 @@ namespace Barotrauma
         }
 
 
-        //public virtual void Apply(ActionType type, float deltaTime, Item item, Character character = null)
+        //public virtual void Apply(ActionType type, float deltaTime, Item item, Character Character = null)
         //{
-        //    if (this.type == type) Apply(deltaTime, character, item);
+        //    if (this.type == type) Apply(deltaTime, Character, item);
         //}
 
         private bool HasRequiredItems(Entity entity)
@@ -225,7 +225,7 @@ namespace Barotrauma
             }
         }
 
-        //protected virtual void Apply(float deltaTime, Character character, Item item)
+        //protected virtual void Apply(float deltaTime, Character Character, Item item)
         //{
         //    if (explosion != null) explosion.Explode(item.SimPosition);
 
@@ -235,7 +235,7 @@ namespace Barotrauma
         //    {
         //        ObjectProperty property;
 
-        //        if (character!=null && character.properties.TryGetValue(propertyNames[i], out property))
+        //        if (Character!=null && Character.properties.TryGetValue(propertyNames[i], out property))
         //        {
         //            ApplyToProperty(property, propertyEffects[i], deltaTime);                 
         //        }

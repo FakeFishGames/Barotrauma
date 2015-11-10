@@ -731,10 +731,8 @@ namespace Barotrauma
             //    cell.body.SetTransform(cell.body.Position + simAmount, cell.body.Rotation);
             //}
 
-            int i = 0;
             foreach (Body body in bodies)
             {
-                i++;
                 body.SetTransform(body.Position + simAmount, body.Rotation);
             }
 
@@ -759,7 +757,6 @@ namespace Barotrauma
         Vector2 prevVelocity;
         public void Move(Vector2 amount)
         {
-            Vector2 velocity = amount;
             Vector2 simVelocity = ConvertUnits.ToSimUnits(amount / (float)Physics.step);
 
             foreach (Body body in bodies)

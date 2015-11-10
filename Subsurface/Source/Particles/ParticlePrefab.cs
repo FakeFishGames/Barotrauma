@@ -1,6 +1,7 @@
 ﻿using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using FarseerPhysics;
+using System.Collections.Generic;
 
 namespace Barotrauma.Particles
 {
@@ -10,7 +11,7 @@ namespace Barotrauma.Particles
 
         public readonly string Name;
 
-        public readonly Sprite Sprite;
+        public readonly List<Sprite> Sprites;
 
         public readonly float AngularVelocityMin, AngularVelocityMax;
 
@@ -35,17 +36,21 @@ namespace Barotrauma.Particles
 
         public readonly DrawTargetType DrawTarget;
 
+        public readonly ParticleBlendState BlendState;
+
         public readonly bool RotateToDirection;
 
         public ParticlePrefab(XElement element)
         {
             Name = element.Name.ToString();
 
+            Sprites = new List<Sprite>();
+
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLower() != "sprite") continue;
 
-                Sprite = new Sprite(subElement);
+                Sprites.Add(new Sprite(subElement));
             }
 
             if (element.Attribute("angularvelocity") == null)
@@ -80,6 +85,10 @@ namespace Barotrauma.Particles
                 SizeChangeMin = ToolBox.GetAttributeVector2(element, "sizechange", Vector2.Zero);
                 SizeChangeMax = SizeChangeMin;
             }
+
+            var blendState = ToolBox.GetAttributeString(element, "blendstate", "alphablend");
+
+            BlendState = (blendState != "additive") ? ParticleBlendState.AlphaBlend : ParticleBlendState.Additive;
 
             GrowTime = ToolBox.GetAttributeFloat(element, "growtime", 0.0f);
 

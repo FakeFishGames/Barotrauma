@@ -42,6 +42,10 @@ namespace Barotrauma
             return (IsValid(vector.X) && IsValid(vector.Y));
         }
 
+        public static Rectangle ExpandRect(Rectangle rect, int amount)
+        {
+            return new Rectangle(rect.X - amount, rect.Y + amount, rect.Width + amount * 2, rect.Height + amount * 2);
+        }
 
         public static int VectorOrientation(Vector2 p1, Vector2 p2, Vector2 p)
         {

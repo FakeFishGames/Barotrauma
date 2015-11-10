@@ -178,7 +178,7 @@ namespace Barotrauma
                 //headMovement *= movement.Length();
 
                 //the movement angle is between direction of the head and the direction 
-                //where the character is actually trying to go
+                //where the Character is actually trying to go
                 
                 //current * (float)alpha + previous * (1.0f - (float)alpha);
 

@@ -217,7 +217,7 @@ namespace Barotrauma
             Task criticalTask = null;
             if (GameMain.GameSession!=null)
             {
-                foreach (Task task in GameMain.GameSession.taskManager.Tasks)
+                foreach (Task task in GameMain.GameSession.TaskManager.Tasks)
                 {
                     if (!task.IsStarted) continue;
                     if (criticalTask == null || task.Priority > criticalTask.Priority)

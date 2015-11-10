@@ -29,7 +29,7 @@ namespace Barotrauma
             private set;
         }
                        
-        //names of the items the character spawns with
+        //names of the items the Character spawns with
         public List<string> ItemNames;
         public List<bool> EquipItem;
 

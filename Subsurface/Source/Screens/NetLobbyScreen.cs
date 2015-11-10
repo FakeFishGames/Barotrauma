@@ -129,7 +129,7 @@ namespace Barotrauma
             //server info panel ------------------------------------------------------------
 
             infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.7f), (int)(panelRect.Height * 0.6f)), GUI.Style, menu);
-            infoFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f); ;
+            infoFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
             
             //chatbox ----------------------------------------------------------------------
             GUIFrame chatFrame = new GUIFrame(
@@ -295,8 +295,8 @@ namespace Barotrauma
             ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
 
 
-
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
+            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
 
             playerList.Parent.RemoveChild(playerList.Parent.children.Find(c => c.UserData as string == "banListButton"));
 
@@ -313,15 +313,13 @@ namespace Barotrauma
 
                 GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, GUI.Style, infoFrame);
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
+                settingsButton.CanBeSelected = false;
                 settingsButton.UserData = "settingsButton";
 
                 var banListButton = new GUIButton(new Rectangle(0, 30, 100, 20), "Banned IPs", Alignment.BottomRight, GUI.Style, playerList.Parent);
                 banListButton.OnClicked = GameMain.Server.BanList.ToggleBanFrame;
                 banListButton.UserData = "banListButton";
                 
-                //mapList.OnSelected = new GUIListBox.OnSelectedHandler(Game1.server.UpdateNetLobby);
-                //modeList.OnSelected += GameMain.Server.UpdateNetLobby;   
-
                 if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(-1);
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(-1);
 
@@ -337,8 +335,15 @@ namespace Barotrauma
                 if (GameMain.Server.SubSelectionMode == SelectionMode.Random) subList.Select(Rand.Range(0,subList.CountChildren));
                 if (GameMain.Server.ModeSelectionMode == SelectionMode.Random) modeList.Select(Rand.Range(0, modeList.CountChildren));
             }
-            else
+            else if (GameMain.Client != null)
             {
+                if (GameMain.Client.GameStarted)
+                {
+                    GUIButton spectateButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Spectate", Alignment.BottomRight, GUI.Style, infoFrame);
+                    spectateButton.OnClicked = GameMain.Client.SpectateClicked;
+                    spectateButton.UserData = "spectateButton";
+                }
+
                 UpdatePlayerFrame(GameMain.Client.CharacterInfo);
             }
 
@@ -654,7 +659,6 @@ namespace Barotrauma
         public void NewChatMessage(string message, Color color)
         {
             float prevSize = chatBox.BarSize;
-            float oldScroll = chatBox.BarScroll;
 
             while (chatBox.CountChildren>20)
             {

@@ -5,12 +5,10 @@ using FarseerPhysics.Dynamics.Joints;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
 using Barotrauma.Particles;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -27,7 +25,7 @@ namespace Barotrauma
 
         public static bool DisableControls;
 
-        //the character that the player is currently controlling
+        //the Character that the player is currently controlling
         private static Character controlled;
 
         public static Character Controlled
@@ -43,7 +41,6 @@ namespace Barotrauma
         }
 
         public readonly bool IsNetworkPlayer;
-        private int importantUpdateTimer;
 
         private CharacterInventory inventory;
 
@@ -116,7 +113,7 @@ namespace Barotrauma
         {
             get
             {
-                return (info != null && !string.IsNullOrWhiteSpace(info.Name)) ? info.Name : SpeciesName;
+                return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : SpeciesName;
             }
         }
 
@@ -334,7 +331,7 @@ namespace Barotrauma
             Info = characterInfo==null ? new CharacterInfo(file) : characterInfo;
 
             XDocument doc = ToolBox.TryLoadXml(file);
-            if (doc == null) return;
+            if (doc == null || doc.Root == null) return;
             
             SpeciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
 
@@ -516,7 +513,7 @@ namespace Barotrauma
             if (IsKeyDown(InputType.Down))  targetMovement.Y -= 1.0f;
 
             //the vertical component is only used for falling through platforms and climbing ladders when not in water,
-            //so the movement can't be normalized or the character would walk slower when pressing down/up
+            //so the movement can't be normalized or the Character would walk slower when pressing down/up
             if (AnimController.InWater)
             {
                 float length = targetMovement.Length();
@@ -693,7 +690,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Control the character according to player input
+        /// Control the Character according to player input
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
@@ -753,7 +750,7 @@ namespace Barotrauma
             }
 
 
-            //find the closest item if selectkey has been hit, or if the character is being
+            //find the closest item if selectkey has been hit, or if the Character is being
             //controlled by the player (in order to highlight it)
 
             if (findClosestTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)
@@ -921,13 +918,13 @@ namespace Barotrauma
 
             aiTarget.SightRange = 0.0f;
 
-            //distance is approximated based on the mass of the character 
+            //distance is approximated based on the mass of the Character 
             //(which corresponds to size because all the characters have the same limb density)
             foreach (Limb limb in AnimController.Limbs)
             {
                 aiTarget.SightRange += limb.Mass * 1000.0f;
             }
-            //the faster the character is moving, the easier it is to see it
+            //the faster the Character is moving, the easier it is to see it
             Limb torso = AnimController.GetLimb(LimbType.Torso);
             if (torso !=null)
             {
@@ -1060,6 +1057,8 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
+                limb.AddDamage(limb.SimPosition, DamageType.Blunt, 500.0f, 0.0f, false);
+
                 Vector2 diff = centerOfMass - limb.SimPosition;
                 if (diff == Vector2.Zero) continue;
                 limb.body.ApplyLinearImpulse(diff * 10.0f);
@@ -1138,7 +1137,7 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null)
             {
-                //if the character is controlled by this client/server, let others know that the character has died
+                //if the Character is controlled by this client/server, let others know that the Character has died
                 if (Character.controlled == this)
                 {
                     string chatMessage = "You have " + DeathMsg[(int)causeOfDeath] + ".";
@@ -1149,12 +1148,12 @@ namespace Barotrauma
 
                     new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);
                 }
-                //if it's an ai character, only let the server kill it
+                //if it's an ai Character, only let the server kill it
                 else if (GameMain.Server != null && this is AICharacter)
                 {
                     new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);
                 }
-                //otherwise don't kill the character unless received a message about the character dying
+                //otherwise don't kill the Character unless received a message about the Character dying
                 else if (!isNetworkMessage)
                 {
                     return;
@@ -1350,9 +1349,9 @@ namespace Barotrauma
                 case NetworkEventType.KillCharacter:
                     if (GameMain.Server != null)
                     {
-                        Client sender =GameMain.Server.connectedClients.Find(c => c.Connection == message.SenderConnection);
-                        if (sender ==null || sender.character != this) 
-                            throw new Exception("Received a KillCharacter message from someone else than the client controlling the character!");
+                        Client sender =GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+                        if (sender ==null || sender.Character != this) 
+                            throw new Exception("Received a KillCharacter message from someone else than the client controlling the Character!");
                     }
 
                     CauseOfDeath causeOfDeath = CauseOfDeath.Damage;                    
@@ -1505,7 +1504,7 @@ namespace Barotrauma
 
                     catch
                     {
-                        //failed to read position, character may be further than NetConfig.CharacterIgnoreDistance
+                        //failed to read position, Character may be further than NetConfig.CharacterIgnoreDistance
                         pos = SimPosition;
                     }                    
 

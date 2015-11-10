@@ -102,7 +102,7 @@
     linkable="true"
     price="10">
 
-    <Sprite texture ="or.png" depth="0.8"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16"/>
 
     <OrComponent canbeselected = "true"/>
 
@@ -129,7 +129,7 @@
     linkable="true"
     price="10">
 
-    <Sprite texture ="not.png" depth="0.8"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,0,16,16"/>
 
     <NotComponent canbeselected = "true"/>
 
@@ -155,7 +155,7 @@
     linkable="true"
     price="10">
 
-    <Sprite texture ="light.png" depth="0.8"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16"/>
 
     <LightComponent canbeselected = "true" color="1.0,0.0,0.0,1.0">
       <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
@@ -182,13 +182,37 @@
     linkable="true"
     price="10">
 
-    <Sprite texture ="light.png" depth="0.8"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="96,0,31,24"/>
 
     <OxygenDetector canbeselected = "true"/>
 
-    <Body width="16" height="16"/>
+    <Body width="31" height="24"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Water Detector"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true"
+    price="10">
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="64,0,31,25"/>
+
+    <WaterDetector canbeselected = "true"/>
+
+    <Body width="31" height="24"/>
+
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
@@ -206,7 +230,7 @@
     linkable="true"
     price="10">
 
-    <Sprite texture ="light.png" depth="0.8"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,16,16,16"/>
 
     <SignalCheckComponent canbeselected = "true"/>
 
@@ -233,7 +257,7 @@
     linkable="true"
     price="10">
 
-    <Sprite texture ="regex.png" depth="0.8"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,16,16,16"/>
 
     <RegExFindComponent canbeselected = "true"/>
 
@@ -258,7 +282,7 @@
     linkable="true"
     price="20">
 
-    <Sprite texture ="wifi.png" depth="0.8"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,13,16,19"/>
 
     <WifiComponent canbeselected = "true"/>
 

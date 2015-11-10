@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<character name ="coelanth" humanoid="false" health="100.0">
+<Character name ="coelanth" humanoid="false" health="100.0">
 
   <sound file="Content/Characters/Scorpion/scorpionattack1.ogg" state="Attack" />
   <sound file="Content/Characters/Scorpion/scorpionidle1.ogg" state="None" />
@@ -55,4 +55,4 @@
   </ragdoll>
 
   <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="2.0" hearing="10.0"/>
-</character>
+</Character>

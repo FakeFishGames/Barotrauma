@@ -479,8 +479,8 @@ namespace Barotrauma
                 //ApplyStatusEffect(effect, type, deltaTime, this);
 
             if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
-                //effect.Apply(type, deltaTime, null, character);
-                //ApplyStatusEffect(effect, type, deltaTime, null, character, limb);
+                //effect.Apply(type, deltaTime, null, Character);
+                //ApplyStatusEffect(effect, type, deltaTime, null, Character, limb);
 
             if (container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(container);
             //{
@@ -803,7 +803,7 @@ namespace Barotrauma
             }
         }
 
-        /// <param name="position">Position of the character doing the pick, only items that are close enough to this are checked</param>
+        /// <param name="position">Position of the Character doing the pick, only items that are close enough to this are checked</param>
         /// <param name="pickPosition">the item closest to pickPosition is returned</param>
         /// <param name="hull">If a hull is specified, only items within that hull are checked</param>
         public static Item FindPickable(Vector2 position, Vector2 pickPosition, Hull hull = null, Item[] ignoredItems=null)
@@ -1171,7 +1171,7 @@ namespace Barotrauma
                 Item item = new Item(rect, ip);
                 item.ID = (ushort)int.Parse(element.Attribute("ID").Value);
                                 
-                item.linkedToID = new List<int>();
+                item.linkedToID = new List<ushort>();
 
                 foreach (XAttribute attribute in element.Attributes())
                 {
@@ -1198,7 +1198,7 @@ namespace Barotrauma
                     string[] linkedToIds = linkedToString.Split(',');
                     for (int i = 0; i<linkedToIds.Length;i++)
                     {
-                        item.linkedToID.Add(int.Parse(linkedToIds[i]));
+                        item.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
                     }
                 }
 

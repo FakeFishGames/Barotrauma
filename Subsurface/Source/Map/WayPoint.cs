@@ -327,11 +327,11 @@ namespace Barotrauma
                 w.assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLower() == jobName);
             }
 
-            w.linkedToID = new List<int>();
+            w.linkedToID = new List<ushort>();
             int i = 0;
             while (element.Attribute("linkedto" + i) != null)
             {
-                w.linkedToID.Add(int.Parse(element.Attribute("linkedto" + i).Value));
+                w.linkedToID.Add((ushort)int.Parse(element.Attribute("linkedto" + i).Value));
                 i += 1;
             }
         }

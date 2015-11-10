@@ -22,13 +22,13 @@ namespace Barotrauma
         //default size
         protected Vector2 size;
 
-        //how close the character has to be to the item to pick it up
+        //how close the Character has to be to the item to pick it up
         private float pickDistance;
 
         private bool pickThroughWalls;
 
         //an area next to the construction
-        //the construction can be Activated() by a character inside the area
+        //the construction can be Activated() by a Character inside the area
         public List<Rectangle> Triggers;
 
         public string ConfigFile

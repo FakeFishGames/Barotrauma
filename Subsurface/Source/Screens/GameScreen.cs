@@ -254,7 +254,7 @@ namespace Barotrauma
                 BlendState.AlphaBlend,
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-            GameMain.ParticleManager.Draw(spriteBatch, true);
+            GameMain.ParticleManager.Draw(spriteBatch, true, Particles.ParticleBlendState.AlphaBlend);
 
             spriteBatch.End();
 
@@ -271,9 +271,16 @@ namespace Barotrauma
                 BlendState.AlphaBlend,
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-
-            GameMain.ParticleManager.Draw(spriteBatch, false);
+            GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
+
+            spriteBatch.Begin(SpriteSortMode.Immediate,
+                BlendState.Additive,
+                null, DepthStencilState.DepthRead, null, null,
+                cam.Transform);
+            GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.Additive);
+            spriteBatch.End();
+
 
             graphics.SetRenderTarget(null);
 

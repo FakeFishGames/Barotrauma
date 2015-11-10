@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
         {
             if (character != null && !characterUsable) return false;
 
-            //ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
+            //ApplyStatusEffects(ActionType.OnUse, 1.0f, Character);
 
             Launch(new Vector2(
                 (float)Math.Cos(item.body.Rotation),

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -207,7 +206,7 @@ namespace Barotrauma.Networking
                             if (packetType == (byte)PacketTypes.LoggedIn)
                             {
                                 myID = inc.ReadInt32();
-                                bool gameStarted= inc.ReadBoolean();
+                                gameStarted = inc.ReadBoolean();
                                 if (gameStarted && Screen.Selected != GameMain.GameScreen)
                                 {
                                     new GUIMessageBox("Please wait", "A round is already running. You will have to wait for a new round to start.");
@@ -219,7 +218,7 @@ namespace Barotrauma.Networking
                                 {
                                     GameMain.NetLobbyScreen.Select();
 
-                                    new GUIMessageBox("Connection timed out", "You were disconnected for too long and your character was deleted. Please wait for another round to start.");
+                                    new GUIMessageBox("Connection timed out", "You were disconnected for too long and your Character was deleted. Please wait for another round to start.");
                                 }
 
                                 GameMain.NetLobbyScreen.ClearPlayers();
@@ -428,7 +427,7 @@ namespace Barotrauma.Networking
                 switch (packetType)
                 {
                     case (byte)PacketTypes.StartGame:
-                        if (gameStarted) continue;
+                        if (Screen.Selected == GameMain.GameScreen) continue;
 
                         GameMain.ShowLoading(StartGame(inc), false);
 
@@ -467,8 +466,8 @@ namespace Barotrauma.Networking
                             if (!c.IsNetworkPlayer || !c.IsHumanoid || c.Info==null) continue;
                             crew.Add(c);
                         }
-                        
-                        CreateCrewFrame(crew);
+
+                        GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
 
                         break;
 
@@ -532,7 +531,7 @@ namespace Barotrauma.Networking
 
             if (gameMode == null)
             {
-                DebugConsole.ThrowError("Game mode ''"+gameMode+"'' not found!");
+                DebugConsole.ThrowError("Game mode ''" + modeName + "'' not found!");
                 yield return CoroutineStatus.Success;
             }
 
@@ -576,7 +575,7 @@ namespace Barotrauma.Networking
 
             AddChatMessage("Press TAB to chat", ChatMessageType.Server);
 
-            CreateCrewFrame(crew);
+            GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
 
             yield return CoroutineStatus.Success;
         }
@@ -624,7 +623,7 @@ namespace Barotrauma.Networking
             myCharacter = null;
             foreach (Client c in otherClients)
             {
-                c.character = null;
+                c.Character = null;
             }
 
             yield return CoroutineStatus.Success;
@@ -678,6 +677,16 @@ namespace Barotrauma.Networking
                     client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
                     break;
             }
+        }
+
+        public bool SpectateClicked(GUIButton button, object userData)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)PacketTypes.Spectate);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+
+            return false;
         }
 
         public void SendCharacterData()
@@ -800,7 +809,7 @@ namespace Barotrauma.Networking
             int bitCount = Rand.Int(100);
             for (int i = 0; i<bitCount; i++)
             {
-                msg.Write((Rand.Int(2)==0) ? true : false);
+                msg.Write(Rand.Int(2)==0);
             }
 
 

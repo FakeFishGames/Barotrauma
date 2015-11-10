@@ -30,7 +30,7 @@
 
 //        }
 
-//        public override bool Select(Character character)
+//        public override bool Select(Character Character)
 //        {
 //            if (textBox == null)
 //            {
@@ -47,10 +47,10 @@
 
 //            textBox.Select();
             
-//            return base.Select(character);
+//            return base.Select(Character);
 //        }
 
-//        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+//        public override void DrawHUD(SpriteBatch spriteBatch, Character Character)
 //        {
 //            //isActive = true;
 //            GuiFrame.Update((float)Physics.step);
@@ -61,7 +61,7 @@
 //            //int y = Game1.GraphicsHeight / 2 - height / 2 - 50;
 
 //            //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
-//            if (!textBox.Selected) character.SelectedConstruction = null;
+//            if (!textBox.Selected) Character.SelectedConstruction = null;
 //        }
 
 //        private bool TextChanged(GUITextBox textBox, string text)

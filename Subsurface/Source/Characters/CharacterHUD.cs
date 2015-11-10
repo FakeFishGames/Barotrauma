@@ -45,8 +45,6 @@ namespace Barotrauma
 
             if (character.Inventory != null) character.Inventory.DrawOwn(spriteBatch);
 
-            Color color = Color.Orange;
-
             if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory!=null)
             {
                 character.SelectedCharacter.Inventory.Draw(spriteBatch);

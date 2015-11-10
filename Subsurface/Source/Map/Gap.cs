@@ -609,7 +609,7 @@ namespace Barotrauma
             Gap g = new Gap(rect);
             g.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             
-            g.linkedToID = new List<int>();
+            g.linkedToID = new List<ushort>();
             //int i = 0;
             //while (element.Attribute("linkedto" + i) != null)
             //{

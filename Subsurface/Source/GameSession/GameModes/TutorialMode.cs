@@ -23,7 +23,7 @@ namespace Barotrauma
 
             GameMain.GameSession.StartShift("tuto");
 
-            GameMain.GameSession.taskManager.Tasks.Clear();
+            GameMain.GameSession.TaskManager.Tasks.Clear();
 
             GameMain.GameScreen.Select();
         }
@@ -255,7 +255,6 @@ namespace Barotrauma
             infoBox = CreateInfoFrame("You can see the equipped wire at the middle of the connection panel. Drag it to the power connector.");
 
             var steeringConnection = steering.Item.Connections.Find(c => c.Name.Contains("power"));
-            var junctionConnection = junctionBox.Item.Connections.Find(c => c.Name.Contains("power"));
 
             while (steeringConnection.Wires.FirstOrDefault(w => w != null) == null)
             {
