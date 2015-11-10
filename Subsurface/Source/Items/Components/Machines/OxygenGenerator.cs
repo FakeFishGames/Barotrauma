@@ -42,8 +42,7 @@ namespace Barotrauma.Items.Components
 
             ventList = new List<Vent>();
 
-            item.linkedTo.CollectionChanged += delegate(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-            { GetVents(); };
+            item.linkedTo.CollectionChanged += delegate { GetVents(); };
         }
 
         public override void Update(float deltaTime, Camera cam)

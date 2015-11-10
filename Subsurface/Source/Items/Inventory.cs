@@ -252,17 +252,17 @@ namespace Barotrauma
 
                 selectedSlot = containerRect.Contains(PlayerInput.MousePosition) ? slotIndex : -1;
 
-                GUI.DrawRectangle(spriteBatch, containerRect, Color.White, false);
+                GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
                 Item[] containedItems = null;
                 if (items[slotIndex] != null) containedItems = items[slotIndex].ContainedItems;
 
-                if (containedItems == null || containedItems.Count() == 0) return;
+                if (containedItems == null || !containedItems.Any()) return;
 
                 for (int i = 0; i < itemCapacity; i++)
                 {
                     rect.Y = rect.Y - rect.Height - 10;
-                    UpdateSlot(spriteBatch, rect, selectedSlot, (i < containedItems.Count()) ? containedItems[i] : null, true);
+                    UpdateSlot(spriteBatch, rect, selectedSlot, i < containedItems.Count() ? containedItems[i] : null, true);
                 }
             }
         }

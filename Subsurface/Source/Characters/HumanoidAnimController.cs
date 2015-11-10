@@ -685,7 +685,7 @@ namespace Barotrauma
             leftLeg.body.ApplyTorque(Dir * -8.0f);
             rightLeg.body.ApplyTorque(Dir * -8.0f);
 
-            //apply forces to the head and the torso to move the character up/down
+            //apply forces to the head and the torso to move the Character up/down
             float movementFactor = (handPos.Y / stepHeight) * (float)Math.PI;
             movementFactor = 0.8f + (float)Math.Abs(Math.Sin(movementFactor));
 
@@ -727,7 +727,7 @@ namespace Barotrauma
         //    Limb rightHand = GetLimb(LimbType.RightHand);
         //    Limb head = GetLimb(LimbType.Head);
 
-        //    Vector2 diff = Vector2.Normalize(character.CursorPosition - RefLimb.Position);
+        //    Vector2 diff = Vector2.Normalize(Character.CursorPosition - RefLimb.Position);
 
         //    rightHand.body.ApplyLinearImpulse(diff * 20.0f);
         //    head.body.ApplyLinearImpulse(diff * 5.0f);
@@ -862,8 +862,6 @@ namespace Barotrauma
 
                 transformedHoldPos += Vector2.Transform(itemPos, torsoTransform);
             }
-
-            Vector2 bodyVelocity = torso.body.LinearVelocity / 60.0f;
 
             item.body.ResetDynamics();
 

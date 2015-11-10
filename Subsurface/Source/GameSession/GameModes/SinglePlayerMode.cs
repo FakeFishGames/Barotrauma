@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         //private const int StartCharacterAmount = 3;
 
-        public readonly CrewManager CrewManager;
+        //public readonly CrewManager CrewManager;
         //public readonly HireManager hireManager;
 
         private GUIButton endShiftButton;
@@ -36,14 +36,18 @@ namespace Barotrauma
 
         public int Money
         {
-            get { return CrewManager.Money; }
-            set { CrewManager.Money = value; }
+            get { return GameMain.GameSession.CrewManager.Money; }
+            set { GameMain.GameSession.CrewManager.Money = value; }
+        }
+
+        private CrewManager CrewManager
+        {
+            get { return GameMain.GameSession.CrewManager; }
         }
 
         public SinglePlayerMode(GameModePreset preset)
             : base(preset)
         {
-            CrewManager = new CrewManager();
 
             CargoManager = new CargoManager();
 
@@ -86,7 +90,7 @@ namespace Barotrauma
             {
                 if (subElement.Name.ToString().ToLower() != "crew") continue;
                 
-                CrewManager = new CrewManager(subElement);                
+                GameMain.GameSession.CrewManager = new CrewManager(subElement);                
             }
 
             savedOnStart = true;

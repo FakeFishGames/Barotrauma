@@ -274,7 +274,7 @@ namespace Barotrauma
 
         public virtual XElement Save(XElement parentElement)
         {
-            XElement charElement = new XElement("character");
+            XElement charElement = new XElement("Character");
 
             charElement.Add(
                 new XAttribute("name", Name),

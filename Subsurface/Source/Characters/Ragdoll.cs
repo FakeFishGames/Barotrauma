@@ -41,7 +41,7 @@ namespace Barotrauma
         private Vector2 targetMovement;
 
         //a movement vector that overrides targetmovement if trying to steer
-        //a character to the position sent by server in multiplayer mode
+        //a Character to the position sent by server in multiplayer mode
         protected Vector2 correctionMovement;
         
         protected float floorY;
@@ -616,7 +616,7 @@ namespace Barotrauma
                     {
 
                         //create a splash particle
-                        Barotrauma.Particles.Particle splash = GameMain.ParticleManager.CreateParticle("watersplash",
+                        GameMain.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.Position.X, limbHull.Surface),
                             new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 10.0f)),
                             0.0f);
@@ -633,7 +633,7 @@ namespace Barotrauma
 
 
 
-                        //if the character dropped into water, create a wave
+                        //if the Character dropped into water, create a wave
                         if (limb.LinearVelocity.Y<0.0f)
                         {
                             //1.0 when the limb is parallel to the surface of the water

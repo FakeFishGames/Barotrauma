@@ -17,7 +17,7 @@ namespace Barotrauma
 
         protected float walkSpeed, swimSpeed;  
 
-        //how large impacts the character can take before being stunned
+        //how large impacts the Character can take before being stunned
         //protected float impactTolerance;
 
         protected float stunTimer;

@@ -179,7 +179,6 @@ namespace Barotrauma
             var attribute = element.Attribute(name);
             if (attribute == null) return defaultValue;
 
-            string val = attribute.Value.ToLower().Trim();
             return GetAttributeBool(attribute, defaultValue);
         }
 

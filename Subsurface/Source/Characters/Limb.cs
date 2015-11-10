@@ -34,7 +34,7 @@ namespace Barotrauma
         
         protected readonly Vector2 stepOffset;
         
-        public Sprite sprite;
+        public Sprite sprite, damagedSprite;
 
         public bool inWater;
 
@@ -49,6 +49,8 @@ namespace Barotrauma
         //private float bleeding;
 
         public readonly float impactTolerance;
+
+        private float damage;
 
         private readonly Vector2 armorSector;
         private readonly float armorValue;
@@ -142,7 +144,7 @@ namespace Barotrauma
         //    set 
         //    { 
         //        damage = Math.Max(value, 0.0f);
-        //        if (damage >=maxHealth) character.Kill();
+        //        if (damage >=maxHealth) Character.Kill();
         //    }
         //}
 
@@ -246,7 +248,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString())
+                switch (subElement.Name.ToString().ToLower())
                 {
                     case "sprite":
                         string spritePath = subElement.Attribute("texture").Value;
@@ -259,6 +261,18 @@ namespace Barotrauma
 
 
                         sprite = new Sprite(subElement, "", spritePath);
+                        break;
+                    case "damagedsprite":
+                        string damagedSpritePath = subElement.Attribute("texture").Value;
+
+                        if (character.Info != null)
+                        {
+                            damagedSpritePath = damagedSpritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
+                            damagedSpritePath = damagedSpritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
+                        }
+
+
+                        damagedSprite = new Sprite(subElement, "", damagedSpritePath);
                         break;
                     case "attack":
                         attack = new Attack(subElement);
@@ -313,9 +327,8 @@ namespace Barotrauma
 
                 damageSoundType = DamageSoundType.LimbArmor;
                 amount = Math.Max(0.0f, amount - totalArmorValue);
-                bleedingAmount = Math.Max(0.0f, bleedingAmount - totalArmorValue); ;
+                bleedingAmount = Math.Max(0.0f, bleedingAmount - totalArmorValue);
             }
-
 
             if (playSound)
             {
@@ -342,6 +355,9 @@ namespace Barotrauma
                 GameMain.ParticleManager.CreateParticle("waterblood", Position, Vector2.Zero);
             }
 
+            damage += Math.Max(amount,bleedingAmount) / character.MaxHealth * 100.0f;
+
+
             return new AttackResult(amount, bleedingAmount, hitArmor);
         }
 
@@ -362,6 +378,9 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+
+            if (!character.IsDead) damage = Math.Max(0.0f, damage-deltaTime*0.1f);
+
             if (LinearVelocity.X>100.0f)
             {
                 //DebugConsole.ThrowError("CHARACTER EXPLODED");
@@ -454,6 +473,19 @@ namespace Barotrauma
                     1.0f, spriteEffect, depth);
             }
 
+            if (damage>0.0f && damagedSprite!=null)
+            {
+                SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                
+                float depth = sprite.Depth - 0.0000015f;
+                
+                damagedSprite.Draw(spriteBatch,
+                    new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
+                    color*Math.Min(damage/50.0f,1.0f), sprite.origin,
+                    -body.DrawRotation,
+                    1.0f, spriteEffect, depth);
+            }
+            
             if (!GameMain.DebugDraw) return;
 
             if (pullJoint!=null)

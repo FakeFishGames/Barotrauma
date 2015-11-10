@@ -41,7 +41,7 @@ namespace Barotrauma
         private float density;
         
         //the direction the item is facing (for example, a gun has to be 
-        //flipped horizontally if the character holding it turns around)
+        //flipped horizontally if the Character holding it turns around)
         float dir;
 
         public Vector2 TargetPosition

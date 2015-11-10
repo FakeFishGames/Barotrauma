@@ -47,6 +47,11 @@ namespace Barotrauma
             get { return endMessage; }
         }
 
+        public GameModePreset Preset
+        {
+            get { return preset; }
+        }
+
         public GameMode(GameModePreset preset)
         {
             this.preset = preset;

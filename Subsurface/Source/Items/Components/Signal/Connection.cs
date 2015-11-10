@@ -191,7 +191,7 @@ namespace Barotrauma.Items.Components
             bool mouseInRect = panelRect.Contains(PlayerInput.MousePosition);
 
             Wire equippedWire = null;
-                        //if the character using the panel has a wire item equipped
+                        //if the Character using the panel has a wire item equipped
             //and the wire hasn't been connected yet, draw it on the panel
             for (int i = 0; i < character.SelectedItems.Length; i++)
             {
@@ -246,7 +246,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            //if the character using the panel has a wire item equipped
+            //if the Character using the panel has a wire item equipped
             //and the wire hasn't been connected yet, draw it on the panel
             if (equippedWire!=null)
             {
@@ -262,9 +262,9 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //for (int i = 0; i < character.SelectedItems.Length; i++ )
+            //for (int i = 0; i < Character.SelectedItems.Length; i++ )
             //{
-            //    Item selectedItem = character.SelectedItems[i];
+            //    Item selectedItem = Character.SelectedItems[i];
 
             //    if (selectedItem == null) continue;
 
@@ -281,7 +281,7 @@ namespace Barotrauma.Items.Components
                 if (!PlayerInput.LeftButtonDown())
                 {
                     panel.Item.NewComponentEvent(panel, true, true);
-                    //draggingConnected.Drop(character);
+                    //draggingConnected.Drop(Character);
                     draggingConnected = null;
                 }
             }

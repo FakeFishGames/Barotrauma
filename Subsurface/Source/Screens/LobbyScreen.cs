@@ -54,6 +54,11 @@ namespace Barotrauma
             }
         }
 
+        private CrewManager CrewManager
+        {
+            get { return GameMain.GameSession.CrewManager; }
+        }
+
         public LobbyScreen()
         {
             Rectangle panelRect = new Rectangle(
@@ -68,7 +73,7 @@ namespace Barotrauma
             //    save, Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
 
             GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 0, 25), "", GUI.Style, 
-                Alignment.TopCenter, Alignment.Top, leftPanel);
+                Alignment.TopLeft, Alignment.TopLeft, leftPanel);
             moneyText.TextGetter = GetMoney;
             
             GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.TopCenter, GUI.Style, leftPanel);
@@ -234,7 +239,7 @@ namespace Barotrauma
         private void UpdateCharacterLists()
         {
             characterList.ClearChildren();
-            foreach (CharacterInfo c in gameMode.CrewManager.characterInfos)
+            foreach (CharacterInfo c in CrewManager.characterInfos)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
@@ -291,7 +296,7 @@ namespace Barotrauma
 
             CreateItemFrame(prefab, selectedItemList);
 
-            buyButton.Enabled = gameMode.CrewManager.Money >= selectedItemCost;
+            buyButton.Enabled = CrewManager.Money >= selectedItemCost;
 
             return false;
         }
@@ -310,9 +315,9 @@ namespace Barotrauma
         {
             int cost =  selectedItemCost;
 
-            if (gameMode.CrewManager.Money < cost) return false;
+            if (CrewManager.Money < cost) return false;
 
-            gameMode.CrewManager.Money -= cost;
+            CrewManager.Money -= cost;
 
             for (int i = selectedItemList.children.Count-1; i>=0; i--)
             {
@@ -345,7 +350,7 @@ namespace Barotrauma
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
 
-            if (characterList.CountChildren != gameMode.CrewManager.characterInfos.Count)
+            if (characterList.CountChildren != CrewManager.characterInfos.Count)
             {
                 UpdateCharacterLists();
             }
@@ -406,7 +411,7 @@ namespace Barotrauma
         
         private string GetMoney()
         {
-            return "Money: " + ((GameMain.GameSession == null) ? "" : gameMode.CrewManager.Money.ToString());
+            return "Money: " + ((GameMain.GameSession == null) ? "" : CrewManager.Money.ToString());
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)

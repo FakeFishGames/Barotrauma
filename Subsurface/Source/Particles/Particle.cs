@@ -10,6 +10,9 @@ namespace Barotrauma.Particles
     {
         private ParticlePrefab prefab;
 
+        public delegate void OnChangeHullHandler(Vector2 position, Hull currentHull);
+        public OnChangeHullHandler OnChangeHull;
+
         private Vector2 position;
         private Vector2 prevPosition;
 
@@ -26,6 +29,8 @@ namespace Barotrauma.Particles
         private Color color;
         private float alpha;
 
+        private int spriteIndex;
+
         private float totalLifeTime;
         private float lifeTime;
 
@@ -37,11 +42,16 @@ namespace Barotrauma.Particles
 
         private Hull currentHull;
 
-        private List<Hull> hullLimits;
+        private List<Gap> hullGaps;
         
         public ParticlePrefab.DrawTargetType DrawTarget
         {
             get { return prefab.DrawTarget; }        
+        }
+
+        public ParticleBlendState BlendState
+        {
+            get { return prefab.BlendState; }
         }
         
         public Vector2 Size
@@ -56,9 +66,11 @@ namespace Barotrauma.Particles
             set { velocityChange = value; }
         }
         
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null)
         {
             this.prefab = prefab;
+
+            spriteIndex = Rand.Int(prefab.Sprites.Count);
 
             this.position = position;
             prevPosition = position;
@@ -84,11 +96,15 @@ namespace Barotrauma.Particles
             
             velocityChange = prefab.VelocityChange;
 
+            OnChangeHull = null;
+
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
-                //currentHull = Hull.FindHull(position);
-                hullLimits = new List<Hull>();
-                hullLimits = FindLimits(position);
+                currentHull = Hull.FindHull(position, hullGuess);
+
+                hullGaps = currentHull==null ? new List<Gap>() : currentHull.FindGaps();
+                //hullLimits = new List<Hull>();
+                //hullLimits = FindLimits(position);
             }
 
             if (prefab.RotateToDirection)
@@ -99,55 +115,17 @@ namespace Barotrauma.Particles
             }
         }
 
-        private List<Hull> FindLimits(Vector2 position)
-        {
-            List<Hull> hullList = new List<Hull>();
+        //private List<Hull> FindLimits(Vector2 position)
+        //{
+        //    List<Hull> hullList = new List<Hull>();
 
-            currentHull = Hull.FindHull(position);
-            if (currentHull == null) return hullList;
+        //    currentHull = Hull.FindHull(position);
+        //    if (currentHull == null) return hullList;
 
-            hullList.Add(currentHull);
-            
-            return FindAdjacentHulls(hullList, currentHull, Math.Abs(velocity.X)>Math.Abs(velocity.Y));
-        }
+        //    hullList.Add(currentHull);
 
-        private List<Hull> FindAdjacentHulls(List<Hull> adjacentHulls, Hull currentHull, bool isHorizontal)
-        {
-            foreach (Gap gap in Gap.GapList)
-            {
-                if (gap.isHorizontal != isHorizontal) continue;
-                if (gap.Open < 0.01f) continue;
-                if (gap.linkedTo.Count==0)
-                {
-                    continue;
-                }
-                else if (gap.linkedTo.Count==1)
-                {
-                    if (!adjacentHulls.Contains(gap.linkedTo[0] as Hull))
-                    {
-                        adjacentHulls.Add(gap.linkedTo[0] as Hull);
-                    }
-                }
-                else if (gap.linkedTo[0] == currentHull && gap.linkedTo[1] != null)
-                {
-                    if (!adjacentHulls.Contains(gap.linkedTo[1] as Hull))
-                    {
-                        adjacentHulls.Add(gap.linkedTo[1] as Hull);
-                        FindAdjacentHulls(adjacentHulls, gap.linkedTo[1] as Hull, isHorizontal);
-                    }
-                }
-                else if (gap.linkedTo[1] == currentHull && gap.linkedTo[0] != null)
-                {
-                    if (!adjacentHulls.Contains(gap.linkedTo[0] as Hull))
-                    {
-                        adjacentHulls.Add(gap.linkedTo[0] as Hull);
-                        FindAdjacentHulls(adjacentHulls, gap.linkedTo[0] as Hull, isHorizontal);
-                    }
-                }
-            }
-
-            return adjacentHulls;
-        }
+        //    return FindAdjacentHulls(hullList, currentHull, Math.Abs(velocity.X) > Math.Abs(velocity.Y));
+        //}
 
         public bool Update(float deltaTime)
         {
@@ -182,24 +160,57 @@ namespace Barotrauma.Particles
             
             if ((prefab.DeleteOnCollision || prefab.CollidesWithWalls) && currentHull!=null)
             {
-                bool insideHull = false;
-                foreach (Hull hull in hullLimits)
-                {
-                    if (!Submarine.RectContains(hull.Rect, position)) continue;
+                Vector2 edgePos =  position + prefab.Sprites[spriteIndex].SourceRect.Width * Vector2.Normalize(velocity) * size.X;
+                //bool insideHull = false;
+                //foreach (Hull hull in hullLimits)
+                //{
+                //    if (!Submarine.RectContains(hull.Rect, edgePos)) continue;
                     
-                    insideHull = true;
-                    break;                    
-                }
+                //    insideHull = true;
+                //    break;                    
+                //}
 
-                if (!insideHull)
+                if (!Submarine.RectContains(currentHull.Rect, edgePos))
                 {
                     if (prefab.DeleteOnCollision) return false;
 
-                    Hull prevHull = Hull.FindHull(prevPosition, hullLimits, currentHull);
+                    bool gapFound = false;
+                    foreach (Gap gap in hullGaps)
+                    {
+                        if (!gap.isHorizontal)
+                        {
+                            if (gap.Rect.X > position.X || gap.Rect.Right < position.X) continue;
+                            if (Math.Sign(velocity.Y) != Math.Sign(gap.Rect.Y - position.Y)) continue;
+                        }
+                        else
+                        {
+                            if (gap.Rect.Y < position.Y || gap.Rect.Y - gap.Rect.Height > position.Y) continue;
+                            if (Math.Sign(velocity.X) != Math.Sign(gap.Rect.X - position.X)) continue;
+                        }
 
-                    if (prevHull == null) return false;
+                        //Rectangle enlargedRect = new Rectangle(gap.Rect.X - 10, gap.Rect.Y + 10, gap.Rect.Width + 20, gap.Rect.Height + 20);
+                        //if (!Submarine.RectContains(enlargedRect, position)) continue;
+                        gapFound = true;
+                    }
 
-                    OnWallCollision(prevHull);
+                    if (!gapFound)
+                    {
+
+                        OnWallCollision(currentHull, edgePos);
+                    }
+                    else
+                    {
+                        currentHull = Hull.FindHull(position);
+                        hullGaps = currentHull == null ? new List<Gap>() : currentHull.FindGaps();
+
+                        if (OnChangeHull != null) OnChangeHull(edgePos, currentHull);
+
+                    }
+
+                    //Hull prevHull = Hull.FindHull(prevPosition, hullLimits, currentHull);
+
+                    //if (prevHull == null) return false;
+
                 }
 
                 //if (position.Y < currentHull.Rect.Y-currentHull.Rect.Height)
@@ -217,10 +228,10 @@ namespace Barotrauma.Particles
             return true;
         }
 
-        private void OnWallCollision(Hull prevHull)
+        private void OnWallCollision(Hull prevHull, Vector2 position)
         {
-            float restitution = 0.05f;
-
+            float restitution = 0.5f;
+            
             if (position.Y < prevHull.Rect.Y - prevHull.Rect.Height)
             {
                 position.Y = prevHull.Rect.Y - prevHull.Rect.Height + 1.0f;
@@ -229,7 +240,8 @@ namespace Barotrauma.Particles
             else if (position.Y > prevHull.Rect.Y)
             {
                 position.Y = prevHull.Rect.Y - 1.0f;
-                velocity.Y = -velocity.Y;
+                velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
+                velocity.Y = -velocity.Y*0.1f;
             }
 
             if (position.X < prevHull.Rect.X)
@@ -262,7 +274,9 @@ namespace Barotrauma.Particles
 
             }
 
-            prefab.Sprite.Draw(spriteBatch, drawPosition, color*alpha, prefab.Sprite.origin, drawRotation, drawSize, SpriteEffects.None, prefab.Sprite.Depth);
+            prefab.Sprites[spriteIndex].Draw(spriteBatch, drawPosition, color * alpha, 
+                prefab.Sprites[spriteIndex].origin, drawRotation,
+                drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
 
             //spriteBatch.Draw(
             //    prefab.sprite.Texture, 

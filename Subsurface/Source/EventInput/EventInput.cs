@@ -101,7 +101,7 @@ namespace EventInput
     public static class EventInput
     {
         /// <summary>
-        /// Event raised when a character has been entered.
+        /// Event raised when a Character has been entered.
         /// </summary>
         public static event CharEnteredHandler CharEntered;
 

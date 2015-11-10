@@ -30,18 +30,18 @@ namespace Barotrauma.Items.Components
             if (character == null) return false;
             if (!character.IsKeyDown(InputType.Aim) || throwing) return false;
 
-            //Vector2 diff = Vector2.Normalize(character.CursorPosition - character.AnimController.RefLimb.Position);
+            //Vector2 diff = Vector2.Normalize(Character.CursorPosition - Character.AnimController.RefLimb.Position);
 
-            //if (character.SelectedItems[1]==item)
+            //if (Character.SelectedItems[1]==item)
             //{
-            //    Limb leftHand = character.AnimController.GetLimb(LimbType.LeftHand);
+            //    Limb leftHand = Character.AnimController.GetLimb(LimbType.LeftHand);
             //    leftHand.body.ApplyLinearImpulse(diff * 20.0f);
             //    leftHand.Disabled = true;
             //}
 
-            //if (character.SelectedItems[0] == item)
+            //if (Character.SelectedItems[0] == item)
             //{
-            //    Limb rightHand = character.AnimController.GetLimb(LimbType.RightHand);
+            //    Limb rightHand = Character.AnimController.GetLimb(LimbType.RightHand);
             //    rightHand.body.ApplyLinearImpulse(diff * 20.0f);
             //    rightHand.Disabled = true;
             //}

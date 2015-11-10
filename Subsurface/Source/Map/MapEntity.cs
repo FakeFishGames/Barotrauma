@@ -24,7 +24,7 @@ namespace Barotrauma
 
         protected static Vector2 startMovingPos = Vector2.Zero;
         
-        protected List<int> linkedToID;
+        protected List<ushort> linkedToID;
 
         //observable collection because some entities may need to be notified when the collection is modified
         public ObservableCollection<MapEntity> linkedTo;

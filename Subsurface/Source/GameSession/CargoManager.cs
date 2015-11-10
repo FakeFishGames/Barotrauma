@@ -32,7 +32,7 @@ namespace Barotrauma
 
             Hull cargoRoom = Hull.FindHull(wp.Position);
 
-            if (wp == null)
+            if (cargoRoom == null)
             {
                 DebugConsole.ThrowError("A waypoint marked as Cargo must be placed inside a room!");
                 return;
@@ -44,7 +44,7 @@ namespace Barotrauma
                     Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
                     Rand.Range(cargoRoom.Rect.Y - cargoRoom.Rect.Height + 20.0f, cargoRoom.Rect.Y));
 
-                new Item(prefab as ItemPrefab, wp.Position);
+                new Item(prefab as ItemPrefab, position);
             }
 
             purchasedItems.Clear();

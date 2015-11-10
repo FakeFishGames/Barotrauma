@@ -35,7 +35,7 @@ namespace Barotrauma
             waterEffect.Parameters["xWaveWidth"].SetValue(0.05f);
             waterEffect.Parameters["xWaveHeight"].SetValue(0.05f);
 #if WINDOWS
-            waterEffect.Parameters["xTexture"].SetValue(waterTexture);
+            //waterEffect.Parameters["xTexture"].SetValue(waterTexture);
 #endif
 #if LINUX
             waterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);

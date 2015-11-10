@@ -373,7 +373,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void Move(Vector2 amount) { }
         
-        /// <summary>a character has picked the item</summary>
+        /// <summary>a Character has picked the item</summary>
         public virtual bool Pick(Character picker) 
         {
             return false;
@@ -384,7 +384,7 @@ namespace Barotrauma.Items.Components
             return CanBeSelected;
         }
         
-        /// <summary>a character has dropped the item</summary>
+        /// <summary>a Character has dropped the item</summary>
         public virtual void Drop(Character dropper)  { }
 
         public virtual void Draw(SpriteBatch spriteBatch, bool editing = false) { }
@@ -475,7 +475,7 @@ namespace Barotrauma.Items.Components
         }
 
         /// <summary>
-        /// Returns 0.0f-1.0f based on how well the character can use the itemcomponent
+        /// Returns 0.0f-1.0f based on how well the Character can use the itemcomponent
         /// </summary>
         /// <returns>0.5f if all the skills meet the skill requirements exactly, 1.0f if they're way above and 0.0f if way less</returns>
         protected float DegreeOfSuccess(Character character)
@@ -496,14 +496,14 @@ namespace Barotrauma.Items.Components
             return (average+100.0f)/2.0f;        
         }
 
-        //public bool CheckFailure(Character character)
+        //public bool CheckFailure(Character Character)
         //{
         //    foreach (Skill skill in requiredSkills)
         //    {
-        //        int characterLevel = character.GetSkillLevel(skill.Name);
+        //        int characterLevel = Character.GetSkillLevel(skill.Name);
         //        if (characterLevel > skill.Level) continue;
 
-        //        item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+        //        item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, Character);
         //        //Item.ApplyStatusEffects();
         //        return true;
                 

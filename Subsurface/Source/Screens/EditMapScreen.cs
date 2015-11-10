@@ -14,7 +14,7 @@ namespace Barotrauma
         private GUIComponent[] GUItabs;
         private int selectedTab;
 
-        //a character used for picking up and manipulating items
+        //a Character used for picking up and manipulating items
         private Character dummyCharacter;
         
         private bool characterMode;

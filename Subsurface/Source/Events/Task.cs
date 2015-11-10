@@ -41,9 +41,9 @@ namespace Barotrauma
 
         public Task(float priority, string name)
         {
-            if (GameMain.GameSession==null || GameMain.GameSession.taskManager == null) return;
+            if (GameMain.GameSession==null || GameMain.GameSession.TaskManager == null) return;
 
-            taskManager = GameMain.GameSession.taskManager;
+            taskManager = GameMain.GameSession.TaskManager;
             musicType = "repair";
             this.priority = priority;
             this.name = name;

@@ -143,7 +143,7 @@ namespace Barotrauma
 
             if (string.IsNullOrWhiteSpace(masterServerData))
             {
-                var nameText = new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", GUI.Style, serverList);
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", GUI.Style, serverList);
 
                 return;
             }

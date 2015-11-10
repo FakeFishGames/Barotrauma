@@ -15,9 +15,11 @@ namespace Barotrauma
     {
         public static List<Hull> hullList = new List<Hull>();
 
-        public static bool EditWater;
+        public static bool EditWater, EditFire;
 
         public static WaterRenderer renderer;
+
+        private List<FireSource> fireSources;
         
         public const float OxygenDistributionSpeed = 500.0f;
         public const float OxygenDetoriationSpeed = 0.3f;
@@ -126,11 +128,18 @@ namespace Barotrauma
             get { return waveVel; }
         }
 
+        public List<FireSource> FireSources
+        {
+            get { return fireSources; }
+        }
+
         public Hull(Rectangle rectangle)
         {
             rect = rectangle;
             
             OxygenPercentage = Rand.Range(90.0f, 100.0f, false);
+
+            fireSources = new List<FireSource>();
 
             properties = TypeDescriptor.GetProperties(GetType())
                 .Cast<PropertyDescriptor>()
@@ -197,6 +206,11 @@ namespace Barotrauma
             hullList.Remove(this);
         }
 
+        public void AddFireSource(FireSource fireSource)
+        {
+            fireSources.Add(fireSource);
+        }
+
         public override void Update(Camera cam, float deltaTime)
         {
             Oxygen -= OxygenDetoriationSpeed * deltaTime;
@@ -217,7 +231,20 @@ namespace Barotrauma
                     }
                 }
             }
+            else if (EditFire)
+            {
+                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+                if (Submarine.RectContains(rect, position))
+                {
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        new FireSource(position);
+                    }
+                }
+            }
 
+            FireSource.UpdateAll(fireSources, deltaTime);
+            
             //update client hulls if the amount of water has changed by >10%
             if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f)
             {
@@ -292,8 +319,11 @@ namespace Barotrauma
                 
                 LethalPressure += ( Submarine.Loaded!=null && Submarine.Loaded.AtDamageDepth) ? 100.0f*deltaTime : 10.0f * deltaTime;
             }
+        }
 
-
+        public void RemoveFire(FireSource fire)
+        {
+            fireSources.Remove(fire);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
@@ -439,6 +469,27 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        public List<Gap> FindGaps()
+        {
+            List<Gap> gaps = new List<Gap>();
+            
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (gap.Open < 0.01f) continue;
+                if (gap.linkedTo.Count == 0) continue;
+
+                var gapHull = gap.linkedTo[0] as Hull;
+                if (gapHull == this) gaps.Add(gap);
+
+                if (gap.linkedTo.Count < 2) continue;
+
+                gapHull = gap.linkedTo[1] as Hull;
+                if (gapHull == this) gaps.Add(gap);
+            }
+
+            return gaps;
         }
 
         public override XElement Save(XDocument doc)

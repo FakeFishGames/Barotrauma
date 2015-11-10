@@ -41,7 +41,7 @@ namespace Barotrauma.Items.Components
         
         public override void Move(Vector2 amount)
         {
-            amount = FarseerPhysics.ConvertUnits.ToDisplayUnits(amount);
+            //amount = FarseerPhysics.ConvertUnits.ToDisplayUnits(amount);
             //for (int i = 0; i<Nodes.Count; i++)
             //{
             //    Nodes[i] += amount;

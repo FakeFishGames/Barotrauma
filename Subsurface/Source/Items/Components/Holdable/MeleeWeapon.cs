@@ -115,13 +115,11 @@ namespace Barotrauma.Items.Components
 
             AnimController ac = picker.AnimController;
 
-            Limb rightHand = ac.GetLimb(LimbType.RightHand);
-
             if (!hitting)
             {
                 if (picker.IsKeyDown(InputType.Aim))
                 {
-                    hitPos = (float)System.Math.Min(hitPos+deltaTime*5.0f, MathHelper.Pi*0.7f);
+                    hitPos = Math.Min(hitPos+deltaTime*5.0f, MathHelper.Pi*0.7f);
 
                     ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.1f), new Vector2(-0.3f, 0.2f), false, hitPos);
                 }

@@ -104,7 +104,7 @@ namespace Barotrauma.Items.Components
             if (character == null) return false;
             if (!character.IsKeyDown(InputType.Aim)) return false;
 
-            //if (DoesUseFail(character)) return false;
+            //if (DoesUseFail(Character)) return false;
 
             IsActive = true;
 
@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
                 //ApplyStatusEffects(ActionType.OnUse, 1.0f, null, targ);
             }
 
-                //if (character.SecondaryKeyDown.State)
+                //if (Character.SecondaryKeyDown.State)
                 //{
                 //    IPropertyObject propertyObject = targetBody.UserData as IPropertyObject;
                 //    if (propertyObject!=null) ApplyStatusEffects(ActionType.OnUse, 1.0f, item.SimPosition, propertyObject);

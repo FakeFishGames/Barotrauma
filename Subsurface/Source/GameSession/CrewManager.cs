@@ -20,6 +20,10 @@ namespace Barotrauma
         private GUIFrame guiFrame;
         private GUIListBox listBox;
 
+        private bool crewFrameOpen;
+        private GUIButton crewButton;
+        protected GUIFrame crewFrame;
+
 
         public int Money
         {
@@ -34,9 +38,12 @@ namespace Barotrauma
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
 
-            listBox = new GUIListBox(new Rectangle(0, 0, 150, 0), Color.Transparent, null, guiFrame);
+            listBox = new GUIListBox(new Rectangle(0, 30, 150, 0), Color.Transparent, null, guiFrame);
             listBox.ScrollBarEnabled = false;
             listBox.OnSelected = SelectCharacter;
+
+            crewButton = new GUIButton(new Rectangle(0, 00, 100, 20), "Crew", GUI.Style, guiFrame);
+            crewButton.OnClicked = ToggleCrewFrame;
 
             money = 10000;
         }
@@ -100,6 +107,8 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);
+
+            if (crewFrameOpen) crewFrame.Update(deltaTime);
         }
 
         public void KillCharacter(Character killedCharacter)
@@ -111,6 +120,71 @@ namespace Barotrauma
             //{
             //    Game1.GameSession.EndShift(null, null);
             //}            
+        }
+
+
+        public void CreateCrewFrame(List<Character> crew)
+        {
+            int width = 600, height = 400;
+
+            crewFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+            crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+
+            GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 280, 300), Color.White * 0.7f, GUI.Style, crewFrame);
+            crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            crewList.OnSelected = SelectCrewCharacter;
+
+            foreach (Character character in crew)
+            {
+                GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, crewList);
+                frame.UserData = character;
+                frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                frame.Color = (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == character) ? Color.Gold * 0.2f : Color.Transparent;
+                frame.HoverColor = Color.LightGray * 0.5f;
+                frame.SelectedColor = Color.Gold * 0.5f;
+
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(40, 0, 0, 25),
+                    character.Info.Name + " (" + character.Info.Job.Name + ")",
+                    Color.Transparent, Color.White,
+                    Alignment.Left, Alignment.Left,
+                    null, frame);
+                textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+
+                new GUIImage(new Rectangle(-10, 0, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
+            }
+
+            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, crewFrame);
+            closeButton.OnClicked = ToggleCrewFrame;
+        }
+
+        protected virtual bool SelectCrewCharacter(GUIComponent component, object obj)
+        {
+            Character character = obj as Character;
+            if (character == null) return false;
+
+            GUIComponent existingFrame = crewFrame.FindChild("selectedcharacter");
+            if (existingFrame != null) crewFrame.RemoveChild(existingFrame);
+
+            var previewPlayer = new GUIFrame(
+                new Rectangle(0, 0, 230, 300),
+                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, GUI.Style, crewFrame);
+            previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            previewPlayer.UserData = "selectedcharacter";
+
+            character.Info.CreateInfoFrame(previewPlayer);
+
+            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(component, obj);
+
+            return true;
+        }
+
+        private bool ToggleCrewFrame(GUIButton button, object obj)
+        {
+            if (crewFrame == null) CreateCrewFrame(characters);
+
+            crewFrameOpen = !crewFrameOpen;
+            return true;
         }
 
         public void StartShift()
@@ -161,6 +235,8 @@ namespace Barotrauma
         public void Draw(SpriteBatch spriteBatch)
         {
             guiFrame.Draw(spriteBatch);
+
+            if (crewFrameOpen) crewFrame.Draw(spriteBatch);
         }
 
         public void Save(XElement parentElement)
