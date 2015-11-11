@@ -18,7 +18,7 @@ namespace Barotrauma
 
     public enum ActionType
     {
-        OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure, OnBroken
+        OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure, OnBroken, OnFire
     }
 
     class Item : MapEntity, IDamageable, IPropertyObject
@@ -148,10 +148,10 @@ namespace Barotrauma
             }
         }
 
-        //public override AITarget AiTarget
-        //{
-        //    get { return aiTarget; }
-        //}
+        public bool FireProof
+        {
+            get { return prefab.FireProof; }
+        }
 
         public bool Updated
         {

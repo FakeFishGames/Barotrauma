@@ -60,7 +60,7 @@ namespace Barotrauma.Items.Components
 
                     if (pt.item.Condition<=0.0f && prevCondition > 0.0f)
                     {
-                        sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, item.Position);
+                        sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, pt.item.Position);
 
                         Vector2 baseVel = Rand.Vector(300.0f);
                         for (int i = 0; i < 10; i++)
@@ -70,6 +70,8 @@ namespace Barotrauma.Items.Components
 
                             if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                         }
+
+                        new FireSource(pt.item.Position);
                     }
                 }
                 

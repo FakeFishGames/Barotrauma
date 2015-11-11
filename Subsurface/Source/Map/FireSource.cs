@@ -9,8 +9,12 @@ namespace Barotrauma
 {
     class FireSource
     {
-        const float OxygenConsumption = 10.0f;
+        static Sound fireSoundBasic, fireSoundLarge;
+
+        const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 5.0f;
+
+        private int basicSoundIndex, largeSoundIndex;
 
         Hull hull;
 
@@ -29,13 +33,19 @@ namespace Barotrauma
             hull = Hull.FindHull(position);
             if (hull == null) return;
 
+            if (fireSoundBasic==null)
+            {
+                fireSoundBasic = Sound.Load("Content/Sounds/fire.ogg");
+                fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg");
+            }
+
             lightSource = new LightSource(position, 50.0f, new Color(1.0f, 0.9f, 0.6f));
 
             hull.AddFireSource(this);
 
             this.position = position - new Vector2(-5.0f, 5.0f);
 
-            this.position.Y = hull.Rect.Y - hull.Rect.Height;
+            //this.position.Y = hull.Rect.Y - hull.Rect.Height;
 
             size = new Vector2(10.0f, 10.0f);
         }
@@ -61,12 +71,15 @@ namespace Barotrauma
             {
                 for (int j = i-1; j>=0 ; j--)
                 {
+                    i = Math.Min(i, fireSources.Count - 1);
+                    j = Math.Min(j, i - 1);
+
                     if (!fireSources[i].CheckOverLap(fireSources[j])) continue;
 
                     fireSources[j].position.X = Math.Min(fireSources[i].position.X, fireSources[j].position.X);
 
-                    fireSources[j].size.X = 
-                        Math.Max(fireSources[i].position.X + fireSources[i].size.X, fireSources[j].position.X + fireSources[j].size.X) 
+                    fireSources[j].size.X =
+                        Math.Max(fireSources[i].position.X + fireSources[i].size.X, fireSources[j].position.X + fireSources[j].size.X)
                         - fireSources[j].position.X;
 
                     fireSources[i].Remove();
@@ -85,7 +98,15 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             float count = Rand.Range(0.0f, (float)Math.Sqrt(size.X)/2.0f);
+
+            basicSoundIndex = fireSoundBasic.Loop(basicSoundIndex, Math.Min(size.X/100.0f,1.0f), position+size/2.0f, 2000.0f);
+            largeSoundIndex = fireSoundLarge.Loop(largeSoundIndex, MathHelper.Clamp((size.X-200.0f) / 100.0f, 0.0f, 1.0f), position + size / 2.0f, 2000.0f);
             
+            if (size.X>50.0f)
+            {
+                this.position.Y = MathHelper.Lerp(this.position.Y, hull.Rect.Y - hull.Rect.Height, deltaTime);
+            }
+
             for (int i = 0; i < count; i++ )
             {
                 float normalizedPos = 0.5f-(i / count);
@@ -106,6 +127,7 @@ namespace Barotrauma
             }
 
             DamageCharacters(deltaTime);
+            DamageItems(deltaTime);
 
             if (hull.Volume > 0.0f) Extinquish(deltaTime);
 
@@ -114,7 +136,7 @@ namespace Barotrauma
 
             hull.Oxygen -= size.X*deltaTime*OxygenConsumption;
 
-            float growModifier = hull.OxygenPercentage < 20.0f ? hull.OxygenPercentage/20.0f : 1.0f;
+            float growModifier = hull.OxygenPercentage < 20.0f ? (hull.OxygenPercentage/10.0f)-1.0f : 1.0f;
 
             position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
             //position.Y += GrowSpeed*0.5f * deltaTime;
@@ -136,6 +158,8 @@ namespace Barotrauma
 
         private void DamageCharacters(float deltaTime)
         {
+            if (size.X <= 0.0f) return;
+
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull == null) continue;
@@ -143,8 +167,26 @@ namespace Barotrauma
                 float range = (float)Math.Sqrt(size.X) * 10.0f;
                 if (c.Position.X < position.X - range || c.Position.X > position.X + size.X + range) continue;
                 if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) continue;
-
+                
                 c.Health -= (float)Math.Sqrt(size.X) * deltaTime;
+            }
+        }
+
+        private void DamageItems(float deltaTime)
+        {
+            if (size.X <= 0.0f) return;
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
+
+                float range = (float)Math.Sqrt(size.X) * 10.0f;
+                if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) continue;
+                if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) continue;
+
+                item.Condition -= (float)Math.Sqrt(size.X) * deltaTime;
+
+                item.ApplyStatusEffects(ActionType.OnFire, deltaTime);
             }
         }
 
@@ -179,6 +221,9 @@ namespace Barotrauma
         public void Remove()
         {
             lightSource.Remove();
+
+            if (basicSoundIndex > -1) Sounds.SoundManager.Stop(basicSoundIndex);
+            if (largeSoundIndex > -1) Sounds.SoundManager.Stop(largeSoundIndex);
 
             hull.RemoveFire(this);
         }

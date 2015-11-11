@@ -201,6 +201,12 @@ namespace Barotrauma
             Item.UpdateHulls();
             Gap.UpdateHulls();
 
+            List<FireSource> fireSourcesToRemove = new List<FireSource>(fireSources);
+            foreach (FireSource fireSource in fireSourcesToRemove)
+            {
+                fireSource.Remove();
+            }
+
             //renderer.Dispose();
 
             hullList.Remove(this);

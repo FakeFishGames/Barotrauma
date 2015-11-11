@@ -20,6 +20,11 @@ namespace Barotrauma
 
         private Texture2D waterTexture;
 
+        public Texture2D WaterTexture
+        {
+            get { return waterTexture; }
+        }
+
         public WaterRenderer(GraphicsDevice graphicsDevice)
         {
 #if WINDOWS

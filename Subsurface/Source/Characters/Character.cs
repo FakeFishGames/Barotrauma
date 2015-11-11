@@ -201,7 +201,8 @@ namespace Barotrauma
         {
             get { return health; }
             set 
-            { 
+            {
+                if (!MathUtils.IsValid(value)) return;
                 health = MathHelper.Clamp(value, 0.0f, maxHealth);
                 if (health <= 0.0f) Kill(CauseOfDeath.Damage);
             }

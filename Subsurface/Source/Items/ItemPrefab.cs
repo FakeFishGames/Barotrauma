@@ -31,6 +31,8 @@ namespace Barotrauma
         //the construction can be Activated() by a Character inside the area
         public List<Rectangle> Triggers;
 
+        public readonly bool FireProof;
+
         public string ConfigFile
         {
             get { return configFile; }
@@ -170,6 +172,8 @@ namespace Barotrauma
             focusOnSelected     = ToolBox.GetAttributeBool(element, "focusonselected", false);
 
             offsetOnSelected    = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
+
+            FireProof = ToolBox.GetAttributeBool(element, "fireproof", false);
 
             string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");
             SpriteColor = new Color(ToolBox.ParseToVector4(spriteColorStr));

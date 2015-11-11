@@ -9,7 +9,7 @@ namespace Barotrauma.Particles
 {
     enum ParticleBlendState
     {
-        AlphaBlend, Additive
+        AlphaBlend, Additive, Distortion
     }
 
     class ParticleManager

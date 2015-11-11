@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
         //turned down and cooling increased
         private float shutDownTemp;
 
-        private float meltDownTemp;
+        private float fireTemp, meltDownTemp;
 
         //how much power is provided to the grid per 1 temperature unit
         private float powerPerTemp;
@@ -55,6 +55,16 @@ namespace Barotrauma.Items.Components
             set 
             {
                 meltDownTemp = Math.Max(0.0f, value);
+            }
+        }
+
+        [Editable, HasDefaultValue(9000.0f, true)]
+        public float FireTemp
+        {
+            get { return fireTemp; }
+            set
+            {
+                fireTemp = Math.Max(0.0f, value);
             }
         }
 
@@ -127,8 +137,6 @@ namespace Barotrauma.Items.Components
             tempGraph           = new float[graphSize];
             loadGraph           = new float[graphSize];
 
-            meltDownTemp = 9000.0f;
-
             shutDownTemp = 500.0f;
 
             powerPerTemp = 1.0f;
@@ -147,6 +155,20 @@ namespace Barotrauma.Items.Components
 
             float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 10000.0f;
             Temperature = temperature + deltaTemp;
+
+            if (temperature>fireTemp && temperature-deltaTemp<fireTemp)
+            {
+                Vector2 baseVel = Rand.Vector(300.0f);
+                for (int i = 0; i < 10; i++)
+                {
+                    var particle = GameMain.ParticleManager.CreateParticle("spark", item.Position,
+                        baseVel + Rand.Vector(100.0f), 0.0f);
+
+                    if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
+                }
+
+                new FireSource(item.Position);
+            }
 
             if (temperature > meltDownTemp)
             {
