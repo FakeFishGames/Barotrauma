@@ -86,9 +86,21 @@ namespace Barotrauma.Particles
                 SizeChangeMax = SizeChangeMin;
             }
 
-            var blendState = ToolBox.GetAttributeString(element, "blendstate", "alphablend");
-
-            BlendState = (blendState != "additive") ? ParticleBlendState.AlphaBlend : ParticleBlendState.Additive;
+            switch (ToolBox.GetAttributeString(element, "blendstate", "alphablend"))
+            {
+                case "alpha":
+                case "alphablend":
+                    BlendState = ParticleBlendState.AlphaBlend;
+                    break;
+                case "add":
+                case "additive":
+                    BlendState = ParticleBlendState.Additive;
+                    break;
+                case "distort":
+                case "distortion":
+                    BlendState = ParticleBlendState.Distortion;
+                    break;
+            }
 
             GrowTime = ToolBox.GetAttributeFloat(element, "growtime", 0.0f);
 

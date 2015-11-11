@@ -96,6 +96,10 @@
     <Holdable slots="RightHand,Any" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnWearing" target="This" Condition="-0.5"/>
       <StatusEffect type="OnWearing" target="Character" Oxygen="-40.0"/>
+      
+      <StatusEffect type="OnFire" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg" disabledeltatime="true">
+        <Explosion range="500.0" structuredamage="100" damage="200" stun="5" force="3.0"/>
+      </StatusEffect>
     </Holdable>
   </Item>
 

@@ -282,7 +282,7 @@
     linkable="true"
     price="20">
 
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,13,16,19"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,32,15,19"/>
 
     <WifiComponent canbeselected = "true"/>
 

@@ -79,6 +79,18 @@ namespace Barotrauma
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
 
+            Hull hull = Hull.FindHull(displayPosition);
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.body == null || item.CurrentHull != hull) continue;
+
+                Vector2 dir = (item.SimPosition == simPosition) ? Rand.Vector(1.0f) : Vector2.Normalize(item.SimPosition - simPosition);
+                float distFactor = 1.0f - Vector2.Distance(item.SimPosition, simPosition) / attack.Range;
+
+                item.body.ApplyLinearImpulse(dir * distFactor * force);
+            }
+
             foreach (Character c in Character.CharacterList)
             {
                 float dist = Vector2.Distance(c.SimPosition, simPosition);
@@ -89,6 +101,7 @@ namespace Barotrauma
                                 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.SimPosition == simPosition) continue;
                     distFactor = 1.0f - Vector2.Distance(limb.SimPosition, simPosition)/attack.Range;
                     
                     c.AddDamage(limb.SimPosition, DamageType.None, 
