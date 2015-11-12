@@ -40,7 +40,6 @@
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
     </ItemContainer>  
-
   </Item>
 
   <Item
@@ -73,6 +72,30 @@
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Oxygen Tank"/>
     </ItemContainer>
+  </Item>
 
+
+  <Item
+    name="Underwater Scooter"
+    Tags="smallitem"
+    pickdistance="200"
+    price="50">
+
+    <Sprite texture ="DivingSuit.png" depth="0.5" sourcerect="29,109,45,19"/>
+
+    <Body radius="10" height="20" density="5"/>
+
+    <Holdable slots="Any,LeftHand,RightHand" aimpos="100,0" handle1="-12,4"/>
+
+    <Propulsion force="80" usablein="water" particles="bubbles">
+      <RequiredItems name="Battery Cell" type="Contained" msg="Battery Cell required"/>
+      <StatusEffect type="OnUse" target="Contained" targetnames="Battery Cell" Condition="-0.7"/>
+      <sound file="scooter.ogg" type="OnUse" range="500.0" loop="true"/>      
+    </Propulsion>
+
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Battery Cell"/>
+    </ItemContainer>
   </Item>
 </Items>

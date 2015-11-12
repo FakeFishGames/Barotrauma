@@ -26,7 +26,8 @@
 
     <Body width="90" height="30" density="10"/>
 
-    <Holdable slots="Any,BothHands" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>
+    <Holdable slots="Any,BothHands" controlpose="true"
+              holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>
     
     <RangedWeapon barrelpos="49,10">
       <Sound file="harpoon1.ogg" type="OnUse"/>

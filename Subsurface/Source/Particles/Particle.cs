@@ -160,15 +160,7 @@ namespace Barotrauma.Particles
             
             if ((prefab.DeleteOnCollision || prefab.CollidesWithWalls) && currentHull!=null)
             {
-                Vector2 edgePos =  position + prefab.Sprites[spriteIndex].SourceRect.Width * Vector2.Normalize(velocity) * size.X;
-                //bool insideHull = false;
-                //foreach (Hull hull in hullLimits)
-                //{
-                //    if (!Submarine.RectContains(hull.Rect, edgePos)) continue;
-                    
-                //    insideHull = true;
-                //    break;                    
-                //}
+                Vector2 edgePos =  position + prefab.CollisionRadius * Vector2.Normalize(velocity) * size.X;
 
                 if (!Submarine.RectContains(currentHull.Rect, edgePos))
                 {

@@ -682,7 +682,7 @@ namespace Barotrauma.Networking
         public bool SpectateClicked(GUIButton button, object userData)
         {
             NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.Spectate);
+            msg.Write((byte)PacketTypes.SpectateRequest);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 

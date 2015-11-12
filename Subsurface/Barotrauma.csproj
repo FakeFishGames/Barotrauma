@@ -60,6 +60,8 @@
     <Compile Include="Source\Characters\AICharacter.cs" />
     <Compile Include="Source\Characters\AI\AIController.cs" />
     <Compile Include="Source\Characters\AI\AITarget.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjective.cs" />
     <Compile Include="Source\Characters\AI\PathFinder.cs" />
     <Compile Include="Source\Characters\AnimController.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
@@ -90,6 +92,7 @@
     <Compile Include="Source\GUI\GUIMessage.cs" />
     <Compile Include="Source\GUI\TitleScreen.cs" />
     <Compile Include="Source\Items\Components\Holdable\MeleeWeapon.cs" />
+    <Compile Include="Source\Items\Components\Holdable\Propulsion.cs" />
     <Compile Include="Source\Items\Components\Label.cs" />
     <Compile Include="Source\Items\Components\Signal\WaterDetector.cs" />
     <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
@@ -866,6 +869,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Diving\divingSuit.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Diving\scooter.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Door\door.ogg">
