@@ -29,7 +29,7 @@ namespace Barotrauma.Networking
 
         ResendRequest, ReliableMessage, LatestMessageID,
        
-        Spectate
+        SpectateRequest
     }
 
     enum VoteType

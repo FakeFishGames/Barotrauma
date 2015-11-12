@@ -305,6 +305,7 @@ namespace Barotrauma
                 case "loadsub":
                 case "load":
                     if (commands.Length < 2) break;
+
                     Submarine.Load(string.Join(" ", commands.Skip(1)));
                     break;
                 case "cleansub":

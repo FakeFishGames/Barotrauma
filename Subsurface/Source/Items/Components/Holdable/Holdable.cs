@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
 
         protected Vector2 aimPos;
 
-        protected bool aimable;
+        //protected bool aimable;
 
         private bool attachable, attached, attachedByDefault;
         private PhysicsBody body;
@@ -35,10 +35,10 @@ namespace Barotrauma.Items.Components
         }
 
         [HasDefaultValue(false, false)]
-        public bool Aimable
+        public bool ControlPose
         {
-            get { return aimable; }
-            set { aimable = value; }
+            get;
+            set;
         }
 
         [HasDefaultValue(false, false)]

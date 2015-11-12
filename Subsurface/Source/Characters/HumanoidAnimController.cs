@@ -787,6 +787,8 @@ namespace Barotrauma
 
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)
         {
+            Holdable holdable = item.GetComponent<Holdable>();
+
             //calculate the handle positions
             Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
             Vector2[] transformedHandlePos = new Vector2[2];
@@ -808,19 +810,23 @@ namespace Barotrauma
                 Vector2 diff = (mousePos - torso.SimPosition) * Dir;
 
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
-                holdAngle = MathHelper.Clamp(MathUtils.WrapAnglePi(holdAngle), -1.3f, 1.0f);
+                //holdAngle = MathHelper.Clamp(MathUtils.WrapAnglePi(holdAngle), -1.3f, 1.0f);
 
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
 
-                head.body.SmoothRotate(itemAngle);
-
-                if (TargetMovement == Vector2.Zero && inWater)
+                if (holdable.ControlPose)
                 {
-                    torso.body.AngularVelocity -= torso.body.AngularVelocity * 0.1f;
-                    torso.body.ApplyForce(torso.body.LinearVelocity * -0.5f);
+                    head.body.SmoothRotate(itemAngle);
+
+                    if (TargetMovement == Vector2.Zero && inWater)
+                    {
+                        torso.body.AngularVelocity -= torso.body.AngularVelocity * 0.1f;
+                        torso.body.ApplyForce(torso.body.LinearVelocity * -0.5f);
+                    }
+
+                    aiming = true;
                 }
 
-                aiming = true;
             }
             else
             {
@@ -945,23 +951,25 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Limb l in Limbs)
+            foreach (Limb limb in Limbs)
             {
-                switch (l.type)
+                switch (limb.type)
                 {
                     case LimbType.LeftHand:
                     case LimbType.LeftArm:
                     case LimbType.RightHand:
                     case LimbType.RightArm:
-                        difference = l.body.SimPosition - torso.SimPosition;
+                        difference = limb.body.SimPosition - torso.SimPosition;
                         difference = Vector2.Transform(difference, torsoTransform);
                         difference.Y = -difference.Y;
 
-                        l.body.SetTransform(torso.SimPosition + Vector2.Transform(difference, -torsoTransform), -l.body.Rotation);
+                        TrySetLimbPosition(limb, limb.SimPosition, torso.SimPosition + Vector2.Transform(difference, -torsoTransform));
+
+                        limb.body.SetTransform(limb.body.SimPosition, -limb.body.Rotation);
                         break;
                     default:
-                        if (!inWater) l.body.SetTransform(l.body.SimPosition,
-                            MathUtils.WrapAnglePi(l.body.Rotation * (l.DoesFlip ? -1.0f : 1.0f)));
+                        if (!inWater) limb.body.SetTransform(limb.body.SimPosition,
+                            MathUtils.WrapAnglePi(limb.body.Rotation * (limb.DoesFlip ? -1.0f : 1.0f)));
                         break;
                 }
             }

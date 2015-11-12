@@ -169,7 +169,7 @@ namespace Barotrauma.Lights
             
             Vector2 scale = new Vector2(MathHelper.Clamp(diff.Length()/256.0f, 2.0f, 5.0f), 2.0f);
             
-            spriteBatch.Draw(LightSource.LightTexture, new Vector2(ViewPos.X, -ViewPos.Y), null, Color.White, rotation, 
+            spriteBatch.Draw(visionCircle, new Vector2(ViewPos.X, -ViewPos.Y), null, Color.White, rotation, 
                 new Vector2(LightSource.LightTexture.Width*0.2f, LightSource.LightTexture.Height/2), scale, SpriteEffects.None, 0.0f);
             spriteBatch.End();
 

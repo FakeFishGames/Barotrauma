@@ -357,17 +357,11 @@ namespace Barotrauma
 
         public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
-            for (int i = 0; i < 5; i++ )
+            for (int i = 0; i < capacity; i++)
             {
                 message.Write(items[i]==null ? (ushort)0 : (ushort)items[i].ID);
             }
-
-            for (int i = 5; i < capacity; i++)
-            {
-                if (items[i] == null) continue;
-                message.Write((ushort)items[i].ID);
-            }
-
+            
             return true;
         }
 
@@ -375,7 +369,7 @@ namespace Barotrauma
         {
             character.ClearInput(InputType.Use);
 
-            for (int i = 0; i<5; i++)
+            for (int i = 0; i<capacity; i++)
             {
                 ushort itemId = message.ReadUInt16();
                 if (itemId==0)
@@ -387,34 +381,11 @@ namespace Barotrauma
                     Item item = Entity.FindEntityByID(itemId) as Item;
                     if (item == null) continue;
 
+                    if (items[i] != item) items[i].Drop(character, false);
                     TryPutItem(item, i, false);
                 }
             }
 
-            List<ushort> newItemIDs = new List<ushort>();
-
-            for (int i = 5; i < capacity; i++)
-            {
-                newItemIDs.Add(message.ReadUInt16());
-            }
-         
-
-            for (int i = 5; i < capacity; i++)
-            {
-                if (items[i] == null) continue;
-                if (!newItemIDs.Contains(items[i].ID))
-                {
-                    items[i].Drop(null, false);
-                    continue;
-                }
-            }
-            foreach (ushort itemId in newItemIDs)
-            {
-                Item item = Entity.FindEntityByID(itemId) as Item;
-                if (item == null) continue;
-
-                TryPutItem(item, LimbSlot.Any, false);
-            }
         }
 
     }

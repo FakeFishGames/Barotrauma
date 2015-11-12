@@ -671,7 +671,7 @@ namespace Barotrauma
             }
         }
 
-        private void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition)
+        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition)
         {
             if (original == simPosition) return;
 

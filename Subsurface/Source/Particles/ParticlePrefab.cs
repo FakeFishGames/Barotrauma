@@ -29,6 +29,7 @@ namespace Barotrauma.Particles
 
         public readonly float GrowTime;
 
+        public readonly float CollisionRadius;
         public readonly bool DeleteOnCollision;
         public readonly bool CollidesWithWalls;
 
@@ -122,7 +123,9 @@ namespace Barotrauma.Particles
             StartAlpha = ToolBox.GetAttributeFloat(element, "startalpha", 1.0f);
 
             DeleteOnCollision = ToolBox.GetAttributeBool(element, "deleteoncollision", false);
-            CollidesWithWalls = ToolBox.GetAttributeBool(element, "collideswithwalls", false); 
+            CollidesWithWalls = ToolBox.GetAttributeBool(element, "collideswithwalls", false);
+
+            CollisionRadius = ToolBox.GetAttributeFloat(element, "collisionradius", Sprites[0].SourceRect.Width/2.0f);
 
             ColorChange = ToolBox.GetAttributeVector4(element, "colorchange", Vector4.Zero);
 

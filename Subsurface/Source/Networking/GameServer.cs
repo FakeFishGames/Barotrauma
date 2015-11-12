@@ -460,11 +460,13 @@ namespace Barotrauma.Networking
                         case (byte)PacketTypes.Vote:
                             Voting.RegisterVote(inc, ConnectedClients);
                             break;
-                        case (byte)PacketTypes.Spectate:
+                        case (byte)PacketTypes.SpectateRequest:
                             if (gameStarted)
                             {
                                 var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
                                 server.SendMessage(startMessage, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered);
+
+                                dataSender.Spectating = true;
                             }
                             break;
                     }
@@ -674,9 +676,6 @@ namespace Barotrauma.Networking
             GameMain.GameSession = new GameSession(selectedSub, "", selectedMode);
             GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
 
-            var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
-            SendMessage(startMessage, NetDeliveryMethod.ReliableUnordered);
-
             yield return CoroutineStatus.Running;
 
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
@@ -716,6 +715,10 @@ namespace Barotrauma.Networking
 
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
             }
+
+            var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
+            SendMessage(startMessage, NetDeliveryMethod.ReliableUnordered);
+
 
             yield return CoroutineStatus.Running;
             
@@ -761,7 +764,7 @@ namespace Barotrauma.Networking
             if (myCharacter != null)
             {
                 msg.Write(-1);
-                WriteCharacterData(msg, myCharacter.Info.Name, Character.Controlled);
+                WriteCharacterData(msg, myCharacter.Info.Name, myCharacter);
             }
 
             return msg;
@@ -799,6 +802,7 @@ namespace Barotrauma.Networking
 
                 foreach (Client client in ConnectedClients)
                 {
+                    client.Spectating = false;
                     client.Character = null;
                     client.inGame = false;
                 }
@@ -1327,6 +1331,8 @@ namespace Barotrauma.Networking
 
         public List<JobPrefab> jobPreferences;
         public JobPrefab assignedJob;
+
+        public bool Spectating;
 
         public ReliableChannel ReliableChannel;
 

@@ -58,6 +58,8 @@ namespace Barotrauma
         
         private float condition;
 
+        private bool inWater;
+
         //the inventory in which the item is contained in
         public Inventory inventory;
 
@@ -151,6 +153,18 @@ namespace Barotrauma
         public bool FireProof
         {
             get { return prefab.FireProof; }
+        }
+
+        public bool InWater
+        {
+            get 
+            { 
+                //if the item has an active physics body, inWater is updated in the Update method
+                if (body != null && body.Enabled) return inWater;
+
+                //if not, we'll just have to check
+                return IsInWater();
+            }
         }
 
         public bool Updated
@@ -501,6 +515,15 @@ namespace Barotrauma
             return new AttackResult(damageAmount, 0.0f, false);
         }
 
+        private bool IsInWater()
+        {
+            if (CurrentHull == null) return true;
+            
+            float surfaceY = CurrentHull.Surface;
+
+            return Position.Y < surfaceY;            
+        }
+
 
         public override void Update(Camera cam, float deltaTime)
         {             
@@ -545,30 +568,7 @@ namespace Barotrauma
 
             body.SetToTargetPosition();
 
-            bool inWater = true;
-
-            if (CurrentHull != null)
-            {
-                float surfaceY = ConvertUnits.ToSimUnits(CurrentHull.Surface);
-
-                if (body.SimPosition.Y < surfaceY )
-                {
-                    inWater = true;
-
-                    //the item has gone through the surface of the water -> apply an impulse which serves as surface tension
-                    //if (body.SimPosition.Y - (body.LinearVelocity.Y / 60.0f) < surfaceY)
-                    //{
-                    //    Vector2 impulse = -body.LinearVelocity * (body.Mass / body.Density);
-                    //    body.ApplyLinearImpulse(impulse);
-                    //    int n = (int)((ConvertUnits.ToDisplayUnits(body.SimPosition.X) - CurrentHull.Rect.X) / Hull.WaveWidth);
-                    //    CurrentHull.WaveVel[n] = impulse.Y * 10.0f;
-                    //}
-                }
-                else
-                {
-                    inWater = false;
-                }
-            }
+            inWater = IsInWater();
 
             if (!inWater) return;
 

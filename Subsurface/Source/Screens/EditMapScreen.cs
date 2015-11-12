@@ -221,6 +221,11 @@ namespace Barotrauma
 
             if (characterMode)
             {
+                if (Entity.FindEntityByID(dummyCharacter.ID)!=dummyCharacter)
+                {
+                    ToggleCharacterMode(null, null);
+                }
+
                 foreach (MapEntity me in MapEntity.mapEntityList)
                 {
                     me.IsHighlighted = false;
