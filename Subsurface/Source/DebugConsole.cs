@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -258,6 +259,15 @@ namespace Barotrauma
                             w.AddDamage(i, -100000.0f);
                         }
                     }
+                    break;
+                case "power":
+                    Item reactorItem = Item.ItemList.Find(i => i.GetComponent<Reactor>() != null);
+                    if (reactorItem == null) return;
+
+                    var reactor = reactorItem.GetComponent<Reactor>();
+                    reactor.ShutDownTemp = 7000.0f;
+                    reactor.AutoTemp = true;
+                    reactor.Temperature = 5000.0f;
                     break;
                 case "shake":
                     GameMain.GameScreen.Cam.Shake = 10.0f;

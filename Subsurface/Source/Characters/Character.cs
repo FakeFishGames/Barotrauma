@@ -1037,7 +1037,7 @@ namespace Barotrauma
 
         public void StartStun(float stunTimer)
         {
-            if (stunTimer <= 0.0f) return;
+            if (stunTimer <= 0.0f || !MathUtils.IsValid(stunTimer)) return;
 
             AnimController.ResetPullJoints();
             AnimController.StunTimer = Math.Max(AnimController.StunTimer, stunTimer);
@@ -1247,25 +1247,31 @@ namespace Barotrauma
                     //    i++;
                     //}
 
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer,0.0f,60.0f), 0.0f, 60.0f, 8);
-                    message.Write((byte)((health/maxHealth)*255.0f));
-                    message.Write((byte)(MathHelper.Clamp(oxygen * 2.55f, 0.0f, 255.0f)));
+                    message.Write((byte)((health / maxHealth) * 255.0f));
+
+                    if (AnimController.StunTimer<=0.0f && bleeding<=0.0f && oxygen>99.0f)
+                    {
+                        message.Write(true);
+                    }
+                    else
+                    {
+                        message.Write(false);
+
+                        message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
+
+                        message.Write((byte)(MathHelper.Clamp(oxygen * 2.55f, 0.0f, 255.0f)));
+
+                        bleeding = MathHelper.Clamp(bleeding, 0.0f, 5.0f);
+                        message.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
+
+                    }
+
 
                     return true;
                 case NetworkEventType.EntityUpdate:
-                    var hasInputs =  
-                        IsKeyDown(InputType.Left)    ||
-                        IsKeyDown(InputType.Right) ||
-                        IsKeyDown(InputType.Up) ||
-                        IsKeyDown(InputType.Down) ||
-                        IsKeyDown(InputType.Use) ||
-                        IsKeyDown(InputType.Aim);
 
-                    message.Write(hasInputs);
                     message.Write((float)NetTime.Now);
 
-                    if (!hasInputs) return true;
-                    
                     message.Write(keys[(int)InputType.Use].DequeueHeld);
 
                     bool secondaryHeld = keys[(int)InputType.Aim].DequeueHeld;
@@ -1278,7 +1284,7 @@ namespace Barotrauma
                     message.Write(keys[(int)InputType.Down].Held);
 
                     message.Write(keys[(int)InputType.Run].Held);
-
+                    
                     if (secondaryHeld)
                     {
                         Vector2 relativeCursorPosition = cursorPosition - Position;
@@ -1382,46 +1388,17 @@ namespace Barotrauma
                     inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message);
                     return;
                 case NetworkEventType.ImportantEntityUpdate:
-                    //foreach (Limb limb in AnimController.Limbs)
-                    //{
-                    //    Vector2 limbPos = limb.SimPosition, vel = Vector2.Zero;
-                    //    float rotation = limb.Rotation;
+                   
+                    Health = (message.ReadByte() / 255.0f) * maxHealth;
 
-                    //    try
-                    //    {
-                    //        limbPos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                    //        limbPos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    bool allOk = message.ReadBoolean();
+                    if (allOk) return;
 
-                    //        rotation = message.ReadFloat();
-                    //    }
-                    //    catch
-                    //    {
-                    //        return;
-                    //    }
-
-                    //    if (limb.body != null)
-                    //    {
-                    //        limb.body.TargetVelocity = limb.body.LinearVelocity;
-                    //        limb.body.TargetPosition = limbPos;// +vel * (float)(deltaTime / 60.0);
-                    //        limb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
-                    //        limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
-                    //    }
-
-                    //}
-
-                    float newStunTimer = 0.0f, newHealth = 0.0f, newOxygen = 0.0f;
-
-                    try
-                    {
-                        newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
-                        newHealth = (message.ReadByte() / 255.0f) * maxHealth;
-                        newOxygen = (message.ReadByte() / 2.55f);
-                    }
-                    catch { return; }
-
+                    float newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
                     StartStun(newStunTimer);
-                    Health = newHealth;
-                    oxygen = newOxygen;
+                    
+                    Oxygen = (message.ReadByte() / 2.55f);
+                    Bleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);     
 
                     return;
                 case NetworkEventType.EntityUpdate:                    
@@ -1434,14 +1411,9 @@ namespace Barotrauma
 
                     try
                     {
-                        bool hasInputs = message.ReadBoolean();
-                        sendingTime         = message.ReadFloat();
-
-                        if (!hasInputs)
-                        {
-                            if (sendingTime > LastNetworkUpdate) ClearInputs();
-                            return;
-                        }
+                        sendingTime         = message.ReadFloat();                        
+                        
+                        if (sendingTime > LastNetworkUpdate) ClearInputs();                        
 
                         actionKeyState      = message.ReadBoolean();
                         secondaryKeyState   = message.ReadBoolean();
@@ -1456,13 +1428,19 @@ namespace Barotrauma
 
                     catch (Exception e)
                     {
+#if DEBUG
+                        DebugConsole.ThrowError("Error in Character.ReadNetworkData: " + e.Message);
+#endif
                         return;
                     }
 
                     AnimController.IsStanding = true;
 
-                    keys[(int)InputType.Use].Held       = actionKeyState;
-                    keys[(int)InputType.Aim].Held       = secondaryKeyState;
+                    keys[(int)InputType.Use].Held = actionKeyState;
+                    keys[(int)InputType.Use].SetState(false, actionKeyState);
+
+                    keys[(int)InputType.Aim].Held = secondaryKeyState;
+                    keys[(int)InputType.Aim].SetState(false, secondaryKeyState);
 
                     if (sendingTime <= LastNetworkUpdate) return;
 

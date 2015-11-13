@@ -163,12 +163,18 @@ namespace Barotrauma
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
-                if (PlayerInput.KeyDown(Keys.A)) moveCam.X -= moveSpeed;
-                if (PlayerInput.KeyDown(Keys.D)) moveCam.X += moveSpeed;
-                if (PlayerInput.KeyDown(Keys.S)) moveCam.Y -= moveSpeed;
-                if (PlayerInput.KeyDown(Keys.W)) moveCam.Y += moveSpeed;
+                if (GUITextBox.KeyboardDispatcher.Subscriber == null)
+                {
+                    if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
+                    if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
 
-                moveCam = moveCam * deltaTime * 60.0f;
+                    if (PlayerInput.KeyDown(Keys.A)) moveCam.X -= moveSpeed;
+                    if (PlayerInput.KeyDown(Keys.D)) moveCam.X += moveSpeed;
+                    if (PlayerInput.KeyDown(Keys.S)) moveCam.Y -= moveSpeed;
+                    if (PlayerInput.KeyDown(Keys.W)) moveCam.Y += moveSpeed;
+
+                    moveCam = moveCam * deltaTime * 60.0f;
+                }
 
 
                 Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, 0.1f, 2.0f); 

@@ -32,6 +32,7 @@ namespace Barotrauma.Networking
         public const float IdSendInterval = 0.2f;
         public const float RerequestInterval = 0.2f;
 
-        public const int ResendAttempts = 8;
+        public const int ReliableMessageBufferSize = 100;
+        public const int ResendAttempts = 10;
     }
 }

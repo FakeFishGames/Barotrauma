@@ -118,7 +118,7 @@ namespace Barotrauma
 
             if (item.inventory != null && removeItem)
             {
-                item.Drop();
+                item.Drop(null, false);
                 item.inventory.RemoveItem(item);
             }
 

@@ -97,14 +97,13 @@ namespace Barotrauma.Networking.ReliableMessages
             message.Write((byte)PacketTypes.ReliableMessage);
             message.Write(messageID);
             
-            int bufferSize=100;
-            if (messageBuffer.Count>bufferSize)
+            if (messageBuffer.Count > NetConfig.ReliableMessageBufferSize)
             {
-                
-                int end = messageCount-bufferSize;
-                int start = end - (messageBuffer.Count - bufferSize);
 
-                if (start<=0)
+                int end = messageCount - NetConfig.ReliableMessageBufferSize;
+                int start = end - (messageBuffer.Count - NetConfig.ReliableMessageBufferSize);
+
+                if (start<0)
                 {
                     int wrappedStart = start + ushort.MaxValue;
                     if (wrappedStart==0) wrappedStart = ushort.MaxValue;
@@ -119,7 +118,7 @@ namespace Barotrauma.Networking.ReliableMessages
                     }
                 }
 
-                for (ushort i = (ushort)Math.Max(start,1); i <= (ushort)Math.Max(end,1); i++)
+                for (ushort i = (ushort)Math.Max(start,0); i <= (ushort)Math.Max(end,0); i++)
                 {
                     messageBuffer.Remove(i);
                     if (i == ushort.MaxValue) break;
@@ -219,12 +218,11 @@ namespace Barotrauma.Networking.ReliableMessages
         {
             foreach (var message in missingMessages.Where(m => m.Value.ResendRequestsSent > NetConfig.ResendAttempts).ToList())
             {
+                Debug.WriteLine("Max rerequest attempts reached on message "+message.Value.ID);
                 missingMessages.Remove(message.Key);
             }
 
-            int bufferSize = 20;
-
-            while (missingMessageIds.Count>bufferSize)
+            while (missingMessageIds.Count>NetConfig.ReliableMessageBufferSize)
             {
                 ushort id = missingMessageIds.Dequeue();
 
@@ -245,7 +243,8 @@ namespace Barotrauma.Networking.ReliableMessages
                 resendRequest.Write((byte)PacketTypes.ResendRequest);
                 resendRequest.Write(missingMessage.ID);
 
-                receiver.SendMessage(resendRequest, recipient, NetDeliveryMethod.Unreliable);
+                receiver.SendMessage(resendRequest, recipient, 
+                    missingMessage.ResendRequestsSent==0 ? NetDeliveryMethod.ReliableUnordered : NetDeliveryMethod.Unreliable);
 
 
                 missingMessage.ResendTimer = Math.Max(recipient.AverageRoundtripTime, NetConfig.RerequestInterval);

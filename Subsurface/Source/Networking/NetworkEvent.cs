@@ -201,7 +201,7 @@ namespace Barotrauma.Networking
             }
 
 
-            System.Diagnostics.Debug.WriteLine(e.ToString());
+            //System.Diagnostics.Debug.WriteLine(e.ToString());
 
             object data;
 

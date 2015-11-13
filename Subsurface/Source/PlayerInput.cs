@@ -148,6 +148,12 @@ namespace Barotrauma
             if (held) heldQueue = true;
 		}
 
+        public void SetState(bool hit, bool held)
+        {
+            if (hit) hitQueue = true;
+            if (held) heldQueue = true;
+        }
+
 		public bool Dequeue
 		{
 			get

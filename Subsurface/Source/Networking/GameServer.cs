@@ -248,7 +248,7 @@ namespace Barotrauma.Networking
 
                 if (gameStarted && disconnectedClients[i].Character!=null)
                 {
-                    disconnectedClients[i].Character.Remove();
+                    disconnectedClients[i].Character.Kill(CauseOfDeath.Damage, true);
                     disconnectedClients[i].Character = null;
                 }
 
@@ -609,7 +609,7 @@ namespace Barotrauma.Networking
         {
             if (NetworkEvent.Events.Count == 0) return;
 
-            List<Client> recipients = ConnectedClients.FindAll(c => c.Character != null);
+            List<Client> recipients = ConnectedClients.FindAll(c => c.Character != null || c.Spectating);
 
             if (recipients.Count == 0) return;
 
@@ -784,6 +784,7 @@ namespace Barotrauma.Networking
             var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
             
             Character.Controlled = null;
+            myCharacter = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
 
