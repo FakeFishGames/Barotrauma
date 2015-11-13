@@ -390,8 +390,7 @@ namespace Barotrauma
 
             if (sectionIndex < 0 || sectionIndex > sections.Length - 1) return;
 
-            if (GameMain.Client == null)
-                SetDamage(sectionIndex, sections[sectionIndex].damage + damage);
+            if (GameMain.Client == null) SetDamage(sectionIndex, sections[sectionIndex].damage + damage);
 
         }
 
@@ -453,7 +452,7 @@ namespace Barotrauma
 
             if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage)>5.0f)
             {
-                new NetworkEvent(NetworkEventType.WallDamage, ID, false);
+                new NetworkEvent(NetworkEventType.ImportantEntityUpdate, ID, false);
                 //sections[sectionIndex].lastSentDamage = damage;
             }
             
@@ -642,17 +641,19 @@ namespace Barotrauma
         {
             message.Write((float)NetTime.Now);
 
-            var updateSections = Array.FindAll(sections, s => s != null && Math.Abs(s.damage - s.lastSentDamage)/Health > 0.01f);
+            //var updateSections = Array.FindAll(sections, s => s != null && Math.Abs(s.damage - s.lastSentDamage) > 0.01f);
 
-            if (updateSections.Length == 0) return false;
+            //if (updateSections.Length == 0) return false;
 
-            Debug.Assert(updateSections.Length<255);
+            //Debug.Assert(updateSections.Length<255);
 
-            message.Write((byte)updateSections.Length);
+           // message.Write((byte)updateSections.Length);
 
-            for (int i = 0; i < updateSections.Length; i++)
+            for (int i = 0; i < sections.Length; i++)
             {
-                message.Write((byte)i);
+                //if (Math.Abs(sections[i].damage - sections[i].lastSentDamage) < 0.01f) continue;
+
+                //message.Write((byte)i);
                 message.WriteRangedSingle(sections[i].damage / Health, 0.0f, 1.0f, 8);
 
                 sections[i].lastSentDamage = sections[i].damage;
@@ -668,17 +669,19 @@ namespace Barotrauma
             float updateTime = message.ReadFloat();
             if (updateTime < lastUpdate) return;
 
-            int sectionCount = message.ReadByte();
+           // int sectionCount = message.ReadByte();
 
-            for (int i = 0; i<sectionCount; i++)
+            for (int i = 0; i<sections.Count(); i++)
             {
-                byte sectionIndex = message.ReadByte();
+                //byte sectionIndex = message.ReadByte();
                 float damage = message.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
 
-                if (sectionIndex < 0 || sectionIndex >= sections.Length) continue;
+                //if (sectionIndex < 0 || sectionIndex >= sections.Length) continue;
 
-                SetDamage(sectionIndex, damage);
+                SetDamage(i, damage);
             }
+
+            lastUpdate = updateTime;
         }
     
     }

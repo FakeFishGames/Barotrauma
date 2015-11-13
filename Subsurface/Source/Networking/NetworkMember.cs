@@ -229,7 +229,7 @@ namespace Barotrauma.Networking
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted && Screen.Selected != GameMain.GameScreen) return;
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen) return;
 
             inGameHUD.Draw(spriteBatch);
         }

@@ -381,7 +381,7 @@ namespace Barotrauma
                     Item item = Entity.FindEntityByID(itemId) as Item;
                     if (item == null) continue;
 
-                    if (items[i] != item) items[i].Drop(character, false);
+                    if (items[i] != item && items[i] != null) items[i].Drop(character, false);
                     TryPutItem(item, i, false);
                 }
             }

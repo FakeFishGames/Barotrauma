@@ -296,6 +296,7 @@ namespace Barotrauma
 
 
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
+            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
 
             playerList.Parent.RemoveChild(playerList.Parent.children.Find(c => c.UserData as string == "banListButton"));
@@ -313,7 +314,6 @@ namespace Barotrauma
 
                 GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, GUI.Style, infoFrame);
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
-                settingsButton.CanBeSelected = false;
                 settingsButton.UserData = "settingsButton";
 
                 var banListButton = new GUIButton(new Rectangle(0, 30, 100, 20), "Banned IPs", Alignment.BottomRight, GUI.Style, playerList.Parent);
