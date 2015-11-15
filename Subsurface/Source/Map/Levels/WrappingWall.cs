@@ -149,8 +149,8 @@ namespace Barotrauma
             slot += amount;
 
             Vector2 moveAmount = Vector2.UnitX * WallWidth * amount;
-
             Vector2 simMoveAmount = ConvertUnits.ToSimUnits(moveAmount);
+
             foreach (VoronoiCell cell in cells)
             {
                 cell.body.SetTransform(cell.body.Position + simMoveAmount, 0.0f);
@@ -158,7 +158,6 @@ namespace Barotrauma
 
             midPos += moveAmount;
             offset += moveAmount;
-
         }
     }
 }

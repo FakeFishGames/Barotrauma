@@ -10,7 +10,7 @@ namespace Barotrauma
         public enum AiState { None, Attack, GoTo, Escape }
         public enum SteeringState { Wander, Seek, Escape }
 
-        public Character Character;
+        public readonly Character Character;
         
         protected AiState state;
 
@@ -45,10 +45,7 @@ namespace Barotrauma
             steeringManager = new SteeringManager(this);
         }
 
-        public virtual void DebugDraw(SpriteBatch spriteBatch)
-        {
-
-        }
+        public virtual void DebugDraw(SpriteBatch spriteBatch) { }
 
         public virtual void OnAttacked(IDamageable attacker, float amount) { }
 
