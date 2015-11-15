@@ -11,7 +11,7 @@ namespace Barotrauma
 
         public virtual bool IsCompleted()
         {
-            return true;
+            return false;
         }
 
         public AIObjective()

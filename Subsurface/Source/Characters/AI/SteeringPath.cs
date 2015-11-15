@@ -48,10 +48,10 @@ namespace Barotrauma
             currentIndex++;
         }
 
-        public WayPoint CheckProgress(Vector2 pos, float minSimDistance = 0.1f)
+        public WayPoint CheckProgress(Vector2 simPosition, float minSimDistance = 0.1f)
         {
             if (nodes.Count == 0 || currentIndex>nodes.Count-1) return null;
-            if (Vector2.Distance(pos, nodes[currentIndex].SimPosition) < minSimDistance) currentIndex++;
+            if (Vector2.Distance(simPosition, nodes[currentIndex].SimPosition) < minSimDistance) currentIndex++;
 
             return CurrentNode;
         }

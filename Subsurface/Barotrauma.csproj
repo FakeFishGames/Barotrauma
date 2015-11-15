@@ -63,6 +63,7 @@
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjective.cs" />
     <Compile Include="Source\Characters\AI\PathFinder.cs" />
+    <Compile Include="Source\Characters\AI\PathSteeringManager.cs" />
     <Compile Include="Source\Characters\AnimController.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundSprite.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Source\Items\FixRequirement.cs" />
     <Compile Include="Source\Items\ItemSpawner.cs" />
     <Compile Include="Source\Map\FireSource.cs" />
+    <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
     <Compile Include="Source\Map\Levels\WrappingWall.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\LocationType.cs" />

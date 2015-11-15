@@ -21,7 +21,7 @@ namespace Barotrauma
 
         static Level loaded;
 
-        private static Texture2D shaftTexture;
+        private LevelRenderer renderer;
 
         //how close the sub has to be to start/endposition to exit
         const float ExitDistance = 6000.0f;
@@ -40,13 +40,10 @@ namespace Barotrauma
         //List<Body> bodies;
         private List<VoronoiCell> cells;
 
-        private static BasicEffect basicEffect;
-
         private VertexPositionTexture[] vertices;
         //private VertexBuffer vertexBuffer;
 
-        private Vector2 startPosition;
-        private Vector2 endPosition;
+        private Vector2 startPosition, endPosition;
 
         private Rectangle borders;
 
@@ -94,6 +91,11 @@ namespace Barotrauma
             get { return positionsOfInterest; }
         }
 
+        public WrappingWall[,] WrappingWalls
+        {
+            get { return wrappingWalls; }
+        }
+
         public string Seed
         {
             get { return seed; }
@@ -107,18 +109,6 @@ namespace Barotrauma
 
         public Level(string seed, float difficulty, int width, int height, int siteInterval)
         {
-            if (shaftTexture == null) shaftTexture = TextureLoader.FromFile("Content/Map/shaft.png");
-
-            if (basicEffect==null)
-            {
-                
-                basicEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
-                basicEffect.VertexColorEnabled = false;
-
-                basicEffect.TextureEnabled = true;
-                basicEffect.Texture = TextureLoader.FromFile("Content/Map/iceSurface.png");
-            }
-
             this.seed = seed;
 
             this.siteInterval = siteInterval;
@@ -150,12 +140,11 @@ namespace Barotrauma
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            if (loaded != null)
-            {
-                loaded.Unload();
-            }
-
+            if (loaded != null) loaded.Unload();
+            
             loaded = this;
+
+            renderer = new LevelRenderer(this);
 
             Voronoi voronoi = new Voronoi(1.0);
 
@@ -391,7 +380,10 @@ namespace Barotrauma
                 endPosition = temp;
             }
 
+            Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
+            Debug.WriteLine("Seed: "+seed);
+            Debug.WriteLine("**********************************************************************************");
         }
 
         private List<VoronoiCell> GeneratePath(List<Vector2> points, List<VoronoiCell> cells, Microsoft.Xna.Framework.Rectangle limits, float minWidth, float wanderAmount = 0.3f, bool mirror=false, bool placeWaypoints=false)
@@ -821,6 +813,15 @@ namespace Barotrauma
             }
         }
 
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            renderer.Draw(spriteBatch);
+        }
+
+        public void Render(GraphicsDevice graphicsDevice, Camera cam)
+        {
+            renderer.Render(graphicsDevice, cam, vertices);
+        }
 
 
         public void DebugCheckPos()
@@ -841,26 +842,6 @@ namespace Barotrauma
             System.Diagnostics.Debug.WriteLine("pos: " + Position);
         }
         
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            Vector2 pos = endPosition;            
-            pos.Y = -pos.Y - Position.Y;
-
-            if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y-512) return;
-
-            pos.X = GameMain.GameScreen.Cam.WorldView.X-512.0f;
-            //pos.X += Position.X % 512;
-
-            int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width/512.0f + 2.0f)*512.0f);
-
-            spriteBatch.Draw(shaftTexture,
-                new Rectangle((int)(MathUtils.Round(pos.X, 512.0f) + Position.X % 512) , (int)pos.Y, width, 512),
-                new Rectangle(0, 0, width, 256),
-                Color.White, 0.0f,
-                Vector2.Zero,
-                SpriteEffects.None, 0.0f);
-        }
-
         public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)
         {
             int gridPosX = (int)Math.Floor(pos.X / GridCellWidth);
@@ -907,7 +888,6 @@ namespace Barotrauma
 
         public List<Vector2[]> GetCellEdges(Vector2 refPos, int searchDepth = 2, bool onlySolid = true)
         {
-
             int gridPosX = (int)Math.Floor(refPos.X / GridCellWidth);
             int gridPosY = (int)Math.Floor(refPos.Y / GridCellWidth);
 
@@ -928,6 +908,7 @@ namespace Barotrauma
                         for (int i = 0; i < cell.edges.Count; i++)
                         {
                             if (onlySolid && !cell.edges[i].isSolid) continue;
+
                             Vector2 start = cell.edges[i].point1 + Position;
                             start.Y = -start.Y;
 
@@ -949,13 +930,14 @@ namespace Barotrauma
 
                     foreach (VoronoiCell cell in wrappingWalls[side, n].Cells)
                     {
+                        Vector2 offset = wrappingWalls[side, n].Offset + Position;
                         for (int i = 0; i < cell.edges.Count; i++)
                         {
                             if (onlySolid && !cell.edges[i].isSolid) continue;
-                            Vector2 start = cell.edges[i].point1 + Position;
+                            Vector2 start = cell.edges[i].point1 + offset;
                             start.Y = -start.Y;
 
-                            Vector2 end = cell.edges[i].point2 + Position;
+                            Vector2 end = cell.edges[i].point2 + offset;
                             end.Y = -end.Y;
 
                             edges.Add(new Vector2[] { start, end });
@@ -967,51 +949,9 @@ namespace Barotrauma
                 return edges;
         }
 
-        public void Render(GraphicsDevice graphicsDevice, Camera cam)
-        {
-            if (vertices == null) return;
-            if (vertices.Length <= 0) return;
-
-            basicEffect.World = Matrix.CreateTranslation(new Vector3(Position, 0.0f)) * cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-            
-            basicEffect.CurrentTechnique.Passes[0].Apply();
-
-            graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
-
-            graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, (int)Math.Floor(vertices.Length / 3.0f));
-
-
-            for (int side = 0; side < 2; side++)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    basicEffect.World = Matrix.CreateTranslation(new Vector3(Position + wrappingWalls[side, i].Offset, 0.0f)) * cam.ShaderTransform
-                        * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-
-                    basicEffect.CurrentTechnique.Passes[0].Apply();
-
-                    graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList,
-                        wrappingWalls[side, i].Vertices, 0, (int)Math.Floor(wrappingWalls[side, i].Vertices.Length / 3.0f));
-
-                }
-            }
-        }
-
         private void Unload()
         {
-            //position = Vector2.Zero;
-
-            //foreach (VoronoiCell cell in cells)
-            //{
-            //    //foreach (Body b in cell.bodies)
-            //    //{
-            //        Game1.world.RemoveBody(cell.body);
-            //    //}
-            //}
-
-
-            //bodies = null;
+            renderer = null;
 
             vertices = null;
 

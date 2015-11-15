@@ -6,12 +6,12 @@ namespace Barotrauma
 {
     class SteeringManager
     {
-        private const float CircleDistance = 2.5f;
-        private const float CircleRadius = 0.3f;
+        protected const float CircleDistance = 2.5f;
+        protected const float CircleRadius = 0.3f;
 
-        private const float RayCastInterval = 0.5f;
+        protected const float RayCastInterval = 0.5f;
 
-        private ISteerable host;
+        protected ISteerable host;
 
         private Vector2 steering;
 
@@ -50,7 +50,7 @@ namespace Barotrauma
             steering += DoSteeringAvoid(deltaTime, speed);
         }
 
-        public void Update(float speed = 1.0f)
+        public virtual void Update(float speed = 1.0f)
         {
             float steeringSpeed = steering.Length();
             if (steeringSpeed>speed)
@@ -61,7 +61,7 @@ namespace Barotrauma
             host.Steering = steering;
         }
 
-        private Vector2 DoSteeringSeek(Vector2 target, float speed = 1.0f)
+        protected virtual Vector2 DoSteeringSeek(Vector2 target, float speed = 1.0f)
         {
             Vector2 targetVel = target - host.SimPosition;
 
@@ -81,7 +81,7 @@ namespace Barotrauma
             return newSteering;
         }
 
-        private Vector2 DoSteeringWander(float speed = 1.0f)
+        protected virtual Vector2 DoSteeringWander(float speed = 1.0f)
         {
             Vector2 circleCenter = (host.Velocity == Vector2.Zero) ? new Vector2(speed, 0.0f) : host.Velocity;
             circleCenter = Vector2.Normalize(circleCenter) * CircleDistance;
@@ -105,7 +105,7 @@ namespace Barotrauma
             return newSteering;
         }
 
-        private Vector2 DoSteeringAvoid(float deltaTime, float speed = 1.0f)
+        protected virtual Vector2 DoSteeringAvoid(float deltaTime, float speed = 1.0f)
         {
             if (steering == Vector2.Zero || host.Steering == Vector2.Zero) return Vector2.Zero;
 
