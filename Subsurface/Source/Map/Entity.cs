@@ -15,7 +15,7 @@ namespace Barotrauma
         protected AITarget aiTarget;
         //protected float soundRange;
         //protected float sightRange;
-        
+                
         public ushort ID
         {
             get { return id; }

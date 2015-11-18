@@ -594,7 +594,7 @@ namespace Barotrauma
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;

@@ -33,6 +33,8 @@ namespace Barotrauma.Particles
         public readonly bool DeleteOnCollision;
         public readonly bool CollidesWithWalls;
 
+        public readonly float Restitution;
+
         public readonly Vector2 VelocityChange;
 
         public readonly DrawTargetType DrawTarget;
@@ -86,6 +88,8 @@ namespace Barotrauma.Particles
                 SizeChangeMin = ToolBox.GetAttributeVector2(element, "sizechange", Vector2.Zero);
                 SizeChangeMax = SizeChangeMin;
             }
+
+            Restitution = ToolBox.GetAttributeFloat(element, "restitution", 0.5f);
 
             switch (ToolBox.GetAttributeString(element, "blendstate", "alphablend"))
             {

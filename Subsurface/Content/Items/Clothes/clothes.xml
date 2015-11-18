@@ -85,9 +85,10 @@
   <Item
     name="Orange Jumpsuit"
     pickdistance="150"
-    tags="smallitem">
+    tags="smallitem"
+    fireproof="true">
 
-    <Sprite texture = "engigear.png" sourcerect="0,52,50,26" depth="0.6"/>
+    <Sprite texture = "engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
 
     <Body width="50" height="17"/>
 
@@ -102,8 +103,31 @@
       <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>      
     </Wearable>
 
-    <ItemContainer containableitems="smallitem" capacity="5"/>
+    <ItemContainer containable="smallitem" capacity="5"/>
   </Item>
 
+  <Item
+    name="Blue Jumpsuit"
+    pickdistance="150"
+    tags="smallitem"
+    fireproof="true">
+
+    <Sprite texture = "engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
+
+    <Body width="50" height="17"/>
+
+    <Wearable slots="Any,Torso,Legs">
+      <sprite texture="engigear.png" limb="Torso" sourcerect="0,77,32,51" origin="0.5,0.48" depth="0.01"/>
+
+      <sprite texture="engigear.png" limb="Waist" sourcerect="81,77,30,26" origin="0.5,0.45" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="RightThigh" sourcerect="53,77,27,49" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="LeftThigh" sourcerect="53,77,27,49" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+
+      <sprite texture="engigear.png" limb="RightLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
+    </Wearable>
+
+    <ItemContainer containable="smallitem" capacity="5"/>
+  </Item>
 </Items>
 

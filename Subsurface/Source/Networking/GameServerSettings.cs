@@ -34,6 +34,8 @@ namespace Barotrauma.Networking
 
         private bool autoRestart;
 
+        private bool allowSpectating = true;
+
         public bool AutoRestart
         {
             get { return (ConnectedClients.Count == 0) ? false : autoRestart; }
@@ -65,6 +67,11 @@ namespace Barotrauma.Networking
             get { return banList; }
         }
 
+        public bool AllowSpectating
+        {
+            get { return allowSpectating; }
+        }
+
         private void CreateSettingsFrame()
         {
             settingsFrame = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsHeight), Color.Black*0.5f);
@@ -93,6 +100,13 @@ namespace Barotrauma.Networking
                 selectionTick.OnSelected = SwitchModeSelection;
                 selectionTick.UserData = (SelectionMode)i;
             }
+
+
+            var allowSpecBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
+            allowSpecBox.Selected = true;
+            allowSpecBox.OnSelected = ToggleAllowSpectating;
+            
+
 
             var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
             closeButton.OnClicked = ToggleSettingsFrame;
@@ -141,6 +155,12 @@ namespace Barotrauma.Networking
         private bool ToggleRandomizeSeed(GUITickBox tickBox)
         {
             randomizeSeed = tickBox.Selected;
+            return true;
+        }
+
+        private bool ToggleAllowSpectating(GUITickBox tickBox)
+        {
+            allowSpectating = tickBox.Selected;
             return true;
         }
 

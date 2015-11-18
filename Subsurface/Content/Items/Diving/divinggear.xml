@@ -45,13 +45,16 @@
   <Item
     name="Diving Suit"
     pickdistance="200"
-    price="200">
+    price="200"
+    fireproof="true">
 
     <Sprite texture ="DivingSuit.png" sourcerect="82,0,46,128" depth="0.55"/>
 
     <Body width="37" height="113" density="5"/>
 
     <Wearable slots="Head,Torso,Legs" armorvalue="10.0">
+      <sprite texture="DivingSuit.png" limb="Head" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
+
       <sprite texture="DivingSuit.png" limb="Torso" sourcerect="40,0,42,97" origin="0.5,0.55" depthlimb="Head" hidelimb="true"/>
 
       <sprite texture="DivingSuit.png" limb="RightHand" sourcerect="0,78,15,50" origin="0.45,0.4" hidelimb="true"/>
@@ -89,7 +92,7 @@
 
     <Propulsion force="80" usablein="water" particles="bubbles">
       <RequiredItems name="Battery Cell" type="Contained" msg="Battery Cell required"/>
-      <StatusEffect type="OnUse" target="Contained" targetnames="Battery Cell" Condition="-0.7"/>
+      <StatusEffect type="OnUse" target="Contained" targetnames="Battery Cell" Condition="-1.0"/>
       <sound file="scooter.ogg" type="OnUse" range="500.0" loop="true"/>      
     </Propulsion>
 

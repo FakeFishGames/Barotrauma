@@ -102,6 +102,28 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
+  <Item
+    name="Fire Extinguisher"
+    Tags="smallitem"
+    pickdistance="200"
+    price="100">
+
+    <Sprite texture ="extinguisher.png"  depth="0.5" sourcerect="0,0,34,64" origin="0.4,0.5"/>
+
+    <Body radius="10" height="45" density="5"/>
+
+    <Holdable slots="Any,BothHands" controlpose="false"
+              aimpos="40,-20" handle1="-2,30"/>
+
+    <RepairTool extinquishamount="30.0" range="300" barrelpos="21,25" particles="extinguisher" particlespeed="650.0">
+      <StatusEffect type="OnUse" target="This" Condition="-2.0"/>
+      <sound file="extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
+    </RepairTool>
+
+    <Propulsion force="-20" usablein="water" particles="bubbles"/>
+
+  </Item>
 
   <Item
     name="Screwdriver"
@@ -132,7 +154,6 @@
           aimpos="50,0" handle1="0,0" holdangle="30" reload="1.0">
       <Attack damage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
-
   </Item>
 
 </Items>

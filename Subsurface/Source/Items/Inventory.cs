@@ -119,7 +119,7 @@ namespace Barotrauma
             if (item.inventory != null && removeItem)
             {
                 item.Drop(null, false);
-                item.inventory.RemoveItem(item);
+                if (item.inventory != null) item.inventory.RemoveItem(item);
             }
 
             items[i] = item;
@@ -139,6 +139,7 @@ namespace Barotrauma
             {
                 if (items[n] != item) continue;
                 items[n] = null;
+                item.inventory = null;
             }
         }
 

@@ -22,6 +22,7 @@
     <Item name="ID Card"/>
     <Item name="Wrench"/>
     <Item name="Screwdriver"/>
+    <Item name="Orange Jumpsuit" equip="true"/>
   </Job>
 
   <Job name="Mechanic" description="Mechanics have high construction and mechanic skills. They are skilled at using tools such as plasma cutters and welders, and are usually the only ones who can fix broken mechanical devices." minnumber="1">
@@ -33,6 +34,7 @@
     <Item name="ID Card"/>
     <Item name="Wrench"/>
     <Item name="Screwdriver"/>
+    <Item name="Blue Jumpsuit" equip="true"/>
   </Job>
 
   <Job name="Security Officer" description="Security officers are are responsible for keeping the submarine safe from potential attackers. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2">

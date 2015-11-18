@@ -284,7 +284,7 @@ namespace Barotrauma
         }
 
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) return;
 
