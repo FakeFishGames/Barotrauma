@@ -49,12 +49,18 @@ namespace Barotrauma.Particles
 
         public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed)
         {
-            return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * speed, angle);
+            return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)-Math.Sin(angle)) * speed, angle);
         }
 
         public Particle CreateParticle(string prefabName, Vector2 position, Vector2 speed, float rotation=0.0f, Hull hullGuess = null)
         {
             ParticlePrefab prefab = FindPrefab(prefabName);
+
+            if (prefab == null)
+            {
+                DebugConsole.ThrowError("Particle prefab ''" + prefabName+"'' not found!");
+                return null;
+            }
 
             return CreateParticle(prefab, position, speed, rotation, hullGuess);
         }

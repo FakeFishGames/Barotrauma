@@ -172,7 +172,7 @@ namespace Barotrauma
             mapEntityList.Insert(i, this);
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch, bool editing) {}
+        public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back=true) {}
 
         public override void Remove()
         {

@@ -50,7 +50,7 @@ namespace Barotrauma
 
         public readonly float impactTolerance;
 
-        private float damage;
+        private float damage, burnt;
 
         private readonly Vector2 armorSector;
         private readonly float armorValue;
@@ -136,6 +136,12 @@ namespace Barotrauma
         public Vector2 StepOffset
         {
             get { return stepOffset; }
+        }
+
+        public float Burnt
+        {
+            get { return burnt; }
+            set { burnt = MathHelper.Clamp(value,0.0f,100.0f); }
         }
 
         //public float Damage
@@ -381,6 +387,8 @@ namespace Barotrauma
 
             if (!character.IsDead) damage = Math.Max(0.0f, damage-deltaTime*0.1f);
 
+            if (burnt > 0.0f) Burnt -= deltaTime;
+
             if (LinearVelocity.X>100.0f)
             {
                 //DebugConsole.ThrowError("CHARACTER EXPLODED");
@@ -435,7 +443,8 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            Color color = Color.White;// new Color(1.0f, 1.0f - damage / maxHealth, 1.0f - damage / maxHealth);
+            float brightness = 1.0f - (burnt / 100.0f) * 0.5f;
+            Color color = new Color(brightness, brightness, brightness);
 
             body.Dir = Dir;
 

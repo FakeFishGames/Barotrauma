@@ -21,8 +21,6 @@ namespace Barotrauma.Items.Components
 
         private string particles;
 
-        float structureFixAmount, limbFixAmount;
-
         [HasDefaultValue(0.0f, false)]
         public float Range
         {
@@ -33,15 +31,18 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue(0.0f, false)]
         public float StructureFixAmount
         {
-            get { return structureFixAmount; }
-            set { structureFixAmount = value; }
+            get; set;
         }
 
         [HasDefaultValue(0.0f, false)]
         public float LimbFixAmount
         {
-            get { return limbFixAmount; }
-            set { limbFixAmount = value; }
+            get; set;
+        }
+        [HasDefaultValue(0.0f, false)]
+        public float ExtinquishAmount
+        {
+            get; set;
         }
 
         [HasDefaultValue("", false)]
@@ -49,6 +50,12 @@ namespace Barotrauma.Items.Components
         {
             get { return particles; }
             set { particles = value; }
+        }
+
+        [HasDefaultValue(0.0f, false)]
+        public float ParticleSpeed
+        {
+            get; set;
         }
 
         [HasDefaultValue("0.0,0.0", false)]
@@ -130,8 +137,17 @@ namespace Barotrauma.Items.Components
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
 
+
+
             Body targetBody = Submarine.PickBody(TransformedBarrelPos, targetPosition, ignoredBodies);
             pickedPosition = Submarine.LastPickedPosition;
+
+            if (ExtinquishAmount > 0.0f)
+            {
+                Vector2 displayPos = ConvertUnits.ToDisplayUnits(TransformedBarrelPos + (targetPosition-TransformedBarrelPos)*Submarine.LastPickedFraction*0.9f);
+                Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
+                if (hull != null) hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
+            }
 
             if (targetBody == null || targetBody.UserData == null) return true;
 
@@ -147,7 +163,7 @@ namespace Barotrauma.Items.Components
 
                 targetStructure.HighLightSection(sectionIndex);
 
-                targetStructure.AddDamage(sectionIndex, -structureFixAmount*degreeOfSuccess);
+                targetStructure.AddDamage(sectionIndex, -StructureFixAmount*degreeOfSuccess);
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
@@ -155,7 +171,7 @@ namespace Barotrauma.Items.Components
                 if (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f)
                 {
                     targetStructure.HighLightSection(sectionIndex + 1);
-                    targetStructure.AddDamage(sectionIndex + 1, -structureFixAmount * degreeOfSuccess);
+                    targetStructure.AddDamage(sectionIndex + 1, -StructureFixAmount * degreeOfSuccess);
                 }
 
             }
@@ -163,7 +179,7 @@ namespace Barotrauma.Items.Components
             {
                 if (character.IsKeyDown(InputType.Aim))
                 {
-                    targetLimb.character.Health += limbFixAmount * degreeOfSuccess;
+                    targetLimb.character.Health += LimbFixAmount * degreeOfSuccess;
                     //isActive = true;
                 }
             }
@@ -180,7 +196,6 @@ namespace Barotrauma.Items.Components
                 }
                 //ApplyStatusEffects(ActionType.OnUse, 1.0f, null, targ);
             }
-
                 //if (Character.SecondaryKeyDown.State)
                 //{
                 //    IPropertyObject propertyObject = targetBody.UserData as IPropertyObject;
@@ -210,7 +225,7 @@ namespace Barotrauma.Items.Components
             if (!string.IsNullOrWhiteSpace(particles))
             {
                 GameMain.ParticleManager.CreateParticle(particles, ConvertUnits.ToDisplayUnits(TransformedBarrelPos), 
-                    -item.body.Rotation + ((item.body.Dir>0.0f) ? 0.0f : MathHelper.Pi), 0.0f);
+                    -item.body.Rotation + ((item.body.Dir>0.0f) ? 0.0f : MathHelper.Pi), ParticleSpeed);
             }
             
             //Vector2 startPos = ConvertUnits.ToDisplayUnits(item.body.Position);

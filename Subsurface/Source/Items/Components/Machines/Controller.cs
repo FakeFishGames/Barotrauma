@@ -182,7 +182,7 @@ namespace Barotrauma.Items.Components
                 IsActive = false;
                 if (activator != null) activator.AnimController.Anim = AnimController.Animation.None;
 
-                return false;
+                return true;
             }
             else
             {

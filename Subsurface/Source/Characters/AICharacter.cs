@@ -111,6 +111,8 @@ namespace Barotrauma
                     aiController.FillNetworkData(message);
                     return true;
                 case NetworkEventType.EntityUpdate:
+                    if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
+
                     message.Write((float)NetTime.Now);
 
                     message.Write(AnimController.TargetDir == Direction.Right);

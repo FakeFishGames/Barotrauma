@@ -362,6 +362,7 @@ namespace Barotrauma.Networking
                             outmsg.Write(sender.ID);
                             outmsg.Write(gameStarted);
                             outmsg.Write(gameStarted && sender.Character!=null);
+                            outmsg.Write(allowSpectating);
 
                             //notify the client about other clients already logged in
                             outmsg.Write((characterInfo == null) ? ConnectedClients.Count - 1 : ConnectedClients.Count);
@@ -461,12 +462,13 @@ namespace Barotrauma.Networking
                             Voting.RegisterVote(inc, ConnectedClients);
                             break;
                         case (byte)PacketTypes.SpectateRequest:
-                            if (gameStarted)
+                            if (gameStarted && allowSpectating)
                             {
                                 var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
                                 server.SendMessage(startMessage, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered);
 
                                 dataSender.Spectating = true;
+                                CoroutineManager.StartCoroutine(SyncSpectator(dataSender));
                             }
                             break;
                     }
@@ -605,11 +607,14 @@ namespace Barotrauma.Networking
             
         }
 
-        private void SendNetworkEvents()
+        private void SendNetworkEvents(List<Client> recipients = null)
         {
             if (NetworkEvent.Events.Count == 0) return;
 
-            List<Client> recipients = ConnectedClients.FindAll(c => c.Character != null || c.Spectating);
+            if (recipients == null)
+            {
+                recipients = ConnectedClients.FindAll(c => c.Character != null || c.Spectating);
+            }
 
             if (recipients.Count == 0) return;
 
@@ -633,6 +638,41 @@ namespace Barotrauma.Networking
             }
 
             NetworkEvent.Events.Clear();
+        }
+
+        private IEnumerable<object> SyncSpectator(Client sender)
+        {
+            yield return new WaitForSeconds(3.0f);
+
+            var existingEvents = NetworkEvent.Events;
+            NetworkEvent.Events.Clear();
+            foreach (Hull hull in Hull.hullList)
+            {
+                if (!hull.FireSources.Any() && hull.Volume < 0.01f) continue;
+                new NetworkEvent(NetworkEventType.ImportantEntityUpdate, hull.ID, false);
+            }
+
+            SendNetworkEvents(new List<Client>() { sender });
+            
+            foreach (Character c in Character.CharacterList)
+            {
+                new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
+                if (c.Inventory != null) new NetworkEvent(NetworkEventType.InventoryUpdate, c.ID, false);
+                if (c.IsDead) new NetworkEvent(NetworkEventType.KillCharacter, c.ID, false);
+            }
+
+            SendNetworkEvents(new List<Client>() { sender });
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.body == null || item.body.Enabled == false) continue;
+                new NetworkEvent(NetworkEventType.DropItem, item.ID, false);
+            }
+
+            SendNetworkEvents(new List<Client>() { sender });
+
+
+            yield return CoroutineStatus.Success;
         }
 
 

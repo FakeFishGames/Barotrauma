@@ -207,12 +207,16 @@ namespace Barotrauma.Networking
                             {
                                 myID = inc.ReadInt32();
                                 gameStarted = inc.ReadBoolean();
-                                if (gameStarted && Screen.Selected != GameMain.GameScreen)
-                                {
-                                    new GUIMessageBox("Please wait", "A round is already running. You will have to wait for a new round to start.");
-                                }
-
                                 bool hasCharacter = inc.ReadBoolean();
+                                bool allowSpectating = inc.ReadBoolean();
+
+                                if (gameStarted && Screen.Selected != GameMain.GameScreen)
+                                {                           
+                                    new GUIMessageBox("Please wait",
+                                        (allowSpectating) ?
+                                        "A round is already running, but you can spectate the game while waiting for a new one to start." :
+                                        "A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.");
+                                }
 
                                 if (gameStarted && !hasCharacter && myCharacter!=null)
                                 {
@@ -220,6 +224,7 @@ namespace Barotrauma.Networking
 
                                     new GUIMessageBox("Connection timed out", "You were disconnected for too long and your Character was deleted. Please wait for another round to start.");
                                 }
+
 
                                 GameMain.NetLobbyScreen.ClearPlayers();
 
@@ -685,6 +690,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)PacketTypes.SpectateRequest);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+
+            if (button != null) button.Enabled = false;
 
             return false;
         }

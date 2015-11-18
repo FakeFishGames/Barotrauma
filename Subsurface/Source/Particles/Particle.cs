@@ -68,6 +68,7 @@ namespace Barotrauma.Particles
         
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null)
         {
+
             this.prefab = prefab;
 
             spriteIndex = Rand.Int(prefab.Sprites.Count);
@@ -77,7 +78,8 @@ namespace Barotrauma.Particles
 
             drawPosition = position;
 
-            velocity = speed;
+            
+            velocity = MathUtils.IsValid(speed) ? speed : Vector2.Zero;
 
             this.rotation = rotation + Rand.Range(prefab.StartRotationMin, prefab.StartRotationMax);    
             prevRotation = rotation;
@@ -172,12 +174,12 @@ namespace Barotrauma.Particles
                         if (!gap.isHorizontal)
                         {
                             if (gap.Rect.X > position.X || gap.Rect.Right < position.X) continue;
-                            if (Math.Sign(velocity.Y) != Math.Sign(gap.Rect.Y - position.Y)) continue;
+                            if (Math.Sign(velocity.Y) != Math.Sign(gap.Rect.Y - (currentHull.Rect.Y-currentHull.Rect.Height))) continue;
                         }
                         else
                         {
                             if (gap.Rect.Y < position.Y || gap.Rect.Y - gap.Rect.Height > position.Y) continue;
-                            if (Math.Sign(velocity.X) != Math.Sign(gap.Rect.X - position.X)) continue;
+                            if (Math.Sign(velocity.X) != Math.Sign(gap.Rect.Center.X - currentHull.Rect.Center.X)) continue;
                         }
 
                         //Rectangle enlargedRect = new Rectangle(gap.Rect.X - 10, gap.Rect.Y + 10, gap.Rect.Width + 20, gap.Rect.Height + 20);
@@ -221,9 +223,7 @@ namespace Barotrauma.Particles
         }
 
         private void OnWallCollision(Hull prevHull, Vector2 position)
-        {
-            float restitution = 0.5f;
-            
+        {            
             if (position.Y < prevHull.Rect.Y - prevHull.Rect.Height)
             {
                 position.Y = prevHull.Rect.Y - prevHull.Rect.Height + 1.0f;
@@ -247,7 +247,7 @@ namespace Barotrauma.Particles
                 velocity.X = -velocity.X;
             }
 
-            velocity *= restitution;
+            velocity *= prefab.Restitution;
         }
         
         public void Draw(SpriteBatch spriteBatch)

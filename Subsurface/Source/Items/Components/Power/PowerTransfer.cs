@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
         static float fullPower;
         static float fullLoad;
 
+        const float FireProbability = 0.15f;
+
         //affects how fast changes in power/load are carried over the grid
         static float inertia = 5.0f;
 
@@ -71,7 +73,10 @@ namespace Barotrauma.Items.Components
                             if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                         }
 
-                        new FireSource(pt.item.Position);
+                        if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
+                        {
+                            new FireSource(pt.item.Position);
+                        }
                     }
                 }
                 

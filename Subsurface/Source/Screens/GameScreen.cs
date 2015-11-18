@@ -255,7 +255,13 @@ namespace Barotrauma
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, true, Particles.ParticleBlendState.AlphaBlend);
+            spriteBatch.End();
 
+            spriteBatch.Begin(SpriteSortMode.Immediate,
+                BlendState.Additive,
+                null, DepthStencilState.DepthRead, null, null,
+                cam.Transform);
+            GameMain.ParticleManager.Draw(spriteBatch, true, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
 
             //----------------------------------------------------------------------------------------

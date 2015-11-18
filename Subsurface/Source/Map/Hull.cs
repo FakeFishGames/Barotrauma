@@ -212,9 +212,13 @@ namespace Barotrauma
             hullList.Remove(this);
         }
 
-        public void AddFireSource(FireSource fireSource)
+        public void AddFireSource(FireSource fireSource, bool createNetworkEvent = true)
         {
             fireSources.Add(fireSource);
+            if (createNetworkEvent)
+            {
+                new Networking.NetworkEvent(Networking.NetworkEventType.ImportantEntityUpdate, this.ID, false);
+            }
         }
 
         public override void Update(Camera cam, float deltaTime)
@@ -327,12 +331,21 @@ namespace Barotrauma
             }
         }
 
+        public void Extinquish(float deltaTime, float amount, Vector2 position)
+        {
+            for (int i = fireSources.Count - 1; i >= 0; i-- )
+            {
+                fireSources[i].Extinquish(deltaTime, amount, position);
+            }
+        }
+
         public void RemoveFire(FireSource fire)
         {
             fireSources.Remove(fire);
+            new Networking.NetworkEvent(Networking.NetworkEventType.ImportantEntityUpdate, this.ID, false);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!editing && !GameMain.DebugDraw) return;
 
@@ -533,6 +546,16 @@ namespace Barotrauma
         {            
             message.WriteRangedSingle(MathHelper.Clamp(volume/FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 6);
 
+            message.Write((byte)fireSources.Count, 4);
+            foreach (FireSource fireSource in fireSources)
+            {
+                Vector2 normalizedPos = new Vector2(
+                    (fireSource.Position.X - rect.X) / rect.Width, 
+                    (fireSource.Position.Y - (rect.Y - rect.Height))/rect.Height);
+                message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 4);
+                message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 4);
+            }
+
             return true;
         }
 
@@ -554,6 +577,44 @@ namespace Barotrauma
             }
 
             Volume = newVolume;
+
+            int fireSourceCount = message.ReadByte(4);
+
+            List<FireSource> newFireSources = new List<FireSource>();
+            for (int i = 0; i < fireSourceCount; i++)
+            {
+                Vector2 pos = Vector2.Zero;
+                pos.X = message.ReadRangedSingle(0.0f, 1.0f, 4);
+                pos.Y = message.ReadRangedSingle(0.0f, 1.0f, 4);
+                if (!MathUtils.IsValid(pos)) continue;
+
+                pos.X = MathHelper.Clamp(pos.X, 0.05f, 0.95f);
+                pos.Y = MathHelper.Clamp(pos.Y, 0.05f, 0.95f);
+
+                pos = new Vector2(rect.X + rect.Width * pos.X, rect.Y - rect.Height + (rect.Height * pos.Y));
+
+                var existingFire = fireSources.Find(fs => fs.Contains(pos));
+                if (existingFire!=null)
+                {
+                    newFireSources.Add(existingFire);
+                    existingFire.Position = pos;
+                }
+                else
+                {
+                    var newFire = new FireSource(pos, this, true);
+
+                    //ignore if the fire wasn't added to this room (invalid position)?
+                    if (!fireSources.Contains(newFire)) continue;
+                    newFireSources.Add(newFire);
+                }
+            }
+
+            var toBeRemoved = fireSources.FindAll(fs => !newFireSources.Contains(fs));
+            for (int i = toBeRemoved.Count - 1; i >= 0; i--)
+            {
+                toBeRemoved[i].Remove(true);
+            }
+            fireSources = newFireSources;
         }
     
 

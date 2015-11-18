@@ -272,6 +272,7 @@ namespace Barotrauma
             DeathMsg[(int)CauseOfDeath.Drowning] = "drowned";
             DeathMsg[(int)CauseOfDeath.Suffocation] = "suffocated";
             DeathMsg[(int)CauseOfDeath.Pressure] = "been crushed by water pressure";
+            DeathMsg[(int)CauseOfDeath.Burn] = "burnt to death";
         }
 
         public Character(string file) : this(file, Vector2.Zero, null)
@@ -1030,6 +1031,8 @@ namespace Barotrauma
 
             AttackResult attackResult = closestLimb.AddDamage(simPosition, damageType, amount, bleedingAmount, playSound);
             health -= attackResult.Damage;
+            if (health <= 0.0f && damageType == DamageType.Burn) Kill(CauseOfDeath.Burn);
+
             bleeding += attackResult.Bleeding;
 
             return attackResult;
