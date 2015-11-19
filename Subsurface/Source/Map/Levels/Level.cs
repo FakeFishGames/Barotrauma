@@ -962,6 +962,8 @@ namespace Barotrauma
             bodies.Clear();
             bodies = null;
 
+            loaded = null;
+
             //vertexBuffer.Dispose();
             //vertexBuffer = null;
         }

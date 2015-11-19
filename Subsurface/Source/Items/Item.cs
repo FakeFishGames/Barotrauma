@@ -582,11 +582,6 @@ namespace Barotrauma
             if (body.LinearVelocity != Vector2.Zero && body.LinearVelocity.Length() > 1000.0f)
             {
                 body.ResetDynamics();
-                if (body.SimPosition.Length() > 1000.0f)
-                {
-                    Remove();
-                    return;
-                }
             }
             body.ApplyForce(buoyancy - body.LinearVelocity * volume);
                 

@@ -394,7 +394,7 @@ namespace Barotrauma
             {
                 for (ushort i = 0; i < Info.PickedItemIDs.Count; i++ )
                 {
-                    if (i == 0) continue;
+                    if (Info.PickedItemIDs[i] == 0) continue;
 
                     Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
                     if (item == null) continue;

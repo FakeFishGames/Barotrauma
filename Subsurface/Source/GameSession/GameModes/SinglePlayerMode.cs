@@ -143,11 +143,13 @@ namespace Barotrauma
             if (Level.Loaded.AtEndPosition)
             {
                 endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;
+                endShiftButton.Font = GUI.SmallFont;
                 endShiftButton.Draw(spriteBatch);
             }
             else if (Level.Loaded.AtStartPosition)
             {
                 endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
+                endShiftButton.Font = GUI.SmallFont;
                 endShiftButton.Draw(spriteBatch);
             }
 

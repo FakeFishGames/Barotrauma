@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Barotrauma.Lights;
 using System;
@@ -79,17 +80,7 @@ namespace Barotrauma
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
 
-            Hull hull = Hull.FindHull(displayPosition);
-
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.body == null || item.CurrentHull != hull) continue;
-
-                Vector2 dir = (item.SimPosition == simPosition) ? Rand.Vector(1.0f) : Vector2.Normalize(item.SimPosition - simPosition);
-                float distFactor = 1.0f - Vector2.Distance(item.SimPosition, simPosition) / attack.Range;
-
-                item.body.ApplyLinearImpulse(dir * distFactor * force);
-            }
+            //Hull hull = Hull.FindHull(displayPosition);
 
             foreach (Character c in Character.CharacterList)
             {

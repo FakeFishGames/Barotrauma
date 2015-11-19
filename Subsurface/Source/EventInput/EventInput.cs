@@ -165,9 +165,16 @@ namespace EventInput
 			(int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
 			hIMC = ImmGetContext(window.Handle);
+#elif LINUX
+            window.TextInput += ReceiveInput;
 #endif
 
             initialized = true;
+        }
+
+        private static void ReceiveInput(object sender, TextInputEventArgs e)
+        {
+            OnCharEntered(e.Character);
         }
 
         public static void OnCharEntered(char character)
