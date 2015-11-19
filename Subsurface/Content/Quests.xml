@@ -9,7 +9,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     itemname="Skyholder Artifact">
-    <message header="Artifact collected" message="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
+    <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageQuest>
 
   <SalvageQuest
@@ -21,7 +21,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     itemname="Thermal Artifact">
-    <message header="Artifact collected" message="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
+    <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageQuest>
 
   <MonsterQuest
@@ -32,7 +32,7 @@
     radarlabel="Moloch"
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/Moloch/moloch.xml">
-    <message header="Target terminated" message="The moloch is dead. Navigate the submarine out of the cavern to claim the reward."/>
+    <message header="Target terminated" text="The moloch is dead. Navigate the submarine out of the cavern to claim the reward."/>
   </MonsterQuest>
 
   <MonsterQuest
@@ -43,7 +43,7 @@
     radarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/TigerThresher/tigerthresher.xml">
-    <message header="Target terminated" message="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
+    <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
   </MonsterQuest>
 
   <MonsterQuest

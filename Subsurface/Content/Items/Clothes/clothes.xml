@@ -103,7 +103,9 @@
       <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>      
     </Wearable>
 
-    <ItemContainer containable="smallitem" capacity="5"/>
+    <ItemContainer capacity="5">
+      <Containable name="smallitem"/>
+    </ItemContainer>
   </Item>
 
   <Item
@@ -127,7 +129,9 @@
       <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
     </Wearable>
 
-    <ItemContainer containable="smallitem" capacity="5"/>
+    <ItemContainer capacity="5">
+      <Containable name="smallitem"/>
+    </ItemContainer>
   </Item>
 </Items>
 
