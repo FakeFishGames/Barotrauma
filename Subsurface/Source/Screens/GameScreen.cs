@@ -174,7 +174,7 @@ namespace Barotrauma
             graphics.SetRenderTarget(renderTarget);
             graphics.Clear(new Color(11, 18, 26, 255));
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
 
             Vector2 backgroundPos = cam.Position;
             if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
@@ -203,8 +203,8 @@ namespace Barotrauma
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                SamplerState.LinearWrap, null, null, null,
+                BlendState.NonPremultiplied,
+                SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);
 
             BackgroundSpriteManager.Draw(spriteBatch);
@@ -237,29 +237,27 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-
             GameMain.LightManager.DrawLightMap(spriteBatch, cam);
 
             //----------------------------------------------------------------------------------------
             //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
-
             graphics.SetRenderTarget(renderTargetWater);
 
-            spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.AlphaBlend);
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.Opaque);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), new Color(0.75f, 0.8f, 0.9f, 1.0f));
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.AlphaBlend,
-                null, DepthStencilState.DepthRead, null, null,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.NonPremultiplied,
+                null, DepthStencilState.Default, null, null,
                 cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, true, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Immediate,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.Additive,
-                null, DepthStencilState.DepthRead, null, null,
+                null, DepthStencilState.Default, null, null,
                 cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, true, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
@@ -268,19 +266,19 @@ namespace Barotrauma
             //draw the rendertarget and particles that are only supposed to be drawn in air into renderTargetAir
 
             graphics.SetRenderTarget(renderTargetAir);
-            spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.AlphaBlend);
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.Opaque);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.AlphaBlend,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.NonPremultiplied,
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Immediate,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.Additive,
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);

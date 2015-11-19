@@ -10,13 +10,13 @@ namespace Barotrauma
 {
     public class SaveUtil
     {
-        private const string SaveFolder = "Data/Saves/";
+        private static string SaveFolder = "Data"+Path.DirectorySeparatorChar+"Saves";
 
         public delegate void ProgressDelegate(string sMessage);
 
         public static void SaveGame(string fileName)
         {
-            fileName = SaveFolder + fileName;
+            fileName = Path.Combine(SaveFolder, fileName);
 
             string tempPath = Path.Combine(SaveFolder, "temp");
             

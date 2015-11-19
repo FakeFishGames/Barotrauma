@@ -14,7 +14,7 @@ namespace Barotrauma
         public readonly CrewManager CrewManager;
                 
         private GUIComponent infoBox;
-
+        
         public static void StartTutorial()
         {
             Submarine.Load("Content/Map/TutorialSub.sub", "");
@@ -63,6 +63,7 @@ namespace Barotrauma
 
             CrewManager.AddCharacter(character);
 
+            //CoroutineManager.StartCoroutine(QuitChecker());
             CoroutineManager.StartCoroutine(UpdateState());
         }
 
@@ -84,8 +85,9 @@ namespace Barotrauma
             if (infoBox!=null) infoBox.Update(deltaTime);
         }
 
+        
         private IEnumerable<object> UpdateState()
-        {
+        {            
             Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
 
             //spawn some fish next to the player

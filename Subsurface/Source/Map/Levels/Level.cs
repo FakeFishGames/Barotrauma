@@ -815,11 +815,13 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            if (renderer == null) return;
             renderer.Draw(spriteBatch);
         }
 
         public void Render(GraphicsDevice graphicsDevice, Camera cam)
         {
+            if (renderer == null) return;
             renderer.Render(graphicsDevice, cam, vertices);
         }
 

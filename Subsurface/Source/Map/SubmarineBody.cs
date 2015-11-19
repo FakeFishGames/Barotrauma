@@ -129,6 +129,11 @@ namespace Barotrauma
 
         private List<Vector2> GenerateConvexHull()
         {
+            if (!Structure.wallList.Any())
+            {
+                return new List<Vector2>() { new Vector2(-1.0f, 1.0f), new Vector2(1.0f, 1.0f), new Vector2(0.0f, -1.0f) };
+            }
+
             List<Vector2> points = new List<Vector2>();
 
             Vector2 leftMost = Vector2.Zero;

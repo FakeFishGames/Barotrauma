@@ -76,7 +76,7 @@ namespace Barotrauma.Lights
 
             if (!ObstructVision) return;
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
+            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative);
             spriteBatch.Draw(losTexture, Vector2.Zero);
             spriteBatch.End();
 
@@ -128,13 +128,13 @@ namespace Barotrauma.Lights
 
                 //draw the light shape
                 //where Alpha is 0, nothing will be written
-                spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
+                spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
                 light.Draw(spriteBatch);
                 spriteBatch.End();
             }
 
             ClearAlphaToOne(graphics, spriteBatch);
-            spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
 
             foreach (LightSource light in lights)
             {
@@ -161,7 +161,7 @@ namespace Barotrauma.Lights
             graphics.SetRenderTarget(losTexture);
             graphics.Clear(Color.Black);
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, null, null, cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, cam.Transform);
 
             Vector2 diff = lookAtPosition - ViewPos;
             diff.Y = -diff.Y;
@@ -185,7 +185,7 @@ namespace Barotrauma.Lights
 
         private void ClearAlphaToOne(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.WriteToAlpha);
+            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.WriteToAlpha);
             spriteBatch.Draw(alphaClearTexture, new Rectangle(0, 0,graphics.Viewport.Width, graphics.Viewport.Height), Color.White);
             spriteBatch.End();
         }
@@ -195,7 +195,7 @@ namespace Barotrauma.Lights
             if (!LightingEnabled) return;
             
             //multiply scene with lightmap
-            spriteBatch.Begin(SpriteSortMode.Immediate, CustomBlendStates.Multiplicative);
+            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative);
             spriteBatch.Draw(lightMap, Vector2.Zero, Color.White);
             spriteBatch.End();            
         }

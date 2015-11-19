@@ -308,8 +308,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Illegal symbols in filename (../)");
                         return;
                     }
-                    Submarine.SaveCurrent(fileName +".sub");
-                    NewMessage("map saved", Color.Green);
+                    if (Submarine.SaveCurrent(fileName +".sub")) NewMessage("map saved", Color.Green);
                     break;
                 case "loadmap":
                 case "loadsub":

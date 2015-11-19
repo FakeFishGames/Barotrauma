@@ -172,6 +172,7 @@ namespace Barotrauma
             guiRoot.Update(deltaTime);
 
             if (gameMode != null) gameMode.Update(deltaTime);
+            if (Quest != null) Quest.Update(deltaTime);
         }
 
         public void Draw(SpriteBatch spriteBatch)

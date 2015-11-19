@@ -18,7 +18,7 @@ namespace Barotrauma
 
     public enum ActionType
     {
-        OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure, OnBroken, OnFire
+        Always, OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure, OnBroken, OnFire
     }
 
     class Item : MapEntity, IDamageable, IPropertyObject

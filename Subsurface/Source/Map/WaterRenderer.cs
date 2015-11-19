@@ -57,12 +57,12 @@ namespace Barotrauma
 
         public void RenderBack(SpriteBatch spriteBatch, RenderTarget2D texture, float blurAmount = 0.0f)
         {
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.LinearWrap, null, null, waterEffect);
 
             waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
             waterEffect.Parameters["xWavePos"].SetValue(wavePos);
             waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
-            waterEffect.CurrentTechnique.Passes[0].Apply();
+            //waterEffect.CurrentTechnique.Passes[0].Apply();
 
             wavePos.X += 0.0001f;
             wavePos.Y += 0.0001f;
@@ -74,7 +74,6 @@ namespace Barotrauma
 
             spriteBatch.Draw(texture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
 #endif
-
             spriteBatch.End();
         }
 
