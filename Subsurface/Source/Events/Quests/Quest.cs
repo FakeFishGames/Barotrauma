@@ -25,6 +25,9 @@ namespace Barotrauma
 
         protected string radarLabel;
 
+        protected List<string> headers;
+        protected List<string> messages;
+
         private int reward;
 
         public string Name
@@ -69,6 +72,15 @@ namespace Barotrauma
             failureMessage = ToolBox.GetAttributeString(element, "failuremessage", "");
 
             radarLabel = ToolBox.GetAttributeString(element, "radarlabel", "");
+
+            messages = new List<string>();
+            headers = new List<string>();
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLower() != "message") continue;
+                headers.Add(ToolBox.GetAttributeString(subElement, "header", ""));
+                messages.Add(ToolBox.GetAttributeString(subElement, "text", ""));
+            }
         }
 
         public static Quest LoadRandom(Location[] locations, Random rand)
@@ -142,8 +154,17 @@ namespace Barotrauma
             return null;
         }
 
-        public virtual void Start(Level level)
+        public virtual void Start(Level level) { }
+
+        public virtual void Update(float deltaTime) { }
+
+        public void ShowMessage(int index)
         {
+            if (index >= headers.Count && index >= messages.Count) return;
+
+            new GUIMessageBox(
+                index < headers.Count ? headers[index] : "",
+                index < messages.Count ? messages[index] : "");
         }
 
         /// <summary>

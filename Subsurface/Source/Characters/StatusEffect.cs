@@ -33,6 +33,8 @@ namespace Barotrauma
 
         private Explosion explosion;
 
+        public readonly bool Fire;
+
         private Sound sound;
         
         public TargetType Targets
@@ -143,6 +145,9 @@ namespace Barotrauma
                     case "explosion":
                         explosion = new Explosion(subElement);
                         break;
+                    case "fire":
+                        Fire = true;
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
@@ -208,6 +213,7 @@ namespace Barotrauma
         protected virtual void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
         {
             if (explosion != null) explosion.Explode(entity.SimPosition);
+            if (Fire) new FireSource(ConvertUnits.ToDisplayUnits(entity.SimPosition));            
 
             if (sound != null) sound.Play(1.0f, 1000.0f, ConvertUnits.ToDisplayUnits(entity.SimPosition));
 

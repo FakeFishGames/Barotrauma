@@ -22,7 +22,8 @@ namespace Barotrauma
 
     class Submarine : Entity
     {
-        public const string SavePath = "Data/SavedSubs";
+
+        public static string SavePath = "Data" + System.IO.Path.DirectorySeparatorChar + "SavedSubs";
 
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
@@ -102,8 +103,12 @@ namespace Barotrauma
 
         public Vector2 Speed
         {
-            get { return subBody.Speed; }
-            set { subBody.Speed = value; }
+            get { return subBody==null ? Vector2.Zero : subBody.Speed; }
+            set 
+            {
+                if (subBody == null) return;
+                subBody.Speed = value; 
+            }
         }
 
         public List<Vector2> HullVertices
@@ -433,18 +438,13 @@ namespace Barotrauma
 
         //saving/loading ----------------------------------------------------
 
-        public void Save()
+        public bool Save()
         {
-            SaveAs(filePath);
+            return SaveAs(filePath);
         }
 
-        public void SaveAs(string filePath)
+        public bool SaveAs(string filePath)
         {
-            //if (filePath=="")
-            //{
-            //    DebugConsole.ThrowError("No save file selected");
-            //    return;
-            //}
             XDocument doc = new XDocument(new XElement("Submarine"));
             doc.Root.Add(new XAttribute("name", name));
 
@@ -464,13 +464,13 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Saving submarine ''" + filePath + "'' failed!", e);
+                return false;
             }
 
-
-            //doc.Save(filePath);
+            return true;
         }
 
-        public static void SaveCurrent(string fileName)
+        public static bool SaveCurrent(string fileName)
         {
             if (loaded==null)
             {
@@ -478,7 +478,7 @@ namespace Barotrauma
                // return;
             }
 
-            loaded.SaveAs(SavePath+"/"+fileName);
+            return loaded.SaveAs(SavePath+System.IO.Path.DirectorySeparatorChar+fileName);
         }
 
         public static void Preload()
@@ -646,7 +646,12 @@ namespace Barotrauma
             loaded = this;
         }
 
-        public static Submarine Load(string fileName, string folder = SavePath)
+        public static Submarine Load(string fileName)
+        {
+           return Load(fileName, SavePath);
+        }
+
+        public static Submarine Load(string fileName, string folder)
         {
             Unload();
 

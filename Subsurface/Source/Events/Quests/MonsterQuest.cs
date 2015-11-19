@@ -10,9 +10,11 @@ namespace Barotrauma
 {
     class MonsterQuest : Quest
     {
-        string monsterFile;
+        private string monsterFile;
 
-        Character monster;
+        private int state;
+
+        private Character monster;
 
         public override Vector2 RadarPosition
         {
@@ -30,6 +32,18 @@ namespace Barotrauma
             Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
 
             monster = new AICharacter(monsterFile, ConvertUnits.ToSimUnits(position+level.Position));
+        }
+
+        public override void Update(float deltaTime)
+        {
+            switch (state)
+            {
+                case 0:
+                    if (!monster.IsDead) return;
+                    ShowMessage(state);
+                    state = 1;
+                    break;
+            }
         }
         
         public override void End()

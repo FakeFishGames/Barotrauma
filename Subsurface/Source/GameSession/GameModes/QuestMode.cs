@@ -38,12 +38,12 @@ namespace Barotrauma
 
             new GUIMessageBox(quest.Name, quest.Description, 400, 400);
 
-            quest.Start(Level.Loaded);
+            //quest.Start(Level.Loaded);
         }
 
         public override void End(string endMessage = "")
         {
-            quest.End();
+            //quest.End();
 
             base.End(endMessage);
         }

@@ -4,10 +4,25 @@
     name="Skyholder Artifact"
     pickdistance="150">
 
-    <Sprite texture="artifact.png" depth="0.8"/>
+    <Sprite texture="artifact.png" depth="0.8" sourcerect="0,0,38,60"/>
 
     <Body width="36" height="60" density="5"/>
 
     <Holdable slots="BothHands" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
   </Item>
+
+  <Item
+     name="Thermal Artifact"
+     pickdistance="150">
+
+    <Sprite texture="artifact.png" depth="0.8" sourcerect="74,0,44,61"/>
+
+    <Body radius="20" height="20" density="5"/>
+
+    <Holdable slots="BothHands" holdpos="30,-15" handle1="0,10" handle2="0,-10">
+      <StatusEffect type="OnActive">
+        <Fire/>
+      </StatusEffect>
+    </Holdable>
+  </Item> 
 </Items>

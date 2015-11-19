@@ -14,6 +14,8 @@ namespace Barotrauma
 
         private Item item;
 
+        private int state;
+
         public override Vector2 RadarPosition
         {
             get
@@ -67,6 +69,23 @@ namespace Barotrauma
             item.MoveWithLevel = true;
             item.body.FarseerBody.GravityScale = 0.5f;
             //item.MoveWithLevel = true;
+        }
+
+        public override void Update(float deltaTime)
+        {
+            switch (state)
+            {
+                case 0:
+                    if (item.CurrentHull == null) return;
+                    ShowMessage(state);
+                    state = 1;
+                    break;
+                case 1:
+                    if (!Level.Loaded.AtEndPosition && !Level.Loaded.AtStartPosition) return;
+                    ShowMessage(state);
+                    state = 2;
+                    break;
+            }    
         }
 
         public override void End()
