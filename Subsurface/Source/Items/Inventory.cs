@@ -89,7 +89,7 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, LimbSlot allowedSlots = 0, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, List<LimbSlot> allowedSlots = null, bool createNetworkEvent = true)
         {
             int slot = FindAllowedSlot(item);
             if (slot < 0) return false;
@@ -238,46 +238,44 @@ namespace Barotrauma
 
             if (selectedSlot == slotIndex && !isSubSlot)
             {
-                System.Diagnostics.Debug.WriteLine("sdfg: "+selectedSlot+" - "+slotIndex);
-
                 selectedSlot = -1;
 
-                if (item == null) return;
-
-
-                int itemCapacity = item.Capacity;
-                if (itemCapacity == 0) return;
+                int itemCapacity = item==null ? 0 : item.Capacity;
+                if (itemCapacity > 0)
+                {
 
 #if DEBUG
-                System.Diagnostics.Debug.Assert(slotIndex>=0 && slotIndex<items.Length);
+                    System.Diagnostics.Debug.Assert(slotIndex >= 0 && slotIndex < items.Length);
 #else
                 if (slotIndex<0 || slotIndex>=items.Length) return;
 #endif
 
-                Rectangle containerRect = new Rectangle(rect.X - 5, rect.Y - (40 + 10) * itemCapacity - 5,
-                        rect.Width + 10, rect.Height + (40 + 10) * itemCapacity + 10);
+                    Rectangle containerRect = new Rectangle(rect.X - 5, rect.Y - (40 + 10) * itemCapacity - 5,
+                            rect.Width + 10, rect.Height + (40 + 10) * itemCapacity + 10);
 
-                Rectangle subRect = rect;
-                subRect.Height = 40;
+                    Rectangle subRect = rect;
+                    subRect.Height = 40;
 
 
-                selectedSlot = containerRect.Contains(PlayerInput.MousePosition) ? slotIndex : -1;
-                System.Diagnostics.Debug.WriteLine(selectedSlot);
+                    selectedSlot = containerRect.Contains(PlayerInput.MousePosition) ? slotIndex : -1;
+                    System.Diagnostics.Debug.WriteLine(selectedSlot);
 
-                GUI.DrawRectangle(spriteBatch, containerRect, Color.Black*0.8f, true);
-                GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
+                    GUI.DrawRectangle(spriteBatch, containerRect, Color.Black * 0.8f, true);
+                    GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
-                Item[] containedItems = null;
-                if (items[slotIndex] != null) containedItems = items[slotIndex].ContainedItems;
+                    Item[] containedItems = null;
+                    if (items[slotIndex] != null) containedItems = items[slotIndex].ContainedItems;
 
-                if (containedItems != null) 
-                {
-                    for (int i = 0; i < itemCapacity; i++)
+                    if (containedItems != null)
                     {
-                        subRect.Y = subRect.Y - subRect.Height - 10;
-                        UpdateSlot(spriteBatch, subRect, selectedSlot, i < containedItems.Count() ? containedItems[i] : null, true);
+                        for (int i = 0; i < itemCapacity; i++)
+                        {
+                            subRect.Y = subRect.Y - subRect.Height - 10;
+                            UpdateSlot(spriteBatch, subRect, selectedSlot, i < containedItems.Count() ? containedItems[i] : null, true);
+                        }
                     }
                 }
+
 
 
             }

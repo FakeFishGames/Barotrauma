@@ -11,7 +11,7 @@ namespace Barotrauma
     [Flags]
     public enum LimbSlot
     {
-        Any = 1, RightHand = 2, LeftHand = 4, Head = 8, Torso = 16, Legs = 32, BothHands = 64
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, Torso = 16, Legs = 32
     };
 
     class CharacterInventory : Inventory
@@ -100,56 +100,69 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public override bool TryPutItem(Item item, LimbSlot allowedSlots, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, List<LimbSlot> allowedSlots, bool createNetworkEvent = true)
         {
-            for (int i = 0; i < capacity; i++)
-            {
-                //item is already in the inventory!
-                if (items[i] == item) return true;
-            }
+            //for (int i = 0; i < capacity; i++)
+            //{
+            //    //item is already in the inventory!
+            //    if (items[i] == item) return true;
+            //}
 
-            if (allowedSlots.HasFlag(LimbSlot.Any))
+            //try to place the item in LimBlot.Any slot if that's allowed
+            if (allowedSlots.Contains(LimbSlot.Any))
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (items[i] != null) continue;
-                    if (limbSlots[i] != LimbSlot.Any) continue;
+                    if (items[i] != null || limbSlots[i] != LimbSlot.Any) continue;
                     PutItem(item, i, createNetworkEvent);
                     item.Unequip(character);
                     return true;                   
                 }
             }
 
-            for (int i = 0; i < capacity; i++)
-            {
-                if (allowedSlots.HasFlag(limbSlots[i]) && items[i]!=null) return false;
-            }
-
             bool placed = false;
-            for (int i = 0; i < capacity; i++)
+            foreach (LimbSlot allowedSlot in allowedSlots)
             {
-                if (allowedSlots.HasFlag(limbSlots[i]) && items[i] == null)
+                //check if all the required slots are free
+                bool free = true;
+                for (int i = 0; i < capacity; i++)
                 {
-                    PutItem(item, i, createNetworkEvent, !placed);
-                    item.Equip(character);
-                    placed = true;
+                    if (allowedSlot.HasFlag(limbSlots[i]) && items[i]!=null && items[i]!=item)
+                    {
+                        free = false;
+                        break;
+                    }
                 }
+
+                if (!free) continue;
+
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (allowedSlot.HasFlag(limbSlots[i]) && items[i] == null)
+                    {
+                        PutItem(item, i, createNetworkEvent, !placed);
+                        item.Equip(character);
+                        placed = true;
+                    }
+                }
+
+                if (placed) return true;
+
+                //if (allowedSlots.HasFlag(LimbSlot.BothHands)) TryPutItem(item, 3, createNetworkEvent);
+
             }
 
-            if (placed) return true;
 
-            if (allowedSlots.HasFlag(LimbSlot.BothHands)) TryPutItem(item, 3, createNetworkEvent);
-
-            return false;
+            return placed;
         }
 
-        public override bool TryPutItem(Item item, int i, bool createNetworkEvent)
+        public override bool TryPutItem(Item item, int index, bool createNetworkEvent)
         {
-            LimbSlot usedSlots = item.AllowedSlots;
-
             //there's already an item in the slot
-            if (items[i] != null)
+            if (items[index] != null)
             {
+                if (items[index] == item) return false;
+
                 bool combined = false;
                 //if (item.Combine(items[i]))
                 //{
@@ -157,11 +170,16 @@ namespace Barotrauma
                 //    combined = true;
                 //}
                 //else 
-                if (items[i].Combine(item))
+                if (items[index].Combine(item))
                 {
                     //PutItem(items[i], i, false, false);
-                    Inventory otherInventory = items[i].inventory;
-                    if (otherInventory!=null && createNetworkEvent)
+                    if (items[index]==null)
+                    {
+                        System.Diagnostics.Debug.Assert(false);
+                        return false;
+                    }
+                    Inventory otherInventory = items[index].inventory;
+                    if (otherInventory != null && createNetworkEvent)
                     {
                         new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true, true);
                     }
@@ -169,65 +187,157 @@ namespace Barotrauma
                     combined = true;
                 }
 
-                if (!combined) return false;                
+                return combined;
+            }
 
-                if (usedSlots.HasFlag(LimbSlot.BothHands))
-                {
-                    if (limbSlots[i] == LimbSlot.LeftHand)
-                    {
-                        PutItem(item, FindLimbSlot(LimbSlot.RightHand), createNetworkEvent, false);
-                    }
-                    else if (limbSlots[i] == LimbSlot.RightHand)
-                    {
-                        PutItem(item, FindLimbSlot(LimbSlot.LeftHand), createNetworkEvent, false);
-                    }                        
-                }
-                if (limbSlots[i] == LimbSlot.Any) item.Unequip(character);
+            if (limbSlots[index] == LimbSlot.Any)
+            {
+                if (!item.AllowedSlots.Contains(LimbSlot.Any)) return false;
+                if (items[index] != null) return items[index] == item;
 
+                PutItem(item, index, createNetworkEvent, true);
                 return true;
             }
+
+            LimbSlot placeToSlots = LimbSlot.None;
+
+            bool slotsFree = true;
+            List<LimbSlot> allowedSlots = item.AllowedSlots;
+            foreach (LimbSlot allowedSlot in allowedSlots)
+            {
+                if (!allowedSlot.HasFlag(limbSlots[index])) continue;
+
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (allowedSlot.HasFlag(limbSlots[i]) && items[i] != null && items[i] != item)
+                    {
+                        slotsFree = false;
+                        break;
+                    }
+
+                    placeToSlots = allowedSlot;
+                }
+            }
+
+            if (!slotsFree) return false;
             
-            if (limbSlots[i]==LimbSlot.Any)
-            {
-                if (usedSlots.HasFlag(LimbSlot.Any))
-                {
-                    item.Unequip(character);
-                    PutItem(item, i, createNetworkEvent);
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
+            return TryPutItem(item, new List<LimbSlot>() {placeToSlots}, createNetworkEvent);
 
-                if (limbSlots[i] != LimbSlot.Any && usedSlots.HasFlag(limbSlots[i]) && items[i] == null)
-                {
-                    item.Unequip(character);
-                    PutItem(item, i, createNetworkEvent);
-                    item.Equip(character);
-                    return true;
-                }
+
+            ////there's already an item in the slot
+            //if (items[i] != null)
+            //{
+            //    bool combined = false;
+            //    //if (item.Combine(items[i]))
+            //    //{
+            //    //    //PutItem(item, i, false, false);
+            //    //    combined = true;
+            //    //}
+            //    //else 
+            //    if (items[i].Combine(item))
+            //    {
+            //        //PutItem(items[i], i, false, false);
+            //        Inventory otherInventory = items[i].inventory;
+            //        if (otherInventory!=null && createNetworkEvent)
+            //        {
+            //            new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true, true);
+            //        }
+
+            //        combined = true;
+            //    }
+
+            //    if (!combined) return false;                
+
+            //    //if (usedSlots.HasFlag(LimbSlot.BothHands))
+            //    //{
+            //    //    if (limbSlots[i] == LimbSlot.LeftHand)
+            //    //    {
+            //    //        PutItem(item, FindLimbSlot(LimbSlot.RightHand), createNetworkEvent, false);
+            //    //    }
+            //    //    else if (limbSlots[i] == LimbSlot.RightHand)
+            //    //    {
+            //    //        PutItem(item, FindLimbSlot(LimbSlot.LeftHand), createNetworkEvent, false);
+            //    //    }                        
+            //    //}
+            //    if (limbSlots[i] == LimbSlot.Any)
+            //    {
+            //        item.Unequip(character);
+            //        return true;
+            //    }
+            //}
+
+            
+            //bool placed = false;
+            //foreach (LimbSlot allowedSlot in usedSlots)
+            //{
+            //    if ()
+            //}
+
+            //foreach (LimbSlot allowedSlot in usedSlots)
+            //{
+            //    //check if all the required slots are free
+            //    for (int n = 0; n < capacity; i++)
+            //    {
+            //        if (allowedSlot.HasFlag(limbSlots[n]) && items[n] != null && items[n] != item) continue;
+            //    }
+
+            //    for (int n = 0; n < capacity; n++)
+            //    {
+            //        if (allowedSlot.HasFlag(limbSlots[i]) && items[i] == null)
+            //        {
+            //            PutItem(item, i, createNetworkEvent, !placed);
+            //            item.Equip(character);
+            //            placed = true;
+            //        }
+            //    }
+
+            //    if (placed) return true;
+
+            //    //if (allowedSlots.HasFlag(LimbSlot.BothHands)) TryPutItem(item, 3, createNetworkEvent);
+
+            //}
+            
+            //if (limbSlots[i]==LimbSlot.Any)
+            //{
+            //    if (usedSlots.HasFlag(LimbSlot.Any))
+            //    {
+            //        item.Unequip(character);
+            //        PutItem(item, i, createNetworkEvent);
+            //        return true;
+            //    }
+            //    else
+            //    {
+            //        return false;
+            //    }
+            //}
+            //else
+            //{
+
+            //    if (limbSlots[i] != LimbSlot.Any && usedSlots.HasFlag(limbSlots[i]) && items[i] == null)
+            //    {
+            //        item.Unequip(character);
+            //        PutItem(item, i, createNetworkEvent);
+            //        item.Equip(character);
+            //        return true;
+            //    }
                 
-                if (usedSlots.HasFlag(LimbSlot.BothHands) && (limbSlots[i]==LimbSlot.LeftHand || limbSlots[i]==LimbSlot.RightHand))
-                {
-                    int rightHandSlot = FindLimbSlot(LimbSlot.LeftHand);
-                    int leftHandSlot = FindLimbSlot(LimbSlot.RightHand);
+            //    if (usedSlots.HasFlag(LimbSlot.BothHands) && (limbSlots[i]==LimbSlot.LeftHand || limbSlots[i]==LimbSlot.RightHand))
+            //    {
+            //        int rightHandSlot = FindLimbSlot(LimbSlot.LeftHand);
+            //        int leftHandSlot = FindLimbSlot(LimbSlot.RightHand);
 
-                    if (items[rightHandSlot] != null) return false;
-                    if (items[leftHandSlot] != null) return false;
+            //        if (items[rightHandSlot] != null) return false;
+            //        if (items[leftHandSlot] != null) return false;
 
-                    PutItem(item, rightHandSlot, createNetworkEvent, true);
-                    PutItem(item, leftHandSlot, createNetworkEvent, false);
-                    item.Equip(character);
-                    return true;
-                }
+            //        PutItem(item, rightHandSlot, createNetworkEvent, true);
+            //        PutItem(item, leftHandSlot, createNetworkEvent, false);
+            //        item.Equip(character);
+            //        return true;
+            //    }
 
                 
-                return false;
-            }
+            //    return false;
+            //}
             
         }
          

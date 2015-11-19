@@ -186,12 +186,12 @@ namespace Barotrauma
         }
 
         //which type of inventory slots (head, torso, any, etc) the item can be placed in
-        public LimbSlot AllowedSlots
+        public List<LimbSlot> AllowedSlots
         {
             get
             {
                 Pickable p = GetComponent<Pickable>();
-                return (p==null) ? LimbSlot.Any : p.AllowedSlots;
+                return (p==null) ? new List<LimbSlot>() { LimbSlot.Any } : p.AllowedSlots;
             }
         }
 
