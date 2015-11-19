@@ -101,6 +101,8 @@ namespace Barotrauma
         {
             Graphics = new GraphicsDeviceManager(this);
 
+            Window.Title = "Barotrauma";
+
             Instance = this;
 
             Config = new GameSettings("config.xml");

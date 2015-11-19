@@ -6,7 +6,7 @@
     pickdistance="150"
     price="100">
 
-    <Sprite texture="explosives.png"  depth="0.8" sourcerect="0,0,16,7"/>
+    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
 
     <Body width="16" height="7"/>
 
@@ -23,7 +23,7 @@
     pickdistance="150"
     price="50">
 
-    <Sprite texture="explosives.png"  depth="0.8" sourcerect="0,7,16,9"/>
+    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,7,16,9"/>
 
     <Body width="16" height="9"/>
 

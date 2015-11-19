@@ -7,7 +7,7 @@
     pickthroughwalls="true"
     price="50">
 
-    <Sprite texture ="spear.png" depth="0.55"/>
+    <Sprite texture="weapons.png" sourcerect="0,50,65,7" depth="0.55"/>
 
     <Body width="64" height="5" density="20"/>
 
@@ -22,7 +22,7 @@
     pickdistance="200"
     price="500">
   
-    <Sprite texture ="harpoongun.png" depth="0.5"/>
+    <Sprite texture="weapons.png" sourcerect="0,25,98,25" depth="0.5"/>
 
     <Body width="90" height="30" density="10"/>
 
@@ -47,12 +47,12 @@
     price="200"
     tags="smallitem">
 
-    <Sprite texture ="stungrenade.png" depth="0.5"/>
+    <Sprite texture="weapons.png" sourcerect="98,0,11,24"/>
 
     <Body width="11" height="24" density="15" friction="0.8f"/>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stunGrenade.ogg">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
         <Explosion range="500" damage="5" stun="10" force="0.1"/>
       </StatusEffect>
     </Throwable>
@@ -64,7 +64,7 @@
     pickdistance="150"
     price="100">
 
-    <Sprite texture="stunbaton.png" sourcerect="0,12,77,23" depth="0.5"/>
+    <Sprite texture="weapons.png" sourcerect="20,0,77,23" depth="0.5"/>
     
     <Body width="90" height="30" density="10"/>
 
@@ -88,7 +88,7 @@
     tags="smallitem,loadable"
     price="50">
 
-    <Sprite texture ="stunbaton.png" sourcerect="0,0,20,9" depth="0.8"/>
+    <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
 
     <Body width="20" height="9" density="15"/>
 

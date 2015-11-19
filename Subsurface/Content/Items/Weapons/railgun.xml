@@ -64,7 +64,7 @@
     pickdistance="200"
     price="100">
 
-    <Sprite texture ="railgunshell.png" depth ="0.5"/>
+    <Sprite texture="weapons.png" sourcerect="0,58,88,20" depth ="0.5"/>
 
     <Body width="87" height="18"/>
 

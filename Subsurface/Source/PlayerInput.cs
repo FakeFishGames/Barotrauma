@@ -309,23 +309,6 @@ namespace Barotrauma
 				if (timeSinceClick < doubleClickDelay) doubleClicked = true;
 				timeSinceClick = 0.0;
 			}
-
-#if LINUX
-            foreach (Keys key in keyboardState.GetPressedKeys())
-            {
-                if (!oldKeyboardState.IsKeyUp(key)) continue;
-
-                char Character = (char)key;
-
-                if (keyboardState.IsKeyUp(Keys.LeftShift) && keyboardState.IsKeyUp(Keys.RightShift))
-                {
-                    Character = char.ToLower(Character);
-                }
-
-                EventInput.EventInput.OnCharEntered(Character);
-            }
-#endif
-
 		}
 	}
 }

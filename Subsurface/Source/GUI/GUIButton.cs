@@ -54,6 +54,19 @@ namespace Barotrauma
             get { return textBlock.TextColor; }
             set { textBlock.TextColor = value; }
         }
+
+        public override SpriteFont Font
+        {
+            get
+            {
+                return (textBlock==null) ? GUI.Font : textBlock.Font;
+            }
+            set
+            {
+                if (textBlock == null) return;
+                base.Font = value;
+            }
+        }
         
         public string Text
         {
