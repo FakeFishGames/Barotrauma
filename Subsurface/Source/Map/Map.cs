@@ -257,7 +257,8 @@ namespace Barotrauma
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
             Vector2 offset = -currentLocation.MapPosition;
 
-            iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), offset, Color.White);
+            iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, Color.White);
+            GUI.DrawRectangle(spriteBatch, rect, Color.White);
             //spriteBatch.Draw(iceTexture, offset, rect, null, null, 0f, null, Color.White, SpriteEffects.None, 0.0f);
 
             //Vector2 scale = new Vector2((float)rect.Width/ size, (float)rect.Height/size);

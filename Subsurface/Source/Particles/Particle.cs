@@ -270,16 +270,6 @@ namespace Barotrauma.Particles
                 prefab.Sprites[spriteIndex].origin, drawRotation,
                 drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
 
-            //spriteBatch.Draw(
-            //    prefab.sprite.Texture, 
-            //    drawPosition, 
-            //    null, 
-            //    color*alpha, 
-            //    drawRotation, 
-            //    prefab.sprite.origin, 
-            //    size,
-            //    SpriteEffects.None, prefab.sprite.Depth);
-
             prevPosition = position;
             prevRotation = rotation;
         }

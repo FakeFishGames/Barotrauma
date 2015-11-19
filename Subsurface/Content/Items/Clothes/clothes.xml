@@ -92,7 +92,7 @@
 
     <Body width="50" height="17"/>
 
-    <Wearable slots="Any,Torso,Legs">
+    <Wearable slots="Any,Torso+Legs">
       <sprite texture="engigear.png" limb="Torso" sourcerect="0,0,32,51" origin="0.5,0.48" depth="0.01"/>
 
       <sprite texture="engigear.png" limb="Waist" sourcerect="81,0,30,26" origin="0.5,0.45" hidelimb="true"/>
@@ -118,7 +118,7 @@
 
     <Body width="50" height="17"/>
 
-    <Wearable slots="Any,Torso,Legs">
+    <Wearable slots="Any,Torso+Legs">
       <sprite texture="engigear.png" limb="Torso" sourcerect="0,77,32,51" origin="0.5,0.48" depth="0.01"/>
 
       <sprite texture="engigear.png" limb="Waist" sourcerect="81,77,30,26" origin="0.5,0.45" hidelimb="true"/>

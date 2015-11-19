@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -7,9 +8,9 @@ namespace Barotrauma.Items.Components
     {
         protected Character picker;
 
-        protected LimbSlot allowedSlots;
+        protected List<LimbSlot> allowedSlots;
 
-        public LimbSlot AllowedSlots
+        public List<LimbSlot> AllowedSlots
         {
             get { return allowedSlots; }
         }
@@ -22,11 +23,26 @@ namespace Barotrauma.Items.Components
         public Pickable(Item item, XElement element)
             : base(item, element)
         {
+            allowedSlots = new List<LimbSlot>();
+
             string slotString = ToolBox.GetAttributeString(element, "slots", "Any");
-            string[] slots = slotString.Split(',');
-            foreach (string slot in slots)
+            string[] slotCombinations = slotString.Split(',');
+            foreach (string slotCombination in slotCombinations)
             {
-                allowedSlots = allowedSlots | (LimbSlot)Enum.Parse(typeof(LimbSlot), slot.Trim());
+                string[] slots = slotCombination.Split('+');
+                LimbSlot allowedSlot = LimbSlot.None;
+                foreach (string slot in slots)                
+                {
+                    if (slot.ToLower()=="bothhands")
+                    {
+                        allowedSlot = LimbSlot.LeftHand | LimbSlot.RightHand;
+                    }
+                    else
+                    {
+                        allowedSlot = allowedSlot | (LimbSlot)Enum.Parse(typeof(LimbSlot), slot.Trim());
+                    }
+                }
+                allowedSlots.Add(allowedSlot);
             }
 
             canBePicked = true;            

@@ -68,7 +68,7 @@
 
     <Body width="87" height="18"/>
 
-    <Holdable slots="BothHands" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
     
     <Projectile launchimpulse="80.0">
       <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>

@@ -11,9 +11,6 @@
     <Body radius="6" height="22" density="5"/>
 
     <Pickable holdpos="30,-15" handle1="0,1" slots="RightHand,LeftHand,Any">
-      <StatusEffect type="OnWearing" target="This" Condition="-0.5"/>
-      <StatusEffect type="OnWearing" target="Character" Oxygen="20.0"/>
-
       <StatusEffect type="OnFire" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg" disabledeltatime="true">
         <Explosion range="500.0" structuredamage="100" damage="200" stun="5" force="3.0"/>
       </StatusEffect>
@@ -33,7 +30,12 @@
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
       <StatusEffect type="OnWearing" target="Character" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
-    
+      <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="20.0" Condition="-0.5">
+        <RequiredItem type="Contained" name="Oxygen Tank"/>
+      </StatusEffect>
+      <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-30.0" Condition="-0.5">
+        <RequiredItem type="Contained" name="Welding Fuel Tank"/>
+      </StatusEffect>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
@@ -52,7 +54,7 @@
 
     <Body width="37" height="113" density="5"/>
 
-    <Wearable slots="Head,Torso,Legs" armorvalue="10.0">
+    <Wearable slots="Head+Torso+Legs" armorvalue="10.0">
       <sprite texture="DivingSuit.png" limb="Head" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
 
       <sprite texture="DivingSuit.png" limb="Torso" sourcerect="40,0,42,97" origin="0.5,0.55" depthlimb="Head" hidelimb="true"/>
@@ -70,10 +72,17 @@
       <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.02" hidelimb="true"/>
       
       <StatusEffect type="OnWearing" target="Character" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
+      <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="20.0" Condition="-0.5">
+        <RequiredItem type="Contained" name="Oxygen Tank"/>
+      </StatusEffect>
+      <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-30.0" Condition="-0.5">
+        <RequiredItem type="Contained" name="Welding Fuel Tank"/>
+      </StatusEffect>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Oxygen Tank"/>
+      <Containable name="Welding Fuel Tank"/>
     </ItemContainer>
   </Item>
 
@@ -86,9 +95,9 @@
 
     <Sprite texture ="DivingSuit.png" depth="0.5" sourcerect="22,98,59,32" origin="0.6,0.66"/>
 
-    <Body radius="7" height="20" density="5"/>
+    <Body width="55" height="30" density="5"/>
 
-    <Holdable slots="Any,BothHands" aimpos="100,0" handle1="0,11" handle2="2,11"/>
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11"/>
 
     <Propulsion force="80" usablein="water" particles="bubbles">
       <RequiredItems name="Battery Cell" type="Contained" msg="Battery Cell required"/>

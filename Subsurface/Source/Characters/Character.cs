@@ -481,8 +481,10 @@ namespace Barotrauma
 
                 if (info.Job.EquipSpawnItem[i])
                 {
-                    inventory.TryPutItem(item, 
-                        item.AllowedSlots.HasFlag(LimbSlot.Any) ? item.AllowedSlots & ~LimbSlot.Any : item.AllowedSlots, false);
+                    List<LimbSlot> allowedSlots = new List<LimbSlot>(item.AllowedSlots);
+                    allowedSlots.Remove(LimbSlot.Any);
+
+                    inventory.TryPutItem(item, allowedSlots, false);
                 }
                 else
                 {
