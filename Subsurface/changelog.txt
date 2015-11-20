@@ -1,5 +1,35 @@
 
 ---------------------------------------------------------------------------------------------------------
+v0.2.6
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- major changes to the networking code: better lag compensation, more reliable item/character
+	syncing, lower bandwidth consumption
+	- spectator mode
+	
+Submarine:
+	- overloading the electrical grid or the reactor may cause fires
+
+Characters:
+	- blood texture drawn on damaged limbs
+	- fixed limbs clipping through walls
+	- some new head sprites
+
+Items:
+	- underwater scooters
+	- water detector
+	- jumpsuits for engineers and mechanics
+	- new artifact with an effect that makes retrieving it much harder
+	- less obtrusive ''fow effect'' when wearing a diving suit or a mask
+	- fire extinguishers
+	- some new sprites
+
+Misc:
+	- fixed placing ladders and labels in sub editor
+	- fixed a couple of game-crashing bugs in submarine saving
+	
+---------------------------------------------------------------------------------------------------------
 v0.2.5
 ---------------------------------------------------------------------------------------------------------
 

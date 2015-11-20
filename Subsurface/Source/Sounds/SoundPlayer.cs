@@ -197,7 +197,7 @@ namespace Barotrauma
 
             //how fast the sub is moving, scaled to 0.0 -> 1.0
             float movementFactor = 0.0f;
-            if (Submarine.Loaded!=null)
+            if (Submarine.Loaded != null)
             {
                 movementFactor = (Submarine.Loaded.Speed == Vector2.Zero) ? 0.0f : Submarine.Loaded.Speed.Length() / 500.0f;
 

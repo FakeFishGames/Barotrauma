@@ -196,9 +196,7 @@ namespace Barotrauma
             Limb rightLeg   = GetLimb(LimbType.RightLeg);
 
             if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
-
-
-
+            
             float getUpSpeed = 0.3f;
             float walkCycleSpeed = head.LinearVelocity.X * walkAnimSpeed;
             if (stairs != null)
@@ -261,7 +259,7 @@ namespace Barotrauma
 
             if (!onGround || (LowestLimb.SimPosition.Y - floorY > 0.5f && stairs == null)) return;
 
-            getUpSpeed = getUpSpeed * (head.SimPosition.Y - colliderPos.Y);
+            getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.1f);
 
             if (stairs != null)
             {
