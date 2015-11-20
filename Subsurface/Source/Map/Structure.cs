@@ -639,8 +639,6 @@ namespace Barotrauma
 
         public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
-            message.Write((float)NetTime.Now);
-
             //var updateSections = Array.FindAll(sections, s => s != null && Math.Abs(s.damage - s.lastSentDamage) > 0.01f);
 
             //if (updateSections.Length == 0) return false;
@@ -662,12 +660,11 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
 
-            float updateTime = message.ReadFloat();
-            if (updateTime < lastUpdate) return;
+            if (sendingTime < lastUpdate) return;
 
            // int sectionCount = message.ReadByte();
 
@@ -681,7 +678,7 @@ namespace Barotrauma
                 SetDamage(i, damage);
             }
 
-            lastUpdate = updateTime;
+            lastUpdate = sendingTime;
         }
     
     }

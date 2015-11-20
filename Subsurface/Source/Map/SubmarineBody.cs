@@ -195,9 +195,19 @@ namespace Barotrauma
             Vector2 translateAmount = speed * deltaTime;            
             translateAmount += ConvertUnits.ToDisplayUnits(body.Position) * collisionRigidness;
 
-            if (targetPosition != Vector2.Zero && Vector2.Distance(targetPosition, sub.Position) > 50.0f)
+            if (targetPosition != Vector2.Zero && targetPosition != sub.Position)
             {
-                translateAmount += (targetPosition - sub.Position) * 0.01f;
+                float dist = Vector2.Distance(targetPosition, sub.Position);
+                
+                if (dist>1000.0f)
+                {
+                    sub.SetPosition(targetPosition);
+                    targetPosition = Vector2.Zero;
+                }
+                else if (dist>50.0f)
+                {
+                    translateAmount += (targetPosition - sub.Position) * 0.01f;
+                }
             }
             else
             {

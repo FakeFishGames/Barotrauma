@@ -122,7 +122,7 @@ namespace Barotrauma
             scrollBarHidden = true;
 
             scrollBar = new GUIScrollBar(
-                new Rectangle(this.rect.X + this.rect.Width-20, this.rect.Y, 20, this.rect.Height), color, 1.0f, style);
+                new Rectangle(this.rect.X + this.rect.Width-20, this.rect.Y, 20, this.rect.Height), color, 1.0f, GUI.Style);
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
             if (style != null) style.Apply(frame, this);

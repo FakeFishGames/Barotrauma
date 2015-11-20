@@ -145,6 +145,8 @@ namespace Barotrauma.Networking
             NetOutgoingMessage message = netPeer.CreateMessage();
             message.Write((byte)PacketTypes.NetworkEvent);
 
+            message.Write((float)NetTime.Now);
+
             message.Write((byte)msgBytes.Count);
             foreach (byte[] msgData in msgBytes)
             {

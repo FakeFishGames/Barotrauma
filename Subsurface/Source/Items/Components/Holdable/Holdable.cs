@@ -263,13 +263,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             message.Write(item.SimPosition.X);
             message.Write(item.SimPosition.Y);
+
+            return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
         {
             Vector2 newPos = Vector2.Zero;
 

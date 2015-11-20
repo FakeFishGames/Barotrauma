@@ -46,6 +46,8 @@ namespace Barotrauma.Items.Components
 
         private float load;
 
+        private float lastUpdate;
+
         private PropertyTask powerUpTask;
 
         [Editable, HasDefaultValue(9500.0f, true)]
@@ -445,7 +447,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void FillNetworkData(NetworkEventType type, NetBuffer message)
+        public override bool FillNetworkData(NetworkEventType type, NetBuffer message)
         {
             message.Write(autoTemp);
             message.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
@@ -453,10 +455,14 @@ namespace Barotrauma.Items.Components
 
             message.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
             message.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
+
+            return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetBuffer message)
+        public override void ReadNetworkData(NetworkEventType type, NetBuffer message, float sendingTime)
         {
+            if (sendingTime < lastUpdate) return;
+
             bool newAutoTemp;
             float newTemperature, newShutDownTemp;
             float newCoolingRate, newFissionRate;
@@ -486,6 +492,8 @@ namespace Barotrauma.Items.Components
 
             CoolingRate = newCoolingRate;
             FissionRate = newFissionRate;
+
+            lastUpdate = sendingTime;
         }
     }
 }

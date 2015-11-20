@@ -391,7 +391,6 @@ namespace Barotrauma
         {
             if (subBody == null) return false;
 
-            message.Write((float)NetTime.Now);
             message.Write(Position.X);
             message.Write(Position.Y);
 
@@ -401,16 +400,13 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message, out object data)
+        public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
 
-            float sendingTime;
             Vector2 newTargetPosition, newSpeed;
             try
             {
-                sendingTime = message.ReadFloat();
-
                 if (sendingTime <= lastNetworkUpdate) return;
 
                 newTargetPosition = new Vector2(message.ReadFloat(), message.ReadFloat());

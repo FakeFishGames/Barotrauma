@@ -55,7 +55,7 @@ namespace Barotrauma
                 headSpriteId = value;
                 Vector2 spriteRange = headSpriteRange[gender == Gender.Male ? 0 : 1];
                 
-                if (headSpriteId < (int)spriteRange.X) headSpriteId = (int)(spriteRange.Y-1);
+                if (headSpriteId < (int)spriteRange.X) headSpriteId = (int)(spriteRange.Y);
                 if (headSpriteId > (int)spriteRange.Y) headSpriteId = (int)(spriteRange.X);
 
                 if (headSpriteId != oldId) headSprite = null;

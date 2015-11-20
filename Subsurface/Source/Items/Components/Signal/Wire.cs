@@ -428,7 +428,7 @@ namespace Barotrauma.Items.Components
             base.Remove();
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             message.Write((byte)Math.Min(Nodes.Count, 10));
             for (int i = 0; i < Math.Min(Nodes.Count,10); i++)
@@ -436,9 +436,11 @@ namespace Barotrauma.Items.Components
                 message.Write(Nodes[i].X);
                 message.Write(Nodes[i].Y);
             }
+
+            return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
         {
             Nodes.Clear();
 

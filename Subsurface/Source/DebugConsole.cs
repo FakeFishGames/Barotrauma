@@ -27,10 +27,13 @@ namespace Barotrauma
 
     static class DebugConsole
     {
-        public static List<ColoredText> messages = new List<ColoredText>();
+        public static List<ColoredText> Messages = new List<ColoredText>();
 
         static bool isOpen;
 
+
+        static GUIFrame frame;
+        static GUIListBox listBox;
         static GUITextBox textBox;
         
         //used for keeping track of the message entered when pressing up/down
@@ -42,9 +45,20 @@ namespace Barotrauma
         }
 
         public static void Init(GameWindow window)
-        {            
-            textBox = new GUITextBox(new Rectangle(30, 480,780, 30), Color.Black, Color.White, Alignment.Left, Alignment.Left);
-            NewMessage("Press F3 to open/close the debug console", Color.Cyan);        
+        {
+            int x = 20, y = 20;
+            int width = 800, height = 500;
+
+            frame = new GUIFrame(new Rectangle(x, y, width, height), new Color(0.4f, 0.4f, 0.4f, 0.5f));
+            frame.Color = Color.White * 0.4f;
+            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+
+            listBox = new GUIListBox(new Rectangle(0,0,0, frame.Rect.Height-40), Color.Black*0.8f, null, frame);
+
+            textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black*0.6f, Color.White, Alignment.BottomLeft, Alignment.Left, null, frame);
+            NewMessage("Press F3 to open/close the debug console", Color.Cyan);
+            NewMessage("Enter ''help'' for a list of available console commands", Color.Cyan);
+
         }
 
         public static void Update(GameMain game, float deltaTime)
@@ -81,18 +95,18 @@ namespace Barotrauma
 
                 if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.Enter) && textBox.Text != "")
                 {
-                    messages.Add(new ColoredText(textBox.Text, Color.White));
+                    NewMessage(textBox.Text, Color.White);
                     ExecuteCommand(textBox.Text, game);
                     textBox.Text = "";
 
-                    selectedIndex = messages.Count;
+                    //selectedIndex = messages.Count;
                 }
             }
         }
 
         private static void SelectMessage(int direction)
         {
-            int messageCount = messages.Count;
+            int messageCount = listBox.children.Count;
             if (messageCount == 0) return;
 
             direction = Math.Min(Math.Max(-1, direction), 1);
@@ -101,42 +115,43 @@ namespace Barotrauma
             if (selectedIndex < 0) selectedIndex = messageCount - 1;
             selectedIndex = selectedIndex % messageCount;
 
-            textBox.Text = messages[selectedIndex].Text;    
+            textBox.Text = (listBox.children[selectedIndex] as GUITextBlock).Text;    
         }
 
         public static void Draw(SpriteBatch spriteBatch)
         {
             if (!isOpen) return;
 
-            int x = 20, y = 20;
-            int width = 800, height = 500;
+            frame.Update(1.0f / 60.0f);
 
             int margin = 5;
 
-            GUI.DrawRectangle(spriteBatch,
-                new Vector2(x, y),
-                new Vector2(width, height),
-                new Color(0.4f, 0.4f, 0.4f, 0.6f), true);
+            //GUI.DrawRectangle(spriteBatch,
+            //    new Vector2(x, y),
+            //    new Vector2(width, height),
+            //    new Color(0.4f, 0.4f, 0.4f, 0.6f), true);
 
-            GUI.DrawRectangle(spriteBatch,
-                new Vector2(x + margin, y + margin),
-                new Vector2(width - margin * 2, height - margin * 2),
-                new Color(0.0f, 0.0f, 0.0f, 0.6f), true);
+            //GUI.DrawRectangle(spriteBatch,
+            //    new Vector2(x + margin, y + margin),
+            //    new Vector2(width - margin * 2, height - margin * 2),
+            //    new Color(0.0f, 0.0f, 0.0f, 0.6f), true);
 
             //remove messages that won't fit on the screen
-            while (messages.Count() * 20 > height-70)
-            {
-                messages.RemoveAt(0);
-            }
+            //while (messages.Count() * 20 > height - 70)
+            //{
+            //    messages.RemoveAt(0);
+            //}
 
-            Vector2 messagePos = new Vector2(x + margin * 2, y + height - 70 - messages.Count()*20);
-            foreach (ColoredText message in messages)
-            {
-                spriteBatch.DrawString(GUI.Font, message.Text, messagePos, message.Color); 
-                messagePos.Y += 20;
-            }
+            //Vector2 messagePos = new Vector2(x + margin * 2, y + height - 70 - messages.Count()*20);
+            //foreach (ColoredText message in messages)
+            //{
+            //    spriteBatch.DrawString(GUI.Font, message.Text, messagePos, message.Color); 
+            //    messagePos.Y += 20;
+            //}
 
-            textBox.Draw(spriteBatch);
+            //textBox.Draw(spriteBatch);
+
+            frame.Draw(spriteBatch);
         }
 
         public static void ExecuteCommand(string command, GameMain game)
@@ -154,6 +169,49 @@ namespace Barotrauma
 
             switch (commands[0].ToLower())
             {
+                case "help":
+                    NewMessage("menu: go to main menu", Color.Cyan);
+                    NewMessage("game: enter the ''game screen''", Color.Cyan);
+                    NewMessage("edit: switch to submarine editor", Color.Cyan);
+                    NewMessage("load [submarine name]: load a submarine!", Color.Cyan);
+                    NewMessage("save [submarine name]: save the current submarine using the specified name", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+                    
+
+                    NewMessage("spawn: spawn a creature at a random spawnpoint", Color.Cyan);
+                    NewMessage("spawn: spawn a creature at a random spawnpoint", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("lights: disable lighting", Color.Cyan);
+                    NewMessage("los: disable the line of sight effect", Color.Cyan);
+                    NewMessage("freecam: detach the camera from the controlled character", Color.Cyan);
+                    NewMessage("control [character name]: start controlling the specified character", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("water: allows adding water into rooms or removing it by holding the left/right mouse buttons", Color.Cyan);
+                    NewMessage("fire: allows putting up fires by left clicking", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("heal: restore the controlled character to full health", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("fixwalls: fixes all the walls", Color.Cyan);
+                    NewMessage("fixitems: fixes every item/device in the sub", Color.Cyan);
+                    NewMessage("oxygen: replenishes the oxygen in every room to 100%", Color.Cyan);
+                    NewMessage("power [amount]: immediately sets the temperature of the reactor to the specified value", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("debugdraw: toggles the ''debug draw mode''", Color.Cyan);
+                    NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
+
+                    
+                    break;
                 case "createfilelist":
                     UpdaterUtil.SaveFileList("filelist.xml");
                     break;
@@ -264,10 +322,13 @@ namespace Barotrauma
                     Item reactorItem = Item.ItemList.Find(i => i.GetComponent<Reactor>() != null);
                     if (reactorItem == null) return;
 
+                    float power = 5000.0f;
+                    if (commands.Length>1) float.TryParse(commands[1], out power);
+
                     var reactor = reactorItem.GetComponent<Reactor>();
                     reactor.ShutDownTemp = 7000.0f;
                     reactor.AutoTemp = true;
-                    reactor.Temperature = 5000.0f;
+                    reactor.Temperature = power;
                     break;
                 case "shake":
                     GameMain.GameScreen.Cam.Shake = 10.0f;
@@ -357,9 +418,26 @@ namespace Barotrauma
         public static void NewMessage(string msg, Color color)
         {
             if (String.IsNullOrEmpty((msg))) return;
-            messages.Add(new ColoredText(msg, color));
 
-            if (textBox != null && textBox.Text == "") selectedIndex = messages.Count;
+            Messages.Add(new ColoredText(msg, color));
+
+            try
+            {
+                var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 15), msg, GUI.Style, Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
+                textBlock.CanBeFocused = false;
+                textBlock.TextColor = color;
+
+                listBox.AddChild(textBlock);
+                listBox.BarScroll = 1.0f;
+            }
+            catch
+            {
+                return;
+            }
+
+            //messages.Add(new ColoredText(msg, color));
+
+            if (textBox != null && textBox.Text == "") selectedIndex = listBox.children.Count;
         }
 
         public static void ThrowError(string error, Exception e = null)

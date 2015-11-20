@@ -58,7 +58,7 @@ namespace Barotrauma
             sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
             sb.AppendLine("Level seed: "+ ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.Loaded == null) ? "none" : Submarine.Loaded.Name +" ("+Submarine.Loaded.MD5Hash+")"));
-            sb.AppendLine("Selected screen: " + Screen.Selected.ToString());
+            sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
 
             if (GameMain.Server != null)
             {
@@ -80,9 +80,9 @@ namespace Barotrauma
             sb.AppendLine("\n");
 
             sb.AppendLine("Last debug messages:");
-            for (int i = DebugConsole.messages.Count - 1; i > 0 && i > DebugConsole.messages.Count - 10; i-- )
+            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 10; i-- )
             {
-                sb.AppendLine("   "+DebugConsole.messages[i].Time+" - "+DebugConsole.messages[i].Text);
+                sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
             }
 
 

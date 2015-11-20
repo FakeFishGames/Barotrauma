@@ -99,7 +99,10 @@ namespace Barotrauma
 
             graphics.SetRenderTarget(null);
 
-            Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
+            if (Hull.renderer != null)
+            {
+                Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
+            }
             
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
             

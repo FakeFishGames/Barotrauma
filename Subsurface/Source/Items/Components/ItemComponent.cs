@@ -79,6 +79,8 @@ namespace Barotrauma.Items.Components
             get { return updated; }
             set { updated = value; }
         }
+
+        public bool NetworkUpdateSent;
         
         public virtual bool IsActive
         {
@@ -701,11 +703,12 @@ namespace Barotrauma.Items.Components
             return ic;
         }
 
-        public virtual void FillNetworkData(NetworkEventType type, NetBuffer message)
+        public virtual bool FillNetworkData(NetworkEventType type, NetBuffer message)
         {
+            return false;
         }
 
-        public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message)
+        public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message, float sendingTime)
         {
         }
     }

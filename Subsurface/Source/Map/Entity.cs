@@ -69,7 +69,7 @@ namespace Barotrauma
         {
             return false;
         }
-        public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data) 
+        public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data) 
         {
             data = null;
         }

@@ -360,7 +360,7 @@ namespace Barotrauma.Networking
                 }
                 else if (gameStarted)
                 {
-                    myCharacter.CreateUpdateNetworkEvent(true);             
+                    new NetworkEvent(NetworkEventType.EntityUpdate, myCharacter.ID, true);
                 }
             }
 
