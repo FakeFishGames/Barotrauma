@@ -9,6 +9,7 @@
     lifetime="2"
     growtime ="0.2"
     collideswithwalls="true"
+    collisionradius="30.0"
     velocitychange="0.0, -9.8">
     <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
     <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
