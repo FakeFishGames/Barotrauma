@@ -151,6 +151,8 @@ namespace Barotrauma.Networking
 
         public static void ReadMessage(NetIncomingMessage message, bool resend=false)
         {
+            float sendingTime = message.ReadFloat();
+
             byte msgCount = message.ReadByte();
             long currPos = message.PositionInBytes;
 
@@ -161,7 +163,7 @@ namespace Barotrauma.Networking
 
                 try
                 {
-                    NetworkEvent.ReadData(message, resend);
+                    NetworkEvent.ReadData(message, sendingTime, resend);
                 }
                 catch
                 {
@@ -173,7 +175,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public static bool ReadData(NetIncomingMessage message, bool resend=false)
+        public static bool ReadData(NetIncomingMessage message, float sendingTime, bool resend=false)
         {
             NetworkEventType eventType;
             ushort id;
@@ -207,7 +209,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                e.ReadNetworkData(eventType, message, out data);
+                e.ReadNetworkData(eventType, message, sendingTime, out data);
             }
             catch (Exception exception)
             {

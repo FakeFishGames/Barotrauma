@@ -181,7 +181,14 @@ namespace Barotrauma
 
             sw = new Stopwatch();
 
+
+            GUIComponent.Init(Window);
+            DebugConsole.Init(Window);
+            yield return CoroutineStatus.Running;
+
             LightManager = new Lights.LightManager(GraphicsDevice);
+
+
 
             Hull.renderer = new WaterRenderer(GraphicsDevice);
         TitleScreen.LoadState = 1.0f;
@@ -233,10 +240,6 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", Cam);
-        yield return CoroutineStatus.Running;
-
-            GUIComponent.Init(Window);
-            DebugConsole.Init(Window);
         yield return CoroutineStatus.Running;
 
             LocationType.Init("Content/Map/locationTypes.xml");

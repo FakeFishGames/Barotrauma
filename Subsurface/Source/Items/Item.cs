@@ -1249,8 +1249,9 @@ namespace Barotrauma
                     if (componentIndex < 0 || componentIndex >= components.Count) return false;
                     
                     message.Write((byte)componentIndex);
-                    components[componentIndex].FillNetworkData(type, message);
-                    break;
+                    bool sent = components[componentIndex].FillNetworkData(type, message);
+                    if (sent) components[componentIndex].NetworkUpdateSent = true;
+                    return sent;
                 case NetworkEventType.UpdateProperty:                                       
                     var allProperties = GetProperties<InGameEditable>();
 
@@ -1292,7 +1293,7 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
 
@@ -1319,7 +1320,7 @@ namespace Barotrauma
 
                     var itemContainer = GetComponent<ItemContainer>();
                     if (itemContainer == null || itemContainer.inventory == null) return;
-                    itemContainer.inventory.ReadNetworkData(NetworkEventType.DropItem, message);
+                    itemContainer.inventory.ReadNetworkData(NetworkEventType.DropItem, message, sendingTime);
                     break;
                 case NetworkEventType.ComponentUpdate:
                 case NetworkEventType.ImportantComponentUpdate:
@@ -1328,7 +1329,9 @@ namespace Barotrauma
                     data = componentIndex;
 
                     if (componentIndex < 0 || componentIndex > components.Count - 1) return;
-                    components[componentIndex].ReadNetworkData(type, message);
+
+                    components[componentIndex].NetworkUpdateSent = true;
+                    components[componentIndex].ReadNetworkData(type, message, sendingTime);
                     break;
                 case NetworkEventType.UpdateProperty:
                     string propertyName = "";

@@ -581,19 +581,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        public void CreateUpdateNetworkEvent(bool isClient)
-        {
-            //new NetworkEvent(importantUpdateTimer <= 0 ? NetworkEventType.ImportantEntityUpdate : NetworkEventType.EntityUpdate, ID, isClient);
-
-            new NetworkEvent(NetworkEventType.EntityUpdate, ID, isClient);
-
-
-            //importantUpdateTimer -= 1;
-            //if (importantUpdateTimer < 0) importantUpdateTimer = (this is AICharacter) ? 30 : 10;
-        }
-
-
+        
         public bool HasSelectedItem(Item item)
         {
             return selectedItems.Contains(item);
@@ -1035,7 +1023,7 @@ namespace Barotrauma
             health -= attackResult.Damage;
             if (health <= 0.0f && damageType == DamageType.Burn) Kill(CauseOfDeath.Burn);
 
-            bleeding += attackResult.Bleeding;
+            Bleeding += attackResult.Bleeding;
 
             return attackResult;
         }
@@ -1274,9 +1262,6 @@ namespace Barotrauma
 
                     return true;
                 case NetworkEventType.EntityUpdate:
-
-                    message.Write((float)NetTime.Now);
-
                     message.Write(keys[(int)InputType.Use].DequeueHeld);
 
                     bool secondaryHeld = keys[(int)InputType.Aim].DequeueHeld;
@@ -1321,7 +1306,7 @@ namespace Barotrauma
             }
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             Enabled = true;
             data = null;
@@ -1362,7 +1347,7 @@ namespace Barotrauma
                     if (GameMain.Server != null)
                     {
                         Client sender =GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
-                        if (sender ==null || sender.Character != this) 
+                        if (sender == null || sender.Character != this) 
                             throw new Exception("Received a KillCharacter message from someone else than the client controlling the Character!");
                     }
 
@@ -1390,7 +1375,7 @@ namespace Barotrauma
                     return;
                 case NetworkEventType.InventoryUpdate:
                     if (inventory == null) return;
-                    inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message);
+                    inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message, sendingTime);
                     return;
                 case NetworkEventType.ImportantEntityUpdate:
                    
@@ -1406,8 +1391,7 @@ namespace Barotrauma
                     Bleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);     
 
                     return;
-                case NetworkEventType.EntityUpdate:                    
-                    float sendingTime = 0.0f;
+                case NetworkEventType.EntityUpdate:
                     Vector2 relativeCursorPos = Vector2.Zero;
 
                     bool actionKeyState, secondaryKeyState;
@@ -1416,8 +1400,6 @@ namespace Barotrauma
 
                     try
                     {
-                        sendingTime         = message.ReadFloat();                        
-                        
                         if (sendingTime > LastNetworkUpdate) ClearInputs();                        
 
                         actionKeyState      = message.ReadBoolean();

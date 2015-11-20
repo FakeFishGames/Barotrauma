@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
             base.Remove();
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             foreach (Connection c in connections)
             {
@@ -135,9 +135,11 @@ namespace Barotrauma.Items.Components
                     message.Write(wires[i].Item.ID);
                 }
             }
+
+            return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
         {
             System.Diagnostics.Debug.WriteLine("connectionpanel update");
             foreach (Connection c in connections)

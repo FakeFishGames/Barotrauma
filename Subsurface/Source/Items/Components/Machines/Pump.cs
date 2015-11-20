@@ -14,6 +14,8 @@ namespace Barotrauma.Items.Components
 
         float? targetLevel;
 
+        float lastUpdate;
+
         Hull hull1, hull2;
 
         [HasDefaultValue(0.0f, true)]
@@ -125,12 +127,12 @@ namespace Barotrauma.Items.Components
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "OUT", false))
             {
                 FlowPercentage -= 10.0f;
-                item.NewComponentEvent(this, true, false);
+                item.NewComponentEvent(this, true, true);
             }
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "IN", false))
             {
                 FlowPercentage += 10.0f;
-                item.NewComponentEvent(this, true, false);
+                item.NewComponentEvent(this, true, true);
             }            
         }
 
@@ -166,17 +168,21 @@ namespace Barotrauma.Items.Components
             if (!IsActive) currPowerConsumption = 0.0f;
         }
 
-        public override void FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             message.WriteRangedInteger(-10,10,(int)(flowPercentage/10.0f));
             message.Write(IsActive);
             message.WritePadBits();
+
+            return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
         {
             float newFlow = 0.0f;
             bool newActive;
+
+            if (sendingTime < lastUpdate) return;
 
             try
             {
@@ -194,6 +200,8 @@ namespace Barotrauma.Items.Components
 
             FlowPercentage = newFlow;
             IsActive = newActive;
+
+            lastUpdate = sendingTime;
         }
     }
 }

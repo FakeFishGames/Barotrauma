@@ -203,8 +203,10 @@ namespace Barotrauma
 
         }
 
-        private Vector2 MeasureText(string text)
+        private Vector2 MeasureText(string text) 
         {
+            if (string.IsNullOrEmpty(text) || Font==null) return Vector2.Zero;
+
             Vector2 size = Vector2.Zero;
             while (size == Vector2.Zero)
             {

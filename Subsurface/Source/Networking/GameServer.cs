@@ -282,7 +282,7 @@ namespace Barotrauma.Networking
             {
                 if (gameStarted)
                 {
-                    if (myCharacter != null) myCharacter.CreateUpdateNetworkEvent(false);  
+                    if (myCharacter != null) new NetworkEvent(NetworkEventType.EntityUpdate, myCharacter.ID, false);
 
                     foreach (Character c in Character.CharacterList)
                     {
@@ -290,7 +290,7 @@ namespace Barotrauma.Networking
 
                         if (c.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) continue;
 
-                        c.CreateUpdateNetworkEvent(false);  
+                        new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
                     }
                 }
 
@@ -316,7 +316,9 @@ namespace Barotrauma.Networking
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c is AICharacter || c.IsDead) continue;
+                if (c.IsDead) continue;
+
+                if (c is AICharacter && c.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) continue;
 
                 new NetworkEvent(NetworkEventType.ImportantEntityUpdate, c.ID, false);
             }
@@ -652,8 +654,6 @@ namespace Barotrauma.Networking
                 new NetworkEvent(NetworkEventType.ImportantEntityUpdate, hull.ID, false);
             }
 
-            SendNetworkEvents(new List<Client>() { sender });
-            
             foreach (Character c in Character.CharacterList)
             {
                 new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
@@ -661,17 +661,30 @@ namespace Barotrauma.Networking
                 if (c.IsDead) new NetworkEvent(NetworkEventType.KillCharacter, c.ID, false);
             }
 
-            SendNetworkEvents(new List<Client>() { sender });
-
             foreach (Item item in Item.ItemList)
             {
+                for (int i = 0; i < item.components.Count; i++)
+                {
+                    if (!item.components[i].NetworkUpdateSent) continue;
+                    item.NewComponentEvent(item.components[i], false, true);
+                }
+
                 if (item.body == null || item.body.Enabled == false) continue;
                 new NetworkEvent(NetworkEventType.DropItem, item.ID, false);
             }
 
-            SendNetworkEvents(new List<Client>() { sender });
+            List<NetworkEvent> syncMessages = new List<NetworkEvent>(NetworkEvent.Events);
+            while (syncMessages.Any())
+            {
+                NetworkEvent.Events = syncMessages.GetRange(0, Math.Min(syncMessages.Count, 5));
+                SendNetworkEvents(new List<Client>() { sender });
+                syncMessages.RemoveRange(0, Math.Min(syncMessages.Count, 5));
 
+                NetworkEvent.Events = existingEvents;
 
+                yield return new WaitForSeconds(0.1f);
+            }
+            
             yield return CoroutineStatus.Success;
         }
 

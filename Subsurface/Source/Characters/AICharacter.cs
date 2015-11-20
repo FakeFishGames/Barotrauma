@@ -112,9 +112,7 @@ namespace Barotrauma
                     return true;
                 case NetworkEventType.EntityUpdate:
                     if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
-
-                    message.Write((float)NetTime.Now);
-
+                    
                     message.Write(AnimController.TargetDir == Direction.Right);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
@@ -127,8 +125,8 @@ namespace Barotrauma
             
             return true;
         }
-        
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, out object data)
+
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
             Enabled = true;
@@ -182,11 +180,9 @@ namespace Barotrauma
                     aiController.ReadNetworkData(message);
                     return;
                 case NetworkEventType.EntityUpdate:
-                    float sendingTime = 0.0f;
                     Vector2 targetMovement  = Vector2.Zero;
                     bool targetDir = false;
-                                
-                    sendingTime = message.ReadFloat();                    
+                                                  
                     if (sendingTime <= LastNetworkUpdate) return;
 
                     Vector2 pos = Vector2.Zero, vel = Vector2.Zero;

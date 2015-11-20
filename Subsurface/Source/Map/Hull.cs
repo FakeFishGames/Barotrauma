@@ -559,7 +559,7 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, out object data)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
 

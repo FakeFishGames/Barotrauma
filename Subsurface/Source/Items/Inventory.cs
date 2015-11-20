@@ -16,6 +16,8 @@ namespace Barotrauma
 
         public readonly Entity Owner;
 
+        protected float lastUpdate;
+
         private int slotsPerRow;
 
         public int SlotsPerRow
@@ -324,8 +326,10 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message)
+        public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message, float sendingTime)
         {
+            if (sendingTime < lastUpdate) return;
+
             List<ushort> newItemIDs = new List<ushort>();
 
             byte count = message.ReadByte();
@@ -350,6 +354,8 @@ namespace Barotrauma
 
                 TryPutItem(item, item.AllowedSlots, false);
             }
+
+            lastUpdate = sendingTime;
         }
     }
 }

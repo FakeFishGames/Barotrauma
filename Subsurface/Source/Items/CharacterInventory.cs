@@ -475,8 +475,10 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetBuffer message)
+        public override void ReadNetworkData(NetworkEventType type, NetBuffer message, float sendingTime)
         {
+            if (sendingTime < lastUpdate) return;
+
             character.ClearInput(InputType.Use);
 
             for (int i = 0; i<capacity; i++)
@@ -496,6 +498,7 @@ namespace Barotrauma
                 }
             }
 
+            lastUpdate = sendingTime;
         }
 
     }
