@@ -199,6 +199,11 @@ namespace Barotrauma.Lights
             spriteBatch.Draw(lightMap, Vector2.Zero, Color.White);
             spriteBatch.End();            
         }
+
+        public void ClearLights()
+        {
+            lights.Clear();
+        }
     }
 
 

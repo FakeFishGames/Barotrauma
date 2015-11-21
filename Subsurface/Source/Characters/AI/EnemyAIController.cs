@@ -283,7 +283,6 @@ namespace Barotrauma
                 case AttackType.PinchCCW:
 
                     float dir = (limb.attack.Type == AttackType.PinchCW) ? 1.0f : -1.0f;
-                    float dist = Vector2.Distance(limb.SimPosition, attackPosition);
 
                     if (wallAttackPos != Vector2.Zero && targetEntity != null)
                     {
@@ -302,6 +301,7 @@ namespace Barotrauma
                         break;
                     }
 
+                    float dist = Vector2.Distance(limb.SimPosition, damageTarget.SimPosition);
                     if (dist < limb.attack.Range * 0.5f)
                     {
                         attackTimer += deltaTime;

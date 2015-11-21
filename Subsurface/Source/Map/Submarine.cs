@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Barotrauma.Lights;
 
 namespace Barotrauma
 {
@@ -666,6 +667,8 @@ namespace Barotrauma
             if (loaded == null) return;
 
             Sound.OnGameEnd();
+
+            if (GameMain.LightManager != null) GameMain.LightManager.ClearLights();
             
             loaded.Remove();
 

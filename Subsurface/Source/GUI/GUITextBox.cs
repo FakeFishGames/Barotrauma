@@ -196,9 +196,15 @@ namespace Barotrauma
                 {
                     string input = Text;
                     Text = "";
-                    OnEnterPressed(this, input);
-                    
+                    OnEnterPressed(this, input);                    
                 }
+#if LINUX
+                else if (PlayerInput.KeyHit(Keys.Back) && Text.Length>0)
+                {
+                    Text = Text.Substring(0, Text.Length-1);
+                }
+#endif
+
             }
 
             textBlock.Update(deltaTime);

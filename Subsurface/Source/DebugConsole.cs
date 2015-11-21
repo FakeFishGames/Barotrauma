@@ -80,6 +80,10 @@ namespace Barotrauma
 
             if (isOpen)
             {
+
+                frame.Update(deltaTime);
+
+
                 Character.DisableControls = true;
 
                 if (PlayerInput.KeyHit(Keys.Up))
@@ -91,7 +95,7 @@ namespace Barotrauma
                     SelectMessage(1);
                 }
                 
-                textBox.Update(deltaTime);
+                //textBox.Update(deltaTime);
 
                 if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.Enter) && textBox.Text != "")
                 {
@@ -121,8 +125,6 @@ namespace Barotrauma
         public static void Draw(SpriteBatch spriteBatch)
         {
             if (!isOpen) return;
-
-            frame.Update(1.0f / 60.0f);
 
             int margin = 5;
 
