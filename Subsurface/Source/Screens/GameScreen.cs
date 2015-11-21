@@ -248,10 +248,17 @@ namespace Barotrauma
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), new Color(0.75f, 0.8f, 0.9f, 1.0f));
             spriteBatch.End();
 
+#if LINUX
             spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                null, DepthStencilState.Default, null, null,
+                BlendState.NonPremultiplied,
+                null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
+#else
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+            BlendState.AlphaBlend,
+            null, DepthStencilState.DepthRead, null, null,
+            cam.Transform);
+#endif
             GameMain.ParticleManager.Draw(spriteBatch, true, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
 
@@ -270,11 +277,18 @@ namespace Barotrauma
                 BlendState.Opaque);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
             spriteBatch.End();
-
+#if LINUX
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.NonPremultiplied,
+                null, DepthStencilState.DepthRead, null, null,
+                cam.Transform);
+#else
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
                 null, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
+#endif
+
             GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
 

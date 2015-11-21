@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private SteeringPath steeringPath;
 
-        private static PathFinder pathFinder;
+        private PathFinder pathFinder;
 
         private float networkUpdateTimer;
         private bool valueChanged;

@@ -143,10 +143,21 @@ namespace Barotrauma
             var md5 = MD5.Create();
             foreach (ContentFile file in files)
             {
-                using (var stream = File.OpenRead(file.path))
+                if (file.type == ContentType.Executable) continue;
+
+                try 
                 {
-                    hashes.Add(md5.ComputeHash(stream));
-                }                
+                    using (var stream = File.OpenRead(file.path))
+                    {
+                        hashes.Add(md5.ComputeHash(stream));
+                    }               
+                }
+
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error while calculating content package hash: ", e);
+                }
+             
             }
 
             //string str = sb.ToString();
@@ -157,7 +168,7 @@ namespace Barotrauma
             }
                 //System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
 
-                md5Hash = new Md5Hash(bytes);
+            md5Hash = new Md5Hash(bytes);
         }
 
         public List<string> GetFilesOfType(ContentType type)

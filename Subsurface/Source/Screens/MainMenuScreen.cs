@@ -297,8 +297,16 @@ namespace Barotrauma
 
             GameMain.NetLobbyScreen = new NetLobbyScreen();
 
-            GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
-            
+            try
+            {
+                GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));                  
+            }
+
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to start server", e);
+            }
+
             GameMain.NetLobbyScreen.IsServer = true;
             //Game1.NetLobbyScreen.Select();
             return true;

@@ -254,7 +254,21 @@ namespace Barotrauma
             if (response.StatusCode!= System.Net.HttpStatusCode.OK)
             {
                 serverList.ClearChildren();  
-                DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
+
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.NotFound:
+                        DebugConsole.ThrowError("Error while connecting to master server (404 - ''" + NetConfig.MasterServerUrl + "'' not found)");
+                        break;
+                    case System.Net.HttpStatusCode.ServiceUnavailable:
+                        DebugConsole.ThrowError("Error while connecting to master server (505 - Service Unavailable)");
+                        DebugConsole.ThrowError("The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.");
+                        break;
+                    default:
+                        DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
+                        break;
+                }
+
                 return;
             }
 
@@ -304,8 +318,17 @@ namespace Barotrauma
                 selectedPassword = passwordBox.Text;
             }
 
-            GameMain.NetworkMember = new GameClient(clientNameBox.Text);
-            GameMain.Client.ConnectToServer(ip, selectedPassword);
+            try
+            {
+                GameMain.NetworkMember = new GameClient(clientNameBox.Text);
+                GameMain.Client.ConnectToServer(ip, selectedPassword);             
+            }
+
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to start the client", e);
+            }
+
 
             yield return CoroutineStatus.Success;
         }
