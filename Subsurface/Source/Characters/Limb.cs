@@ -353,12 +353,12 @@ namespace Barotrauma
 
                 GameMain.ParticleManager.CreateParticle("blood",
                     Position,
-                    particleVel * Rand.Range(100.0f, 300.0f));
+                    particleVel * Rand.Range(100.0f, 300.0f), 0.0f, character.AnimController.CurrentHull);
             }
 
             for (int i = 0; i < bloodAmount / 2; i++)
             {
-                GameMain.ParticleManager.CreateParticle("waterblood", Position, Vector2.Zero);
+                GameMain.ParticleManager.CreateParticle("waterblood", Position, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
             }
 
             damage += Math.Max(amount,bleedingAmount) / character.MaxHealth * 100.0f;

@@ -51,14 +51,14 @@ namespace Barotrauma.Particles
             ParticleAmount = ToolBox.GetAttributeInt(element, "particleamount", 1);
         }
 
-        public void Emit(Vector2 position)
+        public void Emit(Vector2 position, Hull hullGuess = null)
         {
             for (int i = 0; i<ParticleAmount; i++)
             {
                 float angle = Rand.Range(AngleMin, AngleMax);
                 Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(VelocityMin, VelocityMax);
 
-                GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity);
+                GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, 0.0f, hullGuess);
             }
         }
     }

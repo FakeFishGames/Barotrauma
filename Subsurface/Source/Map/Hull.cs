@@ -271,7 +271,7 @@ namespace Barotrauma
                 {
                     GameMain.ParticleManager.CreateParticle("mist",
                         new Vector2(rect.X + WaveWidth * i,surface + waveY[i]),
-                        new Vector2(0.0f, -50.0f));
+                        new Vector2(0.0f, -50.0f), 0.0f, this);
                 }
 
                 waveY[i] = waveY[i] + waveVel[i];
