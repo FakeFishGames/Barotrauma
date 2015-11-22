@@ -254,7 +254,7 @@ namespace Barotrauma
                 UpdateRoomToRoom(deltaTime);
             }
 
-            if (FlowForce.Length() > 150.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
+            if (LerpedFlowForce.Length() > 150.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {
                 //UpdateFlowForce();
 

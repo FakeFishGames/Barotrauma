@@ -43,25 +43,26 @@ namespace Barotrauma
         public void Explode(Vector2 simPosition)
         {
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
+            
+            Hull hull = Hull.FindHull(displayPosition);
 
             if (shockwave)
             {
                 GameMain.ParticleManager.CreateParticle("shockwave", displayPosition,
-                    Vector2.Zero, 0.0f);
+                    Vector2.Zero, 0.0f, hull);
             }
-
 
             for (int i = 0; i < attack.Range * 10; i++)
             {
                 if (sparks)
                 {
                     GameMain.ParticleManager.CreateParticle("spark", displayPosition,
-                        Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f);
+                        Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f, hull);
                 }
                 if (flames)
                 {
                     GameMain.ParticleManager.CreateParticle("explosionfire", displayPosition + Rand.Vector(50f),
-                        Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f);
+                        Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f, hull);
                 }
             }
 
@@ -79,8 +80,6 @@ namespace Barotrauma
             }
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
-
-            //Hull hull = Hull.FindHull(displayPosition);
 
             foreach (Character c in Character.CharacterList)
             {

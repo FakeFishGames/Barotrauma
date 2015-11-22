@@ -612,24 +612,19 @@ namespace Barotrauma
                         }
                     }
                         //the limb has gone through the surface of the water
-                    if (Math.Abs(limb.LinearVelocity.Y) > 3.0 && inWater != prevInWater)
+                    if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && inWater != prevInWater)
                     {
 
                         //create a splash particle
                         GameMain.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.Position.X, limbHull.Surface),
                             new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 10.0f)),
-                            0.0f);
-
-                        //if (splash != null) splash.yLimits = ConvertUnits.ToSimUnits(
-                        //    new Vector2(
-                        //        limbHull.Rect.Y,
-                        //        limbHull.Rect.Y - limbHull.Rect.Height));
+                            0.0f, limbHull);
 
                         GameMain.ParticleManager.CreateParticle("bubbles",
                             new Vector2(limb.Position.X, limbHull.Surface),                            
                             limb.LinearVelocity*0.001f,
-                            0.0f);
+                            0.0f, limbHull);
 
 
 

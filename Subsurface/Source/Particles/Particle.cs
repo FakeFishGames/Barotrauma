@@ -73,6 +73,9 @@ namespace Barotrauma.Particles
 
             spriteIndex = Rand.Int(prefab.Sprites.Count);
 
+            currentHull = Hull.FindHull(position, hullGuess);
+            if (currentHull == null) position = Submarine.Loaded == null ? position : position + Submarine.Loaded.Position;
+
             this.position = position;
             prevPosition = position;
 
@@ -102,8 +105,6 @@ namespace Barotrauma.Particles
 
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
-                currentHull = Hull.FindHull(position, hullGuess);
-
                 hullGaps = currentHull==null ? new List<Gap>() : currentHull.FindGaps();
                 //hullLimits = new List<Hull>();
                 //hullLimits = FindLimits(position);
@@ -253,7 +254,6 @@ namespace Barotrauma.Particles
         public void Draw(SpriteBatch spriteBatch)
         {
             drawPosition = Physics.Interpolate(prevPosition, position);
-            drawPosition.Y = -drawPosition.Y;
             float drawRotation = Physics.Interpolate(prevRotation, rotation);
 
             //drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
@@ -263,10 +263,14 @@ namespace Barotrauma.Particles
             if (prefab.GrowTime>0.0f && totalLifeTime-lifeTime < prefab.GrowTime)
             {
                 drawSize *= ((totalLifeTime - lifeTime) / prefab.GrowTime);
-
             }
 
-            prefab.Sprites[spriteIndex].Draw(spriteBatch, drawPosition, color * alpha, 
+            Vector2 screenSpacePos = currentHull == null && Submarine.Loaded != null ? drawPosition - Submarine.Loaded.Position : drawPosition;
+            screenSpacePos.Y = -screenSpacePos.Y;
+
+            prefab.Sprites[spriteIndex].Draw(spriteBatch, 
+               screenSpacePos, 
+                color * alpha, 
                 prefab.Sprites[spriteIndex].origin, drawRotation,
                 drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
 
