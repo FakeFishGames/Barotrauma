@@ -9,6 +9,8 @@ namespace Barotrauma
     {
         protected List<AIObjective> subObjectives;
 
+        protected float priority;
+
         public virtual bool IsCompleted()
         {
             return false;
@@ -21,7 +23,7 @@ namespace Barotrauma
 
         /// <summary>
         /// makes the character act according to the objective, or according to any subobjectives that
-        /// need to be completed before this one (starting from the one with the highest priority)
+        /// need to be completed before this one
         /// </summary>
         /// <param name="character">the character who's trying to achieve the objective</param>
         public void TryComplete(float deltaTime, Character character)
@@ -38,5 +40,15 @@ namespace Barotrauma
         }
 
         protected virtual void Act(float deltaTime, Character character) { }
+
+        public virtual float GetPriority(Character character)
+        {
+            return 0.0f;
+        }
+
+        public virtual bool IsDuplicate(AIObjective otherObjective)
+        {
+            return true;
+        }
     }
 }

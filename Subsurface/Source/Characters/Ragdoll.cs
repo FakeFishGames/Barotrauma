@@ -314,27 +314,27 @@ namespace Barotrauma
                 
                 if (targetMovement.Y >= 0.0f && lowestLimb.SimPosition.Y > ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 8.0f))
                 {
-                    stairs = null;
-                    return false;
+                    //stairs = null;
+                    //return false;
                 }
                 
                 Limb limb = f1.Body.UserData as Limb;
-                if (limb != null && (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot))
+                if (limb != null)// && (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot))
                 {
                     if (contact.Manifold.LocalNormal.Y >= 0.0f)
                     {
-                        stairs = structure;
-                        return true;
+                        if (limb.SimPosition.Y < lowestLimb.SimPosition.Y+0.2f)
+                        {
+                            stairs = structure;
+                            return true;
+                        }
+
                     }
                     else
                     {
                         stairs = null;
                         return false;
                     }                    
-                }
-                else
-                {
-                    return false;
                 }
             }
                 
@@ -356,12 +356,15 @@ namespace Barotrauma
             avgVelocity = avgVelocity / Limbs.Count();
             
             float impact = Vector2.Dot((f1.Body.LinearVelocity + avgVelocity) / 2.0f, -normal);
-
+            
             if (GameMain.Server != null) impact = impact / 2.0f;
 
             Limb l = (Limb)f1.Body.UserData;
 
-            if (impact > 1.0f && l.HitSound != null && l.soundTimer <= 0.0f) l.HitSound.Play(Math.Min(impact / 5.0f, 1.0f), impact * 100.0f, l.body.FarseerBody);
+            float volume = stairs == null ? impact/5.0f : impact;
+               volume=  Math.Min(impact, 1.0f);
+
+            if (impact > 0.8f && l.HitSound != null && l.soundTimer <= 0.0f) l.HitSound.Play(volume, impact * 100.0f, l.body.FarseerBody);
 
             if (impact > l.impactTolerance)
             {   

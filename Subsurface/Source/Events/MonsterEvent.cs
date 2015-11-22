@@ -45,7 +45,7 @@ namespace Barotrauma
 
                 position.X += Rand.Range(-0.5f, 0.5f);
                 position.Y += Rand.Range(-0.5f, 0.5f);
-                monsters[i] = new AICharacter(characterFile, position);
+                monsters[i] = Character.Create(characterFile, position);
             }
         }
 

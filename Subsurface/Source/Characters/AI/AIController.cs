@@ -16,6 +16,11 @@ namespace Barotrauma
 
         protected SteeringManager steeringManager;
 
+        public SteeringManager SteeringManager
+        {
+            get { return steeringManager; }
+        }
+
         public Vector2 Steering
         {
             get { return Character.AnimController.TargetMovement; }
@@ -41,8 +46,6 @@ namespace Barotrauma
         public AIController (Character c)
         {
             Character = c;
-
-            steeringManager = new SteeringManager(this);
         }
 
         public virtual void DebugDraw(SpriteBatch spriteBatch) { }

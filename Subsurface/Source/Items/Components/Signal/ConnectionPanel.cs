@@ -8,24 +8,24 @@ namespace Barotrauma.Items.Components
 {
     class ConnectionPanel : ItemComponent
     {        
-        public List<Connection> connections;
+        public List<Connection> Connections;
 
         Character user;
 
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)
         {
-            connections = new List<Connection>();
+            Connections = new List<Connection>();
 
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
-                        connections.Add(new Connection(subElement, item));
+                        Connections.Add(new Connection(subElement, item));
                         break;
                     case "output":
-                        connections.Add(new Connection(subElement, item));
+                        Connections.Add(new Connection(subElement, item));
                         break;
                 }
             }
@@ -48,7 +48,7 @@ namespace Barotrauma.Items.Components
         {
             XElement componentElement = base.Save(parentElement);
 
-            foreach (Connection c in connections)
+            foreach (Connection c in Connections)
             {
                 c.Save(componentElement);
             }
@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
-            foreach (Connection c in connections)
+            foreach (Connection c in Connections)
             {
                 c.ConnectLinked();
             }
@@ -113,9 +113,9 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            for (int i = 0; i<loadedConnections.Count && i<connections.Count; i++)
+            for (int i = 0; i<loadedConnections.Count && i<Connections.Count; i++)
             {
-                loadedConnections[i].wireId.CopyTo(connections[i].wireId, 0);
+                loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
             }
         }
 
@@ -126,7 +126,7 @@ namespace Barotrauma.Items.Components
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
-            foreach (Connection c in connections)
+            foreach (Connection c in Connections)
             {
                 Wire[] wires = Array.FindAll(c.Wires, w => w != null);
                 message.Write((byte)wires.Length);
@@ -142,7 +142,7 @@ namespace Barotrauma.Items.Components
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
         {
             System.Diagnostics.Debug.WriteLine("connectionpanel update");
-            foreach (Connection c in connections)
+            foreach (Connection c in Connections)
             {
                 //int wireCount = c.Wires.Length;
                 c.ClearConnections();

@@ -257,12 +257,12 @@ namespace Barotrauma
 
         public override Vector2 SimPosition
         {
-            get { return AnimController.Limbs[0].SimPosition; }
+            get { return AnimController.RefLimb.SimPosition; }
         }
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition); }
+            get { return ConvertUnits.ToDisplayUnits(AnimController.RefLimb.SimPosition); }
         }
 
         static Character()
@@ -274,28 +274,53 @@ namespace Barotrauma
             DeathMsg[(int)CauseOfDeath.Pressure] = "been crushed by water pressure";
             DeathMsg[(int)CauseOfDeath.Burn] = "burnt to death";
         }
-
-        public Character(string file) : this(file, Vector2.Zero, null)
+        
+        public static Character Create(string file, Vector2 position)
         {
+            return Create(file, position, null);
         }
 
-        public Character(string file, Vector2 position)
-            : this(file, position, null)
+        public static Character Create(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
         {
+            return Create(characterInfo.File, spawnPoint.SimPosition, characterInfo, isNetworkPlayer);
         }
 
-        public Character(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
-            : this(characterInfo.File, spawnPoint.SimPosition, characterInfo, isNetworkPlayer)
-        {
 
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
+        {
+            return Create(characterInfo.File, position, characterInfo, isNetworkPlayer);
         }
 
-        public Character(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
-            : this(characterInfo.File, position, characterInfo, isNetworkPlayer)
+        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
         {
+            if (file != humanConfigFile)
+            {
+                var enemyCharacter = new AICharacter(file, position, characterInfo, isNetworkPlayer);
+                var ai = new EnemyAIController(enemyCharacter, file);
+                enemyCharacter.SetAI(ai);
+
+                return enemyCharacter;
+            }
+            else
+            {
+                if (isNetworkPlayer)
+                {
+                    var netCharacter = new Character(file, position, characterInfo, isNetworkPlayer);
+
+                    return netCharacter;
+                }
+                else
+                {
+                    var character = new AICharacter(file, position, characterInfo, isNetworkPlayer);
+                    var ai = new HumanAIController(character);
+                    character.SetAI(ai);
+
+                    return character;
+                }
+            }
         }
 
-        public Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
+        protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
         {
 
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
@@ -686,6 +711,8 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
+            AnimController.IsStanding = true;
+
             Limb head = AnimController.GetLimb(LimbType.Head);
 
             Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(head.SimPosition);
@@ -873,7 +900,7 @@ namespace Barotrauma
                 ControlLocalPlayer(deltaTime, cam);
             }
 
-            if (!(this is AICharacter)) Control(deltaTime, cam);
+            if (controlled==this || !(this is AICharacter)) Control(deltaTime, cam);
 
             UpdateSightRange();
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;

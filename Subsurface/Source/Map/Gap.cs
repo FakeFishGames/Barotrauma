@@ -5,6 +5,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -36,6 +37,8 @@ namespace Barotrauma
             get { return open; }
             set { open = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
+
+        public Door ConnectedDoor;
 
         public Vector2 FlowForce
         {
@@ -133,43 +136,6 @@ namespace Barotrauma
             linkedTo.Add(hulls[0]);
             if (hulls[1] != null) linkedTo.Add(hulls[1]);
 
-            //if (hull1 != null && hull2 != null)
-            //{
-            //    if (isHorizontal)
-            //    {
-            //        //make sure that water1 is the lefthand room
-            //        //or that water2 is null if the gap doesn't lead to another room
-            //        if (hull1.Rect.X < hull2.Rect.X)
-            //        {
-            //            linkedTo.Add(hull1);
-            //            linkedTo.Add(hull2);
-            //        }
-            //        else
-            //        {
-            //            linkedTo.Add(hull2);
-            //            linkedTo.Add(hull1);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        //make sure that water1 is the room on the top
-            //        //or that water2 is null if the gap doesn't lead to another room
-            //        if (hull1.Rect.Y > hull2.Rect.Y)
-            //        {
-            //            linkedTo.Add(hull1);
-            //            linkedTo.Add(hull2);
-            //        }
-            //        else
-            //        {
-            //            linkedTo.Add(hull2);
-            //            linkedTo.Add(hull1);
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    linkedTo.Add(hull1);
-            //}
         }
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)

@@ -42,6 +42,7 @@ namespace Barotrauma.Items.Components
                 foreach (MapEntity e in item.linkedTo)
                 {
                     linkedGap = e as Gap;
+                    linkedGap.ConnectedDoor = this;
                     if (linkedGap != null) return linkedGap;
                 }
                 linkedGap = new Gap(item.Rect);

@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace Barotrauma
 {
-    public enum SpawnType { None, Human, Enemy, Cargo };
+    public enum SpawnType { None, Human, Enemy, Cargo, Path };
     class WayPoint : MapEntity
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
@@ -22,6 +22,12 @@ namespace Barotrauma
 
         //only characters with this job will be spawned at the waypoint
         private JobPrefab assignedJob;
+
+        public Gap ConnectedGap
+        {
+            get;
+            private set;
+        }
 
         public SpawnType SpawnType
         {
@@ -60,6 +66,13 @@ namespace Barotrauma
             WayPointList.Add(this);
         }
 
+        public WayPoint(Vector2 position, SpawnType spawnType, Gap gap = null)
+            :this(new Rectangle((int)position.X-3, (int)position.Y+3, 6, 6))
+        {
+            this.spawnType = spawnType;
+            ConnectedGap = gap;
+        }
+
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back=true)
         {
@@ -69,6 +82,9 @@ namespace Barotrauma
 
             Color clr = (isSelected) ? Color.Red : Color.LightGreen;
             GUI.DrawRectangle(spriteBatch, new Rectangle(pos.X - rect.Width / 2, -pos.Y - rect.Height / 2, rect.Width, rect.Height), clr, true);
+
+
+            spriteBatch.DrawString(GUI.SmallFont, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
 
             foreach (MapEntity e in linkedTo)
             {
@@ -192,6 +208,120 @@ namespace Barotrauma
             y = y + 30;
             
             return editingHUD;
+        }
+
+        public static void GenerateSubWaypoints()
+        {
+            float minDist = 200.0f;
+            float heightFromFloor = 100.0f;
+
+            foreach (Hull hull in Hull.hullList)
+            {
+                WayPoint prevWaypoint = null;
+
+                if (hull.Rect.Width<minDist*3.0f)
+                {
+                    var wayPoint = new WayPoint(
+                        new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path);
+                    continue;
+                }
+
+                for (float x = hull.Rect.X + minDist; x <= hull.Rect.X + hull.Rect.Width - minDist; x += minDist)
+                {
+                    var wayPoint = new WayPoint(new Vector2(x, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path);
+
+                    if (prevWaypoint != null) wayPoint.ConnectTo(prevWaypoint);                    
+
+                    prevWaypoint = wayPoint;
+                }
+            }
+
+            List<Structure> stairList = new List<Structure>();
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                Structure stairs = me as Structure;
+                if (stairs == null) continue;
+
+                if (stairs.StairDirection != Direction.None) stairList.Add(stairs);
+            }
+
+            foreach (Structure stairs in stairList)
+            {
+                WayPoint[] stairPoints = new WayPoint[2];
+
+                stairPoints[0] = new WayPoint(
+                    new Vector2(stairs.Rect.X - 50.0f,
+                        stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? 80 : stairs.Rect.Height) + heightFromFloor), SpawnType.Path);
+
+                stairPoints[1] = new WayPoint(
+                  new Vector2(stairs.Rect.Right + 50.0f,
+                      stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? stairs.Rect.Height : 80) + heightFromFloor), SpawnType.Path);
+
+                for (int i = 0; i < 2; i++ )
+                {
+                    for (int dir = -1; dir <= 1; dir += 2)
+                    {
+                        WayPoint closest = stairPoints[i].FindClosest(dir, true, 30.0f);
+                        if (closest == null) continue;
+                        stairPoints[i].ConnectTo(closest);
+                    }                    
+                }
+
+                stairPoints[0].ConnectTo(stairPoints[1]);                
+            }
+            
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (!gap.isHorizontal) continue;
+
+                var wayPoint = new WayPoint(
+                    new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height + heightFromFloor), SpawnType.Path, gap);
+
+                for (int dir = -1; dir <= 1; dir += 2)
+                {
+                    WayPoint closest = wayPoint.FindClosest(dir, true, 30.0f);
+                    if (closest == null) continue;
+                    wayPoint.ConnectTo(closest);
+                }
+            }
+        }
+
+        private WayPoint FindClosest(int dir, bool horizontalSearch, float tolerance)
+        {
+            if (dir != -1 && dir != 1) return null;
+
+            float closestDist = 0.0f;
+            WayPoint closest = null;
+
+            if (horizontalSearch)
+            {
+                foreach (WayPoint wp in WayPointList)
+                {
+                    if (wp.SpawnType != SpawnType.Path || wp == this) continue;
+
+                    if (Math.Abs(wp.Position.Y - Position.Y) > tolerance) continue;
+
+                    float diff = wp.Position.X - Position.X;
+                    if (Math.Sign(diff) != dir) continue;
+
+                    diff = Math.Abs(diff);
+                    if (closest == null || diff < closestDist)
+                    {
+                        if (Submarine.CheckVisibility(SimPosition, wp.SimPosition) != null) continue;
+
+                        closestDist = diff;
+                        closest = wp;
+                    }
+                }
+            }
+
+            return closest;
+        }
+
+        private void ConnectTo(WayPoint wayPoint2)
+        {
+            linkedTo.Add(wayPoint2);
+            wayPoint2.linkedTo.Add(this);
         }
 
         public static WayPoint GetRandom(SpawnType spawnType = SpawnType.None, Job assignedJob = null)

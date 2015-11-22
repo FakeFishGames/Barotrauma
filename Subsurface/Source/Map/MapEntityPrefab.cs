@@ -39,6 +39,7 @@ namespace Barotrauma
         public static MapEntityPrefab Selected
         {
             get { return selected; }
+            set { selected = value; }
         }
 
         public virtual bool IsLinkable

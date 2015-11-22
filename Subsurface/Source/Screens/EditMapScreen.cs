@@ -81,6 +81,9 @@ namespace Barotrauma
             button = new GUIButton(new Rectangle(0, 220, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
+
+            button = new GUIButton(new Rectangle(0, 270, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, GUIpanel);
+            button.OnClicked = GenerateWaypoints;
             
             GUItabs = new GUIComponent[2];
             int width = 400, height = 400;
@@ -140,6 +143,8 @@ namespace Barotrauma
 
             GUIComponent.MouseOn = null;
 
+            MapEntityPrefab.Selected = null;
+
             if (dummyCharacter != null)
             {
                 dummyCharacter.Remove();
@@ -152,7 +157,7 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) dummyCharacter.Remove();
 
-            dummyCharacter = new Character(Character.HumanConfigFile, Vector2.Zero);
+            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero);
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
         }
@@ -201,6 +206,12 @@ namespace Barotrauma
             MapEntityPrefab.SelectPrefab(obj);
             selectedTab = -1;
             GUIComponent.MouseOn = null;
+            return true;
+        }
+
+        private bool GenerateWaypoints(GUIButton button, object obj)
+        {
+            WayPoint.GenerateSubWaypoints();
             return true;
         }
 
@@ -324,10 +335,6 @@ namespace Barotrauma
 
                 }
 
-                //if (PlayerInput.GetMouseState.LeftButton != ButtonState.Pressed)
-                //{
-                //    Inventory.draggingItem = null;
-                //}
             }
             else
             {
@@ -336,10 +343,9 @@ namespace Barotrauma
 
             GUI.Draw((float)deltaTime, spriteBatch, cam);
 
-                            if (!PlayerInput.LeftButtonDown()) Inventory.draggingItem = null;
+            if (!PlayerInput.LeftButtonDown()) Inventory.draggingItem = null;
                                               
             spriteBatch.End();
-
         }
     }
 }

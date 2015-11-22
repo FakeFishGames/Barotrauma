@@ -60,6 +60,10 @@
     <Compile Include="Source\Characters\AICharacter.cs" />
     <Compile Include="Source\Characters\AI\AIController.cs" />
     <Compile Include="Source\Characters\AI\AITarget.cs" />
+    <Compile Include="Source\Characters\AI\HumanAIController.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFindSafety.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveGoTo.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveManager.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjective.cs" />
     <Compile Include="Source\Characters\AI\PathFinder.cs" />
