@@ -210,7 +210,7 @@ namespace Barotrauma.Items.Components
 
             float rightWireX = x+width / 2 + wireInterval;
             float leftWireX = x + width / 2 - wireInterval;
-            foreach (Connection c in panel.connections)
+            foreach (Connection c in panel.Connections)
             {
                 //if dragging a wire, let the Inventory know so that the wire can be
                 //dropped or dragged from the panel to the players inventory
@@ -250,7 +250,7 @@ namespace Barotrauma.Items.Components
             //and the wire hasn't been connected yet, draw it on the panel
             if (equippedWire!=null)
             {
-                if (panel.connections.Find(c => c.Wires.Contains(equippedWire)) == null)
+                if (panel.Connections.Find(c => c.Wires.Contains(equippedWire)) == null)
                 {
                     DrawWire(spriteBatch, equippedWire.Item, equippedWire.Item,
                         new Vector2(x + width / 2, y + height - 100),

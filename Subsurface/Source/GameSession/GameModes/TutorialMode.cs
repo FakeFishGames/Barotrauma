@@ -47,7 +47,7 @@ namespace Barotrauma
 
             CharacterInfo charInfo = new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Name=="Engineer"));
 
-            Character character = new Character(charInfo, wayPoint.SimPosition);
+            Character character = Character.Create(charInfo, wayPoint.SimPosition);
             Character.Controlled = character;
             character.GiveJobItems(null);
             
@@ -331,7 +331,7 @@ namespace Barotrauma
             }
             yield return new WaitForSeconds(1.0f); 
       
-            var moloch = new AICharacter("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 25.0f);
+            var moloch = Character.Create("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 25.0f);
             moloch.PlaySound(AIController.AiState.Attack);
 
             yield return new WaitForSeconds(1.0f);

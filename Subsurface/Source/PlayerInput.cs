@@ -278,7 +278,7 @@ namespace Barotrauma
             return GameMain.Config.KeyBind(inputType).IsHit();
         }
 
-        public static bool KeyDOwn(InputType inputType)
+        public static bool KeyDown(InputType inputType)
         {
             return GameMain.Config.KeyBind(inputType).IsDown();
         }

@@ -223,7 +223,7 @@ namespace Barotrauma
                     if (commands[1].ToLower()=="human")
                     {
                         WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
-                        Character.Controlled = new Character(Character.HumanConfigFile, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
+                        Character.Controlled = Character.Create(Character.HumanConfigFile, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
                         if (GameMain.GameSession != null)
                         {
                             SinglePlayerMode mode = GameMain.GameSession.gameMode as SinglePlayerMode;
@@ -235,7 +235,7 @@ namespace Barotrauma
                     else
                     {
                         WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
-                        new AICharacter("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
+                        Character.Create("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
                     }
 
                     break;

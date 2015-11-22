@@ -756,14 +756,14 @@ namespace Barotrauma.Networking
             
             for (int i = 0; i < ConnectedClients.Count; i++)
             {
-                ConnectedClients[i].Character = new Character(
+                ConnectedClients[i].Character = Character.Create(
                     ConnectedClients[i].characterInfo, assignedWayPoints[i], true);
                 ConnectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
             }
 
             if (characterInfo != null)
             {
-                myCharacter = new Character(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1]);
+                myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1]);
                 Character.Controlled = myCharacter;
 
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);

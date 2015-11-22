@@ -210,7 +210,7 @@ namespace Barotrauma
             {
                 ConnectionPanel panel = GetComponent<ConnectionPanel>();
                 if (panel == null) return null;
-                return panel.connections;
+                return panel.Connections;
             }
         }
 
@@ -790,7 +790,7 @@ namespace Barotrauma
         {
             ConnectionPanel panel = GetComponent<ConnectionPanel>();
             if (panel == null) return;
-            foreach (Connection c in panel.connections)
+            foreach (Connection c in panel.Connections)
             {
                 if (c.Name != connectionName) continue;
 

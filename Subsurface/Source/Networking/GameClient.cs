@@ -751,8 +751,8 @@ namespace Barotrauma.Networking
             }
 
             Character character = (closestWaypoint == null) ?
-                new Character(ch, position, !isMyCharacter) :
-                new Character(ch, closestWaypoint, !isMyCharacter);
+                Character.Create(ch, position, !isMyCharacter) :
+                Character.Create(ch, closestWaypoint, !isMyCharacter);
 
             character.ID = ID;
             

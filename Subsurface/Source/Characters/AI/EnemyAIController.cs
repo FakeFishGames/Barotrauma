@@ -80,6 +80,8 @@ namespace Barotrauma
             sight           = ToolBox.GetAttributeFloat(aiElement, "sight", 0.0f);
             hearing         = ToolBox.GetAttributeFloat(aiElement, "hearing", 0.0f);
 
+            steeringManager = new SteeringManager(this);
+
             state = AiState.None;
         }
 

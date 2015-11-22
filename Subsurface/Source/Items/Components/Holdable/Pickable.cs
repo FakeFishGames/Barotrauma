@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
                 var connectionPanel = item.GetComponent<ConnectionPanel>();
                 if (connectionPanel!=null)
                 {
-                    foreach (Connection c in connectionPanel.connections)
+                    foreach (Connection c in connectionPanel.Connections)
                     {
                         foreach (Wire w in c.Wires)
                         {

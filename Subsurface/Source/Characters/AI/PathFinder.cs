@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -76,6 +77,9 @@ namespace Barotrauma
 
     class PathFinder
     {
+        public delegate float GetNodePenaltyHandler(PathNode node, PathNode prevNode);
+        public GetNodePenaltyHandler GetNodePriority;
+
         List<PathNode> nodes;
 
         private bool insideSubmarine;
@@ -89,6 +93,9 @@ namespace Barotrauma
 
         public SteeringPath FindPath(Vector2 start, Vector2 end)
         {
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
             float closestDist = 0.0f;
             PathNode startNode = null;
             foreach (PathNode node in nodes)
@@ -96,9 +103,17 @@ namespace Barotrauma
                 float dist = Vector2.Distance(start,node.Position);
                 if (dist<closestDist || startNode==null)
                 {
+                    if (insideSubmarine && Submarine.CheckVisibility(start, node.Position) != null) continue;
+
                     closestDist = dist;
                     startNode = node;
                 }
+            }
+
+            if (startNode == null)
+            {
+                DebugConsole.ThrowError("Pathfinding error, couldn't find a start node");
+                return new SteeringPath();
             }
 
             closestDist = 0.0f;
@@ -108,18 +123,26 @@ namespace Barotrauma
                 float dist = Vector2.Distance(end, node.Position);
                 if (dist < closestDist || endNode == null)
                 {
+                    if (insideSubmarine && Submarine.CheckVisibility(end, node.Waypoint.SimPosition) != null) continue;
+
                     closestDist = dist;
                     endNode = node;
                 }
             }
 
-            if (startNode == null || endNode == null)
+            if (endNode == null)
             {
-                DebugConsole.ThrowError("Pathfinding error, couldn't find pathnodes");
+                DebugConsole.ThrowError("Pathfinding error, couldn't find an end node");
                 return new SteeringPath();
             }
 
-            return FindPath(startNode,endNode);
+
+            var path =  FindPath(startNode,endNode);
+
+            sw.Stop();
+            System.Diagnostics.Debug.WriteLine("findpath: " + sw.ElapsedTicks);
+
+            return path;
         }
 
         public SteeringPath FindPath(WayPoint start, WayPoint end)
@@ -157,7 +180,7 @@ namespace Barotrauma
                 node.G = 0.0f;
                 node.H = 0.0f;
             }
-
+              
             start.state = 1;
             while (true)
             {
@@ -185,7 +208,10 @@ namespace Barotrauma
                     //a node that hasn't been searched yet
                     if (nextNode.state==0)
                     {
-                        nextNode.H = Vector2.Distance(nextNode.Position,end.Position);
+                        nextNode.H = Vector2.DistanceSquared(nextNode.Position,end.Position);
+
+                        if (GetNodePriority != null) nextNode.H += GetNodePriority(currNode, nextNode);
+
                         nextNode.G = currNode.G + currNode.distances[i];
                         nextNode.F = nextNode.G + nextNode.H;
                         nextNode.Parent = currNode;

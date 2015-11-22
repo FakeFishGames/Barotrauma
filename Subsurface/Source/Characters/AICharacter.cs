@@ -19,33 +19,35 @@ namespace Barotrauma
             get { return aiController; }
         }
 
-        public AICharacter(string file) : this(file, Vector2.Zero, null)
-        {
-        }
+        //public AICharacter(string file) : this(file, Vector2.Zero, null)
+        //{
+        //}
 
-        public AICharacter(string file, Vector2 position)
-            : this(file, position, null)
-        {
-        }
+        //public AICharacter(string file, Vector2 position)
+        //    : this(file, position, null)
+        //{
+        //}
 
-        public AICharacter(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
-            : this(characterInfo.File, spawnPoint.SimPosition, characterInfo, isNetworkPlayer)
-        {
+        //public AICharacter(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
+        //    : this(characterInfo.File, spawnPoint.SimPosition, characterInfo, isNetworkPlayer)
+        //{
 
-        }
+        //}
 
-        public AICharacter(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
-            : this(characterInfo.File, position, characterInfo, isNetworkPlayer)
-        {
-        }
+        //public AICharacter(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
+        //    : this(characterInfo.File, position, characterInfo, isNetworkPlayer)
+        //{
+        //}
 
         public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
             : base(file, position, characterInfo, isNetworkPlayer)
         {
-            aiController = new EnemyAIController(this, file);
-
-
             if (GameMain.Client != null && GameMain.Server == null) Enabled = false;
+        }
+
+        public void SetAI(AIController aiController)
+        {
+            this.aiController = aiController;
         }
 
         public override void Update(Camera cam, float deltaTime)
@@ -53,6 +55,8 @@ namespace Barotrauma
             base.Update(cam, deltaTime);
 
             if (isDead) return;
+
+            if (Controlled == this) return;
 
             if (soundTimer > 0)
             {
