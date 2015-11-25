@@ -39,14 +39,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [HasDefaultValue(10.0f, false), Editable]
+        [HasDefaultValue(10.0f, true), Editable]
         public float Capacity
         {
             get { return capacity; }
             set { capacity = Math.Max(value, 1.0f); }
         }
 
-        [HasDefaultValue(10.0f, false), Editable]
+        [HasDefaultValue(10.0f, true), Editable]
         public float RechargeSpeed
         {
             get { return rechargeSpeed; }

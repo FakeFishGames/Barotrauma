@@ -6,8 +6,6 @@ namespace Barotrauma
 {
     class AnimController : Ragdoll
     {
-        public bool IsStanding;
-
         public enum Animation { None, Climbing, UsingConstruction, Struggle };
         public Animation Anim;
 
@@ -32,7 +30,7 @@ namespace Barotrauma
             get { return stunTimer; }
             set 
             {
-                if (float.IsNaN(value) || float.IsInfinity(value)) return;
+                if (!MathUtils.IsValid(value)) return;
                 stunTimer = value; 
             }
         }

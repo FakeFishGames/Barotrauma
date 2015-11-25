@@ -573,7 +573,6 @@ namespace Barotrauma
             Vector2 targetMovement = GetTargetMovement();
 
             AnimController.TargetMovement = targetMovement;
-            AnimController.IsStanding = true;
 
             AnimController.IgnorePlatforms = targetMovement.Y < 0.0f;
 
@@ -721,8 +720,6 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            AnimController.IsStanding = true;
-
             Limb head = AnimController.GetLimb(LimbType.Head);
 
             Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(head.SimPosition);
@@ -733,19 +730,6 @@ namespace Barotrauma
                 {
                     keys[i].SetState();
                 }
-
-                //    keys[(int)InputType.Left].SetState(GameMain.Config.KeyBind(inpu));
-                //keys[(int)InputType.Right].SetState(PlayerInput.KeyDown(Keys.D));
-                //keys[(int)InputType.Up].SetState(PlayerInput.KeyDown(Keys.W));
-                //keys[(int)InputType.Down].SetState(PlayerInput.KeyDown(Keys.S));
-
-                //keys[(int)InputType.Select].SetState(PlayerInput.KeyHit(Keys.E));
-                //keys[(int)InputType.ActionHit].SetState(PlayerInput.LeftButtonClicked());
-                //keys[(int)InputType.ActionHeld].SetState(PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed);
-                //keys[(int)InputType.SecondaryHit].SetState(PlayerInput.RightButtonClicked());
-                //keys[(int)InputType.SecondaryHeld].SetState(PlayerInput.GetMouseState.RightButton == ButtonState.Pressed);
-
-                //keys[(int)InputType.Run].SetState(PlayerInput.KeyDown(Keys.LeftShift));
             }
             else
             {
@@ -1457,8 +1441,6 @@ namespace Barotrauma
 #endif
                         return;
                     }
-
-                    AnimController.IsStanding = true;
 
                     keys[(int)InputType.Use].Held = actionKeyState;
                     keys[(int)InputType.Use].SetState(false, actionKeyState);

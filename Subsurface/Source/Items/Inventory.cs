@@ -165,8 +165,11 @@ namespace Barotrauma
         {
             doubleClickedItem = null;
 
+            string toolTip = "";
+
             int rectWidth = 40, rectHeight = 40;
 
+            Rectangle highlightedSlot = Rectangle.Empty;
             int spacing = 10;
             
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
@@ -184,7 +187,12 @@ namespace Barotrauma
 
                 if (draggingItem == Items[i]) draggingItemSlot = slotRect;
 
-                UpdateSlot(spriteBatch, slotRect, i, Items[i], false);                
+                UpdateSlot(spriteBatch, slotRect, i, Items[i], false);
+                if (slotRect.Contains(PlayerInput.MousePosition) && Items[i] != null)
+                {
+                    highlightedSlot = slotRect;
+                    toolTip = Items[i].Name;
+                }
             }
 
             if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition) && draggingItem.container == this.Owner)
@@ -208,7 +216,29 @@ namespace Barotrauma
                     DropItem(draggingItem);
                     //draggingItem = null;
                 }
-            }                       
+            }
+
+            if (!string.IsNullOrWhiteSpace(toolTip))
+            {
+                DrawToolTip(spriteBatch, toolTip, highlightedSlot);
+            }
+        }
+
+        protected void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot)
+        {
+            Vector2 textSize = GUI.Font.MeasureString(toolTip);
+            Vector2 rectSize = textSize * 1.2f;
+
+            Vector2 pos = new Vector2(highlightedSlot.Center.X, highlightedSlot.Bottom);
+            pos.X = (int)pos.X;
+            pos.Y = (int)pos.Y;
+
+            GUI.DrawRectangle(spriteBatch, pos, rectSize, Color.Black * 0.8f, true);
+            spriteBatch.DrawString(GUI.Font, toolTip,
+                new Vector2((int)pos.X + rectSize.X * 0.5f, (int)pos.Y + rectSize.Y * 0.5f),
+                Color.White, 0.0f,
+                new Vector2((int)textSize.X * 0.5f, (int)textSize.Y * 0.5f),
+                1.0f, SpriteEffects.None, 0.0f);
         }
 
         protected void UpdateSlot(SpriteBatch spriteBatch, Rectangle rect, int slotIndex, Item item, bool isSubSlot, bool drawItem=true)
@@ -294,29 +324,20 @@ namespace Barotrauma
         protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot, bool drawItem=true)
         {
             GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.1f : 0.3f), true);
+
+            if (item != null && item.Condition < 100.0f)
+            {
+                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 4, rect.Width, 4), Color.Black, true);
+                GUI.DrawRectangle(spriteBatch,
+                    new Rectangle(rect.X, rect.Bottom - 4, (int)(rect.Width * item.Condition / 100.0f), 4),
+                    Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f), true);
+            }
+
             GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.2f : 0.4f), false);
 
             if (item == null || !drawItem) return;
 
             item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
-
-            if (isHighLighted)
-            {
-                Vector2 pos = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height + 20) - GUI.Font.MeasureString(item.Name) * 0.5f;
-                pos.X = (int)pos.X;
-                pos.Y = (int)pos.Y;
-#if DEBUG
-                spriteBatch.DrawString(GUI.Font, item.Name+" - "+item.ID, pos - new Vector2(1.0f, 1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.Font, item.Name+" - "+item.ID, pos, Color.White);
-#else
-                spriteBatch.DrawString(GUI.Font, item.Name, pos - new Vector2(1.0f, 1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.Font, item.Name, pos, Color.White);
-#endif
-
-            }
-
-            if (item.Condition < 100.0f)
-                spriteBatch.DrawString(GUI.Font, (int)item.Condition + " %", new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.Red);
         }
 
         public virtual bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
