@@ -636,6 +636,8 @@ namespace Barotrauma
                 }
             }
 
+            WayPoint.GenerateSubWaypoints();
+
             GameMain.LightManager.OnMapLoaded();
 
             ID = ushort.MaxValue-10;

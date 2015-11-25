@@ -25,14 +25,14 @@ namespace Barotrauma
             for (int i = 0; i < capacity; i++)
             {
                 //item is already in the inventory!
-                if (items[i] == item) return -1;
+                if (Items[i] == item) return -1;
             }
 
             if (!container.CanBeContained(item)) return -1;
 
             for (int i = 0; i < capacity; i++)
             {
-                if (items[i] == null) return i;
+                if (Items[i] == null) return i;
             }
 
             return -1;
@@ -40,8 +40,8 @@ namespace Barotrauma
 
         public override bool CanBePut(Item item, int i)
         {
-            if (i < 0 || i >= items.Length) return false;
-            return (item!=null && items[i]==null && container.CanBeContained(item));
+            if (i < 0 || i >= Items.Length) return false;
+            return (item!=null && Items[i]==null && container.CanBeContained(item));
         }
 
         public override bool TryPutItem(Item item, int i, bool createNetworkEvent)

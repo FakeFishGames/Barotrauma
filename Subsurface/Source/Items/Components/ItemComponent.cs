@@ -551,7 +551,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (!hasItem && ri.Type.HasFlag(RelatedItem.RelationType.Picked))
                 {
-                    if (character.Inventory.items.FirstOrDefault(x => x!=null && x.Condition>0.0f && ri.MatchesItem(x))!=null) hasItem = true;
+                    if (character.Inventory.Items.FirstOrDefault(x => x!=null && x.Condition>0.0f && ri.MatchesItem(x))!=null) hasItem = true;
                 }
                 if (!hasItem)
                 {

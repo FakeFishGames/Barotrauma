@@ -162,7 +162,7 @@ namespace Barotrauma.Items.Components
             ItemContainer container = item.GetComponent<ItemContainer>();
             foreach (ItemPrefab ip in fabricatedItem.RequiredItems)
             {
-                var requiredItem = Array.Find(container.inventory.items, it => it != null && it.Prefab == ip);
+                var requiredItem = container.inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip);
                 container.inventory.RemoveItem(requiredItem);
             }
             
@@ -182,7 +182,7 @@ namespace Barotrauma.Items.Components
                 ItemContainer container = item.GetComponent<ItemContainer>();
                 foreach (ItemPrefab ip in targetItem.RequiredItems)
                 {
-                    if (Array.Find(container.inventory.items, it => it != null && it.Prefab == ip) != null) continue;
+                    if (Array.Find(container.inventory.Items, it => it != null && it.Prefab == ip) != null) continue;
                     selectedItemFrame.GetChild<GUIButton>().Enabled = false;
                     break;
                 }

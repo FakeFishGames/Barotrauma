@@ -84,6 +84,17 @@ namespace Barotrauma
         //the name of the species (e.q. human)
         public readonly string SpeciesName;
 
+        protected float soundTimer;
+        protected float soundInterval;
+
+        private float bleeding;
+
+        private Sound[] sounds;
+        private float[] soundRange;
+        //which AIstate each sound is for
+        private AIController.AiState[] soundStates;
+        
+
         private CharacterInfo info;
 
         public CharacterInfo Info
@@ -99,16 +110,6 @@ namespace Barotrauma
             }
         }
 
-        protected float soundTimer;
-        protected float soundInterval;
-
-        private float bleeding;
-                
-        private Sound[] sounds;
-        private float[] soundRange;
-        //which AIstate each sound is for
-        private AIController.AiState[] soundStates;
-        
         public string Name
         {
             get
@@ -171,6 +172,7 @@ namespace Barotrauma
         {
             get { return aiTarget.SightRange; }
         }
+
         private float pressureProtection;
         public float PressureProtection
         {
@@ -181,11 +183,17 @@ namespace Barotrauma
             }
         }
 
+        public bool NeedsAir
+        {
+            get { return needsAir; }
+        }
+
         public float Oxygen
         {
             get { return oxygen; }
             set 
             {
+                if (!MathUtils.IsValid(value)) return;
                 oxygen = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (oxygen == 0.0f) Kill(CauseOfDeath.Suffocation);
             }
@@ -567,6 +575,8 @@ namespace Barotrauma
             AnimController.TargetMovement = targetMovement;
             AnimController.IsStanding = true;
 
+            AnimController.IgnorePlatforms = targetMovement.Y < 0.0f;
+
             if (AnimController.onGround &&
                 !AnimController.InWater &&
                 AnimController.Anim != AnimController.Animation.UsingConstruction)
@@ -877,7 +887,7 @@ namespace Barotrauma
             
             if (isDead) return;
 
-            if (!(this is AICharacter))
+            if (!(AnimController is FishAnimController))
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
                 
@@ -993,7 +1003,7 @@ namespace Barotrauma
                 AnimController.DebugDraw(spriteBatch);
             }
 
-            Vector2 healthBarPos = new Vector2(Position.X - 50, -Position.Y - 50.0f);
+            Vector2 healthBarPos = new Vector2(Position.X - 50, -Position.Y - 100.0f);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f * (health / maxHealth)), 15), Color.Red, true);
         }

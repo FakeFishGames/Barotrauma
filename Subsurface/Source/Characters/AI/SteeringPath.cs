@@ -9,15 +9,36 @@ namespace Barotrauma
 
         int currentIndex;
 
-        public SteeringPath()
+        public bool Unreachable
+        {
+            get;
+            private set;
+        }
+
+        public SteeringPath(bool unreachable = false)
         {
             nodes = new List<WayPoint>();
+            Unreachable = unreachable;
         }
 
         public void AddNode(WayPoint node)
         {
             if (node == null) return;
             nodes.Add(node);
+        }
+
+        public int CurrentIndex
+        {
+            get { return currentIndex; }
+        }
+
+        public WayPoint PrevNode
+        {
+            get 
+            {
+                if (currentIndex-1 < 0 || currentIndex-1 > nodes.Count - 1) return null;
+                return nodes[currentIndex-1]; 
+            }
         }
 
         public WayPoint CurrentNode

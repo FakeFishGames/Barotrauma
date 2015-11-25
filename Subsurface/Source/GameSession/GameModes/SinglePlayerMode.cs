@@ -52,6 +52,7 @@ namespace Barotrauma
             CargoManager = new CargoManager();
 
             endShiftButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.Style);
+            endShiftButton.Font = GUI.SmallFont;
             endShiftButton.OnClicked = EndShift;
 
             for (int i = 0; i < 3; i++)
@@ -142,14 +143,12 @@ namespace Barotrauma
 
             if (Level.Loaded.AtEndPosition)
             {
-                endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;
-                endShiftButton.Font = GUI.SmallFont;
+                endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;                
                 endShiftButton.Draw(spriteBatch);
             }
             else if (Level.Loaded.AtStartPosition)
             {
                 endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
-                endShiftButton.Font = GUI.SmallFont;
                 endShiftButton.Draw(spriteBatch);
             }
 

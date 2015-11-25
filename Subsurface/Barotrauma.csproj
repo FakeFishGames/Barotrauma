@@ -62,7 +62,10 @@
     <Compile Include="Source\Characters\AI\AITarget.cs" />
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFindSafety.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFixLeak.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveGetItem.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveGoTo.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveIdle.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveManager.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjective.cs" />

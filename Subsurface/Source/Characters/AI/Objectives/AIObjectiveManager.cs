@@ -10,6 +10,14 @@ namespace Barotrauma
         private List<AIObjective> objectives;
 
         private Character character;
+        
+        public AIObjective CurrentObjective
+        {
+            get
+            {
+                return objectives.Any() ? objectives[0] : null;
+            }
+        }
 
         public AIObjectiveManager(Character character)
         {
@@ -33,14 +41,24 @@ namespace Barotrauma
             objectives = objectives.FindAll(o => !o.IsCompleted());
 
             //sort objectives according to priority
-            objectives.Sort((x, y) => x.GetPriority(character).CompareTo(y.GetPriority(character)));            
-            
+            objectives.Sort((x, y) => y.GetPriority(character).CompareTo(x.GetPriority(character)));
+
+            if (character.AnimController.CurrentHull!=null)
+            {
+                var gaps = character.AnimController.CurrentHull.FindGaps();
+
+                foreach (Gap gap in gaps)
+                {
+                    if (gap.linkedTo.Count > 1) continue;
+                    AddObjective(new AIObjectiveFixLeak(gap, character));
+                }
+            }
         }
 
         public void DoCurrentObjective(float deltaTime)
         {
             if (!objectives.Any()) return;
-            objectives[0].TryComplete(deltaTime, character);
+            objectives[0].TryComplete(deltaTime);
         }
     }
 }

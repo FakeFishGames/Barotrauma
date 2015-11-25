@@ -27,7 +27,7 @@ namespace Barotrauma
             set { sightRange = value; }
         }
 
-        public Vector2 Position
+        public Vector2 SimPosition
         {
             get { return Entity.SimPosition; }
         }

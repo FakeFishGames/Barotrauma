@@ -42,7 +42,7 @@ namespace Barotrauma
 
         protected int selectedSlot;
 
-        public Item[] items;
+        public Item[] Items;
 
         public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow=5)
         {
@@ -52,7 +52,7 @@ namespace Barotrauma
 
             this.slotsPerRow = slotsPerRow;
 
-            items = new Item[capacity];
+            Items = new Item[capacity];
 
             CenterPos = (centerPos==null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
         }
@@ -61,7 +61,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < capacity; i++)
             {
-                if (items[i] == item) return i;
+                if (Items[i] == item) return i;
             }
             return -1;
         }
@@ -71,12 +71,12 @@ namespace Barotrauma
             for (int i = 0; i < capacity; i++)
             {
                 //item is already in the inventory!
-                if (items[i] == item) return -1;
+                if (Items[i] == item) return -1;
             }
 
             for (int i = 0; i < capacity; i++)
             {
-                if (items[i] == null) return i;                   
+                if (Items[i] == null) return i;                   
             }
             
             return -1;
@@ -84,8 +84,8 @@ namespace Barotrauma
 
         public virtual bool CanBePut(Item item, int i)
         {
-            if (i < 0 || i >= items.Length) return false;
-            return (items[i] == null);            
+            if (i < 0 || i >= Items.Length) return false;
+            return (Items[i] == null);            
         }
         
         /// <summary>
@@ -124,7 +124,7 @@ namespace Barotrauma
                 if (item.inventory != null) item.inventory.RemoveItem(item);
             }
 
-            items[i] = item;
+            Items[i] = item;
             item.inventory = this;
             if (item.body != null)
             {
@@ -134,13 +134,18 @@ namespace Barotrauma
             if (createNetworkEvent) new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true, true);            
         }
 
+        public Item FindItem(string itemName)
+        {
+            return Items.FirstOrDefault(i => i != null && (i.Name == itemName || i.HasTag(itemName)));
+        }
+
         public void RemoveItem(Item item)
         {
             //go through the inventory and remove the item from all slots
             for (int n = 0; n < capacity; n++)
             {
-                if (items[n] != item) continue;
-                items[n] = null;
+                if (Items[n] != item) continue;
+                Items[n] = null;
                 item.inventory = null;
             }
         }
@@ -177,9 +182,9 @@ namespace Barotrauma
                 slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow);
                 slotRect.Y = startY + (rectHeight + spacing) * ((int)Math.Floor((double)i / slotsPerRow));
 
-                if (draggingItem == items[i]) draggingItemSlot = slotRect;
+                if (draggingItem == Items[i]) draggingItemSlot = slotRect;
 
-                UpdateSlot(spriteBatch, slotRect, i, items[i], false);                
+                UpdateSlot(spriteBatch, slotRect, i, Items[i], false);                
             }
 
             if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition) && draggingItem.container == this.Owner)
@@ -247,7 +252,7 @@ namespace Barotrauma
                 {
 
 #if DEBUG
-                    System.Diagnostics.Debug.Assert(slotIndex >= 0 && slotIndex < items.Length);
+                    System.Diagnostics.Debug.Assert(slotIndex >= 0 && slotIndex < Items.Length);
 #else
                 if (slotIndex<0 || slotIndex>=items.Length) return;
 #endif
@@ -266,7 +271,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
                     Item[] containedItems = null;
-                    if (items[slotIndex] != null) containedItems = items[slotIndex].ContainedItems;
+                    if (Items[slotIndex] != null) containedItems = Items[slotIndex].ContainedItems;
 
                     if (containedItems != null)
                     {
@@ -316,7 +321,7 @@ namespace Barotrauma
 
         public virtual bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
-            var foundItems = Array.FindAll(items, i => i != null);
+            var foundItems = Array.FindAll(Items, i => i != null);
             message.Write((byte)foundItems.Count());
             foreach (Item item in foundItems)
             {
@@ -340,10 +345,10 @@ namespace Barotrauma
            
             for (int i = 0; i < capacity; i++)
             {
-                if (items[i] == null) continue;
-                if (!newItemIDs.Contains(items[i].ID))
+                if (Items[i] == null) continue;
+                if (!newItemIDs.Contains(Items[i].ID))
                 {
-                    items[i].Drop(null, false);
+                    Items[i].Drop(null, false);
                     continue;
                 }
             }

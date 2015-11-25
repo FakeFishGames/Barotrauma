@@ -13,20 +13,27 @@ namespace Barotrauma
 
         private AIObjectiveManager objectiveManager;
 
+        private IndoorsSteeringManager indoorsSteeringManager;
+        private SteeringManager outdoorsSteeringManager;
+
         private AITarget selectedAiTarget;
 
         private float updateObjectiveTimer;
 
         public HumanAIController(Character c) : base(c)
         {
-            steeringManager = new PathSteeringManager(this);
+            indoorsSteeringManager = new IndoorsSteeringManager(this, true);
+            outdoorsSteeringManager = new SteeringManager(this);
 
             objectiveManager = new AIObjectiveManager(c);
-            objectiveManager.AddObjective(new AIObjectiveFindSafety());
+            objectiveManager.AddObjective(new AIObjectiveFindSafety(c));
+            objectiveManager.AddObjective(new AIObjectiveIdle(c));
         }
 
         public override void Update(float deltaTime)
         {
+            steeringManager = Character.AnimController.CurrentHull == null ? outdoorsSteeringManager : indoorsSteeringManager;
+
             if (updateObjectiveTimer>0.0f)
             {
                 updateObjectiveTimer -= deltaTime;
@@ -46,12 +53,15 @@ namespace Barotrauma
 
             Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
-            if (Math.Abs(Character.AnimController.TargetMovement.X)>0.1f)
+            if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
             {
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
 
-            steeringManager.Update();
+            float currObjectivePriority = objectiveManager.CurrentObjective == null ? 0.0f : objectiveManager.CurrentObjective.GetPriority(Character);
+            float moveSpeed = MathHelper.Clamp(currObjectivePriority/10.0f, 1.0f, 3.0f);
+            
+            steeringManager.Update(moveSpeed);
         }
 
         public override void SelectTarget(AITarget target)
@@ -61,13 +71,12 @@ namespace Barotrauma
 
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-
             if (selectedAiTarget != null)
             {
-                GUI.DrawLine(spriteBatch, new Vector2(Character.Position.X, -Character.Position.Y), ConvertUnits.ToDisplayUnits(new Vector2(selectedAiTarget.Position.X, -selectedAiTarget.Position.Y)), Color.Red);
+                GUI.DrawLine(spriteBatch, new Vector2(Character.Position.X, -Character.Position.Y), ConvertUnits.ToDisplayUnits(new Vector2(selectedAiTarget.SimPosition.X, -selectedAiTarget.SimPosition.Y)), Color.Red);
             }
 
-            PathSteeringManager pathSteering = steeringManager as PathSteeringManager;
+            IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
             if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode==null) return;
 
             GUI.DrawLine(spriteBatch,
@@ -83,7 +92,6 @@ namespace Barotrauma
                     new Vector2(pathSteering.CurrentPath.Nodes[i - 1].Position.X, -pathSteering.CurrentPath.Nodes[i-1].Position.Y),
                     Color.LightGreen);
             }
-
         }
     }
 }

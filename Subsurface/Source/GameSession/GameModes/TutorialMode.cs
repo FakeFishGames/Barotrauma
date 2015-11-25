@@ -50,16 +50,10 @@ namespace Barotrauma
             Character character = Character.Create(charInfo, wayPoint.SimPosition);
             Character.Controlled = character;
             character.GiveJobItems(null);
-            
-            foreach (Item item in character.Inventory.items)
-            {
-                if (item == null || item.Name != "ID Card") continue;
 
-                item.AddTag("com");
-                item.AddTag("eng");
-
-                break;
-            }
+            var idCard = character.Inventory.FindItem("ID Card");
+            idCard.AddTag("com");
+            idCard.AddTag("eng");
 
             CrewManager.AddCharacter(character);
 
@@ -495,7 +489,7 @@ namespace Barotrauma
 
             do
             {
-                var weldingTool = Character.Controlled.Inventory.items.FirstOrDefault(i => i != null && i.Name == "Welding Tool");
+                var weldingTool = Character.Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Name == "Welding Tool");
                 if (weldingTool != null && 
                     weldingTool.ContainedItems.FirstOrDefault(contained => contained != null && contained.Name == "Welding Fuel Tank") != null) break;
 
@@ -604,7 +598,7 @@ namespace Barotrauma
         private bool HasItem(string itemName)
         {
             if (Character.Controlled == null) return false;
-            return Character.Controlled.Inventory.items.FirstOrDefault(i => i != null && i.Name == itemName)!=null;
+            return Character.Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Name == itemName)!=null;
         }
 
         /// <summary>

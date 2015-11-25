@@ -12,22 +12,46 @@ namespace Barotrauma
     {
         AITarget target;
 
-        private Character character;
+        Vector2 targetPos;
 
-        public AIObjectiveGoTo(AITarget target, Character character)
+        public override bool CanBeCompleted
         {
-            this.character = character;
-            this.target = target;
-
+            get
+            {
+                var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+                return (pathSteering.CurrentPath == null || !pathSteering.CurrentPath.Unreachable);
+            }
         }
 
-        protected override void Act(float deltaTime, Character character)
+        public AITarget Target
         {
-            if (target == null) return;
+            get { return target; }
+        }
 
+        public AIObjectiveGoTo(AITarget target, Character character)
+            : base (character)
+        {
+            this.target = target;
+        }
+
+
+        public AIObjectiveGoTo(Vector2 targetPos, Character character)
+            : base(character)
+        {
+            this.targetPos = targetPos;
+        }
+
+        protected override void Act(float deltaTime)
+        {            
             character.AIController.SelectTarget(target);
 
-            character.AIController.SteeringManager.SteeringSeek(ConvertUnits.ToDisplayUnits(target.Position));
+            character.AIController.SteeringManager.SteeringSeek(
+                target != null ? target.SimPosition : targetPos);
+        }
+
+        public override bool IsCompleted()
+        {
+            return Vector2.Distance(target != null ? target.SimPosition : ConvertUnits.ToDisplayUnits(targetPos), character.SimPosition) < 0.5f;
         }
     }
 }

@@ -77,8 +77,8 @@ namespace Barotrauma
 
     class PathFinder
     {
-        public delegate float GetNodePenaltyHandler(PathNode node, PathNode prevNode);
-        public GetNodePenaltyHandler GetNodePriority;
+        public delegate float? GetNodePenaltyHandler(PathNode node, PathNode prevNode);
+        public GetNodePenaltyHandler GetNodePenalty;
 
         List<PathNode> nodes;
 
@@ -95,12 +95,14 @@ namespace Barotrauma
         {
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
-
+            
             float closestDist = 0.0f;
             PathNode startNode = null;
             foreach (PathNode node in nodes)
             {
-                float dist = Vector2.Distance(start,node.Position);
+                float dist = System.Math.Abs(start.X-node.Position.X)+
+                    System.Math.Abs(start.Y - node.Position.Y)*10.0f +
+                    Vector2.Distance(end,node.Position)/2.0f;
                 if (dist<closestDist || startNode==null)
                 {
                     if (insideSubmarine && Submarine.CheckVisibility(start, node.Position) != null) continue;
@@ -173,6 +175,14 @@ namespace Barotrauma
 
         private SteeringPath FindPath(PathNode start, PathNode end)
         {
+            if (start == end)
+            {
+                var path1 = new SteeringPath();
+                path1.AddNode(start.Waypoint);
+
+                return path1;
+            }
+
             foreach (PathNode node in nodes)
             {
                 node.state = 0;
@@ -210,7 +220,16 @@ namespace Barotrauma
                     {
                         nextNode.H = Vector2.DistanceSquared(nextNode.Position,end.Position);
 
-                        if (GetNodePriority != null) nextNode.H += GetNodePriority(currNode, nextNode);
+                        if (GetNodePenalty != null)
+                        {
+                            float? nodePenalty =GetNodePenalty(currNode, nextNode);
+                            if (nodePenalty == null)
+                            {
+                                nextNode.state = -1;
+                                continue;
+                            }
+                            nextNode.H += (float)nodePenalty;
+                        }
 
                         nextNode.G = currNode.G + currNode.distances[i];
                         nextNode.F = nextNode.G + nextNode.H;
@@ -236,7 +255,7 @@ namespace Barotrauma
             if (end.state==0)
             {
                 //path not found
-                return new SteeringPath();
+                return new SteeringPath(true);
             }
 
             SteeringPath path = new SteeringPath();

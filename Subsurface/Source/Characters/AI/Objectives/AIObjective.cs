@@ -11,14 +11,23 @@ namespace Barotrauma
 
         protected float priority;
 
+        protected Character character;
+
         public virtual bool IsCompleted()
         {
             return false;
         }
 
-        public AIObjective()
+        public virtual bool CanBeCompleted
+        {
+            get { return false; }
+        }
+
+        public AIObjective(Character character)
         {
             subObjectives = new List<AIObjective>();
+
+            this.character = character;
         }
 
         /// <summary>
@@ -26,20 +35,20 @@ namespace Barotrauma
         /// need to be completed before this one
         /// </summary>
         /// <param name="character">the character who's trying to achieve the objective</param>
-        public void TryComplete(float deltaTime, Character character)
+        public void TryComplete(float deltaTime)
         {
             foreach (AIObjective objective in subObjectives)
             {
                 if (objective.IsCompleted()) continue;
 
-                objective.TryComplete(deltaTime, character);
+                objective.TryComplete(deltaTime);
                 return;
             }
 
-            Act(deltaTime, character);
+            Act(deltaTime);
         }
 
-        protected virtual void Act(float deltaTime, Character character) { }
+        protected virtual void Act(float deltaTime) { }
 
         public virtual float GetPriority(Character character)
         {
@@ -48,7 +57,7 @@ namespace Barotrauma
 
         public virtual bool IsDuplicate(AIObjective otherObjective)
         {
-            return true;
+            throw new NotImplementedException();
         }
     }
 }

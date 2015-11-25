@@ -7,6 +7,7 @@ using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
+using System.Collections.Generic;
 
 namespace Barotrauma.Items.Components
 {
@@ -41,8 +42,7 @@ namespace Barotrauma.Items.Components
                 if (linkedGap != null) return linkedGap;
                 foreach (MapEntity e in item.linkedTo)
                 {
-                    linkedGap = e as Gap;
-                    linkedGap.ConnectedDoor = this;
+                    linkedGap = e as Gap;                    
                     if (linkedGap != null) return linkedGap;
                 }
                 linkedGap = new Gap(item.Rect);
@@ -256,6 +256,30 @@ namespace Barotrauma.Items.Components
             linkedGap.Open = 1.0f;
         }
 
+        public List<Controller> GetButtons()
+        {
+            ConnectionPanel connectionPanel = Item.GetComponent<ConnectionPanel>();
+            if (connectionPanel == null) return new List<Controller>();
+
+            List<Controller> buttons = new List<Controller>();
+
+            foreach (Connection c in connectionPanel.Connections)
+            {
+                foreach (Wire w in c.Wires)
+                {
+                    if (w == null) continue;
+                    var otherConnection = w.OtherConnection(c);
+
+                    if (otherConnection.Item == Item || otherConnection == null) continue;
+
+                    var controller = otherConnection.Item.GetComponent<Controller>();
+                    if (controller != null) buttons.Add(controller);                    
+                }
+            }
+
+            return buttons;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {           
             Color color = (item.IsSelected) ? Color.Green : Color.White;
@@ -272,38 +296,43 @@ namespace Barotrauma.Items.Components
             if (openState == 1.0f)
             {
                 body.Enabled = false;
+                return;
+            }
+            
+            spriteBatch.Draw(doorSprite.Texture, new Vector2(item.Rect.Center.X, -item.Rect.Y),
+                new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
+                (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
+                color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
+
+            if (openState == 0.0f)
+            {
+                body.Enabled = true;
             }
             else
             {
-                spriteBatch.Draw(doorSprite.Texture, new Vector2(item.Rect.Center.X, -item.Rect.Y),
-                    new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
-                    (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
-                    color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
+                //push characters out of the doorway when the door is closing/opening
+                Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
+                Vector2 simSize = ConvertUnits.ToSimUnits(new Vector2(item.Rect.Width,
+                item.Rect.Height * (1.0f - openState)));
 
-                if (openState == 0.0f)
+                foreach (Character c in Character.CharacterList)
                 {
-                    body.Enabled = true;
-                }
-                else
-                {
-                    //push characters out of the doorway when the door is closing/opening
-                    Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
-                    Vector2 simSize = ConvertUnits.ToSimUnits(new Vector2(item.Rect.Width,
-                    item.Rect.Height * (1.0f - openState)));
-
-                    foreach (Character c in Character.CharacterList)
+                    int dir = Math.Sign(c.AnimController.Limbs[0].SimPosition.X - simPos.X);
+                    foreach (Limb l in c.AnimController.Limbs)
                     {
-                        int dir = Math.Sign(c.AnimController.Limbs[0].SimPosition.X - simPos.X);
-                        foreach (Limb l in c.AnimController.Limbs)
-                        {
-                            if (l.SimPosition.Y < simPos.Y || l.SimPosition.Y > simPos.Y - simSize.Y) continue;
-                            if (Math.Abs(l.SimPosition.X - simPos.X) > simSize.X * 2.0f) continue;
+                        if (l.SimPosition.Y < simPos.Y || l.SimPosition.Y > simPos.Y - simSize.Y) continue;
+                        if (Math.Abs(l.SimPosition.X - simPos.X) > simSize.X * 2.0f) continue;
 
-                            l.body.ApplyForce(new Vector2(dir * 10.0f, 0.0f));
-                        }
+                        l.body.ApplyForce(new Vector2(dir * 10.0f, 0.0f));
                     }
                 }
             }
+            
+        }
+
+        public override void OnMapLoaded()
+        {
+            LinkedGap.ConnectedDoor = this;
         }
 
         public override void Remove()

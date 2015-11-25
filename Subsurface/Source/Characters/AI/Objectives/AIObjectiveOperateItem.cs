@@ -9,12 +9,13 @@ namespace Barotrauma
     {
         private Item targetItem;
 
-        public AIObjectiveOperateItem(Item item)
+        public AIObjectiveOperateItem(Item item, Character character)
+            :base (character)
         {
             targetItem = item;
         }
 
-        protected override void Act(float deltaTime, Character character)
+        protected override void Act(float deltaTime)
         {
             //item.AIOperate(float deltaTime, Character character) or something
         }
