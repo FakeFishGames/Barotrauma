@@ -102,12 +102,6 @@ namespace Barotrauma
         /// </summary>
         public override bool TryPutItem(Item item, List<LimbSlot> allowedSlots, bool createNetworkEvent = true)
         {
-            //for (int i = 0; i < capacity; i++)
-            //{
-            //    //item is already in the inventory!
-            //    if (items[i] == item) return true;
-            //}
-
             //try to place the item in LimBlot.Any slot if that's allowed
             if (allowedSlots.Contains(LimbSlot.Any))
             {
@@ -147,9 +141,6 @@ namespace Barotrauma
                 }
 
                 if (placed) return true;
-
-                //if (allowedSlots.HasFlag(LimbSlot.BothHands)) TryPutItem(item, 3, createNetworkEvent);
-
             }
 
 
@@ -164,15 +155,8 @@ namespace Barotrauma
                 if (Items[index] == item) return false;
 
                 bool combined = false;
-                //if (item.Combine(items[i]))
-                //{
-                //    //PutItem(item, i, false, false);
-                //    combined = true;
-                //}
-                //else 
                 if (Items[index].Combine(item))
                 {
-                    //PutItem(items[i], i, false, false);
                     if (Items[index]==null)
                     {
                         System.Diagnostics.Debug.Assert(false);
@@ -222,127 +206,13 @@ namespace Barotrauma
             if (!slotsFree) return false;
             
             return TryPutItem(item, new List<LimbSlot>() {placeToSlots}, createNetworkEvent);
-
-
-            ////there's already an item in the slot
-            //if (items[i] != null)
-            //{
-            //    bool combined = false;
-            //    //if (item.Combine(items[i]))
-            //    //{
-            //    //    //PutItem(item, i, false, false);
-            //    //    combined = true;
-            //    //}
-            //    //else 
-            //    if (items[i].Combine(item))
-            //    {
-            //        //PutItem(items[i], i, false, false);
-            //        Inventory otherInventory = items[i].inventory;
-            //        if (otherInventory!=null && createNetworkEvent)
-            //        {
-            //            new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true, true);
-            //        }
-
-            //        combined = true;
-            //    }
-
-            //    if (!combined) return false;                
-
-            //    //if (usedSlots.HasFlag(LimbSlot.BothHands))
-            //    //{
-            //    //    if (limbSlots[i] == LimbSlot.LeftHand)
-            //    //    {
-            //    //        PutItem(item, FindLimbSlot(LimbSlot.RightHand), createNetworkEvent, false);
-            //    //    }
-            //    //    else if (limbSlots[i] == LimbSlot.RightHand)
-            //    //    {
-            //    //        PutItem(item, FindLimbSlot(LimbSlot.LeftHand), createNetworkEvent, false);
-            //    //    }                        
-            //    //}
-            //    if (limbSlots[i] == LimbSlot.Any)
-            //    {
-            //        item.Unequip(character);
-            //        return true;
-            //    }
-            //}
-
-            
-            //bool placed = false;
-            //foreach (LimbSlot allowedSlot in usedSlots)
-            //{
-            //    if ()
-            //}
-
-            //foreach (LimbSlot allowedSlot in usedSlots)
-            //{
-            //    //check if all the required slots are free
-            //    for (int n = 0; n < capacity; i++)
-            //    {
-            //        if (allowedSlot.HasFlag(limbSlots[n]) && items[n] != null && items[n] != item) continue;
-            //    }
-
-            //    for (int n = 0; n < capacity; n++)
-            //    {
-            //        if (allowedSlot.HasFlag(limbSlots[i]) && items[i] == null)
-            //        {
-            //            PutItem(item, i, createNetworkEvent, !placed);
-            //            item.Equip(character);
-            //            placed = true;
-            //        }
-            //    }
-
-            //    if (placed) return true;
-
-            //    //if (allowedSlots.HasFlag(LimbSlot.BothHands)) TryPutItem(item, 3, createNetworkEvent);
-
-            //}
-            
-            //if (limbSlots[i]==LimbSlot.Any)
-            //{
-            //    if (usedSlots.HasFlag(LimbSlot.Any))
-            //    {
-            //        item.Unequip(character);
-            //        PutItem(item, i, createNetworkEvent);
-            //        return true;
-            //    }
-            //    else
-            //    {
-            //        return false;
-            //    }
-            //}
-            //else
-            //{
-
-            //    if (limbSlots[i] != LimbSlot.Any && usedSlots.HasFlag(limbSlots[i]) && items[i] == null)
-            //    {
-            //        item.Unequip(character);
-            //        PutItem(item, i, createNetworkEvent);
-            //        item.Equip(character);
-            //        return true;
-            //    }
-                
-            //    if (usedSlots.HasFlag(LimbSlot.BothHands) && (limbSlots[i]==LimbSlot.LeftHand || limbSlots[i]==LimbSlot.RightHand))
-            //    {
-            //        int rightHandSlot = FindLimbSlot(LimbSlot.LeftHand);
-            //        int leftHandSlot = FindLimbSlot(LimbSlot.RightHand);
-
-            //        if (items[rightHandSlot] != null) return false;
-            //        if (items[leftHandSlot] != null) return false;
-
-            //        PutItem(item, rightHandSlot, createNetworkEvent, true);
-            //        PutItem(item, leftHandSlot, createNetworkEvent, false);
-            //        item.Equip(character);
-            //        return true;
-            //    }
-
-                
-            //    return false;
-            //}
-            
         }
          
         public void DrawOwn(SpriteBatch spriteBatch)
         {
+            string toolTip = "";
+            Rectangle highlightedSlot = Rectangle.Empty;
+
             if (doubleClickedItem!=null &&  doubleClickedItem.inventory!=this)
             {
                 TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
@@ -394,6 +264,11 @@ namespace Barotrauma
                 if (multiSlot) continue;
 
                 UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
+                if (Items[i]!=null && slotRect.Contains(PlayerInput.MousePosition))
+                {
+                    toolTip = Items[i].Name;
+                    highlightedSlot = slotRect;
+                }
                 
                 if (draggingItem!=null && draggingItem == Items[i]) draggingItemSlot = slotRect;
             }
@@ -431,18 +306,15 @@ namespace Barotrauma
                 if (!multiSlot) continue;
 
                 UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
-
-                //if (multiSlot && i == first)
-                //{
-                //    multiSlotPos = multiSlotPos / count;
-                //    items[i].Sprite.Draw(spriteBatch, new Vector2(multiSlotPos.X + rectWidth / 2, multiSlotPos.Y + rectHeight / 2), items[i].Color);
-                //}
-
             }
 
             slotRect.Width = rectWidth;
             slotRect.Height = rectHeight;
 
+            if (!string.IsNullOrWhiteSpace(toolTip))
+            {
+                DrawToolTip(spriteBatch, toolTip, highlightedSlot);
+            }
 
             if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition))
             {
@@ -450,8 +322,6 @@ namespace Barotrauma
                 {
                     slotRect.X = PlayerInput.GetMouseState.X - slotRect.Width / 2;
                     slotRect.Y = PlayerInput.GetMouseState.Y - slotRect.Height / 2;
-                    //GUI.DrawRectangle(spriteBatch, rect, Color.White, true);
-                    //draggingItem.sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.White);
 
                     DrawSlot(spriteBatch, slotRect, draggingItem, false, false);
                 }

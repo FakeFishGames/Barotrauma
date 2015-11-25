@@ -198,7 +198,9 @@ namespace Barotrauma.Items.Components
                         if (it == null) continue;
 
                         PowerTransfer pt = it.GetComponent<PowerTransfer>();
-                        if (pt != null) load += pt.PowerLoad;
+                        if (pt == null) continue;
+                        
+                        load = Math.Max(load,pt.PowerLoad); 
                     }
                 }
             }

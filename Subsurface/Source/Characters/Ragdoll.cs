@@ -303,6 +303,11 @@ namespace Barotrauma
             }
             else if (structure.StairDirection!=Direction.None && lowestLimb != null)
             {
+                float stairPosY = structure.StairDirection == Direction.Right ? 
+                    lowestLimb.Position.X - structure.Rect.X : structure.Rect.Width - (lowestLimb.Position.X - structure.Rect.X);
+
+                if (lowestLimb.Position.Y < stairPosY) return;
+
                 if (targetMovement.Y < 0.5f)
                 {
                     if (inWater || lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)

@@ -155,7 +155,7 @@ namespace Barotrauma
                 default:
                     if (inWater)
                         UpdateSwimming();
-                    else if (IsStanding)
+                    else
                         UpdateStanding();
 
                     break;
