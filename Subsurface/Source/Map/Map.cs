@@ -328,7 +328,16 @@ namespace Barotrauma
                 Location location = locations[i];
                 Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
                 
-                if (!rect.Contains(pos)) continue;
+
+
+
+
+                Rectangle drawRect = location.Type.Sprite.SourceRect;
+                Rectangle sourceRect = drawRect;
+                drawRect.X = (int)pos.X - drawRect.Width/2;
+                drawRect.Y = (int)pos.Y - drawRect.Width/2;
+
+                if (!rect.Intersects(drawRect)) continue;
 
                 Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation))==null ? Color.White : Color.Green;
 
@@ -336,16 +345,32 @@ namespace Barotrauma
 
                 if (location == currentLocation) color = Color.Orange;
 
-                location.Type.Sprite.Draw(spriteBatch, pos, color, 0.0f, scale/3.0f);
+                if (drawRect.X < rect.X)
+                {
+                    sourceRect.X += rect.X - drawRect.X;
+                    sourceRect.Width -= sourceRect.X;
+                    drawRect.X = rect.X;
+                }
+                else if (drawRect.Right > rect.Right)
+                {
+                    sourceRect.Width -= (drawRect.Right - rect.Right);
+                }
 
-                //int imgIndex = i % 16;
-                //int xCell = imgIndex % 4;
-                //int yCell = (int)Math.Floor(imgIndex / 4.0f);
-                //spriteBatch.Draw(iceCraters, pos, 
-                //    new Rectangle(xCell * 64, yCell * 64, 64, 64), 
-                //    Color.White, i, 
-                //    new Vector2(32, 32), 0.5f*scale, SpriteEffects.None, 0.0f);
+                if (drawRect.Y < rect.Y)
+                {
+                    sourceRect.Y += rect.Y - drawRect.Y;
+                    sourceRect.Height -= sourceRect.Y;
+                    drawRect.Y = rect.Y;
+                }
+                else if (drawRect.Bottom > rect.Bottom)
+                {
+                    sourceRect.Height -= drawRect.Bottom - rect.Bottom;
+                }
 
+                drawRect.Width = sourceRect.Width;
+                drawRect.Height = sourceRect.Height;
+                
+                spriteBatch.Draw(location.Type.Sprite.Texture, drawRect, sourceRect, color);
             }
 
             for (int i = 0; i < 3; i++ )

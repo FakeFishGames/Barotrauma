@@ -219,7 +219,7 @@ namespace Barotrauma
         public void UpdateCharacterItems()
         {
             pickedItems.Clear();
-            foreach (Item item in Character.Inventory.items)
+            foreach (Item item in Character.Inventory.Items)
             {
                 pickedItems.Add(item == null ? (ushort)0 : item.ID);
             }

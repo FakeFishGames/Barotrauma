@@ -161,8 +161,8 @@ namespace Barotrauma
             name = ToolBox.GetAttributeString(element, "name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
 
-            pickThroughWalls = ToolBox.GetAttributeBool(element, "pickthroughwalls", false);
-            pickDistance = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f));
+            pickThroughWalls    = ToolBox.GetAttributeBool(element, "pickthroughwalls", false);
+            pickDistance        = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f));
             
             isLinkable          = ToolBox.GetAttributeBool(element, "linkable", false);
 

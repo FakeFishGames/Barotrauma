@@ -21,10 +21,7 @@ namespace Barotrauma
         //0.0 = doesn't attack targets of the type
         //positive values = attacks targets of this type
         //negative values = escapes targets of this type        
-        private float attackRooms;
-        private float attackHumans;
-        private float attackWeaker;
-        private float attackStronger;
+        private float attackRooms, attackHumans, attackWeaker, attackStronger;
 
         private float updateTargetsTimer;
 
@@ -165,7 +162,7 @@ namespace Barotrauma
             
             selectedTargetMemory.Priority -= deltaTime;
             
-            Vector2 attackPosition = selectedAiTarget.Position;
+            Vector2 attackPosition = selectedAiTarget.SimPosition;
             if (wallAttackPos != Vector2.Zero) attackPosition = wallAttackPos;
 
             if (coolDownTimer>0.0f)
@@ -230,7 +227,7 @@ namespace Barotrauma
             targetEntity = null;
             //check if there's a wall between the target and the Character   
             Vector2 rayStart = Character.AnimController.Limbs[0].SimPosition;
-            Vector2 rayEnd = selectedAiTarget.Position;
+            Vector2 rayEnd = selectedAiTarget.SimPosition;
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
 
             if (Submarine.LastPickedFraction == 1.0f || closestBody == null)
@@ -391,7 +388,7 @@ namespace Barotrauma
 
                 dist = Vector2.Distance(
                     character.AnimController.Limbs[0].SimPosition,
-                    target.Position);
+                    target.SimPosition);
                 dist = ConvertUnits.ToDisplayUnits(dist);
 
                 AITargetMemory targetMemory = FindTargetMemory(target);
@@ -402,7 +399,7 @@ namespace Barotrauma
                 if (Math.Abs(valueModifier) > Math.Abs(targetValue) && (dist < target.SightRange * sight || dist < target.SoundRange * hearing))
                 {                  
                     Vector2 rayStart = character.AnimController.Limbs[0].SimPosition;
-                    Vector2 rayEnd = target.Position;
+                    Vector2 rayEnd = target.SimPosition;
 
                     Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
                     Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
@@ -493,7 +490,7 @@ namespace Barotrauma
 
             if (selectedAiTarget!=null)
             {
-                GUI.DrawLine(spriteBatch, pos, ConvertUnits.ToDisplayUnits(new Vector2(selectedAiTarget.Position.X, -selectedAiTarget.Position.Y)), Color.Red);
+                GUI.DrawLine(spriteBatch, pos, ConvertUnits.ToDisplayUnits(new Vector2(selectedAiTarget.SimPosition.X, -selectedAiTarget.SimPosition.Y)), Color.Red);
 
                 if (wallAttackPos!=Vector2.Zero)
                 {

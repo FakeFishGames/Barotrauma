@@ -127,7 +127,7 @@ namespace Barotrauma.Items.Components
         {
             if (!hasStatusEffects) return;
 
-            foreach (Item contained in inventory.items)
+            foreach (Item contained in inventory.Items)
             {
                 if (contained == null || contained.Condition <= 0.0f) continue;
                 //if (contained.body != null) contained.body.Enabled = false;
@@ -179,7 +179,7 @@ namespace Barotrauma.Items.Components
                 currentRotation += item.body.Rotation;
             }
 
-            foreach (Item containedItem in inventory.items)
+            foreach (Item containedItem in inventory.Items)
             {
                 if (containedItem == null) continue;
 
@@ -243,7 +243,7 @@ namespace Barotrauma.Items.Components
         {
             base.Remove();
 
-            foreach (Item item in inventory.items)
+            foreach (Item item in inventory.Items)
             {
                 if (item == null) continue;
                 item.Remove();
@@ -274,10 +274,10 @@ namespace Barotrauma.Items.Components
         {
             XElement componentElement = base.Save(parentElement);
             
-            string[] itemIdStrings = new string[inventory.items.Length];
-            for (int i = 0; i < inventory.items.Length; i++)
+            string[] itemIdStrings = new string[inventory.Items.Length];
+            for (int i = 0; i < inventory.Items.Length; i++)
             {
-                itemIdStrings[i] = (inventory.items[i]==null) ? "0" : inventory.items[i].ID.ToString();
+                itemIdStrings[i] = (inventory.Items[i]==null) ? "0" : inventory.Items[i].ID.ToString();
             }
 
             componentElement.Add(new XAttribute("contained",  string.Join(",",itemIdStrings)));

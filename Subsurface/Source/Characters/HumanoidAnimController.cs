@@ -133,11 +133,7 @@ namespace Barotrauma
                 stunTimer -= deltaTime;
                 return;
             }
-
-            IgnorePlatforms = (TargetMovement.Y < 0.0f);
-
-
-
+            
             if (Anim != Animation.UsingConstruction) ResetPullJoints(); 
 
             if (TargetDir != dir) Flip();

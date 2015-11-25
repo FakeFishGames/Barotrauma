@@ -81,7 +81,7 @@ namespace Barotrauma
 
         public int FindLimbSlot(LimbSlot limbSlot)
         {
-            for (int i = 0; i < items.Length; i++)
+            for (int i = 0; i < Items.Length; i++)
             {
                 if ( limbSlots[i] == limbSlot) return i;
             }
@@ -90,9 +90,9 @@ namespace Barotrauma
 
         public bool IsInLimbSlot(Item item, LimbSlot limbSlot)
         {
-            for (int i = 0; i<items.Length; i++)
+            for (int i = 0; i<Items.Length; i++)
             {
-                if (items[i] == item && limbSlots[i] == limbSlot) return true;
+                if (Items[i] == item && limbSlots[i] == limbSlot) return true;
             }
             return false;
         }
@@ -113,7 +113,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (items[i] != null || limbSlots[i] != LimbSlot.Any) continue;
+                    if (Items[i] != null || limbSlots[i] != LimbSlot.Any) continue;
                     PutItem(item, i, createNetworkEvent);
                     item.Unequip(character);
                     return true;                   
@@ -127,7 +127,7 @@ namespace Barotrauma
                 bool free = true;
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(limbSlots[i]) && items[i]!=null && items[i]!=item)
+                    if (allowedSlot.HasFlag(limbSlots[i]) && Items[i]!=null && Items[i]!=item)
                     {
                         free = false;
                         break;
@@ -138,7 +138,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(limbSlots[i]) && items[i] == null)
+                    if (allowedSlot.HasFlag(limbSlots[i]) && Items[i] == null)
                     {
                         PutItem(item, i, createNetworkEvent, !placed);
                         item.Equip(character);
@@ -159,9 +159,9 @@ namespace Barotrauma
         public override bool TryPutItem(Item item, int index, bool createNetworkEvent)
         {
             //there's already an item in the slot
-            if (items[index] != null)
+            if (Items[index] != null)
             {
-                if (items[index] == item) return false;
+                if (Items[index] == item) return false;
 
                 bool combined = false;
                 //if (item.Combine(items[i]))
@@ -170,15 +170,15 @@ namespace Barotrauma
                 //    combined = true;
                 //}
                 //else 
-                if (items[index].Combine(item))
+                if (Items[index].Combine(item))
                 {
                     //PutItem(items[i], i, false, false);
-                    if (items[index]==null)
+                    if (Items[index]==null)
                     {
                         System.Diagnostics.Debug.Assert(false);
                         return false;
                     }
-                    Inventory otherInventory = items[index].inventory;
+                    Inventory otherInventory = Items[index].inventory;
                     if (otherInventory != null && createNetworkEvent)
                     {
                         new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true, true);
@@ -193,7 +193,7 @@ namespace Barotrauma
             if (limbSlots[index] == LimbSlot.Any)
             {
                 if (!item.AllowedSlots.Contains(LimbSlot.Any)) return false;
-                if (items[index] != null) return items[index] == item;
+                if (Items[index] != null) return Items[index] == item;
 
                 PutItem(item, index, createNetworkEvent, true);
                 return true;
@@ -209,7 +209,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(limbSlots[i]) && items[i] != null && items[i] != item)
+                    if (allowedSlot.HasFlag(limbSlots[i]) && Items[i] != null && Items[i] != item)
                     {
                         slotsFree = false;
                         break;
@@ -381,11 +381,11 @@ namespace Barotrauma
 
                 bool multiSlot = false;
                 //skip if the item is in multiple slots
-                if (items[i]!=null)
+                if (Items[i]!=null)
                 {                    
                     for (int n = 0; n < capacity; n++ )
                     {
-                        if (i==n || items[n] != items[i]) continue;
+                        if (i==n || Items[n] != Items[i]) continue;
                         multiSlot = true;
                         break;
                     }
@@ -393,9 +393,9 @@ namespace Barotrauma
 
                 if (multiSlot) continue;
 
-                UpdateSlot(spriteBatch, slotRect, i, items[i], i > 4);
+                UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
                 
-                if (draggingItem!=null && draggingItem == items[i]) draggingItemSlot = slotRect;
+                if (draggingItem!=null && draggingItem == Items[i]) draggingItemSlot = slotRect;
             }
 
 
@@ -406,7 +406,7 @@ namespace Barotrauma
                 bool multiSlot = false;
 
                 //check if the item is in multiple slots
-                if (items[i] != null)
+                if (Items[i] != null)
                 {
                     slotRect.X = (int)slotPositions[i].X;
                     slotRect.Y = (int)slotPositions[i].Y;
@@ -415,7 +415,7 @@ namespace Barotrauma
 
                     for (int n = 0; n < capacity; n++)
                     {
-                        if (items[n] != items[i]) continue;
+                        if (Items[n] != Items[i]) continue;
 
                         if (!multiSlot && i > n) break;
                         
@@ -430,7 +430,7 @@ namespace Barotrauma
 
                 if (!multiSlot) continue;
 
-                UpdateSlot(spriteBatch, slotRect, i, items[i], i > 4);
+                UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
 
                 //if (multiSlot && i == first)
                 //{
@@ -469,7 +469,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < capacity; i++)
             {
-                message.Write(items[i]==null ? (ushort)0 : (ushort)items[i].ID);
+                message.Write(Items[i]==null ? (ushort)0 : (ushort)Items[i].ID);
             }
             
             return true;
@@ -486,14 +486,14 @@ namespace Barotrauma
                 ushort itemId = message.ReadUInt16();
                 if (itemId==0)
                 {
-                    if (items[i] != null) items[i].Drop(character, false);
+                    if (Items[i] != null) Items[i].Drop(character, false);
                 }
                 else
                 {
                     Item item = Entity.FindEntityByID(itemId) as Item;
                     if (item == null) continue;
 
-                    if (items[i] != item && items[i] != null) items[i].Drop(character, false);
+                    if (Items[i] != item && Items[i] != null) Items[i].Drop(character, false);
                     TryPutItem(item, i, false);
                 }
             }

@@ -12,16 +12,26 @@ namespace Barotrauma
         const float MinSafety = 50.0f;
 
         AIObjectiveGoTo gotoObjective;
+
+        private List<AITarget> unreachable;
         
         float currenthullSafety;
 
         float searchHullTimer;
 
-        protected override void Act(float deltaTime, Character character)
+        public AIObjectiveFindSafety(Character character)
+            : base(character)
+        {
+            unreachable = new List<AITarget>();
+        }
+
+        protected override void Act(float deltaTime)
         {
             if (character.AnimController.CurrentHull == null || GetHullSafety(character.AnimController.CurrentHull) > MinSafety)
             {
-                character.AIController.SteeringManager.SteeringSeek(character.AnimController.CurrentHull.Position);
+                character.AIController.SteeringManager.SteeringSeek(character.AnimController.CurrentHull.SimPosition);
+
+                character.AIController.SelectTarget(null);
 
                 gotoObjective = null;
                 return;
@@ -32,34 +42,56 @@ namespace Barotrauma
                 searchHullTimer -= deltaTime;
                 return;
             }
-
-            searchHullTimer = SearchHullInterval;
-
-            Hull bestHull = null;
-            float bestValue = currenthullSafety;
-
-            foreach (Hull hull in Hull.hullList)
+            else
             {
-                if (hull == character.AnimController.CurrentHull) continue;
 
-                float hullValue =  GetHullSafety(hull);
-                hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X- hull.Position.X));
-                hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)*2.0f);
+                Hull bestHull = null;
+                float bestValue = currenthullSafety;
 
-                if (bestHull==null || hullValue > bestValue)
+                foreach (Hull hull in Hull.hullList)
                 {
-                    bestHull = hull;
-                    bestValue = hullValue;
+                    if (hull == character.AnimController.CurrentHull) continue;
+                    if (unreachable.Contains(hull.AiTarget)) continue;
+
+                    float hullValue =  GetHullSafety(hull);
+                    hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X- hull.Position.X));
+                    hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)*2.0f);
+
+                    if (bestHull==null || hullValue > bestValue)
+                    {
+                        bestHull = hull;
+                        bestValue = hullValue;
+                    }
+                }
+
+                if (bestHull != null)
+                {
+                    gotoObjective = new AIObjectiveGoTo(bestHull.AiTarget, character);
+                    //character.AIController.SelectTarget(bestHull.AiTarget);
+                }
+
+
+                searchHullTimer = SearchHullInterval;
+            }
+
+            if (gotoObjective != null)
+            {
+                var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+                if (pathSteering!=null && pathSteering.CurrentPath!= null && 
+                    pathSteering.CurrentPath.Unreachable && !unreachable.Contains(gotoObjective.Target))
+                {
+                    unreachable.Add(gotoObjective.Target);
                 }
             }
 
-            if (bestHull != null)
-            {
-                gotoObjective = new AIObjectiveGoTo(bestHull.AiTarget, character);
-                //character.AIController.SelectTarget(bestHull.AiTarget);
-            }
 
-            gotoObjective.TryComplete(deltaTime, character);
+
+            gotoObjective.TryComplete(deltaTime);
+        }
+
+        public override bool IsDuplicate(AIObjective otherObjective)
+        {
+            return (otherObjective is AIObjectiveFindSafety);
         }
 
         public override float GetPriority(Character character)
@@ -77,10 +109,11 @@ namespace Barotrauma
 
             foreach (FireSource fireSource in hull.FireSources)
             {
-                fireAmount += fireSource.Size.X;
+                fireAmount += Math.Max(fireSource.Size.X,50.0f);
             }
             
-            float safety = 100.0f - fireAmount - waterPercentage;
+            float safety = 100.0f - fireAmount;
+            if (waterPercentage > 30.0f) safety -= waterPercentage; 
             if (hull.OxygenPercentage < 30.0f) safety -= (30.0f-hull.OxygenPercentage)*3.0f;
 
             return safety;

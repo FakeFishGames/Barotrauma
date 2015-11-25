@@ -98,7 +98,8 @@ namespace Barotrauma
                 name,
                 Color.Transparent, Color.White,
                 Alignment.Left, Alignment.Left,
-                null, frame);
+                null, frame, false);
+            textBlock.Font = GUI.SmallFont;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
             new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);

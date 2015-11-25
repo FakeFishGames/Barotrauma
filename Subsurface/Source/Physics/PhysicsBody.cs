@@ -315,8 +315,6 @@ namespace Barotrauma
             
             sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), color, -drawRotation, 1.0f, spriteEffect, depth);
             
-            //prevPosition = body.Position;
-            //prevRotation = body.Rotation;
         }
 
         /// <summary>
@@ -331,20 +329,6 @@ namespace Barotrauma
             float torque = body.Mass * angle * 60.0f * (force/100.0f);
 
             body.ApplyTorque(torque);
-
-            //float nextAngle = bodyAngle + body->GetAngularVelocity() / 60.0;
-            //float totalRotation = desiredAngle - nextAngle;
-            //while (totalRotation < -180 * DEGTORAD) totalRotation += 360 * DEGTORAD;
-            //while (totalRotation > 180 * DEGTORAD) totalRotation -= 360 * DEGTORAD;
-            //float desiredAngularVelocity = totalRotation * 60;
-            //float torque = body->GetInertia() * desiredAngularVelocity / (1 / 60.0);
-            //body->ApplyTorque(torque);
-
-
-
-
-            //body.ApplyTorque((Math.Sign(angle) + Math.Max(Math.Min(angle * force, force / 2.0f), -force / 2.0f)) * body.Mass);
-            //body.ApplyTorque(-body.AngularVelocity * 0.5f * body.Mass);
         }
         
 
@@ -352,53 +336,7 @@ namespace Barotrauma
         {
             list.Remove(this);
             GameMain.World.RemoveBody(body);
-
         }
 
-        public void FillNetworkData(NetworkEventType type, NetOutgoingMessage message)
-        {
-            message.Write(body.Position.X);
-            message.Write(body.Position.Y);
-            message.Write(body.LinearVelocity.X);
-            message.Write(body.LinearVelocity.Y);
-
-            message.Write(body.Rotation);
-            message.Write(body.AngularVelocity);
-        }
-
-        public void ReadNetworkData(NetworkEventType type, NetIncomingMessage message)
-        {
-            Vector2 newTargetPos = Vector2.Zero;
-            Vector2 newTargetVel = Vector2.Zero;
-
-            float newTargetRotation = 0.0f, newTargetAngularVel = 0.0f;
-            try
-            {
-                newTargetPos = new Vector2(message.ReadFloat(),message.ReadFloat());
-                newTargetVel = new Vector2(message.ReadFloat(),message.ReadFloat());
-
-                newTargetRotation = message.ReadFloat();
-                newTargetAngularVel = message.ReadFloat();
-            }
-
-            catch (Exception e)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("invalid network message", e);
-#endif
-                return;
-            }
-
-            if (!MathUtils.IsValid(newTargetPos) || !MathUtils.IsValid(newTargetVel) ||
-                !MathUtils.IsValid(newTargetRotation) || !MathUtils.IsValid(newTargetAngularVel)) return;
-
-            targetPosition = newTargetPos;
-            targetVelocity = newTargetVel;
-
-            targetRotation = newTargetRotation;
-            targetAngularVelocity = newTargetAngularVel;
-
-
-        }
     }
 }

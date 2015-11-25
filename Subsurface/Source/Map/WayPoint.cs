@@ -23,10 +23,17 @@ namespace Barotrauma
         //only characters with this job will be spawned at the waypoint
         private JobPrefab assignedJob;
 
+        private Hull currentHull;
+
         public Gap ConnectedGap
         {
             get;
             private set;
+        }
+
+        public Hull CurrentHull
+        {
+            get { return currentHull; }
         }
 
         public SpawnType SpawnType
@@ -396,10 +403,14 @@ namespace Barotrauma
             return assignedWayPoints;
         }
 
+        public override void OnMapLoaded()
+        {
+            currentHull = Hull.FindHull(this.Position);
+        }
 
         public override XElement Save(XDocument doc)
         {
-            if (MoveWithLevel) return null;
+            if (MoveWithLevel || spawnType == SpawnType.Path) return null;
             XElement element = new XElement("WayPoint");
 
             element.Add(new XAttribute("ID", ID),

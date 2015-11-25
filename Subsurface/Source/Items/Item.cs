@@ -219,7 +219,7 @@ namespace Barotrauma
             get
             {
                 ItemContainer c = GetComponent<ItemContainer>();
-                return (c == null) ? null : Array.FindAll(c.inventory.items, i=>i!=null);
+                return (c == null) ? null : Array.FindAll(c.inventory.Items, i=>i!=null);
             }
         }
 

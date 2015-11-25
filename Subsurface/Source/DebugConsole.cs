@@ -269,6 +269,12 @@ namespace Barotrauma
                 case "edit":              
                     GameMain.EditMapScreen.Select();
                     break;
+                case "test":
+                    Submarine.Load("aegir mark ii");
+                    GameMain.DebugDraw = true;
+                    GameMain.LightManager.LosEnabled = false;
+                    GameMain.EditMapScreen.Select();
+                    break;                    
                 case "editcharacter":
                 case "editchar":
                     GameMain.EditCharacterScreen.Select();

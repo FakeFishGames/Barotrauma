@@ -181,7 +181,7 @@ namespace Barotrauma
             }
             else if (dummyCharacter != null)
             {     
-                foreach (Item item in dummyCharacter.Inventory.items)
+                foreach (Item item in dummyCharacter.Inventory.Items)
                 {
                     if (item == null) continue;
 

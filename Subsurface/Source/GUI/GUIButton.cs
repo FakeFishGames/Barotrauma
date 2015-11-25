@@ -63,8 +63,8 @@ namespace Barotrauma
             }
             set
             {
-                if (textBlock == null) return;
                 base.Font = value;
+                if (textBlock != null) textBlock.Font = value;                
             }
         }
         

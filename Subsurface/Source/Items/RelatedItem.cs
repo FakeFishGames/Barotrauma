@@ -93,7 +93,7 @@ namespace Barotrauma
                     break;
                 case RelationType.Picked:
                     if (character == null || character.Inventory==null) return false;
-                    foreach (Item pickedItem in character.Inventory.items)
+                    foreach (Item pickedItem in character.Inventory.Items)
                     {
                         if (pickedItem == null) continue;
 

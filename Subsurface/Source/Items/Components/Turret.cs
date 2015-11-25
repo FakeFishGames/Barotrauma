@@ -139,12 +139,12 @@ namespace Barotrauma.Items.Components
                 ItemContainer containerComponent = projectileContainer.GetComponent<ItemContainer>();
                 if (containerComponent == null) continue;
 
-                for (int i = 0; i < containerComponent.inventory.items.Length; i++)
+                for (int i = 0; i < containerComponent.inventory.Items.Length; i++)
                 {
-                    if (containerComponent.inventory.items[i] == null) continue;
-                    if ((projectileComponent = containerComponent.inventory.items[i].GetComponent<Projectile>()) != null)
+                    if (containerComponent.inventory.Items[i] == null) continue;
+                    if ((projectileComponent = containerComponent.inventory.Items[i].GetComponent<Projectile>()) != null)
                     {
-                        projectile = containerComponent.inventory.items[i];
+                        projectile = containerComponent.inventory.Items[i];
                         break;
                     }
                 }
