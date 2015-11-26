@@ -39,6 +39,19 @@ namespace Barotrauma
             }
         }
 
+        public override Color SelectedColor
+        {
+            get
+            {
+                return base.SelectedColor;
+            }
+            set
+            {
+                base.SelectedColor = value;
+                frame.SelectedColor = value;
+            }
+        }
+
         public override Color OutlineColor
         {
             get { return base.OutlineColor; }
@@ -120,7 +133,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            if (rect.Contains(PlayerInput.MousePosition) && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
+            if (rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
             {
                 state = ComponentState.Hover;
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
@@ -135,6 +148,11 @@ namespace Barotrauma
                     if (OnClicked != null)
                     {
                         if (OnClicked(this, UserData) && CanBeSelected) state = ComponentState.Selected;
+                    }
+                    else
+                    {
+                        Selected = !Selected;
+                       // state = state == ComponentState.Selected ? ComponentState.None : ComponentState.Selected;
                     }
                 }
             }

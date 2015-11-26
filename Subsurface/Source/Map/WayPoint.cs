@@ -89,9 +89,8 @@ namespace Barotrauma
 
             Color clr = (isSelected) ? Color.Red : Color.LightGreen;
             GUI.DrawRectangle(spriteBatch, new Rectangle(pos.X - rect.Width / 2, -pos.Y - rect.Height / 2, rect.Width, rect.Height), clr, true);
-
-
-            spriteBatch.DrawString(GUI.SmallFont, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
+            
+            //spriteBatch.DrawString(GUI.SmallFont, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
 
             foreach (MapEntity e in linkedTo)
             {

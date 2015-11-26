@@ -14,10 +14,13 @@ namespace Barotrauma
 
         Vector2 targetPos;
 
+        bool repeat;
+
         public override bool CanBeCompleted
         {
             get
             {
+                if (repeat) return true;
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
                 return (pathSteering.CurrentPath == null || !pathSteering.CurrentPath.Unreachable);
             }
@@ -28,10 +31,11 @@ namespace Barotrauma
             get { return target; }
         }
 
-        public AIObjectiveGoTo(AITarget target, Character character)
+        public AIObjectiveGoTo(AITarget target, Character character, bool repeat = false)
             : base (character)
         {
             this.target = target;
+            this.repeat = false;
         }
 
 
@@ -51,6 +55,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
+            if (repeat) return false;
             return Vector2.Distance(target != null ? target.SimPosition : ConvertUnits.ToDisplayUnits(targetPos), character.SimPosition) < 0.5f;
         }
     }

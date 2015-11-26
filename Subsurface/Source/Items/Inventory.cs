@@ -229,10 +229,10 @@ namespace Barotrauma
             Vector2 textSize = GUI.Font.MeasureString(toolTip);
             Vector2 rectSize = textSize * 1.2f;
 
-            Vector2 pos = new Vector2(highlightedSlot.Center.X, highlightedSlot.Bottom);
+            Vector2 pos = new Vector2(highlightedSlot.Center.X, highlightedSlot.Y-rectSize.Y);
             pos.X = (int)pos.X;
             pos.Y = (int)pos.Y;
-
+            
             GUI.DrawRectangle(spriteBatch, pos, rectSize, Color.Black * 0.8f, true);
             spriteBatch.DrawString(GUI.Font, toolTip,
                 new Vector2((int)pos.X + rectSize.X * 0.5f, (int)pos.Y + rectSize.Y * 0.5f),

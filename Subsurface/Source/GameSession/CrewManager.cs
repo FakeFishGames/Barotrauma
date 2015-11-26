@@ -12,9 +12,6 @@ namespace Barotrauma
         public List<Character> characters;
         public List<CharacterInfo> characterInfos;
         
-        //public static string mapFile;
-        //public string saveFile;
-
         private int money;
         
         private GUIFrame guiFrame;
@@ -24,7 +21,8 @@ namespace Barotrauma
         private GUIButton crewButton;
         protected GUIFrame crewFrame;
 
-
+        private CrewCommander commander;
+        
         public int Money
         {
             get { return money; }
@@ -44,6 +42,8 @@ namespace Barotrauma
 
             crewButton = new GUIButton(new Rectangle(0, 00, 100, 20), "Crew", GUI.Style, guiFrame);
             crewButton.OnClicked = ToggleCrewFrame;
+
+            commander = new CrewCommander(this);
 
             money = 10000;
         }
@@ -102,13 +102,19 @@ namespace Barotrauma
             textBlock.Font = GUI.SmallFont;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-            new GUIImage(new Rectangle(-10, -10, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
+            new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
         }
 
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);
 
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.I))
+            {
+                commander.ToggleGUIFrame();
+            }
+
+            if (commander.Frame != null) commander.Frame.Update(deltaTime);
             if (crewFrameOpen) crewFrame.Update(deltaTime);
         }
 
@@ -235,9 +241,15 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            guiFrame.Draw(spriteBatch);
-
-            if (crewFrameOpen) crewFrame.Draw(spriteBatch);
+            if (commander.IsOpen)
+            {
+                commander.Draw(spriteBatch);
+            }
+            else
+            {
+                guiFrame.Draw(spriteBatch);
+                if (crewFrameOpen) crewFrame.Draw(spriteBatch);
+            }
         }
 
         public void Save(XElement parentElement)
