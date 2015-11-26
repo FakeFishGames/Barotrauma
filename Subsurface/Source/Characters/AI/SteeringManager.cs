@@ -35,9 +35,9 @@ namespace Barotrauma
             wanderAngle = Rand.Range(0.0f, MathHelper.TwoPi);
         }
 
-        public void SteeringSeek(Vector2 target, float speed = 1.0f)
+        public void SteeringSeek(Vector2 targetSimPos, float speed = 1.0f)
         {
-            steering += DoSteeringSeek(target, speed);
+            steering += DoSteeringSeek(targetSimPos, speed);
         }
 
         public void SteeringWander(float speed = 1.0f)

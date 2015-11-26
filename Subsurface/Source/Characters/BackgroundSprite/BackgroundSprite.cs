@@ -67,6 +67,8 @@ namespace Barotrauma
                 Rand.Range(-prefab.Speed, prefab.Speed),
                 Rand.Range(-prefab.Speed, prefab.Speed),
                 Rand.Range(0.0f, prefab.WanderZAmount));
+
+            checkWallsTimer = Rand.Range(0.0f, CheckWallsInterval);
             
         }
 

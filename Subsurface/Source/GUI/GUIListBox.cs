@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     public class GUIListBox : GUIComponent
     {
-        protected GUIComponent selected;
+        protected List<GUIComponent> selected;
 
         public delegate bool OnSelectedHandler(GUIComponent component, object obj);
         public OnSelectedHandler OnSelected;
@@ -27,19 +29,26 @@ namespace Barotrauma
 
         private bool enabled;
 
+        public bool SelectMultiple;
+
         public GUIComponent Selected
         {
             get
             {
-                return selected;
+                return selected.Any() ? selected[0] : null;
             }
+        }
+
+        public List<GUIComponent> AllSelected
+        {
+            get { return selected; }
         }
         
         public object SelectedData
         {
             get 
             {
-                return (selected == null) ? null : selected.UserData; 
+                return (Selected == null) ? null : Selected.UserData; 
             }
         }
 
@@ -47,8 +56,8 @@ namespace Barotrauma
         {
             get
             {
-                if (selected == null) return -1;
-                return children.FindIndex(x => x == selected);
+                if (Selected == null) return -1;
+                return children.FindIndex(x => x == Selected);
             }
         }
 
@@ -108,11 +117,13 @@ namespace Barotrauma
         {            
         }
 
-        public GUIListBox(Rectangle rect, Color? color, Alignment alignment, GUIStyle style = null, GUIComponent parent = null)
+        public GUIListBox(Rectangle rect, Color? color, Alignment alignment, GUIStyle style = null, GUIComponent parent = null, bool isHorizontal = false)
             : base(style)
         {
             this.rect = rect;
             this.alignment = alignment;
+
+            selected = new List<GUIComponent>();
 
             if (color!=null) this.color = (Color)color;
 
@@ -121,8 +132,17 @@ namespace Barotrauma
 
             scrollBarHidden = true;
 
-            scrollBar = new GUIScrollBar(
-                new Rectangle(this.rect.X + this.rect.Width-20, this.rect.Y, 20, this.rect.Height), color, 1.0f, GUI.Style);
+            if (isHorizontal)
+            {
+                scrollBar = new GUIScrollBar(
+                    new Rectangle(this.rect.X, this.rect.Bottom-20, this.rect.Width, 20), color, 1.0f, GUI.Style);
+            }
+            else
+            {
+                scrollBar = new GUIScrollBar(
+                    new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height), color, 1.0f, GUI.Style);
+            }
+
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
             if (style != null) style.Apply(frame, this);
@@ -140,16 +160,17 @@ namespace Barotrauma
 
         public void Select(object selection)
         {
-            foreach (GUIComponent child in children)
+            for (int i = 0; i < children.Count; i++ )
             {
-                if (child.UserData != selection) continue;
-                
-                selected = child;
-                if (OnSelected != null) OnSelected(selected, selected.UserData);
-                return;                
+                if (children[i].UserData != selection) continue;
+
+                Select(i);
+
+                if (OnSelected != null) OnSelected(Selected, Selected.UserData);
+                if (!SelectMultiple) return;
             }
         }
-
+        
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
@@ -167,17 +188,34 @@ namespace Barotrauma
         public void Select(int childIndex)
         {
             //children[0] is the GUIFrame, ignore it
-            childIndex += 1;
+            //childIndex += 1;
 
             if (childIndex >= children.Count || childIndex<0) return;
 
-            selected = children[childIndex];
-            if (OnSelected != null) OnSelected(selected, selected.UserData);
+            if (SelectMultiple)
+            {
+                if (selected.Contains(children[childIndex]))
+                {
+                    selected.Remove(children[childIndex]);
+                }
+                else
+                {
+                    selected.Add(children[childIndex]);
+                }
+            }
+            else
+            {
+                selected.Clear();
+                selected.Add(children[childIndex]);
+            }
+
+            if (OnSelected != null) OnSelected(Selected, Selected.UserData);
+
         }
 
         public void Deselect()
         {
-            selected = null;
+            selected.Clear();
         }
 
         public void UpdateScrollBarSize()
@@ -218,14 +256,14 @@ namespace Barotrauma
         public override void ClearChildren()
         {
             base.ClearChildren();
-            selected = null;
+            selected.Clear();
         }
 
         public override void RemoveChild(GUIComponent child)
         {
             base.RemoveChild(child);
 
-            if (selected == child) selected = null;
+            if (selected.Contains(child)) selected.Remove(child);
 
             UpdateScrollBarSize();            
         }
@@ -272,8 +310,16 @@ namespace Barotrauma
                 GUIComponent child = children[i];
                 if (child == frame) continue;
 
-                child.Rect = new Rectangle(child.Rect.X, y, child.Rect.Width, child.Rect.Height);
-                y += child.Rect.Height + spacing;
+                child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
+                if (scrollBar.IsHorizontal)
+                {
+                    x += child.Rect.Width + spacing;
+                }
+                else
+                {
+                    y += child.Rect.Height + spacing;
+                }
+
 
                 if (child.Rect.Y + child.Rect.Height < rect.Y) continue;
                 if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) break;
@@ -284,28 +330,29 @@ namespace Barotrauma
                     continue;
                 }
 
-                if (selected == child)
-                {
-                    child.State = ComponentState.Selected;
-
-                    if (CheckSelected != null)
-                    {
-                        if (CheckSelected() != selected.UserData) selected = null;
-                    }
-                }
-                else if (enabled && child.CanBeFocused && 
+                if (enabled && child.CanBeFocused && 
                     (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())
                     {
                         Debug.WriteLine("clicked");
-                        selected = child;
-                        if (OnSelected != null)
-                        {
-                            if (!OnSelected(selected, child.UserData)) selected = null;
-                        }
+                        Select(i);
+                        //selected = child;
+                        //if (OnSelected != null)
+                        //{
+                        //    if (!OnSelected(selected, child.UserData)) selected = null;
+                        //}
 
+                    }
+                }
+                else if(selected.Contains(child))
+                {
+                    child.State = ComponentState.Selected;
+
+                    if (CheckSelected != null)
+                    {
+                        if (CheckSelected() != child.UserData) selected.Remove(child);
                     }
                 }
                 else

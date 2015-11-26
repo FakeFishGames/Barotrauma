@@ -60,6 +60,8 @@
     <Compile Include="Source\Characters\AICharacter.cs" />
     <Compile Include="Source\Characters\AI\AIController.cs" />
     <Compile Include="Source\Characters\AI\AITarget.cs" />
+    <Compile Include="Source\Characters\AI\Order.cs" />
+    <Compile Include="Source\Characters\AI\CrewCommander.cs" />
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFindSafety.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFixLeak.cs" />
@@ -71,7 +73,7 @@
     <Compile Include="Source\Characters\AI\Objectives\AIObjective.cs" />
     <Compile Include="Source\Characters\AI\PathFinder.cs" />
     <Compile Include="Source\Characters\AI\PathSteeringManager.cs" />
-    <Compile Include="Source\Characters\AnimController.cs" />
+    <Compile Include="Source\Characters\Animation\AnimController.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundSprite.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpriteManager.cs" />
@@ -127,10 +129,10 @@
     <Compile Include="Source\Events\RepairTask.cs" />
     <Compile Include="Source\GameSession\CrewManager.cs" />
     <Compile Include="Source\Characters\AI\EnemyAIController.cs" />
-    <Compile Include="Source\Characters\FishAnimController.cs" />
+    <Compile Include="Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="Source\GameSession\GameModes\GameMode.cs" />
     <Compile Include="Source\GameSession\HireManager.cs" />
-    <Compile Include="Source\Characters\HumanoidAnimController.cs" />
+    <Compile Include="Source\Characters\Animation\HumanoidAnimController.cs" />
     <Compile Include="Source\GameSession\GameModes\SinglePlayerMode.cs" />
     <Compile Include="Source\GameSession\GameModes\TraitorMode.cs" />
     <Compile Include="Source\GUI\ComponentStyle.cs" />
@@ -160,7 +162,7 @@
     <Compile Include="Source\Items\ItemInventory.cs" />
     <Compile Include="Source\Characters\Limb.cs" />
     <Compile Include="Source\GameSession\GameSession.cs" />
-    <Compile Include="Source\Characters\Ragdoll.cs" />
+    <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\StatusEffect.cs" />
     <Compile Include="Source\DebugConsole.cs" />
     <Compile Include="Source\Events\ScriptedTask.cs" />

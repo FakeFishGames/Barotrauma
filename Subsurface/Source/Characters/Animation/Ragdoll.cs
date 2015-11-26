@@ -306,7 +306,7 @@ namespace Barotrauma
                 float stairPosY = structure.StairDirection == Direction.Right ? 
                     lowestLimb.Position.X - structure.Rect.X : structure.Rect.Width - (lowestLimb.Position.X - structure.Rect.X);
 
-                if (lowestLimb.Position.Y < stairPosY) return;
+                if (lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + stairPosY) return false;
 
                 if (targetMovement.Y < 0.5f)
                 {
@@ -383,7 +383,9 @@ namespace Barotrauma
         }
 
         public virtual void Draw(SpriteBatch spriteBatch)
-        {            
+        {
+            if (simplePhysicsEnabled) return;
+
             foreach (Limb limb in Limbs)
             {
                 limb.Draw(spriteBatch);
@@ -392,7 +394,8 @@ namespace Barotrauma
 
         public void DebugDraw(SpriteBatch spriteBatch)
         {
-            if (!GameMain.DebugDraw) return;
+            if (!GameMain.DebugDraw || !character.Enabled) return;
+            if (simplePhysicsEnabled) return;
 
             foreach (Limb limb in Limbs)
             {

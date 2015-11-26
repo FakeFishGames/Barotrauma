@@ -58,10 +58,15 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
 
-            float currObjectivePriority = objectiveManager.CurrentObjective == null ? 0.0f : objectiveManager.CurrentObjective.GetPriority(Character);
+            float currObjectivePriority = objectiveManager.GetCurrentPriority(Character);
             float moveSpeed = MathHelper.Clamp(currObjectivePriority/10.0f, 1.0f, 3.0f);
             
             steeringManager.Update(moveSpeed);
+        }
+
+        public void SetOrder(Order order, string option)
+        {
+            objectiveManager.SetOrder(order, option);
         }
 
         public override void SelectTarget(AITarget target)
