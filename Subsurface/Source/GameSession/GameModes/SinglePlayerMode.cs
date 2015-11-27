@@ -141,6 +141,8 @@ namespace Barotrauma
 
             CrewManager.Draw(spriteBatch);
 
+            if (Level.Loaded == null) return;
+
             if (Level.Loaded.AtEndPosition)
             {
                 endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;                

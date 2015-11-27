@@ -230,7 +230,7 @@ namespace Barotrauma
 
                 pullJoint = new FixedMouseJoint(body.FarseerBody, jointPos);
                 pullJoint.Enabled = false;
-                pullJoint.MaxForce = 150.0f * body.Mass;
+                pullJoint.MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass;
 
                 GameMain.World.AddJoint(pullJoint);
             }

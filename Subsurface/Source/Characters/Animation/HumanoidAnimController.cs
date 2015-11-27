@@ -214,6 +214,22 @@ namespace Barotrauma
 
             Vector2 colliderPos = new Vector2(torso.SimPosition.X, floorY);
 
+            if (Math.Abs(TargetMovement.X) > 1.0f)
+            {
+                int limbsInWater = 0;
+                foreach (Limb limb in Limbs)
+                {
+                    if (limb.inWater) limbsInWater++;
+                }
+
+                float slowdownFactor = (float)limbsInWater / (float)Limbs.Count();
+
+                float maxSpeed = Math.Max(TargetMovement.Length() - slowdownFactor, 1.0f);
+                if (character.SelectedCharacter!=null) maxSpeed = Math.Min(maxSpeed, 1.0f);
+
+                TargetMovement = Vector2.Normalize(TargetMovement) * maxSpeed;
+            }
+
             float walkPosX = (float)Math.Cos(walkPos);
             float walkPosY = (float)Math.Sin(walkPos);
             float runningModifier = (float)Math.Max(Math.Min(Math.Abs(TargetMovement.X),3.0f) / 1.5f, 1.0);
@@ -224,31 +240,38 @@ namespace Barotrauma
             
             float footMid = waist.SimPosition.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
             
-            if (Math.Abs(TargetMovement.X)>1.0f)
-            {
-                int limbsInWater = 0;
-                foreach (Limb limb in Limbs)
-                {
-                    if (limb.inWater) limbsInWater++;
-                }
-
-                float slowdownFactor = (float)limbsInWater / (float)Limbs.Count();
-
-                TargetMovement = Vector2.Normalize(TargetMovement) * Math.Max(TargetMovement.Length() - slowdownFactor, 1.0f);
-            }
-            
             movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
             movement.Y = 0.0f;
 
             bool legsUp = false;
             for (int i = 0; i < 2; i++)
             {
-                Limb leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);// : leftLeg;
+                Limb leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);// : leftLeg;
 
-                if (leg.SimPosition.Y < torso.SimPosition.Y) continue;
+                float shortestAngle = leg.Rotation - torso.Rotation;
 
-                leg.body.ApplyTorque(Dir * leg.Mass * 10.0f);
-                legsUp = true;
+                if (Math.Abs(shortestAngle)<2.5f) continue;
+                //leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
+                leg.body.ApplyTorque(-shortestAngle*10.0f);
+
+            //    float torsoRot = MathHelper.WrapAngle(torso.Rotation);
+            //    torsoRot = MathHelper.ToDegrees(torsoRot);
+
+                //float torque = Math.Sign(torso.SimPosition.X - leg.SimPosition.X) * leg.Mass * 10.0f;
+                //leg.body.ApplyTorque(torque);
+
+                
+                //leg.body.ApplyTorque(torque);
+   //             if (Math.Sign(Dir)==Math.Sign(torsoRot))
+   //             {
+   //leg.body.ApplyTorque(-leg.Mass * 100.0f);
+   //             }
+   //             else
+   //             {
+   //                 leg.body.ApplyTorque(leg.Mass * 100.0f);
+   //             }
+             
+                //legsUp = true;
             }
 
             if (legsUp || LowestLimb == null) return;
@@ -765,18 +788,26 @@ namespace Barotrauma
 
             leftHand.Disabled = true;
             rightHand.Disabled = true;
+            
+            for (int i = 0; i < 2; i++ )
+            {
+                LimbType type = i == 0 ? LimbType.RightHand : LimbType.LeftHand;
+                Limb targetLimb = target.AnimController.GetLimb(type);
 
-            Limb targetLimb = target.AnimController.GetLimb(LimbType.LeftHand);
+                Limb pullLimb = GetLimb(type);
 
-            leftHand.pullJoint.Enabled = true;
-            leftHand.pullJoint.WorldAnchorB = targetLimb.SimPosition;
-            rightHand.pullJoint.Enabled = true;
-            rightHand.pullJoint.WorldAnchorB = targetLimb.SimPosition;
+                pullLimb.pullJoint.Enabled = true;
+                pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
+                pullLimb.pullJoint.MaxForce = 500.0f;
 
-            targetLimb.pullJoint.Enabled = true;
-            targetLimb.pullJoint.WorldAnchorB = leftHand.SimPosition;
+                targetLimb.pullJoint.Enabled = true;
+                targetLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition;
+                
+            }
+
 
             target.AnimController.IgnorePlatforms = IgnorePlatforms;
+            target.AnimController.TargetMovement = TargetMovement;
         }
 
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)

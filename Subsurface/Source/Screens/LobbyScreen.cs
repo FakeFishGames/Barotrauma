@@ -12,8 +12,8 @@ namespace Barotrauma
     {
         enum PanelTab { Crew = 0, Map = 1, CurrentLocation = 2, Store = 3 }
 
-        private GUIFrame leftPanel;
-        private GUIFrame[] rightPanel;
+        private GUIFrame topPanel;
+        private GUIFrame[] bottomPanel;
 
         private GUIButton startButton;
 
@@ -63,33 +63,30 @@ namespace Barotrauma
         {
             Rectangle panelRect = new Rectangle(
                 40, 40,
-                GameMain.GraphicsWidth < 1000 ? 140 : 180,
-                GameMain.GraphicsHeight - 80);
+                GameMain.GraphicsWidth - 80,
+                100);
 
-            leftPanel = new GUIFrame(panelRect, GUI.Style);
-            leftPanel.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-
-            //new GUITextBlock(new Rectangle(0, 0, 200, 25), 
-            //    save, Color.Transparent, Color.White, Alignment.Left, GUI.Style, leftPanel);
-
-            GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 30, 0, 25), "", GUI.Style, 
-                Alignment.TopLeft, Alignment.TopLeft, leftPanel);
+            topPanel = new GUIFrame(panelRect, GUI.Style);
+            topPanel.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            
+            GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "", GUI.Style, 
+                Alignment.BottomLeft, Alignment.BottomLeft, topPanel);
             moneyText.TextGetter = GetMoney;
             
-            GUIButton button = new GUIButton(new Rectangle(0, 70, 100, 30), "Map", null, Alignment.TopCenter, GUI.Style, leftPanel);
+            GUIButton button = new GUIButton(new Rectangle(-360, 0, 100, 30), "Map", null, Alignment.BottomRight, GUI.Style, topPanel);
             button.UserData = PanelTab.Map;
             button.OnClicked = SelectRightPanel;
             SelectRightPanel(button, button.UserData);
 
-            button = new GUIButton(new Rectangle(0, 110, 100, 30), "Crew", null, Alignment.TopCenter, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(-240, 0, 100, 30), "Crew", null, Alignment.BottomRight, GUI.Style, topPanel);
             button.UserData = PanelTab.Crew;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 150, 100, 30), "Hire", null, Alignment.TopCenter, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(-120, 0, 100, 30), "Hire", null, Alignment.BottomRight, GUI.Style, topPanel);
             button.UserData = PanelTab.CurrentLocation;
             button.OnClicked = SelectRightPanel;
 
-            button = new GUIButton(new Rectangle(0, 190, 100, 30), "Store", null, Alignment.TopCenter, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Store", null, Alignment.BottomRight, GUI.Style, topPanel);
             button.UserData = PanelTab.Store;
             button.OnClicked = SelectRightPanel;
    
@@ -97,61 +94,62 @@ namespace Barotrauma
             //---------------------------------------------------------------
 
             panelRect = new Rectangle(
-                panelRect.X + panelRect.Width + 40,
                 40,
-                GameMain.GraphicsWidth - panelRect.Width - 120,
-                GameMain.GraphicsHeight - 80);
+                panelRect.Bottom + 40,
+                panelRect.Width,
+                GameMain.GraphicsHeight - 120 - panelRect.Height);
 
-            rightPanel = new GUIFrame[4];
+            bottomPanel = new GUIFrame[4];
 
-            rightPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.Style);
-            rightPanel[(int)PanelTab.Crew].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            bottomPanel[(int)PanelTab.Crew] = new GUIFrame(panelRect, GUI.Style);
+            bottomPanel[(int)PanelTab.Crew].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, GUI.Style, rightPanel[(int)PanelTab.Crew]);
+            //new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, GUI.Style, bottomPanel[(int)PanelTab.Crew]);
 
             int crewColumnWidth = Math.Min(300, (panelRect.Width - 40) / 2);
-            characterList = new GUIListBox(new Rectangle(0, 30, crewColumnWidth, 0), GUI.Style, rightPanel[(int)PanelTab.Crew]);
+            characterList = new GUIListBox(new Rectangle(0, 0, crewColumnWidth, 0), GUI.Style, bottomPanel[(int)PanelTab.Crew]);
             characterList.OnSelected = SelectCharacter;
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.Map] = new GUIFrame(panelRect, GUI.Style);
-            rightPanel[(int)PanelTab.Map].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            bottomPanel[(int)PanelTab.Map] = new GUIFrame(panelRect, GUI.Style);
+            bottomPanel[(int)PanelTab.Map].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",
-                Alignment.BottomRight, GUI.Style, rightPanel[(int)PanelTab.Map]);
+                Alignment.BottomRight, GUI.Style, bottomPanel[(int)PanelTab.Map]);
             startButton.OnClicked = StartShift;
             startButton.Enabled = false;
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(panelRect, GUI.Style);
+            bottomPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(panelRect, GUI.Style);
+            bottomPanel[(int)PanelTab.CurrentLocation].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             //---------------------------------------
 
-            rightPanel[(int)PanelTab.Store] = new GUIFrame(panelRect, GUI.Style);
-            rightPanel[(int)PanelTab.Store].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            bottomPanel[(int)PanelTab.Store] = new GUIFrame(panelRect, GUI.Style);
+            bottomPanel[(int)PanelTab.Store].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);            
 
             int sellColumnWidth = (panelRect.Width - 40) / 2 - 20;
 
-            selectedItemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, GUI.Style, rightPanel[(int)PanelTab.Store]);
+            selectedItemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             selectedItemList.OnSelected = DeselectItem;
 
-            var costText = new GUITextBlock(new Rectangle(0, 0, 100, 25), "Cost: ", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, rightPanel[(int)PanelTab.Store]);
+            var costText = new GUITextBlock(new Rectangle(0, 0, 100, 25), "Cost: ", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, bottomPanel[(int)PanelTab.Store]);
             costText.TextGetter = CostTextGetter;
 
-            buyButton = new GUIButton(new Rectangle(sellColumnWidth+20, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, rightPanel[(int)PanelTab.Store]);
+            buyButton = new GUIButton(new Rectangle(sellColumnWidth+20, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             buyButton.OnClicked = BuyItems;
 
-            itemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, rightPanel[(int)PanelTab.Store]);
+            itemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             itemList.OnSelected = SelectItem;
 
-            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
-            {
-                if (ep.Price == 0) continue;
+                foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+                {
+                    if (ep.Price == 0) continue;
 
-                CreateItemFrame(ep, itemList);
-            }
+                    CreateItemFrame(ep, itemList);
+                }
         }
 
         public override void Select()
@@ -167,18 +165,44 @@ namespace Barotrauma
 
         private void UpdateLocationTab(Location location)
         {
-            rightPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(rightPanel[(int)PanelTab.CurrentLocation].Rect, GUI.Style);
-            rightPanel[(int)PanelTab.CurrentLocation].UserData = location;
+            topPanel.RemoveChild(topPanel.FindChild("locationtitle"));
+
+            var locationTitle = new GUITextBlock(new Rectangle(0, 0, 200, 25),
+                "Location: "+location.Name, Color.Transparent, Color.White, Alignment.TopLeft, GUI.Style, topPanel);
+            locationTitle.UserData = "locationtitle";
+            locationTitle.Font = GUI.LargeFont;
+
+            bottomPanel[(int)PanelTab.CurrentLocation].ClearChildren();
             //rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
-            
-            new GUITextBlock(new Rectangle(0, 0, 200, 25), 
-                "Location: "+location.Name, GUI.Style, rightPanel[(int)PanelTab.CurrentLocation]);
-            new GUITextBlock(new Rectangle(0, 20, 200, 25),
-                "("+location.Type.Name+")", GUI.Style, rightPanel[(int)PanelTab.CurrentLocation]);
-            
+
+            //for (int i = 0; i < Enum.GetNames(typeof(PanelTab)).Length; i++ )
+            //{
+                
+            //    float size = Math.Max(
+            //        (float)GameMain.GraphicsWidth / (float)location.Type.Background.SourceRect.Width,
+            //       (float)GameMain.GraphicsHeight / (float)location.Type.Background.SourceRect.Height);
+            //    location.Type.Background.size = new Vector2(
+            //        location.Type.Background.SourceRect.Width*size,
+            //        location.Type.Background.SourceRect.Height*size);
+                
+
+            //    topPanel.sprites.Clear();
+            //    topPanel.TileSprites = false;
+            //    topPanel.sprites.Add(location.Type.Background);
+
+            //    bottomPanel[i].sprites.Clear();
+            //    bottomPanel[i].TileSprites = false;
+            //    bottomPanel[i].sprites.Add(location.Type.Background);
+            //}
+
+            //new GUITextBlock(new Rectangle(0, 0, 200, 25), 
+            //    "Location: "+location.Name, GUI.Style, bottomPanel[(int)PanelTab.CurrentLocation]);
+            //new GUITextBlock(new Rectangle(0, 20, 200, 25),
+            //    "("+location.Type.Name+")", GUI.Style, bottomPanel[(int)PanelTab.CurrentLocation]);
+
             if (location.HireManager != null)
             {
-                hireList = new GUIListBox(new Rectangle(0, 60, 300, 0), GUI.Style, Alignment.Left, rightPanel[(int)PanelTab.CurrentLocation]);
+                hireList = new GUIListBox(new Rectangle(0, 0, 300, 0), GUI.Style, Alignment.Left, bottomPanel[(int)PanelTab.CurrentLocation]);
                 hireList.OnSelected = SelectCharacter;
 
                 hireList.ClearChildren();
@@ -196,6 +220,10 @@ namespace Barotrauma
                         Alignment.TopRight, GUI.Style, textBlock);
                 }
             }
+            else
+            {
+                //(topPanel.FindChild(PanelTab.CurrentLocation) as GUIButton).Enabled = false;
+            }
         }
 
 
@@ -208,11 +236,11 @@ namespace Barotrauma
 
         public void SelectLocation(Location location, LocationConnection connection)
         {
-            GUIComponent locationPanel = rightPanel[(int)PanelTab.Map].GetChild("selectedlocation");
+            GUIComponent locationPanel = bottomPanel[(int)PanelTab.Map].GetChild("selectedlocation");
 
-            if (locationPanel != null) rightPanel[(int)PanelTab.Map].RemoveChild(locationPanel);
+            if (locationPanel != null) bottomPanel[(int)PanelTab.Map].RemoveChild(locationPanel);
 
-            locationPanel = new GUIFrame(new Rectangle(0, 0, 200, 190), Color.Transparent, Alignment.TopRight, null, rightPanel[(int)PanelTab.Map]);
+            locationPanel = new GUIFrame(new Rectangle(0, 0, 200, 190), Color.Transparent, Alignment.TopRight, null, bottomPanel[(int)PanelTab.Map]);
             locationPanel.UserData = "selectedlocation";
 
             if (location == null) return;
@@ -339,8 +367,8 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            leftPanel.Update((float)deltaTime);
-            rightPanel[selectedRightPanel].Update((float)deltaTime);
+            topPanel.Update((float)deltaTime);
+            bottomPanel[selectedRightPanel].Update((float)deltaTime);
 
             mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
             mapZoom = MathHelper.Clamp(mapZoom, 1.0f, 4.0f);
@@ -357,24 +385,29 @@ namespace Barotrauma
 
             graphics.Clear(Color.CornflowerBlue);
 
-            GameMain.GameScreen.DrawMap(graphics, spriteBatch);
+            //GameMain.GameScreen.DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
 
-            leftPanel.Draw(spriteBatch);
+            Sprite backGround = GameMain.GameSession.Map.CurrentLocation.Type.Background;
+            spriteBatch.Draw(backGround.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
+                Math.Max((float)GameMain.GraphicsWidth / backGround.SourceRect.Width, (float)GameMain.GraphicsHeight / backGround.SourceRect.Width), SpriteEffects.None, 0.0f);
 
-            rightPanel[selectedRightPanel].Draw(spriteBatch);
+
+            topPanel.Draw(spriteBatch);
+
+            bottomPanel[selectedRightPanel].Draw(spriteBatch);
 
             if (selectedRightPanel == (int)PanelTab.Map)
             {
                 GameMain.GameSession.Map.Draw(spriteBatch, new Rectangle(
-                    rightPanel[selectedRightPanel].Rect.X + 20, 
-                    rightPanel[selectedRightPanel].Rect.Y + 20,
-                    rightPanel[selectedRightPanel].Rect.Width - 280, 
-                    rightPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
+                    bottomPanel[selectedRightPanel].Rect.X + 20, 
+                    bottomPanel[selectedRightPanel].Rect.Y + 20,
+                    bottomPanel[selectedRightPanel].Rect.Width - 280, 
+                    bottomPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
             }
      
-            if (rightPanel[(int)selectedRightPanel].UserData as Location != GameMain.GameSession.Map.CurrentLocation)
+            if (bottomPanel[(int)selectedRightPanel].UserData as Location != GameMain.GameSession.Map.CurrentLocation)
             {
                 UpdateLocationTab(GameMain.GameSession.Map.CurrentLocation);
             }
@@ -397,7 +430,7 @@ namespace Barotrauma
             if (button != null)
             {
                 button.Selected = true;
-                foreach (GUIComponent child in leftPanel.children)
+                foreach (GUIComponent child in topPanel.children)
                 {
                     GUIButton otherButton = child as GUIButton;
                     if (otherButton == null || otherButton == button) continue;
@@ -423,9 +456,9 @@ namespace Barotrauma
 
             if (previewFrame == null || previewFrame.UserData != characterInfo)
             {
-                previewFrame = new GUIFrame(new Rectangle(rightPanel[(int)PanelTab.Crew].Rect.Width/2, 60, Math.Min(300,rightPanel[(int)PanelTab.Crew].Rect.Width/2 - 40), 300),
+                previewFrame = new GUIFrame(new Rectangle(bottomPanel[(int)PanelTab.Crew].Rect.Width/2, 60, Math.Min(300,bottomPanel[(int)PanelTab.Crew].Rect.Width/2 - 40), 300),
                         new Color(0.0f, 0.0f, 0.0f, 0.8f),
-                        Alignment.Top, GUI.Style, rightPanel[selectedRightPanel]);
+                        Alignment.Top, GUI.Style, bottomPanel[selectedRightPanel]);
                 previewFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
                 previewFrame.UserData = characterInfo;
                 
