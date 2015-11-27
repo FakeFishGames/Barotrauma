@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -19,7 +20,9 @@ namespace Barotrauma
 
         private List<string> nameFormats;
 
-        private Sprite sprite;
+        private Sprite symbolSprite;
+
+        private Sprite backGround;
 
         public bool HasHireableCharacters
         {
@@ -39,7 +42,12 @@ namespace Barotrauma
 
         public Sprite Sprite
         {
-            get { return sprite; }
+            get { return symbolSprite; }
+        }
+
+        public Sprite Background
+        {
+            get { return backGround; }
         }
 
         private LocationType(XElement element)
@@ -58,7 +66,10 @@ namespace Barotrauma
             }
 
             string spritePath = ToolBox.GetAttributeString(element, "symbol", "Content/Map/beaconSymbol.png");
-            sprite = new Sprite(spritePath, new Microsoft.Xna.Framework.Vector2(0.5f, 0.5f));
+            symbolSprite = new Sprite(spritePath, new Vector2(0.5f, 0.5f));
+
+            string backgroundPath = ToolBox.GetAttributeString(element, "background", "");
+            backGround = new Sprite(backgroundPath, Vector2.Zero);
             //sprite.Origin = ;
 
         }

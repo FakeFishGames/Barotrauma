@@ -1,7 +1,8 @@
 ﻿<locationtypes>
   <None
     commonness="3"
-    symbol="Content/Map/beaconSymbol.png">
+    symbol="Content/Map/beaconSymbol.png"
+    background="Content/Map/beaconbackground.jpg">
     <nameformats
       f0="[name]"
       f1="[name]"
@@ -12,7 +13,8 @@
   <City
     commonness="3"
     hireablecharacters="true"
-    symbol="Content/Map/citySymbol.png">
+    symbol="Content/Map/citySymbol.png"
+    background="Content/Map/citybackground.jpg">
     <nameformats
       f0="The City of [name]"
       f1="[name] City"
@@ -23,7 +25,8 @@
   <Military
     commonness="1"
     hireablecharacters="true"
-    symbol="Content/Map/militarySymbol.png">
+    symbol="Content/Map/militarySymbol.png"
+    background="Content/Map/militarybackground.jpg">
     <nameformats
       f0="[name] Outpost"
       f1="[name] Facility"
@@ -34,7 +37,8 @@
   <Research
     commonness="1"
     hireablecharacters="true"
-    symbol="Content/Map/researchSymbol.png">
+    symbol="Content/Map/researchSymbol.png"
+    background="Content/Map/citybackground.jpg">
     <nameformats
       f0="[name] Research Facility"
       f1="[name] Research Center"

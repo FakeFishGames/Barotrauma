@@ -59,6 +59,8 @@ namespace Barotrauma
             set;
         }
 
+        public bool TileSprites;
+
         private GUITextBlock toolTipBlock;
 
         //protected float alpha;
@@ -96,7 +98,7 @@ namespace Barotrauma
             }
         }
 
-        protected List<Sprite> sprites;
+        public List<Sprite> sprites;
         //public Alignment SpriteAlignment { get; set; }
         //public bool RepeatSpriteX, RepeatSpriteY;
 
@@ -151,6 +153,8 @@ namespace Barotrauma
         protected GUIComponent(GUIStyle style)
         {
             Visible = true;
+
+            TileSprites = true;
 
             OutlineColor = Color.Transparent;
 
@@ -231,13 +235,24 @@ namespace Barotrauma
             {
                 foreach (Sprite sprite in sprites)
                 {
-                    Vector2 startPos = new Vector2(rect.X, rect.Y);
-                    Vector2 size = new Vector2(Math.Min(sprite.SourceRect.Width,rect.Width), Math.Min(sprite.SourceRect.Height,rect.Height));
+                    if (TileSprites)
+                    {
+                        Vector2 startPos = new Vector2(rect.X, rect.Y);
+                        Vector2 size = new Vector2(Math.Min(sprite.SourceRect.Width,rect.Width), Math.Min(sprite.SourceRect.Height,rect.Height));
 
-                    if (sprite.size.X == 0.0f) size.X = rect.Width;
-                    if (sprite.size.Y == 0.0f) size.Y = rect.Height;
+                        if (sprite.size.X == 0.0f) size.X = rect.Width;
+                        if (sprite.size.Y == 0.0f) size.Y = rect.Height;
 
-                    sprite.DrawTiled(spriteBatch, startPos, size, currColor * (currColor.A / 255.0f));
+                        sprite.DrawTiled(spriteBatch, startPos, size, currColor * (currColor.A / 255.0f));
+                    }
+                    else
+                    {
+                        float scale = (float)(rect.Width) / sprite.SourceRect.Width;
+
+                        spriteBatch.Draw(sprite.Texture, rect,
+                            new Rectangle(sprite.SourceRect.X, sprite.SourceRect.Y, (int)(sprite.SourceRect.Width), (int)(rect.Height / scale)), 
+                            currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                    }
                 }
             }
 
@@ -278,7 +293,6 @@ namespace Barotrauma
                 if (rect.Contains(PlayerInput.MousePosition))
                 {
                     MouseOn = this;
-                    //ToolTip = this.ToolTip;
                 }
                 else
                 {
@@ -339,7 +353,7 @@ namespace Barotrauma
             selectedColor = style.SelectedColor;
             
             padding = style.Padding;
-            sprites = style.Sprites;
+            sprites = new List<Sprite>(style.Sprites);
 
             OutlineColor = style.OutlineColor;
 
