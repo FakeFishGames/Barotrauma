@@ -32,6 +32,12 @@ namespace Barotrauma
             get { return currentIndex; }
         }
 
+        public float Cost
+        {
+            get;
+            set;
+        }
+
         public WayPoint PrevNode
         {
             get 

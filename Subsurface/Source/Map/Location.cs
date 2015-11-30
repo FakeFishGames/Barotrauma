@@ -52,7 +52,7 @@ namespace Barotrauma
             if (type.HasHireableCharacters)
             {
                 hireManager = new HireManager();
-                hireManager.GenerateCharacters(Character.HumanConfigFile, 10);
+                hireManager.GenerateCharacters(this, 10);
             }
 
             Connections = new List<LocationConnection>();

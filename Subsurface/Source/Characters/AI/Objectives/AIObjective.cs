@@ -13,6 +13,8 @@ namespace Barotrauma
 
         protected Character character;
 
+        protected string option;
+
         public virtual bool IsCompleted()
         {
             return false;
@@ -23,11 +25,23 @@ namespace Barotrauma
             get { return false; }
         }
 
-        public AIObjective(Character character)
+        public string Option
+        {
+            get { return option; }
+        }
+            
+
+        public AIObjective(Character character, string option)
         {
             subObjectives = new List<AIObjective>();
 
             this.character = character;
+
+            this.option = option;
+
+#if DEBUG
+            IsDuplicate(null);
+#endif
         }
 
         /// <summary>
@@ -37,10 +51,10 @@ namespace Barotrauma
         /// <param name="character">the character who's trying to achieve the objective</param>
         public void TryComplete(float deltaTime)
         {
+            subObjectives.RemoveAll(s => s.IsCompleted());
+
             foreach (AIObjective objective in subObjectives)
             {
-                if (objective.IsCompleted()) continue;
-
                 objective.TryComplete(deltaTime);
                 return;
             }
@@ -50,6 +64,13 @@ namespace Barotrauma
 
         protected virtual void Act(float deltaTime) { }
 
+        public void AddSubObjective(AIObjective objective)
+        {
+            if (subObjectives.Find(o => o.IsDuplicate(objective)) != null) return;
+
+            subObjectives.Add(objective);
+        }
+
         public virtual float GetPriority(Character character)
         {
             return 0.0f;
@@ -57,7 +78,12 @@ namespace Barotrauma
 
         public virtual bool IsDuplicate(AIObjective otherObjective)
         {
+#if DEBUG
             throw new NotImplementedException();
+#else
+            return (this.GetType() == otherObjective.GetType());
+#endif
+
         }
     }
 }

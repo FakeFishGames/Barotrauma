@@ -85,7 +85,7 @@ namespace Barotrauma.Networking
             var selectionFrame = new GUIFrame(new Rectangle(0, 60, 300, 20), null, innerFrame);
             for (int i = 0; i<3; i++)
             {
-                var selectionTick = new GUITickBox(new Rectangle(i * 100, 00, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
+                var selectionTick = new GUITickBox(new Rectangle(i * 100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
                 selectionTick.Selected = i == (int)subSelectionMode;
                 selectionTick.OnSelected = SwitchSubSelection;
                 selectionTick.UserData = (SelectionMode)i;
@@ -100,14 +100,11 @@ namespace Barotrauma.Networking
                 selectionTick.OnSelected = SwitchModeSelection;
                 selectionTick.UserData = (SelectionMode)i;
             }
-
-
-            var allowSpecBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
-            allowSpecBox.Selected = true;
-            allowSpecBox.OnSelected = ToggleAllowSpectating;
             
-
-
+            var allowSpecBox = new GUITickBox(new Rectangle(0, 150, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
+            allowSpecBox.Selected = true;
+            allowSpecBox.OnSelected = ToggleAllowSpectating;            
+            
             var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
             closeButton.OnClicked = ToggleSettingsFrame;
         }

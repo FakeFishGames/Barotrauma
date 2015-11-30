@@ -13,7 +13,7 @@ namespace Barotrauma
 
 
 
-        public AIObjectiveIdle(Character character) : base(character)
+        public AIObjectiveIdle(Character character) : base(character, "")
         {
 
         }
@@ -26,9 +26,26 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+
+            var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
+
             if (newTargetTimer <= 0.0f)
             {
                 currentTarget = FindRandomTarget();
+
+                if (currentTarget!=null)
+                {
+                    var path = pathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition);
+                    if (path.Cost > 200.0f)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        pathSteering.SetPath(path);
+                    }
+                }
+
 
                 newTargetTimer = currentTarget == null ? 5.0f : 10.0f;
             }
@@ -39,17 +56,27 @@ namespace Barotrauma
 
 
             if (currentTarget == null) return;
-                
+               
+
+            //wander randomly if reached the end of the path or the target is unreachable
+            if (pathSteering!=null && pathSteering.CurrentPath != null && 
+                (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable))
+            {
+                if (character.Position.X < character.AnimController.CurrentHull.Rect.X + 200.0f)
+                {
+                    pathSteering.SteeringManual(deltaTime, Vector2.UnitX);
+                }
+                else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - 200.0f)
+                {
+                    pathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
+                }
+
+                character.AIController.SteeringManager.SteeringWander(1.0f);
+                return;                
+            }
+ 
             character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition);
 
-            var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-            if (pathSteering!=null && pathSteering.CurrentPath != null)
-            {
-                if (pathSteering.CurrentPath.NextNode==null || pathSteering.CurrentPath.Unreachable)
-                {
-                    character.AIController.SteeringManager.SteeringWander(1.0f);
-                }
-            }
         }
 
         private AITarget FindRandomTarget()

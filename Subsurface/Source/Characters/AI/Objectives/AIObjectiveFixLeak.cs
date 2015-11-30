@@ -11,7 +11,7 @@ namespace Barotrauma
         Gap leak;
 
         public AIObjectiveFixLeak(Gap leak, Character character)
-            :base (character)
+            :base (character, "")
         {
             this.leak = leak;
         }

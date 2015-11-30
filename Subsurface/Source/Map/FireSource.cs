@@ -151,13 +151,17 @@ namespace Barotrauma
 
                 if (size.X < 100.0f) continue;
 
-                var smokeParticle = GameMain.ParticleManager.CreateParticle("smoke",
+                if (Rand.Int(5) == 1)
+                {
+                    var smokeParticle = GameMain.ParticleManager.CreateParticle("smoke",
                     spawnPos, speed, 0.0f, hull);
 
-                if (smokeParticle != null)
-                {
-                    smokeParticle.Size *= MathHelper.Clamp(size.X / 100.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 4.0f);
+                    if (smokeParticle != null)
+                    {
+                        smokeParticle.Size *= MathHelper.Clamp(size.X / 100.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 4.0f);
+                    }
                 }
+
             }
 
             DamageCharacters(deltaTime);
@@ -166,7 +170,7 @@ namespace Barotrauma
             if (hull.Volume > 0.0f) HullWaterExtinquish(deltaTime);
 
             lightSource.Range = Math.Max(size.X, size.Y) * Rand.Range(8.0f, 10.0f)/2.0f;
-            lightSource.Color = new Color(1.0f, 0.9f, 0.6f) * Rand.Range(0.8f, 1.0f); 
+            lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f); 
 
             hull.Oxygen -= size.X*deltaTime*OxygenConsumption;
 

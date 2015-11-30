@@ -8,21 +8,21 @@ namespace Barotrauma
 {
     class AIObjectiveFindSafety : AIObjective
     {
-        const float SearchHullInterval = 1.0f;
+        const float SearchHullInterval = 3.0f;
         const float MinSafety = 50.0f;
 
         AIObjectiveGoTo gotoObjective;
 
-        private List<AITarget> unreachable;
+        private List<Hull> unreachable;
         
         float currenthullSafety;
 
         float searchHullTimer;
 
         public AIObjectiveFindSafety(Character character)
-            : base(character)
+            : base(character, "")
         {
-            unreachable = new List<AITarget>();
+            unreachable = new List<Hull>();
         }
 
         protected override void Act(float deltaTime)
@@ -44,6 +44,7 @@ namespace Barotrauma
             }
             else
             {
+                var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
                 Hull bestHull = null;
                 float bestValue = currenthullSafety;
@@ -51,7 +52,7 @@ namespace Barotrauma
                 foreach (Hull hull in Hull.hullList)
                 {
                     if (hull == character.AnimController.CurrentHull) continue;
-                    if (unreachable.Contains(hull.AiTarget)) continue;
+                    if (unreachable.Contains(hull)) continue;
 
                     float hullValue =  GetHullSafety(hull);
                     hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X- hull.Position.X));
@@ -66,7 +67,17 @@ namespace Barotrauma
 
                 if (bestHull != null)
                 {
-                    gotoObjective = new AIObjectiveGoTo(bestHull.AiTarget, character);
+                    var path = pathSteering.PathFinder.FindPath(character.SimPosition, bestHull.SimPosition);
+                    if (pathSteering.CurrentPath != null && pathSteering.CurrentPath.Cost < path.Cost && !pathSteering.CurrentPath.Unreachable && gotoObjective!=null)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        pathSteering.SetPath(path);
+                    }
+
+                    gotoObjective = new AIObjectiveGoTo(bestHull, character);
                     //character.AIController.SelectTarget(bestHull.AiTarget);
                 }
 
@@ -80,7 +91,7 @@ namespace Barotrauma
                 if (pathSteering!=null && pathSteering.CurrentPath!= null && 
                     pathSteering.CurrentPath.Unreachable && !unreachable.Contains(gotoObjective.Target))
                 {
-                    unreachable.Add(gotoObjective.Target);
+                    unreachable.Add(gotoObjective.Target as Hull);
                 }
             }
 

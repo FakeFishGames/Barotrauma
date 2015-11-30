@@ -49,6 +49,13 @@ namespace Barotrauma
             findPathTimer -= 1.0f / 60.0f;
         }
 
+        public void SetPath(SteeringPath path)
+        {
+            currentPath = path;
+            if (path.Nodes.Any()) currentTarget = path.Nodes[path.Nodes.Count - 1].SimPosition;
+            findPathTimer = 1.0f;
+        }
+
 
         protected override Vector2 DoSteeringSeek(Vector2 target, float speed = 1)
         {
@@ -101,7 +108,7 @@ namespace Barotrauma
                 //toggle the door if it's the previous node and open, or if it's current node and closed
                 if (door.IsOpen != open)
                 {
-                    var buttons = door.GetButtons();
+                    var buttons = door.Item.GetConnectedComponents<Controller>();
                     foreach (Controller controller in buttons)
                     {
                         if (Vector2.Distance(controller.Item.SimPosition, character.SimPosition) > controller.Item.PickDistance * 2.0f) continue;
@@ -123,7 +130,7 @@ namespace Barotrauma
 
                 if (!canOpenDoors) return null;
 
-                var doorButtons = nextNode.Waypoint.ConnectedGap.ConnectedDoor.GetButtons();
+                var doorButtons = nextNode.Waypoint.ConnectedGap.ConnectedDoor.Item.GetConnectedComponents<Controller>();
                 foreach (Controller button in doorButtons)
                 {
                     if (Math.Sign(button.Item.Position.X - nextNode.Waypoint.Position.X) !=

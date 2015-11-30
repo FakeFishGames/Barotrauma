@@ -85,24 +85,28 @@ namespace Barotrauma
                 characterInfos.Add(character.Info);
             }
 
-            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, listBox);
-            frame.UserData = character;
-            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            frame.HoverColor = Color.LightGray * 0.5f;
-            frame.SelectedColor = Color.Gold * 0.5f;
+            commander.UpdateCharacters();
 
-            string name = character.Info.Name.Replace(' ', '\n');
+            character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
 
-            GUITextBlock textBlock = new GUITextBlock(
-                new Rectangle(40, 0, 0, 25),
-                name,
-                Color.Transparent, Color.White,
-                Alignment.Left, Alignment.Left,
-                null, frame, false);
-            textBlock.Font = GUI.SmallFont;
-            textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+            //GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, listBox);
+            //frame.UserData = character;
+            //frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            //frame.HoverColor = Color.LightGray * 0.5f;
+            //frame.SelectedColor = Color.Gold * 0.5f;
 
-            new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
+            //string name = character.Info.Name.Replace(' ', '\n');
+
+            //GUITextBlock textBlock = new GUITextBlock(
+            //    new Rectangle(40, 0, 0, 25),
+            //    name,
+            //    Color.Transparent, Color.White,
+            //    Alignment.Left, Alignment.Left,
+            //    null, frame, false);
+            //textBlock.Font = GUI.SmallFont;
+            //textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+
+            //new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
         }
 
         public void Update(float deltaTime)
@@ -122,6 +126,9 @@ namespace Barotrauma
         {
             GUIComponent characterBlock = listBox.GetChild(killedCharacter) as GUIComponent;
             if (characterBlock != null) characterBlock.Color = Color.DarkRed * 0.5f;
+
+
+            commander.UpdateCharacters();
 
             //if (characters.Find(c => !c.IsDead)==null)
             //{

@@ -311,12 +311,44 @@ namespace Barotrauma.Items.Components
                     new Vector2(10, 40 * (temperature / 10000.0f)), new Color(temperature / 10000.0f, 1.0f - (temperature / 10000.0f), 0.0f, 1.0f), true);
         }
 
+        public override bool AIOperate(float deltaTime, Character character, AIObjective objective)
+        {
+             switch (objective.Option.ToLower())
+             {
+                 case "power up":
+                     float tempDiff = load - temperature;
 
-        bool valueChanged = false;
+                     shutDownTemp = Math.Min(load + 1000.0f, 7500.0f);
+
+                     //temperature too high/low
+                     if (Math.Abs(tempDiff)>500.0f)
+                     {
+                         autoTemp = false;
+                         FissionRate += deltaTime * 100.0f * Math.Sign(tempDiff);
+                         CoolingRate -= deltaTime * 100.0f * Math.Sign(tempDiff);
+                     }
+                     //temperature OK
+                     else
+                     {
+                         autoTemp = true;
+                     }
+
+                     break;
+                 case "shutdown":
+
+                     shutDownTemp = 0.0f;
+
+                     break;
+             }
+
+             return false;
+        }
+        
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             IsActive = true;
 
+            bool valueChanged = false;
 
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
@@ -398,7 +430,6 @@ namespace Barotrauma.Items.Components
             if (valueChanged)
             {
                 item.NewComponentEvent(this, true, false);
-                valueChanged = false;
             }
         }
 

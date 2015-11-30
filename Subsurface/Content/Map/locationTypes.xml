@@ -12,9 +12,15 @@
 
   <City
     commonness="3"
-    hireablecharacters="true"
     symbol="Content/Map/citySymbol.png"
     background="Content/Map/citybackground.jpg">
+
+    <Hireable name="Assistant" commonness="10"/>
+    <Hireable name="Engineer" commonness="3"/>
+    <Hireable name="Mechanic" commonness="3"/>
+    <Hireable name="Security Officer" commonness="1"/>
+    <Hireable name="Captain" commonness="1"/>
+
     <nameformats
       f0="The City of [name]"
       f1="[name] City"
@@ -24,9 +30,15 @@
 
   <Military
     commonness="1"
-    hireablecharacters="true"
     symbol="Content/Map/militarySymbol.png"
     background="Content/Map/militarybackground.jpg">
+
+    <Hireable name="Security Officer" commonness="10"/>
+    <Hireable name="Captain" commonness="3"/>
+    <Hireable name="Assistant" commonness="2"/>
+    <Hireable name="Engineer" commonness="2"/>
+    <Hireable name="Mechanic" commonness="2"/>
+
     <nameformats
       f0="[name] Outpost"
       f1="[name] Facility"
@@ -36,9 +48,15 @@
 
   <Research
     commonness="1"
-    hireablecharacters="true"
     symbol="Content/Map/researchSymbol.png"
-    background="Content/Map/citybackground.jpg">
+    background="Content/Map/researchbackground.jpg">
+    
+    <Hireable name="Engineer" commonness="5"/>
+    <Hireable name="Mechanic" commonness="5"/>      
+    <Hireable name="Assistant" commonness="3"/>
+    <Hireable name="Security Officer" commonness="1"/>
+    <Hireable name="Captain" commonness="1"/>
+
     <nameformats
       f0="[name] Research Facility"
       f1="[name] Research Center"

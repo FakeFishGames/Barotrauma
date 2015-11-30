@@ -216,6 +216,30 @@ namespace Barotrauma
             return frame;
         }
 
+        public GUIFrame CreateCharacterFrame(GUIComponent parent, string text, object userData)
+        {
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, parent);
+            frame.UserData = userData;
+            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            frame.HoverColor = Color.LightGray * 0.5f;
+            frame.SelectedColor = Color.Gold * 0.5f;
+
+           // string name = character.Info.Name.Replace(' ', '\n');
+
+            GUITextBlock textBlock = new GUITextBlock(
+                new Rectangle(40, 0, 0, 25),
+                text,
+                Color.Transparent, Color.White,
+                Alignment.Left, Alignment.Left,
+                null, frame, false);
+            textBlock.Font = GUI.SmallFont;
+            textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+
+            new GUIImage(new Rectangle(-10, -5, 0, 0), HeadSprite, Alignment.Left, frame);
+
+            return frame;
+        }
+
         public void UpdateCharacterItems()
         {
             pickedItems.Clear();

@@ -24,11 +24,9 @@ namespace Barotrauma
 
         private Sprite backGround;
 
-        public bool HasHireableCharacters
-        {
-            get;
-            private set;
-        }
+        //<name, commonness>
+        private List<Tuple<JobPrefab, float>> hireableJobs;
+        private float totalHireableWeight;
         
         public string Name
         {
@@ -38,6 +36,11 @@ namespace Barotrauma
         public List<string> NameFormats
         {
             get { return nameFormats; }
+        }
+
+        public bool HasHireableCharacters
+        {
+            get { return hireableJobs.Any(); }
         }
 
         public Sprite Sprite
@@ -57,12 +60,31 @@ namespace Barotrauma
             commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
             totalWeight += commonness;
 
-            HasHireableCharacters = ToolBox.GetAttributeBool(element, "hireablecharacters", false);
-
             nameFormats = new List<string>();
             foreach (XAttribute nameFormat in element.Element("nameformats").Attributes())
             {
                 nameFormats.Add(nameFormat.Value);
+            }
+
+            hireableJobs = new List<Tuple<JobPrefab, float>>();
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLower() != "hireable") continue;
+
+                string jobName = ToolBox.GetAttributeString(subElement, "name", "");
+
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLower() == jobName.ToLower());
+                if (jobPrefab==null)
+                {
+                    DebugConsole.ThrowError("Invalid job name ("+jobName+") in location type "+name);
+                }
+
+                float jobCommonness = ToolBox.GetAttributeFloat(subElement, "commonness", 1.0f);
+                totalHireableWeight += jobCommonness;
+
+                Tuple<JobPrefab, float> hireableJob = new Tuple<JobPrefab, float>(jobPrefab, jobCommonness);
+
+                hireableJobs.Add(hireableJob);
             }
 
             string spritePath = ToolBox.GetAttributeString(element, "symbol", "Content/Map/beaconSymbol.png");
@@ -70,8 +92,19 @@ namespace Barotrauma
 
             string backgroundPath = ToolBox.GetAttributeString(element, "background", "");
             backGround = new Sprite(backgroundPath, Vector2.Zero);
-            //sprite.Origin = ;
+        }
 
+        public JobPrefab GetRandomHireable()
+        {
+            float randFloat = Rand.Range(0.0f, totalHireableWeight);
+
+            foreach (Tuple<JobPrefab, float> hireable in hireableJobs)
+            {
+                if (randFloat < hireable.Item2) return hireable.Item1;
+                randFloat -= hireable.Item2;
+            }
+
+            return null;
         }
 
         public static LocationType Random()
