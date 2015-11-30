@@ -44,11 +44,6 @@ namespace Barotrauma
             get { return skills.Values.ToList(); }
         }
 
-        //public List<float> SkillLevels
-        //{
-        //    get { return skills.Values.ToList(); }
-        //}
-
         public Job(JobPrefab jobPrefab)
         {
             prefab = jobPrefab;

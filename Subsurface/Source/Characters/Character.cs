@@ -131,6 +131,11 @@ namespace Barotrauma
         public Vector2 CursorPosition
         {
             get { return cursorPosition; }
+            set 
+            { 
+                if (!MathUtils.IsValid(value)) return;
+                cursorPosition = value;
+            }
         }
 
         public Character ClosestCharacter

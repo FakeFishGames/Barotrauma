@@ -127,67 +127,161 @@ namespace Barotrauma.Items.Components
         {
             if (reload > 0.0f) return false;
 
-            Projectile projectileComponent = null;
-            //search for a projectile from linked containers
-            Item projectile = null;
-            Item projectileContainer = null;
-            foreach (MapEntity e in item.linkedTo)
-            {
-                projectileContainer = e as Item;
-                if (projectileContainer == null) continue;
+            var projectiles = GetLoadedProjectiles(true);
+            if (projectiles.Count == 0) return false;
 
-                ItemContainer containerComponent = projectileContainer.GetComponent<ItemContainer>();
-                if (containerComponent == null) continue;
-
-                for (int i = 0; i < containerComponent.inventory.Items.Length; i++)
-                {
-                    if (containerComponent.inventory.Items[i] == null) continue;
-                    if ((projectileComponent = containerComponent.inventory.Items[i].GetComponent<Projectile>()) != null)
-                    {
-                        projectile = containerComponent.inventory.Items[i];
-                        break;
-                    }
-                }
-
-                if (projectileComponent != null) break;
-            }
-
-            if (projectile == null || projectileComponent == null) return false;
-
+            if (GetAvailablePower() < currPowerConsumption) return false;
+            
+            var batteries = item.GetConnectedComponents<PowerContainer>();
 
             float availablePower = 0.0f;
-            //List<PowerContainer> batteries = new List<PowerContainer>();
-            foreach (Connection c in item.Connections)
+            foreach (PowerContainer battery in batteries)
             {
-                foreach (Connection c2 in c.Recipients)
-                {
-                    if (c2 == null || c2.Item == null) continue;
+                float batteryPower = Math.Min(battery.Charge, battery.MaxOutPut);
+                float takePower = Math.Min(currPowerConsumption - availablePower, batteryPower);
 
-                    PowerContainer batteryComponent = c2.Item.GetComponent<PowerContainer>();
-                    if (batteryComponent == null) continue;
-
-                    float batteryPower = Math.Min(batteryComponent.Charge, batteryComponent.MaxOutPut);
-                    float takePower = Math.Min(currPowerConsumption - availablePower, batteryPower);
-
-                    batteryComponent.Charge -= takePower;
-                    availablePower += takePower;
-                }
+                battery.Charge -= takePower;
             }
 
-            reload = reloadTime;
-            
-            if (availablePower < currPowerConsumption) return false;
-            
+            reload = reloadTime;            
+
+            Item projectile = projectiles[0].Item;
+
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
             projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y)), -rotation);
 
-            projectileComponent.Use(deltaTime);
-            projectileContainer.RemoveContained(projectile);
+            projectiles[0].Use(deltaTime);
+            if (projectile.container != null) projectile.container.RemoveContained(projectile);
 
             return true;
         }
 
+        public override bool AIOperate(float deltaTime, Character character, AIObjective objective)
+        {
+            var projectiles = GetLoadedProjectiles();
+
+            if (projectiles.Count==0 || (projectiles.Count==1 && objective.Option.ToLower()=="hold fire"))
+            {
+                ItemContainer container = null;
+                foreach (MapEntity e in item.linkedTo)
+                {
+                    var containerItem = e as Item;
+                    if (containerItem == null) continue;
+
+                    container = containerItem.GetComponent<ItemContainer>();
+                    if (container != null) break;
+                }
+
+                if (container == null || container.ContainableItems.Count==0) return true;
+                
+                objective.AddSubObjective(new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container));
+                return false;
+            }
+            else if (GetAvailablePower() < powerConsumption)
+            {
+                var batteries = item.GetConnectedComponents<PowerContainer>();
+
+                float lowestCharge = 0.0f;
+                PowerContainer batteryToLoad = null;
+                foreach (PowerContainer battery in batteries)
+                {
+                    if (batteryToLoad==null || battery.Charge < lowestCharge)
+                    {
+                        batteryToLoad = battery;
+                        lowestCharge = battery.Charge;
+                    }                    
+                }
+
+                if (batteryToLoad == null) return true;
+
+                if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed*0.4f)
+                {
+                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, ""));
+                    return false;
+                }
+
+
+            }
+
+            //enough shells and power
+
+            Character closestEnemy = null;
+            float closestDist = 3000.0f;
+            foreach (Character enemy in Character.CharacterList)
+            {
+                //ignore humans and characters that are inside the sub
+                if (enemy.IsDead || enemy.SpeciesName == "human" || enemy.AnimController.CurrentHull != null) continue;
+
+                float dist = Vector2.Distance(enemy.Position, item.Position);
+                if (dist < closestDist)
+                {
+                    closestEnemy = enemy;
+                    closestDist = dist;
+                }
+            }
+
+            if (closestEnemy == null) return false;
+
+            character.CursorPosition = closestEnemy.Position;
+            SecondaryUse(deltaTime, character);
+
+            float enemyAngle = MathUtils.VectorToAngle(closestEnemy.Position-item.Position);
+            float turretAngle = -(rotation - MathHelper.TwoPi);
+
+            if (Math.Abs(enemyAngle - turretAngle) > 0.01f) return false;
+
+            var pickedBody = Submarine.PickBody(item.SimPosition, closestEnemy.SimPosition, null);
+            if (pickedBody != null && pickedBody.UserData as Limb == null) return false;
+
+            Use(deltaTime, character);
+
+
+            return false;
+
+        }
+
+        private float GetAvailablePower()
+        {
+            var batteries = item.GetConnectedComponents<PowerContainer>();
+
+            float availablePower = 0.0f;
+            foreach (PowerContainer battery in batteries)
+            {
+                float batteryPower = Math.Min(battery.Charge, battery.MaxOutPut);
+
+                availablePower += batteryPower;
+            }
+
+            return availablePower;
+        }
+
+        private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)
+        {
+            List<Projectile> projectiles = new List<Projectile>();
+
+            foreach (MapEntity e in item.linkedTo)
+            {
+                var projectileContainer = e as Item;
+                if (projectileContainer == null) continue;
+
+                var containedItems = projectileContainer.ContainedItems;
+                if (containedItems == null) continue;
+
+                for (int i = 0; i < containedItems.Length; i++)
+                {
+                    var projectileComponent = containedItems[i].GetComponent<Projectile>();
+                    if (projectileComponent != null)
+                    {
+                        projectiles.Add(projectileComponent);
+                        if (returnFirst) return projectiles;
+                    }
+                }
+            }
+
+            return projectiles;
+        }
+        
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
         {
             switch (connection.Name)

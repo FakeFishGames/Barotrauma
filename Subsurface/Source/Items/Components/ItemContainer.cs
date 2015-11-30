@@ -86,6 +86,11 @@ namespace Barotrauma.Items.Components
         }
         private int slotsPerRow;
 
+        public List<RelatedItem> ContainableItems
+        {
+            get { return containableItems; }
+        }
+
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {

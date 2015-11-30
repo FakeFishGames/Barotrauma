@@ -50,6 +50,11 @@ namespace Barotrauma
             steering += DoSteeringAvoid(deltaTime, speed);
         }
 
+        public void SteeringManual(float deltaTime, Vector2 velocity)
+        {
+            steering += velocity * deltaTime;
+        }
+
         public virtual void Update(float speed = 1.0f)
         {
             float steeringSpeed = steering.Length();
@@ -111,7 +116,7 @@ namespace Barotrauma
 
             float maxDistance = 2.0f;
 
-            Vector2 ahead = host.SimPosition + Vector2.Normalize(host.Steering)*maxDistance;
+            Vector2 ahead = host.SimPosition + Vector2.Normalize(host.Steering) * maxDistance;
 
             if (rayCastTimer <= 0.0f)
             {
@@ -120,12 +125,12 @@ namespace Barotrauma
                 if (closestBody == null)
                 {
                     avoidSteering = Vector2.Zero;
-                    return Vector2.Zero;                    
+                    return Vector2.Zero;
                 }
                 else
                 {
                     Structure closestStructure = closestBody.UserData as Structure;
-                    if (closestStructure!=null)
+                    if (closestStructure != null)
                     {
                         Vector2 obstaclePosition = Submarine.LastPickedPosition;
                         if (closestStructure.IsHorizontal)
@@ -139,8 +144,14 @@ namespace Barotrauma
 
                         avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - obstaclePosition);
                     }
+                    else
+                    {
+                        Item item = closestBody.UserData as Item;
+                        if (item != null) avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - item.SimPosition);
+
+                    }
                 }
-                
+
             }
             else
             {
@@ -148,7 +159,7 @@ namespace Barotrauma
             }
 
             return avoidSteering * speed;
-
         }
+
     }
 }

@@ -266,6 +266,7 @@ namespace Barotrauma
             {
                 finalPath.Add(pathNode.Waypoint);
 
+                path.Cost += pathNode.F;
                 pathNode = pathNode.Parent;
             }
 
@@ -275,6 +276,7 @@ namespace Barotrauma
             {
                 path.AddNode(wayPoint);
             }
+            
                 
             return path;
         }

@@ -12,13 +12,15 @@ namespace Barotrauma
         {
             availableCharacters = new List<CharacterInfo>();
         }
-
-        public void GenerateCharacters(string file, int amount)
-        {
-            
+        
+        public void GenerateCharacters(Location location, int amount)
+        {            
             for (int i = 0 ; i<amount ; i++)
             {
-                availableCharacters.Add(new CharacterInfo(file));
+                JobPrefab job = location.Type.GetRandomHireable();
+                if (job == null) return;
+
+                availableCharacters.Add(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, job));
             }
         }
     }

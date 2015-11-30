@@ -47,7 +47,7 @@ namespace Barotrauma
 
         public void UpdateObjectives()
         {
-            if (currentOrder != null || !objectives.Any()) return;
+            if (!objectives.Any()) return;
 
             //remove completed objectives
             objectives = objectives.FindAll(o => !o.IsCompleted());
@@ -69,7 +69,7 @@ namespace Barotrauma
 
         public void DoCurrentObjective(float deltaTime)
         {
-            if (currentOrder != null)
+            if (currentOrder != null && (!objectives.Any() || objectives[0].GetPriority(character)<OrderPriority))
             {
                 currentOrder.TryComplete(deltaTime);
                 return;
@@ -81,19 +81,18 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string option)
         {
+            currentOrder = null;
+
             switch (order.Name.ToLower())
             {
                 case "follow":
-                    currentOrder = new AIObjectiveGoTo(Character.Controlled.AiTarget, character, true);
-                    break;
-                case "operate reactor":
-                    var reactorItem = Item.ItemList.Find(i => i.GetComponent<Reactor>() != null);
-                    if (reactorItem == null) return;
-
-                    currentOrder = new AIObjectiveOperateItem(reactorItem.GetComponent<Reactor>(), character);
+                    currentOrder = new AIObjectiveGoTo(Character.Controlled, character, true);
                     break;
                 default:
-                    currentOrder = null;
+                    if (order.TargetItem == null) return;
+
+                    currentOrder = new AIObjectiveOperateItem(order.TargetItem, character, option);
+
                     break;
             }
         }

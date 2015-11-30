@@ -144,12 +144,12 @@ namespace Barotrauma
             itemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             itemList.OnSelected = SelectItem;
 
-                foreach (MapEntityPrefab ep in MapEntityPrefab.list)
-                {
-                    if (ep.Price == 0) continue;
+            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+            {
+                if (ep.Price == 0) continue;
 
-                    CreateItemFrame(ep, itemList);
-                }
+                CreateItemFrame(ep, itemList);
+            }
         }
 
         public override void Select()
@@ -158,7 +158,16 @@ namespace Barotrauma
 
             gameMode = GameMain.GameSession.gameMode as SinglePlayerMode;
 
-            //Map.Unload();
+            foreach (GUIComponent component in topPanel.children)
+            {
+                var button = component as GUIButton;
+                if (button == null || button.Text != "Hire") continue;
+
+                button.Enabled = GameMain.GameSession.Map.CurrentLocation.Type.HasHireableCharacters;
+                break;
+            }
+            //hireButton.Enabled = location.Type.HasHireableCharacters;
+            
 
             UpdateCharacterLists();            
         }
@@ -173,6 +182,7 @@ namespace Barotrauma
             locationTitle.Font = GUI.LargeFont;
 
             bottomPanel[(int)PanelTab.CurrentLocation].ClearChildren();
+            bottomPanel[(int)PanelTab.CurrentLocation].UserData = location;
             //rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
 
             //for (int i = 0; i < Enum.GetNames(typeof(PanelTab)).Length; i++ )
@@ -208,16 +218,18 @@ namespace Barotrauma
                 hireList.ClearChildren();
                 foreach (CharacterInfo c in location.HireManager.availableCharacters)
                 {
-                    GUITextBlock textBlock = new GUITextBlock(
-                        new Rectangle(0, 0, 0, 25),
-                        c.Name + " (" + c.Job.Name + ")", GUI.Style, hireList);
-                    textBlock.UserData = c;
+                    var frame = c.CreateCharacterFrame(hireList, c.Name + " (" + c.Job.Name + ")", c);
 
-                    textBlock = new GUITextBlock(
+                    //GUITextBlock textBlock = new GUITextBlock(
+                    //    new Rectangle(0, 0, 0, 25),
+                    //    c.Name + " (" + c.Job.Name + ")", GUI.Style, hireList);
+                    //textBlock.UserData = c;
+
+                    var textBlock = new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
                         c.Salary.ToString(),
                         null, null,
-                        Alignment.TopRight, GUI.Style, textBlock);
+                        Alignment.TopRight, GUI.Style, frame);
                 }
             }
             else
@@ -240,22 +252,22 @@ namespace Barotrauma
 
             if (locationPanel != null) bottomPanel[(int)PanelTab.Map].RemoveChild(locationPanel);
 
-            locationPanel = new GUIFrame(new Rectangle(0, 0, 200, 190), Color.Transparent, Alignment.TopRight, null, bottomPanel[(int)PanelTab.Map]);
+            locationPanel = new GUIFrame(new Rectangle(0, 0, 250, 190), Color.Transparent, Alignment.TopRight, null, bottomPanel[(int)PanelTab.Map]);
             locationPanel.UserData = "selectedlocation";
 
             if (location == null) return;
 
-            new GUITextBlock(new Rectangle(0,0,0,0), location.Name, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
+            new GUITextBlock(new Rectangle(0, 0, 0, 0), location.Name, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel).Font = GUI.LargeFont;
 
             if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Quest != null)
             {
                 var quest = GameMain.GameSession.Map.SelectedConnection.Quest;
 
-                new GUITextBlock(new Rectangle(0, 40, 0, 20), "Quest: "+quest.Name, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
-                
-                new GUITextBlock(new Rectangle(0, 60, 0, 20), "Reward: " + quest.Reward, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel);
-                
-                new GUITextBlock(new Rectangle(0, 80, 0, 0), quest.Description, Color.Transparent, Color.White, Alignment.TopLeft, null, locationPanel, true);
+                new GUITextBlock(new Rectangle(0, 40, 0, 20), "Quest: "+quest.Name, Color.Black*0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
+
+                new GUITextBlock(new Rectangle(0, 60, 0, 20), "Reward: " + quest.Reward, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
+
+                new GUITextBlock(new Rectangle(0, 80, 0, 0), quest.Description, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel, true);
 
             }
 
@@ -269,14 +281,16 @@ namespace Barotrauma
             characterList.ClearChildren();
             foreach (CharacterInfo c in CrewManager.characterInfos)
             {
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    c.Name + " (" + c.Job.Name + ")", GUI.Style, 
-                    Alignment.Left, 
-                    Alignment.Left,
-                    characterList, false, GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
-                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                textBlock.UserData = c;
+                c.CreateCharacterFrame(characterList, c.Name + " ("+c.Job.Name+") ", c);
+
+                //GUITextBlock textBlock = new GUITextBlock(
+                //    new Rectangle(0, 0, 0, 25),
+                //    c.Name + " (" + c.Job.Name + ")", GUI.Style, 
+                //    Alignment.Left, 
+                //    Alignment.Left,
+                //    characterList, false, GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
+                //textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
+                //textBlock.UserData = c;
             }
         }
 
@@ -403,7 +417,7 @@ namespace Barotrauma
                 GameMain.GameSession.Map.Draw(spriteBatch, new Rectangle(
                     bottomPanel[selectedRightPanel].Rect.X + 20, 
                     bottomPanel[selectedRightPanel].Rect.Y + 20,
-                    bottomPanel[selectedRightPanel].Rect.Width - 280, 
+                    bottomPanel[selectedRightPanel].Rect.Width - 310, 
                     bottomPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
             }
      
@@ -449,6 +463,16 @@ namespace Barotrauma
 
         private bool SelectCharacter(GUIComponent component, object selection)
         {
+            GUIComponent prevInfoFrame = null;
+            foreach (GUIComponent child in bottomPanel[selectedRightPanel].children)
+            {
+                if (child.UserData as CharacterInfo == null) continue;
+
+                prevInfoFrame = child;
+            }
+
+            if (prevInfoFrame != null) bottomPanel[selectedRightPanel].RemoveChild(prevInfoFrame);
+
             CharacterInfo characterInfo = selection as CharacterInfo;
             if (characterInfo == null) return false;
 

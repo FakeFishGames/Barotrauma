@@ -22,7 +22,7 @@ namespace Barotrauma
         }
 
         public AIObjectiveGetItem(Character character, string itemName)
-            : base (character)
+            : base (character, "")
         {
             canBeCompleted = true;
 
@@ -72,7 +72,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return character.Inventory.Items.FirstOrDefault(i => i != null && (i.HasTag(itemName) || i.Name == itemName)) != null;
+            return character.Inventory.FindItem(itemName) != null;
         }
     }
 }

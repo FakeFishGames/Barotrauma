@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     class AIObjectiveGoTo : AIObjective
     {
-        AITarget target;
+        Entity target;
 
         Vector2 targetPos;
 
@@ -26,13 +26,13 @@ namespace Barotrauma
             }
         }
 
-        public AITarget Target
+        public Entity Target
         {
             get { return target; }
         }
 
-        public AIObjectiveGoTo(AITarget target, Character character, bool repeat = false)
-            : base (character)
+        public AIObjectiveGoTo(Entity target, Character character, bool repeat = false)
+            : base (character, "")
         {
             this.target = target;
             this.repeat = false;
@@ -40,14 +40,19 @@ namespace Barotrauma
 
 
         public AIObjectiveGoTo(Vector2 targetPos, Character character)
-            : base(character)
+            : base(character, "")
         {
             this.targetPos = targetPos;
         }
 
         protected override void Act(float deltaTime)
         {            
-            character.AIController.SelectTarget(target);
+            if (character.SelectedConstruction!=null)
+            {
+                character.SelectedConstruction = null;
+            }
+
+            if (target!=null) character.AIController.SelectTarget(target.AiTarget);
 
             character.AIController.SteeringManager.SteeringSeek(
                 target != null ? target.SimPosition : targetPos);
@@ -56,7 +61,22 @@ namespace Barotrauma
         public override bool IsCompleted()
         {
             if (repeat) return false;
-            return Vector2.Distance(target != null ? target.SimPosition : ConvertUnits.ToDisplayUnits(targetPos), character.SimPosition) < 0.5f;
+
+            float allowedDistance = 0.5f;
+            var item = target as Item;
+            if (item != null) allowedDistance = Math.Max(item.PickDistance,allowedDistance);
+
+            return Vector2.Distance(target != null ? target.SimPosition : targetPos, character.SimPosition) < allowedDistance;
+        }
+
+        public override bool IsDuplicate(AIObjective otherObjective)
+        {
+            AIObjectiveGoTo objective = otherObjective as AIObjectiveGoTo;
+            if (objective == null) return false;
+
+            if (objective.target == target) return true;
+
+            return (objective.targetPos == targetPos);
         }
     }
 }

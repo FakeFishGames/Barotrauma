@@ -9,26 +9,7 @@ namespace Barotrauma
     class JobPrefab
     {
         public static List<JobPrefab> List;
-
-        string name;
-        string description;
-
-        //how many crew members can have the job (only one captain etc)        
-        private int maxNumber;
-
-        //how many crew members are REQUIRED to have a job 
-        //(i.e. if one captain is required, one captain is chosen even if all the players have set captain to lowest preference)
-        private int minNumber;
-
-        private float commonness;
-
-        //if set to true, a client that has chosen this as their preferred job will get it no matter what
-        public bool AllowAlways
-        {
-            get;
-            private set;
-        }
-                       
+                
         //names of the items the Character spawns with
         public List<string> ItemNames;
         public List<bool> EquipItem;
@@ -37,39 +18,55 @@ namespace Barotrauma
 
         public string Name
         {
-            get { return name; }
+            get;
+            private set;
         }
 
         public string Description
         {
-            get { return description; }
+            get;
+            private set;
         }
 
+
+        //if set to true, a client that has chosen this as their preferred job will get it no matter what
+        public bool AllowAlways
+        {
+            get;
+            private set;
+        }
+
+        //how many crew members can have the job (only one captain etc)    
         public int MaxNumber
         {
-            get { return maxNumber; }
+            get;
+            private set;
         }
 
+        //how many crew members are REQUIRED to have the job 
+        //(i.e. if one captain is required, one captain is chosen even if all the players have set captain to lowest preference)
         public int MinNumber
         {
-            get { return minNumber; }
+            get;
+            private set;
         }
 
         public float Commonness
         {
-            get { return commonness; }
+            get;
+            private set;
         }
 
         public JobPrefab(XElement element)
         {
-            name = ToolBox.GetAttributeString(element, "name", "name not found");
+            Name = ToolBox.GetAttributeString(element, "name", "name not found");
 
-            description = ToolBox.GetAttributeString(element, "description", "");
+            Description = ToolBox.GetAttributeString(element, "description", "");
 
-            minNumber = ToolBox.GetAttributeInt(element, "minnumber", 0);
-            maxNumber = ToolBox.GetAttributeInt(element, "maxnumber", 10);
+            MinNumber = ToolBox.GetAttributeInt(element, "minnumber", 0);
+            MaxNumber = ToolBox.GetAttributeInt(element, "maxnumber", 10);
 
-            commonness = ToolBox.GetAttributeInt(element, "commonness", 10);
+            Commonness = ToolBox.GetAttributeInt(element, "commonness", 10);
 
             AllowAlways = ToolBox.GetAttributeBool(element, "allowalways", false);
 
@@ -117,9 +114,9 @@ namespace Barotrauma
             GUIFrame frame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style, backFrame);
             frame.Padding = new Vector4(30.0f, 30.0f, 30.0f, 30.0f);
             
-            new GUITextBlock(new Rectangle(0,0,100,20), name, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0,0,100,20), Name, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
 
-            var descriptionBlock = new GUITextBlock(new Rectangle(0, 40, 0, 0), description, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+            var descriptionBlock = new GUITextBlock(new Rectangle(0, 40, 0, 0), Description, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
 
             new GUITextBlock(new Rectangle(0, 40 + descriptionBlock.Rect.Height + 20, 100, 20), "Skills: ", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
 

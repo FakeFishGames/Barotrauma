@@ -41,7 +41,10 @@ namespace Barotrauma
 
         public static bool IsOpen
         {
-            get { return isOpen; }
+            get 
+            {                
+                return isOpen; 
+            }
         }
 
         public static void Init(GameWindow window)
@@ -72,6 +75,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    GUIComponent.MouseOn = null;
                     textBox.Deselect();
                 }
 
@@ -80,9 +84,7 @@ namespace Barotrauma
 
             if (isOpen)
             {
-
                 frame.Update(deltaTime);
-
 
                 Character.DisableControls = true;
 

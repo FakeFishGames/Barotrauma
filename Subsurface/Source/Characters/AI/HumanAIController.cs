@@ -50,7 +50,7 @@ namespace Barotrauma
             //{
             //    steeringManager.SteeringSeek(Character.Controlled.Position);
             //}
-
+            
             Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
             if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)

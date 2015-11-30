@@ -681,7 +681,7 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD(bool inGame=false)
         {
-            int width = 500;
+            int width = 400;
             int x = GameMain.GraphicsWidth/2-width/2, y = 10;
 
             List<ObjectProperty> editableProperties = inGame ? GetProperties<InGameEditable>() : GetProperties<Editable>();
@@ -786,6 +786,26 @@ namespace Barotrauma
             }
         }
 
+        public List<T> GetConnectedComponents<T>()
+        {
+            ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
+            if (connectionPanel == null) return new List<T>();
+
+            List<T> connectedComponents = new List<T>();
+
+            foreach (Connection c in connectionPanel.Connections)
+            {
+                var recipients = c.Recipients;
+                foreach (Connection recipient in recipients)
+                {
+                    var component = recipient.Item.GetComponent<T>();
+                    if (component != null) connectedComponents.Add(component);
+                }
+            }
+
+            return connectedComponents;
+        }
+
         public void SendSignal(string signal, string connectionName, float power = 0.0f)
         {
             ConnectionPanel panel = GetComponent<ConnectionPanel>();
@@ -860,6 +880,18 @@ namespace Barotrauma
             }
             
             return closest;
+        }
+
+        public bool IsInsideTrigger(Vector2 position)
+        {
+            foreach (Rectangle trigger in prefab.Triggers)
+            {
+                Rectangle transformedTrigger = TransformTrigger(trigger);
+
+                if (Submarine.RectContains(transformedTrigger, position)) return true;
+            }
+
+            return false;
         }
 
         public bool Pick(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)

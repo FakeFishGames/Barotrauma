@@ -255,31 +255,7 @@ namespace Barotrauma.Items.Components
 
             linkedGap.Open = 1.0f;
         }
-
-        public List<Controller> GetButtons()
-        {
-            ConnectionPanel connectionPanel = Item.GetComponent<ConnectionPanel>();
-            if (connectionPanel == null) return new List<Controller>();
-
-            List<Controller> buttons = new List<Controller>();
-
-            foreach (Connection c in connectionPanel.Connections)
-            {
-                foreach (Wire w in c.Wires)
-                {
-                    if (w == null) continue;
-                    var otherConnection = w.OtherConnection(c);
-
-                    if (otherConnection.Item == Item || otherConnection == null) continue;
-
-                    var controller = otherConnection.Item.GetComponent<Controller>();
-                    if (controller != null) buttons.Add(controller);                    
-                }
-            }
-
-            return buttons;
-        }
-
+        
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {           
             Color color = (item.IsSelected) ? Color.Green : Color.White;

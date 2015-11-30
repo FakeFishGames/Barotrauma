@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,11 @@ namespace Barotrauma
         {
             IsOpen = !IsOpen;
 
-            if (IsOpen && frame == null) CreateGUIFrame();
+            if (IsOpen) 
+            {
+                CreateGUIFrame();
+                UpdateCharacters();
+            }
         }
 
         private void CreateGUIFrame()
@@ -43,14 +48,64 @@ namespace Barotrauma
             frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.3f);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
 
+            UpdateCharacters();
+
+            int x = 0, y = 150;            
+            foreach (Order order in Order.PrefabList)
+            {
+                if (order.ItemComponentType!=null)
+                {
+                    var matchingItems = Item.ItemList.FindAll(i => i.components.Find(ic => ic.GetType() == order.ItemComponentType) != null);
+                    int y2 = y;
+                    foreach (Item it in matchingItems)
+                    {
+                        var newOrder = new Order(order, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
+
+                        var button = new GUIButton(new Rectangle(x, y2, 150, 20), order.Name, GUI.Style, frame);
+                        button.UserData = newOrder;
+                        button.OnClicked = SetOrder;
+                        y2 += 25;
+                    }
+                }
+                else
+                {
+                    var button = new GUIButton(new Rectangle(x, y, 150, 20), order.Name, GUI.Style, frame);
+                    button.UserData = order;
+                    button.OnClicked = SetOrder;
+                }
+
+
+
+                x += 160;
+            }
+        }
+
+        public void UpdateCharacters()
+        {
+            if (frame == null) CreateGUIFrame();
+
+            List<GUIComponent> prevCharacterFrames = new List<GUIComponent>();
+            foreach (GUIComponent child in frame.children)
+            {
+                if (child.UserData as Character == null) continue;
+
+                prevCharacterFrames.Add(child);
+            }
+
+            foreach (GUIComponent child in prevCharacterFrames)
+            {
+                frame.RemoveChild(child);
+            }
+
             int x = 0, y = 0;
             foreach (Character character in crewManager.characters)
             {
-                GUIButton characterButton = new GUIButton(new Rectangle(x,y, 150, 40), "", Color.Transparent, null, frame);
+                if (character.IsDead) continue;
+
+                GUIButton characterButton = new GUIButton(new Rectangle(x, y, 150, 40), "", Color.Transparent, null, frame);
                 characterButton.UserData = character;
                 characterButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-
-
+                
                 if (character == Character.Controlled)
                 {
                     characterButton.CanBeSelected = false;
@@ -75,18 +130,7 @@ namespace Barotrauma
 
                 new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
 
-                x += 160;               
-            }
-
-            x = 0;
-            y = 150;
-            foreach (Order command in Order.List)
-            {
-                var button = new GUIButton(new Rectangle(x, y, 150, 20), command.Name, GUI.Style, frame);
-                button.UserData = command;
-                button.OnClicked = SetOrder;
-
-                x += button.Rect.Width + 10;
+                x += 160;
             }
         }
 

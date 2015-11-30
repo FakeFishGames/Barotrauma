@@ -156,6 +156,13 @@ namespace Barotrauma.Items.Components
             voltage = 0.0f;
         }
 
+        public override bool AIOperate(float deltaTime, Character character, AIObjective objective)
+        {
+            RechargeSpeed = maxRechargeSpeed * 0.5f;
+
+            return true;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             base.Draw(spriteBatch);
