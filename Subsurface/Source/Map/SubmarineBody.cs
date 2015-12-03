@@ -71,6 +71,10 @@ namespace Barotrauma
             }
         }
 
+        public Vector2 Position
+        {
+            get { return ConvertUnits.ToDisplayUnits(body.Position); }
+        }
 
         public Vector2 Center
         {
@@ -79,7 +83,7 @@ namespace Barotrauma
 
         public bool AtDamageDepth
         {
-            get { return sub.Position.Y < DamageDepth; }
+            get { return Position.Y < DamageDepth; }
         }
 
         public SubmarineBody(Submarine sub)
@@ -187,34 +191,35 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (body.Position!=Vector2.Zero)
+            if (Position!=Vector2.Zero)
             {
-                UpdateColliding();
+                //!!!!!!!!!!!!!!!!
+                //UpdateColliding();
             }
 
-            Vector2 translateAmount = speed * deltaTime;            
-            translateAmount += ConvertUnits.ToDisplayUnits(body.Position) * collisionRigidness;
+            //Vector2 translateAmount = speed * deltaTime;            
+            //translateAmount += ConvertUnits.ToDisplayUnits(Position) * collisionRigidness;
 
-            if (targetPosition != Vector2.Zero && targetPosition != sub.Position)
-            {
-                float dist = Vector2.Distance(targetPosition, sub.Position);
+            //if (targetPosition != Vector2.Zero && targetPosition != Position)
+            //{
+            //    float dist = Vector2.Distance(targetPosition, Position);
                 
-                if (dist>1000.0f)
-                {
-                    sub.SetPosition(targetPosition);
-                    targetPosition = Vector2.Zero;
-                }
-                else if (dist>50.0f)
-                {
-                    translateAmount += (targetPosition - sub.Position) * 0.01f;
-                }
-            }
-            else
-            {
-                targetPosition = Vector2.Zero;
-            }
+            //    if (dist>1000.0f)
+            //    {
+            //        sub.SetPosition(targetPosition);
+            //        targetPosition = Vector2.Zero;
+            //    }
+            //    else if (dist>50.0f)
+            //    {
+            //        translateAmount += (targetPosition - Position) * 0.01f;
+            //    }
+            //}
+            //else
+            //{
+            //    targetPosition = Vector2.Zero;
+            //}
 
-            sub.Translate(translateAmount);
+            //sub.Translate(translateAmount);
 
             //-------------------------
 
@@ -232,14 +237,13 @@ namespace Barotrauma
 
             ApplyForce(totalForce);
 
-            UpdateDepthDamage(deltaTime);
+            //UpdateDepthDamage(deltaTime);
 
             //hullBodies[0].body.LinearVelocity = -hullBodies[0].body.Position;
 
             //hullBody.SetTransform(Vector2.Zero , 0.0f);
-            body.SetTransform(Vector2.Zero, 0.0f);// .LinearVelocity = -body.Position / (float)Physics.step;
-            body.LinearVelocity = Vector2.Zero;
-
+            //body.SetTransform(Vector2.Zero, 0.0f);// .LinearVelocity = -body.Position / (float)Physics.step;
+            //body.LinearVelocity = Vector2.Zero;
         }
 
         private Vector2 CalculateBuoyancy()
@@ -264,14 +268,19 @@ namespace Barotrauma
 
         public void ApplyForce(Vector2 force)
         {
-            Speed += force / mass;
+            body.ApplyForce(force/100.0f);
+        }
+
+        public void SetPosition(Vector2 position)
+        {
+            body.SetTransform(ConvertUnits.ToSimUnits(position), 0.0f);
         }
 
         private void UpdateDepthDamage(float deltaTime)
         {
-            if (sub.Position.Y > DamageDepth) return;
+            if (Position.Y > DamageDepth) return;
 
-            float depth = DamageDepth - sub.Position.Y;
+            float depth = DamageDepth - Position.Y;
             depth = Math.Min(depth, 40000.0f);
 
            // float prevTimer = depthDamageTimer;
@@ -311,6 +320,9 @@ namespace Barotrauma
 
         private void UpdateColliding()
         {
+
+            return;
+
             if (body.Position.LengthSquared()<0.00001f) return;
 
             Vector2 normal = Vector2.Normalize(body.Position);

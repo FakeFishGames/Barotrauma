@@ -59,7 +59,7 @@ namespace Barotrauma
 
             this.position = position;
 
-            drawPosition = position + Level.Loaded.Position;
+            drawPosition = position;
 
             steeringManager = new SteeringManager(this);
 
@@ -153,7 +153,7 @@ namespace Barotrauma
                 if (velocity.X < 0.0f) rotation -= MathHelper.Pi;
             }
 
-            if (Level.Loaded != null) drawPosition = position + Level.Loaded.Position;
+            if (Level.Loaded != null) drawPosition = position;// +Level.Loaded.Position;
 
             if (depth > 0.0f)
             {
