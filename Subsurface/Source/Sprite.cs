@@ -216,8 +216,8 @@ namespace Barotrauma
 
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color)
         {
-            pos.X = (int)pos.X;
-            pos.Y = (int)pos.Y;
+            //pos.X = (int)pos.X;
+            //pos.Y = (int)pos.Y;
 
             //how many times the texture needs to be drawn on the x-axis
             int xTiles = (int)Math.Ceiling((targetSize.X+startOffset.X) / sourceRect.Width);

@@ -133,7 +133,8 @@ namespace Barotrauma
             get { return fireSources; }
         }
 
-        public Hull(Rectangle rectangle)
+        public Hull(Rectangle rectangle, Submarine submarine)
+            : base (submarine)
         {
             rect = rectangle;
             
@@ -376,12 +377,13 @@ namespace Barotrauma
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
 
             //calculate where the surface should be based on the water volume
-            float top = rect.Y;
-            float bottom = rect.Y - rect.Height;
+            float top = rect.Y+Submarine.Position.Y;
+            float bottom = top - rect.Height;
             float surfaceY = bottom + Volume / rect.Width;
 
             //interpolate the position of the rendered surface towards the "target surface"
-            surface = surface + (surfaceY - surface) / 10.0f;
+            surface = surface + ((surfaceY - Submarine.Position.Y) - surface) / 10.0f;
+            float drawSurface = surface + Submarine.Position.Y;
 
             Matrix transform =  cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
@@ -393,15 +395,16 @@ namespace Barotrauma
 
                 Vector3[] corners = new Vector3[4];
 
-                corners[0] = new Vector3(rect.X, top, 0.0f);
-                corners[1] = new Vector3(rect.X + rect.Width, top, 0.0f);
+                corners[0] = new Vector3(rect.X, rect.Y, 0.0f);
+                corners[1] = new Vector3(rect.X + rect.Width, rect.Y, 0.0f);
 
-                corners[2] = new Vector3(corners[1].X, bottom, 0.0f);
-                corners[3] = new Vector3(corners[0].X, bottom, 0.0f);
+                corners[2] = new Vector3(corners[1].X, rect.Y-rect.Height, 0.0f);
+                corners[3] = new Vector3(corners[0].X, corners[2].Y, 0.0f);
 
                 Vector2[] uvCoords = new Vector2[4];
                 for (int i = 0; i < 4; i++ )
                 {
+                    corners[i] += new Vector3(Submarine.Loaded.Position, 0.0f);
                     uvCoords[i] = Vector2.Transform(new Vector2(corners[i].X, -corners[i].Y), transform);                    
                 }
 
@@ -418,8 +421,8 @@ namespace Barotrauma
                 return;
             }
 
-            int x = rect.X;
-            int start = (int)Math.Floor((float)(cam.WorldView.X - x) / WaveWidth);
+            float x = rect.X+Submarine.Position.X;
+            int start = (int)Math.Floor((cam.WorldView.X - x) / WaveWidth);
             start = Math.Max(start, 0);
 
             int end = (waveY.Length - 1)
@@ -435,7 +438,7 @@ namespace Barotrauma
                 Vector3[] corners = new Vector3[4];
 
                 corners[0] = new Vector3(x, top, 0.0f);
-                corners[3] = new Vector3(corners[0].X, surface + waveY[i], 0.0f);
+                corners[3] = new Vector3(corners[0].X, drawSurface + waveY[i], 0.0f);
 
                 //skip adjacent "water rects" if the surface of the water is roughly at the same position
                 int width = WaveWidth;
@@ -446,7 +449,7 @@ namespace Barotrauma
                 }
 
                 corners[1] = new Vector3(x + width, top, 0.0f);
-                corners[2] = new Vector3(corners[1].X, surface + waveY[i+1], 0.0f);
+                corners[2] = new Vector3(corners[1].X, drawSurface + waveY[i + 1], 0.0f);
                 
                 Vector2[] uvCoords = new Vector2[4];
                 for (int n = 0; n < 4; n++)
@@ -527,7 +530,7 @@ namespace Barotrauma
             return element;
         }
 
-        public static void Load(XElement element)
+        public static void Load(XElement element, Submarine submarine)
         {
             Rectangle rect = new Rectangle(
                 int.Parse(element.Attribute("x").Value),
@@ -535,7 +538,7 @@ namespace Barotrauma
                 int.Parse(element.Attribute("width").Value),
                 int.Parse(element.Attribute("height").Value));
 
-            Hull h = new Hull(rect);
+            Hull h = new Hull(rect, submarine);
 
             h.volume = ToolBox.GetAttributeFloat(element, "pressure", 0.0f);
 

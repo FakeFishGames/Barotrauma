@@ -57,12 +57,12 @@ namespace Barotrauma
             get { return flowTargetHull; }
         }
 
-        public Gap(Rectangle newRect)
-            : this(newRect, (newRect.Width < newRect.Height))
-        {
-        }
+        public Gap(Rectangle newRect, Submarine submarine)
+            : this(newRect, newRect.Width < newRect.Height, submarine)
+        { }
 
-        public Gap(Rectangle newRect, bool isHorizontal)
+        public Gap(Rectangle newRect, bool isHorizontal, Submarine submarine)
+            : base (submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();
@@ -564,7 +564,7 @@ namespace Barotrauma
         }
 
 
-        public static void Load(XElement element)
+        public static void Load(XElement element, Submarine submarine)
         {
             Rectangle rect = new Rectangle(
                 int.Parse(element.Attribute("x").Value),
@@ -572,7 +572,7 @@ namespace Barotrauma
                 int.Parse(element.Attribute("width").Value),
                 int.Parse(element.Attribute("height").Value));
 
-            Gap g = new Gap(rect);
+            Gap g = new Gap(rect, submarine);
             g.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             
             g.linkedToID = new List<ushort>();

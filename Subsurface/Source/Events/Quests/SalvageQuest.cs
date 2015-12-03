@@ -65,7 +65,7 @@ namespace Barotrauma
             } while (tries < 10);
 
 
-            item = new Item(itemPrefab, position);
+            item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;
             item.body.FarseerBody.GravityScale = 0.5f;
             //item.MoveWithLevel = true;

@@ -239,7 +239,7 @@ namespace Barotrauma
             for (int i = 0; i <3 ; i++ )
             {
                 Vector2 position = pathCells[Rand.Range((int)(pathCells.Count * 0.5f), pathCells.Count - 2, false)].Center;
-                WayPoint wayPoint = new WayPoint(new Rectangle((int)position.X, (int)position.Y, 10, 10));
+                WayPoint wayPoint = new WayPoint(new Rectangle((int)position.X, (int)position.Y, 10, 10), null);
                 wayPoint.MoveWithLevel = true;
                 wayPoint.SpawnType = SpawnType.Enemy;
             }
@@ -454,7 +454,7 @@ namespace Barotrauma
 
             if (placeWaypoints)
             {
-                WayPoint newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, (int)(borders.Height + shaftHeight), 10, 10));
+                WayPoint newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
                 newWaypoint.MoveWithLevel = true;
 
                 WayPoint prevWaypoint = newWaypoint;
@@ -471,7 +471,7 @@ namespace Barotrauma
                     }
                     if (i >= pathCells.Count) break;
 
-                    newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10));
+                    newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10), null);
                     newWaypoint.MoveWithLevel = true;
                     if (prevWaypoint != null)
                     {
@@ -481,7 +481,7 @@ namespace Barotrauma
                     prevWaypoint = newWaypoint;
                 }
 
-                newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, (int)(borders.Height + shaftHeight), 10, 10));
+                newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
                 newWaypoint.MoveWithLevel = true;
 
                 prevWaypoint.linkedTo.Add(newWaypoint);

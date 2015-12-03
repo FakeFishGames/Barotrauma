@@ -152,7 +152,17 @@ namespace Barotrauma
 
         public Hull CurrentHull
         {
-            get { return currentHull;}
+            get { return currentHull; }
+            set
+            {
+                if (value == currentHull) return;
+
+                currentHull = value;
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.Submarine = currentHull == null ? null : Submarine.Loaded;
+                }
+            }
         }
 
         public bool IgnorePlatforms
@@ -534,8 +544,9 @@ namespace Barotrauma
 
             if (newHull == currentHull) return;
 
-            currentHull = newHull;
+            CurrentHull = newHull;
 
+            
             UpdateCollisionCategories();
         }
 

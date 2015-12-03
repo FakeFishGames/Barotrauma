@@ -54,14 +54,18 @@ namespace Barotrauma
                 (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable)))
             {
                 //steer away from edges of the hull
-                if (character.Position.X < character.AnimController.CurrentHull.Rect.X + WallAvoidDistance)
+                if (character.AnimController.CurrentHull!=null)
                 {
-                    pathSteering.SteeringManual(deltaTime, Vector2.UnitX);
+                    if (character.Position.X < character.AnimController.CurrentHull.Rect.X + WallAvoidDistance)
+                    {
+                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX);
+                    }
+                    else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - WallAvoidDistance)
+                    {
+                        pathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
+                    }
                 }
-                else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - WallAvoidDistance)
-                {
-                    pathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
-                }
+
 
                 character.AIController.SteeringManager.SteeringWander(1.0f);
                 return;                

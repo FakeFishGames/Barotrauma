@@ -138,7 +138,8 @@ namespace Barotrauma
             //}
         }
                 
-        public Structure(Rectangle rectangle, StructurePrefab sp)
+        public Structure(Rectangle rectangle, StructurePrefab sp, Submarine submarine)
+            : base(submarine)
         {
             if (rectangle.Width == 0 || rectangle.Height == 0) return;
 
@@ -291,24 +292,25 @@ namespace Barotrauma
             Color color = (isHighlighted) ? Color.Green : Color.White;
             if (isSelected && editing) color = Color.Red;
 
-            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
+            Vector2 drawPos = Submarine == null ? new Vector2(rect.X, -rect.Y) : new Vector2(rect.X + Submarine.DrawPosition.X, -(rect.Y + Submarine.DrawPosition.Y));
+
+            prefab.sprite.DrawTiled(spriteBatch, drawPos, new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
             
             foreach (WallSection s in sections)
             {
                 if (s.isHighLighted)
                 {
                     GUI.DrawRectangle(spriteBatch,
-                        new Rectangle((int)s.rect.X, (int)-s.rect.Y, (int)s.rect.Width, (int)s.rect.Height),
+                        drawPos, new Vector2(rect.Width, rect.Height),
                         new Color((s.damage / prefab.MaxHealth), 1.0f - (s.damage / prefab.MaxHealth), 0.0f, 1.0f), true);
                 }
-
 
                 s.isHighLighted = false;
 
                 if (s.damage < 0.01f) continue;
                 
-                GUI.DrawRectangle(spriteBatch, 
-                    new Rectangle((int)s.rect.X, (int)-s.rect.Y, (int)s.rect.Width, (int)s.rect.Height),
+                GUI.DrawRectangle(spriteBatch,
+                    drawPos, new Vector2(rect.Width, rect.Height),
                     Color.Black * (s.damage / prefab.MaxHealth), true); 
             }
             
@@ -474,7 +476,7 @@ namespace Barotrauma
                     gapRect.Y += 10;
                     gapRect.Width += 20;
                     gapRect.Height += 20;
-                    sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal);
+                    sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
                 }
             }
 
@@ -590,7 +592,7 @@ namespace Barotrauma
             return element;
         }
 
-        public static void Load(XElement element)
+        public static void Load(XElement element, Submarine submarine)
         {
             string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
             string[] rectValues = rectString.Split(',');
@@ -609,7 +611,8 @@ namespace Barotrauma
             {
                 if (ep.Name == name)
                 {
-                    s = new Structure(rect, (StructurePrefab)ep);
+                    s = new Structure(rect, (StructurePrefab)ep, submarine);
+                    s.Submarine = submarine;
                     s.ID = (ushort)int.Parse(element.Attribute("ID").Value);
                     break;
                 }

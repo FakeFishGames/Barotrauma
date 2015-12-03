@@ -148,16 +148,17 @@ namespace Barotrauma
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
                 viewMatrix;
 
-            prevPosition = position;
-            prevZoom = zoom;
+
 
 
             Sound.CameraPos = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
-
         }
-
+        
         public void MoveCamera(float deltaTime)
-        {
+        {            
+            prevPosition = position;
+            prevZoom = zoom;
+
             float moveSpeed = 20.0f/zoom;
 
             Vector2 moveCam = Vector2.Zero;
@@ -210,6 +211,7 @@ namespace Barotrauma
         public Vector2 Position
         {
             get { return position; }
+            set { position = value; }
         }
         
         public Vector2 ScreenToWorld(Vector2 coords)

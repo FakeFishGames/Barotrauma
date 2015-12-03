@@ -41,6 +41,7 @@ namespace Barotrauma
         private string filePath;
         private string name;
 
+        private Vector2 prevPosition;
 
         private float lastNetworkUpdate;
 
@@ -93,12 +94,16 @@ namespace Barotrauma
                 return (loaded==null) ? Rectangle.Empty : Loaded.subBody.Borders;                
             }
         }
-
-
-
-        public Vector2 Position
+        
+        public override Vector2 Position
         {
             get { return subBody.Position; }
+        }
+
+        public new Vector2 DrawPosition
+        {
+            get;
+            private set;
         }
 
         public Vector2 Speed
@@ -129,7 +134,7 @@ namespace Barotrauma
 
         //constructors & generation ----------------------------------------------------
 
-        public Submarine(string filePath, string hash = "")
+        public Submarine(string filePath, string hash = "") : base(null)
         {
             this.filePath = filePath;
             try
@@ -179,6 +184,12 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth < 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
+
+            if (Submarine.Loaded!=null)
+            {
+                Submarine.Loaded.DrawPosition = Physics.Interpolate(Submarine.Loaded.prevPosition, Submarine.Loaded.Position);
+            }
+        
 
             if (loaded == null) return;
 
@@ -371,6 +382,12 @@ namespace Barotrauma
         public void ApplyForce(Vector2 force)
         {
             if (subBody != null) subBody.ApplyForce(force);
+        }
+
+        public void SetPrevTransform(Vector2 position, Camera cam = null)
+        {
+            if (cam != null) cam.Position += prevPosition - position;
+            prevPosition = position;
         }
 
         public void SetPosition(Vector2 position)
@@ -618,7 +635,7 @@ namespace Barotrauma
                 try
                 {
                     MethodInfo loadMethod = t.GetMethod("Load");
-                    loadMethod.Invoke(t, new object[] { element });
+                    loadMethod.Invoke(t, new object[] { element, this });
                 }
                 catch (Exception e)
                 {

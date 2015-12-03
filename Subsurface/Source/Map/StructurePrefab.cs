@@ -143,7 +143,7 @@ namespace Barotrauma
 
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
                 {
-                    new Structure(newRect, this);
+                    new Structure(newRect, this, Submarine.Loaded);
                     selected = null;
                     return;
                 }
