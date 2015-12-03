@@ -74,7 +74,7 @@
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjective.cs" />
     <Compile Include="Source\Characters\AI\PathFinder.cs" />
-    <Compile Include="Source\Characters\AI\PathSteeringManager.cs" />
+    <Compile Include="Source\Characters\AI\ÍndoorsSteeringManager.cs" />
     <Compile Include="Source\Characters\Animation\AnimController.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundSprite.cs" />

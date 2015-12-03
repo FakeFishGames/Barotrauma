@@ -889,7 +889,7 @@ namespace Barotrauma
                 
                 if (Submarine.Loaded!=null && Level.Loaded !=null)
                 {
-                    protectedFromPressure = protectedFromPressure && (Position-Level.Loaded.Position).Y > SubmarineBody.DamageDepth;
+                    protectedFromPressure = protectedFromPressure && Position.Y > SubmarineBody.DamageDepth;
                 }
                 
                 if (!protectedFromPressure && 

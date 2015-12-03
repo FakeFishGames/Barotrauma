@@ -118,7 +118,7 @@ namespace Barotrauma
 
                 GameMain.World.Step((float)Physics.step);
 
-                Level.AfterWorldStep();
+                //Level.AfterWorldStep();
 
                 Physics.accumulator -= Physics.step;
             }
@@ -177,7 +177,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
 
             Vector2 backgroundPos = cam.Position;
-            if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
+            //if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
             backgroundPos.Y = -backgroundPos.Y;
             backgroundPos /= 20.0f;
 
@@ -210,7 +210,7 @@ namespace Barotrauma
             BackgroundSpriteManager.Draw(spriteBatch);
 
             backgroundPos = new Vector2(cam.WorldView.X, cam.WorldView.Y) + dustOffset;
-            if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
+            //if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
 
             Rectangle viewRect = cam.WorldView;
             viewRect.Y = -viewRect.Y;
@@ -229,7 +229,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend,
                 null, null, null, null,
-                cam.Transform);
+                Matrix.CreateTranslation(new Vector3(Submarine.Loaded.Position.X, -Submarine.Loaded.Position.Y, 0.0f))*cam.Transform);
 
             Submarine.DrawBack(spriteBatch);
 
@@ -315,7 +315,7 @@ namespace Barotrauma
                 hull.Render(graphics, cam);
             }
 
-            Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
+            Hull.renderer.Render(graphics, cam, renderTargetAir,Cam.ShaderTransform);
             
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
             {
@@ -330,7 +330,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend, SamplerState.LinearWrap,
                 null, null, null,
-                cam.Transform);
+                Matrix.CreateTranslation(new Vector3(Submarine.Loaded.Position.X, -Submarine.Loaded.Position.Y, 0.0f))*cam.Transform);
 
             foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
 

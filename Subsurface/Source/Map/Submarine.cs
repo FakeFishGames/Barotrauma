@@ -23,7 +23,6 @@ namespace Barotrauma
 
     class Submarine : Entity
     {
-
         public static string SavePath = "Data" + System.IO.Path.DirectorySeparatorChar + "SavedSubs";
 
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
@@ -99,7 +98,7 @@ namespace Barotrauma
 
         public Vector2 Position
         {
-            get { return (Level.Loaded == null) ? Vector2.Zero : -Level.Loaded.Position; }
+            get { return subBody.Position; }
         }
 
         public Vector2 Speed
@@ -377,7 +376,9 @@ namespace Barotrauma
         public void SetPosition(Vector2 position)
         {
             if (!MathUtils.IsValid(position)) return;
-            Level.Loaded.SetPosition(-position);
+
+            subBody.SetPosition(position);
+            //Level.Loaded.SetPosition(-position);
             //prevPosition = position;
         }
 
@@ -385,7 +386,9 @@ namespace Barotrauma
         {
             if (amount == Vector2.Zero || !MathUtils.IsValid(amount)) return;
 
-            Level.Loaded.Move(-amount);
+            subBody.SetPosition(subBody.Position + amount);
+
+            //Level.Loaded.Move(-amount);
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, NetBuffer message, object data)

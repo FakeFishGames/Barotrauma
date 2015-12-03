@@ -35,8 +35,8 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            Vector2 pos = level.EndPosition;
-            pos.Y = -pos.Y - level.Position.Y;
+            Vector2 pos = Vector2.Zero;// level.EndPosition;
+            //pos.Y = -pos.Y - level.Position.Y;
 
             if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y - 512) return;
 
@@ -46,7 +46,7 @@ namespace Barotrauma
             int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 512.0f + 2.0f) * 512.0f);
 
             spriteBatch.Draw(shaftTexture,
-                new Rectangle((int)(MathUtils.Round(pos.X, 512.0f) + level.Position.X % 512), (int)pos.Y, width, 512),
+                new Rectangle((int)(MathUtils.Round(pos.X, 512.0f) - Submarine.Loaded.Position.X % 512), (int)pos.Y, width, 512),
                 new Rectangle(0, 0, width, 256),
                 Color.White, 0.0f,
                 Vector2.Zero,
@@ -59,7 +59,7 @@ namespace Barotrauma
             if (vertices == null) return;
             if (vertices.Length <= 0) return;
 
-            basicEffect.World = Matrix.CreateTranslation(new Vector3(level.Position, 0.0f)) * cam.ShaderTransform
+            basicEffect.World = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
             basicEffect.CurrentTechnique.Passes[0].Apply();
@@ -74,7 +74,7 @@ namespace Barotrauma
                 for (int i = 0; i < 2; i++)
                 {
                     basicEffect.World = Matrix.CreateTranslation(
-                        new Vector3(level.Position + level.WrappingWalls[side, i].Offset, 0.0f)) * 
+                        new Vector3(-Submarine.Loaded.Position + level.WrappingWalls[side, i].Offset, 0.0f)) * 
                         cam.ShaderTransform *
                         Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 

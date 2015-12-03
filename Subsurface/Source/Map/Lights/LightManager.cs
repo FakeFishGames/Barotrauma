@@ -69,7 +69,7 @@ namespace Barotrauma.Lights
 
             foreach (ConvexHull convexHull in ConvexHull.list)
             {
-                if (!camView.Intersects(convexHull.BoundingBox)) continue;
+                //if (!camView.Intersects(convexHull.BoundingBox)) continue;
 
                 convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
             }
@@ -109,7 +109,7 @@ namespace Barotrauma.Lights
             foreach (LightSource light in lights)
             {
                 if (light.hullsInRange.Count == 0 || light.Color.A < 0.01f || light.Range < 1.0f) continue;
-                if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
+                //if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, viewRect)) continue;
                             
                 //clear alpha to 1
                 ClearAlphaToOne(graphics, spriteBatch);
@@ -128,7 +128,7 @@ namespace Barotrauma.Lights
 
                 //draw the light shape
                 //where Alpha is 0, nothing will be written
-                spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
+                spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, Matrix.CreateTranslation(new Vector3(Submarine.Loaded.Position.X, -Submarine.Loaded.Position.Y, 0.0f)) * cam.Transform);
                 light.Draw(spriteBatch);
                 spriteBatch.End();
             }
