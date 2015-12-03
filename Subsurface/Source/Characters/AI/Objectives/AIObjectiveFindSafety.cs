@@ -11,13 +11,15 @@ namespace Barotrauma
         const float SearchHullInterval = 3.0f;
         const float MinSafety = 50.0f;
 
-        AIObjectiveGoTo gotoObjective;
+        private AIObjectiveGoTo goToObjective;
 
         private List<Hull> unreachable;
-        
-        float currenthullSafety;
 
-        float searchHullTimer;
+        private float currenthullSafety;
+
+        private float searchHullTimer;
+
+        public float? OverrideCurrentHullSafety;
 
         public AIObjectiveFindSafety(Character character)
             : base(character, "")
@@ -27,20 +29,24 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (character.AnimController.CurrentHull == null || GetHullSafety(character.AnimController.CurrentHull) > MinSafety)
+
+            currenthullSafety = OverrideCurrentHullSafety == null ? 
+                GetHullSafety(character.AnimController.CurrentHull) : (float)OverrideCurrentHullSafety;
+
+            if (character.AnimController.CurrentHull == null || currenthullSafety > MinSafety)
             {
                 character.AIController.SteeringManager.SteeringSeek(character.AnimController.CurrentHull.SimPosition);
 
                 character.AIController.SelectTarget(null);
 
-                gotoObjective = null;
+                goToObjective = null;
                 return;
             }
 
             if (searchHullTimer>0.0f)
             {
                 searchHullTimer -= deltaTime;
-                return;
+                //return;
             }
             else
             {
@@ -67,37 +73,35 @@ namespace Barotrauma
 
                 if (bestHull != null)
                 {
-                    var path = pathSteering.PathFinder.FindPath(character.SimPosition, bestHull.SimPosition);
-                    if (pathSteering.CurrentPath != null && pathSteering.CurrentPath.Cost < path.Cost && !pathSteering.CurrentPath.Unreachable && gotoObjective!=null)
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        pathSteering.SetPath(path);
-                    }
+                    //var path = pathSteering.PathFinder.FindPath(character.SimPosition, bestHull.SimPosition);
+                    //if (pathSteering.CurrentPath == null || (pathSteering.CurrentPath.NextNode==null && pathSteering.CurrentPath.Cost > path.Cost) || 
+                    //    pathSteering.CurrentPath.Unreachable || goToObjective==null)
+                    //{
+               
+                        //pathSteering.SetPath(path);
+                        goToObjective = new AIObjectiveGoTo(bestHull, character);
+                    //}
 
-                    gotoObjective = new AIObjectiveGoTo(bestHull, character);
-                    //character.AIController.SelectTarget(bestHull.AiTarget);
+                    
+                    //haracter.AIController.SelectTarget(bestHull.AiTarget);
                 }
 
 
                 searchHullTimer = SearchHullInterval;
             }
 
-            if (gotoObjective != null)
+            if (goToObjective != null)
             {
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
                 if (pathSteering!=null && pathSteering.CurrentPath!= null && 
-                    pathSteering.CurrentPath.Unreachable && !unreachable.Contains(gotoObjective.Target))
+                    pathSteering.CurrentPath.Unreachable && !unreachable.Contains(goToObjective.Target))
                 {
-                    unreachable.Add(gotoObjective.Target as Hull);
+                    unreachable.Add(goToObjective.Target as Hull);
                 }
+
+
+                goToObjective.TryComplete(deltaTime);
             }
-
-
-
-            gotoObjective.TryComplete(deltaTime);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
@@ -125,7 +129,7 @@ namespace Barotrauma
             
             float safety = 100.0f - fireAmount;
             if (waterPercentage > 30.0f) safety -= waterPercentage; 
-            if (hull.OxygenPercentage < 30.0f) safety -= (30.0f-hull.OxygenPercentage)*3.0f;
+            if (hull.OxygenPercentage < 30.0f) safety -= (30.0f-hull.OxygenPercentage)*5.0f;
 
             return safety;
         }

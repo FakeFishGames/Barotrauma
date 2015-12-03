@@ -191,7 +191,7 @@ namespace Barotrauma
 
 
             Hull.renderer = new WaterRenderer(GraphicsDevice);
-        TitleScreen.LoadState = 1.0f;
+            TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
             GUI.LoadContent(GraphicsDevice);
@@ -203,19 +203,25 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
-            TitleScreen.LoadState = 15.0f;
-        yield return CoroutineStatus.Running;
-
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
-            TitleScreen.LoadState = 25.0f;
+            TitleScreen.LoadState = 20.0f;
         yield return CoroutineStatus.Running;
 
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
-            TitleScreen.LoadState = 40.0f;
+            TitleScreen.LoadState = 30.0f;
         yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
             CoroutineManager.StartCoroutine(SoundPlayer.Init());
+
+            int i = 0;
+            while (!SoundPlayer.Initialized)
+            {
+                i++;
+                TitleScreen.LoadState = Math.Min((float)TitleScreen.LoadState + 40.0f/41, 70.0f);
+                yield return CoroutineStatus.Running;
+            }
+
             TitleScreen.LoadState = 70.0f;
         yield return CoroutineStatus.Running;
 
@@ -244,10 +250,9 @@ namespace Barotrauma
 
             LocationType.Init("Content/Map/locationTypes.xml");
             MainMenuScreen.Select();
-        yield return CoroutineStatus.Running;
 
-        TitleScreen.LoadState = 100.0f;
-        hasLoaded = true;
+            TitleScreen.LoadState = 100.0f;
+            hasLoaded = true;
         yield return CoroutineStatus.Success;
 
         }

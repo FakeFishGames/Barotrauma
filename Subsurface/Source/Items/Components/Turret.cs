@@ -161,7 +161,7 @@ namespace Barotrauma.Items.Components
         {
             var projectiles = GetLoadedProjectiles();
 
-            if (projectiles.Count==0 || (projectiles.Count==1 && objective.Option.ToLower()=="hold fire"))
+            if (projectiles.Count==0 || (projectiles.Count==1 && objective.Option.ToLower()!="fire at will"))
             {
                 ItemContainer container = null;
                 foreach (MapEntity e in item.linkedTo)
@@ -174,8 +174,10 @@ namespace Barotrauma.Items.Components
                 }
 
                 if (container == null || container.ContainableItems.Count==0) return true;
-                
-                objective.AddSubObjective(new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container));
+
+                var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container);
+                containShellObjective.IgnoreAlreadyContainedItems = true;
+                objective.AddSubObjective(containShellObjective);
                 return false;
             }
             else if (GetAvailablePower() < powerConsumption)
@@ -186,7 +188,7 @@ namespace Barotrauma.Items.Components
                 PowerContainer batteryToLoad = null;
                 foreach (PowerContainer battery in batteries)
                 {
-                    if (batteryToLoad==null || battery.Charge < lowestCharge)
+                    if (batteryToLoad == null || battery.Charge < lowestCharge)
                     {
                         batteryToLoad = battery;
                         lowestCharge = battery.Charge;
@@ -205,7 +207,6 @@ namespace Barotrauma.Items.Components
             }
 
             //enough shells and power
-
             Character closestEnemy = null;
             float closestDist = 3000.0f;
             foreach (Character enemy in Character.CharacterList)
@@ -254,6 +255,13 @@ namespace Barotrauma.Items.Components
             }
 
             return availablePower;
+        }
+
+        public override void Remove()
+        {
+            base.Remove();
+
+            barrelSprite.Remove();
         }
 
         private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)

@@ -12,7 +12,7 @@ namespace Barotrauma
         public bool Unreachable
         {
             get;
-            private set;
+            set;
         }
 
         public SteeringPath(bool unreachable = false)

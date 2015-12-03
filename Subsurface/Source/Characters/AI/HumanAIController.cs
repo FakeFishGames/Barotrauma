@@ -32,6 +32,8 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            Character.ClearInputs();
+
             steeringManager = Character.AnimController.CurrentHull == null ? outdoorsSteeringManager : indoorsSteeringManager;
 
             if (updateObjectiveTimer>0.0f)
@@ -45,15 +47,14 @@ namespace Barotrauma
             }
 
             objectiveManager.DoCurrentObjective(deltaTime);
-
-            //if (Character.Controlled != null)
-            //{
-            //    steeringManager.SteeringSeek(Character.Controlled.Position);
-            //}
-            
+         
             Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
-            if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
+            if (Character.IsKeyDown(InputType.Aim))
+            {
+                Character.AnimController.TargetDir = Character.CursorPosition.X > Character.Position.X ? Direction.Right : Direction.Left;
+            }
+            else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
             {
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
@@ -62,6 +63,14 @@ namespace Barotrauma
             float moveSpeed = MathHelper.Clamp(currObjectivePriority/10.0f, 1.0f, 3.0f);
             
             steeringManager.Update(moveSpeed);
+        }
+
+        public override void OnAttacked(IDamageable attacker, float amount)
+        {
+            var enemy = attacker as Character;
+            if (enemy == null) return;
+
+            objectiveManager.AddObjective(new AIObjectiveCombat(Character, enemy));
         }
 
         public void SetOrder(Order order, string option)

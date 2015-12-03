@@ -68,11 +68,11 @@ namespace Barotrauma
         private static float currMusicVolume;
 
         private static Sound startDrone;
+
+        public static bool Initialized;
         
         public static IEnumerable<object> Init()
         {
-
-
             startDrone = Sound.Load("Content/Sounds/startDrone.ogg", false);
             startDrone.Play();
 
@@ -147,6 +147,8 @@ namespace Barotrauma
                     i++;
                 }
             }
+
+            Initialized = true;
 
             yield return CoroutineStatus.Success;
 

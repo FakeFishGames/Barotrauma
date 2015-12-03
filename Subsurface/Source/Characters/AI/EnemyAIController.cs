@@ -56,6 +56,11 @@ namespace Barotrauma
         private float sight;
         //how far the NPC can hear targets from (0.0 = deaf, 1.0 = hears every target within soundRange)
         private float hearing;
+
+        public AITarget SelectedAiTarget
+        {
+            get { return selectedAiTarget; }
+        }
                         
         public EnemyAIController(Character c, string file) : base(c)
         {

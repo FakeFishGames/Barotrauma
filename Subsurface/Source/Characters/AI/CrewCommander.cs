@@ -48,36 +48,54 @@ namespace Barotrauma
             frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.3f);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
 
-            UpdateCharacters();
+            //UpdateCharacters();
 
-            int x = 0, y = 150;            
-            foreach (Order order in Order.PrefabList)
-            {
-                if (order.ItemComponentType!=null)
+            int buttonWidth = 130;
+            int spacing = 10;
+
+                int y = 250;  
+
+            for (int n = 0; n<2; n++)
+            {          
+                            
+                List<Order> orders = (n==0) ? 
+                    Order.PrefabList.FindAll(o => o.ItemComponentType == null) : 
+                    Order.PrefabList.FindAll(o=> o.ItemComponentType!=null);
+
+                int startX = (int)-(buttonWidth * orders.Count + spacing * (orders.Count - 1)) / 2;
+
+                int i=0;
+                foreach (Order order in orders)
                 {
-                    var matchingItems = Item.ItemList.FindAll(i => i.components.Find(ic => ic.GetType() == order.ItemComponentType) != null);
-                    int y2 = y;
-                    foreach (Item it in matchingItems)
+                    int x = startX + (buttonWidth + spacing) * (i % orders.Count);
+
+                    if (order.ItemComponentType!=null)
                     {
-                        var newOrder = new Order(order, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
+                        var matchingItems = Item.ItemList.FindAll(it => it.components.Find(ic => ic.GetType() == order.ItemComponentType) != null);
+                        int y2 = y;
+                        foreach (Item it in matchingItems)
+                        {
+                            var newOrder = new Order(order, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
 
-                        var button = new GUIButton(new Rectangle(x, y2, 150, 20), order.Name, GUI.Style, frame);
-                        button.UserData = newOrder;
-                        button.OnClicked = SetOrder;
-                        y2 += 25;
+                            var button = new GUIButton(new Rectangle(x+buttonWidth/2, y2, buttonWidth, 20),  order.Name, Alignment.TopCenter, GUI.Style, frame);
+                            button.UserData = newOrder;
+                            button.OnClicked = SetOrder;
+                            y2 += 25;
+                        }
                     }
+                    else
+                    {
+                        var button = new GUIButton(new Rectangle(x + buttonWidth / 2, y, buttonWidth, 20), order.Name, Alignment.TopCenter, GUI.Style, frame);
+                        button.UserData = order;
+                        button.OnClicked = SetOrder;
+                    }
+                    i++;
                 }
-                else
-                {
-                    var button = new GUIButton(new Rectangle(x, y, 150, 20), order.Name, GUI.Style, frame);
-                    button.UserData = order;
-                    button.OnClicked = SetOrder;
-                }
 
-
-
-                x += 160;
+                y += 80;
             }
+
+
         }
 
         public void UpdateCharacters()
@@ -97,12 +115,30 @@ namespace Barotrauma
                 frame.RemoveChild(child);
             }
 
-            int x = 0, y = 0;
-            foreach (Character character in crewManager.characters)
-            {
-                if (character.IsDead) continue;
+            List<Character> aliveCharacters = crewManager.characters.FindAll(c => !c.IsDead);
 
-                GUIButton characterButton = new GUIButton(new Rectangle(x, y, 150, 40), "", Color.Transparent, null, frame);
+            int charactersPerRow = 4;
+
+            int spacing = 5;
+
+
+            int rows = (int)Math.Ceiling((double)aliveCharacters.Count / charactersPerRow);
+
+            int i = 0;
+            foreach (Character character in aliveCharacters)
+            {
+                int rowCharacterCount = Math.Min(charactersPerRow, aliveCharacters.Count);
+                if (aliveCharacters.Count - i < charactersPerRow-1) rowCharacterCount = aliveCharacters.Count % charactersPerRow;
+
+               // rowCharacterCount = Math.Min(rowCharacterCount, aliveCharacters.Count - i);
+                int startX = (int)-(150 * rowCharacterCount + spacing * (rowCharacterCount - 1)) / 2;
+
+
+                int x = startX + (150 + spacing) * (i % Math.Min(charactersPerRow, aliveCharacters.Count));
+                int y = (105 + spacing)*((int)Math.Floor((double)i / charactersPerRow));
+
+                GUIButton characterButton = new GUIButton(new Rectangle(x+75, y, 150, 40), "", Color.Black, Alignment.TopCenter, null, frame);
+                
                 characterButton.UserData = character;
                 characterButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 
@@ -113,8 +149,10 @@ namespace Barotrauma
                 }
                 else
                 {
+                    characterButton.Color = Color.Black * 0.5f;
                     characterButton.HoverColor = Color.LightGray * 0.5f;
                     characterButton.SelectedColor = Color.Gold * 0.5f;
+                    characterButton.OutlineColor = Color.LightGray * 0.8f;
                 }
 
                 string name = character.Info.Name.Replace(' ', '\n');
@@ -130,7 +168,7 @@ namespace Barotrauma
 
                 new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
 
-                x += 160;
+                i++;
             }
         }
 

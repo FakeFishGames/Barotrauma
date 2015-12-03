@@ -52,7 +52,7 @@ namespace Barotrauma
 
         public void SteeringManual(float deltaTime, Vector2 velocity)
         {
-            steering += velocity * deltaTime;
+            steering += velocity;
         }
 
         public virtual void Update(float speed = 1.0f)

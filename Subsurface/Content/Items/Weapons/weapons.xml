@@ -20,7 +20,8 @@
   <Item
     name="Harpoon Gun"
     pickdistance="200"
-    price="500">
+    price="500"
+    tags="weapon">
   
     <Sprite texture="weapons.png" sourcerect="0,25,98,25" depth="0.5"/>
 
@@ -45,7 +46,7 @@
     name="Stun Grenade"
     pickdistance="200"
     price="200"
-    tags="smallitem">
+    tags="smallitem,weapon">
 
     <Sprite texture="weapons.png" sourcerect="98,0,11,24"/>
 
@@ -60,7 +61,7 @@
 
   <Item
     name="Stun Baton"
-    Tags="smallitem"
+    Tags="smallitem,weapon"
     pickdistance="150"
     price="100">
 

@@ -27,11 +27,14 @@ namespace Barotrauma
 
             PrefabList.Add(new Order("Follow", "Following"));
 
+            PrefabList.Add(new Order("Dismiss", "Dismissed"));
+
+            PrefabList.Add(new Order("Wait", "Wait"));
+
             PrefabList.Add(new Order("Operate Reactor", "Operating reactor", typeof(Reactor), new string[] {"Power up", "Shutdown"}));
             PrefabList.Add(new Order("Operate Railgun", "Operating railgun", typeof(Turret), new string[] { "Fire at will", "Hold fire" }));
 
 
-            PrefabList.Add(new Order("Dismiss", "Dismissed"));
         }
 
         private Order(string name, string doingText, Type itemComponentType, string[] parameters = null)

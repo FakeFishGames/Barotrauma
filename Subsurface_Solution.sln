@@ -5,13 +5,11 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Barotrauma", "Subsurface\Barotrauma.csproj", "{008C0F83-E914-4966-9135-EA885059EDD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subsurface_contentContent", "Subsurface_content\Subsurface_contentContent\Subsurface_contentContent.contentproj", "{8C1D2051-F0F3-457B-AAAE-4E155FC7C75C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Barotrauma_contentContent", "Subsurface_content\Subsurface_contentContent\Barotrauma_contentContent.contentproj", "{8C1D2051-F0F3-457B-AAAE-4E155FC7C75C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subsurface_content", "Subsurface_content\Subsurface_content\Subsurface_content.csproj", "{1E6BF44D-6E31-40CC-8321-3D5958C983E7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Barotrauma_content", "Subsurface_content\Subsurface_content\Barotrauma_content.csproj", "{1E6BF44D-6E31-40CC-8321-3D5958C983E7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farseer Physics MonoGame", "Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj", "{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OldLauncher", "Launcher\OldLauncher.csproj", "{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lidgren.Network", "Lidgren.Network\Lidgren.Network.csproj", "{49BA1C69-6104-41AC-A5D8-B54FA9F696E8}"
 EndProject
@@ -214,51 +212,6 @@ Global
 		{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}.Windows8|Mixed Platforms.Build.0 = Release|x86
 		{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}.Windows8|x86.ActiveCfg = Release|x86
 		{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}.Windows8|x86.Build.0 = Release|x86
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Android|Any CPU.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Android|Any CPU.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Android|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Android|Mixed Platforms.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Android|x86.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.iOS|Any CPU.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.iOS|Any CPU.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.iOS|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.iOS|Mixed Platforms.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.iOS|x86.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Linux|Any CPU.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Linux|Any CPU.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Linux|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Linux|Mixed Platforms.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Linux|x86.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.OSX|Any CPU.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.OSX|Any CPU.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.OSX|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.OSX|Mixed Platforms.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.OSX|x86.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.PSM|Any CPU.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.PSM|Any CPU.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.PSM|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.PSM|Mixed Platforms.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.PSM|x86.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Release|x86.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows|Any CPU.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows|Any CPU.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows|Mixed Platforms.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows|x86.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows8|Any CPU.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows8|Any CPU.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows8|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows8|Mixed Platforms.Build.0 = Release|Any CPU
-		{24420B91-6CD9-4DE3-9ADD-2F2C7E1FB6BB}.Windows8|x86.ActiveCfg = Release|Any CPU
 		{49BA1C69-6104-41AC-A5D8-B54FA9F696E8}.Android|Any CPU.ActiveCfg = Release|Any CPU
 		{49BA1C69-6104-41AC-A5D8-B54FA9F696E8}.Android|Any CPU.Build.0 = Release|Any CPU
 		{49BA1C69-6104-41AC-A5D8-B54FA9F696E8}.Android|Mixed Platforms.ActiveCfg = Release|Any CPU

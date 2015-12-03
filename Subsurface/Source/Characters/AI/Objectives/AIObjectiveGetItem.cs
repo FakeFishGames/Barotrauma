@@ -16,10 +16,13 @@ namespace Barotrauma
 
         private bool canBeCompleted;
 
+        public bool IgnoreContainedItems;
+
         public override bool CanBeCompleted
         {
             get { return canBeCompleted; }
         }
+
 
         public AIObjectiveGetItem(Character character, string itemName)
             : base (character, "")
@@ -39,7 +42,6 @@ namespace Barotrauma
                 {
                     targetItem.Pick(character, false, true);
                 }
-                return;
             }
             
             if (currSearchIndex >= Item.ItemList.Count) 
@@ -47,20 +49,23 @@ namespace Barotrauma
                 canBeCompleted = false;
                 return;
             }
-            
-            if (Item.ItemList[currSearchIndex].HasTag(itemName) || Item.ItemList[currSearchIndex].Name == itemName)
-            {
-                targetItem = Item.ItemList[currSearchIndex];
-
-                while (targetItem.container != null)
-                {
-                    targetItem = targetItem.container;
-                }
-
-                subObjectives.Add(new AIObjectiveGoTo(targetItem.Position, character));
-            }
 
             currSearchIndex++;
+
+            if (!Item.ItemList[currSearchIndex].HasTag(itemName) && Item.ItemList[currSearchIndex].Name != itemName) return;
+            if (IgnoreContainedItems && Item.ItemList[currSearchIndex].container != null) return;
+            
+            targetItem = Item.ItemList[currSearchIndex];
+
+            Item moveToTarget = targetItem;
+            while (moveToTarget.container != null)
+            {
+                moveToTarget = moveToTarget.container;
+            }
+
+            subObjectives.Add(new AIObjectiveGoTo(moveToTarget, character));
+            
+
         }
         
         public override bool IsDuplicate(AIObjective otherObjective)

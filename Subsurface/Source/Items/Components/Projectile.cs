@@ -22,6 +22,8 @@ namespace Barotrauma.Items.Components
 
         public List<Body> ignoredBodies;
 
+        public Character User;
+
         [HasDefaultValue(10.0f, false)]
         public float LaunchImpulse
         {
@@ -127,17 +129,15 @@ namespace Barotrauma.Items.Components
         {
             if (stickJoint != null && stickJoint.JointTranslation < 0.01f)  
             {
-                if (stickTarget!=null)
+                if (stickTarget != null)
                 {
                     try
                     {
                         item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                     }
-                    catch (Exception e)
+                    catch 
                     {
-#if DEBUG
-                        DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);
-#endif
+                        //the body that the projectile was stuck to has been removed
                     }
 
                     stickTarget = null;
@@ -147,11 +147,9 @@ namespace Barotrauma.Items.Components
                 {
                     GameMain.World.RemoveJoint(stickJoint);
                 }
-                catch (Exception e)
+                catch
                 {
-#if DEBUG
-                    DebugConsole.ThrowError("Failed to remove stickJoint", e);
-#endif
+                    //the body that the projectile was stuck to has been removed
                 }
 
                 stickJoint = null; 
@@ -165,17 +163,17 @@ namespace Barotrauma.Items.Components
             if (ignoredBodies.Contains(f2.Body)) return false;
 
             AttackResult attackResult = new AttackResult(0.0f, 0.0f);
-            if (attack!=null)
+            if (attack != null)
             {
                 Limb limb;
                 Structure structure;
                 if ((limb = (f2.Body.UserData as Limb)) != null)
-                {           
-                    attackResult = attack.DoDamage(null, limb.character, item.SimPosition, 1.0f);
+                {
+                    attackResult = attack.DoDamage(User, limb.character, item.SimPosition, 1.0f);
                 }
                 else if ((structure = (f2.Body.UserData as Structure)) != null)
                 {
-                    attackResult = attack.DoDamage(null, structure, item.SimPosition, 1.0f);
+                    attackResult = attack.DoDamage(User, structure, item.SimPosition, 1.0f);
                 }
             }
 
