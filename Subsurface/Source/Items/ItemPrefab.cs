@@ -83,7 +83,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this);
+                    new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.Loaded);
                     //constructor.Invoke(lobject);
 
                     placePosition = Vector2.Zero;
@@ -112,7 +112,7 @@ namespace Barotrauma
 
                     if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
                     {
-                        new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this);
+                        new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this, Submarine.Loaded);
                         placePosition = Vector2.Zero;
                         //selected = null;
                         return;

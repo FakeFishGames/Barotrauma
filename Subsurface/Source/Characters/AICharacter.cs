@@ -94,7 +94,6 @@ namespace Barotrauma
                 case NetworkEventType.KillCharacter:
                     return true;
                 case NetworkEventType.ImportantEntityUpdate:
-                    int i = 0;
                     //foreach (Limb limb in AnimController.Limbs)
                     //{
                         //if (RefLimb.ignoreCollisions) continue;

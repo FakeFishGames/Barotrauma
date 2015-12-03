@@ -82,7 +82,7 @@ namespace Barotrauma
             get { return false; }
         }
 
-        public virtual Vector2 Position
+        public override Vector2 Position
         {
             get
             {
@@ -138,7 +138,9 @@ namespace Barotrauma
         {
             get { return ""; }
         }
-        
+
+        public MapEntity(Submarine submarine) : base(submarine) { }
+
         public virtual void Move(Vector2 amount) 
         {
             rect.X += (int)amount.X;

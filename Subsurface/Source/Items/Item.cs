@@ -255,13 +255,14 @@ namespace Barotrauma
             
         //}
 
-        public Item(ItemPrefab itemPrefab, Vector2 position)
-            : this(new Rectangle((int)position.X, (int)position.Y, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
+            : this(new Rectangle((int)position.X, (int)position.Y, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab, submarine)
         {
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
+            : base(submarine)
         {
             prefab = itemPrefab;
 
@@ -409,6 +410,10 @@ namespace Barotrauma
         public virtual Hull FindHull()
         {
             CurrentHull = Hull.FindHull((body == null) ? Position : ConvertUnits.ToDisplayUnits(body.SimPosition), CurrentHull);
+            if (body!=null)
+            {
+                body.Submarine = CurrentHull == null ? null : Submarine.Loaded;
+            }
             return CurrentHull;
         }
         
@@ -598,7 +603,16 @@ namespace Barotrauma
             {
                 if (body == null)
                 {
-                    prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+                    {
+
+                        prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X+rect.Width/2, -DrawPosition.Y-rect.Height/2), new Vector2(rect.Width, rect.Height), color);
+                    }
+                    else
+                    {
+                        prefab.sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color);
+                    }
+
                 }
                 else if (body.Enabled)
                 {
@@ -615,7 +629,7 @@ namespace Barotrauma
                             depth = holdable.Picker.AnimController.GetLimb(LimbType.LeftArm).sprite.Depth - 0.000001f;
                         }
 
-                        body.Draw(spriteBatch, prefab.sprite,  color, depth);
+                        body.Draw(spriteBatch, prefab.sprite, color, depth);
                     }
                     else
                     {
@@ -1159,8 +1173,8 @@ namespace Barotrauma
             return element;
         }
 
-        public static void Load(XElement element)
-        {
+        public static void Load(XElement element, Submarine submarine)
+        {          
             string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
             string[] rectValues = rectString.Split(',');
             Rectangle rect = Rectangle.Empty;
@@ -1195,7 +1209,8 @@ namespace Barotrauma
                     rect.Height = (int)ip.Size.Y;
                 }
 
-                Item item = new Item(rect, ip);
+                Item item = new Item(rect, ip, submarine);
+                item.Submarine = submarine;
                 item.ID = (ushort)int.Parse(element.Attribute("ID").Value);
                                 
                 item.linkedToID = new List<ushort>();

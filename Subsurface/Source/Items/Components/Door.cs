@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
                     linkedGap = e as Gap;                    
                     if (linkedGap != null) return linkedGap;
                 }
-                linkedGap = new Gap(item.Rect);
+                linkedGap = new Gap(item.Rect, Item.Submarine);
                 linkedGap.Open = openState;
                 item.linkedTo.Add(linkedGap);
                 return linkedGap;

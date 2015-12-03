@@ -273,19 +273,19 @@ namespace Barotrauma
             get { return AnimController.RefLimb.SimPosition; }
         }
 
-        public Vector2 Position
+        public override Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(AnimController.RefLimb.SimPosition); }
+            get { return AnimController.RefLimb.Position; }
         }
-
+        
         static Character()
         {
-            DeathMsg[(int)CauseOfDeath.Damage] = "succumbed to your injuries";
-            DeathMsg[(int)CauseOfDeath.Bloodloss] = "bled out";
-            DeathMsg[(int)CauseOfDeath.Drowning] = "drowned";
+            DeathMsg[(int)CauseOfDeath.Damage]      = "succumbed to your injuries";
+            DeathMsg[(int)CauseOfDeath.Bloodloss]   = "bled out";
+            DeathMsg[(int)CauseOfDeath.Drowning]    = "drowned";
             DeathMsg[(int)CauseOfDeath.Suffocation] = "suffocated";
-            DeathMsg[(int)CauseOfDeath.Pressure] = "been crushed by water pressure";
-            DeathMsg[(int)CauseOfDeath.Burn] = "burnt to death";
+            DeathMsg[(int)CauseOfDeath.Pressure]    = "been crushed by water pressure";
+            DeathMsg[(int)CauseOfDeath.Burn]        = "burnt to death";
         }
         
         public static Character Create(string file, Vector2 position)
@@ -334,6 +334,7 @@ namespace Barotrauma
         }
 
         protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
+            : base(null)
         {
 
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
@@ -522,7 +523,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                Item item = new Item(itemPrefab, Position);
+                Item item = new Item(itemPrefab, Position, null);
 
                 if (info.Job.EquipSpawnItem[i])
                 {
@@ -754,12 +755,15 @@ namespace Barotrauma
 
             if (moveCam)
             {
-                cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
+                cam.TargetPos = WorldPosition;
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
             }
             
-            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);            
+            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+            if (AnimController.CurrentHull != null) cursorPosition -= Submarine.Loaded.Position;
+
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
+
             if (Vector2.Distance(AnimController.Limbs[0].SimPosition, mouseSimPos)>1.0f)
             {
                 Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
@@ -877,9 +881,11 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
+            Submarine = AnimController.CurrentHull == null ? null : Submarine.Loaded;
+
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
             
-            AnimController.SimplePhysicsEnabled = (Character.controlled != this && Vector2.Distance(cam.WorldViewCenter, Position) > 5000.0f);
+            AnimController.SimplePhysicsEnabled = (Character.controlled != this && Vector2.Distance(cam.WorldViewCenter, WorldPosition) > 5000.0f);
             
             if (isDead) return;
 

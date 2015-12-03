@@ -88,13 +88,15 @@ namespace Barotrauma
 
         public Vector2 DrawPosition
         {
-            get { return drawPosition; }
+            get { return Submarine == null ? drawPosition : drawPosition + Submarine.DrawPosition; }
         }
 
         public float DrawRotation
         {
             get { return drawRotation; }
         }
+
+        public Submarine Submarine;
 
         public float Dir
         {
@@ -313,7 +315,7 @@ namespace Barotrauma
                 color = Color.Blue;
             }
             
-            sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), color, -drawRotation, 1.0f, spriteEffect, depth);
+            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, 1.0f, spriteEffect, depth);
             
         }
 
