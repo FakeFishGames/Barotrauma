@@ -250,10 +250,13 @@ namespace Barotrauma
 
                 float shortestAngle = leg.Rotation - torso.Rotation;
 
-                if (Math.Abs(shortestAngle)<2.5f) continue;
-                //leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
+                if (Math.Abs(shortestAngle)<2.4f) continue;
+
                 leg.body.ApplyTorque(-shortestAngle*10.0f);
 
+                leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);
+                leg.body.ApplyTorque(-shortestAngle * 5.0f);
+                
             //    float torsoRot = MathHelper.WrapAngle(torso.Rotation);
             //    torsoRot = MathHelper.ToDegrees(torsoRot);
 

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -19,8 +20,7 @@ namespace Barotrauma
 
         private int selectedRightPanel;
 
-        private GUIListBox characterList;
-        private GUIListBox hireList;
+        private GUIListBox characterList, hireList;
 
         private GUIListBox selectedItemList, itemList;
 
@@ -36,7 +36,7 @@ namespace Barotrauma
 
         private string CostTextGetter()
         {
-            return "Cost: "+selectedItemCost.ToString();
+            return "Cost: "+selectedItemCost.ToString()+" credits";
         }
 
         private int selectedItemCost
@@ -183,32 +183,6 @@ namespace Barotrauma
 
             bottomPanel[(int)PanelTab.CurrentLocation].ClearChildren();
             bottomPanel[(int)PanelTab.CurrentLocation].UserData = location;
-            //rightPanel[(int)PanelTab.Hire].Padding = GUI.style.smallPadding;
-
-            //for (int i = 0; i < Enum.GetNames(typeof(PanelTab)).Length; i++ )
-            //{
-                
-            //    float size = Math.Max(
-            //        (float)GameMain.GraphicsWidth / (float)location.Type.Background.SourceRect.Width,
-            //       (float)GameMain.GraphicsHeight / (float)location.Type.Background.SourceRect.Height);
-            //    location.Type.Background.size = new Vector2(
-            //        location.Type.Background.SourceRect.Width*size,
-            //        location.Type.Background.SourceRect.Height*size);
-                
-
-            //    topPanel.sprites.Clear();
-            //    topPanel.TileSprites = false;
-            //    topPanel.sprites.Add(location.Type.Background);
-
-            //    bottomPanel[i].sprites.Clear();
-            //    bottomPanel[i].TileSprites = false;
-            //    bottomPanel[i].sprites.Add(location.Type.Background);
-            //}
-
-            //new GUITextBlock(new Rectangle(0, 0, 200, 25), 
-            //    "Location: "+location.Name, GUI.Style, bottomPanel[(int)PanelTab.CurrentLocation]);
-            //new GUITextBlock(new Rectangle(0, 20, 200, 25),
-            //    "("+location.Type.Name+")", GUI.Style, bottomPanel[(int)PanelTab.CurrentLocation]);
 
             if (location.HireManager != null)
             {
@@ -257,17 +231,17 @@ namespace Barotrauma
 
             if (location == null) return;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 0), location.Name, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel).Font = GUI.LargeFont;
+            new GUITextBlock(new Rectangle(0, 0, 250, 0), location.Name, GUI.Style,  Alignment.TopLeft, Alignment.TopCenter, locationPanel, true, GUI.LargeFont);
 
             if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Quest != null)
             {
                 var quest = GameMain.GameSession.Map.SelectedConnection.Quest;
 
-                new GUITextBlock(new Rectangle(0, 40, 0, 20), "Quest: "+quest.Name, Color.Black*0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
+                new GUITextBlock(new Rectangle(0, 80, 0, 20), "Quest: "+quest.Name, Color.Black*0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
 
-                new GUITextBlock(new Rectangle(0, 60, 0, 20), "Reward: " + quest.Reward, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
+                new GUITextBlock(new Rectangle(0, 100, 0, 20), "Reward: " + quest.Reward+" credits", Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
 
-                new GUITextBlock(new Rectangle(0, 80, 0, 0), quest.Description, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel, true);
+                new GUITextBlock(new Rectangle(0, 120, 0, 0), quest.Description, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel, true);
 
             }
 
@@ -282,15 +256,6 @@ namespace Barotrauma
             foreach (CharacterInfo c in CrewManager.characterInfos)
             {
                 c.CreateCharacterFrame(characterList, c.Name + " ("+c.Job.Name+") ", c);
-
-                //GUITextBlock textBlock = new GUITextBlock(
-                //    new Rectangle(0, 0, 0, 25),
-                //    c.Name + " (" + c.Job.Name + ")", GUI.Style, 
-                //    Alignment.Left, 
-                //    Alignment.Left,
-                //    characterList, false, GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
-                //textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                //textBlock.UserData = c;
             }
         }
 
@@ -458,7 +423,7 @@ namespace Barotrauma
         
         private string GetMoney()
         {
-            return "Money: " + ((GameMain.GameSession == null) ? "" : CrewManager.Money.ToString());
+            return "Money: " + ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", CrewManager.Money)) + " credits";
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)

@@ -182,21 +182,30 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Vector2 pos, float rotate=0.0f, float scale=1.0f, SpriteEffects spriteEffect = SpriteEffects.None)
         {
-            spriteBatch.Draw(texture, pos + offset, sourceRect, Color.White, rotation + rotate, origin, scale, spriteEffect, depth);
+            this.Draw(spriteBatch, pos, Color.White, rotate, scale, spriteEffect);
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
-            spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth==null ? this.depth : (float)depth);
+            this.Draw(spriteBatch, pos, color, this.origin, rotate, new Vector2(scale,scale), spriteEffect, depth);
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
-            spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
+            this.Draw(spriteBatch, pos, color, origin, rotate, new Vector2(scale, scale), spriteEffect, depth);
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
+            //for (int x = -1; x < 3; x+=2 )
+            //{
+            //    for (int y = -1; y < 3; y+=2 )
+            //    {
+
+            //        spriteBatch.Draw(texture, pos + offset + new Vector2(x, y)*1.0f, sourceRect, Color.Black, rotation + rotate, origin, scale, spriteEffect, (depth == null ? this.depth : (float)depth)+0.0001f);
+            //    }            
+            //}
+
             spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
         }
         
@@ -214,14 +223,14 @@ namespace Barotrauma
             int xTiles = (int)Math.Ceiling((targetSize.X+startOffset.X) / sourceRect.Width);
             //how many times the texture needs to be drawn on the y-axis
             int yTiles = (int)Math.Ceiling((targetSize.Y+startOffset.Y) / sourceRect.Height);
-            
-            Vector2 position = pos-startOffset;
+
+            Vector2 position = pos - startOffset;
             Rectangle drawRect = sourceRect;
 
             position.X = pos.X;
 
-            for (int x = 0 ; x<xTiles ; x++)
-            {                
+            for (int x = 0; x < xTiles; x++)
+            {
                 drawRect.X = sourceRect.X;
                 drawRect.Height = sourceRect.Height;
 
@@ -243,11 +252,11 @@ namespace Barotrauma
                 }
 
                 position.Y = pos.Y;
-                
-                for (int y = 0 ; y<yTiles ; y++)
+
+                for (int y = 0; y < yTiles; y++)
                 {
                     drawRect.Y = sourceRect.Y;
-                    
+
                     if (y == yTiles - 1)
                     {
                         drawRect.Height -= (int)((position.Y + sourceRect.Height) - (pos.Y + targetSize.Y));
@@ -264,10 +273,10 @@ namespace Barotrauma
                         drawRect.Height -= diff;
                         drawRect.Y += diff;
                     }
-                    
+
                     spriteBatch.Draw(texture, position,
                         drawRect, color, rotation, Vector2.Zero, 1.0f, effects, depth);
-                    
+
                     position.Y += sourceRect.Height;
                 }
 

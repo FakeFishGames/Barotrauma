@@ -17,6 +17,7 @@ namespace Barotrauma
 
         bool isCompleted;
 
+        public bool IgnoreAlreadyContainedItems;
 
         public AIObjectiveContainItem(Character character, string itemName, ItemContainer container)
             : base (character, "")
@@ -47,14 +48,16 @@ namespace Barotrauma
             var itemToContain = character.Inventory.FindItem(itemName);
             if (itemToContain == null)
             {
-                AddSubObjective(new AIObjectiveGetItem(character, itemName));
+                var getItem = new AIObjectiveGetItem(character, itemName);
+                getItem.IgnoreContainedItems = IgnoreAlreadyContainedItems;
+                AddSubObjective(getItem);
                 return;
             }
 
             if (Vector2.Distance(character.SimPosition, container.Item.SimPosition) > container.Item.PickDistance
-                || !container.Item.IsInsideTrigger(character.Position))
+                && !container.Item.IsInsideTrigger(character.Position))
             {
-                AddSubObjective(new AIObjectiveGoTo(container.Item.SimPosition, character));
+                AddSubObjective(new AIObjectiveGoTo(container.Item, character));
                 return;
             }
 
@@ -65,7 +68,9 @@ namespace Barotrauma
         public override bool IsDuplicate(AIObjective otherObjective)
         {
             AIObjectiveContainItem objective = otherObjective as AIObjectiveContainItem;
-            return (objective != null);
+            if (objective == null) return false;
+
+            return objective.itemName == itemName && objective.container == container;
         }
 
     

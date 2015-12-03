@@ -88,6 +88,9 @@ namespace Barotrauma
                 case "follow":
                     currentOrder = new AIObjectiveGoTo(Character.Controlled, character, true);
                     break;
+                case "wait":
+                    currentOrder = new AIObjectiveGoTo(character.SimPosition, character, true);
+                    break;
                 default:
                     if (order.TargetItem == null) return;
 

@@ -480,6 +480,13 @@ namespace Barotrauma
             return keys[(int)inputType].Held;
         }
 
+        public void SetInput(InputType inputType, bool hit, bool held)
+        {
+            keys[(int)inputType].Hit = hit;
+            keys[(int)inputType].Held = held;
+            
+        }
+
         public void ClearInput(InputType inputType)
         {
             keys[(int)inputType].Hit = false;

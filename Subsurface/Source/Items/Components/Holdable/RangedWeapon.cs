@@ -90,26 +90,18 @@ namespace Barotrauma.Items.Components
                     + Rand.Range(-degreeOfFailure, degreeOfFailure));
 
                 projectile.Use(deltaTime);
+                projectileComponent.User = character;
 
                 projectile.body.ApplyTorque(projectile.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
 
-                    //recoil
+                //recoil
                 item.body.ApplyLinearImpulse(
                     new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);
                 
-                //else
-                //{
-                    projectileComponent.ignoredBodies = limbBodies;
-
-                    //recoil
-                    //item.body.ApplyLinearImpulse(
-                    //    new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * -item.body.Mass);
-                //}
+                projectileComponent.ignoredBodies = limbBodies;
 
                 item.RemoveContained(projectile);
                 
-
-
                 Rope rope = item.GetComponent<Rope>();
                 if (rope != null) rope.Attach(projectile);
 
@@ -117,9 +109,8 @@ namespace Barotrauma.Items.Components
             }
 
 
-            return false;
-      
+            return false;      
         }
-    
+            
     }
 }

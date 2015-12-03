@@ -35,14 +35,15 @@ namespace Barotrauma
             : base (character, "")
         {
             this.target = target;
-            this.repeat = false;
+            this.repeat = repeat;
         }
 
 
-        public AIObjectiveGoTo(Vector2 targetPos, Character character)
+        public AIObjectiveGoTo(Vector2 simPos, Character character, bool repeat = false)
             : base(character, "")
         {
-            this.targetPos = targetPos;
+            this.targetPos = simPos;
+            this.repeat = repeat;
         }
 
         protected override void Act(float deltaTime)

@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     class AIObjectiveIdle : AIObjective
     {
+        const float WallAvoidDistance = 150.0f;
+
         AITarget currentTarget;
         private float newTargetTimer;
 
@@ -33,40 +35,30 @@ namespace Barotrauma
             {
                 currentTarget = FindRandomTarget();
 
-                if (currentTarget!=null)
+                if (currentTarget != null)
                 {
                     var path = pathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition);
-                    if (path.Cost > 200.0f)
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        pathSteering.SetPath(path);
-                    }
+                    if (path.Cost > 200.0f) return;
+
+                    pathSteering.SetPath(path);
                 }
 
 
                 newTargetTimer = currentTarget == null ? 5.0f : 10.0f;
             }
-            else
-            {
-                newTargetTimer -= deltaTime;
-            }
-
-
-            if (currentTarget == null) return;
-               
-
+            
+            newTargetTimer -= deltaTime;            
+                  
             //wander randomly if reached the end of the path or the target is unreachable
-            if (pathSteering!=null && pathSteering.CurrentPath != null && 
-                (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable))
+            if (pathSteering==null || (pathSteering.CurrentPath != null && 
+                (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable)))
             {
-                if (character.Position.X < character.AnimController.CurrentHull.Rect.X + 200.0f)
+                //steer away from edges of the hull
+                if (character.Position.X < character.AnimController.CurrentHull.Rect.X + WallAvoidDistance)
                 {
                     pathSteering.SteeringManual(deltaTime, Vector2.UnitX);
                 }
-                else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - 200.0f)
+                else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - WallAvoidDistance)
                 {
                     pathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
                 }
@@ -75,8 +67,8 @@ namespace Barotrauma
                 return;                
             }
  
+            if (currentTarget == null) return;
             character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition);
-
         }
 
         private AITarget FindRandomTarget()
@@ -111,7 +103,7 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            return true;
+            return (otherObjective as AIObjectiveIdle != null);
         }
     }
 }

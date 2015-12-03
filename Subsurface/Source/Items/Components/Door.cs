@@ -244,6 +244,43 @@ namespace Barotrauma.Items.Components
                 OpenState += deltaTime * ((isOpen) ? 2.0f : -2.0f);
                 LinkedGap.Open = openState;
             }
+            
+            if (openState > 0.0f && openState < 1.0f)
+            {
+                //push characters out of the doorway when the door is closing/opening
+                Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
+                Vector2 simSize = ConvertUnits.ToSimUnits(new Vector2(doorSprite.size.X,
+                    item.Rect.Height * (1.0f - openState)));
+
+                foreach (Character c in Character.CharacterList)
+                {
+                    int dir = Math.Sign(c.SimPosition.X - item.SimPosition.X);
+                    foreach (Limb l in c.AnimController.Limbs)
+                    {
+                        if (l.SimPosition.Y > simPos.Y || l.SimPosition.Y < simPos.Y - simSize.Y) continue;
+
+                        if (Math.Sign(l.SimPosition.X - item.SimPosition.X) != dir)
+                        {
+                            l.body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X*1.2f, item.SimPosition.Y), l.body.Rotation);
+                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, l.body.FarseerBody);
+                            //c.AddDamage(item.SimPosition, DamageType.Blunt, 1.0f, 0.0f, 0.0f, true);
+
+                            l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
+                        }
+
+                        if (Math.Abs(l.SimPosition.X - item.SimPosition.X) > simSize.X*0.5f) continue;
+
+
+                        l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -0.5f));
+                        c.StartStun(0.2f);
+                    }
+                }
+            }
+            else
+            {
+
+                body.Enabled = openState < 1.0f;
+            }
 
             
             item.SendSignal((isOpen) ? "1" : "0", "state_out");
@@ -278,32 +315,7 @@ namespace Barotrauma.Items.Components
             spriteBatch.Draw(doorSprite.Texture, new Vector2(item.Rect.Center.X, -item.Rect.Y),
                 new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
                 (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
-                color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
-
-            if (openState == 0.0f)
-            {
-                body.Enabled = true;
-            }
-            else
-            {
-                //push characters out of the doorway when the door is closing/opening
-                Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
-                Vector2 simSize = ConvertUnits.ToSimUnits(new Vector2(item.Rect.Width,
-                item.Rect.Height * (1.0f - openState)));
-
-                foreach (Character c in Character.CharacterList)
-                {
-                    int dir = Math.Sign(c.AnimController.Limbs[0].SimPosition.X - simPos.X);
-                    foreach (Limb l in c.AnimController.Limbs)
-                    {
-                        if (l.SimPosition.Y < simPos.Y || l.SimPosition.Y > simPos.Y - simSize.Y) continue;
-                        if (Math.Abs(l.SimPosition.X - simPos.X) > simSize.X * 2.0f) continue;
-
-                        l.body.ApplyForce(new Vector2(dir * 10.0f, 0.0f));
-                    }
-                }
-            }
-            
+                color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);            
         }
 
         public override void OnMapLoaded()
