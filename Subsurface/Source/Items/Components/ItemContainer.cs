@@ -163,6 +163,7 @@ namespace Barotrauma.Items.Components
             if (item.body == null)
             {
                 transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
+                if (item.Submarine != null) transformedItemPos += item.Submarine.Position;
                 transformedItemPos = transformedItemPos + itemPos;
             }
             else
@@ -179,7 +180,7 @@ namespace Barotrauma.Items.Components
                 transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                 
-                transformedItemPos += ConvertUnits.ToDisplayUnits(item.body.SimPosition);
+                transformedItemPos += item.DrawPosition;
 
                 currentRotation += item.body.Rotation;
             }

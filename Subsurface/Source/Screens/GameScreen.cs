@@ -101,14 +101,15 @@ namespace Barotrauma
             while (Physics.accumulator >= Physics.step)
             {
                 cam.MoveCamera((float)Physics.step);
+                if (Character.Controlled != null) cam.TargetPos = Character.Controlled.WorldPosition;
 
-                if (Submarine.Loaded != null) Submarine.Loaded.SetPrevTransform(Submarine.Loaded.Position, cam);
+                if (Submarine.Loaded != null) Submarine.Loaded.SetPrevTransform(Submarine.Loaded.Position);
 
                 foreach (PhysicsBody pb in PhysicsBody.list)
                 {
                     pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
                 }
-                    
+                
                 MapEntity.UpdateAll(cam, (float)Physics.step);
 
                 Character.UpdateAnimAll((float)Physics.step);

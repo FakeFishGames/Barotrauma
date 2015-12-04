@@ -536,17 +536,28 @@ namespace Barotrauma
             }
         }
 
-        public void FindHull()
+        public void FindHull(bool setSubmarine = true)
         {
             Hull newHull = Hull.FindHull(
                 ConvertUnits.ToDisplayUnits(refLimb.SimPosition), 
                 currentHull);
-
+            
             if (newHull == currentHull) return;
 
-            CurrentHull = newHull;
-
+            if (setSubmarine)
+            {
+                if (newHull == null && currentHull.Submarine != null)
+                {
+                    SetPosition(refLimb.SimPosition + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
+                }
+                else if (currentHull == null && newHull != null && newHull.Submarine != null)
+                {
+                   SetPosition(refLimb.SimPosition - ConvertUnits.ToSimUnits(newHull.Submarine.Position));
+                }
+            }
             
+            CurrentHull = newHull;
+                        
             UpdateCollisionCategories();
         }
 
