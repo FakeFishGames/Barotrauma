@@ -1257,6 +1257,16 @@ namespace Barotrauma
             }
 
         }
+
+        public override void OnMapLoaded()
+        {
+            FindHull();
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.OnMapLoaded();
+            }            
+        }
         
 
         public void NewComponentEvent(ItemComponent ic, bool isClient, bool isImportant)

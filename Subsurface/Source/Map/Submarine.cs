@@ -384,9 +384,8 @@ namespace Barotrauma
             if (subBody != null) subBody.ApplyForce(force);
         }
 
-        public void SetPrevTransform(Vector2 position, Camera cam = null)
+        public void SetPrevTransform(Vector2 position)
         {
-            if (cam != null) cam.Position += prevPosition - position;
             prevPosition = position;
         }
 
@@ -646,23 +645,16 @@ namespace Barotrauma
 
             subBody = new SubmarineBody(this);            
             
-            MapEntity.MapLoaded();
-                        
-            foreach (Item item in Item.ItemList)
-            {
-                foreach (ItemComponent ic in item.components)
-                {
-                    ic.OnMapLoaded();
-                }
-            }
+            loaded = this;
 
+            MapEntity.MapLoaded();
+               
             WayPoint.GenerateSubWaypoints();
 
             GameMain.LightManager.OnMapLoaded();
 
             ID = ushort.MaxValue-10;
 
-            loaded = this;
         }
 
         public static Submarine Load(string fileName)

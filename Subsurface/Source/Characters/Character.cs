@@ -443,7 +443,7 @@ namespace Barotrauma
                 }
             }
 
-            AnimController.FindHull();
+            AnimController.FindHull(false);
 
             CharacterList.Add(this);
 
@@ -755,7 +755,6 @@ namespace Barotrauma
 
             if (moveCam)
             {
-                cam.TargetPos = WorldPosition;
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
             }
             
