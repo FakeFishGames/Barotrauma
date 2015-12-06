@@ -389,9 +389,19 @@ namespace Barotrauma
                 Limb limb = f2.Body.UserData as Limb;
                 if (limb!=null && limb.character.Submarine==null)
                 {
-                    var ragdoll = limb.character.AnimController;
-                    ragdoll.SetPosition(ragdoll.RefLimb.Position - body.Position);
-                    limb.character.Submarine = submarine;                    
+                    Vector2 normal2;
+                    FixedArray2<Vector2> points;
+                    contact.GetWorldManifold(out normal2, out points);
+
+                    if (Submarine.PickBody(points[0] - ConvertUnits.ToSimUnits(submarine.Position), points[0] - ConvertUnits.ToSimUnits(submarine.Position) - normal2, null, Physics.CollisionWall) != null)
+                    {
+                        return true;
+                    }
+
+                    return false;
+                    //var ragdoll = limb.character.AnimController;
+                    //ragdoll.SetPosition(ragdoll.RefLimb.Position - body.Position);
+                    //limb.character.Submarine = submarine;                    
                 }
 
                 return true;

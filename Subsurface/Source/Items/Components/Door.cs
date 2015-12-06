@@ -317,7 +317,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            Vector2 pos = new Vector2(item.Rect.Center.X, -item.Rect.Y);
+            Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y);
             if (item.Submarine != null) pos += item.Submarine.Position;
             pos.Y = -pos.Y;
 

@@ -31,6 +31,11 @@ namespace Barotrauma
 
             var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
+            if (pathSteering==null)
+            {
+                return;
+            }
+
             if (newTargetTimer <= 0.0f)
             {
                 currentTarget = FindRandomTarget();
