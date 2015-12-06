@@ -9,7 +9,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Voronoi2;
 
 namespace Barotrauma
@@ -32,7 +31,7 @@ namespace Barotrauma
 
         private float depthDamageTimer;
 
-        private Submarine sub;
+        private Submarine submarine;
         
         private Body body;
 
@@ -88,7 +87,7 @@ namespace Barotrauma
 
         public SubmarineBody(Submarine sub)
         {
-            this.sub = sub;
+            this.submarine = sub;
 
 
             List<Vector2> convexHull = GenerateConvexHull();
@@ -119,7 +118,7 @@ namespace Barotrauma
             body.BodyType = BodyType.Dynamic;
 
             body.CollisionCategories = Physics.CollisionMisc;
-            body.CollidesWith = Physics.CollisionLevel;
+            body.CollidesWith = Physics.CollisionLevel | Physics.CollisionCharacter;
             body.Restitution = 0.0f;
             body.FixedRotation = true;
             body.Awake = true;
@@ -387,8 +386,14 @@ namespace Barotrauma
             VoronoiCell cell = f2.Body.UserData as VoronoiCell;
             if (cell == null)
             {
-                lastContactCell = null;
-                lastContactPoint = null;
+                Limb limb = f2.Body.UserData as Limb;
+                if (limb!=null && limb.character.Submarine==null)
+                {
+                    var ragdoll = limb.character.AnimController;
+                    ragdoll.SetPosition(ragdoll.RefLimb.Position - body.Position);
+                    limb.character.Submarine = submarine;                    
+                }
+
                 return true;
             }
 

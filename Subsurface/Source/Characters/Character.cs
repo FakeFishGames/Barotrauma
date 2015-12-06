@@ -735,7 +735,7 @@ namespace Barotrauma
         {
             Limb head = AnimController.GetLimb(LimbType.Head);
 
-            Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(head.SimPosition);
+            Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(WorldPosition);
 
             if (!DisableControls)
             {

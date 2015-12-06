@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
             //    break;
             //}
 
-            light = new LightSource(item.Position, 100.0f, Color.White);
+            light = new LightSource(item.Position, 100.0f, Color.White, item.CurrentHull == null ? null : item.CurrentHull.Submarine);
 
             IsActive = true;
 

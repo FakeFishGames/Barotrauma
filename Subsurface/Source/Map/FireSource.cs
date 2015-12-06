@@ -50,7 +50,7 @@ namespace Barotrauma
                 fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg");
             }
 
-            lightSource = new LightSource(position, 50.0f, new Color(1.0f, 0.9f, 0.6f));
+            lightSource = new LightSource(position, 50.0f, new Color(1.0f, 0.9f, 0.6f), hull == null ? null : hull.Submarine);
 
             hull.AddFireSource(this, !networkEvent);
 

@@ -64,7 +64,7 @@ namespace Barotrauma
         public Submarine Submarine
         {
             get;
-            protected set;
+            set;
         }
 
         public AITarget AiTarget
