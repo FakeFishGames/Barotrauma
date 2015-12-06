@@ -263,7 +263,7 @@ namespace Barotrauma
                 corners[2] = new Vector2(rect.Right, rect.Y);
                 corners[3] = new Vector2(rect.Right, rect.Y - rect.Height);
 
-                convexHull = new ConvexHull(corners, Color.Black);
+                convexHull = new ConvexHull(corners, Color.Black, this);
             }
 
             InsertToList();

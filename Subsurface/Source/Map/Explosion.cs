@@ -68,7 +68,7 @@ namespace Barotrauma
 
             float displayRange = ConvertUnits.ToDisplayUnits(attack.Range);
 
-            light = new LightSource(displayPosition, displayRange, Color.LightYellow);
+            light = new LightSource(displayPosition, displayRange, Color.LightYellow, hull != null ? hull.Submarine : null);
             CoroutineManager.StartCoroutine(DimLight());
 
             float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, displayPosition)/2.0f;

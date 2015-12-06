@@ -19,6 +19,8 @@ namespace Barotrauma.Lights
 
         private Texture2D texture;
 
+        public Entity Submarine;
+
         private Vector2 position;
         public Vector2 Position
         {
@@ -30,6 +32,11 @@ namespace Barotrauma.Lights
                 position = value;
                 UpdateHullsInRange();
             }
+        }
+
+        public Vector2 WorldPosition
+        {
+            get { return (Submarine == null) ? position : position + Submarine.Position; }
         }
 
         public static Texture2D LightTexture
@@ -64,9 +71,11 @@ namespace Barotrauma.Lights
             }
         }
 
-        public LightSource(Vector2 position, float range, Color color)
+        public LightSource(Vector2 position, float range, Color color, Submarine submarine)
         {
             hullsInRange = new List<ConvexHull>();
+
+            this.Submarine = submarine;
 
             this.position = position;
             this.range = range;
