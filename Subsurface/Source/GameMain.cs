@@ -346,10 +346,7 @@ namespace Barotrauma
             waitForKeyHit = waitKeyHit;
             titleScreenOpen = true;
             CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
-
         }
-
-
 
         protected override void OnExiting(object sender, EventArgs args)
         {

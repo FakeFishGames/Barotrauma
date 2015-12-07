@@ -1171,7 +1171,8 @@ namespace Barotrauma
                     int.Parse(rectValues[1]),
                     int.Parse(rectValues[2]),
                     int.Parse(rectValues[3]));
-            } else
+            } 
+            else
             {
                 rect = new Rectangle(
                     int.Parse(rectValues[0]),
