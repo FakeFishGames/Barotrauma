@@ -754,7 +754,6 @@ namespace Barotrauma
 
             if (moveCam)
             {
-                cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
             }
             

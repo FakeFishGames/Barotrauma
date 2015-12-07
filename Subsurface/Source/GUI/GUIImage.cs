@@ -47,7 +47,7 @@ namespace Barotrauma
         }
 
         public GUIImage(Rectangle rect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
-            : this(rect, sprite.SourceRect, sprite, alignment, parent)
+            : this(rect, sprite==null ? Rectangle.Empty : sprite.SourceRect, sprite, alignment, parent)
         {
         }
 
@@ -83,8 +83,12 @@ namespace Barotrauma
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
 
-            spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero,
-                Scale, SpriteEffects.None, 0.0f);            
+            if (sprite!=null)
+            {
+                spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero,
+                    Scale, SpriteEffects.None, 0.0f);  
+            }
+          
             
             DrawChildren(spriteBatch);
         }

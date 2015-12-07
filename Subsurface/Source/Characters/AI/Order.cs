@@ -1,21 +1,28 @@
 ﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class Order
     {
+        private static string ConfigFile = Path.Combine("Content", "Orders.xml");
+
         public static List<Order> PrefabList;
 
         public readonly string Name;
         public readonly string DoingText;
 
-        //Sprite buttonSprite;
+        public readonly Sprite SymbolSprite;
 
         public readonly Type ItemComponentType;
+
+        public readonly Color Color;
 
         public ItemComponent TargetItem;
 
@@ -25,16 +32,62 @@ namespace Barotrauma
         {
             PrefabList = new List<Order>();
 
-            PrefabList.Add(new Order("Follow", "Following"));
+            XDocument doc = ToolBox.TryLoadXml(ConfigFile);
+            if (doc == null) return;
 
-            PrefabList.Add(new Order("Dismiss", "Dismissed"));
+            foreach (XElement orderElement in doc.Root.Elements())
+            {
+                if (orderElement.Name.ToString().ToLower() != "order") continue;
 
-            PrefabList.Add(new Order("Wait", "Wait"));
+                PrefabList.Add(new Order(orderElement));
+            }
 
-            PrefabList.Add(new Order("Operate Reactor", "Operating reactor", typeof(Reactor), new string[] {"Power up", "Shutdown"}));
-            PrefabList.Add(new Order("Operate Railgun", "Operating railgun", typeof(Turret), new string[] { "Fire at will", "Hold fire" }));
+            //PrefabList.Add(new Order("Follow", "Following"));
+
+            //PrefabList.Add(new Order("Dismiss", "Dismissed"));
+
+            //PrefabList.Add(new Order("Wait", "Wait"));
+
+            //PrefabList.Add(new Order("Operate Reactor", "Operating reactor", typeof(Reactor), new string[] {"Power up", "Shutdown"}));
+            //PrefabList.Add(new Order("Operate Railgun", "Operating railgun", typeof(Turret), new string[] { "Fire at will", "Hold fire" }));
 
 
+        }
+
+        private Order(XElement orderElement)
+        {
+            Name = ToolBox.GetAttributeString(orderElement, "name", "Name not found");
+            DoingText = ToolBox.GetAttributeString(orderElement, "doingtext", "");
+
+            string targetItemName = ToolBox.GetAttributeString(orderElement, "targetitemtype", "");
+
+            if (!string.IsNullOrWhiteSpace(targetItemName))
+            {
+                try
+                {
+                    ItemComponentType = Type.GetType("Barotrauma.Items.Components." + targetItemName, true, true);
+                }
+
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + ConfigFile + ", item component type " + targetItemName + " not found", e);
+                }
+            }
+
+            Color = new Color(ToolBox.GetAttributeVector4(orderElement, "color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f)));
+
+            Options = ToolBox.GetAttributeString(orderElement, "options", "").Split(',');
+            for (int i = 0; i<Options.Length; i++)
+            {
+                Options[i] = Options[i].Trim();
+            }
+
+            foreach (XElement subElement in orderElement.Elements())
+            {
+                if (subElement.Name.ToString().ToLower() != "sprite") continue;
+                SymbolSprite = new Sprite(subElement);
+                break;
+            }
         }
 
         private Order(string name, string doingText, Type itemComponentType, string[] parameters = null)
@@ -51,6 +104,8 @@ namespace Barotrauma
             DoingText = prefab.DoingText;
             ItemComponentType = prefab.ItemComponentType;
             Options = prefab.Options;
+            SymbolSprite = prefab.SymbolSprite;
+            Color = prefab.Color;
 
             TargetItem = targetItem;
         }

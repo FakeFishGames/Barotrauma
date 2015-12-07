@@ -63,7 +63,7 @@ namespace Barotrauma
                     Order.PrefabList.FindAll(o=> o.ItemComponentType!=null);
 
                 int startX = (int)-(buttonWidth * orders.Count + spacing * (orders.Count - 1)) / 2;
-
+                
                 int i=0;
                 foreach (Order order in orders)
                 {
@@ -77,25 +77,39 @@ namespace Barotrauma
                         {
                             var newOrder = new Order(order, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
 
-                            var button = new GUIButton(new Rectangle(x+buttonWidth/2, y2, buttonWidth, 20),  order.Name, Alignment.TopCenter, GUI.Style, frame);
-                            button.UserData = newOrder;
-                            button.OnClicked = SetOrder;
+                            CreateOrderButton(new Rectangle(x + buttonWidth / 2, y2, buttonWidth, 20), newOrder, y2==y);
                             y2 += 25;
                         }
                     }
                     else
                     {
-                        var button = new GUIButton(new Rectangle(x + buttonWidth / 2, y, buttonWidth, 20), order.Name, Alignment.TopCenter, GUI.Style, frame);
-                        button.UserData = order;
-                        button.OnClicked = SetOrder;
+                        CreateOrderButton(new Rectangle(x + buttonWidth / 2, y, buttonWidth, 20), order);
                     }
                     i++;
                 }
 
                 y += 80;
             }
+        }
 
+        private GUIButton CreateOrderButton(Rectangle rect, Order order, bool createSymbol = true)
+        {
+            var orderButton = new GUIButton(rect, order.Name, Color.Black * 0.5f, Alignment.TopCenter, Alignment.Right, null, frame);
+            orderButton.HoverColor = Color.LightGray * 0.5f;
+            orderButton.OutlineColor = Color.LightGray * 0.8f;
+            orderButton.UserData = order;
+            orderButton.OnClicked = SetOrder;
+            
+            if (createSymbol)
+            {
+                var symbol = new GUIImage(new Rectangle(-5,0,64,64), order.SymbolSprite, Alignment.Left | Alignment.CenterY, orderButton);
+                symbol.Color = order.Color;
 
+                orderButton.children.Insert(1, symbol);
+                orderButton.children.RemoveAt(orderButton.children.Count-1);
+            }
+            
+            return orderButton;
         }
 
         public void UpdateCharacters()
@@ -155,7 +169,8 @@ namespace Barotrauma
                     characterButton.OutlineColor = Color.LightGray * 0.8f;
                 }
 
-                string name = character.Info.Name.Replace(' ', '\n');
+                string name = character.Info.Name;
+                if (character.Info.Job != null) name += '\n' + "(" + character.Info.Job.Name + ")";
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(40, 0, 0, 25),
@@ -166,7 +181,7 @@ namespace Barotrauma
                 textBlock.Font = GUI.SmallFont;
                 textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-                new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
+                new GUIImage(new Rectangle(-5, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
 
                 i++;
             }
