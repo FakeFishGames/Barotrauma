@@ -138,6 +138,11 @@ namespace Barotrauma
             }
         }
 
+        public Vector2 CursorWorldPosition
+        {
+            get { return Submarine == null ? cursorPosition : cursorPosition + Submarine.Position; }
+        }
+
         public Character ClosestCharacter
         {
             get { return closestCharacter; }
@@ -295,7 +300,7 @@ namespace Barotrauma
 
         public static Character Create(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
         {
-            return Create(characterInfo.File, spawnPoint.SimPosition, characterInfo, isNetworkPlayer);
+            return Create(characterInfo.File, spawnPoint.WorldPosition, characterInfo, isNetworkPlayer);
         }
 
 
@@ -393,7 +398,7 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
-                limb.body.SetTransform(position+limb.SimPosition, 0.0f);
+                limb.body.SetTransform(ConvertUnits.ToSimUnits(position)+limb.SimPosition, 0.0f);
                 //limb.prevPosition = ConvertUnits.ToDisplayUnits(position);
             }
 
@@ -443,7 +448,8 @@ namespace Barotrauma
                 }
             }
 
-            AnimController.FindHull(false);
+            AnimController.FindHull(null, false);
+            if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;
 
             CharacterList.Add(this);
 
@@ -735,7 +741,7 @@ namespace Barotrauma
         {
             Limb head = AnimController.GetLimb(LimbType.Head);
 
-            Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(WorldPosition);
+            Lights.LightManager.ViewPos = WorldPosition;
 
             if (!DisableControls)
             {
@@ -1004,7 +1010,7 @@ namespace Barotrauma
                 AnimController.DebugDraw(spriteBatch);
             }
 
-            Vector2 healthBarPos = new Vector2(Position.X - 50, -Position.Y - 100.0f);
+            Vector2 healthBarPos = new Vector2(WorldPosition.X - 50, -WorldPosition.Y - 100.0f);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f * (health / maxHealth)), 15), Color.Red, true);
         }
@@ -1102,12 +1108,12 @@ namespace Barotrauma
             for (int i = 0; i < 10; i++)
             {
                 Particle p = GameMain.ParticleManager.CreateParticle("waterblood",
-                    centerOfMass + Rand.Vector(50.0f),
+                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(50.0f),
                     Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
                 GameMain.ParticleManager.CreateParticle("bubbles",
-                    centerOfMass + Rand.Vector(50.0f),
+                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(50.0f),
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f,50f)));
             }
 

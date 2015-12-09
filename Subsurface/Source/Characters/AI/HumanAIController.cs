@@ -87,7 +87,9 @@ namespace Barotrauma
         {
             if (selectedAiTarget != null)
             {
-                GUI.DrawLine(spriteBatch, new Vector2(Character.Position.X, -Character.Position.Y), ConvertUnits.ToDisplayUnits(new Vector2(selectedAiTarget.SimPosition.X, -selectedAiTarget.SimPosition.Y)), Color.Red);
+                GUI.DrawLine(spriteBatch, 
+                    new Vector2(Character.WorldPosition.X, -Character.WorldPosition.Y), 
+                    new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
             }
 
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;

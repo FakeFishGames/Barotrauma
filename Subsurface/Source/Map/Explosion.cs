@@ -10,8 +10,6 @@ namespace Barotrauma
 {
     class Explosion
     {
-        private Vector2 position;
-
         private Attack attack;
         
         private float force;
@@ -32,58 +30,52 @@ namespace Barotrauma
             shockwave   = ToolBox.GetAttributeBool(element, "shockwave", true);
             flames      = ToolBox.GetAttributeBool(element, "flames", true); 
 
-            CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range*10.0f);
+            CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range);
         }
 
-        public void Explode()
+        public void Explode(Vector2 worldPosition)
         {
-            Explode(position);
-        }
-
-        public void Explode(Vector2 simPosition)
-        {
-            Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
-            
-            Hull hull = Hull.FindHull(displayPosition);
+            Hull hull = Hull.FindHull(worldPosition);
 
             if (shockwave)
             {
-                GameMain.ParticleManager.CreateParticle("shockwave", displayPosition,
+                GameMain.ParticleManager.CreateParticle("shockwave", worldPosition,
                     Vector2.Zero, 0.0f, hull);
             }
 
-            for (int i = 0; i < attack.Range * 10; i++)
+            for (int i = 0; i < attack.Range * 0.1f; i++)
             {
                 if (sparks)
                 {
-                    GameMain.ParticleManager.CreateParticle("spark", displayPosition,
+                    GameMain.ParticleManager.CreateParticle("spark", worldPosition,
                         Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f, hull);
                 }
                 if (flames)
                 {
-                    GameMain.ParticleManager.CreateParticle("explosionfire", displayPosition + Rand.Vector(50f),
+                    GameMain.ParticleManager.CreateParticle("explosionfire", worldPosition + Rand.Vector(50f),
                         Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f, hull);
                 }
             }
 
-            float displayRange = ConvertUnits.ToDisplayUnits(attack.Range);
+            float displayRange = attack.Range;
+            if (displayRange < 0.1f) return;
 
-            light = new LightSource(displayPosition, displayRange, Color.LightYellow, hull != null ? hull.Submarine : null);
+            light = new LightSource(worldPosition, displayRange, Color.LightYellow, hull != null ? hull.Submarine : null);
             CoroutineManager.StartCoroutine(DimLight());
 
-            float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, displayPosition)/2.0f;
-            GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist)/displayRange, 0.0f);
+            float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, worldPosition)/2.0f;
+            GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist) / displayRange, 0.0f);
             
             if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
-                RangedStructureDamage(displayPosition, displayRange, attack.GetStructureDamage(1.0f));
+                RangedStructureDamage(worldPosition, displayRange, attack.GetStructureDamage(1.0f));
             }
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
 
             foreach (Character c in Character.CharacterList)
             {
-                float dist = Vector2.Distance(c.SimPosition, simPosition);
+                float dist = Vector2.Distance(c.WorldPosition, worldPosition);
 
                 if (dist > attack.Range) continue;
 
@@ -91,14 +83,14 @@ namespace Barotrauma
                                 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (limb.SimPosition == simPosition) continue;
-                    distFactor = 1.0f - Vector2.Distance(limb.SimPosition, simPosition)/attack.Range;
+                    if (limb.WorldPosition == worldPosition) continue;
+                    distFactor = 1.0f - Vector2.Distance(limb.WorldPosition, worldPosition)/attack.Range;
                     
                     c.AddDamage(limb.SimPosition, DamageType.None, 
                         attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 0.0f, attack.Stun * distFactor, false);
-                    if (force>0.0f)
+                    if (force > 0.0f)
                     {
-                        limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.SimPosition - simPosition) * distFactor * force);
+                        limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.WorldPosition - worldPosition) * distFactor * force);
                     }
                 }
             }
@@ -124,7 +116,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public static void RangedStructureDamage(Vector2 displayPosition, float displayRange, float damage)
+        public static void RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
         {
             List<Structure> structureList = new List<Structure>();
 
@@ -137,7 +129,7 @@ namespace Barotrauma
 
                 if (structure.HasBody &&
                     !structure.IsPlatform &&
-                    Vector2.Distance(structure.Position, displayPosition) < dist * 3.0f)
+                    Vector2.Distance(structure.WorldPosition, worldPosition) < dist * 3.0f)
                 {
                     structureList.Add(structure);
                 }
@@ -147,7 +139,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < structure.SectionCount; i++)
                 {
-                    float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i), displayPosition) / displayRange);
+                    float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange);
                     if (distFactor > 0.0f) structure.AddDamage(i, damage * distFactor);
                 }
             }

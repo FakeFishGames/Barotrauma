@@ -403,7 +403,7 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            currentHull = Hull.FindHull(this.Position);
+            currentHull = Hull.FindHull(WorldPosition);
         }
 
         public override XElement Save(XDocument doc)

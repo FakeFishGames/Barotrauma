@@ -378,9 +378,8 @@ namespace Barotrauma
 
             if (ItemList != null && body != null)
             {
-                amount = ConvertUnits.ToSimUnits(amount);
                 //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
-                body.SetTransform(body.SimPosition+amount, body.Rotation);
+                body.SetTransform(body.SimPosition+ConvertUnits.ToSimUnits(amount), body.Rotation);
             }
             foreach (ItemComponent ic in components)
             {
@@ -409,7 +408,7 @@ namespace Barotrauma
         
         public virtual Hull FindHull()
         {
-            CurrentHull = Hull.FindHull((body == null) ? Position : ConvertUnits.ToDisplayUnits(body.SimPosition), CurrentHull);
+            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
             if (body!=null)
             {
                 body.Submarine = CurrentHull == null ? null : Submarine.Loaded;

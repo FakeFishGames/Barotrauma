@@ -35,14 +35,12 @@ namespace Barotrauma
         
         private Body body;
 
-        private Vector2 speed;
-
         private Vector2 targetPosition;
                 
         float mass = 10000.0f;
 
-        private Vector2? lastContactPoint;
-        private VoronoiCell lastContactCell;
+        //private Vector2? lastContactPoint;
+        //private VoronoiCell lastContactCell;
 
         public Rectangle Borders
         {
@@ -50,13 +48,13 @@ namespace Barotrauma
             private set;
         }
                 
-        public Vector2 Speed
+        public Vector2 Velocity
         {
-            get { return speed; }
-            set 
+            get { return body.LinearVelocity; }
+            set
             {
                 if (!MathUtils.IsValid(value)) return;
-                speed = value; 
+                body.LinearVelocity = value;
             }
         }
 
@@ -117,15 +115,16 @@ namespace Barotrauma
             body = BodyFactory.CreateCompoundPolygon(GameMain.World, triangulatedVertices, 5.0f);
             body.BodyType = BodyType.Dynamic;
 
-            body.CollisionCategories = Physics.CollisionMisc;
+            body.CollisionCategories = Physics.CollisionMisc | Physics.CollisionWall;
             body.CollidesWith = Physics.CollisionLevel | Physics.CollisionCharacter;
-            body.Restitution = 0.0f;
+            body.Restitution = Restitution;
+            body.Friction = Friction;
             body.FixedRotation = true;
+            body.Mass = mass;
             body.Awake = true;
             body.SleepingAllowed = false;
             body.IgnoreGravity = true;
             body.OnCollision += OnCollision;
-            body.OnSeparation += OnSeparation;
             body.UserData = this;
         }
 
@@ -224,14 +223,14 @@ namespace Barotrauma
 
             Vector2 totalForce = CalculateBuoyancy();
 
-            if (speed.LengthSquared() > 0.000001f)
+            if (body.LinearVelocity.LengthSquared() > 0.000001f)
             {
                 float dragCoefficient = 0.00001f;
 
-                float speedLength = (speed == Vector2.Zero) ? 0.0f : speed.Length();
+                float speedLength = (body.LinearVelocity == Vector2.Zero) ? 0.0f : body.LinearVelocity.Length();
                 float drag = speedLength * speedLength * dragCoefficient * mass;
 
-                totalForce += -Vector2.Normalize(speed) * drag;                
+                totalForce += -Vector2.Normalize(body.LinearVelocity) * drag;                
             }
 
             ApplyForce(totalForce);
@@ -267,7 +266,7 @@ namespace Barotrauma
 
         public void ApplyForce(Vector2 force)
         {
-            body.ApplyForce(force/100.0f);
+            body.ApplyForce(force);
         }
 
         public void SetPosition(Vector2 position)
@@ -317,31 +316,121 @@ namespace Barotrauma
             depthDamageTimer = 10.0f;
         }
 
-        private void UpdateColliding()
+        //private void UpdateColliding()
+        //{
+
+        //    return;
+
+        //    if (body.Position.LengthSquared()<0.00001f) return;
+
+        //    Vector2 normal = Vector2.Normalize(body.Position);
+        //    Vector2 simSpeed = ConvertUnits.ToSimUnits(body.LinearVelocity);
+
+        //    float impact = Vector2.Dot(simSpeed, -normal);
+
+        //    if (impact < 0.0f) return;
+
+        //    Vector2 u = Vector2.Dot(simSpeed, -normal) * normal;
+        //    Vector2 w = (simSpeed + u);
+
+        //    //speed = ConvertUnits.ToDisplayUnits(w * (1.0f - Friction) + u * Restitution);
+            
+        //    if (lastContactPoint == null || lastContactCell==null || impact < 3.0f) return;
+            
+        //    SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits((Vector2)lastContactPoint));
+        //    GameMain.GameScreen.Cam.Shake = impact * 2.0f;
+
+        //    Vector2 limbForce = -normal * impact*0.5f;
+
+        //    float length = limbForce.Length();
+        //    if (length > 10.0f) limbForce = (limbForce / length) * 10.0f;
+
+        //    foreach (Character c in Character.CharacterList)
+        //    {
+        //        if (c.AnimController.CurrentHull == null) continue;
+
+        //        if (impact > 2.0f) c.AnimController.StunTimer = (impact - 2.0f) * 0.1f;
+
+        //        foreach (Limb limb in c.AnimController.Limbs)
+        //        {
+        //            if (c.AnimController.LowestLimb == limb) continue;
+        //            limb.body.ApplyLinearImpulse(limb.Mass * limbForce);
+        //        }
+        //    }
+
+        //    Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits((Vector2)lastContactPoint), impact*50.0f, impact*DamageMultiplier);
+
+        //    //Body wallBody = Submarine.PickBody(
+        //    //    (Vector2)lastContactPoint - body.Position, 
+        //    //    (Vector2)lastContactPoint + body.Position * 10.0f, 
+        //    //    new List<Body>() { lastContactCell.body });
+
+        //    //if (wallBody == null || wallBody.UserData == null) return;
+            
+        //    //var damageable = wallBody.UserData as IDamageable;
+        //    //Structure structure = wallBody.UserData as Structure;
+
+        //    //if (structure == null) return;
+            
+        //    //int sectionIndex = structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
+
+        //    //for (int i = sectionIndex - (int)(impact / 5.0f); i < sectionIndex + (int)(impact / 5.0f); i++)
+        //    //{
+        //    //    structure.AddDamage(i, impact * DamageMultiplier);      
+        //    //}            
+        //}
+
+        public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
 
-            return;
 
-            if (body.Position.LengthSquared()<0.00001f) return;
-
-            Vector2 normal = Vector2.Normalize(body.Position);
-            Vector2 simSpeed = ConvertUnits.ToSimUnits(speed);
-
-            float impact = Vector2.Dot(simSpeed, -normal);
-
-            if (impact < 0.0f) return;
-
-            Vector2 u = Vector2.Dot(simSpeed, -normal) * normal;
-            Vector2 w = (simSpeed + u);
-
-            speed = ConvertUnits.ToDisplayUnits(w * (1.0f - Friction) + u * Restitution);
+            VoronoiCell cell = f2.Body.UserData as VoronoiCell;
             
-            if (lastContactPoint == null || lastContactCell==null || impact < 3.0f) return;
-            
-            SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits((Vector2)lastContactPoint));
+            if (cell == null)
+            {
+                Limb limb = f2.Body.UserData as Limb;
+                if (limb!=null && limb.character.Submarine==null)
+                {
+                    Vector2 normal2;
+                    FixedArray2<Vector2> points;
+                    contact.GetWorldManifold(out normal2, out points);
+
+                    if (Submarine.PickBody(points[0] - ConvertUnits.ToSimUnits(submarine.Position) + normal2, points[0] - ConvertUnits.ToSimUnits(submarine.Position) - normal2, null, Physics.CollisionWall) != null)
+                    {
+                        
+                        return true;
+                    }
+
+                    var ragdoll = limb.character.AnimController;
+                    ragdoll.FindHull();                    
+              
+                    return false;
+
+                }
+
+                return true;
+            }
+
+            Vector2 normal;
+            FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
+            contact.GetWorldManifold(out normal, out worldPoints);
+
+            Vector2 lastContactPoint = worldPoints[0];
+
+
+            float impact = Vector2.Dot(Velocity, -normal);
+
+            //Vector2 u = Vector2.Dot(Velocity, -normal) * normal;
+            //Vector2 w = (Velocity + u);
+
+            //speed = ConvertUnits.ToDisplayUnits(w * (1.0f - Friction) + u * Restitution);
+
+            if (impact < 3.0f) return true;
+
+            SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(lastContactPoint));
             GameMain.GameScreen.Cam.Shake = impact * 2.0f;
 
-            Vector2 limbForce = -normal * impact*0.5f;
+            Vector2 limbForce = -normal * impact * 0.5f;
 
             float length = limbForce.Length();
             if (length > 10.0f) limbForce = (limbForce / length) * 10.0f;
@@ -359,141 +448,10 @@ namespace Barotrauma
                 }
             }
 
-            Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits((Vector2)lastContactPoint), impact*50.0f, impact*DamageMultiplier);
-
-            //Body wallBody = Submarine.PickBody(
-            //    (Vector2)lastContactPoint - body.Position, 
-            //    (Vector2)lastContactPoint + body.Position * 10.0f, 
-            //    new List<Body>() { lastContactCell.body });
-
-            //if (wallBody == null || wallBody.UserData == null) return;
-            
-            //var damageable = wallBody.UserData as IDamageable;
-            //Structure structure = wallBody.UserData as Structure;
-
-            //if (structure == null) return;
-            
-            //int sectionIndex = structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
-
-            //for (int i = sectionIndex - (int)(impact / 5.0f); i < sectionIndex + (int)(impact / 5.0f); i++)
-            //{
-            //    structure.AddDamage(i, impact * DamageMultiplier);      
-            //}            
-        }
-
-        public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
-        {
-            VoronoiCell cell = f2.Body.UserData as VoronoiCell;
-            if (cell == null)
-            {
-                Limb limb = f2.Body.UserData as Limb;
-                if (limb!=null && limb.character.Submarine==null)
-                {
-                    Vector2 normal2;
-                    FixedArray2<Vector2> points;
-                    contact.GetWorldManifold(out normal2, out points);
-
-                    if (Submarine.PickBody(points[0] - ConvertUnits.ToSimUnits(submarine.Position), points[0] - ConvertUnits.ToSimUnits(submarine.Position) - normal2, null, Physics.CollisionWall) != null)
-                    {
-                        return true;
-                    }
-
-                    return false;
-                    //var ragdoll = limb.character.AnimController;
-                    //ragdoll.SetPosition(ragdoll.RefLimb.Position - body.Position);
-                    //limb.character.Submarine = submarine;                    
-                }
-
-                return true;
-            }
-
-            lastContactCell = cell;
-
-            Vector2 normal;
-            FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
-            contact.GetWorldManifold(out normal, out worldPoints);
-
-            lastContactPoint = worldPoints[0];
+            Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * DamageMultiplier);
 
             return true;
-
-            //Vector2 normal = contact.Manifold.LocalNormal;
-            //Vector2 simSpeed = ConvertUnits.ToSimUnits(speed);
-            //float impact = Vector2.Dot(-simSpeed, normal);
-
-            ////Vector2 u = Vector2.Dot(simSpeed, -normal) * -normal;
-            ////Vector2 w = simSpeed - u;
-
-            //Vector2 limbForce = normal * impact;
-
-            ////float length = limbForce.Length();
-            ////if (length > 10.0f) limbForce = (limbForce / length) * 10.0f;
-
-            ////foreach (Character c in Character.CharacterList)
-            ////{
-            ////    if (c.AnimController.CurrentHull == null) continue;
-
-            ////    if (impact > 2.0f) c.AnimController.StunTimer = (impact - 2.0f) * 0.1f;
-
-            ////    foreach (Limb limb in c.AnimController.Limbs)
-            ////    {
-            ////        if (c.AnimController.LowestLimb == limb) continue;
-            ////        limb.body.ApplyLinearImpulse(limb.Mass * limbForce);
-            ////    }
-            ////}
-
-            //System.Diagnostics.Debug.WriteLine("IMPACT: " + impact + " normal: " + normal + " simspeed: " + simSpeed);
-            //if (impact > 1.0f)
-            //{                
-                
-            //    contact.GetWorldManifold(out normal, out worldPoints);
-
-            //    lastContactPoint = worldPoints[0];
-
-            //    AmbientSoundManager.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(worldPoints[0]));
-
-            //    GameMain.GameScreen.Cam.Shake = impact * 2.0f;
-
-            //    //speed = ConvertUnits.ToDisplayUnits(w * 0.9f + u * 0.5f);
-
-            //    //FixedArray2<Vector2> worldPoints;
-            //    //contact.GetWorldManifold(out normal, out worldPoints);
-
-            //    //if (contact.Manifold.PointCount >= 1)
-            //    //{
-            //    //    Vector2 contactPoint = worldPoints[0];
-
-            //    //    Body wallBody = Submarine.PickBody(contactPoint, contactPoint + normal, new List<Body>() { cell.body });
-
-            //    //    if (wallBody!=null && wallBody.UserData!=null)
-            //    //    {
-            //    //        Structure s = wallBody.UserData as Structure;
-            //    //    }
-            //    //}
-
-            //    //foreach (GraphEdge ge in cell.edges)
-            //    //{
-            //    //    Body wallBody = Submarine.PickBody(
-            //    //        ConvertUnits.ToSimUnits(ge.point1 + GameMain.GameSession.Level.Position + normal),
-            //    //        ConvertUnits.ToSimUnits(ge.point2 + GameMain.GameSession.Level.Position + normal), new List<Body>() { cell.body });
-            //    //    if (wallBody == null || wallBody.UserData == null) continue;
-
-            //    //    Structure structure = wallBody.UserData as Structure;
-            //    //    if (structure == null) continue;
-            //    //    structure.AddDamage(
-            //    //        structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition)), impact*50.0f);
-            //    //}
-            //}
-
-
-            //collisionRigidness = 0.8f;
-
-            //return true;
         }
 
-        public void OnSeparation(Fixture f1, Fixture f2)
-        {
-            lastContactPoint = null;
-        }
     }
 }

@@ -270,8 +270,11 @@ namespace Barotrauma
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
                 if (maxDelta > Rand.Range(1.0f,10.0f))
                 {
+                    Vector2 particlePos = new Vector2(rect.X + WaveWidth * i, surface + waveY[i]);
+                    if (Submarine != null) particlePos += Submarine.Position;
+
                     GameMain.ParticleManager.CreateParticle("mist",
-                        new Vector2(rect.X + WaveWidth * i,surface + waveY[i]),
+                        particlePos,
                         new Vector2(0.0f, -50.0f), 0.0f, this);
                 }
 
@@ -473,21 +476,21 @@ namespace Barotrauma
         }
 
         //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHull(Vector2 position, Hull guess = null)
+        public static Hull FindHull(Vector2 worldPosition, Hull guess = null)
         {
-            return FindHull(position, hullList, guess);
+            return FindHull(worldPosition, hullList, guess);
         }
 
-        public static Hull FindHull(Vector2 position, List<Hull> hulls, Hull guess = null)
+        public static Hull FindHull(Vector2 worldPosition, List<Hull> hulls, Hull guess = null)
         {
             if (guess != null && hulls.Contains(guess))
             {
-                if (Submarine.RectContains(guess.rect, position)) return guess;
+                if (Submarine.RectContains(guess.WorldRect, worldPosition)) return guess;
             }
 
-            foreach (Hull w in hulls)
+            foreach (Hull hull in hulls)
             {
-                if (Submarine.RectContains(w.rect, position)) return w;
+                if (Submarine.RectContains(hull.WorldRect, worldPosition)) return hull;
             }
 
             return null;

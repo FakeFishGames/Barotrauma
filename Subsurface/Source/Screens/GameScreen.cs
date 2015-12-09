@@ -166,11 +166,14 @@ namespace Barotrauma
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+
+            if (Submarine.Loaded != null) Submarine.Loaded.UpdateTransform();
+
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
             GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
             GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, 
-                Character.Controlled==null ? LightManager.ViewPos : Character.Controlled.CursorPosition);
+                Character.Controlled==null ? LightManager.ViewPos : Character.Controlled.CursorWorldPosition);
 
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them

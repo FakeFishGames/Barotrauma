@@ -70,7 +70,12 @@ namespace Barotrauma
         public virtual Rectangle Rect { 
             get { return rect; }
             set { rect = value; }
-        }        
+        }
+     
+        public Rectangle WorldRect
+        {
+            get { return Submarine == null ? rect : new Rectangle((int)(Submarine.Position.X + rect.X), (int)(Submarine.Position.Y + rect.Y), rect.Width, rect.Height); }
+        }
 
         public virtual Sprite Sprite 
         {
@@ -505,12 +510,16 @@ namespace Barotrauma
             foreach (MapEntity e in mapEntityList)
             {
                 e.OnMapLoaded();
+
+                if (e.Submarine != null) e.Move(Submarine.HiddenSubPosition);
             }
 
-            //mapEntityList.Sort((x, y) =>
-            //{
-            //    return x.Name.CompareTo(y.Name);
-            //});
+
+
+            mapEntityList.Sort((x, y) =>
+            {
+                return x.Name.CompareTo(y.Name);
+            });
         }
 
 

@@ -343,7 +343,7 @@ namespace Barotrauma
             bool broken = false;
             do
             {
-                Submarine.Loaded.Speed = Vector2.Zero;
+                Submarine.Loaded.Velocity = Vector2.Zero;
 
                 moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
                 Vector2 steeringDir = windows[0].Position - moloch.Position;

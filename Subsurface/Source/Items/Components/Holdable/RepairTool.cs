@@ -24,8 +24,8 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue(0.0f, false)]
         public float Range
         {
-            get { return ConvertUnits.ToDisplayUnits(range); }
-            set { range = ConvertUnits.ToSimUnits(value); }
+            get { return range; }
+            set { range = value; }
         }
 
         [HasDefaultValue(0.0f, false)]
@@ -61,8 +61,8 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("0.0,0.0", false)]
         public string BarrelPos
         {
-            get { return ToolBox.Vector2ToString(ConvertUnits.ToDisplayUnits(barrelPos)); }
-            set { barrelPos = ConvertUnits.ToSimUnits(ToolBox.ParseToVector2(value)); }
+            get { return ToolBox.Vector2ToString(barrelPos); }
+            set { barrelPos = ToolBox.ParseToVector2(value); }
         }
 
         public Vector2 TransformedBarrelPos
@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
                 Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
                 Vector2 flippedPos = barrelPos;
                 if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
-                return (Vector2.Transform(flippedPos, bodyTransform) + item.body.SimPosition);
+                return (Vector2.Transform(flippedPos, bodyTransform));
             }
         }
 
@@ -115,7 +115,6 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
 
-            Vector2 targetPosition = item.body.SimPosition;
             //targetPosition = targetPosition.X, -targetPosition.Y);
 
             float degreeOfSuccess = DegreeOfSuccess(character)/100.0f;
@@ -126,6 +125,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
+            Vector2 targetPosition = item.WorldPosition;
             targetPosition += new Vector2(
                 (float)Math.Cos(item.body.Rotation),
                 (float)Math.Sin(item.body.Rotation)) * range * item.body.Dir;
@@ -137,14 +137,18 @@ namespace Barotrauma.Items.Components
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
 
+            Vector2 rayStart = item.WorldPosition + TransformedBarrelPos;
+            Vector2 rayEnd = targetPosition;
 
+            Body targetBody = Submarine.PickBody(
+                ConvertUnits.ToSimUnits(rayStart - Submarine.Loaded.Position), 
+                ConvertUnits.ToSimUnits(rayEnd - Submarine.Loaded.Position), ignoredBodies);
 
-            Body targetBody = Submarine.PickBody(TransformedBarrelPos, targetPosition, ignoredBodies);
             pickedPosition = Submarine.LastPickedPosition;
 
             if (ExtinquishAmount > 0.0f)
             {
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(TransformedBarrelPos + (targetPosition-TransformedBarrelPos)*Submarine.LastPickedFraction*0.9f);
+                Vector2 displayPos = rayStart + (rayEnd-rayStart)*Submarine.LastPickedFraction*0.9f;
                 Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
                 if (hull != null) hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
             }
@@ -224,7 +228,7 @@ namespace Barotrauma.Items.Components
 
             if (!string.IsNullOrWhiteSpace(particles))
             {
-                GameMain.ParticleManager.CreateParticle(particles, ConvertUnits.ToDisplayUnits(TransformedBarrelPos), 
+                GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition+TransformedBarrelPos, 
                     -item.body.Rotation + ((item.body.Dir>0.0f) ? 0.0f : MathHelper.Pi), ParticleSpeed);
             }
             

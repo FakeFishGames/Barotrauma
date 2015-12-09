@@ -81,8 +81,12 @@ namespace Barotrauma.Items.Components
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
+            Vector2 drawPos = new Vector2(item.Rect.X, item.Rect.Y);
+            if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;
+            drawPos.Y = -drawPos.Y;
+
             barrelSprite.Draw(spriteBatch, 
-                new Vector2(item.Rect.X, -item.Rect.Y) + barrelPos, Color.White,
+                 drawPos + barrelPos, Color.White,
                 rotation + MathHelper.PiOver2, 1.0f, 
                 SpriteEffects.None, item.Sprite.Depth+0.01f);
         }

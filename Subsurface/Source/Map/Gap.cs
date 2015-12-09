@@ -229,7 +229,7 @@ namespace Barotrauma
                 {
                     pos.X += Math.Sign(flowForce.X);
                     pos.Y = MathHelper.Clamp((higherSurface+lowerSurface)/2.0f, rect.Y - rect.Height, rect.Y);
-
+                    
                     Vector2 velocity = new Vector2(
                         MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
                         flowForce.Y * Rand.Range(0.5f, 0.7f));

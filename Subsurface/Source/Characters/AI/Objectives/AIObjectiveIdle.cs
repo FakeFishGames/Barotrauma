@@ -89,8 +89,8 @@ namespace Barotrauma
 
                 foreach (WayPoint wp in WayPoint.WayPointList)
                 {
-                    if (wp.SpawnType != SpawnType.Human) continue;
-
+                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull==null) continue;
+                 
                     foreach (string tag in wp.IdCardTags)
                     {
                         if (idCard.HasTag(tag)) return wp.CurrentHull.AiTarget;

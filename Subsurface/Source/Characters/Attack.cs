@@ -109,7 +109,7 @@ namespace Barotrauma
                 sound = Sound.Load(soundPath);
             }
                       
-            Range = FarseerPhysics.ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "range", 0.0f));
+            Range = ToolBox.GetAttributeFloat(element, "range", 0.0f);
 
             Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
