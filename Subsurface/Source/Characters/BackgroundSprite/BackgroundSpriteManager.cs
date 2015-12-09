@@ -47,9 +47,10 @@ namespace Barotrauma
 
                 if (position == null)
                 {
-                    if (WayPoint.WayPointList.Count>0)
+                    var wayPoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine==null);
+                    if (wayPoints.Any())
                     {
-                        WayPoint wp = WayPoint.WayPointList[Rand.Int(WayPoint.WayPointList.Count)];
+                        WayPoint wp = wayPoints[Rand.Int(wayPoints.Count)];
 
                         pos = new Vector2(wp.Rect.X, wp.Rect.Y);
                         pos += Rand.Vector(200.0f);

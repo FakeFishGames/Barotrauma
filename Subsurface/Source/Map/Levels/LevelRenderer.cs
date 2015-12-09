@@ -35,18 +35,18 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            Vector2 pos = Vector2.Zero;// level.EndPosition;
+            Vector2 pos = new Vector2(0.0f, -level.StartPosition.Y);// level.EndPosition;
             //pos.Y = -pos.Y - level.Position.Y;
 
             if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y - 512) return;
 
-            pos.X = GameMain.GameScreen.Cam.WorldView.X - 512.0f;
+            pos.X = GameMain.GameScreen.Cam.WorldView.X -512.0f;
             //pos.X += Position.X % 512;
 
             int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 512.0f + 2.0f) * 512.0f);
 
             spriteBatch.Draw(shaftTexture,
-                new Rectangle((int)(MathUtils.Round(pos.X, 512.0f) - Submarine.Loaded.Position.X % 512), (int)pos.Y, width, 512),
+                new Rectangle((int)(MathUtils.Round(pos.X, 512.0f)), (int)pos.Y, width, 512),
                 new Rectangle(0, 0, width, 256),
                 Color.White, 0.0f,
                 Vector2.Zero,

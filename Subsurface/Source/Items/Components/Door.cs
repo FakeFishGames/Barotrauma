@@ -318,7 +318,7 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y);
-            if (item.Submarine != null) pos += item.Submarine.Position;
+            if (item.Submarine != null) pos += item.Submarine.DrawPosition;
             pos.Y = -pos.Y;
 
             spriteBatch.Draw(doorSprite.Texture, pos,

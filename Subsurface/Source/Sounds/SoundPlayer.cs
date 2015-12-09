@@ -201,7 +201,7 @@ namespace Barotrauma
             float movementFactor = 0.0f;
             if (Submarine.Loaded != null)
             {
-                movementFactor = (Submarine.Loaded.Speed == Vector2.Zero) ? 0.0f : Submarine.Loaded.Speed.Length() / 500.0f;
+                movementFactor = (Submarine.Loaded.Velocity == Vector2.Zero) ? 0.0f : Submarine.Loaded.Velocity.Length() / 5.0f;
 
                 movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
             }

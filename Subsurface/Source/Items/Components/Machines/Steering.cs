@@ -193,7 +193,7 @@ namespace Barotrauma.Items.Components
             {
                 float prediction = 5.0f;
 
-                Vector2 futurePosition = Submarine.Loaded.Speed * prediction;
+                Vector2 futurePosition = ConvertUnits.ToDisplayUnits(Submarine.Loaded.Velocity) * prediction;
                 Vector2 targetSpeed = ((steeringPath.CurrentNode.Position - Submarine.Loaded.Position) - futurePosition);
 
                 targetSpeed = Vector2.Normalize(targetSpeed);

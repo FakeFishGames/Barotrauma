@@ -9,6 +9,11 @@ namespace Barotrauma
             get;
         }
 
+        Vector2 WorldPosition
+        {
+            get;
+        }
+
         float Health
         {
             get;

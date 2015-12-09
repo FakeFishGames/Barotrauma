@@ -30,7 +30,7 @@ namespace Barotrauma
                 return;
             }
 
-            Hull cargoRoom = Hull.FindHull(wp.Position);
+            Hull cargoRoom = Hull.FindHull(wp.WorldPosition);
 
             if (cargoRoom == null)
             {

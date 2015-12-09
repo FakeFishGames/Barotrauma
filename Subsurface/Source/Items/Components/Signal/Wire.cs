@@ -41,11 +41,10 @@ namespace Barotrauma.Items.Components
         
         public override void Move(Vector2 amount)
         {
-            //amount = FarseerPhysics.ConvertUnits.ToDisplayUnits(amount);
-            //for (int i = 0; i<Nodes.Count; i++)
-            //{
-            //    Nodes[i] += amount;
-            //}
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                Nodes[i] += amount;
+            }
         }
 
         public Connection OtherConnection(Connection connection)
@@ -348,9 +347,11 @@ namespace Barotrauma.Items.Components
                     MapEntity.DisableSelect = true;
                     Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
 
-                    Vector2 pos = Nodes[(int)selectedNodeIndex];
+                    Vector2 nodeWorldPos = Nodes[(int)selectedNodeIndex];
 
-                    Nodes[(int)selectedNodeIndex] = RoundNode(Nodes[(int)selectedNodeIndex], Hull.FindHull(Nodes[(int)selectedNodeIndex]));
+                    if (item.Submarine != null) nodeWorldPos += item.Submarine.Position;
+
+                    Nodes[(int)selectedNodeIndex] = RoundNode(Nodes[(int)selectedNodeIndex], Hull.FindHull(nodeWorldPos));
                     MapEntity.SelectEntity(item);
                 }
             }
@@ -362,6 +363,12 @@ namespace Barotrauma.Items.Components
 
         private void DrawSection(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color)
         {
+            if (item.Submarine!=null)
+            {
+                start += item.Submarine.DrawPosition;
+                end += item.Submarine.DrawPosition;
+            }
+
             start.Y = -start.Y;
             end.Y = -end.Y;
 

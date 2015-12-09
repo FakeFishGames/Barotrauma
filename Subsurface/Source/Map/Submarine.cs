@@ -25,6 +25,10 @@ namespace Barotrauma
     {
         public static string SavePath = "Data" + System.IO.Path.DirectorySeparatorChar + "SavedSubs";
 
+        //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
+        //should be in an unreachable place
+        public static readonly Vector2 HiddenSubPosition = new Vector2(0.0f, 50000.0f);
+
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
@@ -97,7 +101,7 @@ namespace Barotrauma
         
         public override Vector2 Position
         {
-            get { return subBody.Position; }
+            get { return subBody.Position - HiddenSubPosition; }
         }
 
         public new Vector2 DrawPosition
@@ -106,13 +110,13 @@ namespace Barotrauma
             private set;
         }
 
-        public Vector2 Speed
+        public Vector2 Velocity
         {
-            get { return subBody==null ? Vector2.Zero : subBody.Speed; }
-            set 
+            get { return subBody==null ? Vector2.Zero : subBody.Velocity; }
+            set
             {
                 if (subBody == null) return;
-                subBody.Speed = value; 
+                subBody.Velocity = value;
             }
         }
 
@@ -185,10 +189,6 @@ namespace Barotrauma
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
 
-            if (Submarine.Loaded!=null)
-            {
-                Submarine.Loaded.DrawPosition = Physics.Interpolate(Submarine.Loaded.prevPosition, Submarine.Loaded.Position);
-            }
         
 
             if (loaded == null) return;
@@ -212,6 +212,11 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth >= 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
+        }
+
+        public void UpdateTransform()
+        {
+            DrawPosition = Physics.Interpolate(prevPosition, Position);            
         }
 
         //math/physics stuff ----------------------------------------------------
@@ -414,8 +419,8 @@ namespace Barotrauma
             message.Write(Position.X);
             message.Write(Position.Y);
 
-            message.Write(Speed.X);
-            message.Write(Speed.Y);
+            message.Write(Velocity.X);
+            message.Write(Velocity.Y);
 
             return true;
         }
@@ -446,7 +451,7 @@ namespace Barotrauma
             //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
 
             subBody.TargetPosition = newTargetPosition;
-            subBody.Speed = newSpeed;
+            subBody.Velocity = newSpeed;
 
             lastNetworkUpdate = sendingTime;
         }
@@ -611,6 +616,8 @@ namespace Barotrauma
             XDocument doc = OpenDoc(filePath);
             if (doc == null) return;
 
+            subBody = new SubmarineBody(this);
+
             foreach (XElement element in doc.Root.Elements())
             {
                 string typeName = element.Name.ToString();
@@ -643,7 +650,7 @@ namespace Barotrauma
 
             }
 
-            subBody = new SubmarineBody(this);            
+            subBody.SetPosition(HiddenSubPosition);
             
             loaded = this;
 
@@ -694,9 +701,9 @@ namespace Barotrauma
         {
             if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
-            subBody = null;
-
             Entity.RemoveAll();
+
+            subBody = null;
 
             PhysicsBody.list.Clear();
             

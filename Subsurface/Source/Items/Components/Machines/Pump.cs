@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
 
         private void GetHull()
         {
-            hull1 = Hull.FindHull(item.Position, item.CurrentHull);
+            hull1 = Hull.FindHull(item.WorldPosition, item.CurrentHull);
         }
         
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)

@@ -30,7 +30,6 @@ namespace Barotrauma.Lights
 
         private Dictionary<LightSource, CachedShadow> cachedShadows;
                 
-        private Vector2[] worldVertices;
         private Vector2[] vertices;
         private int primitiveCount;
 
@@ -75,7 +74,6 @@ namespace Barotrauma.Lights
             cachedShadows = new Dictionary<LightSource, CachedShadow>();
             
             vertices = points;
-            worldVertices = new Vector2[vertices.Length];
             primitiveCount = vertices.Length;
 
             CalculateDimensions();
@@ -115,7 +113,6 @@ namespace Barotrauma.Lights
             for (int i = 0; i < vertices.Count(); i++)
             {
                 vertices[i] += amount;
-                worldVertices[i] += amount;
             }
 
             CalculateDimensions();
@@ -125,26 +122,17 @@ namespace Barotrauma.Lights
         {
             cachedShadows.Clear();
 
-            worldVertices = points;
             vertices = points;
         }
 
         private void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
         {
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                worldVertices[i] = vertices[i];
-                if (parentEntity != null && parentEntity.Submarine != null)
-                {
-                    worldVertices[i] += parentEntity.Submarine.Position;
-                }
-            }
             //compute facing of each edge, using N*L
             for (int i = 0; i < primitiveCount; i++)
             {
-                Vector2 firstVertex = new Vector2(worldVertices[i].X, worldVertices[i].Y);
+                Vector2 firstVertex = new Vector2(vertices[i].X, vertices[i].Y);
                 int secondIndex = (i + 1) % primitiveCount;
-                Vector2 secondVertex = new Vector2(worldVertices[secondIndex].X, worldVertices[secondIndex].Y);
+                Vector2 secondVertex = new Vector2(vertices[secondIndex].X, vertices[secondIndex].Y);
                 Vector2 middle = (firstVertex + secondVertex) / 2;
 
                 Vector2 L = lightSourcePos - middle;
@@ -187,7 +175,7 @@ namespace Barotrauma.Lights
             int svCount = 0;
             while (svCount != shadowVertexCount * 2)
             {
-                Vector3 vertexPos = new Vector3(worldVertices[currentIndex], 0.0f);
+                Vector3 vertexPos = new Vector3(vertices[currentIndex], 0.0f);
 
                 //one vertex on the hull
                 shadowVertices[svCount] = new VertexPositionColor();
@@ -217,7 +205,7 @@ namespace Barotrauma.Lights
 
             for (int n = 0; n < 4; n += 3)
             {
-                Vector3 penumbraStart = new Vector3((n == 0) ? worldVertices[startingIndex] : worldVertices[endingIndex], 0.0f);
+                Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex] : vertices[endingIndex], 0.0f);
 
                 penumbraVertices[n] = new VertexPositionTexture();
                 penumbraVertices[n].Position = penumbraStart;
@@ -293,6 +281,8 @@ namespace Barotrauma.Lights
         {
             if (!Enabled) return;
 
+            if (parentEntity != null && parentEntity.Submarine != null) lightSourcePos -= parentEntity.Submarine.Position;
+
             CalculateShadowVertices(lightSourcePos, los);
 
             DrawShadows(graphicsDevice, cam, transform, los);
@@ -300,7 +290,15 @@ namespace Barotrauma.Lights
 
         private void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Matrix transform, bool los = true)
         {
-            shadowEffect.World = transform;
+
+            Vector3 offset = Vector3.Zero;
+                if (parentEntity != null && parentEntity.Submarine != null)
+                {
+                    offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
+                }
+            
+
+            shadowEffect.World = Matrix.CreateTranslation(offset) * transform;
             shadowEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertices.Length - 2);

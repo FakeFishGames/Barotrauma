@@ -292,16 +292,16 @@ namespace Barotrauma
             Color color = (isHighlighted) ? Color.Green : Color.White;
             if (isSelected && editing) color = Color.Red;
 
-            Vector2 drawPos = Submarine == null ? new Vector2(rect.X, -rect.Y) : new Vector2(rect.X + Submarine.DrawPosition.X, -(rect.Y + Submarine.DrawPosition.Y));
-
-            prefab.sprite.DrawTiled(spriteBatch, drawPos, new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
+            Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
+            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
             
             foreach (WallSection s in sections)
             {
+
                 if (s.isHighLighted)
                 {
                     GUI.DrawRectangle(spriteBatch,
-                        drawPos, new Vector2(rect.Width, rect.Height),
+                        new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
                         new Color((s.damage / prefab.MaxHealth), 1.0f - (s.damage / prefab.MaxHealth), 0.0f, 1.0f), true);
                 }
 
@@ -310,7 +310,7 @@ namespace Barotrauma
                 if (s.damage < 0.01f) continue;
                 
                 GUI.DrawRectangle(spriteBatch,
-                    drawPos, new Vector2(rect.Width, rect.Height),
+                    new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
                     Color.Black * (s.damage / prefab.MaxHealth), true); 
             }
             
@@ -413,13 +413,17 @@ namespace Barotrauma
             return sections[sectionIndex].damage;
         }
 
-        public Vector2 SectionPosition(int sectionIndex)
+        public Vector2 SectionPosition(int sectionIndex, bool world = false)
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return Vector2.Zero;
 
-            return new Vector2(
+            Vector2 sectionPos = new Vector2(
                 sections[sectionIndex].rect.X + sections[sectionIndex].rect.Width / 2.0f,
                 sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
+
+            if (world && Submarine != null) sectionPos += Submarine.Position;
+
+            return sectionPos;
         }
 
         public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
@@ -427,7 +431,10 @@ namespace Barotrauma
             if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return new AttackResult(0.0f, 0.0f);
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
-            int i = FindSectionIndex(ConvertUnits.ToDisplayUnits(position));
+            Vector2 transformedPos = ConvertUnits.ToDisplayUnits(position);
+            if (Submarine != null) transformedPos -= Submarine.Position;
+
+            int i = FindSectionIndex(transformedPos);
             if (i == -1) return new AttackResult(0.0f, 0.0f);
             
             GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
