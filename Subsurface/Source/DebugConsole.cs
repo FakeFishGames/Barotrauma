@@ -287,6 +287,9 @@ namespace Barotrauma
                     commands[1] = commands[1].ToLower();
                     Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLower() == commands[1]);
                     break;
+                case "godmode":
+                    Submarine.Loaded.GodMode = !Submarine.Loaded.GodMode;
+                    break;
                 case "heal":
                     if (Character.Controlled != null)
                     {

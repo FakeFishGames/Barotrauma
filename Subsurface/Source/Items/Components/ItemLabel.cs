@@ -61,6 +61,7 @@ namespace Barotrauma.Items.Components
         {
             base.Draw(spriteBatch, editing);
 
+            textBlock.Rect = new Rectangle(item.WorldRect.X, -(item.WorldRect.Y - item.Rect.Height/2), item.Rect.Width, item.Rect.Height);
             textBlock.Draw(spriteBatch);
         }
     }

@@ -314,7 +314,11 @@ namespace Barotrauma.Items.Components
 
             for (int i = 1; i < Nodes.Count; i++)
             {
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 3, (int)-Nodes[i].Y - 3, 6, 6), Color.Red, true, 0.0f);
+                Vector2 worldPos = Nodes[i];
+                if (item.Submarine != null) worldPos += item.Submarine.Position;
+                worldPos.Y = -worldPos.Y;
+
+                GUI.DrawRectangle(spriteBatch, worldPos+new Vector2(-3,3), new Vector2(6, 6), Color.Red, true, 0.0f);
 
                 if (GUIComponent.MouseOn != null ||
                     Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) > 10.0f)
@@ -322,7 +326,7 @@ namespace Barotrauma.Items.Components
                     continue;
                 }
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)Nodes[i].X - 10, (int)-Nodes[i].Y - 10, 20, 20), Color.Red, false, 0.0f);
+                GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-10, 10), new Vector2(20, 20), Color.Red, false, 0.0f);
 
                 if (selectedNodeIndex == null && !MapEntity.SelectedAny)
                 {

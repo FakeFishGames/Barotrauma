@@ -448,7 +448,7 @@ namespace Barotrauma
                 }
             }
 
-            AnimController.FindHull(null, false);
+            AnimController.FindHull(null);
             if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;
 
             CharacterList.Add(this);
@@ -741,7 +741,7 @@ namespace Barotrauma
         {
             Limb head = AnimController.GetLimb(LimbType.Head);
 
-            Lights.LightManager.ViewPos = WorldPosition;
+            Lights.LightManager.ViewPos = DrawPosition;
 
             if (!DisableControls)
             {
@@ -1010,7 +1010,7 @@ namespace Barotrauma
                 AnimController.DebugDraw(spriteBatch);
             }
 
-            Vector2 healthBarPos = new Vector2(WorldPosition.X - 50, -WorldPosition.Y - 100.0f);
+            Vector2 healthBarPos = new Vector2(DrawPosition.X - 50, -DrawPosition.Y - 100.0f);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f * (health / maxHealth)), 15), Color.Red, true);
         }
@@ -1028,17 +1028,16 @@ namespace Barotrauma
                 if (soundStates[i] != state) continue;
                 if (n == selectedSound && sounds[i]!=null)
                 {
-                    sounds[i].Play(1.0f, 2000.0f,
-                            AnimController.Limbs[0].body.FarseerBody);
+                    sounds[i].Play(1.0f, 2000.0f, AnimController.Limbs[0].WorldPosition);
                     return;
                 }
                 n++;
             }
         }
 
-        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 simPosition, Attack attack, float deltaTime, bool playSound = false)
+        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            return AddDamage(simPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
+            return AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
         }
 
         public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
@@ -1103,7 +1102,7 @@ namespace Barotrauma
                // limb.Damage = 100.0f;
             }
 
-            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body.FarseerBody);
+            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body);
             
             for (int i = 0; i < 10; i++)
             {

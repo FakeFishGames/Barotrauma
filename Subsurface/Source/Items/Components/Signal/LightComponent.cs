@@ -98,6 +98,10 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
+            if (item.CurrentHull != null)
+            {
+                //light.Submarine = item.CurrentHull.Submarine;
+            }
             
             if (item.container != null)
             {
@@ -107,7 +111,7 @@ namespace Barotrauma.Items.Components
 
             if (item.body != null)
             {
-                light.Position = ConvertUnits.ToDisplayUnits(item.body.SimPosition);
+                light.Position = item.WorldPosition;
             }
             
             if (powerConsumption == 0.0f)
@@ -121,7 +125,7 @@ namespace Barotrauma.Items.Components
 
             if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
             {
-                if (voltage > 0.1f) sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 400.0f, item.Position);
+                if (voltage > 0.1f) sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 400.0f, item.WorldPosition);
                 lightBrightness = 0.0f;
             }
             else

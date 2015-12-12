@@ -84,18 +84,20 @@ namespace Barotrauma
         {
             if (!editing && !GameMain.DebugDraw) return;
 
-            Point pos = new Point((int)Position.X, (int)Position.Y);
+            Rectangle drawRect =
+                Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+
 
             Color clr = (isSelected) ? Color.Red : Color.LightGreen;
-            GUI.DrawRectangle(spriteBatch, new Rectangle(pos.X - rect.Width / 2, -pos.Y - rect.Height / 2, rect.Width, rect.Height), clr, true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height), clr, true);
             
             //spriteBatch.DrawString(GUI.SmallFont, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
 
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(pos.X, -pos.Y),
-                    new Vector2(e.Position.X + e.Rect.Width / 2, -e.Position.Y + e.Rect.Height / 2),
+                    new Vector2(drawRect.X, -drawRect.Y),
+                    new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
                     Color.Green);
             }
         }

@@ -236,6 +236,8 @@ namespace Barotrauma.Items.Components
 
             AnimController ac = picker.AnimController;
 
+            item.Submarine = picker.Submarine;
+
             //item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;            
 
             ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);

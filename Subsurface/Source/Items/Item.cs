@@ -549,7 +549,7 @@ namespace Barotrauma
                 {
                     ic.Update(deltaTime, cam);
                     
-                    ic.PlaySound(ActionType.OnActive, Position);
+                    ic.PlaySound(ActionType.OnActive, WorldPosition);
                     //ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                    
                 }
                 else
@@ -605,7 +605,7 @@ namespace Barotrauma
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical)
                     {
 
-                        prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X+rect.Width/2, -DrawPosition.Y-rect.Height/2), new Vector2(rect.Width, rect.Height), color);
+                        prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X-rect.Width/2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), color);
                     }
                     else
                     {
@@ -645,13 +645,18 @@ namespace Barotrauma
                 return;
             }
 
-            GUI.DrawRectangle(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), Color.Green);
+            GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green);
 
             foreach (Rectangle t in prefab.Triggers)
             {
                 Rectangle transformedTrigger = TransformTrigger(t);
+
+                Vector2 rectWorldPos = new Vector2(transformedTrigger.X, transformedTrigger.Y);
+                if (Submarine!=null) rectWorldPos += Submarine.Position;
+                rectWorldPos.Y = -rectWorldPos.Y;
+
                 GUI.DrawRectangle(spriteBatch, 
-                    new Vector2(transformedTrigger.X, -transformedTrigger.Y),
+                    rectWorldPos,
                     new Vector2(transformedTrigger.Width, transformedTrigger.Height), 
                     Color.Green);
             }
@@ -659,8 +664,8 @@ namespace Barotrauma
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(rect.X + rect.Width / 2, -rect.Y + rect.Height / 2),
-                    new Vector2(e.Rect.X + e.Rect.Width / 2, -e.Rect.Y + e.Rect.Height / 2),
+                    new Vector2(WorldPosition.X, -WorldPosition.Y),
+                     new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
                     Color.Red*0.3f);
             }
         }
@@ -1002,7 +1007,7 @@ namespace Barotrauma
                 {
                     ic.WasUsed = true;
 
-                    ic.PlaySound(ActionType.OnUse, body==null ? Position : ConvertUnits.ToDisplayUnits(body.SimPosition));
+                    ic.PlaySound(ActionType.OnUse, WorldPosition);
     
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
 

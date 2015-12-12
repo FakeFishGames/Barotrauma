@@ -101,7 +101,7 @@ namespace Barotrauma.Lights
         {
             Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
             float scale = range / (lightTexture.Width / 2.0f);
-            spriteBatch.Draw(lightTexture, new Vector2(Position.X, -Position.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
+            spriteBatch.Draw(lightTexture, new Vector2(WorldPosition.X, -WorldPosition.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
         }
 
         public void Remove()

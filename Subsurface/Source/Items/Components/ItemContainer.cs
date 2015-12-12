@@ -163,7 +163,7 @@ namespace Barotrauma.Items.Components
             if (item.body == null)
             {
                 transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
-                if (item.Submarine != null) transformedItemPos += item.Submarine.Position;
+                if (item.Submarine != null) transformedItemPos += item.Submarine.DrawPosition;
                 transformedItemPos = transformedItemPos + itemPos;
             }
             else

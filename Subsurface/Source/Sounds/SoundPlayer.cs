@@ -76,9 +76,7 @@ namespace Barotrauma
             startDrone = Sound.Load("Content/Sounds/startDrone.ogg", false);
             startDrone.Play();
 
-
             yield return CoroutineStatus.Running;
-
 
             waterAmbiences[0] = Sound.Load("Content/Sounds/Water/WaterAmbience1.ogg", false);
             yield return CoroutineStatus.Running;
@@ -276,9 +274,9 @@ namespace Barotrauma
             }
         }
 
-        public static void PlayDamageSound(DamageSoundType damageType, float damage, Body body)
+        public static void PlayDamageSound(DamageSoundType damageType, float damage, PhysicsBody body)
         {
-            Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
+            Vector2 bodyPosition = body.DrawPosition;
             bodyPosition.Y = -bodyPosition.Y;
 
             PlayDamageSound(damageType, damage, bodyPosition);

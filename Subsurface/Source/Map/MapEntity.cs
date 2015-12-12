@@ -154,7 +154,7 @@ namespace Barotrauma
 
         public virtual bool Contains(Vector2 position)
         {
-            return (Submarine.RectContains(rect, position));
+            return (Submarine.RectContains(WorldRect, position));
         }
         
         protected void InsertToList()
