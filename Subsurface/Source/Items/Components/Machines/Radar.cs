@@ -50,6 +50,8 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            currPowerConsumption = powerConsumption;
+
             base.Update(deltaTime, cam);
 
             for (int i = radarBlips.Count - 1; i >= 0; i-- )
@@ -71,6 +73,8 @@ namespace Barotrauma.Items.Components
             {
                 pingState = 0.0f;
             }
+
+            voltage = 0.0f;
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -262,7 +266,6 @@ namespace Barotrauma.Items.Components
                 prevPos = pos;
             }
 
-            voltage = 0.0f;
         }
 
         private void DrawBlip(SpriteBatch spriteBatch, RadarBlip blip, Vector2 center, Color color, float radius)

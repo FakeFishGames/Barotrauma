@@ -54,7 +54,7 @@ namespace Barotrauma
 
             if (character.ClosestCharacter != null && (character.ClosestCharacter.IsDead || character.ClosestCharacter.Stun > 0.0f))
             {
-                Vector2 startPos = character.Position + (character.ClosestCharacter.Position - character.Position) * 0.7f;
+                Vector2 startPos = character.Position + (character.ClosestCharacter.WorldPosition - character.WorldPosition) * 0.7f;
                 startPos = cam.WorldToScreen(startPos);
 
                 Vector2 textPos = startPos;

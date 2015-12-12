@@ -153,7 +153,7 @@ namespace Barotrauma.Items.Components
 
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
-            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y)), -rotation);
+            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y)), -rotation);
 
             projectiles[0].Use(deltaTime);
             if (projectile.container != null) projectile.container.RemoveContained(projectile);
@@ -301,7 +301,7 @@ namespace Barotrauma.Items.Components
                 case "position_in":
                     Vector2 receivedPos = ToolBox.ParseToVector2(signal, false);
 
-                    Vector2 centerPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
+                    Vector2 centerPos = new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y);
 
                     Vector2 offset = receivedPos - centerPos;
                     offset.Y = -offset.Y;

@@ -64,6 +64,8 @@ namespace Barotrauma
                         
         public EnemyAIController(Character c, string file) : base(c)
         {
+            if (GameMain.Client != null && GameMain.Server == null) c.Enabled = false;
+
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
 
             XDocument doc = ToolBox.TryLoadXml(file);
