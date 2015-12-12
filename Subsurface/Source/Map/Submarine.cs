@@ -110,6 +110,14 @@ namespace Barotrauma
             private set;
         }
 
+        public override Vector2 SimPosition
+        {
+            get
+            {
+                return ConvertUnits.ToSimUnits(Position);
+            }
+        }
+
         public Vector2 Velocity
         {
             get { return subBody==null ? Vector2.Zero : subBody.Velocity; }

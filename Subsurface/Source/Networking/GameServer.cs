@@ -1223,8 +1223,8 @@ namespace Barotrauma.Networking
 
             message.Write((byte)character.Info.HeadSpriteId);
 
-            message.Write(character.SimPosition.X);
-            message.Write(character.SimPosition.Y);
+            message.Write(character.WorldPosition.X);
+            message.Write(character.WorldPosition.Y);
 
             message.Write(character.Info.Job.Name);
         }

@@ -402,7 +402,7 @@ namespace Barotrauma
                     }
 
                     var ragdoll = limb.character.AnimController;
-                    ragdoll.FindHull();                    
+                    ragdoll.FindHull();
               
                     return false;
 

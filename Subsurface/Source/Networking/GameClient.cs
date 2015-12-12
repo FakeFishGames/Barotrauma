@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Barotrauma.Networking.ReliableMessages;
+using FarseerPhysics;
 
 namespace Barotrauma.Networking
 {
@@ -356,7 +357,7 @@ namespace Barotrauma.Networking
                 if (myCharacter.IsDead)
                 {
                     Character.Controlled = null;
-                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
                 }
                 else if (gameStarted)
                 {
@@ -742,7 +743,7 @@ namespace Barotrauma.Networking
             float closestDist = 0.0f;
             foreach (WayPoint wp in WayPoint.WayPointList)
             {
-                float dist = Vector2.Distance(wp.SimPosition, position);
+                float dist = Vector2.Distance(wp.WorldPosition, position);
                 if (closestWaypoint != null && dist > closestDist) continue;
                 
                 closestWaypoint = wp;
@@ -750,9 +751,7 @@ namespace Barotrauma.Networking
                 continue;                
             }
 
-            Character character = (closestWaypoint == null) ?
-                Character.Create(ch, position, !isMyCharacter) :
-                Character.Create(ch, closestWaypoint, !isMyCharacter);
+            Character character = Character.Create(ch, position, !isMyCharacter);
 
             character.ID = ID;
             

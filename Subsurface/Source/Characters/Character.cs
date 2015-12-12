@@ -988,7 +988,7 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
-            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
+            Vector2 pos = AnimController.Limbs[0].WorldPosition;
             pos.Y = -pos.Y;
             
             if (this == controlled) return;
@@ -1335,10 +1335,10 @@ namespace Barotrauma
                         message.Write(AnimController.Dir > 0.0f);
                     }
 
-                    if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return true;
+                    if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return true;
                     
-                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    message.Write(AnimController.RefLimb.SimPosition.X);
+                    message.Write(AnimController.RefLimb.SimPosition.Y);
 
                     return true;
                 default:
@@ -1505,8 +1505,8 @@ namespace Barotrauma
                     }
                     try
                     {
-                        pos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                        pos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        pos.X = message.ReadFloat();
+                        pos.Y = message.ReadFloat();
                     }
 
                     catch
