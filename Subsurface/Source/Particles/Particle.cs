@@ -74,6 +74,7 @@ namespace Barotrauma.Particles
             spriteIndex = Rand.Int(prefab.Sprites.Count);
 
             currentHull = Hull.FindHull(position, hullGuess);
+            if (currentHull != null && currentHull.Submarine != null) speed += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
             //if (currentHull == null) position = Submarine.Loaded == null ? position : position + Submarine.Loaded.Position;
 
             this.position = position;

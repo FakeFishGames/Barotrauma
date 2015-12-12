@@ -101,7 +101,7 @@ namespace Barotrauma
         
         public override Vector2 Position
         {
-            get { return subBody.Position - HiddenSubPosition; }
+            get { return subBody==null ? Vector2.Zero : subBody.Position - HiddenSubPosition; }
         }
 
         public new Vector2 DrawPosition
@@ -616,7 +616,6 @@ namespace Barotrauma
             XDocument doc = OpenDoc(filePath);
             if (doc == null) return;
 
-            subBody = new SubmarineBody(this);
 
             foreach (XElement element in doc.Root.Elements())
             {
@@ -650,6 +649,7 @@ namespace Barotrauma
 
             }
 
+            subBody = new SubmarineBody(this);
             subBody.SetPosition(HiddenSubPosition);
             
             loaded = this;

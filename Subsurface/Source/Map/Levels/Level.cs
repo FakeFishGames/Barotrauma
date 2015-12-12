@@ -6,6 +6,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Voronoi2;
@@ -324,7 +325,12 @@ namespace Barotrauma
                     wrappingWalls[side, i] = new WrappingWall(pathCells, cells, borders.Height * 0.5f,
                         (side == 0 ? -1 : 1) * (i == 0 ? 1 : 2));
 
-                    wrappingWalls[side, i].Vertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>());
+                    wrappingWalls[side, i].Vertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>(), false);
+                    //wrappingWalls[side, i].Cells[0].edges[1].isSolid = false;
+                    //wrappingWalls[side, i].Cells[0].edges[3].isSolid = false;
+
+                    //wrappingWalls[side, i].Cells[wrappingWalls[side, i].Cells.Count-1].edges[1].isSolid = false;
+                    //wrappingWalls[side, i].Cells[wrappingWalls[side, i].Cells.Count - 1].edges[3].isSolid = false;
                 }
 
             }
@@ -616,7 +622,7 @@ namespace Barotrauma
         }
 
 
-        private VertexPositionTexture[] GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells)
+        private VertexPositionTexture[] GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells, bool setSolid=true)
         {
             List<VertexPositionTexture> verticeList = new List<VertexPositionTexture>();
             //bodies = new List<Body>();
@@ -639,7 +645,7 @@ namespace Barotrauma
                     VoronoiCell adjacentCell = ge.AdjacentCell(cell);
                     if (adjacentCell!=null && cells.Contains(adjacentCell)) continue;
 
-                    ge.isSolid = true;
+                    if (setSolid) ge.isSolid = true;
 
                     if (!bodyPoints.Contains(ge.point1)) bodyPoints.Add(ge.point1);
                     if (!bodyPoints.Contains(ge.point2)) bodyPoints.Add(ge.point2);
@@ -651,15 +657,14 @@ namespace Barotrauma
                     continue;
                 }
 
-                var triangles = MathUtils.TriangulateConvexHull(tempVertices, cell.Center);
-                for (int i = 0; i < triangles.Count; i++)
-                {
-                    foreach (Vector2 vertex in triangles[i])
-                    {
-                        verticeList.Add(new VertexPositionTexture(new Vector3(vertex, 0.0f), vertex/1000.0f));
-                    }
-                }
-
+                //var triangles = MathUtils.TriangulateConvexHull(tempVertices, cell.Center);
+                //for (int i = 0; i < triangles.Count; i++)
+                //{
+                //    foreach (Vector2 vertex in triangles[i])
+                //    {
+                //        verticeList.Add(new VertexPositionTexture(new Vector3(vertex, 0.0f), vertex/1000.0f));
+                //    }
+                //}
 
                 if (bodyPoints.Count < 2) continue;
 
@@ -679,7 +684,7 @@ namespace Barotrauma
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
 
-                triangles = MathUtils.TriangulateConvexHull(bodyPoints, cell.Center);
+                var triangles = MathUtils.TriangulateConvexHull(bodyPoints, cell.Center);
 
                 Body edgeBody = new Body(GameMain.World);
 
@@ -701,7 +706,150 @@ namespace Barotrauma
                 bodies.Add(edgeBody);
             }
 
+
+            verticeList = GenerateWallShapes(cells);
+
             return verticeList.ToArray();
+        }
+
+        private List<VertexPositionTexture> GenerateWallShapes(List<VoronoiCell> cells)
+        {
+            float wallThickness = 500.0f;
+
+            List<VertexPositionTexture> verticeList = new List<VertexPositionTexture>();
+
+            foreach (VoronoiCell cell in cells)
+            {
+                if (cell.body == null) continue;
+                foreach (GraphEdge edge in cell.edges)
+                {
+                    if (edge.cell1 != null && edge.cell1.body == null) edge.cell1 = null;
+                    if (edge.cell2 != null && edge.cell2.body == null) edge.cell2 = null;
+
+                    //CompareCCW compare = new CompareCCW(cell.Center);
+                    //if (compare.Compare(edge.point1, edge.point2) == -1)
+                    //{
+                    //    var temp = edge.point1;
+                    //    edge.point1 = edge.point2;
+                    //    edge.point2 = temp;
+                    //}
+                }
+            }
+
+            foreach (VoronoiCell cell in cells)
+            {
+                if (cell.body == null) continue;
+                foreach (GraphEdge edge in cell.edges)
+                {
+                    if (!edge.isSolid) continue;
+
+                    GraphEdge leftEdge = null, rightEdge = null;
+
+                    foreach (GraphEdge edge2 in cell.edges)
+                    {
+                        if (edge == edge2) continue;
+                        if (edge.point1 == edge2.point1 || 
+                            edge.point1 == edge2.point2)
+                        {
+                            leftEdge = edge2;
+                        }
+                        else if(edge.point2 == edge2.point2 ||  edge.point2 == edge2.point1)
+                        {
+                            rightEdge = edge2;
+                        }
+                    }
+
+                    Vector2 leftNormal = Vector2.Zero, rightNormal = Vector2.Zero;
+
+                    if (leftEdge == null)
+                    {
+                        leftNormal = GetEdgeNormal(edge, cell);
+                    }
+                    else
+                    {
+                        leftNormal = (leftEdge.isSolid) ? 
+                            Vector2.Normalize(GetEdgeNormal(leftEdge) + GetEdgeNormal(edge, cell)) : 
+                            Vector2.Normalize(leftEdge.Center - edge.point1);
+                    }
+
+
+                    if (rightEdge == null)
+                    {
+                        rightNormal = GetEdgeNormal(edge, cell);
+                    }
+                    else
+                    {
+                        rightNormal = (rightEdge.isSolid) ?
+                            Vector2.Normalize(GetEdgeNormal(rightEdge) + GetEdgeNormal(edge, cell)) :
+                            Vector2.Normalize(rightEdge.Center - edge.point2);
+                    }
+                    for (int i = 0; i < 2; i++)
+                    {
+                        Vector2[] verts = new Vector2[3];
+                        VertexPositionTexture[] vertPos = new VertexPositionTexture[3];
+
+                        
+                        if (i==0)
+                        {
+                            verts[0] = edge.point1;
+                            verts[1] = edge.point2;
+                            verts[2] = edge.point1 + leftNormal * wallThickness;
+
+                            vertPos[0] = new VertexPositionTexture(new Vector3(verts[0], 0.0f), Vector2.Zero);
+                            vertPos[1] = new VertexPositionTexture(new Vector3(verts[1], 0.0f), Vector2.UnitX);
+                            vertPos[2] = new VertexPositionTexture(new Vector3(verts[2], 0.0f), new Vector2(0, 0.5f));
+                        }
+                        else
+                        {
+                            verts[0] = edge.point1 + leftNormal * wallThickness;
+                            verts[1] = edge.point2;
+                            verts[2] = edge.point2 + rightNormal * wallThickness;
+
+                            vertPos[0] = new VertexPositionTexture(new Vector3(verts[0], 0.0f), new Vector2(0.0f, 0.5f));
+                            vertPos[1] = new VertexPositionTexture(new Vector3(verts[1], 0.0f), Vector2.UnitX);
+                            vertPos[2] = new VertexPositionTexture(new Vector3(verts[2], 0.0f), new Vector2(1.0f, 0.5f));
+                        }
+                        
+                        var comparer = new CompareCCW((verts[0] + verts[1] + verts[2]) / 3.0f);
+                        Array.Sort(verts, vertPos, comparer);
+
+                        for (int j = 0; j<3; j++)
+                        {
+                            verticeList.Add(vertPos[j]);
+                        }
+                    }
+                }
+            }
+
+            return verticeList;
+        }
+
+        private Vector2 GetEdgeNormal(GraphEdge edge, VoronoiCell cell = null)
+        {
+            if (cell == null) cell = edge.AdjacentCell(null);
+            if (cell == null) return Vector2.UnitX;
+
+            CompareCCW compare = new CompareCCW(cell.Center);
+            if (compare.Compare(edge.point1, edge.point2) == -1)
+            {
+                var temp = edge.point1;
+                edge.point1 = edge.point2;
+                edge.point2 = temp;
+            }
+
+            Vector2 normal = Vector2.Zero;
+
+            normal = Vector2.Normalize(edge.point2 - edge.point1);
+            Vector2 diffToCell = Vector2.Normalize(cell.Center - edge.point2);
+
+            normal = new Vector2(-normal.Y, normal.X);
+
+            if (Vector2.Dot(normal, diffToCell) < 0)
+            {
+                normal = -normal;
+            }
+            
+            return normal;            
         }
 
         //public void SetPosition(Vector2 pos)

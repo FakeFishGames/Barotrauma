@@ -192,6 +192,7 @@ namespace Barotrauma
                 raycastTimer = RaycastInterval;
             }
 
+            steeringManager.SteeringAvoid(deltaTime, 1.0f);
             steeringManager.SteeringSeek(attackSimPosition);
             
             //check if any of the limbs is close enough to attack the target
@@ -322,7 +323,7 @@ namespace Barotrauma
                         attackTimer += deltaTime;
                         limb.body.ApplyTorque(limb.Mass * 50.0f * Character.AnimController.Dir * dir);
 
-                        limb.attack.DoDamage(Character, damageTarget, limb.SimPosition, deltaTime, (limb.soundTimer <= 0.0f));
+                        limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, deltaTime, (limb.soundTimer <= 0.0f));
 
                         limb.soundTimer = Limb.SoundInterval;
                     }

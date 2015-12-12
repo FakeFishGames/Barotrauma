@@ -225,7 +225,7 @@ namespace Barotrauma
 
             if (body.LinearVelocity.LengthSquared() > 0.000001f)
             {
-                float dragCoefficient = 0.00001f;
+                float dragCoefficient = 0.01f;
 
                 float speedLength = (body.LinearVelocity == Vector2.Zero) ? 0.0f : body.LinearVelocity.Length();
                 float drag = speedLength * speedLength * dragCoefficient * mass;
@@ -259,9 +259,9 @@ namespace Barotrauma
             float neutralPercentage = 0.07f;
 
             float buoyancy = Math.Max(neutralPercentage - waterPercentage, -neutralPercentage*2.0f);
-            buoyancy *= mass * 30.0f;
+            buoyancy *= mass;
 
-            return new Vector2(0.0f, buoyancy);
+            return new Vector2(0.0f, buoyancy*10.0f);
         }
 
         public void ApplyForce(Vector2 force)
@@ -417,6 +417,7 @@ namespace Barotrauma
 
             Vector2 lastContactPoint = worldPoints[0];
 
+            normal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(body.Position) - cell.Center);
 
             float impact = Vector2.Dot(Velocity, -normal);
 

@@ -128,7 +128,7 @@ namespace Barotrauma.Lights
 
                 //draw the light shape
                 //where Alpha is 0, nothing will be written
-                spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, Matrix.CreateTranslation(new Vector3(Submarine.Loaded.DrawPosition.X, -Submarine.Loaded.DrawPosition.Y, 0.0f)) * cam.Transform);
+                spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
                 light.Draw(spriteBatch);
                 spriteBatch.End();
             }

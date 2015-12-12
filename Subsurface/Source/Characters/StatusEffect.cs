@@ -215,7 +215,7 @@ namespace Barotrauma
             if (explosion != null) explosion.Explode(entity.WorldPosition);
             if (Fire) new FireSource(ConvertUnits.ToDisplayUnits(entity.SimPosition));            
 
-            if (sound != null) sound.Play(1.0f, 1000.0f, ConvertUnits.ToDisplayUnits(entity.SimPosition));
+            if (sound != null) sound.Play(1.0f, 1000.0f, entity.WorldPosition);
 
             for (int i = 0; i < propertyNames.Count(); i++)
             {

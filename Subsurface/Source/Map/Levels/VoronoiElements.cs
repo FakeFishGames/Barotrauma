@@ -180,6 +180,11 @@ namespace Voronoi2
 
         public bool isSolid;
 
+        public Vector2 Center
+        {
+            get { return (point1 + point2) / 2.0f; }
+        }
+
         public VoronoiCell AdjacentCell(VoronoiCell cell)
         {
             if (cell1==cell)

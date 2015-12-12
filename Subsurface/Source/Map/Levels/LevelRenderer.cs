@@ -27,7 +27,7 @@ namespace Barotrauma
                 basicEffect.VertexColorEnabled = false;
 
                 basicEffect.TextureEnabled = true;
-                basicEffect.Texture = TextureLoader.FromFile("Content/Map/iceSurface.png");
+                basicEffect.Texture = TextureLoader.FromFile("Content/Map/iceWall.png");
             }
 
             this.level = level;
@@ -73,12 +73,12 @@ namespace Barotrauma
             {
                 for (int i = 0; i < 2; i++)
                 {
-                    basicEffect.World = Matrix.CreateTranslation(
-                        new Vector3(-Submarine.Loaded.Position + level.WrappingWalls[side, i].Offset, 0.0f)) * 
-                        cam.ShaderTransform *
-                        Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+            //        basicEffect.World = Matrix.CreateTranslation(
+            //            new Vector3(-Submarine.Loaded.Position + level.WrappingWalls[side, i].Offset, 0.0f)) * 
+            //            cam.ShaderTransform *
+            //            Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-                    basicEffect.CurrentTechnique.Passes[0].Apply();
+            //        basicEffect.CurrentTechnique.Passes[0].Apply();
 
                     graphicsDevice.DrawUserPrimitives(
                         PrimitiveType.TriangleList,

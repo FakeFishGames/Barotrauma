@@ -262,7 +262,7 @@ namespace Barotrauma.Items.Components
                         if (Math.Sign(l.SimPosition.X - item.SimPosition.X) != dir)
                         {
                             l.body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X*1.2f, item.SimPosition.Y), l.body.Rotation);
-                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, l.body.FarseerBody);
+                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, l.body);
                             //c.AddDamage(item.SimPosition, DamageType.Blunt, 1.0f, 0.0f, 0.0f, true);
 
                             l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
@@ -358,7 +358,7 @@ namespace Barotrauma.Items.Components
             else if (connection.Name == "set_state")
             {
                 bool newState = (signal!="0");
-                if (isOpen!=newState) PlaySound(ActionType.OnUse, item.Position);
+                if (isOpen!=newState) PlaySound(ActionType.OnUse, item.WorldPosition);
                 isOpen = newState;             
             }
 

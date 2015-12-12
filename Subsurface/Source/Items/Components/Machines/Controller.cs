@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
         {
             item.SendSignal("1", "signal_out");
 
-            PlaySound(ActionType.OnUse, item.Position);
+            PlaySound(ActionType.OnUse, item.WorldPosition);
 
             return true;
         }

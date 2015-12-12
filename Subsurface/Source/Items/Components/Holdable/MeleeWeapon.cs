@@ -194,7 +194,7 @@ namespace Barotrauma.Items.Components
 
             if (target == null) return false;
 
-            if (attack!=null) attack.DoDamage(user, target, item.Position, 1.0f);
+            if (attack!=null) attack.DoDamage(user, target, item.WorldPosition, 1.0f);
 
             RestoreCollision();
             hitting = false;

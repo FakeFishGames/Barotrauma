@@ -431,7 +431,7 @@ namespace Barotrauma
             if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return new AttackResult(0.0f, 0.0f);
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
-            Vector2 transformedPos = ConvertUnits.ToDisplayUnits(position);
+            Vector2 transformedPos = position;
             if (Submarine != null) transformedPos -= Submarine.Position;
 
             int i = FindSectionIndex(transformedPos);

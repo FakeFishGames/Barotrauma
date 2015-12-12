@@ -122,7 +122,7 @@ namespace Barotrauma
         }
 
 
-        public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 position, float deltaTime, bool playSound = true)
+        public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
             float damageAmount = 0.0f;
             //DamageSoundType damageSoundType = DamageSoundType.None;
@@ -139,15 +139,15 @@ namespace Barotrauma
 
             if (particleEmitterPrefab != null)
             {
-                particleEmitterPrefab.Emit(position);
+                particleEmitterPrefab.Emit(worldPosition);
             }
 
             if (sound != null)
             {
-                sound.Play(1.0f, 500.0f, position);
+                sound.Play(1.0f, 500.0f, worldPosition);
             }
 
-            return target.AddDamage(attacker, position, this, deltaTime, playSound);
+            return target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
 
         }
     }

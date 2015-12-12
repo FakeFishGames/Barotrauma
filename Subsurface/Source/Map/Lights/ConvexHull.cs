@@ -249,7 +249,7 @@ namespace Barotrauma.Lights
             if (!Enabled) return;
 
             CachedShadow cachedShadow = null;
-            if (cachedShadows.TryGetValue(light, out cachedShadow))
+            if (cachedShadows.TryGetValue(light, out cachedShadow) && false)
             {
                 if (light.Position == cachedShadow.LightPos ||
                     Vector2.DistanceSquared(light.WorldPosition, cachedShadow.LightPos) < 1.0f)
@@ -269,9 +269,15 @@ namespace Barotrauma.Lights
             }
             else
             {
-                CalculateShadowVertices(light.Position, los);
-                cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.WorldPosition);
-                cachedShadows.Add(light, cachedShadow);
+                Vector2 lightPos = light.WorldPosition;
+                if (light.Submarine!=null && parentEntity != null && parentEntity.Submarine == light.Submarine)
+                {
+                    lightPos = light.Position;
+                }
+
+                CalculateShadowVertices(lightPos, los);
+               // cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.WorldPosition);
+               // cachedShadows.Add(light, cachedShadow);
             }
 
             DrawShadows(graphicsDevice, cam, transform, los);

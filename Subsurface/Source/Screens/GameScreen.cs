@@ -234,6 +234,12 @@ namespace Barotrauma
             
             spriteBatch.End();
 
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+            {
+                GameMain.GameSession.Level.Render(graphics, cam);
+                //GameMain.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
+            }
+
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend,
                 null, null, null, null,
@@ -325,12 +331,6 @@ namespace Barotrauma
 
             Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
             
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
-            {
-                GameMain.GameSession.Level.Render(graphics, cam);
-                //GameMain.GameSession.Level.SetObserverPosition(cam.WorldViewCenter);
-            }
-
             //----------------------------------------------------------------------------------------
             //3. draw the sections of the map that are on top of the water
             //----------------------------------------------------------------------------------------

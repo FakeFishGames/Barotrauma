@@ -113,7 +113,7 @@ namespace Barotrauma
         {
             guiFrame.Update(deltaTime);
 
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.I))
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.C))
             {
                 commander.ToggleGUIFrame();
             }

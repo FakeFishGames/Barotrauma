@@ -115,162 +115,160 @@ namespace Barotrauma.Items.Components
             float radius = rect.Width / 2.0f;
             
             float simScale = 1.5f;
+            
+            if (Level.Loaded != null)
+            {
+                List<VoronoiCell> cells = Level.Loaded.GetCells(item.WorldPosition, 7);
 
-            return;
+                foreach (VoronoiCell cell in cells)
+                {
 
-            //if (Level.Loaded != null)
-            //{
-            //    List<VoronoiCell> cells = Level.Loaded.GetCells(Submarine.Loaded.Position, 7);
+                    foreach (GraphEdge edge in cell.edges)
+                    {
+                        //if (!edge.isSolid) continue;
+                        float cellDot = Vector2.Dot(cell.Center - item.WorldPosition, (edge.point1 + edge.point2) / 2.0f - cell.Center);
+                        //if (cellDot > 0) continue;
 
-            //    foreach (VoronoiCell cell in cells)
-            //    {
+                        float facingDot = Vector2.Dot(Vector2.Normalize(edge.point1 - edge.point2), Vector2.Normalize(cell.Center-item.WorldPosition));
+                        facingDot = 1.0f;// MathHelper.Clamp(facingDot, -1.0f, 1.0f);
 
-            //        foreach (GraphEdge edge in cell.edges)
-            //        {
-            //            //if (!edge.isSolid) continue;
-            //            float cellDot = Vector2.Dot(cell.Center + Level.Loaded.Position, (edge.point1 + edge.point2) / 2.0f - cell.Center);
-            //            if (cellDot > 0) continue;
+                        Vector2 point1 = (edge.point1);
+                        Vector2 point2 = (edge.point2);
 
-            //            float facingDot = Vector2.Dot(Vector2.Normalize(edge.point1 - edge.point2), Vector2.Normalize(cell.Center + Level.Loaded.Position));
-            //            facingDot = MathHelper.Clamp(facingDot, -1.0f, 1.0f);
+                        float length = (point1 - point2).Length();
+                        for (float x = 0; x < length; x += Rand.Range(600.0f, 800.0f))
+                        {
+                            Vector2 point = point1 + Vector2.Normalize(point2 - point1) * x;
 
-            //            Vector2 point1 = (edge.point1 + Level.Loaded.Position);
-            //            Vector2 point2 = (edge.point2 + Level.Loaded.Position);
+                            float pointDist = Vector2.Distance(item.WorldPosition, point) * displayScale;
 
-            //            float length = (point1 - point2).Length();
-            //            for (float x=0; x<length; x+=Rand.Range(600.0f, 800.0f))
-            //            {
-            //                Vector2 point = point1 + Vector2.Normalize(point2 - point1) * x;
-
-            //                float pointDist = point.Length() * displayScale;
-
-            //                if (pointDist > radius) continue;
-            //                if (pointDist < prevPingRadius || pointDist > pingRadius) continue;
+                            if (pointDist > radius) continue;
+                            if (pointDist < prevPingRadius || pointDist > pingRadius) continue;
 
 
-            //                float step = 5.0f * (Math.Abs(facingDot)+1.0f);
-            //                float alpha = Rand.Range(1.5f, 2.0f);
-            //                for (float z = 0; z<radius-pointDist;z+=step)
-            //                {
-                                
-            //                    var blip = new RadarBlip(
-            //                        point + Rand.Vector(150.0f) - Level.Loaded.Position + Vector2.Normalize(point) * z / displayScale,
-            //                        alpha);
+                            float step = 5.0f * (Math.Abs(facingDot) + 1.0f);
+                            float alpha = Rand.Range(1.5f, 2.0f);
+                            for (float z = 0; z < radius - pointDist; z += step)
+                            {
 
-            //                    radarBlips.Add(blip);
-            //                    step += 0.5f;
-            //                    alpha -= (z == 0) ? 0.5f : 0.1f;
-            //                }
-                            
-            //            }
-            //        }
-            //    }
+                                var blip = new RadarBlip(
+                                    point + Rand.Vector(150.0f) + Vector2.Normalize(point-item.WorldPosition) * z / displayScale,
+                                    alpha);
 
-            //    for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
-            //    {
-            //        Vector2 start = Submarine.Loaded.HullVertices[i] * simScale;
-            //        start.Y = -start.Y;
-            //        Vector2 end = Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] * simScale;
-            //        end.Y = -end.Y;
+                                radarBlips.Add(blip);
+                                step += 0.5f;
+                                alpha -= (z == 0) ? 0.5f : 0.1f;
+                            }
 
-            //        Vector2 diff = end - start;
-            //        for (float x = 0; x < diff.Length(); x+=4.0f )
-            //        {
-            //            GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
-            //        }                        
-            //    }
+                        }
+                    }
+                }
 
-            //}
+                for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
+                {
+                    Vector2 start = (Submarine.Loaded.HullVertices[i] - ConvertUnits.ToSimUnits(item.Position - Submarine.HiddenSubPosition)) * simScale;
+                    start.Y = -start.Y;
+                    Vector2 end = (Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] - ConvertUnits.ToSimUnits(item.Position - Submarine.HiddenSubPosition)) * simScale;
+                    end.Y = -end.Y;
 
-            //foreach (Character c in Character.CharacterList)
-            //{
-            //    if (c.AnimController.CurrentHull != null) continue;
+                    Vector2 diff = end - start;
+                    for (float x = 0; x < diff.Length(); x += 4.0f)
+                    {
+                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
+                    }
+                }
 
-            //    foreach (Limb limb in c.AnimController.Limbs)
-            //    {
-            //        Vector2 pos = limb.Position;
-            //        float pointDist = pos.Length() * displayScale;
+            }
 
-            //        if (limb.SimPosition == Vector2.Zero || pointDist > radius) continue;
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.AnimController.CurrentHull != null) continue;
+
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    float pointDist = (limb.WorldPosition - item.WorldPosition).Length() * displayScale;
+
+                    if (limb.SimPosition == Vector2.Zero || pointDist > radius) continue;
 
 
-            //        if (pointDist > radius) continue;
-            //        if (pointDist > prevPingRadius && pointDist < pingRadius)
-            //        {
-            //            var blip = new RadarBlip(pos - Level.Loaded.Position, 1.0f);
-            //            radarBlips.Add(blip);
-            //        }
-            //    }
-            //}
+                    if (pointDist > radius) continue;
+                    if (pointDist > prevPingRadius && pointDist < pingRadius)
+                    {
+                        var blip = new RadarBlip(limb.WorldPosition, 1.0f);
+                        radarBlips.Add(blip);
+                    }
+                }
+            }
 
-            //foreach (RadarBlip radarBlip in radarBlips)
-            //{
-            //    DrawBlip(spriteBatch,radarBlip,  center, Color.Green * radarBlip.FadeTimer, radius);
-            //}
+            foreach (RadarBlip radarBlip in radarBlips)
+            {
+                DrawBlip(spriteBatch, radarBlip, center, Color.Green * radarBlip.FadeTimer, radius);
+            }
+
+            prevPingRadius = pingRadius;
+
+            if (screenOverlay != null)
+            {
+                screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width / screenOverlay.size.X);
+            }
 
             //prevPingRadius = pingRadius;
 
-            //if (screenOverlay!=null)
-            //{
-            //    screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width/screenOverlay.size.X);
-            //}
-
-            ////prevPingRadius = pingRadius;
-
-            //if (GameMain.GameSession == null) return;
+            if (GameMain.GameSession == null) return;
 
 
-            //DrawMarker(spriteBatch,
-            //    (GameMain.GameSession.Map == null) ? "Start" : GameMain.GameSession.Map.CurrentLocation.Name,
-            //    (Level.Loaded.StartPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
+            DrawMarker(spriteBatch,
+                (GameMain.GameSession.Map == null) ? "Start" : GameMain.GameSession.Map.CurrentLocation.Name,
+                (Level.Loaded.StartPosition), displayScale, center, (rect.Width * 0.55f));
 
-            //DrawMarker(spriteBatch,
-            //    (GameMain.GameSession.Map == null) ? "End" : GameMain.GameSession.Map.SelectedLocation.Name,
-            //    (Level.Loaded.EndPosition + Level.Loaded.Position), displayScale, center, (rect.Width * 0.55f));
+            DrawMarker(spriteBatch,
+                (GameMain.GameSession.Map == null) ? "End" : GameMain.GameSession.Map.SelectedLocation.Name,
+                (Level.Loaded.EndPosition), displayScale, center, (rect.Width * 0.55f));
 
-            //if (GameMain.GameSession.Quest != null)
-            //{
-            //    var quest = GameMain.GameSession.Quest;
+            if (GameMain.GameSession.Quest != null)
+            {
+                var quest = GameMain.GameSession.Quest;
 
-            //    if (!string.IsNullOrWhiteSpace(quest.RadarLabel))
-            //    {
-            //        DrawMarker(spriteBatch,
-            //            quest.RadarLabel,
-            //            quest.RadarPosition, displayScale, center, (rect.Width * 0.55f));
-            //    }
-            //}
+                if (!string.IsNullOrWhiteSpace(quest.RadarLabel))
+                {
+                    DrawMarker(spriteBatch,
+                        quest.RadarLabel,
+                        quest.RadarPosition, displayScale, center, (rect.Width * 0.55f));
+                }
+            }
 
-            //if (!GameMain.DebugDraw) return;
+            if (!GameMain.DebugDraw) return;
 
-            //var steering = item.GetComponent<Steering>();
-            //if (steering == null || steering.SteeringPath == null) return;
+            var steering = item.GetComponent<Steering>();
+            if (steering == null || steering.SteeringPath == null) return;
 
-            //Vector2 prevPos = Vector2.Zero;
+            Vector2 prevPos = Vector2.Zero;
 
-            //foreach (WayPoint wp in steering.SteeringPath.Nodes)
-            //{
-            //    Vector2 pos = (wp.Position - Submarine.Loaded.Position) * displayScale;
-            //    if (pos.Length() > radius) continue;
+            foreach (WayPoint wp in steering.SteeringPath.Nodes)
+            {
+                Vector2 pos = (wp.Position - item.WorldPosition) * displayScale;
+                if (pos.Length() > radius) continue;
 
-            //    pos.Y = -pos.Y;
-            //    pos += center;
+                pos.Y = -pos.Y;
+                pos += center;
 
-            //    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X -3 / 2, (int)pos.Y - 3, 6, 6), (steering.SteeringPath.CurrentNode==wp) ? Color.LightGreen : Color.Green, false);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (steering.SteeringPath.CurrentNode == wp) ? Color.LightGreen : Color.Green, false);
 
-            //    if (prevPos!=Vector2.Zero)
-            //    {
-            //        GUI.DrawLine(spriteBatch, pos, prevPos, Color.Green);
-            //    }
+                if (prevPos != Vector2.Zero)
+                {
+                    GUI.DrawLine(spriteBatch, pos, prevPos, Color.Green);
+                }
 
-            //    prevPos = pos;
-            //}
+                prevPos = pos;
+            }
 
-            //voltage = 0.0f;
+            voltage = 0.0f;
         }
 
         private void DrawBlip(SpriteBatch spriteBatch, RadarBlip blip, Vector2 center, Color color, float radius)
         {
-            Vector2 pos = (blip.Position) * displayScale;
+            
+            Vector2 pos = (blip.Position-item.WorldPosition) * displayScale;
             pos.Y = -pos.Y;
 
             if (pos.Length() > radius)
