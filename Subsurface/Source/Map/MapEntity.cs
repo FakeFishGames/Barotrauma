@@ -507,8 +507,10 @@ namespace Barotrauma
                 }
             }
 
-            foreach (MapEntity e in mapEntityList)
+            for (int i = 0; i<mapEntityList.Count; i++)
             {
+                MapEntity e = mapEntityList[i];
+
                 e.OnMapLoaded();
 
                 if (e.Submarine != null) e.Move(Submarine.HiddenSubPosition);
@@ -516,10 +518,10 @@ namespace Barotrauma
 
 
 
-            mapEntityList.Sort((x, y) =>
-            {
-                return x.Name.CompareTo(y.Name);
-            });
+            //mapEntityList.Sort((x, y) =>
+            //{
+            //    return x.Name.CompareTo(y.Name);
+            //});
         }
 
 

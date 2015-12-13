@@ -213,7 +213,7 @@ namespace Barotrauma
                 //WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Human);
                 //Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
                 
-                Character character = Character.Create(characterInfos[i], waypoints[i]);
+                Character character = Character.Create(characterInfos[i], waypoints[i].WorldPosition);
                 Character.Controlled = character;
 
                 if (!character.Info.StartItemsGiven)

@@ -297,19 +297,13 @@ namespace Barotrauma
         {
             return Create(file, position, null);
         }
-
-        public static Character Create(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
-        {
-            return Create(characterInfo.File, spawnPoint.WorldPosition, characterInfo, isNetworkPlayer);
-        }
-
-
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
+        
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false, bool hasAi=true)
         {
             return Create(characterInfo.File, position, characterInfo, isNetworkPlayer);
         }
 
-        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
+        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, bool hasAi=true)
         {
             if (file != humanConfigFile)
             {
@@ -321,11 +315,9 @@ namespace Barotrauma
             }
             else
             {
-                if (isNetworkPlayer)
+                if (hasAi)
                 {
-                    var netCharacter = new Character(file, position, characterInfo, isNetworkPlayer);
-
-                    return netCharacter;
+                    return new Character(file, position, characterInfo, isNetworkPlayer);
                 }
                 else
                 {

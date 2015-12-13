@@ -1,7 +1,4 @@
-﻿using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -362,7 +359,7 @@ namespace Barotrauma
                 UpdateCharacterLists();
             }
 
-            graphics.Clear(Color.CornflowerBlue);
+            graphics.Clear(Color.Black);
 
             //GameMain.GameScreen.DrawMap(graphics, spriteBatch);
 
@@ -370,7 +367,7 @@ namespace Barotrauma
 
             Sprite backGround = GameMain.GameSession.Map.CurrentLocation.Type.Background;
             spriteBatch.Draw(backGround.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
-                Math.Max((float)GameMain.GraphicsWidth / backGround.SourceRect.Width, (float)GameMain.GraphicsHeight / backGround.SourceRect.Width), SpriteEffects.None, 0.0f);
+                Math.Max((float)GameMain.GraphicsWidth / backGround.SourceRect.Width, (float)GameMain.GraphicsHeight / backGround.SourceRect.Height), SpriteEffects.None, 0.0f);
 
 
             topPanel.Draw(spriteBatch);
