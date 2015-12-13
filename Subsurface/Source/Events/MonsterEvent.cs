@@ -36,12 +36,12 @@ namespace Barotrauma
             for (int i = 0; i < amount; i++)
             {
                 Vector2 position = (randomWayPoint == null) ? Vector2.Zero : FarseerPhysics.ConvertUnits.ToSimUnits(randomWayPoint.Position);
-                
+
                 //!!!!!!!!!!!!!!!!!!
-                //if (spawnDeep)
-                //{
-                //    position.Y = FarseerPhysics.ConvertUnits.ToSimUnits(Level.Loaded.Position.Y);
-                //}
+                if (spawnDeep)
+                {
+                    position.Y -= 100.0f;
+                }
 
                 position.X += Rand.Range(-0.5f, 0.5f);
                 position.Y += Rand.Range(-0.5f, 0.5f);

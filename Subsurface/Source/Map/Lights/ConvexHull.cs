@@ -125,6 +125,18 @@ namespace Barotrauma.Lights
             vertices = points;
         }
 
+        public bool Intersects(Rectangle rect)
+        {
+            Rectangle transformedBounds = boundingBox;
+            if (parentEntity != null && parentEntity.Submarine != null)
+            {
+                transformedBounds.X += (int)parentEntity.Submarine.Position.X;
+                transformedBounds.Y += (int)parentEntity.Submarine.Position.Y;
+            }
+
+            return transformedBounds.Intersects(rect);
+        }
+
         private void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
         {
             //compute facing of each edge, using N*L
