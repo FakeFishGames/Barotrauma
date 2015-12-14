@@ -31,7 +31,7 @@ namespace Barotrauma
         {
             Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
 
-            monster = Character.Create(monsterFile, ConvertUnits.ToSimUnits(position));
+            monster = Character.Create(monsterFile, position);
         }
 
         public override void Update(float deltaTime)

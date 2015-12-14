@@ -733,7 +733,7 @@ namespace Barotrauma
         {
             Limb head = AnimController.GetLimb(LimbType.Head);
 
-            Lights.LightManager.ViewPos = DrawPosition;
+            //Lights.LightManager.ViewPos = WorldPosition;
 
             if (!DisableControls)
             {
@@ -1327,10 +1327,14 @@ namespace Barotrauma
                         message.Write(AnimController.Dir > 0.0f);
                     }
 
-                    if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return true;
-                    
-                    message.Write(AnimController.RefLimb.SimPosition.X);
-                    message.Write(AnimController.RefLimb.SimPosition.Y);
+                    message.Write(Submarine != null);
+
+                    //Vector2 position = Submarine == null ? SimPosition : SimPosition - Submarine.SimPosition;
+
+                    //if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return true;
+
+                    message.Write(SimPosition.X);
+                    message.Write(SimPosition.Y);
 
                     return true;
                 default:
@@ -1495,17 +1499,21 @@ namespace Barotrauma
 #endif
                         return;
                     }
-                    try
-                    {
-                        pos.X = message.ReadFloat();
-                        pos.Y = message.ReadFloat();
-                    }
 
-                    catch
+                    bool inSub = message.ReadBoolean();
+
+                    pos.X = message.ReadFloat();
+                    pos.Y = message.ReadFloat();
+
+                    if (inSub)
                     {
-                        //failed to read position, Character may be further than NetConfig.CharacterIgnoreDistance
-                        pos = SimPosition;
-                    }                    
+                        Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
+                        if (newHull != null)
+                        {
+                            AnimController.CurrentHull = newHull;
+                            Submarine = newHull.Submarine;
+                        }
+                    }
 
                     if (secondaryKeyState)
                     {
@@ -1517,7 +1525,8 @@ namespace Barotrauma
                         cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
                     }   
 
-                    AnimController.RefLimb.body.TargetPosition = AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now + message.SenderConnection.RemoteTimeOffset) - sendingTime);
+                    AnimController.RefLimb.body.TargetPosition = 
+                        AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now + message.SenderConnection.RemoteTimeOffset) - sendingTime);
 
                     LastNetworkUpdate = sendingTime;
 

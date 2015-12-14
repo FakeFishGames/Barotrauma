@@ -15,7 +15,9 @@ namespace Barotrauma
 
         public const float WallWidth = 20000.0f;
 
-        public VertexPositionTexture[] Vertices;
+        public VertexPositionTexture[] WallVertices;
+
+        public VertexPositionColor[] BodyVertices;
 
         private Vector2 midPos;
         private int slot;

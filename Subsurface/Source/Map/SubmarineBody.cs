@@ -108,13 +108,17 @@ namespace Barotrauma
                 (int)ConvertUnits.ToDisplayUnits(hullAABB.UpperBound.Y),
                 (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.X * 2.0f),
                 (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.Y * 2.0f));
+            
+            //var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
 
+            body = BodyFactory.CreateBody(GameMain.World, this);
 
-            var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
+            foreach (Hull hull in Hull.hullList)
+            {
+                FixtureFactory.AttachRectangle(ConvertUnits.ToSimUnits(hull.Rect.Width), ConvertUnits.ToSimUnits(hull.Rect.Height), 5.0f, hull.SimPosition, body, this);
+            }
 
-            body = BodyFactory.CreateCompoundPolygon(GameMain.World, triangulatedVertices, 5.0f);
             body.BodyType = BodyType.Dynamic;
-
             body.CollisionCategories = Physics.CollisionMisc | Physics.CollisionWall;
             body.CollidesWith = Physics.CollisionLevel | Physics.CollisionCharacter;
             body.Restitution = Restitution;
@@ -125,13 +129,13 @@ namespace Barotrauma
             body.SleepingAllowed = false;
             body.IgnoreGravity = true;
             body.OnCollision += OnCollision;
-            body.UserData = this;
+            //body.UserData = this;
         }
 
 
         private List<Vector2> GenerateConvexHull()
         {
-            if (!Structure.wallList.Any())
+            if (!Structure.WallList.Any())
             {
                 return new List<Vector2>() { new Vector2(-1.0f, 1.0f), new Vector2(1.0f, 1.0f), new Vector2(0.0f, -1.0f) };
             }
@@ -140,7 +144,7 @@ namespace Barotrauma
 
             Vector2 leftMost = Vector2.Zero;
 
-            foreach (Structure wall in Structure.wallList)
+            foreach (Structure wall in Structure.WallList)
             {
                 for (int x = -1; x <= 1; x += 2)
                 {
@@ -175,7 +179,7 @@ namespace Barotrauma
                         endPoint = points[i];
                     }
                 }
-
+                
                 currPoint = endPoint;
 
             }
@@ -183,9 +187,6 @@ namespace Barotrauma
 
             return hullPoints;
         }
-
-
-        float collisionRigidness = 1.0f;
 
         public void Update(float deltaTime)
         {

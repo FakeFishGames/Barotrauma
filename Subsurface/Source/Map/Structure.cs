@@ -41,7 +41,7 @@ namespace Barotrauma
     class Structure : MapEntity, IDamageable
     {
         public static int wallSectionSize = 100;
-        public static List<Structure> wallList = new List<Structure>();
+        public static List<Structure> WallList = new List<Structure>();
 
         ConvexHull convexHull;
 
@@ -169,7 +169,7 @@ namespace Barotrauma
 
                 bodies.Add(newBody);
 
-                wallList.Add(this);
+                WallList.Add(this);
                         
                 int xsections = 1;
                 int ysections = 1;
@@ -273,7 +273,7 @@ namespace Barotrauma
         {
             base.Remove();
 
-            if (wallList.Contains(this)) wallList.Remove(this);
+            if (WallList.Contains(this)) WallList.Remove(this);
 
             if (bodies != null)
             {
