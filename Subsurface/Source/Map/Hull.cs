@@ -479,21 +479,21 @@ namespace Barotrauma
         }
 
         //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHull(Vector2 worldPosition, Hull guess = null)
+        public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
         {
-            return FindHull(worldPosition, hullList, guess);
+            return FindHull(position, hullList, guess, useWorldCoordinates);
         }
 
-        public static Hull FindHull(Vector2 worldPosition, List<Hull> hulls, Hull guess = null)
+        public static Hull FindHull(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true)
         {
             if (guess != null && hulls.Contains(guess))
             {
-                if (Submarine.RectContains(guess.WorldRect, worldPosition)) return guess;
+                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
             }
 
             foreach (Hull hull in hulls)
             {
-                if (Submarine.RectContains(hull.WorldRect, worldPosition)) return hull;
+                if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position)) return hull;
             }
 
             return null;

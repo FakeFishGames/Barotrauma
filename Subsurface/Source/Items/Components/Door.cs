@@ -353,7 +353,7 @@ namespace Barotrauma.Items.Components
             if (connection.Name=="toggle")
             {
                 isOpen = !isOpen;
-                PlaySound(ActionType.OnUse, item.Position);
+                PlaySound(ActionType.OnUse, item.WorldPosition);
             }
             else if (connection.Name == "set_state")
             {

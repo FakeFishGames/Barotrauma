@@ -37,12 +37,18 @@ namespace Barotrauma
         }
 
         public GUIProgressBar(Rectangle rect, Color color, float barSize, Alignment alignment, GUIComponent parent = null)
-            : base(null)
+            : this(rect,color,null, barSize,alignment, parent)
+        {
+            
+        }
+
+        public GUIProgressBar(Rectangle rect, Color color, GUIStyle style, float barSize, Alignment alignment, GUIComponent parent = null)
+            : base(style)
         {
             this.rect = rect;
             this.color = color;
             isHorizontal = (rect.Width > rect.Height);
-            
+
             this.alignment = alignment;
 
             margin = 5;
@@ -50,19 +56,36 @@ namespace Barotrauma
             if (parent != null)
                 parent.AddChild(this);
 
-            frame = new GUIFrame(new Rectangle(0,0,0,0), Color.White, null, this);
+            frame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black, null, this);
 
             this.barSize = barSize;
             UpdateRect();
+
+            if (style != null) style.Apply(this);
+        }
+
+        public override void ApplyStyle(GUIComponentStyle style)
+        {
+            if (frame == null) return;
+
+            frame.Color = style.Color;
+            frame.HoverColor = style.HoverColor;
+            frame.SelectedColor = style.SelectedColor;
+
+            Padding = style.Padding;
+
+            frame.OutlineColor = style.OutlineColor;
+
+            this.style = style;
         }
 
         private void UpdateRect()
         {
             rect = new Rectangle(
-                frame.Rect.X + margin,
-                frame.Rect.Y + margin,
-                isHorizontal ? (int)((frame.Rect.Width - margin * 2) * barSize) : (frame.Rect.Width - margin * 2),
-                isHorizontal ? (frame.Rect.Height - margin * 2) : (int)((frame.Rect.Height - margin * 2) * barSize));
+                (int)(frame.Rect.X + padding.X),
+                (int)(frame.Rect.Y + padding.Y),
+                isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : (frame.Rect.Width - margin * 2),
+                isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)((frame.Rect.Height - margin * 2) * barSize));
         }
 
         public override void Draw(SpriteBatch spriteBatch)

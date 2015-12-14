@@ -354,34 +354,7 @@ namespace Barotrauma
             lastPickedFraction = closestFraction;
             return closestBody;
         }
-
-        //public static Body PickBody(Vector2 point)
-        //{
-        //    Body foundBody = null;
-        //    AABB aabb = new AABB(point, point);
-
-        //    GameMain.World.QueryAABB(p =>
-        //    {
-        //        foundBody = p.Body;
-
-        //        return true;
-
-        //    }, ref aabb);
-
-        //    return foundBody;
-        //}
-
-        //public static bool InsideWall(Vector2 point)
-        //{
-        //    Body foundBody = PickBody(point);
-        //    if (foundBody==null) return false;
-
-        //    Structure wall = foundBody.UserData as Structure;
-        //    if (wall == null || wall.IsPlatform) return false;
-            
-        //    return true;
-        //}
-        
+                
         //movement ----------------------------------------------------
 
 

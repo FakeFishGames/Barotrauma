@@ -219,6 +219,12 @@ namespace Barotrauma
 
         public static void GenerateSubWaypoints()
         {
+            List<WayPoint> existingWaypoints = WayPointList.FindAll(wp => wp.spawnType == SpawnType.Path);
+            foreach (WayPoint wayPoint in existingWaypoints)
+            {
+                wayPoint.Remove();
+            }
+
             float minDist = 200.0f;
             float heightFromFloor = 100.0f;
 

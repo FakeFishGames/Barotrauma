@@ -36,6 +36,8 @@ namespace Barotrauma
         public bool IsServer;
         public string ServerName, ServerMessage;
 
+        private Sprite backgroundSprite;
+
         private GUITextBox serverMessage;
 
         public GUIListBox SubList
@@ -98,6 +100,9 @@ namespace Barotrauma
             }
             private set
             {
+                if (levelSeed == value) return;
+                backgroundSprite = LocationType.Random(LevelSeed).Background;
+
                 levelSeed = value;
                 seedBox.Text = levelSeed;
             }
@@ -266,6 +271,7 @@ namespace Barotrauma
             serverMessage.Wrap = true;
             serverMessage.TextGetter = GetServerMessage;
             serverMessage.OnTextChanged = UpdateServerMessage;
+
         }
 
         public override void Deselect()
@@ -284,7 +290,7 @@ namespace Barotrauma
             textBox.Select();
 
             Character.Controlled = null;
-            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+            //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             subList.Enabled         = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting;
             playerList.Enabled      = GameMain.Server != null;
@@ -597,19 +603,19 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
             
-            Vector2 pos = new Vector2(
-                Submarine.Borders.X + Submarine.Borders.Width / 2,
-                Submarine.Borders.Y - Submarine.Borders.Height / 2);
+            //Vector2 pos = new Vector2(
+            //    Submarine.Borders.X + Submarine.Borders.Width / 2,
+            //    Submarine.Borders.Y - Submarine.Borders.Height / 2);
 
-            camAngle += (float)deltaTime / 10.0f;
-            Vector2 offset = (new Vector2(
-                (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-                (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+            //camAngle += (float)deltaTime / 10.0f;
+            //Vector2 offset = (new Vector2(
+            //    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+            //    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
             
-            pos += offset * 0.8f;
+            //pos += offset * 0.8f;
             
-            GameMain.GameScreen.Cam.TargetPos = pos;
-            GameMain.GameScreen.Cam.MoveCamera((float)deltaTime);
+            //GameMain.GameScreen.Cam.TargetPos = pos;
+            //GameMain.GameScreen.Cam.MoveCamera((float)deltaTime);
 
             menu.Update((float)deltaTime);
 
@@ -632,11 +638,16 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            graphics.Clear(Color.CornflowerBlue);
-
-            GameMain.GameScreen.DrawMap(graphics, spriteBatch);
-
+            graphics.Clear(Color.Black);
+            
             spriteBatch.Begin();
+
+            if (backgroundSprite!=null)
+            {
+                spriteBatch.Draw(backgroundSprite.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
+                    Math.Max((float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width, (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height), 
+                    SpriteEffects.None, 0.0f);
+            }
 
             menu.Draw(spriteBatch);
             

@@ -310,10 +310,10 @@ namespace Barotrauma.Lights
         {
 
             Vector3 offset = Vector3.Zero;
-                if (parentEntity != null && parentEntity.Submarine != null)
-                {
-                    offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
-                }
+            if (parentEntity != null && parentEntity.Submarine != null)
+            {
+                offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
+            }
             
 
             shadowEffect.World = Matrix.CreateTranslation(offset) * transform;

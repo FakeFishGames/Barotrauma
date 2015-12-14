@@ -368,8 +368,7 @@ namespace Barotrauma
             Sprite backGround = GameMain.GameSession.Map.CurrentLocation.Type.Background;
             spriteBatch.Draw(backGround.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
                 Math.Max((float)GameMain.GraphicsWidth / backGround.SourceRect.Width, (float)GameMain.GraphicsHeight / backGround.SourceRect.Height), SpriteEffects.None, 0.0f);
-
-
+            
             topPanel.Draw(spriteBatch);
 
             bottomPanel[selectedRightPanel].Draw(spriteBatch);

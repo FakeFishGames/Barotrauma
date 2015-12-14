@@ -333,7 +333,7 @@ namespace Barotrauma
             infoBox = CreateInfoFrame("Uh-oh... Something enormous just appeared on the radar.");
 
             List<Structure> windows = new List<Structure>();
-            foreach (Structure s in Structure.wallList)
+            foreach (Structure s in Structure.WallList)
             {
                 if (s.CastShadow || !s.HasBody) continue;
 

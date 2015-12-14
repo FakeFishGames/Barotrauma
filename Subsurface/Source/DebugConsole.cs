@@ -323,7 +323,7 @@ namespace Barotrauma
                     break;
                 case "fixhull":
                 case "fixwalls":
-                    foreach (Structure w in Structure.wallList)
+                    foreach (Structure w in Structure.WallList)
                     {
                         for (int i = 0 ; i < w.SectionCount; i++)
                         {

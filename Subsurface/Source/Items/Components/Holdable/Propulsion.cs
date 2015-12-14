@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
 
             if (!string.IsNullOrWhiteSpace(particles))
             {
-                GameMain.ParticleManager.CreateParticle(particles, item.Position,
+                GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition,
                     item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi), 0.0f, item.CurrentHull);
             }
 

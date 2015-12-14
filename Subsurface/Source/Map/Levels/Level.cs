@@ -41,7 +41,6 @@ namespace Barotrauma
         //List<Body> bodies;
         private List<VoronoiCell> cells;
 
-        private VertexPositionTexture[] vertices;
         //private VertexBuffer vertexBuffer;
 
         private Vector2 startPosition, endPosition;
@@ -314,7 +313,9 @@ namespace Barotrauma
             startPosition.Y = borders.Height;
             endPosition.Y = borders.Height;
 
-            vertices = GeneratePolygons(cells, pathCells);
+            renderer.BodyVertices = GeneratePolygons(cells, pathCells);
+            renderer.WallVertices = GenerateWallShapes(cells);
+
             
             wrappingWalls = new WrappingWall[2, 2];
 
@@ -325,7 +326,8 @@ namespace Barotrauma
                     wrappingWalls[side, i] = new WrappingWall(pathCells, cells, borders.Height * 0.5f,
                         (side == 0 ? -1 : 1) * (i == 0 ? 1 : 2));
 
-                    wrappingWalls[side, i].Vertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>(), false);
+                    wrappingWalls[side, i].BodyVertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>(), false);
+                    wrappingWalls[side, i].WallVertices = GenerateWallShapes(wrappingWalls[side, i].Cells);
                     //wrappingWalls[side, i].Cells[0].edges[1].isSolid = false;
                     //wrappingWalls[side, i].Cells[0].edges[3].isSolid = false;
 
@@ -622,9 +624,9 @@ namespace Barotrauma
         }
 
 
-        private VertexPositionTexture[] GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells, bool setSolid=true)
+        private VertexPositionColor[] GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells, bool setSolid=true)
         {
-            List<VertexPositionTexture> verticeList = new List<VertexPositionTexture>();
+            List<VertexPositionColor> verticeList = new List<VertexPositionColor>();
             //bodies = new List<Body>();
 
             List<Vector2> tempVertices = new List<Vector2>();
@@ -657,14 +659,14 @@ namespace Barotrauma
                     continue;
                 }
 
-                //var triangles = MathUtils.TriangulateConvexHull(tempVertices, cell.Center);
-                //for (int i = 0; i < triangles.Count; i++)
-                //{
-                //    foreach (Vector2 vertex in triangles[i])
-                //    {
-                //        verticeList.Add(new VertexPositionTexture(new Vector3(vertex, 0.0f), vertex/1000.0f));
-                //    }
-                //}
+                var triangles = MathUtils.TriangulateConvexHull(tempVertices, cell.Center);
+                for (int i = 0; i < triangles.Count; i++)
+                {
+                    foreach (Vector2 vertex in triangles[i])
+                    {
+                        verticeList.Add(new VertexPositionColor(new Vector3(vertex, 0.0f), Color.Black));
+                    }
+                }
 
                 if (bodyPoints.Count < 2) continue;
 
@@ -684,7 +686,7 @@ namespace Barotrauma
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
 
-                var triangles = MathUtils.TriangulateConvexHull(bodyPoints, cell.Center);
+                triangles = MathUtils.TriangulateConvexHull(bodyPoints, cell.Center);
 
                 Body edgeBody = new Body(GameMain.World);
 
@@ -706,15 +708,12 @@ namespace Barotrauma
                 bodies.Add(edgeBody);
             }
 
-
-            verticeList = GenerateWallShapes(cells);
-
             return verticeList.ToArray();
         }
 
-        private List<VertexPositionTexture> GenerateWallShapes(List<VoronoiCell> cells)
+        private VertexPositionTexture[] GenerateWallShapes(List<VoronoiCell> cells)
         {
-            float wallThickness = 500.0f;
+            float inwardThickness = 500.0f, outWardThickness = 30.0f;
 
             List<VertexPositionTexture> verticeList = new List<VertexPositionTexture>();
 
@@ -726,13 +725,13 @@ namespace Barotrauma
                     if (edge.cell1 != null && edge.cell1.body == null) edge.cell1 = null;
                     if (edge.cell2 != null && edge.cell2.body == null) edge.cell2 = null;
 
-                    //CompareCCW compare = new CompareCCW(cell.Center);
-                    //if (compare.Compare(edge.point1, edge.point2) == -1)
-                    //{
-                    //    var temp = edge.point1;
-                    //    edge.point1 = edge.point2;
-                    //    edge.point2 = temp;
-                    //}
+                    CompareCCW compare = new CompareCCW(cell.Center);
+                    if (compare.Compare(edge.point1, edge.point2) == -1)
+                    {
+                        var temp = edge.point1;
+                        edge.point1 = edge.point2;
+                        edge.point2 = temp;
+                    }
                 }
             }
 
@@ -758,7 +757,7 @@ namespace Barotrauma
                             rightEdge = edge2;
                         }
                     }
-
+                    
                     Vector2 leftNormal = Vector2.Zero, rightNormal = Vector2.Zero;
 
                     if (leftEdge == null)
@@ -783,6 +782,10 @@ namespace Barotrauma
                             Vector2.Normalize(GetEdgeNormal(rightEdge) + GetEdgeNormal(edge, cell)) :
                             Vector2.Normalize(rightEdge.Center - edge.point2);
                     }
+
+
+
+
                     for (int i = 0; i < 2; i++)
                     {
                         Vector2[] verts = new Vector2[3];
@@ -791,9 +794,9 @@ namespace Barotrauma
                         
                         if (i==0)
                         {
-                            verts[0] = edge.point1;
-                            verts[1] = edge.point2;
-                            verts[2] = edge.point1 + leftNormal * wallThickness;
+                            verts[0] = edge.point1 - leftNormal * outWardThickness;
+                            verts[1] = edge.point2 - rightNormal * outWardThickness;
+                            verts[2] = edge.point1 + leftNormal * inwardThickness;
 
                             vertPos[0] = new VertexPositionTexture(new Vector3(verts[0], 0.0f), Vector2.Zero);
                             vertPos[1] = new VertexPositionTexture(new Vector3(verts[1], 0.0f), Vector2.UnitX);
@@ -801,9 +804,9 @@ namespace Barotrauma
                         }
                         else
                         {
-                            verts[0] = edge.point1 + leftNormal * wallThickness;
-                            verts[1] = edge.point2;
-                            verts[2] = edge.point2 + rightNormal * wallThickness;
+                            verts[0] = edge.point1 + leftNormal * inwardThickness;
+                            verts[1] = edge.point2 - rightNormal * outWardThickness;
+                            verts[2] = edge.point2 + rightNormal * inwardThickness;
 
                             vertPos[0] = new VertexPositionTexture(new Vector3(verts[0], 0.0f), new Vector2(0.0f, 0.5f));
                             vertPos[1] = new VertexPositionTexture(new Vector3(verts[1], 0.0f), Vector2.UnitX);
@@ -821,7 +824,7 @@ namespace Barotrauma
                 }
             }
 
-            return verticeList;
+            return verticeList.ToArray();
         }
 
         private Vector2 GetEdgeNormal(GraphEdge edge, VoronoiCell cell = null)
@@ -953,16 +956,21 @@ namespace Barotrauma
         //    }
         //}
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Update (float deltaTime)
+        {
+            renderer.Update(deltaTime);
+        }
+
+        public void DrawFront(SpriteBatch spriteBatch)
         {
             if (renderer == null) return;
             renderer.Draw(spriteBatch);
         }
 
-        public void Render(GraphicsDevice graphicsDevice, Camera cam)
+        public void DrawBack(SpriteBatch spriteBatch, Camera cam, BackgroundSpriteManager backgroundSpriteManager = null)
         {
             if (renderer == null) return;
-            renderer.Render(graphicsDevice, cam, vertices);
+            renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager);
         }
 
 
@@ -1094,9 +1102,7 @@ namespace Barotrauma
         private void Unload()
         {
             renderer = null;
-
-            vertices = null;
-
+            
             cells = null;
 
             bodies.Clear();
