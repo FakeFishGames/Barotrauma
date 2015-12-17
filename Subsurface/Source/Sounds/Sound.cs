@@ -183,7 +183,6 @@ namespace Barotrauma
 
         public int Loop(int sourceIndex, float baseVolume, Vector2 position, float range)
         {
-
             Vector2 relativePos = GetRelativePosition(position);
             float volume = GetVolume(relativePos, range, baseVolume);
 
@@ -258,7 +257,7 @@ namespace Barotrauma
                 if (s.oggSound == oggSound) return;
             }
 
-            System.Diagnostics.Debug.WriteLine("Removing sound " + filePath + " (buffer id" + AlBufferId + ")");
+            //System.Diagnostics.Debug.WriteLine("Removing sound " + filePath + " (buffer id" + AlBufferId + ")");
 
             SoundManager.ClearAlSource(AlBufferId);
             oggSound.Dispose();

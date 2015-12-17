@@ -40,6 +40,8 @@ namespace Barotrauma
             this.canOpenDoors = canOpenDoors;
 
             character = (host as AIController).Character;
+
+            findPathTimer = Rand.Range(0.0f, 1.0f);
         }
 
         public override void Update(float speed = 1)
@@ -65,9 +67,9 @@ namespace Barotrauma
                 if (findPathTimer > 0.0f) return Vector2.Zero;
 
                 currentTarget = target;
-                currentPath = pathFinder.FindPath(host.SimPosition, target);
+                currentPath = pathFinder.FindPath(host.SimPosition+Rand.Vector(0.2f), target);
                 
-                findPathTimer = 1.0f;
+                findPathTimer = Rand.Range(1.0f,1.2f);
 
                 return DiffToCurrentNode();
             }

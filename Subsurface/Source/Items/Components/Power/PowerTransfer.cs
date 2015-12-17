@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
 
                         if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
                         {
-                            new FireSource(pt.item.Position);
+                            new FireSource(pt.item.WorldPosition);
                         }
                     }
                 }

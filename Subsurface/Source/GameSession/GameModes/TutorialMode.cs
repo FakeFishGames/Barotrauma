@@ -85,7 +85,7 @@ namespace Barotrauma
             Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
 
             //spawn some fish next to the player
-            GameMain.GameScreen.BackgroundSpriteManager.SpawnSprites(2, 
+            GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2, 
                 Submarine.Loaded.Position + Character.Controlled.Position);
 
             yield return new WaitForSeconds(4.0f);

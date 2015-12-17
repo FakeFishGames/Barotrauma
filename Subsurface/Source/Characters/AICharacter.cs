@@ -42,6 +42,7 @@ namespace Barotrauma
         public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
             : base(file, position, characterInfo, isNetworkPlayer)
         {
+            soundInterval = Rand.Range(0.0f, soundInterval);
         }
 
         public void SetAI(AIController aiController)
@@ -113,7 +114,16 @@ namespace Barotrauma
                     aiController.FillNetworkData(message);
                     return true;
                 case NetworkEventType.EntityUpdate:
-                    if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
+                    if (Submarine == null)
+                    {
+                        if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
+                    
+                    }
+                    else
+                    {
+                        if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;                    
+                    }
+
                     
                     message.Write(AnimController.TargetDir == Direction.Right);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);

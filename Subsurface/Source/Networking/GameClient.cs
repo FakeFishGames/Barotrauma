@@ -611,7 +611,7 @@ namespace Barotrauma.Networking
                     (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
                     (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
+                GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
@@ -751,7 +751,7 @@ namespace Barotrauma.Networking
                 continue;                
             }
 
-            Character character = Character.Create(ch, position, !isMyCharacter);
+            Character character = Character.Create(ch, position, !isMyCharacter, false);
 
             character.ID = ID;
             

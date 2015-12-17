@@ -107,6 +107,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (picker==null || picker.Inventory == null) return;
+
+            item.Submarine = picker.Submarine;
             
             if (item.body!= null && !item.body.Enabled)
             {

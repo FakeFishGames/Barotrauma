@@ -110,6 +110,9 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
+            item.body.Enabled = true;
+            IsActive = false;
+
             if (picker == null)
             {
                 if (dropper==null) return;
@@ -117,8 +120,8 @@ namespace Barotrauma.Items.Components
             }
             if (picker.Inventory == null) return;
 
-            item.body.Enabled = true;
-            IsActive = false;
+
+            item.Submarine = picker.Submarine;
 
             //item.Unequip();
 

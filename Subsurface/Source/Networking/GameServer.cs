@@ -709,12 +709,21 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            GameMain.ShowLoading(StartGame(selectedSub), false);
+            GameModePreset selectedMode = Voting.HighestVoted<GameModePreset>(VoteType.Mode, ConnectedClients);
+            if (selectedMode == null) selectedMode = GameMain.NetLobbyScreen.SelectedMode;   
+
+            if (selectedMode==null)
+            {
+                GameMain.NetLobbyScreen.ModeList.Flash();
+                return false;
+            }
+
+            GameMain.ShowLoading(StartGame(selectedSub, selectedMode), false);
  
             return true;
         }
 
-        private IEnumerable<object> StartGame(Submarine selectedSub)
+        private IEnumerable<object> StartGame(Submarine selectedSub, GameModePreset selectedMode)
         {
             GUIMessageBox.CloseAll();
 
@@ -722,10 +731,7 @@ namespace Barotrauma.Networking
 
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
-
-            GameModePreset selectedMode = Voting.HighestVoted<GameModePreset>(VoteType.Mode, ConnectedClients);                        
-            if (selectedMode==null) selectedMode=GameMain.NetLobbyScreen.SelectedMode;            
-
+       
             GameMain.GameSession = new GameSession(selectedSub, "", selectedMode);
             GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
 
@@ -757,13 +763,13 @@ namespace Barotrauma.Networking
             for (int i = 0; i < ConnectedClients.Count; i++)
             {
                 ConnectedClients[i].Character = Character.Create(
-                    ConnectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true);
+                    ConnectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
                 ConnectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
             }
 
             if (characterInfo != null)
             {
-                myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition);
+                myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
                 Character.Controlled = myCharacter;
 
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
@@ -782,7 +788,7 @@ namespace Barotrauma.Networking
 
             gameStarted = true;
 
-            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+            GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position;
 
             GameMain.GameScreen.Select();
 
@@ -876,7 +882,7 @@ namespace Barotrauma.Networking
                     (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
                     (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
+                GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";

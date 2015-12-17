@@ -63,7 +63,7 @@ namespace Barotrauma
                 {
                     if (character.Position.X < character.AnimController.CurrentHull.Rect.X + WallAvoidDistance)
                     {
-                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX);
+                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX*5.0f);
                     }
                     else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - WallAvoidDistance)
                     {

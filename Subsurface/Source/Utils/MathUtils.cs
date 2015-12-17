@@ -205,7 +205,7 @@ namespace Barotrauma
 
             return (cornerDistanceSq <= (radius * radius));
         }
-
+        
         /// <summary>
         /// divide a convex hull into triangles
         /// </summary>

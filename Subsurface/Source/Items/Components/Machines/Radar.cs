@@ -129,9 +129,9 @@ namespace Barotrauma.Items.Components
 
                     foreach (GraphEdge edge in cell.edges)
                     {
-                        //if (!edge.isSolid) continue;
-                        float cellDot = Vector2.Dot(cell.Center - item.WorldPosition, (edge.point1 + edge.point2) / 2.0f - cell.Center);
-                        //if (cellDot > 0) continue;
+                        if (!edge.isSolid) continue;
+                        float cellDot = Vector2.Dot(cell.Center - item.WorldPosition, edge.Center - cell.Center);
+                        if (cellDot > 0) continue;
 
                         float facingDot = Vector2.Dot(Vector2.Normalize(edge.point1 - edge.point2), Vector2.Normalize(cell.Center-item.WorldPosition));
                         facingDot = 1.0f;// MathHelper.Clamp(facingDot, -1.0f, 1.0f);
@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
                             if (pointDist < prevPingRadius || pointDist > pingRadius) continue;
 
 
-                            float step = 5.0f * (Math.Abs(facingDot) + 1.0f);
+                            float step = 3.0f * (Math.Abs(facingDot) + 1.0f);
                             float alpha = Rand.Range(1.5f, 2.0f);
                             for (float z = 0; z < radius - pointDist; z += step)
                             {

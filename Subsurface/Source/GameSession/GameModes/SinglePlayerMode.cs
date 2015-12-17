@@ -141,14 +141,12 @@ namespace Barotrauma
 
             CrewManager.Draw(spriteBatch);
 
-            if (Level.Loaded == null) return;
-
-            if (Level.Loaded.AtEndPosition)
+            if (Submarine.Loaded.AtEndPosition)
             {
                 endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;                
                 endShiftButton.Draw(spriteBatch);
             }
-            else if (Level.Loaded.AtStartPosition)
+            else if (Submarine.Loaded.AtStartPosition)
             {
                 endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
                 endShiftButton.Draw(spriteBatch);
@@ -223,7 +221,7 @@ namespace Barotrauma
                     sb.Append("No casualties!");
                 }
 
-                if (Level.Loaded.AtEndPosition)
+                if (Submarine.Loaded.AtEndPosition)
                 {
                     Map.MoveToNextLocation();
                 }

@@ -57,17 +57,34 @@ namespace Barotrauma
 
             character.AIController.SteeringManager.SteeringSeek(
                 target != null ? target.SimPosition : targetPos);
+
+            Vector2 currTargetPos = target != null ? target.SimPosition : targetPos;
+            if (Vector2.Distance(currTargetPos, character.SimPosition) < 1.0f)
+            {
+                character.AnimController.TargetDir = currTargetPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
+            }
         }
 
         public override bool IsCompleted()
         {
             if (repeat) return false;
 
+            bool completed = false;
+
             float allowedDistance = 0.5f;
             var item = target as Item;
-            if (item != null) allowedDistance = Math.Max(item.PickDistance,allowedDistance);
 
-            return Vector2.Distance(target != null ? target.SimPosition : targetPos, character.SimPosition) < allowedDistance;
+            if (item != null)
+            {
+                allowedDistance = Math.Max(item.PickDistance, allowedDistance);
+                if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
+            }
+
+            completed = completed || Vector2.Distance(target != null ? target.SimPosition : targetPos, character.SimPosition) < allowedDistance;
+
+            if (completed) character.AIController.SteeringManager.SteeringManual(0.0f, -character.AIController.Steering);
+
+            return completed;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

@@ -28,6 +28,8 @@ namespace Barotrauma
             objectiveManager = new AIObjectiveManager(c);
             objectiveManager.AddObjective(new AIObjectiveFindSafety(c));
             objectiveManager.AddObjective(new AIObjectiveIdle(c));
+
+            updateObjectiveTimer = Rand.Range(0.0f, UpdateObjectiveInterval);
         }
 
         public override void Update(float deltaTime)

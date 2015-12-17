@@ -9,7 +9,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
 
-    class BackgroundSprite : ISteerable
+    class BackgroundCreature : ISteerable
     {
         const float MaxDepth = 100.0f;
 
@@ -17,7 +17,7 @@ namespace Barotrauma
 
         public bool Enabled;
 
-        private BackgroundSpritePrefab prefab;
+        private BackgroundCreaturePrefab prefab;
 
         private Vector2 position;
 
@@ -53,7 +53,7 @@ namespace Barotrauma
             set;
         }
         
-        public BackgroundSprite(BackgroundSpritePrefab prefab, Vector2 position)
+        public BackgroundCreature(BackgroundCreaturePrefab prefab, Vector2 position)
         {
             this.prefab = prefab;
 
@@ -104,18 +104,6 @@ namespace Barotrauma
             {
                 Vector2 midPoint = Swarm.MidPoint();
                 float midPointDist = Vector2.Distance(position, midPoint);
-
-
-
-                //steeringManager.SteeringSeek(midPoint + Swarm.AvgVelocity()*1000.0f, prefab.Speed*0.1f);
-
-                //float avgWanderAngle = 0.0f;
-                //foreach (var other in Swarm.Members)
-                //{
-                //    avgWanderAngle += other.steeringManager.WanderAngle;
-                //}
-                //avgWanderAngle /= Swarm.Members.Count;
-                //steeringManager.WanderAngle = MathHelper.Lerp(steeringManager.WanderAngle, avgWanderAngle, 0.1f);
 
                 if (midPointDist > Swarm.MaxDistance)
                 {
@@ -169,7 +157,7 @@ namespace Barotrauma
 
     class Swarm
     {
-        public List<BackgroundSprite> Members;
+        public List<BackgroundCreature> Members;
 
         public readonly float MaxDistance;
 
@@ -179,7 +167,7 @@ namespace Barotrauma
 
             Vector2 midPoint = Vector2.Zero;
 
-            foreach (BackgroundSprite member in Members)
+            foreach (BackgroundCreature member in Members)
             {
                 midPoint += member.SimPosition;
             }
@@ -195,7 +183,7 @@ namespace Barotrauma
 
             Vector2 avgVel = Vector2.Zero;
 
-            foreach (BackgroundSprite member in Members)
+            foreach (BackgroundCreature member in Members)
             {
                 avgVel += member.Velocity;
             }
@@ -205,13 +193,13 @@ namespace Barotrauma
             return avgVel;
         }
 
-        public Swarm(List<BackgroundSprite> members, float maxDistance)
+        public Swarm(List<BackgroundCreature> members, float maxDistance)
         {
             this.Members = members;
 
             this.MaxDistance = maxDistance;
 
-            foreach (BackgroundSprite bgSprite in members)
+            foreach (BackgroundCreature bgSprite in members)
             {
                 bgSprite.Swarm = this;
             }

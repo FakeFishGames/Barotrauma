@@ -16,12 +16,14 @@ namespace Barotrauma
 
         private int basicSoundIndex, largeSoundIndex;
 
-        Hull hull;
+        private Hull hull;
 
-        LightSource lightSource;
+        private LightSource lightSource;
 
-        Vector2 position;
-        Vector2 size;
+        private Vector2 position;
+        private Vector2 size;
+
+        private Entity Submarine;
 
         public Vector2 Position
         {
@@ -32,6 +34,11 @@ namespace Barotrauma
 
                 position = value;
             }
+        }
+
+        public Vector2 WorldPosition
+        {
+            get { return Submarine.Position + position; }
         }
 
         public Vector2 Size
@@ -50,11 +57,16 @@ namespace Barotrauma
                 fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg");
             }
 
-            lightSource = new LightSource(worldPosition, 50.0f, new Color(1.0f, 0.9f, 0.6f), hull == null ? null : hull.Submarine);
-
             hull.AddFireSource(this, !networkEvent);
 
-            this.position = worldPosition - new Vector2(-5.0f, 5.0f);
+            Submarine = hull.Submarine;
+
+            this.position = worldPosition - new Vector2(-5.0f, 5.0f) - Submarine.Position;
+
+
+            lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull == null ? null : hull.Submarine);
+
+
 
             //this.position.Y = hull.Rect.Y - hull.Rect.Height;
 
@@ -136,9 +148,9 @@ namespace Barotrauma
             {
                 float normalizedPos = 0.5f-(i / count);
 
-                Vector2 spawnPos = new Vector2(position.X + Rand.Range(0.0f, size.X), Rand.Range(position.Y - size.Y, position.Y)+10.0f);
+                Vector2 spawnPos = new Vector2(WorldPosition.X + Rand.Range(0.0f, size.X), Rand.Range(WorldPosition.Y - size.Y, WorldPosition.Y) + 10.0f);
 
-                Vector2 speed = new Vector2((spawnPos.X - (position.X + size.X/2.0f)), (float)Math.Sqrt(size.X)*Rand.Range(10.0f,15.0f)*growModifier);
+                Vector2 speed = new Vector2((spawnPos.X - (WorldPosition.X + size.X / 2.0f)), (float)Math.Sqrt(size.X) * Rand.Range(10.0f, 15.0f) * growModifier);
                 
                 var particle = GameMain.ParticleManager.CreateParticle("flame",
                     spawnPos, speed, 0.0f, hull);
@@ -265,8 +277,8 @@ namespace Barotrauma
         {
             float range = 100.0f;
 
-            if (pos.X < position.X-range || pos.X > position.X + size.X+range) return;
-            if (pos.Y < position.Y - size.Y || pos.Y > position.Y + 500.0f) return;
+            if (pos.X < WorldPosition.X - range || pos.X > WorldPosition.X + size.X + range) return;
+            if (pos.Y < WorldPosition.Y - size.Y || pos.Y > WorldPosition.Y + 500.0f) return;
 
             float extinquishAmount = amount * deltaTime;
 

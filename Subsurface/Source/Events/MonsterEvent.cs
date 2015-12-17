@@ -40,7 +40,8 @@ namespace Barotrauma
                 //!!!!!!!!!!!!!!!!!!
                 if (spawnDeep)
                 {
-                    position.Y -= 100.0f;
+
+                    position.Y -= Level.Loaded.Size.Y;
                 }
 
                 position.X += Rand.Range(-0.5f, 0.5f);

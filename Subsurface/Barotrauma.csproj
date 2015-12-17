@@ -74,10 +74,12 @@
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjective.cs" />
     <Compile Include="Source\Characters\AI\PathFinder.cs" />
-    <Compile Include="Source\Characters\AI\ÍndoorsSteeringManager.cs" />
+    <Compile Include="Source\Characters\AI\IndoorsSteeringManager.cs" />
     <Compile Include="Source\Characters\Animation\AnimController.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
-    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSprite.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreature.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreatureManager.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreaturePrefab.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpriteManager.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpritePrefab.cs" />
     <Compile Include="Source\Characters\Character.cs" />
@@ -285,11 +287,18 @@
     <Content Include="changelog.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\BackgroundSprites\BackgroundSpritePrefabs.xml">
+    <Content Include="Content\BackgroundSprites\BackgroundCreaturePrefabs.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\BackgroundSprites\BackgroundSpritePrefabs.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Content\BackgroundSprites\bgFish1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\BackgroundSprites\vegetation.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Coelanth\Coelanth.png">
