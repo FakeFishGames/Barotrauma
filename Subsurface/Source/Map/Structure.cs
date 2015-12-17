@@ -41,7 +41,7 @@ namespace Barotrauma
     class Structure : MapEntity, IDamageable
     {
         public static int wallSectionSize = 100;
-        public static List<Structure> wallList = new List<Structure>();
+        public static List<Structure> WallList = new List<Structure>();
 
         ConvexHull convexHull;
 
@@ -138,7 +138,8 @@ namespace Barotrauma
             //}
         }
                 
-        public Structure(Rectangle rectangle, StructurePrefab sp)
+        public Structure(Rectangle rectangle, StructurePrefab sp, Submarine submarine)
+            : base(submarine)
         {
             if (rectangle.Width == 0 || rectangle.Height == 0) return;
 
@@ -168,7 +169,7 @@ namespace Barotrauma
 
                 bodies.Add(newBody);
 
-                wallList.Add(this);
+                WallList.Add(this);
                         
                 int xsections = 1;
                 int ysections = 1;
@@ -262,7 +263,7 @@ namespace Barotrauma
                 corners[2] = new Vector2(rect.Right, rect.Y);
                 corners[3] = new Vector2(rect.Right, rect.Y - rect.Height);
 
-                convexHull = new ConvexHull(corners, Color.Black);
+                convexHull = new ConvexHull(corners, Color.Black, this);
             }
 
             InsertToList();
@@ -272,7 +273,7 @@ namespace Barotrauma
         {
             base.Remove();
 
-            if (wallList.Contains(this)) wallList.Remove(this);
+            if (WallList.Contains(this)) WallList.Remove(this);
 
             if (bodies != null)
             {
@@ -288,27 +289,28 @@ namespace Barotrauma
         {
             if (prefab.sprite == null) return;
 
-            Color color = (isHighlighted) ? Color.Green : Color.White;
+            Color color = (isHighlighted) ? Color.Orange : Color.White;
             if (isSelected && editing) color = Color.Red;
 
-            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
+            Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
+            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
             
             foreach (WallSection s in sections)
             {
+
                 if (s.isHighLighted)
                 {
                     GUI.DrawRectangle(spriteBatch,
-                        new Rectangle((int)s.rect.X, (int)-s.rect.Y, (int)s.rect.Width, (int)s.rect.Height),
+                        new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
                         new Color((s.damage / prefab.MaxHealth), 1.0f - (s.damage / prefab.MaxHealth), 0.0f, 1.0f), true);
                 }
-
 
                 s.isHighLighted = false;
 
                 if (s.damage < 0.01f) continue;
                 
-                GUI.DrawRectangle(spriteBatch, 
-                    new Rectangle((int)s.rect.X, (int)-s.rect.Y, (int)s.rect.Width, (int)s.rect.Height),
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
                     Color.Black * (s.damage / prefab.MaxHealth), true); 
             }
             
@@ -411,13 +413,17 @@ namespace Barotrauma
             return sections[sectionIndex].damage;
         }
 
-        public Vector2 SectionPosition(int sectionIndex)
+        public Vector2 SectionPosition(int sectionIndex, bool world = false)
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return Vector2.Zero;
 
-            return new Vector2(
+            Vector2 sectionPos = new Vector2(
                 sections[sectionIndex].rect.X + sections[sectionIndex].rect.Width / 2.0f,
                 sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
+
+            if (world && Submarine != null) sectionPos += Submarine.Position;
+
+            return sectionPos;
         }
 
         public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
@@ -425,7 +431,10 @@ namespace Barotrauma
             if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return new AttackResult(0.0f, 0.0f);
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
-            int i = FindSectionIndex(ConvertUnits.ToDisplayUnits(position));
+            Vector2 transformedPos = position;
+            if (Submarine != null) transformedPos -= Submarine.Position;
+
+            int i = FindSectionIndex(transformedPos);
             if (i == -1) return new AttackResult(0.0f, 0.0f);
             
             GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
@@ -474,7 +483,7 @@ namespace Barotrauma
                     gapRect.Y += 10;
                     gapRect.Width += 20;
                     gapRect.Height += 20;
-                    sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal);
+                    sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
                 }
             }
 
@@ -574,8 +583,11 @@ namespace Barotrauma
             
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID),
-                new XAttribute("rect", rect.X + "," + rect.Y+","+rect.Width+","+rect.Height));
-
+                new XAttribute("rect",
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                    rect.Width + "," + rect.Height));
+            
             for (int i = 0; i < sections.Count(); i++)
             {
                 if (sections[i].damage == 0.0f) continue;
@@ -590,7 +602,7 @@ namespace Barotrauma
             return element;
         }
 
-        public static void Load(XElement element)
+        public static void Load(XElement element, Submarine submarine)
         {
             string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
             string[] rectValues = rectString.Split(',');
@@ -609,7 +621,8 @@ namespace Barotrauma
             {
                 if (ep.Name == name)
                 {
-                    s = new Structure(rect, (StructurePrefab)ep);
+                    s = new Structure(rect, (StructurePrefab)ep, submarine);
+                    s.Submarine = submarine;
                     s.ID = (ushort)int.Parse(element.Attribute("ID").Value);
                     break;
                 }

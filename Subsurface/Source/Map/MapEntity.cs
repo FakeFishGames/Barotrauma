@@ -70,7 +70,12 @@ namespace Barotrauma
         public virtual Rectangle Rect { 
             get { return rect; }
             set { rect = value; }
-        }        
+        }
+     
+        public Rectangle WorldRect
+        {
+            get { return Submarine == null ? rect : new Rectangle((int)(Submarine.Position.X + rect.X), (int)(Submarine.Position.Y + rect.Y), rect.Width, rect.Height); }
+        }
 
         public virtual Sprite Sprite 
         {
@@ -82,7 +87,7 @@ namespace Barotrauma
             get { return false; }
         }
 
-        public virtual Vector2 Position
+        public override Vector2 Position
         {
             get
             {
@@ -138,7 +143,9 @@ namespace Barotrauma
         {
             get { return ""; }
         }
-        
+
+        public MapEntity(Submarine submarine) : base(submarine) { }
+
         public virtual void Move(Vector2 amount) 
         {
             rect.X += (int)amount.X;
@@ -147,7 +154,7 @@ namespace Barotrauma
 
         public virtual bool Contains(Vector2 position)
         {
-            return (Submarine.RectContains(rect, position));
+            return (Submarine.RectContains(WorldRect, position));
         }
         
         protected void InsertToList()
@@ -229,8 +236,6 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateSelecting(Camera cam)
         {
-            if (GUIComponent.MouseOn != null) return;
-
             if (DisableSelect)
             {
                 DisableSelect = false;
@@ -242,6 +247,10 @@ namespace Barotrauma
                 e.isHighlighted = false;
                 e.isSelected = false;
             }
+
+            if (GUIComponent.MouseOn != null) return;
+
+
 
             if (MapEntityPrefab.Selected != null)
             {
@@ -271,8 +280,7 @@ namespace Barotrauma
                 e.isSelected = false;
             }
 
-            if (highLightedEntity != null)
-                highLightedEntity.isHighlighted = true;
+            if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
 
             foreach (MapEntity e in selectedList)
             {
@@ -297,7 +305,6 @@ namespace Barotrauma
 
                     startMovingPos = Vector2.Zero;
                 }
-
             }
             //started dragging a "selection rectangle"
             else if (selectionPos != Vector2.Zero)
@@ -390,7 +397,7 @@ namespace Barotrauma
                 {
                     foreach (MapEntity e in selectedList)
                         GUI.DrawRectangle(spriteBatch, 
-                            new Vector2(e.rect.X, -e.rect.Y) + moveAmount, 
+                            new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount, 
                             new Vector2(e.rect.Width, e.rect.Height), 
                             Color.DarkRed);
                     
@@ -495,15 +502,20 @@ namespace Barotrauma
                 {
                     MapEntity linked = FindEntityByID(i) as MapEntity;
 
-                    if (linked != null)
-                        e.linkedTo.Add(linked);
+                    if (linked != null) e.linkedTo.Add(linked);
                 }
             }
 
-            foreach (MapEntity e in mapEntityList)
+            for (int i = 0; i<mapEntityList.Count; i++)
             {
+                MapEntity e = mapEntityList[i];
+
                 e.OnMapLoaded();
+
+                if (e.Submarine != null) e.Move(Submarine.HiddenSubPosition);
             }
+
+
 
             //mapEntityList.Sort((x, y) =>
             //{

@@ -322,6 +322,8 @@ namespace Barotrauma.Items.Components
             if (itemSound.Loop)
             {
                 loopingSound = itemSound;
+
+                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
             }
             else
             {

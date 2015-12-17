@@ -64,6 +64,8 @@ namespace Barotrauma
                         
         public EnemyAIController(Character c, string file) : base(c)
         {
+            if (GameMain.Client != null && GameMain.Server == null) c.Enabled = false;
+
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
 
             XDocument doc = ToolBox.TryLoadXml(file);
@@ -167,12 +169,17 @@ namespace Barotrauma
             
             selectedTargetMemory.Priority -= deltaTime;
             
-            Vector2 attackPosition = selectedAiTarget.SimPosition;
-            if (wallAttackPos != Vector2.Zero) attackPosition = wallAttackPos;
+            Vector2 attackSimPosition = Character.Submarine==null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
+            if (wallAttackPos != Vector2.Zero && targetEntity != null)
+            {
+                attackSimPosition = wallAttackPos;
+
+                if (selectedAiTarget.Entity != null && Character.Submarine==null && selectedAiTarget.Entity.Submarine != null) attackSimPosition += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+            }
 
             if (coolDownTimer>0.0f)
             {
-                UpdateCoolDown(attackPosition, deltaTime);
+                UpdateCoolDown(attackSimPosition, deltaTime);
                 return;
             }
 
@@ -187,7 +194,8 @@ namespace Barotrauma
                 raycastTimer = RaycastInterval;
             }
 
-            steeringManager.SteeringSeek(attackPosition);
+            steeringManager.SteeringAvoid(deltaTime, 1.0f);
+            steeringManager.SteeringSeek(attackSimPosition);
             
             //check if any of the limbs is close enough to attack the target
             if (attackingLimb == null)
@@ -195,7 +203,7 @@ namespace Barotrauma
                 foreach (Limb limb in Character.AnimController.Limbs)
                 {
                     if (limb.attack==null || limb.attack.Type == AttackType.None) continue;
-                    if (Vector2.Distance(limb.SimPosition, attackPosition) > limb.attack.Range) continue;
+                    if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;
                                         
                     attackingLimb = limb;
                     break;   
@@ -203,7 +211,7 @@ namespace Barotrauma
                 return;
             }
 
-            UpdateLimbAttack(deltaTime, attackingLimb, attackPosition);
+            UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
                   
         }
 
@@ -230,9 +238,19 @@ namespace Barotrauma
         private void GetTargetEntity()
         {
             targetEntity = null;
+
+
+
+
             //check if there's a wall between the target and the Character   
-            Vector2 rayStart = Character.AnimController.Limbs[0].SimPosition;
+            Vector2 rayStart = Character.SimPosition;
             Vector2 rayEnd = selectedAiTarget.SimPosition;
+
+            if (selectedAiTarget.Entity.Submarine!=null && Character.Submarine==null)
+            {
+                rayStart -= ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+            }
+
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
 
             if (Submarine.LastPickedFraction == 1.0f || closestBody == null)
@@ -245,6 +263,8 @@ namespace Barotrauma
             if (wall == null)
             {
                 wallAttackPos = Submarine.LastPickedPosition;
+                if (selectedAiTarget.Entity.Submarine!=null) wallAttackPos -= ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+            
             }
             else
             {
@@ -261,6 +281,7 @@ namespace Barotrauma
                     if (wall.SectionDamage(i) > sectionDamage) sectionIndex = i;
                 }
                 wallAttackPos = wall.SectionPosition(sectionIndex);
+                //if (wall.Submarine != null) wallAttackPos += wall.Submarine.Position;
                 wallAttackPos = ConvertUnits.ToSimUnits(wallAttackPos);
             }
             
@@ -288,15 +309,8 @@ namespace Barotrauma
 
                     float dir = (limb.attack.Type == AttackType.PinchCW) ? 1.0f : -1.0f;
 
-                    if (wallAttackPos != Vector2.Zero && targetEntity != null)
-                    {
-                        damageTarget = targetEntity as IDamageable;
-                    }                     
-                    else
-                    {
-                        damageTarget = selectedAiTarget.Entity as IDamageable;
-                    }
-                    
+                    damageTarget = (wallAttackPos != Vector2.Zero && targetEntity != null) ? targetEntity : selectedAiTarget.Entity as IDamageable;
+                                        
                     attackTimer += deltaTime*0.05f;
 
                     if (damageTarget == null)
@@ -305,13 +319,13 @@ namespace Barotrauma
                         break;
                     }
 
-                    float dist = Vector2.Distance(limb.SimPosition, damageTarget.SimPosition);
+                    float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackPosition));
                     if (dist < limb.attack.Range * 0.5f)
                     {
                         attackTimer += deltaTime;
                         limb.body.ApplyTorque(limb.Mass * 50.0f * Character.AnimController.Dir * dir);
-                        
-                        limb.attack.DoDamage(Character, damageTarget, limb.SimPosition, deltaTime, (limb.soundTimer <= 0.0f));
+
+                        limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, deltaTime, (limb.soundTimer <= 0.0f));
 
                         limb.soundTimer = Limb.SoundInterval;
                     }
@@ -392,9 +406,8 @@ namespace Barotrauma
                 }
 
                 dist = Vector2.Distance(
-                    character.AnimController.Limbs[0].SimPosition,
-                    target.SimPosition);
-                dist = ConvertUnits.ToDisplayUnits(dist);
+                    character.WorldPosition,
+                    target.WorldPosition);
 
                 AITargetMemory targetMemory = FindTargetMemory(target);
 
@@ -405,6 +418,11 @@ namespace Barotrauma
                 {                  
                     Vector2 rayStart = character.AnimController.Limbs[0].SimPosition;
                     Vector2 rayEnd = target.SimPosition;
+
+                    if (target.Entity.Submarine != null && character.Submarine==null)
+                    {
+                        rayStart -= ConvertUnits.ToSimUnits(target.Entity.Submarine.Position);
+                    }
 
                     Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
                     Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
@@ -490,12 +508,12 @@ namespace Barotrauma
         {
             if (Character.IsDead) return;
 
-            Vector2 pos = Character.Position;
+            Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
 
             if (selectedAiTarget!=null)
             {
-                GUI.DrawLine(spriteBatch, pos, ConvertUnits.ToDisplayUnits(new Vector2(selectedAiTarget.SimPosition.X, -selectedAiTarget.SimPosition.Y)), Color.Red);
+                GUI.DrawLine(spriteBatch, pos, new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
 
                 if (wallAttackPos!=Vector2.Zero)
                 {

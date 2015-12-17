@@ -133,7 +133,8 @@ namespace Barotrauma
             get { return fireSources; }
         }
 
-        public Hull(Rectangle rectangle)
+        public Hull(Rectangle rectangle, Submarine submarine)
+            : base (submarine)
         {
             rect = rectangle;
             
@@ -155,7 +156,7 @@ namespace Barotrauma
             surface = rect.Y - rect.Height;
 
             aiTarget = new AITarget(this);
-            aiTarget.SightRange = (rect.Width + rect.Height)*10.0f;
+            aiTarget.SightRange = (rect.Width + rect.Height)*5.0f;
 
             hullList.Add(this);
 
@@ -169,8 +170,8 @@ namespace Barotrauma
 
         public override bool Contains(Vector2 position)
         {
-            return (Submarine.RectContains(rect, position) &&
-                !Submarine.RectContains(new Rectangle(rect.X + 8, rect.Y - 8, rect.Width - 16, rect.Height - 16), position));
+            return (Submarine.RectContains(WorldRect, position) &&
+                !Submarine.RectContains(MathUtils.ExpandRect(WorldRect, -8), position));
         }
 
         public int GetWaveIndex(Vector2 position)
@@ -228,11 +229,11 @@ namespace Barotrauma
             if (EditWater)
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(rect, position))
+                if (Submarine.RectContains(WorldRect, position))
                 {
                     if (PlayerInput.LeftButtonDown())
                     {
-                        waveY[(int)(position.X - rect.X) / WaveWidth] = 100.0f;
+                        //waveY[GetWaveIndex(position.X - rect.X - Submarine.Position.X) / WaveWidth] = 100.0f;
                         Volume = Volume + 1500.0f;
                     }
                     else if (PlayerInput.RightButtonDown())
@@ -244,7 +245,7 @@ namespace Barotrauma
             else if (EditFire)
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(rect, position))
+                if (Submarine.RectContains(WorldRect, position))
                 {
                     if (PlayerInput.LeftButtonClicked())
                     {
@@ -269,8 +270,11 @@ namespace Barotrauma
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
                 if (maxDelta > Rand.Range(1.0f,10.0f))
                 {
+                    Vector2 particlePos = new Vector2(rect.X + WaveWidth * i, surface + waveY[i]);
+                    if (Submarine != null) particlePos += Submarine.Position;
+
                     GameMain.ParticleManager.CreateParticle("mist",
-                        new Vector2(rect.X + WaveWidth * i,surface + waveY[i]),
+                        particlePos,
                         new Vector2(0.0f, -50.0f), 0.0f, this);
                 }
 
@@ -349,25 +353,28 @@ namespace Barotrauma
         {
             if (!editing && !GameMain.DebugDraw) return;
 
-            GUI.DrawRectangle(spriteBatch,
-                new Vector2(rect.X, -rect.Y),
-                new Vector2(rect.Width, rect.Height),
-                isHighlighted ? Color.Green : Color.Blue);
+            Rectangle drawRect =
+            Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
             GUI.DrawRectangle(spriteBatch,
-                new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height),
+                new Vector2(drawRect.X, -drawRect.Y),
+                new Vector2(rect.Width, rect.Height),
+                Color.Blue);
+
+            GUI.DrawRectangle(spriteBatch,
+                new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
                 Color.Red*((100.0f-OxygenPercentage)/400.0f), true);
 
             spriteBatch.DrawString(GUI.Font, "Pressure: " + ((int)pressure - rect.Y).ToString() +
-                " - Oxygen: "+((int)OxygenPercentage), new Vector2(rect.X+10, -rect.Y+10), Color.Black);
-            spriteBatch.DrawString(GUI.Font, volume +" / "+ FullVolume, new Vector2(rect.X+10, -rect.Y+30), Color.Black);
+                " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 10, -drawRect.Y + 10), Color.Black);
+            spriteBatch.DrawString(GUI.Font, volume + " / " + FullVolume, new Vector2(drawRect.X + 10, -drawRect.Y + 30), Color.Black);
 
-            if (isSelected && editing)
+            if ((isSelected || isHighlighted) && editing)
             {
                 GUI.DrawRectangle(spriteBatch,
-                    new Vector2(rect.X - 5, -rect.Y - 5),
-                    new Vector2(rect.Width + 10, rect.Height + 10),
-                    Color.Red);
+                    new Vector2(drawRect.X + 5, -drawRect.Y + 5),
+                    new Vector2(rect.Width - 10, rect.Height - 10),
+                    isHighlighted ? Color.LightBlue*0.5f : Color.Red*0.5f, true);
             }
         }
 
@@ -376,12 +383,13 @@ namespace Barotrauma
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
 
             //calculate where the surface should be based on the water volume
-            float top = rect.Y;
-            float bottom = rect.Y - rect.Height;
+            float top = rect.Y+Submarine.DrawPosition.Y;
+            float bottom = top - rect.Height;
             float surfaceY = bottom + Volume / rect.Width;
 
             //interpolate the position of the rendered surface towards the "target surface"
-            surface = surface + (surfaceY - surface) / 10.0f;
+            surface = surface + ((surfaceY - Submarine.DrawPosition.Y) - surface) / 10.0f;
+            float drawSurface = surface + Submarine.DrawPosition.Y;
 
             Matrix transform =  cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
@@ -393,15 +401,16 @@ namespace Barotrauma
 
                 Vector3[] corners = new Vector3[4];
 
-                corners[0] = new Vector3(rect.X, top, 0.0f);
-                corners[1] = new Vector3(rect.X + rect.Width, top, 0.0f);
+                corners[0] = new Vector3(rect.X, rect.Y, 0.0f);
+                corners[1] = new Vector3(rect.X + rect.Width, rect.Y, 0.0f);
 
-                corners[2] = new Vector3(corners[1].X, bottom, 0.0f);
-                corners[3] = new Vector3(corners[0].X, bottom, 0.0f);
+                corners[2] = new Vector3(corners[1].X, rect.Y-rect.Height, 0.0f);
+                corners[3] = new Vector3(corners[0].X, corners[2].Y, 0.0f);
 
                 Vector2[] uvCoords = new Vector2[4];
                 for (int i = 0; i < 4; i++ )
                 {
+                    corners[i] += new Vector3(Submarine.DrawPosition, 0.0f);
                     uvCoords[i] = Vector2.Transform(new Vector2(corners[i].X, -corners[i].Y), transform);                    
                 }
 
@@ -418,8 +427,8 @@ namespace Barotrauma
                 return;
             }
 
-            int x = rect.X;
-            int start = (int)Math.Floor((float)(cam.WorldView.X - x) / WaveWidth);
+            float x = rect.X + Submarine.DrawPosition.X;
+            int start = (int)Math.Floor((cam.WorldView.X - x) / WaveWidth);
             start = Math.Max(start, 0);
 
             int end = (waveY.Length - 1)
@@ -435,7 +444,7 @@ namespace Barotrauma
                 Vector3[] corners = new Vector3[4];
 
                 corners[0] = new Vector3(x, top, 0.0f);
-                corners[3] = new Vector3(corners[0].X, surface + waveY[i], 0.0f);
+                corners[3] = new Vector3(corners[0].X, drawSurface + waveY[i], 0.0f);
 
                 //skip adjacent "water rects" if the surface of the water is roughly at the same position
                 int width = WaveWidth;
@@ -446,7 +455,7 @@ namespace Barotrauma
                 }
 
                 corners[1] = new Vector3(x + width, top, 0.0f);
-                corners[2] = new Vector3(corners[1].X, surface + waveY[i+1], 0.0f);
+                corners[2] = new Vector3(corners[1].X, drawSurface + waveY[i + 1], 0.0f);
                 
                 Vector2[] uvCoords = new Vector2[4];
                 for (int n = 0; n < 4; n++)
@@ -470,21 +479,21 @@ namespace Barotrauma
         }
 
         //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHull(Vector2 position, Hull guess = null)
+        public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
         {
-            return FindHull(position, hullList, guess);
+            return FindHull(position, hullList, guess, useWorldCoordinates);
         }
 
-        public static Hull FindHull(Vector2 position, List<Hull> hulls, Hull guess = null)
+        public static Hull FindHull(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true)
         {
             if (guess != null && hulls.Contains(guess))
             {
-                if (Submarine.RectContains(guess.rect, position)) return guess;
+                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
             }
 
-            foreach (Hull w in hulls)
+            foreach (Hull hull in hulls)
             {
-                if (Submarine.RectContains(w.rect, position)) return w;
+                if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position)) return hull;
             }
 
             return null;
@@ -515,27 +524,46 @@ namespace Barotrauma
         {
             XElement element = new XElement("Hull");
 
-            element.Add(new XAttribute("ID", ID),
-                new XAttribute("x", rect.X),
-                new XAttribute("y", rect.Y),
-                new XAttribute("width", rect.Width),
-                new XAttribute("height", rect.Height),
-                new XAttribute("water", volume));
+            element.Add
+            (
+                new XAttribute("ID", ID),                
+                new XAttribute("rect",
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                    rect.Width + "," + rect.Height),
+                new XAttribute("water", volume)
+            );
             
             doc.Root.Add(element);
 
             return element;
         }
 
-        public static void Load(XElement element)
+        public static void Load(XElement element, Submarine submarine)
         {
-            Rectangle rect = new Rectangle(
-                int.Parse(element.Attribute("x").Value),
-                int.Parse(element.Attribute("y").Value),
-                int.Parse(element.Attribute("width").Value),
-                int.Parse(element.Attribute("height").Value));
+            Rectangle rect = Rectangle.Empty;
 
-            Hull h = new Hull(rect);
+            if (element.Attribute("rect") != null)
+            {
+                string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
+                string[] rectValues = rectString.Split(',');
+
+                rect = new Rectangle(
+                    int.Parse(rectValues[0]),
+                    int.Parse(rectValues[1]),
+                    int.Parse(rectValues[2]),
+                    int.Parse(rectValues[3]));
+            }
+            else
+            {
+                rect = new Rectangle(
+                    int.Parse(element.Attribute("x").Value),
+                    int.Parse(element.Attribute("y").Value),
+                    int.Parse(element.Attribute("width").Value),
+                    int.Parse(element.Attribute("height").Value));
+            }
+
+            Hull h = new Hull(rect, submarine);
 
             h.volume = ToolBox.GetAttributeFloat(element, "pressure", 0.0f);
 

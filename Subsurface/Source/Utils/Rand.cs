@@ -18,14 +18,12 @@ namespace Barotrauma
 
         public static float Range(float minimum, float maximum, bool local = true)
         {
-            return (float)(local ? localRandom : syncedRandom).NextDouble() * (maximum - minimum) + minimum;
-       
+            return (float)(local ? localRandom : syncedRandom).NextDouble() * (maximum - minimum) + minimum;       
         }
 
         public static int Range(int minimum, int maximum, bool local = true)
         {
-            return (local ? localRandom : syncedRandom).Next(maximum - minimum) + minimum;
-            
+            return (local ? localRandom : syncedRandom).Next(maximum - minimum) + minimum;            
         }
 
         public static int Int(int max = int.MaxValue, bool local = true)

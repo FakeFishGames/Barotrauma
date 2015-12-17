@@ -36,6 +36,8 @@ namespace Barotrauma
         public bool IsServer;
         public string ServerName, ServerMessage;
 
+        private Sprite backgroundSprite;
+
         private GUITextBox serverMessage;
 
         public GUIListBox SubList
@@ -98,7 +100,10 @@ namespace Barotrauma
             }
             private set
             {
+                if (levelSeed == value) return;
+
                 levelSeed = value;
+                backgroundSprite = LocationType.Random(levelSeed).Background;
                 seedBox.Text = levelSeed;
             }
         }
@@ -266,13 +271,12 @@ namespace Barotrauma
             serverMessage.Wrap = true;
             serverMessage.TextGetter = GetServerMessage;
             serverMessage.OnTextChanged = UpdateServerMessage;
+
         }
 
         public override void Deselect()
         {
             textBox.Deselect();
-
-            seedBox.Text = ToolBox.RandomSeed(8);
         }
 
         public override void Select()
@@ -284,7 +288,7 @@ namespace Barotrauma
             textBox.Select();
 
             Character.Controlled = null;
-            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+            //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             subList.Enabled         = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting;
             playerList.Enabled      = GameMain.Server != null;
@@ -320,18 +324,18 @@ namespace Barotrauma
                 banListButton.OnClicked = GameMain.Server.BanList.ToggleBanFrame;
                 banListButton.UserData = "banListButton";
                 
-                if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(-1);
-                if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(-1);
+                if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(0);
+                if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
                 if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
 
-                if (GameMain.Server.RandomizeSeed) seedBox.Text = ToolBox.RandomSeed(8);
+                if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
                 if (GameMain.Server.SubSelectionMode == SelectionMode.Random) subList.Select(Rand.Range(0,subList.CountChildren));
                 if (GameMain.Server.ModeSelectionMode == SelectionMode.Random) modeList.Select(Rand.Range(0, modeList.CountChildren));
             }
@@ -358,7 +362,7 @@ namespace Barotrauma
 
                 if (IsServer && GameMain.Server != null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
@@ -597,19 +601,19 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
             
-            Vector2 pos = new Vector2(
-                Submarine.Borders.X + Submarine.Borders.Width / 2,
-                Submarine.Borders.Y - Submarine.Borders.Height / 2);
+            //Vector2 pos = new Vector2(
+            //    Submarine.Borders.X + Submarine.Borders.Width / 2,
+            //    Submarine.Borders.Y - Submarine.Borders.Height / 2);
 
-            camAngle += (float)deltaTime / 10.0f;
-            Vector2 offset = (new Vector2(
-                (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-                (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+            //camAngle += (float)deltaTime / 10.0f;
+            //Vector2 offset = (new Vector2(
+            //    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+            //    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
             
-            pos += offset * 0.8f;
+            //pos += offset * 0.8f;
             
-            GameMain.GameScreen.Cam.TargetPos = pos;
-            GameMain.GameScreen.Cam.MoveCamera((float)deltaTime);
+            //GameMain.GameScreen.Cam.TargetPos = pos;
+            //GameMain.GameScreen.Cam.MoveCamera((float)deltaTime);
 
             menu.Update((float)deltaTime);
 
@@ -632,11 +636,16 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            graphics.Clear(Color.CornflowerBlue);
-
-            GameMain.GameScreen.DrawMap(graphics, spriteBatch);
-
+            graphics.Clear(Color.Black);
+            
             spriteBatch.Begin();
+
+            if (backgroundSprite!=null)
+            {
+                spriteBatch.Draw(backgroundSprite.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
+                    Math.Max((float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width, (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height), 
+                    SpriteEffects.None, 0.0f);
+            }
 
             menu.Draw(spriteBatch);
             
@@ -731,6 +740,8 @@ namespace Barotrauma
 
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
+
+            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(obj);
 
             return true;
         }
@@ -875,11 +886,11 @@ namespace Barotrauma
             //msg.Write(AllowSubVoting);
             //msg.Write(AllowModeVoting);
 
-            msg.Write(modeList.SelectedIndex-1);
+            msg.Write(modeList.SelectedIndex);
             //msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
-            msg.Write(GameMain.Server==null ? false : GameMain.Server.AutoRestart);
+            msg.Write(GameMain.Server == null ? false : GameMain.Server.AutoRestart);
             msg.Write(GameMain.Server == null ? 0.0f : GameMain.Server.AutoRestartTimer);
 
             msg.Write((byte)(playerList.CountChildren));
@@ -896,7 +907,7 @@ namespace Barotrauma
             
             int modeIndex = 0;
             //float durationScroll = 0.0f;
-            string levelSeed = "";
+            string newSeed = "";
 
             bool autoRestart = false;
 
@@ -917,7 +928,7 @@ namespace Barotrauma
 
                 //durationScroll = msg.ReadFloat();
 
-                levelSeed       = msg.ReadString();
+                newSeed       = msg.ReadString();
 
                 autoRestart     = msg.ReadBoolean();
                 restartTimer    = msg.ReadFloat();
@@ -945,7 +956,7 @@ namespace Barotrauma
 
             //durationBar.BarScroll = durationScroll;
 
-            LevelSeed = levelSeed;
+            LevelSeed = newSeed;
         }
 
     }

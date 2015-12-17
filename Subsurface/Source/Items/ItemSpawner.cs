@@ -30,7 +30,8 @@ namespace Barotrauma
             {
                 var itemInfo = spawnQueue.Dequeue();
 
-                new Item(itemInfo.First, itemInfo.Second);
+                //!!!!!!!!!!!!!!!!!!!!!!
+                new Item(itemInfo.First, itemInfo.Second, null);
             }
         }
     }

@@ -10,32 +10,17 @@ namespace Barotrauma
     {
         public readonly Sprite Sprite;
 
-        public readonly float Speed;
+        public readonly Alignment Alignment;
 
-        public readonly float WanderAmount;
+        public readonly int Commonness;
 
-        public readonly float WanderZAmount;
-
-        public readonly int SwarmMin, SwarmMax;
-
-        public readonly float SwarmRadius;
-
-        public readonly bool DisableRotation;
-        
         public BackgroundSpritePrefab(XElement element)
         {
-            Speed = ToolBox.GetAttributeFloat(element, "speed", 1.0f);
+            string alignmentStr = ToolBox.GetAttributeString(element, "alignment", "BottomCenter");
 
-            WanderAmount = ToolBox.GetAttributeFloat(element, "wanderamount", 0.0f);
+            if (!Enum.TryParse(alignmentStr, out Alignment)) Alignment = Alignment.BottomCenter;
 
-            WanderZAmount = ToolBox.GetAttributeFloat(element, "wanderzamount", 0.0f);
-            
-            SwarmMin = ToolBox.GetAttributeInt(element, "swarmmin", 1);
-            SwarmMax = ToolBox.GetAttributeInt(element, "swarmmax", 1);
-
-            SwarmRadius = ToolBox.GetAttributeFloat(element, "swarmradius", 200.0f);
-
-            DisableRotation = ToolBox.GetAttributeBool(element, "disablerotation", false);
+            Commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -45,6 +30,6 @@ namespace Barotrauma
                 break;
             }
         }
-    }
 
+    }
 }

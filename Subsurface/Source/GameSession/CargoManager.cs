@@ -30,7 +30,7 @@ namespace Barotrauma
                 return;
             }
 
-            Hull cargoRoom = Hull.FindHull(wp.Position);
+            Hull cargoRoom = Hull.FindHull(wp.WorldPosition);
 
             if (cargoRoom == null)
             {
@@ -44,7 +44,7 @@ namespace Barotrauma
                     Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
                     Rand.Range(cargoRoom.Rect.Y - cargoRoom.Rect.Height + 20.0f, cargoRoom.Rect.Y));
 
-                new Item(prefab as ItemPrefab, position);
+                new Item(prefab as ItemPrefab, position, wp.Submarine);
             }
 
             purchasedItems.Clear();

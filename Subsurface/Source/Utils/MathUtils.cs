@@ -205,7 +205,7 @@ namespace Barotrauma
 
             return (cornerDistanceSq <= (radius * radius));
         }
-
+        
         /// <summary>
         /// divide a convex hull into triangles
         /// </summary>
@@ -247,6 +247,11 @@ namespace Barotrauma
             this.center = center;
         }
         public int Compare(Vector2 a, Vector2 b)
+        {
+            return Compare(a, b, center);
+        }
+
+        public static int Compare(Vector2 a, Vector2 b, Vector2 center)
         {
             if (a.X - center.X >= 0 && b.X - center.X < 0) return -1;
             if (a.X - center.X < 0 && b.X - center.X >= 0) return 1;

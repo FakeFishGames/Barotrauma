@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Barotrauma.Networking.ReliableMessages;
+using FarseerPhysics;
 
 namespace Barotrauma.Networking
 {
@@ -356,7 +357,7 @@ namespace Barotrauma.Networking
                 if (myCharacter.IsDead)
                 {
                     Character.Controlled = null;
-                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
                 }
                 else if (gameStarted)
                 {
@@ -610,7 +611,7 @@ namespace Barotrauma.Networking
                     (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
                     (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
+                GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
@@ -742,7 +743,7 @@ namespace Barotrauma.Networking
             float closestDist = 0.0f;
             foreach (WayPoint wp in WayPoint.WayPointList)
             {
-                float dist = Vector2.Distance(wp.SimPosition, position);
+                float dist = Vector2.Distance(wp.WorldPosition, position);
                 if (closestWaypoint != null && dist > closestDist) continue;
                 
                 closestWaypoint = wp;
@@ -750,9 +751,7 @@ namespace Barotrauma.Networking
                 continue;                
             }
 
-            Character character = (closestWaypoint == null) ?
-                Character.Create(ch, position, !isMyCharacter) :
-                Character.Create(ch, closestWaypoint, !isMyCharacter);
+            Character character = Character.Create(ch, position, !isMyCharacter, false);
 
             character.ID = ID;
             

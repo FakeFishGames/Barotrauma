@@ -92,10 +92,7 @@ namespace Barotrauma
 
             if (Vector2.Distance(character.SimPosition, enemy.SimPosition) < 3.0f)
             {
-                character.AIController.SteeringManager.SteeringManual(deltaTime, character.SimPosition - enemy.SimPosition);            
-            }
-            else
-            {
+                character.AIController.SteeringManager.SteeringManual(deltaTime, (character.SimPosition - enemy.SimPosition)*0.1f);            
                 coolDownTimer = CoolDown;
             }
         }

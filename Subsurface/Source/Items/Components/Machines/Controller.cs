@@ -118,7 +118,7 @@ namespace Barotrauma.Items.Components
                 fmj.WorldAnchorB = position;
             }
             
-            item.SendSignal(ToolBox.Vector2ToString(character.CursorPosition), "position_out");
+            item.SendSignal(ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
         }
 
         public override bool Use(float deltaTime, Character activator = null)
@@ -152,12 +152,12 @@ namespace Barotrauma.Items.Components
                 {
                     if (c2 == null || c2.Item==null || !c2.Item.Prefab.FocusOnSelected) continue;
 
-                    Vector2 centerPos = c2.Item.Position;
+                    Vector2 centerPos = c2.Item.WorldPosition;
 
                     if (character == Character.Controlled && cam != null)
                     {
                         Lights.LightManager.ViewPos = centerPos;
-                        cam.TargetPos = c2.Item.Position;
+                        cam.TargetPos = c2.Item.WorldPosition;
                     }
 
                     break;
@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
         {
             item.SendSignal("1", "signal_out");
 
-            PlaySound(ActionType.OnUse, item.Position);
+            PlaySound(ActionType.OnUse, item.WorldPosition);
 
             return true;
         }

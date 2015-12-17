@@ -79,6 +79,11 @@ namespace Barotrauma
             get { return doesFlip; }
         }
 
+        public Vector2 WorldPosition
+        {
+            get { return character.Submarine == null ? Position : Position + character.Submarine.Position; }
+        }
+
         public Vector2 Position
         {
             get { return ConvertUnits.ToDisplayUnits(body.SimPosition); }
@@ -352,13 +357,13 @@ namespace Barotrauma
                 if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
 
                 GameMain.ParticleManager.CreateParticle("blood",
-                    Position,
+                    WorldPosition,
                     particleVel * Rand.Range(100.0f, 300.0f), 0.0f, character.AnimController.CurrentHull);
             }
 
             for (int i = 0; i < bloodAmount / 2; i++)
             {
-                GameMain.ParticleManager.CreateParticle("waterblood", Position, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
+                GameMain.ParticleManager.CreateParticle("waterblood", WorldPosition, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
             }
 
             damage += Math.Max(amount,bleedingAmount) / character.MaxHealth * 100.0f;

@@ -85,7 +85,7 @@ namespace Barotrauma
             Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
 
             //spawn some fish next to the player
-            GameMain.GameScreen.BackgroundSpriteManager.SpawnSprites(2, 
+            GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2, 
                 Submarine.Loaded.Position + Character.Controlled.Position);
 
             yield return new WaitForSeconds(4.0f);
@@ -333,7 +333,7 @@ namespace Barotrauma
             infoBox = CreateInfoFrame("Uh-oh... Something enormous just appeared on the radar.");
 
             List<Structure> windows = new List<Structure>();
-            foreach (Structure s in Structure.wallList)
+            foreach (Structure s in Structure.WallList)
             {
                 if (s.CastShadow || !s.HasBody) continue;
 
@@ -343,7 +343,7 @@ namespace Barotrauma
             bool broken = false;
             do
             {
-                Submarine.Loaded.Speed = Vector2.Zero;
+                Submarine.Loaded.Velocity = Vector2.Zero;
 
                 moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
                 Vector2 steeringDir = windows[0].Position - moloch.Position;

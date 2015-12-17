@@ -81,7 +81,6 @@ namespace Barotrauma
 
             GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.Style, menu);
             button.OnClicked = GameMain.MainMenuScreen.SelectTab;
-            button.CanBeSelected = false;
             button.SelectedColor = button.Color;
 
             refreshDisableTimer = DateTime.Now;

@@ -9,7 +9,7 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
 
-    class BackgroundSprite : ISteerable
+    class BackgroundCreature : ISteerable
     {
         const float MaxDepth = 100.0f;
 
@@ -17,7 +17,7 @@ namespace Barotrauma
 
         public bool Enabled;
 
-        private BackgroundSpritePrefab prefab;
+        private BackgroundCreaturePrefab prefab;
 
         private Vector2 position;
 
@@ -53,13 +53,13 @@ namespace Barotrauma
             set;
         }
         
-        public BackgroundSprite(BackgroundSpritePrefab prefab, Vector2 position)
+        public BackgroundCreature(BackgroundCreaturePrefab prefab, Vector2 position)
         {
             this.prefab = prefab;
 
             this.position = position;
 
-            drawPosition = position + Level.Loaded.Position;
+            drawPosition = position;
 
             steeringManager = new SteeringManager(this);
 
@@ -105,18 +105,6 @@ namespace Barotrauma
                 Vector2 midPoint = Swarm.MidPoint();
                 float midPointDist = Vector2.Distance(position, midPoint);
 
-
-
-                //steeringManager.SteeringSeek(midPoint + Swarm.AvgVelocity()*1000.0f, prefab.Speed*0.1f);
-
-                //float avgWanderAngle = 0.0f;
-                //foreach (var other in Swarm.Members)
-                //{
-                //    avgWanderAngle += other.steeringManager.WanderAngle;
-                //}
-                //avgWanderAngle /= Swarm.Members.Count;
-                //steeringManager.WanderAngle = MathHelper.Lerp(steeringManager.WanderAngle, avgWanderAngle, 0.1f);
-
                 if (midPointDist > Swarm.MaxDistance)
                 {
                     steeringManager.SteeringSeek(midPoint, (midPointDist / Swarm.MaxDistance) * prefab.Speed);
@@ -153,15 +141,15 @@ namespace Barotrauma
                 if (velocity.X < 0.0f) rotation -= MathHelper.Pi;
             }
 
-            if (Level.Loaded != null) drawPosition = position + Level.Loaded.Position;
+            drawPosition = position;// +Level.Loaded.Position;
 
             if (depth > 0.0f)
             {
                 Vector2 camOffset = drawPosition - GameMain.GameScreen.Cam.WorldViewCenter;
 
-                drawPosition = drawPosition - camOffset * (depth / MaxDepth) * 0.05f;
+                drawPosition -= camOffset * (depth / MaxDepth) * 0.05f;
             }
-
+            
             prefab.Sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), Color.Lerp(Color.White, Color.DarkBlue, (depth/MaxDepth)*0.3f),
                 rotation, 1.0f - (depth / MaxDepth) * 0.2f, velocity.X > 0.0f ? SpriteEffects.None : SpriteEffects.FlipHorizontally, (depth / MaxDepth));
         }
@@ -169,7 +157,7 @@ namespace Barotrauma
 
     class Swarm
     {
-        public List<BackgroundSprite> Members;
+        public List<BackgroundCreature> Members;
 
         public readonly float MaxDistance;
 
@@ -179,7 +167,7 @@ namespace Barotrauma
 
             Vector2 midPoint = Vector2.Zero;
 
-            foreach (BackgroundSprite member in Members)
+            foreach (BackgroundCreature member in Members)
             {
                 midPoint += member.SimPosition;
             }
@@ -195,7 +183,7 @@ namespace Barotrauma
 
             Vector2 avgVel = Vector2.Zero;
 
-            foreach (BackgroundSprite member in Members)
+            foreach (BackgroundCreature member in Members)
             {
                 avgVel += member.Velocity;
             }
@@ -205,13 +193,13 @@ namespace Barotrauma
             return avgVel;
         }
 
-        public Swarm(List<BackgroundSprite> members, float maxDistance)
+        public Swarm(List<BackgroundCreature> members, float maxDistance)
         {
             this.Members = members;
 
             this.MaxDistance = maxDistance;
 
-            foreach (BackgroundSprite bgSprite in members)
+            foreach (BackgroundCreature bgSprite in members)
             {
                 bgSprite.Swarm = this;
             }

@@ -85,7 +85,7 @@ namespace Barotrauma
             basicEffect.Texture = texture;
 
             basicEffect.View = Matrix.Identity;
-            basicEffect.World = cam.ShaderTransform
+            basicEffect.World = transform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
             basicEffect.CurrentTechnique.Passes[0].Apply();

@@ -15,7 +15,9 @@ namespace Barotrauma
 
         public const float WallWidth = 20000.0f;
 
-        public VertexPositionTexture[] Vertices;
+        public VertexPositionTexture[] WallVertices;
+
+        public VertexPositionColor[] BodyVertices;
 
         private Vector2 midPos;
         private int slot;
@@ -95,8 +97,15 @@ namespace Barotrauma
                 vertices[3] = vertices[0] + Vector2.UnitY * wallSectionSize.Y;
 
                 VoronoiCell wallCell = new VoronoiCell(vertices);
+                wallCell.edges[0].cell1 = wallCell;
                 wallCell.edges[1].cell1 = wallCell;
+                wallCell.edges[2].cell1 = wallCell;
                 wallCell.edges[3].cell1 = wallCell;
+
+                wallCell.edges[0].isSolid = true;
+                wallCell.edges[2].isSolid = true;
+
+
                 if (i > 1)
                 {
                     wallCell.edges[1].cell2 = cells[i - 2];

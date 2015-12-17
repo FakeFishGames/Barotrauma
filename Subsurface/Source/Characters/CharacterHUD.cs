@@ -54,7 +54,7 @@ namespace Barotrauma
 
             if (character.ClosestCharacter != null && (character.ClosestCharacter.IsDead || character.ClosestCharacter.Stun > 0.0f))
             {
-                Vector2 startPos = character.Position + (character.ClosestCharacter.Position - character.Position) * 0.7f;
+                Vector2 startPos = character.DrawPosition + (character.ClosestCharacter.DrawPosition - character.DrawPosition) * 0.7f;
                 startPos = cam.WorldToScreen(startPos);
 
                 Vector2 textPos = startPos;
@@ -67,7 +67,7 @@ namespace Barotrauma
             else if (character.SelectedCharacter == null && character.ClosestItem != null && character.SelectedConstruction == null)
             {
 
-                Vector2 startPos = character.Position + (character.ClosestItem.Position - character.Position) * 0.7f;
+                Vector2 startPos = character.DrawPosition + (character.ClosestItem.DrawPosition - character.DrawPosition) * 0.7f;
                 startPos = cam.WorldToScreen(startPos);
 
                 Vector2 textPos = startPos;
@@ -96,10 +96,10 @@ namespace Barotrauma
             {
                 int width = 100, height = 20;
 
-                drowningBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 200, width, height), Color.Blue, 1.0f);
+                drowningBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 200, width, height), Color.Blue, GUI.Style, 1.0f, Alignment.TopLeft);
                 new GUIImage(new Rectangle(-27, -7, 20, 20), new Rectangle(17, 0, 20, 24), statusIcons, Alignment.TopLeft, drowningBar);
 
-                healthBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 230, width, height), Color.Red, 1.0f);
+                healthBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 230, width, height), Color.Red, GUI.Style, 1.0f, Alignment.TopLeft);
                 new GUIImage(new Rectangle(-26, -7, 20, 20), new Rectangle(0, 0, 13, 24), statusIcons, Alignment.TopLeft, healthBar);
             }
 

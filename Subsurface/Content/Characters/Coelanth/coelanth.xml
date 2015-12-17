@@ -15,7 +15,7 @@
     <!-- lower yaw -->
     <limb id = "1" radius="20" height="240" impacttolerance="50.0">
       <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="425,1,101,309" depth="0.025" origin="0.5,0.5"/>
-      <attack type="PinchCCW" range="200" duration="0.5" damage="200" bleedingdamage="50" structuredamage="150" damagetype="slash"/>
+      <attack type="PinchCCW" range="300" duration="0.5" damage="200" bleedingdamage="50" structuredamage="150" damagetype="slash"/>
     </limb>
 
     <!-- body -->
@@ -54,5 +54,5 @@
     
   </ragdoll>
 
-  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="2.0" hearing="10.0"/>
+  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="0.1" hearing="1.0"/>
 </Character>
