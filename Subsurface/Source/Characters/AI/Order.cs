@@ -76,11 +76,23 @@ namespace Barotrauma
 
             Color = new Color(ToolBox.GetAttributeVector4(orderElement, "color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f)));
 
-            Options = ToolBox.GetAttributeString(orderElement, "options", "").Split(',');
-            for (int i = 0; i<Options.Length; i++)
+            string optionStr = ToolBox.GetAttributeString(orderElement, "options", "");
+
+            if (string.IsNullOrWhiteSpace(optionStr))
             {
-                Options[i] = Options[i].Trim();
+                Options = new string[0];
             }
+            else
+            {
+                Options = optionStr.Split(',');
+
+                for (int i = 0; i<Options.Length; i++)
+                {
+                    Options[i] = Options[i].Trim();
+                }
+            }
+
+
 
             foreach (XElement subElement in orderElement.Elements())
             {

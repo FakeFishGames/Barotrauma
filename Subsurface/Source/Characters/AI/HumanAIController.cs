@@ -20,6 +20,18 @@ namespace Barotrauma
 
         private float updateObjectiveTimer;
 
+        public Order CurrentOrder
+        {
+            get;
+            private set;
+        }
+
+        public string CurrentOrderOption
+        {
+            get;
+            private set;
+        }
+
         public HumanAIController(Character c) : base(c)
         {
             indoorsSteeringManager = new IndoorsSteeringManager(this, true);
@@ -77,6 +89,8 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string option)
         {
+            CurrentOrderOption = option;
+            CurrentOrder = order;
             objectiveManager.SetOrder(order, option);
         }
 
