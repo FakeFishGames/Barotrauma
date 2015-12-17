@@ -14,13 +14,13 @@ namespace Barotrauma
 
         private Character character;
 
-        private AIObjective currentOrder;
+        private AIObjective currentObjective;
         
         public AIObjective CurrentObjective
         {
             get
             {
-                if (currentOrder != null) return currentOrder;
+                if (currentObjective != null) return currentObjective;
                 return objectives.Any() ? objectives[0] : null;
             }
         }
@@ -41,7 +41,7 @@ namespace Barotrauma
 
         public float GetCurrentPriority(Character character)
         {
-            if (currentOrder != null) return OrderPriority;
+            if (currentObjective != null) return OrderPriority;
             return (CurrentObjective == null) ? 0.0f : CurrentObjective.GetPriority(character);
         }
 
@@ -69,9 +69,9 @@ namespace Barotrauma
 
         public void DoCurrentObjective(float deltaTime)
         {
-            if (currentOrder != null && (!objectives.Any() || objectives[0].GetPriority(character)<OrderPriority))
+            if (currentObjective != null && (!objectives.Any() || objectives[0].GetPriority(character)<OrderPriority))
             {
-                currentOrder.TryComplete(deltaTime);
+                currentObjective.TryComplete(deltaTime);
                 return;
             }
 
@@ -81,20 +81,20 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string option)
         {
-            currentOrder = null;
+            currentObjective = null;
 
             switch (order.Name.ToLower())
             {
                 case "follow":
-                    currentOrder = new AIObjectiveGoTo(Character.Controlled, character, true);
+                    currentObjective = new AIObjectiveGoTo(Character.Controlled, character, true);
                     break;
                 case "wait":
-                    currentOrder = new AIObjectiveGoTo(character.SimPosition, character, true);
+                    currentObjective = new AIObjectiveGoTo(character.SimPosition, character, true);
                     break;
                 default:
                     if (order.TargetItem == null) return;
 
-                    currentOrder = new AIObjectiveOperateItem(order.TargetItem, character, option);
+                    currentObjective = new AIObjectiveOperateItem(order.TargetItem, character, option);
 
                     break;
             }

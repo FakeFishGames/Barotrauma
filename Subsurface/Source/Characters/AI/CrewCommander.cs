@@ -38,20 +38,20 @@ namespace Barotrauma
 
             if (IsOpen) 
             {
-                CreateGUIFrame();
+                if (frame == null) CreateGUIFrame();
                 UpdateCharacters();
             }
         }
 
         private void CreateGUIFrame()
         {
-            frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.3f);
+            frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.6f);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
 
             //UpdateCharacters();
 
             int buttonWidth = 130;
-            int spacing = 10;
+            int spacing = 20;
 
                 int y = 250;  
 
@@ -88,13 +88,16 @@ namespace Barotrauma
                     i++;
                 }
 
-                y += 80;
+                y += 100;
             }
         }
 
         private GUIButton CreateOrderButton(Rectangle rect, Order order, bool createSymbol = true)
         {
-            var orderButton = new GUIButton(rect, order.Name, Color.Black * 0.5f, Alignment.TopCenter, Alignment.Right, null, frame);
+            var orderButton = new GUIButton(rect, order.Name, Color.Black * 0.7f, Alignment.TopCenter, Alignment.Center, null, frame);
+            orderButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            orderButton.TextColor = Color.White;
+            orderButton.Color = Color.Black * 0.5f;
             orderButton.HoverColor = Color.LightGray * 0.5f;
             orderButton.OutlineColor = Color.LightGray * 0.8f;
             orderButton.UserData = order;
@@ -102,10 +105,10 @@ namespace Barotrauma
             
             if (createSymbol)
             {
-                var symbol = new GUIImage(new Rectangle(-5,0,64,64), order.SymbolSprite, Alignment.Left | Alignment.CenterY, orderButton);
+                var symbol = new GUIImage(new Rectangle(0,-60,64,64), order.SymbolSprite, Alignment.TopCenter, orderButton);
                 symbol.Color = order.Color;
 
-                orderButton.children.Insert(1, symbol);
+                orderButton.children.Insert(0, symbol);
                 orderButton.children.RemoveAt(orderButton.children.Count-1);
             }
             
@@ -123,7 +126,7 @@ namespace Barotrauma
 
                 prevCharacterFrames.Add(child);
             }
-
+            
             foreach (GUIComponent child in prevCharacterFrames)
             {
                 frame.RemoveChild(child);
@@ -183,6 +186,12 @@ namespace Barotrauma
 
                 new GUIImage(new Rectangle(-5, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
 
+                var humanAi = character.AIController as HumanAIController;
+                if (humanAi.CurrentOrder != null)
+                {
+                    CreateCharacterOrderFrame(characterButton, humanAi.CurrentOrder, humanAi.CurrentOrderOption);
+                }
+
                 i++;
             }
         }
@@ -200,30 +209,9 @@ namespace Barotrauma
                 if (!characterButton.Selected) continue;
                 characterButton.Selected = false;
 
-                var character = child.UserData as Character;
-                if (character == null) continue;
+                CreateCharacterOrderFrame(characterButton, order, "");
 
-                var humanAi = character.AIController as HumanAIController;
-                if (humanAi == null) continue;
-
-                var existingOrder = characterButton.children.Find(c => c.UserData as Order != null);
-                if (existingOrder != null) characterButton.RemoveChild(existingOrder);
-
-                var orderFrame = new GUIFrame(new Rectangle(0, characterButton.Rect.Height, 0, 30 + order.Options.Length*15), null, characterButton);
-                orderFrame.OutlineColor = Color.LightGray * 0.8f;
-                orderFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                orderFrame.UserData = order;
-                new GUITextBlock(new Rectangle(0,0,0,20), order.DoingText, GUI.Style, Alignment.TopLeft, Alignment.TopCenter, orderFrame);
-
-                var optionList = new GUIListBox(new Rectangle(0,20,0,80), Color.Transparent, null, orderFrame);
-                optionList.UserData = order;
-                optionList.OnSelected = SelectOrderOption;
-                foreach (string option in order.Options)
-                {
-                    var optionBox = new GUITextBlock(new Rectangle(0,0,0,15), option, GUI.Style, optionList);
-                    optionBox.Font = GUI.SmallFont;
-                    optionBox.UserData = option;
-                }
+                var humanAi = (characterButton.UserData as Character).AIController as HumanAIController;
 
                 humanAi.SetOrder(order, "");
             }
@@ -231,6 +219,41 @@ namespace Barotrauma
             //characterList.Deselect();
 
             return true;
+        }
+
+        private void CreateCharacterOrderFrame(GUIComponent characterFrame, Order order, string selectedOption)
+        {
+            var character = characterFrame.UserData as Character;
+            if (character == null) return;
+
+            var humanAi = character.AIController as HumanAIController;
+            if (humanAi == null) return;
+
+            var existingOrder = characterFrame.children.Find(c => c.UserData as Order != null);
+            if (existingOrder != null) characterFrame.RemoveChild(existingOrder);
+
+            var orderFrame = new GUIFrame(new Rectangle(0, characterFrame.Rect.Height, 0, 30 + order.Options.Length * 15), null, characterFrame);
+            orderFrame.OutlineColor = Color.LightGray * 0.8f;
+            orderFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            orderFrame.UserData = order;
+            new GUITextBlock(new Rectangle(0, 0, 0, 20), order.DoingText, GUI.Style, Alignment.TopLeft, Alignment.TopCenter, orderFrame);
+
+            var optionList = new GUIListBox(new Rectangle(0, 20, 0, 80), Color.Transparent, null, orderFrame);
+            optionList.UserData = order;
+
+            for (int i = 0; i < order.Options.Length; i++ )
+            {
+                var optionBox = new GUITextBlock(new Rectangle(0, 0, 0, 15), order.Options[i], GUI.Style, optionList);
+                optionBox.Font = GUI.SmallFont;
+                optionBox.UserData = order.Options[i];
+
+                if (selectedOption == order.Options[i])
+                {
+                    optionList.Select(i);
+                }
+            }
+            optionList.OnSelected = SelectOrderOption;
+
         }
 
         private bool SelectOrderOption(GUIComponent component, object userData)

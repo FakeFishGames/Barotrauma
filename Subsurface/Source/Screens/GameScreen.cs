@@ -134,9 +134,9 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            if (Character.Controlled!=null)
+            if (Character.Controlled != null)
             {
-                cam.TargetPos = Character.Controlled.Position;
+                cam.TargetPos = Character.Controlled.WorldPosition;
             }
 
             cam.UpdateTransform();
