@@ -115,6 +115,11 @@ namespace Barotrauma
             get { return body.Position; }
         }
 
+        public Vector2 PrevPosition
+        {
+            get { return prevPosition; }
+        }
+
         public float Rotation
         {
             get { return body.Rotation; }

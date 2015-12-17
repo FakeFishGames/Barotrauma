@@ -25,7 +25,7 @@ namespace Barotrauma
         private LevelRenderer renderer;
 
         //how close the sub has to be to start/endposition to exit
-        const float ExitDistance = 6000.0f;
+        public const float ExitDistance = 6000.0f;
 
         private string seed;
 
@@ -56,12 +56,6 @@ namespace Barotrauma
             get { return startPosition; }
         }
 
-        public bool AtStartPosition
-        {
-            get;
-            private set;
-        }
-
         public Vector2 Size
         {
             get { return new Vector2(borders.Width, borders.Height); }
@@ -71,13 +65,7 @@ namespace Barotrauma
         {
             get { return endPosition; }
         }
-
-        public bool AtEndPosition
-        {
-            get;
-            private set;
-        }
-        
+                
         public List<Vector2> PositionsOfInterest
         {
             get { return positionsOfInterest; }
@@ -379,6 +367,8 @@ namespace Barotrauma
                 startPosition = endPosition;
                 endPosition = temp;
             }
+
+            renderer.PlaceSprites(100);
 
             Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
@@ -967,7 +957,7 @@ namespace Barotrauma
             renderer.Draw(spriteBatch);
         }
 
-        public void DrawBack(SpriteBatch spriteBatch, Camera cam, BackgroundSpriteManager backgroundSpriteManager = null)
+        public void DrawBack(SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundSpriteManager = null)
         {
             if (renderer == null) return;
             renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager);

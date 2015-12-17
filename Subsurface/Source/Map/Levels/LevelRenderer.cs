@@ -16,6 +16,8 @@ namespace Barotrauma
         private static Texture2D dustParticles;
         private static Texture2D shaftTexture;
 
+        private static BackgroundSpriteManager backgroundSpriteManager;
+
         Vector2 dustOffset;
 
         private Level level;
@@ -43,16 +45,25 @@ namespace Barotrauma
                 basicEffect.Texture = TextureLoader.FromFile("Content/Map/iceWall.png");
             }
 
+            if (backgroundSpriteManager==null)
+            {
+                backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
+            }
+
             this.level = level;
+        }
+
+        public void PlaceSprites(int amount)
+        {
+            backgroundSpriteManager.PlaceSprites(level, amount);
         }
 
         public void Update(float deltaTime)
         {
-
             dustOffset -= Vector2.UnitY * 10.0f * (float)deltaTime;
         }
 
-        public void DrawBackground(SpriteBatch spriteBatch, Camera cam, BackgroundSpriteManager backgroundSpriteManager = null)
+        public void DrawBackground(SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundCreatureManager = null)
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
 
@@ -87,7 +98,9 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);
 
-            if (backgroundSpriteManager!=null) backgroundSpriteManager.Draw(spriteBatch);
+            backgroundSpriteManager.DrawSprites(spriteBatch);
+
+            if (backgroundCreatureManager!=null) backgroundCreatureManager.Draw(spriteBatch);
 
             spriteBatch.End();
 
@@ -118,12 +131,10 @@ namespace Barotrauma
         public void Draw(SpriteBatch spriteBatch)
         {
             Vector2 pos = new Vector2(0.0f, -level.StartPosition.Y);// level.EndPosition;
-            //pos.Y = -pos.Y - level.Position.Y;
 
             if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y - 512) return;
 
             pos.X = GameMain.GameScreen.Cam.WorldView.X -512.0f;
-            //pos.X += Position.X % 512;
 
             int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 512.0f + 2.0f) * 512.0f);
 

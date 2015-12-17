@@ -289,7 +289,7 @@ namespace Barotrauma
         {
             if (prefab.sprite == null) return;
 
-            Color color = (isHighlighted) ? Color.Green : Color.White;
+            Color color = (isHighlighted) ? Color.Orange : Color.White;
             if (isSelected && editing) color = Color.Red;
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
@@ -583,8 +583,11 @@ namespace Barotrauma
             
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID),
-                new XAttribute("rect", rect.X + "," + rect.Y+","+rect.Width+","+rect.Height));
-
+                new XAttribute("rect",
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                    rect.Width + "," + rect.Height));
+            
             for (int i = 0; i < sections.Count(); i++)
             {
                 if (sections[i].damage == 0.0f) continue;

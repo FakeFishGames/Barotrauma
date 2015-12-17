@@ -236,8 +236,6 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateSelecting(Camera cam)
         {
-            if (GUIComponent.MouseOn != null) return;
-
             if (DisableSelect)
             {
                 DisableSelect = false;
@@ -249,6 +247,10 @@ namespace Barotrauma
                 e.isHighlighted = false;
                 e.isSelected = false;
             }
+
+            if (GUIComponent.MouseOn != null) return;
+
+
 
             if (MapEntityPrefab.Selected != null)
             {
@@ -278,8 +280,7 @@ namespace Barotrauma
                 e.isSelected = false;
             }
 
-            if (highLightedEntity != null)
-                highLightedEntity.isHighlighted = true;
+            if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
 
             foreach (MapEntity e in selectedList)
             {
@@ -304,7 +305,6 @@ namespace Barotrauma
 
                     startMovingPos = Vector2.Zero;
                 }
-
             }
             //started dragging a "selection rectangle"
             else if (selectionPos != Vector2.Zero)
@@ -397,7 +397,7 @@ namespace Barotrauma
                 {
                     foreach (MapEntity e in selectedList)
                         GUI.DrawRectangle(spriteBatch, 
-                            new Vector2(e.rect.X, -e.rect.Y) + moveAmount, 
+                            new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount, 
                             new Vector2(e.rect.Width, e.rect.Height), 
                             Color.DarkRed);
                     
@@ -502,8 +502,7 @@ namespace Barotrauma
                 {
                     MapEntity linked = FindEntityByID(i) as MapEntity;
 
-                    if (linked != null)
-                        e.linkedTo.Add(linked);
+                    if (linked != null) e.linkedTo.Add(linked);
                 }
             }
 

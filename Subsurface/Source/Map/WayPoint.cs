@@ -420,8 +420,8 @@ namespace Barotrauma
             XElement element = new XElement("WayPoint");
 
             element.Add(new XAttribute("ID", ID),
-                new XAttribute("x", rect.X),
-                new XAttribute("y", rect.Y),
+                new XAttribute("x", (int)(rect.X - Submarine.HiddenSubPosition.X)),
+                new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
                 new XAttribute("spawn", spawnType));
 
             if (idCardTags.Length > 0)

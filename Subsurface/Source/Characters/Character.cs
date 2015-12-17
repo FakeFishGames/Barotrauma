@@ -300,7 +300,7 @@ namespace Barotrauma
         
         public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false, bool hasAi=true)
         {
-            return Create(characterInfo.File, position, characterInfo, isNetworkPlayer);
+            return Create(characterInfo.File, position, characterInfo, isNetworkPlayer, hasAi);
         }
 
         public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, bool hasAi=true)
@@ -315,17 +315,19 @@ namespace Barotrauma
             }
             else
             {
-                if (hasAi)
-                {
-                    return new Character(file, position, characterInfo, isNetworkPlayer);
-                }
-                else
+                if (hasAi && !isNetworkPlayer)
                 {
                     var character = new AICharacter(file, position, characterInfo, isNetworkPlayer);
                     var ai = new HumanAIController(character);
                     character.SetAI(ai);
 
                     return character;
+
+                }
+                else
+                {
+
+                    return new Character(file, position, characterInfo, isNetworkPlayer);
                 }
             }
         }
@@ -340,26 +342,12 @@ namespace Barotrauma
             {
                 keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));
             }
-
-            //keys[(int)InputType.Select] = new Key(GameMain.Config.KeyBind(InputType.Select));
-            //keys[(int)InputType.ActionHeld] = new Key(true);
-            //keys[(int)InputType.ActionHit] = new Key(false);
-            //keys[(int)InputType.SecondaryHit] = new Key(false);
-            //keys[(int)InputType.SecondaryHeld] = new Key(true);
-
-            //keys[(int)InputType.Left] = new Key(true);
-            //keys[(int)InputType.Right] = new Key(true);
-            //keys[(int)InputType.Up] = new Key(true);
-            //keys[(int)InputType.Down] = new Key(true);
-
-            //keys[(int)InputType.Run] = new Key(true);
-
+            
             selectedItems = new Item[2];
 
             IsNetworkPlayer = isNetworkPlayer;
 
             oxygen = 100.0f;
-            //blood = 100.0f;
             aiTarget = new AITarget(this);
 
             lowPassMultiplier = 1.0f;
@@ -1259,22 +1247,6 @@ namespace Barotrauma
                     return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
                 case NetworkEventType.ImportantEntityUpdate:
                     
-                    //int i = 0;
-                    //foreach (Limb limb in AnimController.Limbs)
-                    //{
-                    //    if (limb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
-
-                    //    message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                    //    message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-
-                    //    //message.Write(limb.body.LinearVelocity.X);
-                    //    //message.Write(limb.body.LinearVelocity.Y);
-
-                    //    message.Write(limb.body.Rotation);
-                    //    //message.WriteRangedSingle(MathHelper.Clamp(limb.body.AngularVelocity, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-                    //    i++;
-                    //}
-
                     message.Write((byte)((health / maxHealth) * 255.0f));
 
                     if (AnimController.StunTimer<=0.0f && bleeding<=0.0f && oxygen>99.0f)
@@ -1291,9 +1263,7 @@ namespace Barotrauma
 
                         bleeding = MathHelper.Clamp(bleeding, 0.0f, 5.0f);
                         message.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
-
                     }
-
 
                     return true;
                 case NetworkEventType.EntityUpdate:

@@ -101,9 +101,9 @@ namespace Barotrauma
             private set
             {
                 if (levelSeed == value) return;
-                backgroundSprite = LocationType.Random(LevelSeed).Background;
 
                 levelSeed = value;
+                backgroundSprite = LocationType.Random(levelSeed).Background;
                 seedBox.Text = levelSeed;
             }
         }
@@ -277,8 +277,6 @@ namespace Barotrauma
         public override void Deselect()
         {
             textBox.Deselect();
-
-            seedBox.Text = ToolBox.RandomSeed(8);
         }
 
         public override void Select()
@@ -326,18 +324,18 @@ namespace Barotrauma
                 banListButton.OnClicked = GameMain.Server.BanList.ToggleBanFrame;
                 banListButton.UserData = "banListButton";
                 
-                if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(-1);
-                if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(-1);
+                if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(0);
+                if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
                 if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
 
-                if (GameMain.Server.RandomizeSeed) seedBox.Text = ToolBox.RandomSeed(8);
+                if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
                 if (GameMain.Server.SubSelectionMode == SelectionMode.Random) subList.Select(Rand.Range(0,subList.CountChildren));
                 if (GameMain.Server.ModeSelectionMode == SelectionMode.Random) modeList.Select(Rand.Range(0, modeList.CountChildren));
             }
@@ -364,7 +362,7 @@ namespace Barotrauma
 
                 if (IsServer && GameMain.Server != null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(-10, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
@@ -743,6 +741,8 @@ namespace Barotrauma
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
 
+            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(obj);
+
             return true;
         }
 
@@ -886,11 +886,11 @@ namespace Barotrauma
             //msg.Write(AllowSubVoting);
             //msg.Write(AllowModeVoting);
 
-            msg.Write(modeList.SelectedIndex-1);
+            msg.Write(modeList.SelectedIndex);
             //msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
-            msg.Write(GameMain.Server==null ? false : GameMain.Server.AutoRestart);
+            msg.Write(GameMain.Server == null ? false : GameMain.Server.AutoRestart);
             msg.Write(GameMain.Server == null ? 0.0f : GameMain.Server.AutoRestartTimer);
 
             msg.Write((byte)(playerList.CountChildren));
@@ -907,7 +907,7 @@ namespace Barotrauma
             
             int modeIndex = 0;
             //float durationScroll = 0.0f;
-            string levelSeed = "";
+            string newSeed = "";
 
             bool autoRestart = false;
 
@@ -928,7 +928,7 @@ namespace Barotrauma
 
                 //durationScroll = msg.ReadFloat();
 
-                levelSeed       = msg.ReadString();
+                newSeed       = msg.ReadString();
 
                 autoRestart     = msg.ReadBoolean();
                 restartTimer    = msg.ReadFloat();
@@ -956,7 +956,7 @@ namespace Barotrauma
 
             //durationBar.BarScroll = durationScroll;
 
-            LevelSeed = levelSeed;
+            LevelSeed = newSeed;
         }
 
     }

@@ -104,6 +104,24 @@ namespace Barotrauma
             get { return subBody==null ? Vector2.Zero : subBody.Position - HiddenSubPosition; }
         }
 
+        public bool AtEndPosition
+        {
+            get 
+            { 
+                if (Level.Loaded == null) return false;
+                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance);
+            }
+        }
+
+        public bool AtStartPosition
+        {
+            get
+            {
+                if (Level.Loaded == null) return false;
+                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance);
+            }
+        }
+
         public new Vector2 DrawPosition
         {
             get;
@@ -283,6 +301,8 @@ namespace Barotrauma
 
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null)
         {
+            if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.0f) return null;
+
             float closestFraction = 1.0f;
             Body closestBody = null;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
@@ -397,8 +417,8 @@ namespace Barotrauma
         {
             if (subBody == null) return false;
 
-            message.Write(Position.X);
-            message.Write(Position.Y);
+            message.Write(subBody.Position.X);
+            message.Write(subBody.Position.Y);
 
             message.Write(Velocity.X);
             message.Write(Velocity.Y);

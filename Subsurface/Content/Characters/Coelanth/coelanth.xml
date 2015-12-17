@@ -54,5 +54,5 @@
     
   </ragdoll>
 
-  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="2.0" hearing="10.0"/>
+  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="0.1" hearing="1.0"/>
 </Character>

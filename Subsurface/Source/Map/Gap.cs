@@ -79,6 +79,13 @@ namespace Barotrauma
             InsertToList();
         }
 
+        public override void Move(Vector2 amount)
+        {
+            base.Move(amount);
+
+            FindHulls();
+        }
+
         public static void UpdateHulls()
         {
             foreach (Gap g in Gap.GapList)
@@ -119,7 +126,7 @@ namespace Barotrauma
 
             if (hulls[0] == null && hulls[1] == null) return;
 
-            if (hulls[0]!=null && hulls[1]!=null)
+            if (hulls[0] != null && hulls[1] != null)
             {
                 if ((isHorizontal && hulls[0].Rect.X > hulls[1].Rect.X) || (!isHorizontal && hulls[0].Rect.Y < hulls[1].Rect.Y))
                 {
@@ -537,15 +544,21 @@ namespace Barotrauma
             if (soundIndex > -1) Sounds.SoundManager.Stop(soundIndex);
         }
 
+
+        public override void OnMapLoaded()
+        {
+            UpdateHulls();
+        }
         public override XElement Save(XDocument doc)
         {
             XElement element = new XElement("Gap");
 
-            element.Add(new XAttribute("ID", ID),
-                new XAttribute("x", rect.X),
-                new XAttribute("y", rect.Y),
-                new XAttribute("width", rect.Width),
-                new XAttribute("height", rect.Height));
+            element.Add(new XAttribute("ID", ID));
+
+            element.Add(new XAttribute("rect",
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                    rect.Width + "," + rect.Height));
 
             //if (linkedTo != null)
             //{
@@ -566,11 +579,27 @@ namespace Barotrauma
 
         public static void Load(XElement element, Submarine submarine)
         {
-            Rectangle rect = new Rectangle(
-                int.Parse(element.Attribute("x").Value),
-                int.Parse(element.Attribute("y").Value),
-                int.Parse(element.Attribute("width").Value),
-                int.Parse(element.Attribute("height").Value));
+            Rectangle rect = Rectangle.Empty;
+
+            if (element.Attribute("rect") != null)
+            {
+                string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
+                string[] rectValues = rectString.Split(',');
+
+                rect = new Rectangle(
+                    int.Parse(rectValues[0]),
+                    int.Parse(rectValues[1]),
+                    int.Parse(rectValues[2]),
+                    int.Parse(rectValues[3]));
+            }
+            else
+            {
+                rect = new Rectangle(
+                    int.Parse(element.Attribute("x").Value),
+                    int.Parse(element.Attribute("y").Value),
+                    int.Parse(element.Attribute("width").Value),
+                    int.Parse(element.Attribute("height").Value));
+            }
 
             Gap g = new Gap(rect, submarine);
             g.ID = (ushort)int.Parse(element.Attribute("ID").Value);

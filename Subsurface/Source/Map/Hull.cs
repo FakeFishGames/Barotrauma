@@ -229,11 +229,11 @@ namespace Barotrauma
             if (EditWater)
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(rect, position))
+                if (Submarine.RectContains(WorldRect, position))
                 {
                     if (PlayerInput.LeftButtonDown())
                     {
-                        waveY[(int)(position.X - rect.X) / WaveWidth] = 100.0f;
+                        //waveY[GetWaveIndex(position.X - rect.X - Submarine.Position.X) / WaveWidth] = 100.0f;
                         Volume = Volume + 1500.0f;
                     }
                     else if (PlayerInput.RightButtonDown())
@@ -245,7 +245,7 @@ namespace Barotrauma
             else if (EditFire)
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(rect, position))
+                if (Submarine.RectContains(WorldRect, position))
                 {
                     if (PlayerInput.LeftButtonClicked())
                     {
@@ -524,12 +524,15 @@ namespace Barotrauma
         {
             XElement element = new XElement("Hull");
 
-            element.Add(new XAttribute("ID", ID),
-                new XAttribute("x", rect.X),
-                new XAttribute("y", rect.Y),
-                new XAttribute("width", rect.Width),
-                new XAttribute("height", rect.Height),
-                new XAttribute("water", volume));
+            element.Add
+            (
+                new XAttribute("ID", ID),                
+                new XAttribute("rect",
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                    rect.Width + "," + rect.Height),
+                new XAttribute("water", volume)
+            );
             
             doc.Root.Add(element);
 
@@ -538,11 +541,27 @@ namespace Barotrauma
 
         public static void Load(XElement element, Submarine submarine)
         {
-            Rectangle rect = new Rectangle(
-                int.Parse(element.Attribute("x").Value),
-                int.Parse(element.Attribute("y").Value),
-                int.Parse(element.Attribute("width").Value),
-                int.Parse(element.Attribute("height").Value));
+            Rectangle rect = Rectangle.Empty;
+
+            if (element.Attribute("rect") != null)
+            {
+                string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
+                string[] rectValues = rectString.Split(',');
+
+                rect = new Rectangle(
+                    int.Parse(rectValues[0]),
+                    int.Parse(rectValues[1]),
+                    int.Parse(rectValues[2]),
+                    int.Parse(rectValues[3]));
+            }
+            else
+            {
+                rect = new Rectangle(
+                    int.Parse(element.Attribute("x").Value),
+                    int.Parse(element.Attribute("y").Value),
+                    int.Parse(element.Attribute("width").Value),
+                    int.Parse(element.Attribute("height").Value));
+            }
 
             Hull h = new Hull(rect, submarine);
 

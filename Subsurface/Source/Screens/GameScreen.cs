@@ -15,7 +15,7 @@ namespace Barotrauma
         readonly RenderTarget2D renderTargetWater;
         readonly RenderTarget2D renderTargetAir;
 
-        public BackgroundSpriteManager BackgroundSpriteManager;
+        public BackgroundCreatureManager BackgroundCreatureManager;
 
         public Camera Cam
         {
@@ -32,12 +32,14 @@ namespace Barotrauma
             renderTargetAir = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             
-            BackgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
+            BackgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundSprites/BackgroundCreaturePrefabs.xml");
         }
 
         public override void Select()
         {
             base.Select();
+
+            if (Submarine.Loaded != null) cam.TargetPos = Submarine.Loaded.Position;
 
             foreach (MapEntity entity in MapEntity.mapEntityList)
                 entity.IsHighlighted = false;
@@ -83,7 +85,7 @@ namespace Barotrauma
 
             Character.UpdateAll(cam, (float)deltaTime);
 
-            BackgroundSpriteManager.Update(cam, (float)deltaTime);
+            BackgroundCreatureManager.Update(cam, (float)deltaTime);
 
             GameMain.ParticleManager.Update((float)deltaTime);
 
@@ -180,7 +182,7 @@ namespace Barotrauma
             graphics.SetRenderTarget(renderTarget);
             graphics.Clear(new Color(11, 18, 26, 255));
 
-            if (Level.Loaded != null) Level.Loaded.DrawBack(spriteBatch, cam, BackgroundSpriteManager);
+            if (Level.Loaded != null) Level.Loaded.DrawBack(spriteBatch, cam, BackgroundCreatureManager);
 
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,

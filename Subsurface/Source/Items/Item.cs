@@ -389,15 +389,22 @@ namespace Barotrauma
             if (body != null) FindHull();
         }
 
-        public Rectangle TransformTrigger(Rectangle trigger)
+        public Rectangle TransformTrigger(Rectangle trigger, bool world = false)
         {
-            return new Rectangle(
+            return world ? 
+            new Rectangle(
+                WorldRect.X + trigger.X,
+                WorldRect.Y + trigger.Y,
+                (trigger.Width == 0) ? (int)Rect.Width : trigger.Width,
+                (trigger.Height == 0) ? (int)Rect.Height : trigger.Height)
+                :
+            new Rectangle(
                 Rect.X + trigger.X,
                 Rect.Y + trigger.Y,
                 (trigger.Width == 0) ? (int)Rect.Width : trigger.Width,
                 (trigger.Height == 0) ? (int)Rect.Height : trigger.Height);
         }
-        
+
         /// <summary>
         /// goes through every item and re-checks which hull they are in
         /// </summary>
@@ -900,13 +907,13 @@ namespace Barotrauma
             return closest;
         }
 
-        public bool IsInsideTrigger(Vector2 position)
+        public bool IsInsideTrigger(Vector2 worldPosition)
         {
             foreach (Rectangle trigger in prefab.Triggers)
             {
-                Rectangle transformedTrigger = TransformTrigger(trigger);
+                Rectangle transformedTrigger = TransformTrigger(trigger, true);
 
-                if (Submarine.RectContains(transformedTrigger, position)) return true;
+                if (Submarine.RectContains(transformedTrigger, worldPosition)) return true;
             }
 
             return false;
@@ -1142,14 +1149,19 @@ namespace Barotrauma
 
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID));
-
+            
             if (prefab.ResizeHorizontal || prefab.ResizeVertical)
             {
-                element.Add(new XAttribute("rect", rect.X + "," + rect.Y + "," + rect.Width + "," + rect.Height));
+                element.Add(new XAttribute("rect", 
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," + 
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," + 
+                    rect.Width + "," + rect.Height));
             }
             else
             {
-                element.Add(new XAttribute("rect", rect.X + "," + rect.Y));
+                element.Add(new XAttribute("rect", 
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," + 
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y)));
             }
 
             if (linkedTo != null && linkedTo.Count>0)

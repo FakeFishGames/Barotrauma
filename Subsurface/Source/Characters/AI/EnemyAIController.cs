@@ -170,7 +170,7 @@ namespace Barotrauma
             selectedTargetMemory.Priority -= deltaTime;
             
             Vector2 attackSimPosition = Character.Submarine==null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
-            if (wallAttackPos != Vector2.Zero)
+            if (wallAttackPos != Vector2.Zero && targetEntity != null)
             {
                 attackSimPosition = wallAttackPos;
 
