@@ -31,6 +31,11 @@ namespace Barotrauma
 
             var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
+            if (pathSteering==null)
+            {
+                return;
+            }
+
             if (newTargetTimer <= 0.0f)
             {
                 currentTarget = FindRandomTarget();
@@ -54,14 +59,18 @@ namespace Barotrauma
                 (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable)))
             {
                 //steer away from edges of the hull
-                if (character.Position.X < character.AnimController.CurrentHull.Rect.X + WallAvoidDistance)
+                if (character.AnimController.CurrentHull!=null)
                 {
-                    pathSteering.SteeringManual(deltaTime, Vector2.UnitX);
+                    if (character.Position.X < character.AnimController.CurrentHull.Rect.X + WallAvoidDistance)
+                    {
+                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX*5.0f);
+                    }
+                    else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - WallAvoidDistance)
+                    {
+                        pathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
+                    }
                 }
-                else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - WallAvoidDistance)
-                {
-                    pathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
-                }
+
 
                 character.AIController.SteeringManager.SteeringWander(1.0f);
                 return;                
@@ -80,8 +89,8 @@ namespace Barotrauma
 
                 foreach (WayPoint wp in WayPoint.WayPointList)
                 {
-                    if (wp.SpawnType != SpawnType.Human) continue;
-
+                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull==null) continue;
+                 
                     foreach (string tag in wp.IdCardTags)
                     {
                         if (idCard.HasTag(tag)) return wp.CurrentHull.AiTarget;

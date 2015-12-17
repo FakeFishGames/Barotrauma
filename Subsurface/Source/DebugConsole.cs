@@ -225,7 +225,7 @@ namespace Barotrauma
                     if (commands[1].ToLower()=="human")
                     {
                         WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
-                        Character.Controlled = Character.Create(Character.HumanConfigFile, (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
+                        Character.Controlled = Character.Create(Character.HumanConfigFile, (spawnPoint == null) ? Vector2.Zero : spawnPoint.WorldPosition);
                         if (GameMain.GameSession != null)
                         {
                             SinglePlayerMode mode = GameMain.GameSession.gameMode as SinglePlayerMode;
@@ -237,7 +237,7 @@ namespace Barotrauma
                     else
                     {
                         WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
-                        Character.Create("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.SimPosition);
+                        Character.Create("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.WorldPosition);
                     }
 
                     break;
@@ -287,6 +287,9 @@ namespace Barotrauma
                     commands[1] = commands[1].ToLower();
                     Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLower() == commands[1]);
                     break;
+                case "godmode":
+                    Submarine.Loaded.GodMode = !Submarine.Loaded.GodMode;
+                    break;
                 case "heal":
                     if (Character.Controlled != null)
                     {
@@ -320,7 +323,7 @@ namespace Barotrauma
                     break;
                 case "fixhull":
                 case "fixwalls":
-                    foreach (Structure w in Structure.wallList)
+                    foreach (Structure w in Structure.WallList)
                     {
                         for (int i = 0 ; i < w.SectionCount; i++)
                         {

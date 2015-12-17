@@ -103,7 +103,7 @@ namespace Barotrauma
 
             if (volume <= 0.0f) return -1;
 
-            alSourceId = SoundManager.Play(this, relativePos, volume);
+            alSourceId = SoundManager.Play(this, relativePos/100.0f, volume);
 
             return alSourceId;
 
@@ -112,16 +112,16 @@ namespace Barotrauma
             //return UpdatePosition(newIndex, position, range, volume);
         }
 
-        public int Play(float volume, float range, Body body)
-        {
-            //Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
-            //bodyPosition.Y = -bodyPosition.Y;
+        //public int Play(float volume, float range, Body body)
+        //{
+        //    //Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
+        //    //bodyPosition.Y = -bodyPosition.Y;
 
 
-            alSourceId = Play(volume, range, ConvertUnits.ToDisplayUnits(body.Position));
+        //    alSourceId = Play(volume, range, ConvertUnits.ToDisplayUnits(body.Position));
 
-            return alSourceId;
-        }
+        //    return alSourceId;
+        //}
 
         private float GetVolume(Vector2 relativePosition, float range, float baseVolume)
         {
@@ -183,7 +183,6 @@ namespace Barotrauma
 
         public int Loop(int sourceIndex, float baseVolume, Vector2 position, float range)
         {
-
             Vector2 relativePos = GetRelativePosition(position);
             float volume = GetVolume(relativePos, range, baseVolume);
 
@@ -198,7 +197,7 @@ namespace Barotrauma
                 return sourceIndex;
             }
 
-            return SoundManager.Loop(this, sourceIndex, relativePos, volume);
+            return SoundManager.Loop(this, sourceIndex, relativePos/100.0f, volume);
 
         }
 
@@ -258,7 +257,7 @@ namespace Barotrauma
                 if (s.oggSound == oggSound) return;
             }
 
-            System.Diagnostics.Debug.WriteLine("Removing sound " + filePath + " (buffer id" + AlBufferId + ")");
+            //System.Diagnostics.Debug.WriteLine("Removing sound " + filePath + " (buffer id" + AlBufferId + ")");
 
             SoundManager.ClearAlSource(AlBufferId);
             oggSound.Dispose();

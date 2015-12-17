@@ -30,7 +30,7 @@ namespace Barotrauma
             ItemComponent target = itemController == null ? targetItem: itemController;
 
             if (Vector2.Distance(character.SimPosition, target.Item.SimPosition) < target.Item.PickDistance
-                || target.Item.IsInsideTrigger(character.Position))
+                || target.Item.IsInsideTrigger(character.WorldPosition))
             {
                 if (character.SelectedConstruction != target.Item && target.CanBeSelected)
                 {

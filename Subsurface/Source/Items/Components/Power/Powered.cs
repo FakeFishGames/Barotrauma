@@ -98,7 +98,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!powerOnSoundPlayed)
                 {
-                    powerOnSound.Play(1.0f, 600.0f, item.Position);
+                    powerOnSound.Play(1.0f, 600.0f, item.WorldPosition);
                     powerOnSoundPlayed = true;
                 }
             }

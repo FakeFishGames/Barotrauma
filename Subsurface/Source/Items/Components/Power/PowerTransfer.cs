@@ -62,12 +62,12 @@ namespace Barotrauma.Items.Components
 
                     if (pt.item.Condition<=0.0f && prevCondition > 0.0f)
                     {
-                        sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, pt.item.Position);
+                        sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, pt.item.WorldPosition);
 
                         Vector2 baseVel = Rand.Vector(300.0f);
                         for (int i = 0; i < 10; i++)
                         {
-                            var particle = GameMain.ParticleManager.CreateParticle("spark", pt.item.Position,
+                            var particle = GameMain.ParticleManager.CreateParticle("spark", pt.item.WorldPosition,
                                 baseVel + Rand.Vector(100.0f), 0.0f, item.CurrentHull);
 
                             if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
 
                         if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
                         {
-                            new FireSource(pt.item.Position);
+                            new FireSource(pt.item.WorldPosition);
                         }
                     }
                 }

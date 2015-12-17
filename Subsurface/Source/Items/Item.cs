@@ -255,13 +255,14 @@ namespace Barotrauma
             
         //}
 
-        public Item(ItemPrefab itemPrefab, Vector2 position)
-            : this(new Rectangle((int)position.X, (int)position.Y, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
+            : this(new Rectangle((int)position.X, (int)position.Y, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab, submarine)
         {
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
+            : base(submarine)
         {
             prefab = itemPrefab;
 
@@ -377,9 +378,8 @@ namespace Barotrauma
 
             if (ItemList != null && body != null)
             {
-                amount = ConvertUnits.ToSimUnits(amount);
                 //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
-                body.SetTransform(body.SimPosition+amount, body.Rotation);
+                body.SetTransform(body.SimPosition+ConvertUnits.ToSimUnits(amount), body.Rotation);
             }
             foreach (ItemComponent ic in components)
             {
@@ -389,15 +389,22 @@ namespace Barotrauma
             if (body != null) FindHull();
         }
 
-        public Rectangle TransformTrigger(Rectangle trigger)
+        public Rectangle TransformTrigger(Rectangle trigger, bool world = false)
         {
-            return new Rectangle(
+            return world ? 
+            new Rectangle(
+                WorldRect.X + trigger.X,
+                WorldRect.Y + trigger.Y,
+                (trigger.Width == 0) ? (int)Rect.Width : trigger.Width,
+                (trigger.Height == 0) ? (int)Rect.Height : trigger.Height)
+                :
+            new Rectangle(
                 Rect.X + trigger.X,
                 Rect.Y + trigger.Y,
                 (trigger.Width == 0) ? (int)Rect.Width : trigger.Width,
                 (trigger.Height == 0) ? (int)Rect.Height : trigger.Height);
         }
-        
+
         /// <summary>
         /// goes through every item and re-checks which hull they are in
         /// </summary>
@@ -408,7 +415,11 @@ namespace Barotrauma
         
         public virtual Hull FindHull()
         {
-            CurrentHull = Hull.FindHull((body == null) ? Position : ConvertUnits.ToDisplayUnits(body.SimPosition), CurrentHull);
+            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
+            if (body!=null)
+            {
+                body.Submarine = CurrentHull == null ? null : Submarine.Loaded;
+            }
             return CurrentHull;
         }
         
@@ -545,7 +556,7 @@ namespace Barotrauma
                 {
                     ic.Update(deltaTime, cam);
                     
-                    ic.PlaySound(ActionType.OnActive, Position);
+                    ic.PlaySound(ActionType.OnActive, WorldPosition);
                     //ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                    
                 }
                 else
@@ -598,7 +609,16 @@ namespace Barotrauma
             {
                 if (body == null)
                 {
-                    prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+                    {
+
+                        prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X-rect.Width/2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), color);
+                    }
+                    else
+                    {
+                        prefab.sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color);
+                    }
+
                 }
                 else if (body.Enabled)
                 {
@@ -615,7 +635,7 @@ namespace Barotrauma
                             depth = holdable.Picker.AnimController.GetLimb(LimbType.LeftArm).sprite.Depth - 0.000001f;
                         }
 
-                        body.Draw(spriteBatch, prefab.sprite,  color, depth);
+                        body.Draw(spriteBatch, prefab.sprite, color, depth);
                     }
                     else
                     {
@@ -632,13 +652,18 @@ namespace Barotrauma
                 return;
             }
 
-            GUI.DrawRectangle(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), Color.Green);
+            GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green);
 
             foreach (Rectangle t in prefab.Triggers)
             {
                 Rectangle transformedTrigger = TransformTrigger(t);
+
+                Vector2 rectWorldPos = new Vector2(transformedTrigger.X, transformedTrigger.Y);
+                if (Submarine!=null) rectWorldPos += Submarine.Position;
+                rectWorldPos.Y = -rectWorldPos.Y;
+
                 GUI.DrawRectangle(spriteBatch, 
-                    new Vector2(transformedTrigger.X, -transformedTrigger.Y),
+                    rectWorldPos,
                     new Vector2(transformedTrigger.Width, transformedTrigger.Height), 
                     Color.Green);
             }
@@ -646,8 +671,8 @@ namespace Barotrauma
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(rect.X + rect.Width / 2, -rect.Y + rect.Height / 2),
-                    new Vector2(e.Rect.X + e.Rect.Width / 2, -e.Rect.Y + e.Rect.Height / 2),
+                    new Vector2(WorldPosition.X, -WorldPosition.Y),
+                     new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
                     Color.Red*0.3f);
             }
         }
@@ -882,13 +907,13 @@ namespace Barotrauma
             return closest;
         }
 
-        public bool IsInsideTrigger(Vector2 position)
+        public bool IsInsideTrigger(Vector2 worldPosition)
         {
             foreach (Rectangle trigger in prefab.Triggers)
             {
-                Rectangle transformedTrigger = TransformTrigger(trigger);
+                Rectangle transformedTrigger = TransformTrigger(trigger, true);
 
-                if (Submarine.RectContains(transformedTrigger, position)) return true;
+                if (Submarine.RectContains(transformedTrigger, worldPosition)) return true;
             }
 
             return false;
@@ -989,7 +1014,7 @@ namespace Barotrauma
                 {
                     ic.WasUsed = true;
 
-                    ic.PlaySound(ActionType.OnUse, body==null ? Position : ConvertUnits.ToDisplayUnits(body.SimPosition));
+                    ic.PlaySound(ActionType.OnUse, WorldPosition);
     
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
 
@@ -1124,14 +1149,19 @@ namespace Barotrauma
 
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID));
-
+            
             if (prefab.ResizeHorizontal || prefab.ResizeVertical)
             {
-                element.Add(new XAttribute("rect", rect.X + "," + rect.Y + "," + rect.Width + "," + rect.Height));
+                element.Add(new XAttribute("rect", 
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," + 
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," + 
+                    rect.Width + "," + rect.Height));
             }
             else
             {
-                element.Add(new XAttribute("rect", rect.X + "," + rect.Y));
+                element.Add(new XAttribute("rect", 
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," + 
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y)));
             }
 
             if (linkedTo != null && linkedTo.Count>0)
@@ -1159,8 +1189,8 @@ namespace Barotrauma
             return element;
         }
 
-        public static void Load(XElement element)
-        {
+        public static void Load(XElement element, Submarine submarine)
+        {          
             string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
             string[] rectValues = rectString.Split(',');
             Rectangle rect = Rectangle.Empty;
@@ -1196,7 +1226,8 @@ namespace Barotrauma
                     rect.Height = (int)ip.Size.Y;
                 }
 
-                Item item = new Item(rect, ip);
+                Item item = new Item(rect, ip, submarine);
+                item.Submarine = submarine;
                 item.ID = (ushort)int.Parse(element.Attribute("ID").Value);
                                 
                 item.linkedToID = new List<ushort>();
@@ -1242,6 +1273,16 @@ namespace Barotrauma
                 break;
             }
 
+        }
+
+        public override void OnMapLoaded()
+        {
+            FindHull();
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.OnMapLoaded();
+            }            
         }
         
 

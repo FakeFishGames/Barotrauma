@@ -42,7 +42,7 @@ namespace Barotrauma
         public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
             : base(file, position, characterInfo, isNetworkPlayer)
         {
-            if (GameMain.Client != null && GameMain.Server == null) Enabled = false;
+            soundInterval = Rand.Range(0.0f, soundInterval);
         }
 
         public void SetAI(AIController aiController)
@@ -94,15 +94,14 @@ namespace Barotrauma
                 case NetworkEventType.KillCharacter:
                     return true;
                 case NetworkEventType.ImportantEntityUpdate:
-                    int i = 0;
                     //foreach (Limb limb in AnimController.Limbs)
                     //{
                         //if (RefLimb.ignoreCollisions) continue;
 
-                        if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
+                        if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
 
-                        message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                        message.WriteRangedSingle(AnimController.RefLimb.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        message.Write(AnimController.RefLimb.SimPosition.X);
+                        message.Write(AnimController.RefLimb.SimPosition.Y);
 
 
                         message.Write(AnimController.RefLimb.Rotation);
@@ -115,14 +114,23 @@ namespace Barotrauma
                     aiController.FillNetworkData(message);
                     return true;
                 case NetworkEventType.EntityUpdate:
-                    if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
+                    if (Submarine == null)
+                    {
+                        if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
+                    
+                    }
+                    else
+                    {
+                        if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;                    
+                    }
+
                     
                     message.Write(AnimController.TargetDir == Direction.Right);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
             
-                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    message.Write(AnimController.RefLimb.SimPosition.X);
+                    message.Write(AnimController.RefLimb.SimPosition.Y);
 
                     return true;                    
             }
@@ -150,8 +158,8 @@ namespace Barotrauma
 
                         try
                         {
-                            limbPos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                            limbPos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                            limbPos.X = message.ReadFloat();
+                            limbPos.Y = message.ReadFloat();
                             
                             rotation = message.ReadFloat();
                         }
@@ -197,8 +205,8 @@ namespace Barotrauma
                         targetMovement.X = message.ReadRangedSingle(-1.0f, 1.0f, 8);
                         targetMovement.Y = message.ReadRangedSingle(-1.0f, 1.0f, 8);
 
-                        pos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                        pos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                        pos.X = message.ReadFloat();
+                        pos.Y = message.ReadFloat();
 
                         //vel.X = message.ReadFloat();
                         //vel.Y = message.ReadFloat();

@@ -81,8 +81,12 @@ namespace Barotrauma.Items.Components
 
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
+            Vector2 drawPos = new Vector2(item.Rect.X, item.Rect.Y);
+            if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;
+            drawPos.Y = -drawPos.Y;
+
             barrelSprite.Draw(spriteBatch, 
-                new Vector2(item.Rect.X, -item.Rect.Y) + barrelPos, Color.White,
+                 drawPos + barrelPos, Color.White,
                 rotation + MathHelper.PiOver2, 1.0f, 
                 SpriteEffects.None, item.Sprite.Depth+0.01f);
         }
@@ -149,7 +153,7 @@ namespace Barotrauma.Items.Components
 
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
-            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y)), -rotation);
+            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y)), -rotation);
 
             projectiles[0].Use(deltaTime);
             if (projectile.container != null) projectile.container.RemoveContained(projectile);
@@ -297,7 +301,7 @@ namespace Barotrauma.Items.Components
                 case "position_in":
                     Vector2 receivedPos = ToolBox.ParseToVector2(signal, false);
 
-                    Vector2 centerPos = new Vector2(item.Rect.X + barrelPos.X, item.Rect.Y - barrelPos.Y);
+                    Vector2 centerPos = new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y);
 
                     Vector2 offset = receivedPos - centerPos;
                     offset.Y = -offset.Y;

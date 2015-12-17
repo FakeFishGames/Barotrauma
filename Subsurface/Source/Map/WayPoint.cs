@@ -63,7 +63,14 @@ namespace Barotrauma
             }
         }
 
-        public WayPoint(Rectangle newRect)
+        public WayPoint(Vector2 position, SpawnType spawnType, Submarine submarine, Gap gap = null)
+            : this(new Rectangle((int)position.X-3, (int)position.Y+3, 6, 6), submarine)
+        {
+            this.spawnType = spawnType;
+            ConnectedGap = gap;
+        }
+        public WayPoint(Rectangle newRect, Submarine submarine)
+            : base (submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();
@@ -73,30 +80,24 @@ namespace Barotrauma
             WayPointList.Add(this);
         }
 
-        public WayPoint(Vector2 position, SpawnType spawnType, Gap gap = null)
-            :this(new Rectangle((int)position.X-3, (int)position.Y+3, 6, 6))
-        {
-            this.spawnType = spawnType;
-            ConnectedGap = gap;
-        }
-
-
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back=true)
         {
             if (!editing && !GameMain.DebugDraw) return;
 
-            Point pos = new Point((int)Position.X, (int)Position.Y);
+            Rectangle drawRect =
+                Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+
 
             Color clr = (isSelected) ? Color.Red : Color.LightGreen;
-            GUI.DrawRectangle(spriteBatch, new Rectangle(pos.X - rect.Width / 2, -pos.Y - rect.Height / 2, rect.Width, rect.Height), clr, true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height), clr, true);
             
             //spriteBatch.DrawString(GUI.SmallFont, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
 
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(pos.X, -pos.Y),
-                    new Vector2(e.Position.X + e.Rect.Width / 2, -e.Position.Y + e.Rect.Height / 2),
+                    new Vector2(drawRect.X, -drawRect.Y),
+                    new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
                     Color.Green);
             }
         }
@@ -218,6 +219,12 @@ namespace Barotrauma
 
         public static void GenerateSubWaypoints()
         {
+            List<WayPoint> existingWaypoints = WayPointList.FindAll(wp => wp.spawnType == SpawnType.Path);
+            foreach (WayPoint wayPoint in existingWaypoints)
+            {
+                wayPoint.Remove();
+            }
+
             float minDist = 200.0f;
             float heightFromFloor = 100.0f;
 
@@ -228,13 +235,13 @@ namespace Barotrauma
                 if (hull.Rect.Width<minDist*3.0f)
                 {
                     var wayPoint = new WayPoint(
-                        new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path);
+                        new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path, Submarine.Loaded);
                     continue;
                 }
 
                 for (float x = hull.Rect.X + minDist; x <= hull.Rect.X + hull.Rect.Width - minDist; x += minDist)
                 {
-                    var wayPoint = new WayPoint(new Vector2(x, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path);
+                    var wayPoint = new WayPoint(new Vector2(x, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path, Submarine.Loaded);
 
                     if (prevWaypoint != null) wayPoint.ConnectTo(prevWaypoint);                    
 
@@ -257,11 +264,11 @@ namespace Barotrauma
 
                 stairPoints[0] = new WayPoint(
                     new Vector2(stairs.Rect.X - 50.0f,
-                        stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? 80 : stairs.Rect.Height) + heightFromFloor), SpawnType.Path);
+                        stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? 80 : stairs.Rect.Height) + heightFromFloor), SpawnType.Path, Submarine.Loaded);
 
                 stairPoints[1] = new WayPoint(
                   new Vector2(stairs.Rect.Right + 50.0f,
-                      stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? stairs.Rect.Height : 80) + heightFromFloor), SpawnType.Path);
+                      stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? stairs.Rect.Height : 80) + heightFromFloor), SpawnType.Path, Submarine.Loaded);
 
                 for (int i = 0; i < 2; i++ )
                 {
@@ -281,7 +288,7 @@ namespace Barotrauma
                 if (!gap.isHorizontal) continue;
 
                 var wayPoint = new WayPoint(
-                    new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height + heightFromFloor), SpawnType.Path, gap);
+                    new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height + heightFromFloor), SpawnType.Path, Submarine.Loaded, gap);
 
                 for (int dir = -1; dir <= 1; dir += 2)
                 {
@@ -404,7 +411,7 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            currentHull = Hull.FindHull(this.Position);
+            currentHull = Hull.FindHull(WorldPosition);
         }
 
         public override XElement Save(XDocument doc)
@@ -413,8 +420,8 @@ namespace Barotrauma
             XElement element = new XElement("WayPoint");
 
             element.Add(new XAttribute("ID", ID),
-                new XAttribute("x", rect.X),
-                new XAttribute("y", rect.Y),
+                new XAttribute("x", (int)(rect.X - Submarine.HiddenSubPosition.X)),
+                new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
                 new XAttribute("spawn", spawnType));
 
             if (idCardTags.Length > 0)
@@ -442,14 +449,14 @@ namespace Barotrauma
             return element;
         }
 
-        public static void Load(XElement element)
+        public static void Load(XElement element, Submarine submarine)
         {
             Rectangle rect = new Rectangle(
                 int.Parse(element.Attribute("x").Value),
                 int.Parse(element.Attribute("y").Value),
                 (int)Submarine.GridSize.X, (int)Submarine.GridSize.Y);
 
-            WayPoint w = new WayPoint(rect);
+            WayPoint w = new WayPoint(rect, submarine);
 
             w.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             w.spawnType = (SpawnType)Enum.Parse(typeof(SpawnType), 

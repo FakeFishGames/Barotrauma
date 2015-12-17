@@ -169,11 +169,11 @@ namespace Barotrauma.Items.Components
                 Structure structure;
                 if ((limb = (f2.Body.UserData as Limb)) != null)
                 {
-                    attackResult = attack.DoDamage(User, limb.character, item.SimPosition, 1.0f);
+                    attackResult = attack.DoDamage(User, limb.character, item.WorldPosition, 1.0f);
                 }
                 else if ((structure = (f2.Body.UserData as Structure)) != null)
                 {
-                    attackResult = attack.DoDamage(User, structure, item.SimPosition, 1.0f);
+                    attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f);
                 }
             }
 

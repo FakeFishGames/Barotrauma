@@ -6,6 +6,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Voronoi2;
@@ -24,7 +25,7 @@ namespace Barotrauma
         private LevelRenderer renderer;
 
         //how close the sub has to be to start/endposition to exit
-        const float ExitDistance = 6000.0f;
+        public const float ExitDistance = 6000.0f;
 
         private string seed;
 
@@ -40,7 +41,6 @@ namespace Barotrauma
         //List<Body> bodies;
         private List<VoronoiCell> cells;
 
-        private VertexPositionTexture[] vertices;
         //private VertexBuffer vertexBuffer;
 
         private Vector2 startPosition, endPosition;
@@ -56,12 +56,6 @@ namespace Barotrauma
             get { return startPosition; }
         }
 
-        public bool AtStartPosition
-        {
-            get;
-            private set;
-        }
-
         public Vector2 Size
         {
             get { return new Vector2(borders.Width, borders.Height); }
@@ -71,21 +65,7 @@ namespace Barotrauma
         {
             get { return endPosition; }
         }
-
-        public bool AtEndPosition
-        {
-            get;
-            private set;
-        }
-
-        public Vector2 Position
-        {
-            get 
-            {                 
-                return cells==null ? Vector2.Zero : ConvertUnits.ToDisplayUnits(cells[0].body.Position); 
-            }
-        }
-
+                
         public List<Vector2> PositionsOfInterest
         {
             get { return positionsOfInterest; }
@@ -247,7 +227,7 @@ namespace Barotrauma
             for (int i = 0; i <3 ; i++ )
             {
                 Vector2 position = pathCells[Rand.Range((int)(pathCells.Count * 0.5f), pathCells.Count - 2, false)].Center;
-                WayPoint wayPoint = new WayPoint(new Rectangle((int)position.X, (int)position.Y, 10, 10));
+                WayPoint wayPoint = new WayPoint(new Rectangle((int)position.X, (int)position.Y, 10, 10), null);
                 wayPoint.MoveWithLevel = true;
                 wayPoint.SpawnType = SpawnType.Enemy;
             }
@@ -321,7 +301,9 @@ namespace Barotrauma
             startPosition.Y = borders.Height;
             endPosition.Y = borders.Height;
 
-            vertices = GeneratePolygons(cells, pathCells);
+            renderer.BodyVertices = GeneratePolygons(cells, pathCells);
+            renderer.WallVertices = GenerateWallShapes(cells);
+
             
             wrappingWalls = new WrappingWall[2, 2];
 
@@ -332,7 +314,13 @@ namespace Barotrauma
                     wrappingWalls[side, i] = new WrappingWall(pathCells, cells, borders.Height * 0.5f,
                         (side == 0 ? -1 : 1) * (i == 0 ? 1 : 2));
 
-                    wrappingWalls[side, i].Vertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>());
+                    wrappingWalls[side, i].BodyVertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>(), false);
+                    wrappingWalls[side, i].WallVertices = GenerateWallShapes(wrappingWalls[side, i].Cells);
+                    //wrappingWalls[side, i].Cells[0].edges[1].isSolid = false;
+                    //wrappingWalls[side, i].Cells[0].edges[3].isSolid = false;
+
+                    //wrappingWalls[side, i].Cells[wrappingWalls[side, i].Cells.Count-1].edges[1].isSolid = false;
+                    //wrappingWalls[side, i].Cells[wrappingWalls[side, i].Cells.Count - 1].edges[3].isSolid = false;
                 }
 
             }
@@ -379,6 +367,8 @@ namespace Barotrauma
                 startPosition = endPosition;
                 endPosition = temp;
             }
+
+            renderer.PlaceSprites(100);
 
             Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
@@ -462,7 +452,7 @@ namespace Barotrauma
 
             if (placeWaypoints)
             {
-                WayPoint newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, (int)(borders.Height + shaftHeight), 10, 10));
+                WayPoint newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
                 newWaypoint.MoveWithLevel = true;
 
                 WayPoint prevWaypoint = newWaypoint;
@@ -479,7 +469,7 @@ namespace Barotrauma
                     }
                     if (i >= pathCells.Count) break;
 
-                    newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10));
+                    newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10), null);
                     newWaypoint.MoveWithLevel = true;
                     if (prevWaypoint != null)
                     {
@@ -489,7 +479,7 @@ namespace Barotrauma
                     prevWaypoint = newWaypoint;
                 }
 
-                newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, (int)(borders.Height + shaftHeight), 10, 10));
+                newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
                 newWaypoint.MoveWithLevel = true;
 
                 prevWaypoint.linkedTo.Add(newWaypoint);
@@ -624,9 +614,9 @@ namespace Barotrauma
         }
 
 
-        private VertexPositionTexture[] GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells)
+        private VertexPositionColor[] GeneratePolygons(List<VoronoiCell> cells, List<VoronoiCell> emptyCells, bool setSolid=true)
         {
-            List<VertexPositionTexture> verticeList = new List<VertexPositionTexture>();
+            List<VertexPositionColor> verticeList = new List<VertexPositionColor>();
             //bodies = new List<Body>();
 
             List<Vector2> tempVertices = new List<Vector2>();
@@ -647,7 +637,7 @@ namespace Barotrauma
                     VoronoiCell adjacentCell = ge.AdjacentCell(cell);
                     if (adjacentCell!=null && cells.Contains(adjacentCell)) continue;
 
-                    ge.isSolid = true;
+                    if (setSolid) ge.isSolid = true;
 
                     if (!bodyPoints.Contains(ge.point1)) bodyPoints.Add(ge.point1);
                     if (!bodyPoints.Contains(ge.point2)) bodyPoints.Add(ge.point2);
@@ -664,10 +654,9 @@ namespace Barotrauma
                 {
                     foreach (Vector2 vertex in triangles[i])
                     {
-                        verticeList.Add(new VertexPositionTexture(new Vector3(vertex, 0.0f), vertex/1000.0f));
+                        verticeList.Add(new VertexPositionColor(new Vector3(vertex, 0.0f), Color.Black));
                     }
                 }
-
 
                 if (bodyPoints.Count < 2) continue;
 
@@ -712,117 +701,266 @@ namespace Barotrauma
             return verticeList.ToArray();
         }
 
-        public void SetPosition(Vector2 pos)
+        private VertexPositionTexture[] GenerateWallShapes(List<VoronoiCell> cells)
         {
-            Vector2 amount = pos - Position;
-            Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
-            //foreach (VoronoiCell cell in cells)
-            //{
-            //    if (cell.body == null) continue;
-            //    cell.body.SleepingAllowed = false;
-            //    cell.body.SetTransform(cell.body.Position + simAmount, cell.body.Rotation);
-            //}
+            float inwardThickness = 500.0f, outWardThickness = 30.0f;
 
-            foreach (Body body in bodies)
-            {
-                body.SetTransform(body.Position + simAmount, body.Rotation);
-            }
+            List<VertexPositionTexture> verticeList = new List<VertexPositionTexture>();
 
-            foreach (MapEntity mapEntity in MapEntity.mapEntityList)
+            foreach (VoronoiCell cell in cells)
             {
-                Item item = mapEntity as Item;
-                if (item == null)
+                if (cell.body == null) continue;
+                foreach (GraphEdge edge in cell.edges)
                 {
-                    //if (!mapEntity.MoveWithLevel) continue;
-                    //mapEntity.Move(amount);
-                }
-                else if (item.body != null)
-                {
-                    if (item.CurrentHull != null) continue;
-                    item.SetTransform(item.SimPosition+amount, item.body.Rotation);
+                    if (edge.cell1 != null && edge.cell1.body == null) edge.cell1 = null;
+                    if (edge.cell2 != null && edge.cell2.body == null) edge.cell2 = null;
+
+                    CompareCCW compare = new CompareCCW(cell.Center);
+                    if (compare.Compare(edge.point1, edge.point2) == -1)
+                    {
+                        var temp = edge.point1;
+                        edge.point1 = edge.point2;
+                        edge.point2 = temp;
+                    }
                 }
             }
 
-            //WrappingWall.UpdateWallShift(Position, wrappingWalls);
-        }
-
-        Vector2 prevVelocity;
-        public void Move(Vector2 amount)
-        {
-            Vector2 simVelocity = ConvertUnits.ToSimUnits(amount / (float)Physics.step);
-
-            foreach (Body body in bodies)
+            foreach (VoronoiCell cell in cells)
             {
-                body.LinearVelocity = simVelocity;
-            }
-
-            foreach (Character character in Character.CharacterList)
-            {
-                foreach (Limb limb in character.AnimController.Limbs)
+                if (cell.body == null) continue;
+                foreach (GraphEdge edge in cell.edges)
                 {
-                    if (character.AnimController.CurrentHull != null) continue;
+                    if (!edge.isSolid) continue;
+
+                    GraphEdge leftEdge = null, rightEdge = null;
+
+                    foreach (GraphEdge edge2 in cell.edges)
+                    {
+                        if (edge == edge2) continue;
+                        if (edge.point1 == edge2.point1 || 
+                            edge.point1 == edge2.point2)
+                        {
+                            leftEdge = edge2;
+                        }
+                        else if(edge.point2 == edge2.point2 ||  edge.point2 == edge2.point1)
+                        {
+                            rightEdge = edge2;
+                        }
+                    }
                     
-                    limb.body.LinearVelocity += simVelocity;                    
+                    Vector2 leftNormal = Vector2.Zero, rightNormal = Vector2.Zero;
+
+                    if (leftEdge == null)
+                    {
+                        leftNormal = GetEdgeNormal(edge, cell);
+                    }
+                    else
+                    {
+                        leftNormal = (leftEdge.isSolid) ? 
+                            Vector2.Normalize(GetEdgeNormal(leftEdge) + GetEdgeNormal(edge, cell)) : 
+                            Vector2.Normalize(leftEdge.Center - edge.point1);
+                    }
+
+
+                    if (rightEdge == null)
+                    {
+                        rightNormal = GetEdgeNormal(edge, cell);
+                    }
+                    else
+                    {
+                        rightNormal = (rightEdge.isSolid) ?
+                            Vector2.Normalize(GetEdgeNormal(rightEdge) + GetEdgeNormal(edge, cell)) :
+                            Vector2.Normalize(rightEdge.Center - edge.point2);
+                    }
+
+
+
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        Vector2[] verts = new Vector2[3];
+                        VertexPositionTexture[] vertPos = new VertexPositionTexture[3];
+
+                        
+                        if (i==0)
+                        {
+                            verts[0] = edge.point1 - leftNormal * outWardThickness;
+                            verts[1] = edge.point2 - rightNormal * outWardThickness;
+                            verts[2] = edge.point1 + leftNormal * inwardThickness;
+
+                            vertPos[0] = new VertexPositionTexture(new Vector3(verts[0], 0.0f), Vector2.Zero);
+                            vertPos[1] = new VertexPositionTexture(new Vector3(verts[1], 0.0f), Vector2.UnitX);
+                            vertPos[2] = new VertexPositionTexture(new Vector3(verts[2], 0.0f), new Vector2(0, 0.5f));
+                        }
+                        else
+                        {
+                            verts[0] = edge.point1 + leftNormal * inwardThickness;
+                            verts[1] = edge.point2 - rightNormal * outWardThickness;
+                            verts[2] = edge.point2 + rightNormal * inwardThickness;
+
+                            vertPos[0] = new VertexPositionTexture(new Vector3(verts[0], 0.0f), new Vector2(0.0f, 0.5f));
+                            vertPos[1] = new VertexPositionTexture(new Vector3(verts[1], 0.0f), Vector2.UnitX);
+                            vertPos[2] = new VertexPositionTexture(new Vector3(verts[2], 0.0f), new Vector2(1.0f, 0.5f));
+                        }
+                        
+                        var comparer = new CompareCCW((verts[0] + verts[1] + verts[2]) / 3.0f);
+                        Array.Sort(verts, vertPos, comparer);
+
+                        for (int j = 0; j<3; j++)
+                        {
+                            verticeList.Add(vertPos[j]);
+                        }
+                    }
                 }
             }
 
-            foreach (Item item in Item.ItemList)
-            {        
-                if (item.body==null || item.CurrentHull != null) continue;
-                item.body.LinearVelocity += simVelocity;                
+            return verticeList.ToArray();
+        }
+
+        private Vector2 GetEdgeNormal(GraphEdge edge, VoronoiCell cell = null)
+        {
+            if (cell == null) cell = edge.AdjacentCell(null);
+            if (cell == null) return Vector2.UnitX;
+
+            CompareCCW compare = new CompareCCW(cell.Center);
+            if (compare.Compare(edge.point1, edge.point2) == -1)
+            {
+                var temp = edge.point1;
+                edge.point1 = edge.point2;
+                edge.point2 = temp;
             }
 
-            AtStartPosition = Vector2.Distance(startPosition, -Position) < ExitDistance;
-            AtEndPosition = Vector2.Distance(endPosition, -Position) < ExitDistance;
+            Vector2 normal = Vector2.Zero;
+
+            normal = Vector2.Normalize(edge.point2 - edge.point1);
+            Vector2 diffToCell = Vector2.Normalize(cell.Center - edge.point2);
+
+            normal = new Vector2(-normal.Y, normal.X);
+
+            if (Vector2.Dot(normal, diffToCell) < 0)
+            {
+                normal = -normal;
+            }
             
-            prevVelocity = simVelocity;
-
-            WrappingWall.UpdateWallShift(-Position, wrappingWalls);
+            return normal;            
         }
 
-        public static void AfterWorldStep()
+        //public void SetPosition(Vector2 pos)
+        //{
+        //    Vector2 amount = pos - Position;
+        //    Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
+        //    //foreach (VoronoiCell cell in cells)
+        //    //{
+        //    //    if (cell.body == null) continue;
+        //    //    cell.body.SleepingAllowed = false;
+        //    //    cell.body.SetTransform(cell.body.Position + simAmount, cell.body.Rotation);
+        //    //}
+
+        //    foreach (Body body in bodies)
+        //    {
+        //        body.SetTransform(body.Position + simAmount, body.Rotation);
+        //    }
+
+        //    foreach (MapEntity mapEntity in MapEntity.mapEntityList)
+        //    {
+        //        Item item = mapEntity as Item;
+        //        if (item == null)
+        //        {
+        //            //if (!mapEntity.MoveWithLevel) continue;
+        //            //mapEntity.Move(amount);
+        //        }
+        //        else if (item.body != null)
+        //        {
+        //            if (item.CurrentHull != null) continue;
+        //            item.SetTransform(item.SimPosition+amount, item.body.Rotation);
+        //        }
+        //    }
+
+        //    //WrappingWall.UpdateWallShift(Position, wrappingWalls);
+        //}
+
+        //Vector2 prevVelocity;
+        //public void Move(Vector2 amount)
+        //{
+        //    Vector2 simVelocity = ConvertUnits.ToSimUnits(amount / (float)Physics.step);
+
+        //    foreach (Body body in bodies)
+        //    {
+        //        body.LinearVelocity = simVelocity;
+        //    }
+
+        //    foreach (Character character in Character.CharacterList)
+        //    {
+        //        foreach (Limb limb in character.AnimController.Limbs)
+        //        {
+        //            if (character.AnimController.CurrentHull != null) continue;
+                    
+        //            limb.body.LinearVelocity += simVelocity;                    
+        //        }
+        //    }
+
+        //    foreach (Item item in Item.ItemList)
+        //    {        
+        //        if (item.body==null || item.CurrentHull != null) continue;
+        //        item.body.LinearVelocity += simVelocity;                
+        //    }
+
+        //    AtStartPosition = Vector2.Distance(startPosition, -Position) < ExitDistance;
+        //    AtEndPosition = Vector2.Distance(endPosition, -Position) < ExitDistance;
+            
+        //    prevVelocity = simVelocity;
+
+        //    WrappingWall.UpdateWallShift(-Position, wrappingWalls);
+        //}
+
+        //public static void AfterWorldStep()
+        //{
+        //    if (loaded == null) return;
+
+        //    loaded.ResetBodyVelocities();
+        //}
+
+        //private void ResetBodyVelocities()
+        //{
+        //    if (prevVelocity == Vector2.Zero) return;
+        //    if (!MathUtils.IsValid(prevVelocity))
+        //    {
+        //        prevVelocity = Vector2.Zero;
+        //        return;
+        //    }
+
+        //    foreach (Character character in Character.CharacterList)
+        //    {
+        //        if (character.AnimController.CurrentHull != null) continue;
+
+        //        foreach (Limb limb in character.AnimController.Limbs)
+        //        {
+        //            limb.body.LinearVelocity -= prevVelocity;
+        //        }
+        //    }
+
+        //    foreach (Item item in Item.ItemList)
+        //    {
+        //        if (item.body == null || item.CurrentHull != null) continue;
+        //        item.body.LinearVelocity -= prevVelocity;
+        //    }
+        //}
+
+        public void Update (float deltaTime)
         {
-            if (loaded == null) return;
-
-            loaded.ResetBodyVelocities();
+            renderer.Update(deltaTime);
         }
 
-        private void ResetBodyVelocities()
-        {
-            if (prevVelocity == Vector2.Zero) return;
-            if (!MathUtils.IsValid(prevVelocity))
-            {
-                prevVelocity = Vector2.Zero;
-                return;
-            }
-
-            foreach (Character character in Character.CharacterList)
-            {
-                if (character.AnimController.CurrentHull != null) continue;
-
-                foreach (Limb limb in character.AnimController.Limbs)
-                {
-                    limb.body.LinearVelocity -= prevVelocity;
-                }
-            }
-
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.body == null || item.CurrentHull != null) continue;
-                item.body.LinearVelocity -= prevVelocity;
-            }
-        }
-
-        public void Draw(SpriteBatch spriteBatch)
+        public void DrawFront(SpriteBatch spriteBatch)
         {
             if (renderer == null) return;
             renderer.Draw(spriteBatch);
         }
 
-        public void Render(GraphicsDevice graphicsDevice, Camera cam)
+        public void DrawBack(SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundSpriteManager = null)
         {
             if (renderer == null) return;
-            renderer.Render(graphicsDevice, cam, vertices);
+            renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager);
         }
 
 
@@ -841,7 +979,7 @@ namespace Barotrauma
 
             System.Diagnostics.Debug.WriteLine("avgpos: " + avgPos / cells.Count);
 
-            System.Diagnostics.Debug.WriteLine("pos: " + Position);
+            //System.Diagnostics.Debug.WriteLine("pos: " + Position);
         }
         
         public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)
@@ -911,10 +1049,10 @@ namespace Barotrauma
                         {
                             if (onlySolid && !cell.edges[i].isSolid) continue;
 
-                            Vector2 start = cell.edges[i].point1 + Position;
+                            Vector2 start = cell.edges[i].point1;
                             start.Y = -start.Y;
 
-                            Vector2 end = cell.edges[i].point2 + Position;
+                            Vector2 end = cell.edges[i].point2;
                             end.Y = -end.Y;
                             
                             edges.Add(new Vector2[] { start, end });
@@ -932,7 +1070,7 @@ namespace Barotrauma
 
                     foreach (VoronoiCell cell in wrappingWalls[side, n].Cells)
                     {
-                        Vector2 offset = wrappingWalls[side, n].Offset + Position;
+                        Vector2 offset = wrappingWalls[side, n].Offset;
                         for (int i = 0; i < cell.edges.Count; i++)
                         {
                             if (onlySolid && !cell.edges[i].isSolid) continue;
@@ -954,9 +1092,7 @@ namespace Barotrauma
         private void Unload()
         {
             renderer = null;
-
-            vertices = null;
-
+            
             cells = null;
 
             bodies.Clear();

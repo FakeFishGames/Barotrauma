@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
 
                 for (int i = 0; i < 5; i++)
                 {
-                    GameMain.ParticleManager.CreateParticle("bubbles", item.Position,
+                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition,
                         -currForce / 5.0f + new Vector2(Rand.Range(-100.0f, 100.0f), Rand.Range(-50f, 50f)),
                         0.0f, item.CurrentHull);
                 }

@@ -138,6 +138,11 @@ namespace Barotrauma
             }
         }
 
+        public Vector2 CursorWorldPosition
+        {
+            get { return Submarine == null ? cursorPosition : cursorPosition + Submarine.Position; }
+        }
+
         public Character ClosestCharacter
         {
             get { return closestCharacter; }
@@ -273,38 +278,32 @@ namespace Barotrauma
             get { return AnimController.RefLimb.SimPosition; }
         }
 
-        public Vector2 Position
+        public override Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(AnimController.RefLimb.SimPosition); }
+            get { return AnimController.RefLimb.Position; }
         }
-
+        
         static Character()
         {
-            DeathMsg[(int)CauseOfDeath.Damage] = "succumbed to your injuries";
-            DeathMsg[(int)CauseOfDeath.Bloodloss] = "bled out";
-            DeathMsg[(int)CauseOfDeath.Drowning] = "drowned";
+            DeathMsg[(int)CauseOfDeath.Damage]      = "succumbed to your injuries";
+            DeathMsg[(int)CauseOfDeath.Bloodloss]   = "bled out";
+            DeathMsg[(int)CauseOfDeath.Drowning]    = "drowned";
             DeathMsg[(int)CauseOfDeath.Suffocation] = "suffocated";
-            DeathMsg[(int)CauseOfDeath.Pressure] = "been crushed by water pressure";
-            DeathMsg[(int)CauseOfDeath.Burn] = "burnt to death";
+            DeathMsg[(int)CauseOfDeath.Pressure]    = "been crushed by water pressure";
+            DeathMsg[(int)CauseOfDeath.Burn]        = "burnt to death";
         }
         
         public static Character Create(string file, Vector2 position)
         {
             return Create(file, position, null);
         }
-
-        public static Character Create(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
+        
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false, bool hasAi=true)
         {
-            return Create(characterInfo.File, spawnPoint.SimPosition, characterInfo, isNetworkPlayer);
+            return Create(characterInfo.File, position, characterInfo, isNetworkPlayer, hasAi);
         }
 
-
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
-        {
-            return Create(characterInfo.File, position, characterInfo, isNetworkPlayer);
-        }
-
-        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
+        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, bool hasAi=true)
         {
             if (file != humanConfigFile)
             {
@@ -316,24 +315,25 @@ namespace Barotrauma
             }
             else
             {
-                if (isNetworkPlayer)
-                {
-                    var netCharacter = new Character(file, position, characterInfo, isNetworkPlayer);
-
-                    return netCharacter;
-                }
-                else
+                if (hasAi && !isNetworkPlayer)
                 {
                     var character = new AICharacter(file, position, characterInfo, isNetworkPlayer);
                     var ai = new HumanAIController(character);
                     character.SetAI(ai);
 
                     return character;
+
+                }
+                else
+                {
+
+                    return new Character(file, position, characterInfo, isNetworkPlayer);
                 }
             }
         }
 
         protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
+            : base(null)
         {
 
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
@@ -342,26 +342,12 @@ namespace Barotrauma
             {
                 keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));
             }
-
-            //keys[(int)InputType.Select] = new Key(GameMain.Config.KeyBind(InputType.Select));
-            //keys[(int)InputType.ActionHeld] = new Key(true);
-            //keys[(int)InputType.ActionHit] = new Key(false);
-            //keys[(int)InputType.SecondaryHit] = new Key(false);
-            //keys[(int)InputType.SecondaryHeld] = new Key(true);
-
-            //keys[(int)InputType.Left] = new Key(true);
-            //keys[(int)InputType.Right] = new Key(true);
-            //keys[(int)InputType.Up] = new Key(true);
-            //keys[(int)InputType.Down] = new Key(true);
-
-            //keys[(int)InputType.Run] = new Key(true);
-
+            
             selectedItems = new Item[2];
 
             IsNetworkPlayer = isNetworkPlayer;
 
             oxygen = 100.0f;
-            //blood = 100.0f;
             aiTarget = new AITarget(this);
 
             lowPassMultiplier = 1.0f;
@@ -392,7 +378,7 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
-                limb.body.SetTransform(position+limb.SimPosition, 0.0f);
+                limb.body.SetTransform(ConvertUnits.ToSimUnits(position)+limb.SimPosition, 0.0f);
                 //limb.prevPosition = ConvertUnits.ToDisplayUnits(position);
             }
 
@@ -442,7 +428,8 @@ namespace Barotrauma
                 }
             }
 
-            AnimController.FindHull();
+            AnimController.FindHull(null);
+            if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;
 
             CharacterList.Add(this);
 
@@ -522,7 +509,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                Item item = new Item(itemPrefab, Position);
+                Item item = new Item(itemPrefab, Position, null);
 
                 if (info.Job.EquipSpawnItem[i])
                 {
@@ -734,7 +721,7 @@ namespace Barotrauma
         {
             Limb head = AnimController.GetLimb(LimbType.Head);
 
-            Lights.LightManager.ViewPos = ConvertUnits.ToDisplayUnits(head.SimPosition);
+            //Lights.LightManager.ViewPos = WorldPosition;
 
             if (!DisableControls)
             {
@@ -757,8 +744,11 @@ namespace Barotrauma
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
             }
             
-            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);            
+            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+            if (AnimController.CurrentHull != null) cursorPosition -= Submarine.Loaded.Position;
+
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
+
             if (Vector2.Distance(AnimController.Limbs[0].SimPosition, mouseSimPos)>1.0f)
             {
                 Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
@@ -876,9 +866,11 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
+            Submarine = AnimController.CurrentHull == null ? null : Submarine.Loaded;
+
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
             
-            AnimController.SimplePhysicsEnabled = (Character.controlled != this && Vector2.Distance(cam.WorldViewCenter, Position) > 5000.0f);
+            AnimController.SimplePhysicsEnabled = (Character.controlled != this && Vector2.Distance(cam.WorldViewCenter, WorldPosition) > 5000.0f);
             
             if (isDead) return;
 
@@ -888,7 +880,7 @@ namespace Barotrauma
                 
                 if (Submarine.Loaded!=null && Level.Loaded !=null)
                 {
-                    protectedFromPressure = protectedFromPressure && (Position-Level.Loaded.Position).Y > SubmarineBody.DamageDepth;
+                    protectedFromPressure = protectedFromPressure && Position.Y > SubmarineBody.DamageDepth;
                 }
                 
                 if (!protectedFromPressure && 
@@ -976,7 +968,7 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
-            Vector2 pos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
+            Vector2 pos = AnimController.Limbs[0].WorldPosition;
             pos.Y = -pos.Y;
             
             if (this == controlled) return;
@@ -998,7 +990,7 @@ namespace Barotrauma
                 AnimController.DebugDraw(spriteBatch);
             }
 
-            Vector2 healthBarPos = new Vector2(Position.X - 50, -Position.Y - 100.0f);
+            Vector2 healthBarPos = new Vector2(DrawPosition.X - 50, -DrawPosition.Y - 100.0f);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f * (health / maxHealth)), 15), Color.Red, true);
         }
@@ -1016,17 +1008,16 @@ namespace Barotrauma
                 if (soundStates[i] != state) continue;
                 if (n == selectedSound && sounds[i]!=null)
                 {
-                    sounds[i].Play(1.0f, 2000.0f,
-                            AnimController.Limbs[0].body.FarseerBody);
+                    sounds[i].Play(1.0f, 2000.0f, AnimController.Limbs[0].WorldPosition);
                     return;
                 }
                 n++;
             }
         }
 
-        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 simPosition, Attack attack, float deltaTime, bool playSound = false)
+        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            return AddDamage(simPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
+            return AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
         }
 
         public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
@@ -1091,17 +1082,17 @@ namespace Barotrauma
                // limb.Damage = 100.0f;
             }
 
-            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body.FarseerBody);
+            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body);
             
             for (int i = 0; i < 10; i++)
             {
                 Particle p = GameMain.ParticleManager.CreateParticle("waterblood",
-                    centerOfMass + Rand.Vector(50.0f),
+                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(50.0f),
                     Vector2.Zero);
                 if (p!=null) p.Size *= 2.0f;
 
                 GameMain.ParticleManager.CreateParticle("bubbles",
-                    centerOfMass + Rand.Vector(50.0f),
+                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(50.0f),
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f,50f)));
             }
 
@@ -1256,22 +1247,6 @@ namespace Barotrauma
                     return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
                 case NetworkEventType.ImportantEntityUpdate:
                     
-                    //int i = 0;
-                    //foreach (Limb limb in AnimController.Limbs)
-                    //{
-                    //    if (limb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;
-
-                    //    message.WriteRangedSingle(limb.body.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                    //    message.WriteRangedSingle(limb.body.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-
-                    //    //message.Write(limb.body.LinearVelocity.X);
-                    //    //message.Write(limb.body.LinearVelocity.Y);
-
-                    //    message.Write(limb.body.Rotation);
-                    //    //message.WriteRangedSingle(MathHelper.Clamp(limb.body.AngularVelocity, -10.0f, 10.0f), -10.0f, 10.0f, 8);
-                    //    i++;
-                    //}
-
                     message.Write((byte)((health / maxHealth) * 255.0f));
 
                     if (AnimController.StunTimer<=0.0f && bleeding<=0.0f && oxygen>99.0f)
@@ -1288,9 +1263,7 @@ namespace Barotrauma
 
                         bleeding = MathHelper.Clamp(bleeding, 0.0f, 5.0f);
                         message.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
-
                     }
-
 
                     return true;
                 case NetworkEventType.EntityUpdate:
@@ -1324,10 +1297,14 @@ namespace Barotrauma
                         message.Write(AnimController.Dir > 0.0f);
                     }
 
-                    if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return true;
-                    
-                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.X, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                    message.WriteRangedSingle(AnimController.RefLimb.SimPosition.Y, -NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
+                    message.Write(Submarine != null);
+
+                    //Vector2 position = Submarine == null ? SimPosition : SimPosition - Submarine.SimPosition;
+
+                    //if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return true;
+
+                    message.Write(SimPosition.X);
+                    message.Write(SimPosition.Y);
 
                     return true;
                 default:
@@ -1492,17 +1469,21 @@ namespace Barotrauma
 #endif
                         return;
                     }
-                    try
-                    {
-                        pos.X = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                        pos.Y = message.ReadRangedSingle(-NetConfig.CharacterIgnoreDistance, NetConfig.CharacterIgnoreDistance, 16);
-                    }
 
-                    catch
+                    bool inSub = message.ReadBoolean();
+
+                    pos.X = message.ReadFloat();
+                    pos.Y = message.ReadFloat();
+
+                    if (inSub)
                     {
-                        //failed to read position, Character may be further than NetConfig.CharacterIgnoreDistance
-                        pos = SimPosition;
-                    }                    
+                        Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
+                        if (newHull != null)
+                        {
+                            AnimController.CurrentHull = newHull;
+                            Submarine = newHull.Submarine;
+                        }
+                    }
 
                     if (secondaryKeyState)
                     {
@@ -1514,7 +1495,8 @@ namespace Barotrauma
                         cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
                     }   
 
-                    AnimController.RefLimb.body.TargetPosition = AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now + message.SenderConnection.RemoteTimeOffset) - sendingTime);
+                    AnimController.RefLimb.body.TargetPosition = 
+                        AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now + message.SenderConnection.RemoteTimeOffset) - sendingTime);
 
                     LastNetworkUpdate = sendingTime;
 

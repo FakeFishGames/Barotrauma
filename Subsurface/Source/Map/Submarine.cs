@@ -23,8 +23,11 @@ namespace Barotrauma
 
     class Submarine : Entity
     {
-
         public static string SavePath = "Data" + System.IO.Path.DirectorySeparatorChar + "SavedSubs";
+
+        //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
+        //should be in an unreachable place
+        public static readonly Vector2 HiddenSubPosition = new Vector2(0.0f, 50000.0f);
 
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
@@ -42,6 +45,7 @@ namespace Barotrauma
         private string filePath;
         private string name;
 
+        private Vector2 prevPosition;
 
         private float lastNetworkUpdate;
 
@@ -94,21 +98,51 @@ namespace Barotrauma
                 return (loaded==null) ? Rectangle.Empty : Loaded.subBody.Borders;                
             }
         }
-
-
-
-        public Vector2 Position
+        
+        public override Vector2 Position
         {
-            get { return (Level.Loaded == null) ? Vector2.Zero : -Level.Loaded.Position; }
+            get { return subBody==null ? Vector2.Zero : subBody.Position - HiddenSubPosition; }
         }
 
-        public Vector2 Speed
+        public bool AtEndPosition
         {
-            get { return subBody==null ? Vector2.Zero : subBody.Speed; }
-            set 
+            get 
+            { 
+                if (Level.Loaded == null) return false;
+                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance);
+            }
+        }
+
+        public bool AtStartPosition
+        {
+            get
+            {
+                if (Level.Loaded == null) return false;
+                return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance);
+            }
+        }
+
+        public new Vector2 DrawPosition
+        {
+            get;
+            private set;
+        }
+
+        public override Vector2 SimPosition
+        {
+            get
+            {
+                return ConvertUnits.ToSimUnits(Position);
+            }
+        }
+
+        public Vector2 Velocity
+        {
+            get { return subBody==null ? Vector2.Zero : subBody.Velocity; }
+            set
             {
                 if (subBody == null) return;
-                subBody.Speed = value; 
+                subBody.Velocity = value;
             }
         }
 
@@ -130,7 +164,7 @@ namespace Barotrauma
 
         //constructors & generation ----------------------------------------------------
 
-        public Submarine(string filePath, string hash = "")
+        public Submarine(string filePath, string hash = "") : base(null)
         {
             this.filePath = filePath;
             try
@@ -181,6 +215,8 @@ namespace Barotrauma
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
 
+        
+
             if (loaded == null) return;
 
             //foreach (HullBody hb in loaded.hullBodies)
@@ -202,6 +238,11 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth >= 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
+        }
+
+        public void UpdateTransform()
+        {
+            DrawPosition = Physics.Interpolate(prevPosition, Position);            
         }
 
         //math/physics stuff ----------------------------------------------------
@@ -260,6 +301,8 @@ namespace Barotrauma
 
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null)
         {
+            if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.0f) return null;
+
             float closestFraction = 1.0f;
             Body closestBody = null;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
@@ -331,34 +374,7 @@ namespace Barotrauma
             lastPickedFraction = closestFraction;
             return closestBody;
         }
-
-        //public static Body PickBody(Vector2 point)
-        //{
-        //    Body foundBody = null;
-        //    AABB aabb = new AABB(point, point);
-
-        //    GameMain.World.QueryAABB(p =>
-        //    {
-        //        foundBody = p.Body;
-
-        //        return true;
-
-        //    }, ref aabb);
-
-        //    return foundBody;
-        //}
-
-        //public static bool InsideWall(Vector2 point)
-        //{
-        //    Body foundBody = PickBody(point);
-        //    if (foundBody==null) return false;
-
-        //    Structure wall = foundBody.UserData as Structure;
-        //    if (wall == null || wall.IsPlatform) return false;
-            
-        //    return true;
-        //}
-        
+                
         //movement ----------------------------------------------------
 
 
@@ -374,10 +390,17 @@ namespace Barotrauma
             if (subBody != null) subBody.ApplyForce(force);
         }
 
+        public void SetPrevTransform(Vector2 position)
+        {
+            prevPosition = position;
+        }
+
         public void SetPosition(Vector2 position)
         {
             if (!MathUtils.IsValid(position)) return;
-            Level.Loaded.SetPosition(-position);
+
+            subBody.SetPosition(position);
+            //Level.Loaded.SetPosition(-position);
             //prevPosition = position;
         }
 
@@ -385,18 +408,20 @@ namespace Barotrauma
         {
             if (amount == Vector2.Zero || !MathUtils.IsValid(amount)) return;
 
-            Level.Loaded.Move(-amount);
+            subBody.SetPosition(subBody.Position + amount);
+
+            //Level.Loaded.Move(-amount);
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, NetBuffer message, object data)
         {
             if (subBody == null) return false;
 
-            message.Write(Position.X);
-            message.Write(Position.Y);
+            message.Write(subBody.Position.X);
+            message.Write(subBody.Position.Y);
 
-            message.Write(Speed.X);
-            message.Write(Speed.Y);
+            message.Write(Velocity.X);
+            message.Write(Velocity.Y);
 
             return true;
         }
@@ -427,7 +452,7 @@ namespace Barotrauma
             //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
 
             subBody.TargetPosition = newTargetPosition;
-            subBody.Speed = newSpeed;
+            subBody.Velocity = newSpeed;
 
             lastNetworkUpdate = sendingTime;
         }
@@ -592,6 +617,7 @@ namespace Barotrauma
             XDocument doc = OpenDoc(filePath);
             if (doc == null) return;
 
+
             foreach (XElement element in doc.Root.Elements())
             {
                 string typeName = element.Name.ToString();
@@ -615,7 +641,7 @@ namespace Barotrauma
                 try
                 {
                     MethodInfo loadMethod = t.GetMethod("Load");
-                    loadMethod.Invoke(t, new object[] { element });
+                    loadMethod.Invoke(t, new object[] { element, this });
                 }
                 catch (Exception e)
                 {
@@ -624,25 +650,19 @@ namespace Barotrauma
 
             }
 
-            subBody = new SubmarineBody(this);            
+            subBody = new SubmarineBody(this);
+            subBody.SetPosition(HiddenSubPosition);
             
-            MapEntity.MapLoaded();
-                        
-            foreach (Item item in Item.ItemList)
-            {
-                foreach (ItemComponent ic in item.components)
-                {
-                    ic.OnMapLoaded();
-                }
-            }
+            loaded = this;
 
+            MapEntity.MapLoaded();
+               
             WayPoint.GenerateSubWaypoints();
 
             GameMain.LightManager.OnMapLoaded();
 
             ID = ushort.MaxValue-10;
 
-            loaded = this;
         }
 
         public static Submarine Load(string fileName)
@@ -682,9 +702,9 @@ namespace Barotrauma
         {
             if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
-            subBody = null;
-
             Entity.RemoveAll();
+
+            subBody = null;
 
             PhysicsBody.list.Clear();
             

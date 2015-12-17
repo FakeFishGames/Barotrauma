@@ -45,14 +45,37 @@ namespace Barotrauma
         {
             get { return Vector2.Zero; }
         }
+        
+        public virtual Vector2 Position
+        {
+            get { return Vector2.Zero; }
+        }
+
+        public Vector2 WorldPosition
+        {
+            get { return Submarine == null ? Position : Submarine.Position + Position; }
+        }
+
+        public Vector2 DrawPosition
+        {
+            get { return Submarine == null ? Position : Submarine.DrawPosition + Position; }
+        }
+
+        public Submarine Submarine
+        {
+            get;
+            set;
+        }
 
         public AITarget AiTarget
         {
             get { return aiTarget; }
         }
 
-        public Entity()
+        public Entity(Submarine submarine)
         {
+            this.Submarine = submarine;
+
             //give  an unique ID
             bool IDfound;
             id = 1;//Rand.Int(int.MaxValue);

@@ -47,8 +47,8 @@ namespace Barotrauma
                 Vector2 tryPos = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
                 
                 if (Submarine.PickBody(
-                    tryPos + level.Position, 
-                    tryPos + level.Position - Vector2.UnitY*level.Size.Y, 
+                    tryPos, 
+                    tryPos - Vector2.UnitY*level.Size.Y, 
                     null, Physics.CollisionLevel) != null)
                 {
                     position = tryPos;
@@ -65,7 +65,7 @@ namespace Barotrauma
             } while (tries < 10);
 
 
-            item = new Item(itemPrefab, position + level.Position);
+            item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;
             item.body.FarseerBody.GravityScale = 0.5f;
             //item.MoveWithLevel = true;
@@ -81,7 +81,7 @@ namespace Barotrauma
                     state = 1;
                     break;
                 case 1:
-                    if (!Level.Loaded.AtEndPosition && !Level.Loaded.AtStartPosition) return;
+                    if (!Submarine.Loaded.AtEndPosition && !Submarine.Loaded.AtStartPosition) return;
                     ShowMessage(state);
                     state = 2;
                     break;

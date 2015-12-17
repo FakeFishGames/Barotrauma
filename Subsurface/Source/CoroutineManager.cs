@@ -66,18 +66,18 @@ namespace Barotrauma
                     }
                 }
 
-                try
-                {
+                //try
+                //{
                     Coroutines[i].MoveNext();
-                }
+//                }
 
-                catch (Exception e)
-                {                    
-#if DEBUG
-                    DebugConsole.ThrowError("Coroutine " + Coroutines[i] + " threw an exception: " + e.Message);
-#endif
-                    Coroutines.RemoveAt(i);
-                }
+//                catch (Exception e)
+//                {                    
+//#if DEBUG
+//                    DebugConsole.ThrowError("Coroutine " + Coroutines[i] + " threw an exception: " + e.Message);
+//#endif
+//                    Coroutines.RemoveAt(i);
+//                }
 
             }
         }

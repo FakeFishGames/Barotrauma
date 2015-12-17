@@ -57,12 +57,12 @@ namespace Barotrauma
             get { return flowTargetHull; }
         }
 
-        public Gap(Rectangle newRect)
-            : this(newRect, (newRect.Width < newRect.Height))
-        {
-        }
+        public Gap(Rectangle newRect, Submarine submarine)
+            : this(newRect, newRect.Width < newRect.Height, submarine)
+        { }
 
-        public Gap(Rectangle newRect, bool isHorizontal)
+        public Gap(Rectangle newRect, bool isHorizontal, Submarine submarine)
+            : base (submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();
@@ -79,6 +79,13 @@ namespace Barotrauma
             InsertToList();
         }
 
+        public override void Move(Vector2 amount)
+        {
+            base.Move(amount);
+
+            FindHulls();
+        }
+
         public static void UpdateHulls()
         {
             foreach (Gap g in Gap.GapList)
@@ -89,8 +96,8 @@ namespace Barotrauma
 
         public override bool Contains(Vector2 position)
         {
-            return (Submarine.RectContains(rect, position) &&
-                !Submarine.RectContains(new Rectangle(rect.X + 4, rect.Y - 4, rect.Width - 8, rect.Height - 8), position));
+            return (Submarine.RectContains(WorldRect, position) &&
+                !Submarine.RectContains(MathUtils.ExpandRect(WorldRect, -5), position));
         }
 
         private void FindHulls()
@@ -119,7 +126,7 @@ namespace Barotrauma
 
             if (hulls[0] == null && hulls[1] == null) return;
 
-            if (hulls[0]!=null && hulls[1]!=null)
+            if (hulls[0] != null && hulls[1] != null)
             {
                 if ((isHorizontal && hulls[0].Rect.X > hulls[1].Rect.X) || (!isHorizontal && hulls[0].Rect.Y < hulls[1].Rect.Y))
                 {
@@ -142,7 +149,7 @@ namespace Barotrauma
         {
             if (GameMain.DebugDraw)
             {
-                Vector2 center = new Vector2(rect.X + rect.Width / 2.0f, -(rect.Y - rect.Width / 2.0f));
+                Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Width / 2.0f));
                 GUI.DrawLine(sb, center, center + flowForce/10.0f, Color.Red);
 
                 GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + lerpedFlowForce / 10.0f + Vector2.One * 5.0f, Color.Orange);
@@ -152,7 +159,7 @@ namespace Barotrauma
 
             Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
 
-            GUI.DrawRectangle(sb, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), clr*0.5f, true);
+            GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), clr * 0.5f, true);
 
             if (isHorizontal)
             {
@@ -160,11 +167,11 @@ namespace Barotrauma
                 {
                     if (linkedTo[i].Rect.Center.X > rect.Center.X)
                     {
-                        GUI.DrawRectangle(sb, new Rectangle(rect.Right, -rect.Y, 10, rect.Height), Color.Green * 0.3f, true);
+                        GUI.DrawRectangle(sb, new Rectangle(WorldRect.Right, -WorldRect.Y, 10, rect.Height), Color.Green * 0.3f, true);
                     }
                     else
                     {
-                        GUI.DrawRectangle(sb, new Rectangle(rect.X - 10, -rect.Y, 10, rect.Height), Color.Green * 0.3f, true);
+                        GUI.DrawRectangle(sb, new Rectangle(WorldRect.X - 10, -WorldRect.Y, 10, rect.Height), Color.Green * 0.3f, true);
                     }
                 }
             }
@@ -172,13 +179,13 @@ namespace Barotrauma
             {
                 for (int i = 0; i < linkedTo.Count; i++)
                 {
-                    if (linkedTo[i].Rect.Y - linkedTo[i].Rect.Height/2.0f > rect.Y)
+                    if (linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f > WorldRect.Y)
                     {
-                        GUI.DrawRectangle(sb, new Rectangle(rect.X, -rect.Y - 10, rect.Width, 10), Color.Green * 0.3f, true);
+                        GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y - 10, rect.Width, 10), Color.Green * 0.3f, true);
                     }
                     else
                     {
-                        GUI.DrawRectangle(sb, new Rectangle(rect.X, -rect.Y + rect.Height, rect.Width, 10), Color.Green * 0.3f, true);
+                        GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y + rect.Height, rect.Width, 10), Color.Green * 0.3f, true);
                     }
                 }
             }
@@ -186,7 +193,7 @@ namespace Barotrauma
             if (isSelected)
             {
                 GUI.DrawRectangle(sb,
-                    new Vector2(rect.X - 5, -rect.Y - 5),
+                    new Vector2(WorldRect.X - 5, -WorldRect.Y - 5),
                     new Vector2(rect.Width + 10, rect.Height + 10),
                     Color.Red);
             }
@@ -200,7 +207,7 @@ namespace Barotrauma
             int index = (int)Math.Floor(flowForce.Length() / 100.0f);
             index = Math.Min(index,2);
 
-            soundIndex = SoundPlayer.flowSounds[index].Loop(soundIndex, soundVolume, Position, 2000.0f);
+            soundIndex = SoundPlayer.flowSounds[index].Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
             
             flowForce = Vector2.Zero;
             lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, 0.05f);
@@ -229,7 +236,7 @@ namespace Barotrauma
                 {
                     pos.X += Math.Sign(flowForce.X);
                     pos.Y = MathHelper.Clamp((higherSurface+lowerSurface)/2.0f, rect.Y - rect.Height, rect.Y);
-
+                    
                     Vector2 velocity = new Vector2(
                         MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
                         flowForce.Y * Rand.Range(0.5f, 0.7f));
@@ -537,15 +544,21 @@ namespace Barotrauma
             if (soundIndex > -1) Sounds.SoundManager.Stop(soundIndex);
         }
 
+
+        public override void OnMapLoaded()
+        {
+            UpdateHulls();
+        }
         public override XElement Save(XDocument doc)
         {
             XElement element = new XElement("Gap");
 
-            element.Add(new XAttribute("ID", ID),
-                new XAttribute("x", rect.X),
-                new XAttribute("y", rect.Y),
-                new XAttribute("width", rect.Width),
-                new XAttribute("height", rect.Height));
+            element.Add(new XAttribute("ID", ID));
+
+            element.Add(new XAttribute("rect",
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                    rect.Width + "," + rect.Height));
 
             //if (linkedTo != null)
             //{
@@ -564,15 +577,31 @@ namespace Barotrauma
         }
 
 
-        public static void Load(XElement element)
+        public static void Load(XElement element, Submarine submarine)
         {
-            Rectangle rect = new Rectangle(
-                int.Parse(element.Attribute("x").Value),
-                int.Parse(element.Attribute("y").Value),
-                int.Parse(element.Attribute("width").Value),
-                int.Parse(element.Attribute("height").Value));
+            Rectangle rect = Rectangle.Empty;
 
-            Gap g = new Gap(rect);
+            if (element.Attribute("rect") != null)
+            {
+                string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
+                string[] rectValues = rectString.Split(',');
+
+                rect = new Rectangle(
+                    int.Parse(rectValues[0]),
+                    int.Parse(rectValues[1]),
+                    int.Parse(rectValues[2]),
+                    int.Parse(rectValues[3]));
+            }
+            else
+            {
+                rect = new Rectangle(
+                    int.Parse(element.Attribute("x").Value),
+                    int.Parse(element.Attribute("y").Value),
+                    int.Parse(element.Attribute("width").Value),
+                    int.Parse(element.Attribute("height").Value));
+            }
+
+            Gap g = new Gap(rect, submarine);
             g.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             
             g.linkedToID = new List<ushort>();

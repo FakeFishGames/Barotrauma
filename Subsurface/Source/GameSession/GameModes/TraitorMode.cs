@@ -55,7 +55,7 @@ namespace Barotrauma
                     End(endMessage);
                     return;
                 }
-                else if (Level.Loaded.AtEndPosition)
+                else if (Submarine.Loaded.AtEndPosition)
                 {
                     string endMessage = traitorCharacter.Name + " was a traitor! ";
                     endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";

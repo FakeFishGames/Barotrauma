@@ -38,6 +38,8 @@ namespace Barotrauma.Lights
         private VertexPositionColor[] shadowVertices;
         private VertexPositionTexture[] penumbraVertices;
 
+        private Entity parentEntity;
+
         private Rectangle boundingBox;
 
         public bool Enabled
@@ -51,7 +53,7 @@ namespace Barotrauma.Lights
             get { return boundingBox; }
         }
                 
-        public ConvexHull(Vector2[] points, Color color)
+        public ConvexHull(Vector2[] points, Color color, Entity parent)
         {
             if (shadowEffect == null)
             {
@@ -66,6 +68,8 @@ namespace Barotrauma.Lights
                 penumbraEffect.LightingEnabled = false;
                 penumbraEffect.Texture = TextureLoader.FromFile("Content/Lights/penumbra.png");
             }
+
+            parentEntity = parent;
 
             cachedShadows = new Dictionary<LightSource, CachedShadow>();
             
@@ -119,6 +123,18 @@ namespace Barotrauma.Lights
             cachedShadows.Clear();
 
             vertices = points;
+        }
+
+        public bool Intersects(Rectangle rect)
+        {
+            Rectangle transformedBounds = boundingBox;
+            if (parentEntity != null && parentEntity.Submarine != null)
+            {
+                transformedBounds.X += (int)parentEntity.Submarine.Position.X;
+                transformedBounds.Y += (int)parentEntity.Submarine.Position.Y;
+            }
+
+            return transformedBounds.Intersects(rect);
         }
 
         private void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
@@ -245,10 +261,10 @@ namespace Barotrauma.Lights
             if (!Enabled) return;
 
             CachedShadow cachedShadow = null;
-            if (cachedShadows.TryGetValue(light, out cachedShadow))
+            if (cachedShadows.TryGetValue(light, out cachedShadow) && false)
             {
                 if (light.Position == cachedShadow.LightPos ||
-                    Vector2.DistanceSquared(light.Position, cachedShadow.LightPos) < 1.0f)
+                    Vector2.DistanceSquared(light.WorldPosition, cachedShadow.LightPos) < 1.0f)
                 {
                     shadowVertices = cachedShadow.ShadowVertices;
                     penumbraVertices = cachedShadow.PenumbraVertices;
@@ -256,8 +272,8 @@ namespace Barotrauma.Lights
                 }
                 else
                 {
-                    CalculateShadowVertices(light.Position, los);
-                    cachedShadow.LightPos = light.Position;
+                    CalculateShadowVertices(light.WorldPosition, los);
+                    cachedShadow.LightPos = light.WorldPosition;
                     cachedShadow.ShadowVertices = shadowVertices;
                     cachedShadow.PenumbraVertices = penumbraVertices;
 
@@ -265,9 +281,15 @@ namespace Barotrauma.Lights
             }
             else
             {
-                CalculateShadowVertices(light.Position, los);
-                cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position);
-                cachedShadows.Add(light, cachedShadow);
+                Vector2 lightPos = light.WorldPosition;
+                if (light.Submarine!=null && parentEntity != null && parentEntity.Submarine == light.Submarine)
+                {
+                    lightPos = light.Position;
+                }
+
+                CalculateShadowVertices(lightPos, los);
+               // cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.WorldPosition);
+               // cachedShadows.Add(light, cachedShadow);
             }
 
             DrawShadows(graphicsDevice, cam, transform, los);
@@ -277,6 +299,8 @@ namespace Barotrauma.Lights
         {
             if (!Enabled) return;
 
+            if (parentEntity != null && parentEntity.Submarine != null) lightSourcePos -= parentEntity.Submarine.Position;
+
             CalculateShadowVertices(lightSourcePos, los);
 
             DrawShadows(graphicsDevice, cam, transform, los);
@@ -284,7 +308,15 @@ namespace Barotrauma.Lights
 
         private void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Matrix transform, bool los = true)
         {
-            shadowEffect.World = transform;
+
+            Vector3 offset = Vector3.Zero;
+            if (parentEntity != null && parentEntity.Submarine != null)
+            {
+                offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
+            }
+            
+
+            shadowEffect.World = Matrix.CreateTranslation(offset) * transform;
             shadowEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertices.Length - 2);

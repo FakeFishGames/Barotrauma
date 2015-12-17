@@ -45,7 +45,8 @@ namespace Barotrauma.Items.Components
                     linkedGap = e as Gap;                    
                     if (linkedGap != null) return linkedGap;
                 }
-                linkedGap = new Gap(item.Rect);
+                linkedGap = new Gap(item.Rect, Item.Submarine);
+                linkedGap.Submarine = item.Submarine;
                 linkedGap.Open = openState;
                 item.linkedTo.Add(linkedGap);
                 return linkedGap;
@@ -144,8 +145,8 @@ namespace Barotrauma.Items.Components
             
             Vector2[] corners = GetConvexHullCorners(doorRect);
 
-            convexHull = new ConvexHull(corners, Color.Black);            
-            if (window!=Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black);
+            convexHull = new ConvexHull(corners, Color.Black, item.CurrentHull == null ? null : item.CurrentHull.Submarine);            
+            if (window!=Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item.CurrentHull == null ? null : item.CurrentHull.Submarine);
 
             UpdateConvexHulls();
 
@@ -262,7 +263,7 @@ namespace Barotrauma.Items.Components
                         if (Math.Sign(l.SimPosition.X - item.SimPosition.X) != dir)
                         {
                             l.body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X*1.2f, item.SimPosition.Y), l.body.Rotation);
-                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, l.body.FarseerBody);
+                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, l.body);
                             //c.AddDamage(item.SimPosition, DamageType.Blunt, 1.0f, 0.0f, 0.0f, true);
 
                             l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
@@ -303,7 +304,12 @@ namespace Barotrauma.Items.Components
 
             if (stuck>0.0f && weldedSprite!=null)
             {
-                weldedSprite.Draw(spriteBatch, new Vector2(item.Rect.X, -item.Rect.Y), Color.White*(stuck/100.0f), 0.0f, 1.0f);
+                Vector2 weldSpritePos = new Vector2(item.Rect.X, item.Rect.Y);
+                if (item.Submarine != null) weldSpritePos += item.Submarine.Position;
+                weldSpritePos.Y = -weldSpritePos.Y;
+
+                weldedSprite.Draw(spriteBatch,
+                    weldSpritePos, Color.White*(stuck/100.0f), 0.0f, 1.0f);
             }
 
             if (openState == 1.0f)
@@ -311,8 +317,12 @@ namespace Barotrauma.Items.Components
                 body.Enabled = false;
                 return;
             }
-            
-            spriteBatch.Draw(doorSprite.Texture, new Vector2(item.Rect.Center.X, -item.Rect.Y),
+
+            Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y);
+            if (item.Submarine != null) pos += item.Submarine.DrawPosition;
+            pos.Y = -pos.Y;
+
+            spriteBatch.Draw(doorSprite.Texture, pos,
                 new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
                 (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
                 color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);            
@@ -344,12 +354,12 @@ namespace Barotrauma.Items.Components
             if (connection.Name=="toggle")
             {
                 isOpen = !isOpen;
-                PlaySound(ActionType.OnUse, item.Position);
+                PlaySound(ActionType.OnUse, item.WorldPosition);
             }
             else if (connection.Name == "set_state")
             {
                 bool newState = (signal!="0");
-                if (isOpen!=newState) PlaySound(ActionType.OnUse, item.Position);
+                if (isOpen!=newState) PlaySound(ActionType.OnUse, item.WorldPosition);
                 isOpen = newState;             
             }
 

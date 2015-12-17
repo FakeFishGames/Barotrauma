@@ -119,7 +119,7 @@ namespace Barotrauma
                 level.Generate();
                 submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
 
-                GameMain.GameScreen.BackgroundSpriteManager.SpawnSprites(80);
+                GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(80);
             }
 
             if (Quest!=null) Quest.Start(Level.Loaded);

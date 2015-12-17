@@ -107,9 +107,14 @@ namespace Barotrauma
             return null;
         }
 
-        public static LocationType Random()
+        public static LocationType Random(string seed = "")
         {
             Debug.Assert(list.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
+
+            if (!string.IsNullOrWhiteSpace(seed))
+            {
+                Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
+            }
 
             int randInt = Rand.Int(totalWeight, false);
 

@@ -5,23 +5,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Voronoi2;
 
 namespace Barotrauma
 {
+    class BackgroundSprite
+    {
+        public readonly BackgroundSpritePrefab Prefab;
+        public Vector2 Position;
+
+        public BackgroundSprite(BackgroundSpritePrefab prefab, Vector2 position)
+        {
+            this.Prefab = prefab;
+            this.Position = position;
+        }
+    }
+
     class BackgroundSpriteManager
     {
-        const int MaxSprites = 100;
-
-        const float checkActiveInterval = 1.0f;
-
-        float checkActiveTimer;
-
         private List<BackgroundSpritePrefab> prefabs;
-        private List<BackgroundSprite> activeSprites;
+        private List<BackgroundSprite> sprites;
 
         public BackgroundSpriteManager(string configPath)
         {
-            activeSprites = new List<BackgroundSprite>();
+            sprites = new List<BackgroundSprite>();
             prefabs = new List<BackgroundSpritePrefab>();
 
             XDocument doc = ToolBox.TryLoadXml(configPath);
@@ -33,92 +40,92 @@ namespace Barotrauma
             }
         }
 
-        public void SpawnSprites(int count, Vector2? position = null)
+        public void PlaceSprites(Level level, int amount)
         {
-            activeSprites.Clear();
+            sprites.Clear();
 
-            if (prefabs.Count == 0) return;
-
-            count = Math.Min(count, MaxSprites);
-
-            for (int i = 0; i < count; i++ )
+            for (int i = 0 ; i <amount; i++)
             {
-                Vector2 pos = Vector2.Zero;
+                BackgroundSpritePrefab prefab = GetRandomPrefab();
+                Vector2 pos = FindSpritePosition(level, prefab);
 
-                if (position == null)
-                {
-                    if (WayPoint.WayPointList.Count>0)
-                    {
-                        WayPoint wp = WayPoint.WayPointList[Rand.Int(WayPoint.WayPointList.Count)];
-
-                        pos = new Vector2(wp.Rect.X, wp.Rect.Y);
-                        pos += Rand.Vector(200.0f);
-                    }
-                    else
-                    {
-                        pos = Rand.Vector(2000.0f);
-                    } 
-                }
-                else
-                {
-                    pos = (Vector2)position;
-                }
-
-
-                var prefab = prefabs[Rand.Int(prefabs.Count)];
-
-                int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax);
-                List<BackgroundSprite> swarmMembers = new List<BackgroundSprite>();
-
-                for (int n = 0; n < amount; n++)
-                {
-                    var newSprite = new BackgroundSprite(prefab, pos);
-                    activeSprites.Add(newSprite);
-                    swarmMembers.Add(newSprite);
-                }
-                if (amount > 0)
-                {
-                    new Swarm(swarmMembers, prefab.SwarmRadius);
-                }
+                sprites.Add(new BackgroundSprite(prefab, pos));
             }
         }
 
-        public void ClearSprites()
+        private Vector2 FindSpritePosition(Level level, BackgroundSpritePrefab prefab)
         {
-            activeSprites.Clear();
+            Vector2 randomPos = new Vector2(Rand.Range(0.0f, level.Size.X), Rand.Range(0.0f, level.Size.Y));
+            var cells = level.GetCells(randomPos);
+
+            if (!cells.Any()) return Vector2.Zero;
+
+            VoronoiCell cell = cells[Rand.Int(cells.Count)];
+            GraphEdge bestEdge = null;
+            foreach (GraphEdge edge in cell.edges)
+            {
+                if (prefab.Alignment.HasFlag(Alignment.Bottom))
+                {
+                    if (bestEdge == null || edge.Center.Y > bestEdge.Center.Y) bestEdge = edge;
+                }
+                else if (prefab.Alignment.HasFlag(Alignment.Top))
+                {
+                    if (bestEdge == null || edge.Center.Y < bestEdge.Center.Y) bestEdge = edge;
+                }
+                else if (prefab.Alignment.HasFlag(Alignment.Left))
+                {
+                    if (bestEdge == null || edge.Center.X > bestEdge.Center.X) bestEdge = edge;
+                }
+                else if (prefab.Alignment.HasFlag(Alignment.Right))
+                {
+                    if (bestEdge == null || edge.Center.X < bestEdge.Center.X) bestEdge = edge;
+                }
+            }
+
+            Vector2 dir = Vector2.Normalize(bestEdge.point1 - bestEdge.point2);
+            Vector2 pos = bestEdge.Center;
+
+            if (prefab.Alignment.HasFlag(Alignment.Bottom))
+            {
+                pos.Y -= Math.Abs(dir.Y) * prefab.Sprite.size.X/Math.Abs(dir.X);
+            }
+            else if (prefab.Alignment.HasFlag(Alignment.Top))
+            {
+                pos.Y += Math.Abs(dir.Y) * prefab.Sprite.size.X/Math.Abs(dir.X);
+            }
+
+            return pos;
         }
 
-        public void Update(Camera cam, float deltaTime)
+        public void DrawSprites(SpriteBatch spriteBatch)
         {
-            if (checkActiveTimer<0.0f)
+            foreach (BackgroundSprite sprite in sprites)
             {
-                foreach (BackgroundSprite sprite in activeSprites)
+                sprite.Prefab.Sprite.Draw(spriteBatch, new Vector2(sprite.Position.X, -sprite.Position.Y));
+            }
+        }
+
+        private BackgroundSpritePrefab GetRandomPrefab()
+        {
+            int totalCommonness = 0;
+            foreach (BackgroundSpritePrefab prefab in prefabs)
+            {
+                totalCommonness += prefab.Commonness;
+            }
+
+            float randomNumber = Rand.Int(totalCommonness+1);
+
+            foreach (BackgroundSpritePrefab prefab in prefabs)
+            {
+                if (randomNumber <= prefab.Commonness)
                 {
-                    sprite.Enabled = (Math.Abs(sprite.TransformedPosition.X - cam.WorldViewCenter.X) < 4000.0f &&
-                    Math.Abs(sprite.TransformedPosition.Y - cam.WorldViewCenter.Y) < 4000.0f);                    
+                    return prefab;
                 }
 
-                checkActiveTimer = checkActiveInterval;
-            }
-            else
-            {
-                checkActiveTimer -= deltaTime;
+                randomNumber -= prefab.Commonness;
             }
 
-            foreach (BackgroundSprite sprite in activeSprites)
-            {
-                if (!sprite.Enabled) continue;
-                sprite.Update(deltaTime);
-            }
-        }
-
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            foreach (BackgroundSprite sprite in activeSprites)
-            {
-                if (!sprite.Enabled) continue;
-                sprite.Draw(spriteBatch);
-            }
+            return null;
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (pathFinder==null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
                     steeringPath = pathFinder.FindPath(
-                        ConvertUnits.ToSimUnits(Submarine.Loaded.Position),
+                        ConvertUnits.ToSimUnits(item.WorldPosition),
                         ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
                 }
             }
@@ -160,31 +160,31 @@ namespace Barotrauma.Items.Components
         {
             autopilotRayCastTimer -= deltaTime;
 
-            steeringPath.CheckProgress(ConvertUnits.ToSimUnits(Submarine.Loaded.Position), 10.0f);
+            steeringPath.CheckProgress(ConvertUnits.ToSimUnits(item.WorldPosition), 10.0f);
 
             if (autopilotRayCastTimer<=0.0f && steeringPath.NextNode != null)
             {
-                Vector2 diff = ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - Submarine.Loaded.Position);
+                Vector2 diff = ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - item.WorldPosition);
 
-                bool nextVisible = true;
-                for (int x = -1; x < 2; x += 2)
-                {
-                    for (int y = -1; y < 2; y += 2)
-                    {
-                        Vector2 cornerPos =
-                            new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
+                //bool nextVisible = true;
+                //for (int x = -1; x < 2; x += 2)
+                //{
+                //    for (int y = -1; y < 2; y += 2)
+                //    {
+                //        Vector2 cornerPos =
+                //            new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
 
-                        cornerPos = ConvertUnits.ToSimUnits(cornerPos*1.2f);
+                //        cornerPos = ConvertUnits.ToSimUnits(cornerPos*1.2f);
 
-                        if (Submarine.PickBody(cornerPos, cornerPos + diff, null, Physics.CollisionLevel) == null) continue;
+                //        if (Submarine.PickBody(cornerPos, cornerPos + diff, null, Physics.CollisionLevel) == null) continue;
                         
-                        nextVisible = false;
-                        x = 2;
-                        y = 2;                        
-                    }
-                }
+                //        nextVisible = false;
+                //        x = 2;
+                //        y = 2;                        
+                //    }
+                //}
 
-                if (nextVisible) steeringPath.SkipToNextNode();
+                //if (nextVisible) steeringPath.SkipToNextNode();
 
                 autopilotRayCastTimer = AutopilotRayCastInterval;                
             }
@@ -193,8 +193,8 @@ namespace Barotrauma.Items.Components
             {
                 float prediction = 5.0f;
 
-                Vector2 futurePosition = Submarine.Loaded.Speed * prediction;
-                Vector2 targetSpeed = ((steeringPath.CurrentNode.Position - Submarine.Loaded.Position) - futurePosition);
+                Vector2 futurePosition = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity) * prediction;
+                Vector2 targetSpeed = ((steeringPath.CurrentNode.WorldPosition - item.WorldPosition) - futurePosition);
 
                 targetSpeed = Vector2.Normalize(targetSpeed);
                 TargetVelocity = targetSpeed * 100.0f;

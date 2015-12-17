@@ -134,6 +134,8 @@ namespace Barotrauma
             
             GUIComponent.MouseOn = null;
             characterMode = false;
+
+            if (Submarine.Loaded != null) cam.Position = Submarine.Loaded.Position + Submarine.HiddenSubPosition;
              //CreateDummyCharacter();
         }
 

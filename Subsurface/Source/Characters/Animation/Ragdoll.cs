@@ -152,7 +152,17 @@ namespace Barotrauma
 
         public Hull CurrentHull
         {
-            get { return currentHull;}
+            get { return currentHull; }
+            set
+            {
+                if (value == currentHull) return;
+
+                currentHull = value;
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.Submarine = currentHull == null ? null : Submarine.Loaded;
+                }
+            }
         }
 
         public bool IgnorePlatforms
@@ -378,14 +388,14 @@ namespace Barotrauma
             float volume = stairs == null ? impact/5.0f : impact;
                volume=  Math.Min(impact, 1.0f);
 
-            if (impact > 0.8f && l.HitSound != null && l.soundTimer <= 0.0f) l.HitSound.Play(volume, impact * 100.0f, l.body.FarseerBody);
+            if (impact > 0.8f && l.HitSound != null && l.soundTimer <= 0.0f) l.HitSound.Play(volume, impact * 100.0f, l.WorldPosition);
 
             if (impact > l.impactTolerance)
             {   
                 character.Health -= (impact - l.impactTolerance * 0.1f);
                 strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
 
-                SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body.FarseerBody);                
+                SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body);                
 
                 if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
             }
@@ -526,16 +536,28 @@ namespace Barotrauma
             }
         }
 
-        public void FindHull()
+        public void FindHull(Vector2? worldPosition = null, bool setSubmarine = true)
         {
-            Hull newHull = Hull.FindHull(
-                ConvertUnits.ToDisplayUnits(refLimb.SimPosition), 
-                currentHull);
+            Vector2 findPos = worldPosition==null ? refLimb.WorldPosition : (Vector2)worldPosition;
 
+            Hull newHull = Hull.FindHull(findPos, currentHull);
+            
             if (newHull == currentHull) return;
 
-            currentHull = newHull;
-
+            if (setSubmarine)
+            {
+                if (newHull == null && currentHull.Submarine != null)
+                {
+                    SetPosition(refLimb.SimPosition + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
+                }
+                else if (currentHull == null && newHull != null && newHull.Submarine != null)
+                {
+                   SetPosition(refLimb.SimPosition - ConvertUnits.ToSimUnits(newHull.Submarine.Position));
+                }
+            }
+            
+            CurrentHull = newHull;
+                        
             UpdateCollisionCategories();
         }
 
@@ -597,11 +619,9 @@ namespace Barotrauma
                        
             foreach (Limb limb in Limbs)
             {
-                Vector2 limbPosition = ConvertUnits.ToDisplayUnits(limb.SimPosition);
-
                 //find the room which the limb is in
                 //the room where the ragdoll is in is used as the "guess", meaning that it's checked first
-                Hull limbHull = Hull.FindHull(limbPosition, currentHull);
+                Hull limbHull = Hull.FindHull(limb.WorldPosition, currentHull);
                 
                 bool prevInWater = limb.inWater;
                 limb.inWater = false;
@@ -611,9 +631,9 @@ namespace Barotrauma
                     //limb isn't in any room -> it's in the water
                     limb.inWater = true;
                 }
-                else if (limbHull.Volume > 0.0f && Submarine.RectContains(limbHull.Rect, limbPosition))
-                {                    
-                    if (limbPosition.Y < limbHull.Surface)                        
+                else if (limbHull.Volume > 0.0f && Submarine.RectContains(limbHull.Rect, limb.Position))
+                {
+                    if (limb.Position.Y < limbHull.Surface)                        
                     {
                         limb.inWater = true;
 
@@ -637,12 +657,12 @@ namespace Barotrauma
 
                         //create a splash particle
                         GameMain.ParticleManager.CreateParticle("watersplash",
-                            new Vector2(limb.Position.X, limbHull.Surface),
+                            new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
                             new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 10.0f)),
                             0.0f, limbHull);
-
+                                                
                         GameMain.ParticleManager.CreateParticle("bubbles",
-                            new Vector2(limb.Position.X, limbHull.Surface),                            
+                            new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,                            
                             limb.LinearVelocity*0.001f,
                             0.0f, limbHull);
 
@@ -656,7 +676,7 @@ namespace Barotrauma
                             float parallel = (float)Math.Abs(Math.Sin(limb.Rotation));
                             Vector2 impulse = Vector2.Multiply(limb.LinearVelocity, -parallel * limb.Mass);
                             //limb.body.ApplyLinearImpulse(impulse);
-                            int n = (int)((limbPosition.X - limbHull.Rect.X) / Hull.WaveWidth);
+                            int n = (int)((limb.Position.X - limbHull.Rect.X) / Hull.WaveWidth);
                             limbHull.WaveVel[n] = Math.Min(impulse.Y * 1.0f, 5.0f);
                             StrongestImpact = ((impulse.Length() * 0.5f) - limb.impactTolerance);
                         }

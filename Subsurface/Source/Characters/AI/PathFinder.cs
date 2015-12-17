@@ -218,7 +218,7 @@ namespace Barotrauma
                     //a node that hasn't been searched yet
                     if (nextNode.state==0)
                     {
-                        nextNode.H = Vector2.DistanceSquared(nextNode.Position,end.Position);
+                        nextNode.H = Vector2.Distance(nextNode.Position,end.Position);
 
                         if (GetNodePenalty != null)
                         {

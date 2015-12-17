@@ -144,11 +144,14 @@ namespace Barotrauma
 
                         avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - obstaclePosition);
                     }
-                    else
+                    else if (closestBody.UserData is Item)
                     {
                         Item item = closestBody.UserData as Item;
-                        if (item != null) avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - item.SimPosition);
-
+                        avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - item.SimPosition);
+                    }
+                    else
+                    {
+                        avoidSteering = Vector2.Normalize(host.SimPosition - Submarine.LastPickedPosition);
                     }
                 }
 
