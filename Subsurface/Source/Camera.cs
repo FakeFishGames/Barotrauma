@@ -117,7 +117,11 @@ namespace Barotrauma
         public Vector2 TargetPos
         {
             get { return targetPos; }
-            set { targetPos = value; }
+            set { 
+                targetPos = value;
+                System.Diagnostics.Debug.WriteLine(value);
+
+            }
         }
                 
         // Auxiliary function to move the camera

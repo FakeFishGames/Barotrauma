@@ -228,7 +228,7 @@ namespace Barotrauma
             }
 
             List<BackgroundMusic> suitableMusic = null;
-            if (Submarine.Loaded!=null && Submarine.Loaded.Position.Y<0.0f)
+            if (Submarine.Loaded!=null && Submarine.Loaded.Position.Y<SubmarineBody.DamageDepth+10000.0f)
             {
                 suitableMusic = musicClips.Where(x => x != null && x.type == "deep").ToList();
             }

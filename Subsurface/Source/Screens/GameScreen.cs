@@ -74,7 +74,7 @@ namespace Barotrauma
                 if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
                 if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
-                GameMain.GameSession.Submarine.ApplyForce(targetMovement * 1000000.0f);
+                GameMain.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
             }
 #endif
 
@@ -134,10 +134,10 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            if (Character.Controlled != null)
-            {
-                cam.TargetPos = Character.Controlled.WorldPosition;
-            }
+            //if (Character.Controlled != null)
+            //{
+            //    cam.TargetPos = Character.Controlled.WorldPosition;
+            //}
 
             cam.UpdateTransform();
 

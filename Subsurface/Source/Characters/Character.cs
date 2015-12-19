@@ -869,8 +869,16 @@ namespace Barotrauma
             Submarine = AnimController.CurrentHull == null ? null : Submarine.Loaded;
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
-            
-            AnimController.SimplePhysicsEnabled = (Character.controlled != this && Vector2.Distance(cam.WorldViewCenter, WorldPosition) > 5000.0f);
+
+            float dist = Vector2.Distance(cam.WorldViewCenter, WorldPosition);
+            if (dist > 8000.0f)
+            {
+                AnimController.SimplePhysicsEnabled = true;
+            }
+            else if (dist < 7000.0f)
+            {
+                AnimController.SimplePhysicsEnabled = false;
+            }
             
             if (isDead) return;
 

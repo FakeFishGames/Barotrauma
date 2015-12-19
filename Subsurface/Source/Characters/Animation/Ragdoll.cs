@@ -196,6 +196,8 @@ namespace Barotrauma
             this.character = character;
 
             dir = Direction.Right;
+
+            float scale = ToolBox.GetAttributeFloat(element, "scale", 1.0f);
             
             //int limbAmount = ;
             Limbs = new Limb[element.Elements("limb").Count()];
@@ -217,7 +219,7 @@ namespace Barotrauma
                     case "limb":
                         byte ID = Convert.ToByte(subElement.Attribute("id").Value);
 
-                        Limb limb = new Limb(character, subElement);
+                        Limb limb = new Limb(character, subElement, scale);
 
                         limb.body.FarseerBody.OnCollision += OnLimbCollision;
                         
@@ -229,10 +231,10 @@ namespace Barotrauma
                         Byte limb1ID = Convert.ToByte(subElement.Attribute("limb1").Value);
                         Byte limb2ID = Convert.ToByte(subElement.Attribute("limb2").Value);
 
-                        Vector2 limb1Pos = ToolBox.GetAttributeVector2(subElement, "limb1anchor", Vector2.Zero);
+                        Vector2 limb1Pos = ToolBox.GetAttributeVector2(subElement, "limb1anchor", Vector2.Zero) * scale;
                         limb1Pos = ConvertUnits.ToSimUnits(limb1Pos);
 
-                        Vector2 limb2Pos = ToolBox.GetAttributeVector2(subElement, "limb2anchor", Vector2.Zero);
+                        Vector2 limb2Pos = ToolBox.GetAttributeVector2(subElement, "limb2anchor", Vector2.Zero) * scale;
                         limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
 
                         RevoluteJoint joint = new RevoluteJoint(Limbs[limb1ID].body.FarseerBody, Limbs[limb2ID].body.FarseerBody, limb1Pos, limb2Pos);
@@ -296,6 +298,8 @@ namespace Barotrauma
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)
         {
             Structure structure = f2.Body.UserData as Structure;
+
+            if (f2.Body.UserData as SubmarineBody != null) return true;
             
             //always collides with bodies other than structures
             if (structure == null)
