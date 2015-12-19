@@ -119,8 +119,6 @@ namespace Barotrauma
             get { return targetPos; }
             set { 
                 targetPos = value;
-                System.Diagnostics.Debug.WriteLine(value);
-
             }
         }
                 
