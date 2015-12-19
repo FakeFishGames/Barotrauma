@@ -42,7 +42,7 @@ namespace Barotrauma
         public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
             : base(file, position, characterInfo, isNetworkPlayer)
         {
-            soundInterval = Rand.Range(0.0f, soundInterval);
+            soundTimer = Rand.Range(0.0f, soundInterval);
         }
 
         public void SetAI(AIController aiController)

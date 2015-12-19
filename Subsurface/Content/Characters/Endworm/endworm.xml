@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Character name ="endworm" humanoid="false" health="10000.0">
+  
+  <sound file="Content/Characters/Endworm/endwormidle.ogg" state="None" range="8000" />
+  <sound file="Content/Characters/Endworm/endwormattack1.ogg" state="Attack" range="8000" />
+  <sound file="Content/Characters/Endworm/endwormattack2.ogg" state="Attack" range="8000" />
+
+  <ragdoll waveamplitude="100.0" wavelength="1000" speed="1.5" scale ="2.0">
+
+    <!-- head -->
+    <limb id = "0" width="600" height="450" type="Head" steerforce="3.0">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,478,720,546" depth="0.05"/>
+    </limb>
+
+    <!-- body -->
+    <limb id = "1" width="600" height="400" type="Torso">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.01" origin="0.5,0.5"/>
+    </limb>
+
+    <!-- body -->
+    <limb id = "2" width="600" height="400" type="Torso">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.02" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "3" width="600" height="400" type="Torso">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.03" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "4" width="600" height="400" type="Tail">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.04" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "5" width="600" height="400" type="Tail">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.05" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "6" width="600" height="400" type="Tail">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.06" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "7" width="300" height="400" type="Tail">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="704,0,320,400" depth="0.07" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "8" width="100" height="450">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="755,552,137,470" depth="0.08" origin="0.5,0.5"/>
+    </limb>
+    
+    <limb id = "9" width="100" height="450">
+      <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="892,552,137,470" depth="0.08" origin="0.6,0.5"/>
+    </limb>
+    
+
+    <!-- head to body -->
+    <joint limb1="0" limb1anchor="0,-80" limb2="1" limb2anchor="0,170" lowerlimit="-10" upperlimit="10"/>
+
+    <joint limb1="1" limb1anchor="0,-160" limb2="2" limb2anchor="0,160" lowerlimit="-30" upperlimit="30"/>
+
+    <joint limb1="2" limb1anchor="0,-160" limb2="3" limb2anchor="0,160" lowerlimit="-30" upperlimit="30"/>
+
+    <joint limb1="3" limb1anchor="0,-160" limb2="4" limb2anchor="0,160" lowerlimit="-30" upperlimit="30"/>
+
+    <joint limb1="4" limb1anchor="0,-160" limb2="5" limb2anchor="0,160" lowerlimit="-30" upperlimit="30"/>
+
+    <joint limb1="5" limb1anchor="0,-160" limb2="6" limb2anchor="0,160" lowerlimit="-30" upperlimit="30"/>
+
+    <joint limb1="6" limb1anchor="0,-160" limb2="7" limb2anchor="100,0" lowerlimit="80" upperlimit="100"/>
+
+    <joint limb1="0" limb1anchor="-160,50" limb2="8" limb2anchor="0,-200" lowerlimit="-20" upperlimit="50"/>
+
+    <joint limb1="0" limb1anchor="160,50" limb2="9" limb2anchor="0,-200" lowerlimit="-50" upperlimit="20"/>
+
+
+
+s
+  </ragdoll>
+
+  <ai attackhumans="100" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="0.5" hearing="1.0"/>
+</Character>
+

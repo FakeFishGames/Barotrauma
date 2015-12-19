@@ -178,8 +178,8 @@ namespace Barotrauma
             set { body.CollidesWith = value; }
         }
 
-        public PhysicsBody(XElement element)
-            : this(element, Vector2.Zero)
+        public PhysicsBody(XElement element, float scale = 1.0f)
+            : this(element, Vector2.Zero, scale)
         {
         }
 
@@ -194,11 +194,11 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        public PhysicsBody(XElement element, Vector2 position)
+        public PhysicsBody(XElement element, Vector2 position, float scale=1.0f)
         {
-            float radius = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "radius", 0.0f));
-            float height = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "height", 0.0f));
-            float width = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "width", 0.0f));
+            float radius = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "radius", 0.0f)) * scale;
+            float height = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "height", 0.0f)) * scale;
+            float width = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "width", 0.0f)) * scale;
 
             density = ToolBox.GetAttributeFloat(element, "density", 10.0f);
 
@@ -307,7 +307,7 @@ namespace Barotrauma
             drawRotation = Physics.Interpolate(prevRotation, body.Rotation);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null)
+        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f)
         {
             if (!body.Enabled) return;
 
@@ -320,7 +320,7 @@ namespace Barotrauma
                 color = Color.Blue;
             }
             
-            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, 1.0f, spriteEffect, depth);
+            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
             
         }
 

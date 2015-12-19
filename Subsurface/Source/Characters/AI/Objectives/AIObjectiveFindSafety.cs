@@ -29,6 +29,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (character.AnimController.CurrentHull == null) return;
 
             currenthullSafety = OverrideCurrentHullSafety == null ? 
                 GetHullSafety(character.AnimController.CurrentHull) : (float)OverrideCurrentHullSafety;
@@ -36,7 +37,6 @@ namespace Barotrauma
             if (character.AnimController.CurrentHull == null || currenthullSafety > MinSafety)
             {
                 character.AIController.SteeringManager.SteeringSeek(character.AnimController.CurrentHull.SimPosition);
-
                 character.AIController.SelectTarget(null);
 
                 goToObjective = null;

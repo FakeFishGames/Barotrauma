@@ -149,6 +149,8 @@ namespace Barotrauma
             set { burnt = MathHelper.Clamp(value,0.0f,100.0f); }
         }
 
+        private float scale;
+
         //public float Damage
         //{
         //    get { return damage; }
@@ -182,7 +184,7 @@ namespace Barotrauma
             set { wearingItemSprite = value; }
         }
 
-        public Limb (Character character, XElement element)
+        public Limb (Character character, XElement element, float scale = 1.0f)
         {
             this.character = character;
             
@@ -190,7 +192,9 @@ namespace Barotrauma
 
             doesFlip = ToolBox.GetAttributeBool(element, "flip", false);
 
-            body = new PhysicsBody(element);
+            this.scale = scale;
+
+            body = new PhysicsBody(element, scale);
 
             if (ToolBox.GetAttributeBool(element, "ignorecollisions", false))
             {
@@ -225,10 +229,10 @@ namespace Barotrauma
                 }
 
 
-                Vector2 jointPos = ToolBox.GetAttributeVector2(element, "pullpos", Vector2.Zero);
+                Vector2 jointPos = ToolBox.GetAttributeVector2(element, "pullpos", Vector2.Zero) * scale;
                 jointPos = ConvertUnits.ToSimUnits(jointPos);
 
-                stepOffset = ToolBox.GetAttributeVector2(element, "stepoffset", Vector2.Zero);
+                stepOffset = ToolBox.GetAttributeVector2(element, "stepoffset", Vector2.Zero) * scale;
                 stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
                 refJointIndex = ToolBox.GetAttributeInt(element, "refjoint", -1);
@@ -455,7 +459,7 @@ namespace Barotrauma
 
             if (wearingItem == null || !wearingItemSprite.HideLimb)
             {
-                body.Draw(spriteBatch, sprite, color);
+                body.Draw(spriteBatch, sprite, color, null, scale);
             }
             else
             {
@@ -484,7 +488,7 @@ namespace Barotrauma
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     color, origin,
                     -body.DrawRotation,
-                    1.0f, spriteEffect, depth);
+                    scale, spriteEffect, depth);
             }
 
             if (damage>0.0f && damagedSprite!=null)
