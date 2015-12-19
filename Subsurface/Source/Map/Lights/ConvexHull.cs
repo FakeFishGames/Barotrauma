@@ -14,10 +14,15 @@ namespace Barotrauma.Lights
 
         public Vector2 LightPos;
 
-        public CachedShadow(VertexPositionColor[] shadowVertices, VertexPositionTexture[] penumbraVertices, Vector2 lightPos)
+        public int ShadowVertexCount, PenumbraVertexCount;
+
+        public CachedShadow(VertexPositionColor[] shadowVertices, VertexPositionTexture[] penumbraVertices, Vector2 lightPos, int shadowVertexCount, int penumbraVertexCount)
         {
             ShadowVertices = shadowVertices;
             PenumbraVertices = penumbraVertices;
+
+            ShadowVertexCount = shadowVertexCount;
+            PenumbraVertexCount = penumbraVertexCount;
 
             LightPos = lightPos;
         }
@@ -38,6 +43,8 @@ namespace Barotrauma.Lights
 
         private VertexPositionColor[] shadowVertices;
         private VertexPositionTexture[] penumbraVertices;
+
+        private VertexBuffer shadowBuffer, penumbraBuffer;
 
         int shadowVertexCount;
 
@@ -78,6 +85,8 @@ namespace Barotrauma.Lights
             
             shadowVertices = new VertexPositionColor[6 * 2];
             penumbraVertices = new VertexPositionTexture[6];
+
+            shadowBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, 6*2, BufferUsage.WriteOnly);
 
             
             vertices = points;
@@ -216,6 +225,10 @@ namespace Barotrauma.Lights
             {
                 CalculatePenumbraVertices(startingIndex, endingIndex, lightSourcePos, los);
             }
+            else
+            {
+                shadowBuffer.SetData(shadowVertices);
+            }
         }
 
         private void CalculatePenumbraVertices(int startingIndex, int endingIndex, Vector2 lightSourcePos, bool los)
@@ -266,35 +279,39 @@ namespace Barotrauma.Lights
             if (!Enabled) return;
 
             CachedShadow cachedShadow = null;
-            if (cachedShadows.TryGetValue(light, out cachedShadow) && false)
+            if (cachedShadows.TryGetValue(light, out cachedShadow) && 
+                (light.Position == cachedShadow.LightPos || Vector2.DistanceSquared(light.Position, cachedShadow.LightPos) < 1.0f))
             {
-                if (light.Position == cachedShadow.LightPos ||
-                    Vector2.DistanceSquared(light.WorldPosition, cachedShadow.LightPos) < 1.0f)
-                {
-                    shadowVertices = cachedShadow.ShadowVertices;
-                    penumbraVertices = cachedShadow.PenumbraVertices;
+                //{
+                shadowVertices = cachedShadow.ShadowVertices;
+                penumbraVertices = cachedShadow.PenumbraVertices;
 
-                }
-                else
-                {
-                    CalculateShadowVertices(light.WorldPosition, los);
-                    cachedShadow.LightPos = light.WorldPosition;
-                    cachedShadow.ShadowVertices = shadowVertices;
-                    cachedShadow.PenumbraVertices = penumbraVertices;
+                shadowVertexCount = cachedShadow.ShadowVertexCount;
 
-                }
+
+                //}
+                //else
+                
+                    //CalculateShadowVertices(light.Position, los);
+                    //cachedShadow.LightPos = light.Position;
+                    //cachedShadow.ShadowVertices = shadowVertices;
+                    //cachedShadow.PenumbraVertices = penumbraVertices;
+
+                
             }
             else
             {
-                Vector2 lightPos = light.WorldPosition;
-                if (light.Submarine!=null && parentEntity != null && parentEntity.Submarine == light.Submarine)
-                {
-                    lightPos = light.Position;
-                }
+                Vector2 lightPos = light.Position;
+                //if (light.Submarine!=null && parentEntity != null && parentEntity.Submarine == light.Submarine)
+                //{
+                //    lightPos = light.Position;
+                //}
 
                 CalculateShadowVertices(lightPos, los);
-               // cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.WorldPosition);
-               // cachedShadows.Add(light, cachedShadow);
+
+                if (cachedShadows.ContainsKey(light)) cachedShadows.Remove(light);
+                cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position, shadowVertexCount, 0);
+                cachedShadows.Add(light, cachedShadow);
             }
 
             DrawShadows(graphicsDevice, cam, transform, los);
@@ -323,10 +340,21 @@ namespace Barotrauma.Lights
             
             if (shadowVertexCount>0)
             {
+
+
+
                 shadowEffect.World = Matrix.CreateTranslation(offset) * transform;
                 shadowEffect.CurrentTechnique.Passes[0].Apply();
 
-                graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount*2 - 2);
+                if (los || true)
+                {
+                    graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount * 2 - 2);
+                }
+                else
+                {
+                    graphicsDevice.SetVertexBuffer(shadowBuffer);
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, shadowVertexCount);
+                }               
             
             }
 
