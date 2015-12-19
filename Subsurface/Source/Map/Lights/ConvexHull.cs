@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Barotrauma.Lights
@@ -38,6 +39,8 @@ namespace Barotrauma.Lights
         private VertexPositionColor[] shadowVertices;
         private VertexPositionTexture[] penumbraVertices;
 
+        int shadowVertexCount;
+
         private Entity parentEntity;
 
         private Rectangle boundingBox;
@@ -72,6 +75,10 @@ namespace Barotrauma.Lights
             parentEntity = parent;
 
             cachedShadows = new Dictionary<LightSource, CachedShadow>();
+            
+            shadowVertices = new VertexPositionColor[6 * 2];
+            penumbraVertices = new VertexPositionTexture[6];
+
             
             vertices = points;
             primitiveCount = vertices.Length;
@@ -139,6 +146,8 @@ namespace Barotrauma.Lights
 
         private void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
         {
+            shadowVertexCount = 0;
+
             //compute facing of each edge, using N*L
             for (int i = 0; i < primitiveCount; i++)
             {
@@ -172,15 +181,13 @@ namespace Barotrauma.Lights
                     startingIndex = nextEdge;
             }
 
-            int shadowVertexCount;
-
             //nr of vertices that are in the shadow
             if (endingIndex > startingIndex)
                 shadowVertexCount = endingIndex - startingIndex + 1;
             else
                 shadowVertexCount = primitiveCount + 1 - startingIndex + endingIndex;
 
-            shadowVertices = new VertexPositionColor[shadowVertexCount * 2];
+            //shadowVertices = new VertexPositionColor[shadowVertexCount * 2];
 
             //create a triangle strip that has the shape of the shadow
             int currentIndex = startingIndex;
@@ -213,8 +220,6 @@ namespace Barotrauma.Lights
 
         private void CalculatePenumbraVertices(int startingIndex, int endingIndex, Vector2 lightSourcePos, bool los)
         {
-            penumbraVertices = new VertexPositionTexture[6];
-
             for (int n = 0; n < 4; n += 3)
             {
                 Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex] : vertices[endingIndex], 0.0f);
@@ -309,18 +314,23 @@ namespace Barotrauma.Lights
         private void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Matrix transform, bool los = true)
         {
 
+
             Vector3 offset = Vector3.Zero;
             if (parentEntity != null && parentEntity.Submarine != null)
             {
                 offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
             }
             
+            if (shadowVertexCount>0)
+            {
+                shadowEffect.World = Matrix.CreateTranslation(offset) * transform;
+                shadowEffect.CurrentTechnique.Passes[0].Apply();
 
-            shadowEffect.World = Matrix.CreateTranslation(offset) * transform;
-            shadowEffect.CurrentTechnique.Passes[0].Apply();
-
-            graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertices.Length - 2);
+                graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount*2 - 2);
             
+            }
+
+
             if (los)
             {
                 penumbraEffect.World = shadowEffect.World;
@@ -330,6 +340,7 @@ namespace Barotrauma.Lights
                 graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, penumbraVertices, 0, 2, VertexPositionTexture.VertexDeclaration);
 #endif
             }
+
         }
 
         public void Remove()

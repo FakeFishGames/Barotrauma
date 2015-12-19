@@ -198,8 +198,15 @@ namespace Barotrauma.Items.Components
                     if (pointDist > radius) continue;
                     if (pointDist > prevPingRadius && pointDist < pingRadius)
                     {
-                        var blip = new RadarBlip(limb.WorldPosition, 1.0f);
-                        radarBlips.Add(blip);
+                        float limbSize = limb.Mass;
+
+                        for (int i = 0; i<=limb.Mass/100.0f; i++)
+                        {
+                            var blip = new RadarBlip(limb.WorldPosition+Rand.Vector(limb.Mass/10.0f), 1.0f);
+                            radarBlips.Add(blip);
+                        }
+
+
                     }
                 }
             }

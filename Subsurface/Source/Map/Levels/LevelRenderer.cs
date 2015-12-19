@@ -151,6 +151,9 @@ namespace Barotrauma
         {
             if (WallVertices == null || WallVertices.Length <= 0) return;
 
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             basicEffect.World = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
@@ -194,6 +197,10 @@ namespace Barotrauma
 
                 }
             }
+
+            sw.Stop();
+
+            Debug.WriteLine("level render: "+sw.ElapsedTicks);
         }
 
     }
