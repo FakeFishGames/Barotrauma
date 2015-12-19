@@ -21,9 +21,11 @@ namespace Barotrauma
         Vector2 dustOffset;
 
         private Level level;
+
+        private VertexBuffer wallVertices, bodyVertices;
         
-        public VertexPositionTexture[] WallVertices;
-        public VertexPositionColor[] BodyVertices;
+        //public VertexPositionTexture[] WallVertices;
+        //public VertexPositionColor[] BodyVertices;
         
         public LevelRenderer(Level level)
         {
@@ -44,7 +46,7 @@ namespace Barotrauma
                 basicEffect.TextureEnabled = true;
                 basicEffect.Texture = TextureLoader.FromFile("Content/Map/iceWall.png");
             }
-
+            
             if (backgroundSpriteManager==null)
             {
                 backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
@@ -61,6 +63,18 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             dustOffset -= Vector2.UnitY * 10.0f * (float)deltaTime;
+        }
+
+        public void SetWallVertices(VertexPositionTexture[] vertices)
+        {
+            wallVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length,BufferUsage.WriteOnly);
+            wallVertices.SetData(vertices);
+        }
+
+        public void SetBodyVertices(VertexPositionColor[] vertices)
+        {
+            bodyVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            bodyVertices.SetData(vertices);
         }
 
         public void DrawBackground(SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundCreatureManager = null)
@@ -149,7 +163,7 @@ namespace Barotrauma
 
         public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
         {
-            if (WallVertices == null || WallVertices.Length <= 0) return;
+            if (wallVertices == null) return;
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -158,45 +172,49 @@ namespace Barotrauma
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+            graphicsDevice.SetVertexBuffer(bodyVertices);
 
             basicEffect.VertexColorEnabled = true;
             basicEffect.TextureEnabled = false;
             basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_VertexColor"];
             basicEffect.CurrentTechnique.Passes[0].Apply();
 
-            graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, BodyVertices, 0, (int)Math.Floor(BodyVertices.Length / 3.0f));
 
-            for (int side = 0; side < 2; side++)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    graphicsDevice.DrawUserPrimitives(
-                        PrimitiveType.TriangleList, level.WrappingWalls[side, i].BodyVertices, 0,
-                        (int)Math.Floor(level.WrappingWalls[side, i].BodyVertices.Length / 3.0f));
+            graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
 
-                }
-            }
+            //for (int side = 0; side < 2; side++)
+            //{
+            //    for (int i = 0; i < 2; i++)
+            //    {
+            //        graphicsDevice.DrawUserPrimitives(
+            //            PrimitiveType.TriangleList, level.WrappingWalls[side, i].BodyVertices, 0,
+            //            (int)Math.Floor(level.WrappingWalls[side, i].BodyVertices.Length / 3.0f));
 
+            //    }
+            //}
+
+
+            graphicsDevice.SetVertexBuffer(wallVertices);
             basicEffect.VertexColorEnabled = false;
             basicEffect.TextureEnabled = true;
             basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
             basicEffect.CurrentTechnique.Passes[0].Apply();
-            graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, WallVertices, 0, (int)Math.Floor(WallVertices.Length / 3.0f)); 
+            graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
 
-            for (int side = 0; side < 2; side++)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    basicEffect.VertexColorEnabled = false;
-                    basicEffect.TextureEnabled = true;
-                    basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
-                    basicEffect.CurrentTechnique.Passes[0].Apply();
-                    graphicsDevice.DrawUserPrimitives(
-                        PrimitiveType.TriangleList, level.WrappingWalls[side, i].WallVertices, 0,
-                        (int)Math.Floor(level.WrappingWalls[side, i].WallVertices.Length / 3.0f));
+            //for (int side = 0; side < 2; side++)
+            //{
+            //    for (int i = 0; i < 2; i++)
+            //    {
+            //        basicEffect.VertexColorEnabled = false;
+            //        basicEffect.TextureEnabled = true;
+            //        basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
+            //        basicEffect.CurrentTechnique.Passes[0].Apply();
+            //        graphicsDevice.DrawUserPrimitives(
+            //            PrimitiveType.TriangleList, level.WrappingWalls[side, i].WallVertices, 0,
+            //            (int)Math.Floor(level.WrappingWalls[side, i].WallVertices.Length / 3.0f));
 
-                }
-            }
+            //    }
+            //}
 
             sw.Stop();
 

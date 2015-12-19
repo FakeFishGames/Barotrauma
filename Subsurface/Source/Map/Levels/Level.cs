@@ -301,8 +301,8 @@ namespace Barotrauma
             startPosition.Y = borders.Height;
             endPosition.Y = borders.Height;
 
-            renderer.BodyVertices = GeneratePolygons(cells, pathCells);
-            renderer.WallVertices = GenerateWallShapes(cells);
+            renderer.SetBodyVertices(GeneratePolygons(cells, pathCells));
+            renderer.SetWallVertices(GenerateWallShapes(cells));
 
             
             wrappingWalls = new WrappingWall[2, 2];
