@@ -111,7 +111,7 @@ namespace Barotrauma
             get { return condition; }
             set 
             {
-                if (float.IsNaN(value)) return;
+                if (!MathUtils.IsValid(value)) return;
 
                 float prev = condition;
                 condition = MathHelper.Clamp(value, 0.0f, 100.0f); 
@@ -166,15 +166,7 @@ namespace Barotrauma
                 return IsInWater();
             }
         }
-
-        public bool Updated
-        {
-            set 
-            {
-                foreach (ItemComponent ic in components) ic.Updated = value;
-            }
-        }
-
+        
         public ItemPrefab Prefab
         {
             get { return prefab; }

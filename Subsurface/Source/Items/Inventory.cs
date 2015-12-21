@@ -284,7 +284,7 @@ namespace Barotrauma
 #if DEBUG
                     System.Diagnostics.Debug.Assert(slotIndex >= 0 && slotIndex < Items.Length);
 #else
-                if (slotIndex<0 || slotIndex>=items.Length) return;
+                if (slotIndex<0 || slotIndex>=Items.Length) return;
 #endif
 
                     Rectangle containerRect = new Rectangle(rect.X - 5, rect.Y - (40 + 10) * itemCapacity - 5,

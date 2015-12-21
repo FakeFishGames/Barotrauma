@@ -1,16 +1,19 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
 namespace Barotrauma.Lights
 {
-    class CachedShadow
+    class CachedShadow : IDisposable
     {
 
-        public VertexPositionColor[] ShadowVertices;
-        public VertexPositionTexture[] PenumbraVertices;
+        //public VertexPositionColor[] ShadowVertices;
+        //public VertexPositionTexture[] PenumbraVertices;
+
+        public VertexBuffer ShadowBuffer;
 
         public Vector2 LightPos;
 
@@ -18,13 +21,28 @@ namespace Barotrauma.Lights
 
         public CachedShadow(VertexPositionColor[] shadowVertices, VertexPositionTexture[] penumbraVertices, Vector2 lightPos, int shadowVertexCount, int penumbraVertexCount)
         {
-            ShadowVertices = shadowVertices;
-            PenumbraVertices = penumbraVertices;
+            //var ShadowVertices = new VertexPositionColor [shadowVertices.Count()];
+            //shadowVertices.CopyTo(ShadowVertices, 0);
+
+            ShadowBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, 6*2, BufferUsage.None);
+            ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
 
             ShadowVertexCount = shadowVertexCount;
             PenumbraVertexCount = penumbraVertexCount;
 
             LightPos = lightPos;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            ShadowBuffer.Dispose();
         }
     }
 
@@ -43,9 +61,7 @@ namespace Barotrauma.Lights
 
         private VertexPositionColor[] shadowVertices;
         private VertexPositionTexture[] penumbraVertices;
-
-        private VertexBuffer shadowBuffer, penumbraBuffer;
-
+        
         int shadowVertexCount;
 
         private Entity parentEntity;
@@ -85,9 +101,6 @@ namespace Barotrauma.Lights
             
             shadowVertices = new VertexPositionColor[6 * 2];
             penumbraVertices = new VertexPositionTexture[6];
-
-            shadowBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, 6*2, BufferUsage.WriteOnly);
-
             
             vertices = points;
             primitiveCount = vertices.Length;
@@ -100,7 +113,7 @@ namespace Barotrauma.Lights
 
             list.Add(this);
         }
-
+        
         private void CalculateDimensions()
         {
             Vector2 center = Vector2.Zero;
@@ -225,10 +238,6 @@ namespace Barotrauma.Lights
             {
                 CalculatePenumbraVertices(startingIndex, endingIndex, lightSourcePos, los);
             }
-            else
-            {
-                shadowBuffer.SetData(shadowVertices);
-            }
         }
 
         private void CalculatePenumbraVertices(int startingIndex, int endingIndex, Vector2 lightSourcePos, bool los)
@@ -283,21 +292,9 @@ namespace Barotrauma.Lights
                 (light.Position == cachedShadow.LightPos || Vector2.DistanceSquared(light.Position, cachedShadow.LightPos) < 1.0f))
             {
                 //{
-                shadowVertices = cachedShadow.ShadowVertices;
-                penumbraVertices = cachedShadow.PenumbraVertices;
-
+                graphicsDevice.SetVertexBuffer(cachedShadow.ShadowBuffer);
                 shadowVertexCount = cachedShadow.ShadowVertexCount;
 
-
-                //}
-                //else
-                
-                    //CalculateShadowVertices(light.Position, los);
-                    //cachedShadow.LightPos = light.Position;
-                    //cachedShadow.ShadowVertices = shadowVertices;
-                    //cachedShadow.PenumbraVertices = penumbraVertices;
-
-                
             }
             else
             {
@@ -309,7 +306,11 @@ namespace Barotrauma.Lights
 
                 CalculateShadowVertices(lightPos, los);
 
-                if (cachedShadows.ContainsKey(light)) cachedShadows.Remove(light);
+                if (cachedShadow != null)
+                {
+                    cachedShadow.Dispose();
+                    cachedShadows.Remove(light);
+                }
                 cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position, shadowVertexCount, 0);
                 cachedShadows.Add(light, cachedShadow);
             }
@@ -339,20 +340,17 @@ namespace Barotrauma.Lights
             }
             
             if (shadowVertexCount>0)
-            {
+            {                
+                shadowEffect.World = Matrix.CreateTranslation(offset) * transform;                
 
-
-
-                shadowEffect.World = Matrix.CreateTranslation(offset) * transform;
-                shadowEffect.CurrentTechnique.Passes[0].Apply();
-
-                if (los || true)
+                if (los)
                 {
+                    shadowEffect.CurrentTechnique.Passes[0].Apply();
                     graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount * 2 - 2);
                 }
                 else
-                {
-                    graphicsDevice.SetVertexBuffer(shadowBuffer);
+                {                    
+                    shadowEffect.CurrentTechnique.Passes[0].Apply();
                     graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, shadowVertexCount);
                 }               
             
@@ -373,6 +371,12 @@ namespace Barotrauma.Lights
 
         public void Remove()
         {
+            foreach (KeyValuePair<LightSource, CachedShadow> cachedShadow in cachedShadows)
+            {
+                cachedShadow.Value.Dispose();
+            }
+            cachedShadows.Clear();
+
             list.Remove(this);
         }
 
