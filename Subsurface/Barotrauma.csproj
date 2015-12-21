@@ -1155,6 +1155,10 @@
       <Project>{0aad36e3-51a5-4a07-ab60-5c8a66bd38b7}</Project>
       <Name>Farseer Physics MonoGame</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Hyper.ComponentModel\Hyper.ComponentModel.csproj">
+      <Project>{3b8f9edb-6e5e-450c-abc2-ec49075d0b50}</Project>
+      <Name>Hyper.ComponentModel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{49ba1c69-6104-41ac-a5d8-b54fa9f696e8}</Project>
       <Name>Lidgren.Network</Name>

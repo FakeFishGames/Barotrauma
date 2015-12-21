@@ -49,7 +49,20 @@ namespace Barotrauma
                 BackgroundSpritePrefab prefab = GetRandomPrefab();
                 Vector2 pos = FindSpritePosition(level, prefab);
 
-                sprites.Add(new BackgroundSprite(prefab, pos));
+                var newSprite = new BackgroundSprite(prefab, pos);
+
+                int n = 0;
+                
+                while (n < sprites.Count)
+                {
+                    n++;
+
+                    Sprite existingSprite = sprites[n - 1].Prefab.Sprite;
+                    if (existingSprite == null) continue;
+                    if (existingSprite.Texture == newSprite.Prefab.Sprite.Texture) break;
+                }
+
+                sprites.Insert(i, newSprite);
             }
         }
 

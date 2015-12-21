@@ -150,6 +150,9 @@ namespace Barotrauma
 
             CurrGraphicsDevice = GraphicsDevice;
 
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));
+
             //Event.Init("Content/randomevents.xml");
         }
 
