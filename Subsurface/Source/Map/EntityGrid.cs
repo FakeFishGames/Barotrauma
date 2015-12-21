@@ -50,19 +50,11 @@ namespace Barotrauma
         
         public void RemoveEntity(MapEntity entity)
         {
-            Rectangle indices = GetIndices(entity.Rect);
-            if (indices.X < 0 || indices.Width >= entities.GetLength(0) ||
-                indices.Y < 0 || indices.Height >= entities.GetLength(1))
+            for (int x = 0; x <= entities.GetLength(0); x++)
             {
-                DebugConsole.ThrowError("Error in EntityGrid.RemoveEntity: " + entity + " is outside the grid");
-                return;
-            }
-
-            for (int x = indices.X; x <= indices.Width; x++)
-            {
-                for (int y = indices.Y; y <= indices.Height; y++)
+                for (int y = 0; y <= entities.GetLength(1); y++)
                 {
-                    entities[x, y].Remove(entity);
+                    if (entities[x,y].Contains(entity)) entities[x, y].Remove(entity);
                 }
             }
         }

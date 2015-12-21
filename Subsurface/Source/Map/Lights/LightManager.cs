@@ -59,11 +59,7 @@ namespace Barotrauma.Lights
         }
 
         public void DrawLOS(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 pos)
-        {
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
+        {            
             if (!LosEnabled) return;
 
             Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
@@ -78,10 +74,7 @@ namespace Barotrauma.Lights
 
                 convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
             }
-
-            sw.Stop();
-
-            Debug.WriteLine("drawlos: " + sw.ElapsedTicks + " (" + sw.ElapsedMilliseconds + ")");
+            
             if (!ObstructVision) return;
 
             spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative);
@@ -102,10 +95,6 @@ namespace Barotrauma.Lights
 
         public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
             if (!LightingEnabled) return;
 
             Matrix shadowTransform = cam.ShaderTransform
@@ -162,9 +151,7 @@ namespace Barotrauma.Lights
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);
             graphics.SetRenderTarget(null);
-
-
-            Debug.WriteLine("lights: " + sw.ElapsedTicks + " (" + sw.ElapsedMilliseconds + ")");
+            
             if (!ObstructVision) return;
 
 

@@ -129,7 +129,7 @@ namespace Barotrauma
             viewRect.Y = -viewRect.Y;
 
             float multiplier = 0.8f;
-            for (int i = 1; i < 5; i++)
+            for (int i = 1; i < 4; i++)
             {
                 spriteBatch.Draw(dustParticles, new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsHeight),
                     new Rectangle((int)((backgroundPos.X * multiplier)), (int)((-backgroundPos.Y * multiplier)), cam.WorldView.Width*2, cam.WorldView.Height*2),
@@ -164,10 +164,7 @@ namespace Barotrauma
         public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
         {
             if (wallVertices == null) return;
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
+            
             basicEffect.World = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
@@ -202,12 +199,7 @@ namespace Barotrauma
             basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
             basicEffect.CurrentTechnique.Passes[0].Apply();
             graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
-
-            basicEffect.VertexColorEnabled = false;
-            basicEffect.TextureEnabled = true;
-            basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
-            basicEffect.CurrentTechnique.Passes[0].Apply();
-
+            
             for (int side = 0; side < 2; side++)
             {
                 for (int i = 0; i < 2; i++)
@@ -221,10 +213,7 @@ namespace Barotrauma
 
                 }
             }
-
-            sw.Stop();
-
-            Debug.WriteLine("level render: "+sw.ElapsedTicks);
+            
         }
 
         public void Dispose()

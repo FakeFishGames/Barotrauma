@@ -162,6 +162,7 @@ namespace Barotrauma.Items.Components
                     c.Wires[i] = wireComponent;
                     wireComponent.Connect(c, false);
                 }
+                c.UpdateRecipients();
             } 
         }
     }
