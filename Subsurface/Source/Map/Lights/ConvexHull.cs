@@ -9,10 +9,6 @@ namespace Barotrauma.Lights
 {
     class CachedShadow : IDisposable
     {
-
-        //public VertexPositionColor[] ShadowVertices;
-        //public VertexPositionTexture[] PenumbraVertices;
-
         public VertexBuffer ShadowBuffer;
 
         public Vector2 LightPos;
@@ -291,29 +287,32 @@ namespace Barotrauma.Lights
             if (cachedShadows.TryGetValue(light, out cachedShadow) && 
                 (light.Position == cachedShadow.LightPos || Vector2.DistanceSquared(light.Position, cachedShadow.LightPos) < 1.0f))
             {
-                //{
-                graphicsDevice.SetVertexBuffer(cachedShadow.ShadowBuffer);
-                shadowVertexCount = cachedShadow.ShadowVertexCount;
 
             }
             else
             {
-                Vector2 lightPos = light.Position;
                 //if (light.Submarine!=null && parentEntity != null && parentEntity.Submarine == light.Submarine)
                 //{
                 //    lightPos = light.Position;
                 //}
 
-                CalculateShadowVertices(lightPos, los);
+                CalculateShadowVertices(light.Position, los);
 
                 if (cachedShadow != null)
                 {
-                    cachedShadow.Dispose();
-                    cachedShadows.Remove(light);
+                    cachedShadow.LightPos = light.Position;
+                    cachedShadow.ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
+                    cachedShadow.ShadowVertexCount = shadowVertexCount;
                 }
-                cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position, shadowVertexCount, 0);
-                cachedShadows.Add(light, cachedShadow);
+                else
+                {
+                    cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position, shadowVertexCount, 0);
+                    cachedShadows.Add(light, cachedShadow);
+                }
             }
+
+            graphicsDevice.SetVertexBuffer(cachedShadow.ShadowBuffer);
+            shadowVertexCount = cachedShadow.ShadowVertexCount;
 
             DrawShadows(graphicsDevice, cam, transform, los);
         }

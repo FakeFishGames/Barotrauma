@@ -41,10 +41,10 @@ namespace Barotrauma.Items.Components
         
         public override void Move(Vector2 amount)
         {
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                Nodes[i] += amount;
-            }
+            //for (int i = 0; i < Nodes.Count; i++)
+            //{
+            //    Nodes[i] += amount;
+            //}
         }
 
         public Connection OtherConnection(Connection connection)
@@ -64,7 +64,10 @@ namespace Barotrauma.Items.Components
                 
                 for (int n = 0; n< connections[i].Wires.Length; n++)
                 {
-                    if (connections[i].Wires[n] == this) connections[i].Wires[n] = null;
+                    if (connections[i].Wires[n] != this) continue;
+                    
+                    connections[i].Wires[n] = null;
+                    connections[i].UpdateRecipients();
                 }
                 connections[i] = null;
             }
@@ -290,7 +293,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (Nodes.Count == 0) return;
 
@@ -369,8 +372,8 @@ namespace Barotrauma.Items.Components
         {
             if (item.Submarine!=null)
             {
-                start += item.Submarine.DrawPosition;
-                end += item.Submarine.DrawPosition;
+                start += item.Submarine.DrawPosition+Submarine.HiddenSubPosition;
+                end += item.Submarine.DrawPosition+Submarine.HiddenSubPosition;
             }
 
             start.Y = -start.Y;
