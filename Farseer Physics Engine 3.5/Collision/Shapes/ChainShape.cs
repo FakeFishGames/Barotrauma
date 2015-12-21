@@ -78,12 +78,7 @@ namespace FarseerPhysics.Collision.Shapes
                 Vector2 v2 = vertices[i];
 
                 // If the code crashes here, it means your vertices are too close together.
-
-                if (Vector2.DistanceSquared(v1, v2) < Settings.LinearSlop * Settings.LinearSlop)
-                {
-                    int asldmfk = 1;
-                }
-
+                
                 Debug.Assert(Vector2.DistanceSquared(v1, v2) > Settings.LinearSlop * Settings.LinearSlop);
             }
 

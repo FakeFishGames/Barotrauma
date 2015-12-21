@@ -15,9 +15,7 @@ namespace Barotrauma
 
         public const float WallWidth = 20000.0f;
 
-        public VertexPositionTexture[] WallVertices;
-
-        public VertexPositionColor[] BodyVertices;
+        private VertexBuffer wallVertices, bodyVertices;
 
         private Vector2 midPos;
         private int slot;
@@ -25,6 +23,16 @@ namespace Barotrauma
         private Vector2 offset;
 
         private List<VoronoiCell> cells;
+
+        public VertexBuffer WallVertices
+        {
+            get { return wallVertices; }
+        }
+
+        public VertexBuffer BodyVertices
+        {
+            get { return bodyVertices; }
+        }
 
         public Vector2 Offset
         {
@@ -114,6 +122,18 @@ namespace Barotrauma
 
                 cells.Add(wallCell);
             }
+        }
+
+        public void SetWallVertices(VertexPositionTexture[] vertices)
+        {
+            wallVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            wallVertices.SetData(vertices);
+        }
+
+        public void SetBodyVertices(VertexPositionColor[] vertices)
+        {
+            bodyVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            bodyVertices.SetData(vertices);
         }
 
 

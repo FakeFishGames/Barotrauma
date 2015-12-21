@@ -63,10 +63,11 @@ namespace Barotrauma.Lights
             get { return range; }
             set
             {
-                float newRange = MathHelper.Clamp(value, 0.0f, 2048.0f);
-                if (range == newRange) return;
-                range = newRange;
 
+                float prevRange = range;
+                range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+                if (Math.Abs(prevRange - range)<5.0f) return;
+                
                 UpdateHullsInRange();
             }
         }

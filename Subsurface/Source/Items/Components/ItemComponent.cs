@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
 
         public List<Skill> requiredSkills;
 
-        private List<ItemSound> sounds;
+        private Dictionary<ActionType,List<ItemSound>> sounds;
 
         private GUIFrame guiFrame;
 
@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
 
             requiredSkills = new List<Skill>();
 
-            sounds = new List<ItemSound>();
+            sounds = new Dictionary<ActionType, List<ItemSound>>();
 
             statusEffects = new List<StatusEffect>();
 
@@ -283,7 +283,15 @@ namespace Barotrauma.Items.Components
                         ItemSound itemSound = new ItemSound(sound, type, range, loop);
                         itemSound.VolumeProperty = ToolBox.GetAttributeString(subElement, "volume", "");
                         itemSound.VolumeMultiplier = ToolBox.GetAttributeFloat(subElement, "volumemultiplier", 1.0f);
-                        sounds.Add(itemSound);
+
+                        List<ItemSound> soundList = null;
+                        if (!sounds.TryGetValue(itemSound.Type, out soundList))
+                        {
+                            soundList = new List<ItemSound>();
+                            sounds.Add(itemSound.Type, soundList);
+                        }
+
+                        soundList.Add(itemSound);
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, item, item.ConfigFile, false);                        
@@ -306,9 +314,9 @@ namespace Barotrauma.Items.Components
                 loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
                 return;
             }
-            
-            List<ItemSound> matchingSounds = sounds.FindAll(x => x.Type == type);
-            if (matchingSounds.Count == 0) return;
+
+            List<ItemSound> matchingSounds = null;
+            if (!sounds.TryGetValue(type, out matchingSounds)) return;
 
             ItemSound itemSound = null;
             if (!Sounds.SoundManager.IsPlaying(loopingSoundIndex))

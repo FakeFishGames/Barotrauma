@@ -12,6 +12,10 @@ namespace Barotrauma.Items.Components
         static float fullPower;
         static float fullLoad;
 
+        //private bool updated;
+
+        private int updateTimer;
+        
         const float FireProbability = 0.15f;
 
         //affects how fast changes in power/load are carried over the grid
@@ -40,9 +44,14 @@ namespace Barotrauma.Items.Components
             fullLoad = 0.0f;
             connectedList.Clear();
 
-            if (updated) return;
+            if (updateTimer > 0)
+            {
+                updateTimer--;
+                return;
+            }
             
             CheckJunctions(deltaTime);
+            updateTimer = 0;
 
             foreach (Powered p in connectedList)
             {
@@ -54,51 +63,43 @@ namespace Barotrauma.Items.Components
                 pt.Item.SendSignal("", "power", fullPower / Math.Max(fullLoad, 1.0f));
 
                 //damage the item if voltage is too high
-                if (-pt.currPowerConsumption > Math.Max(pt.powerLoad * 2.0f, 200.0f))
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * 2.0f, 200.0f)) continue;
+                
+                float prevCondition = pt.item.Condition;
+                pt.item.Condition -= deltaTime * 10.0f;
+
+                if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
+                    sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, pt.item.WorldPosition);
 
-                    float prevCondition = pt.item.Condition;
-                    pt.item.Condition -= deltaTime * 10.0f;
-
-                    if (pt.item.Condition<=0.0f && prevCondition > 0.0f)
+                    Vector2 baseVel = Rand.Vector(300.0f);
+                    for (int i = 0; i < 10; i++)
                     {
-                        sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, pt.item.WorldPosition);
+                        var particle = GameMain.ParticleManager.CreateParticle("spark", pt.item.WorldPosition,
+                            baseVel + Rand.Vector(100.0f), 0.0f, item.CurrentHull);
 
-                        Vector2 baseVel = Rand.Vector(300.0f);
-                        for (int i = 0; i < 10; i++)
-                        {
-                            var particle = GameMain.ParticleManager.CreateParticle("spark", pt.item.WorldPosition,
-                                baseVel + Rand.Vector(100.0f), 0.0f, item.CurrentHull);
+                        if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
+                    }
 
-                            if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
-                        }
-
-                        if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
-                        {
-                            new FireSource(pt.item.WorldPosition);
-                        }
+                    if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
+                    {
+                        new FireSource(pt.item.WorldPosition);
                     }
                 }
-                
+                  
             }
-
-            
         }
 
         public override bool Pick(Character picker)
         {
-            if (picker == null) return false;
-
-            //picker.SelectedConstruction = (picker.SelectedConstruction == item) ? null : item;
-            
-            return true;
+            return picker != null;
         }
 
         //a recursive function that goes through all the junctions and adds up
         //all the generated/consumed power of the constructions connected to the grid
         private void CheckJunctions(float deltaTime)
         {
-            updated = true;
+            updateTimer = 1;
             connectedList.Add(this);
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -119,11 +120,12 @@ namespace Barotrauma.Items.Components
                     //if (it.Updated) continue;
 
                     Powered powered = it.GetComponent<Powered>();
-                    if (powered == null || powered.Updated) continue;
+                    if (powered == null) continue;
 
                     PowerTransfer powerTransfer = powered as PowerTransfer;
                     if (powerTransfer != null)
                     {
+                        if (powerTransfer.updateTimer>0) continue;
                         powerTransfer.CheckJunctions(deltaTime);
                     }
                     else
@@ -143,9 +145,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
         }
-
+        
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             int x = GuiFrame.Rect.X;

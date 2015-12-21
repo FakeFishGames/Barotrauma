@@ -16,7 +16,7 @@ namespace Barotrauma
         
         //which entities have been selected for editing
         protected static List<MapEntity> selectedList = new List<MapEntity>();
-
+        
         protected static GUIComponent editingHUD;
         
         protected static Vector2 selectionPos = Vector2.Zero;
@@ -206,11 +206,6 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateAll(Camera cam, float deltaTime)
         {
-            foreach (Item item in Item.ItemList)
-            {
-                item.Updated = false;
-            }
-
             foreach (Hull hull in Hull.hullList)
             {
                 hull.Update(cam, deltaTime);

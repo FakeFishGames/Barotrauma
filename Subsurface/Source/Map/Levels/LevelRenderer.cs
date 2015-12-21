@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    class LevelRenderer
+    class LevelRenderer : IDisposable
     {
         private static BasicEffect basicEffect;
 
@@ -182,16 +182,18 @@ namespace Barotrauma
 
             graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
 
-            //for (int side = 0; side < 2; side++)
-            //{
-            //    for (int i = 0; i < 2; i++)
-            //    {
-            //        graphicsDevice.DrawUserPrimitives(
-            //            PrimitiveType.TriangleList, level.WrappingWalls[side, i].BodyVertices, 0,
-            //            (int)Math.Floor(level.WrappingWalls[side, i].BodyVertices.Length / 3.0f));
+            for (int side = 0; side < 2; side++)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    graphicsDevice.SetVertexBuffer(level.WrappingWalls[side, i].BodyVertices);
 
-            //    }
-            //}
+                    graphicsDevice.DrawPrimitives(
+                        PrimitiveType.TriangleList, 0,
+                        (int)Math.Floor(level.WrappingWalls[side, i].BodyVertices.VertexCount / 3.0f));
+
+                }
+            }
 
 
             graphicsDevice.SetVertexBuffer(wallVertices);
@@ -201,24 +203,41 @@ namespace Barotrauma
             basicEffect.CurrentTechnique.Passes[0].Apply();
             graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
 
-            //for (int side = 0; side < 2; side++)
-            //{
-            //    for (int i = 0; i < 2; i++)
-            //    {
-            //        basicEffect.VertexColorEnabled = false;
-            //        basicEffect.TextureEnabled = true;
-            //        basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
-            //        basicEffect.CurrentTechnique.Passes[0].Apply();
-            //        graphicsDevice.DrawUserPrimitives(
-            //            PrimitiveType.TriangleList, level.WrappingWalls[side, i].WallVertices, 0,
-            //            (int)Math.Floor(level.WrappingWalls[side, i].WallVertices.Length / 3.0f));
+            basicEffect.VertexColorEnabled = false;
+            basicEffect.TextureEnabled = true;
+            basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
+            basicEffect.CurrentTechnique.Passes[0].Apply();
 
-            //    }
-            //}
+            for (int side = 0; side < 2; side++)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+
+                    graphicsDevice.SetVertexBuffer(level.WrappingWalls[side, i].WallVertices);
+
+                    graphicsDevice.DrawPrimitives(
+                        PrimitiveType.TriangleList, 0,
+                        (int)Math.Floor(level.WrappingWalls[side, i].WallVertices.VertexCount / 3.0f));
+
+                }
+            }
 
             sw.Stop();
 
             Debug.WriteLine("level render: "+sw.ElapsedTicks);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            wallVertices.Dispose();
+            bodyVertices.Dispose();
         }
 
     }

@@ -314,8 +314,8 @@ namespace Barotrauma
                     wrappingWalls[side, i] = new WrappingWall(pathCells, cells, borders.Height * 0.5f,
                         (side == 0 ? -1 : 1) * (i == 0 ? 1 : 2));
 
-                    wrappingWalls[side, i].BodyVertices = GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>(), false);
-                    wrappingWalls[side, i].WallVertices = GenerateWallShapes(wrappingWalls[side, i].Cells);
+                    wrappingWalls[side, i].SetBodyVertices(GeneratePolygons(wrappingWalls[side, i].Cells, new List<VoronoiCell>(), false));
+                    wrappingWalls[side, i].SetWallVertices(GenerateWallShapes(wrappingWalls[side, i].Cells));
                     //wrappingWalls[side, i].Cells[0].edges[1].isSolid = false;
                     //wrappingWalls[side, i].Cells[0].edges[3].isSolid = false;
 
@@ -1091,10 +1091,11 @@ namespace Barotrauma
 
         private void Unload()
         {
+            renderer.Dispose();
             renderer = null;
             
             cells = null;
-
+            
             bodies.Clear();
             bodies = null;
 
