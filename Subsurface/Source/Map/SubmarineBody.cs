@@ -330,15 +330,19 @@ namespace Barotrauma
             if (cell == null)
             {
                 Limb limb = f2.Body.UserData as Limb;
-                if (limb!=null && limb.character.Submarine==null)
+                if (limb!=null)
                 {
+                    if (limb.character.Submarine != null) return false;
+
                     Vector2 normal2;
                     FixedArray2<Vector2> points;
                     contact.GetWorldManifold(out normal2, out points);
 
-                    if (Submarine.PickBody(
-                        points[0] - limb.LinearVelocity * ((float)Physics.step) - ConvertUnits.ToSimUnits(submarine.Position) - submarine.Velocity * ((float)Physics.step) + normal2, 
-                        points[0] - ConvertUnits.ToSimUnits(submarine.Position) - normal2, null, Physics.CollisionWall) != null)
+                    var pickedBody = Submarine.PickBody(
+                        points[0] - limb.LinearVelocity * ((float)Physics.step) - ConvertUnits.ToSimUnits(submarine.Position) - submarine.Velocity * ((float)Physics.step),
+                        points[0] - ConvertUnits.ToSimUnits(submarine.Position), null, Physics.CollisionWall);
+
+                    if (pickedBody != null)
                     {
                         
                         return true;

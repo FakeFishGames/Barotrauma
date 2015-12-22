@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,16 +19,31 @@ namespace Barotrauma
 
         public bool IgnoreContainedItems;
 
+        private bool equip;
+
         public override bool CanBeCompleted
         {
             get { return canBeCompleted; }
         }
 
+        public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false)
+            : base(character, "")
+        {
+            canBeCompleted = true;
 
-        public AIObjectiveGetItem(Character character, string itemName)
+            this.equip = equip;
+
+            currSearchIndex = 0;
+
+            this.targetItem = targetItem;
+        }
+
+        public AIObjectiveGetItem(Character character, string itemName, bool equip=false)
             : base (character, "")
         {
             canBeCompleted = true;
+
+            this.equip = equip;
 
             currSearchIndex = 0;
 
@@ -40,32 +56,68 @@ namespace Barotrauma
             {
                 if (Vector2.Distance(character.SimPosition, targetItem.SimPosition) < targetItem.PickDistance)
                 {
+                    int targetSlot = -1;
+                    if (equip)
+                    {
+                        var pickable = targetItem.GetComponent<Pickable>();
+                        //check if all the slots required by the item are free
+                        foreach (LimbSlot slots in pickable.AllowedSlots)
+                        {
+                            if (slots.HasFlag(LimbSlot.Any)) continue;
+                            
+                            for (int i = 0; i<character.Inventory.Items.Length; i++)
+                            {
+                                //slot not needed by the item, continue
+                                if (!slots.HasFlag(CharacterInventory.limbSlots[i])) continue;
+
+                                targetSlot = i;
+
+                                //slot free, continue
+                                if (character.Inventory.Items[i] == null) continue;
+
+                                //try to move the existing item to LimbSlot.Any and continue if successful
+                                if (character.Inventory.TryPutItem(character.Inventory.Items[i], new List<LimbSlot>() { LimbSlot.Any }, false)) continue;
+
+                                //if everything else fails, simply drop the existing item
+                                character.Inventory.Items[i].Drop();
+                            }
+                        }
+                    }
+
                     targetItem.Pick(character, false, true);
+
+                    if (targetSlot>-1 && character.Inventory.IsInLimbSlot(targetItem, LimbSlot.Any))
+                    {
+                        character.Inventory.TryPutItem(targetItem, targetSlot, false);
+                    }
                 }
+
+                return;
             }
             
-            if (currSearchIndex >= Item.ItemList.Count) 
+
+            for (int i = 0; i<10 && currSearchIndex<Item.ItemList.Count; i++)
             {
-                canBeCompleted = false;
+                currSearchIndex++;
+
+                if (!Item.ItemList[currSearchIndex].HasTag(itemName) && Item.ItemList[currSearchIndex].Name != itemName) continue;
+                if (IgnoreContainedItems && Item.ItemList[currSearchIndex].container != null) continue;
+                if (Item.ItemList[currSearchIndex].inventory is CharacterInventory) continue;
+            
+                targetItem = Item.ItemList[currSearchIndex];
+                
+
+                Item moveToTarget = targetItem;
+                while (moveToTarget.container != null)
+                {
+                    moveToTarget = moveToTarget.container;
+                }
+
+                subObjectives.Add(new AIObjectiveGoTo(moveToTarget, character));
                 return;
             }
 
-            currSearchIndex++;
-
-            if (!Item.ItemList[currSearchIndex].HasTag(itemName) && Item.ItemList[currSearchIndex].Name != itemName) return;
-            if (IgnoreContainedItems && Item.ItemList[currSearchIndex].container != null) return;
-            
-            targetItem = Item.ItemList[currSearchIndex];
-
-            Item moveToTarget = targetItem;
-            while (moveToTarget.container != null)
-            {
-                moveToTarget = moveToTarget.container;
-            }
-
-            subObjectives.Add(new AIObjectiveGoTo(moveToTarget, character));
-            
-
+            if (currSearchIndex >= Item.ItemList.Count) canBeCompleted = false;
         }
         
         public override bool IsDuplicate(AIObjective otherObjective)

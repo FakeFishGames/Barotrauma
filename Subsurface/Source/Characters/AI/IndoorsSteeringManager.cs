@@ -62,12 +62,12 @@ namespace Barotrauma
         protected override Vector2 DoSteeringSeek(Vector2 target, float speed = 1)
         {
             //find a new path if one hasn't been found yet or the target is different from the current target
-            if (currentPath == null || Vector2.Distance(target, currentTarget)>1.0f || findPathTimer < -10.0f)
+            if (currentPath == null || Vector2.Distance(target, currentTarget)>1.0f || findPathTimer < -5.0f)
             {
                 if (findPathTimer > 0.0f) return Vector2.Zero;
 
                 currentTarget = target;
-                currentPath = pathFinder.FindPath(host.SimPosition+Rand.Vector(0.2f), target);
+                currentPath = pathFinder.FindPath(host.SimPosition, target);
                 
                 findPathTimer = Rand.Range(1.0f,1.2f);
 

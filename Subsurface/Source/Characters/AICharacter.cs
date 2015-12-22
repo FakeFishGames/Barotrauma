@@ -18,27 +18,7 @@ namespace Barotrauma
         {
             get { return aiController; }
         }
-
-        //public AICharacter(string file) : this(file, Vector2.Zero, null)
-        //{
-        //}
-
-        //public AICharacter(string file, Vector2 position)
-        //    : this(file, position, null)
-        //{
-        //}
-
-        //public AICharacter(CharacterInfo characterInfo, WayPoint spawnPoint, bool isNetworkPlayer = false)
-        //    : this(characterInfo.File, spawnPoint.SimPosition, characterInfo, isNetworkPlayer)
-        //{
-
-        //}
-
-        //public AICharacter(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false)
-        //    : this(characterInfo.File, position, characterInfo, isNetworkPlayer)
-        //{
-        //}
-
+        
         public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
             : base(file, position, characterInfo, isNetworkPlayer)
         {

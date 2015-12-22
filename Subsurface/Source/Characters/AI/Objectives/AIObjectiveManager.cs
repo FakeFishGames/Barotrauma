@@ -49,27 +49,23 @@ namespace Barotrauma
         {
             if (!objectives.Any()) return;
 
-            //remove completed objectives
-            objectives = objectives.FindAll(o => !o.IsCompleted());
+            //remove completed objectives and ones that can't be completed
+            objectives = objectives.FindAll(o => !o.IsCompleted() && o.CanBeCompleted);
 
             //sort objectives according to priority
             objectives.Sort((x, y) => y.GetPriority(character).CompareTo(x.GetPriority(character)));
 
-            if (character.AnimController.CurrentHull!=null)
+            foreach (Gap gap in Gap.GapList)
             {
-                var gaps = character.AnimController.CurrentHull.FindGaps();
+                if (gap.IsRoomToRoom || gap.ConnectedDoor != null || gap.Open<0.1f) continue;
 
-                foreach (Gap gap in gaps)
-                {
-                    if (gap.linkedTo.Count > 1) continue;
-                    AddObjective(new AIObjectiveFixLeak(gap, character));
-                }
+                AddObjective(new AIObjectiveFixLeak(gap, character));
             }
         }
 
         public void DoCurrentObjective(float deltaTime)
         {
-            if (currentObjective != null && (!objectives.Any() || objectives[0].GetPriority(character)<OrderPriority))
+            if (currentObjective != null && (!objectives.Any() || objectives[0].GetPriority(character) < OrderPriority))
             {
                 currentObjective.TryComplete(deltaTime);
                 return;

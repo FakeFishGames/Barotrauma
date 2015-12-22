@@ -112,16 +112,16 @@ namespace Barotrauma
             if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode==null) return;
 
             GUI.DrawLine(spriteBatch,
-                new Vector2(Character.Position.X, -Character.Position.Y),
-                new Vector2(pathSteering.CurrentPath.CurrentNode.Position.X, -pathSteering.CurrentPath.CurrentNode.Position.Y),
+                new Vector2(Character.WorldPosition.X, -Character.WorldPosition.Y),
+                new Vector2(pathSteering.CurrentPath.CurrentNode.Position.X+Submarine.Loaded.Position.X, -(pathSteering.CurrentPath.CurrentNode.Position.Y+Submarine.Loaded.Position.Y)),
                 Color.LightGreen);
 
 
             for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].Position.X, -pathSteering.CurrentPath.Nodes[i].Position.Y),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].Position.X, -pathSteering.CurrentPath.Nodes[i-1].Position.Y),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i].Position.X + Submarine.Loaded.Position.X, -(pathSteering.CurrentPath.Nodes[i].Position.Y + Submarine.Loaded.Position.Y)),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].Position.X + Submarine.Loaded.Position.X, -(pathSteering.CurrentPath.Nodes[i-1].Position.Y + Submarine.Loaded.Position.Y)),
                     Color.LightGreen);
             }
         }

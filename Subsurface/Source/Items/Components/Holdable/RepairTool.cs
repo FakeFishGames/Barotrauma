@@ -5,7 +5,6 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Particles;
 
 namespace Barotrauma.Items.Components
 {
@@ -200,23 +199,30 @@ namespace Barotrauma.Items.Components
                 }
                 //ApplyStatusEffects(ActionType.OnUse, 1.0f, null, targ);
             }
-                //if (Character.SecondaryKeyDown.State)
-                //{
-                //    IPropertyObject propertyObject = targetBody.UserData as IPropertyObject;
-                //    if (propertyObject!=null) ApplyStatusEffects(ActionType.OnUse, 1.0f, item.SimPosition, propertyObject);
-                //    //isActive = true;
-                //}
+            //if (Character.SecondaryKeyDown.State)
+            //{
+            //    IPropertyObject propertyObject = targetBody.UserData as IPropertyObject;
+            //    if (propertyObject!=null) ApplyStatusEffects(ActionType.OnUse, 1.0f, item.SimPosition, propertyObject);
+            //    //isActive = true;
+            //}
 
             return true;
         }
-        
-        public override void Update(float deltaTime, Camera cam)
+
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            base.Update(deltaTime, cam);
+            Gap leak = objective.OperateTarget as Gap;
+            if (leak == null) return true;
 
-            //isActive = true;
+            character.CursorPosition = leak.Position;
+            character.SetInput(InputType.Aim, false, true);
+
+            Use(deltaTime, character);
+
+            return leak.Open <= 0.0f;
+
         }
-
+        
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (!IsActive) return;

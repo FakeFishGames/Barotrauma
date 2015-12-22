@@ -9,39 +9,69 @@ namespace Barotrauma
 {
     class AIObjectiveOperateItem : AIObjective
     {
-        private ItemComponent targetItem;
-        private ItemComponent itemController;
+        private ItemComponent component;
+
+        private Entity operateTarget;
 
         private bool isCompleted;
 
+        private bool canBeCompleted;
 
+        public override bool CanBeCompleted
+        {
+            get
+            {
+                return canBeCompleted;
+            }
+        }
 
-        public AIObjectiveOperateItem(ItemComponent item, Character character, string option)
+        public Entity OperateTarget
+        {
+            get { return operateTarget; }
+        }
+
+        public AIObjectiveOperateItem(ItemComponent item, Character character, string option, Entity operateTarget = null)
             :base (character, option)
         {
-            targetItem = item;
+            component = item;
+
+            this.operateTarget = operateTarget;
 
             var controllers = item.Item.GetConnectedComponents<Controller>();
-            if (controllers.Any()) itemController = controllers[0];
+            if (controllers.Any()) component = controllers[0];
+
+            canBeCompleted = true;
         }
 
         protected override void Act(float deltaTime)
         {
-            ItemComponent target = itemController == null ? targetItem: itemController;
-
-            if (Vector2.Distance(character.SimPosition, target.Item.SimPosition) < target.Item.PickDistance
-                || target.Item.IsInsideTrigger(character.WorldPosition))
-            {
-                if (character.SelectedConstruction != target.Item && target.CanBeSelected)
+            if (component.CanBeSelected)
+            { 
+                if (Vector2.Distance(character.SimPosition, component.Item.SimPosition) < component.Item.PickDistance
+                    || component.Item.IsInsideTrigger(character.WorldPosition))
                 {
-                    target.Item.Pick(character, false, true);
+                    if (character.SelectedConstruction != component.Item && component.CanBeSelected)
+                    {
+                        component.Item.Pick(character, false, true);
+                    }
+
+                    if (component.AIOperate(deltaTime, character, this)) isCompleted = true;
+                    return;
                 }
 
-                if (targetItem.AIOperate(deltaTime, character, this)) isCompleted = true;
-                return;
+                AddSubObjective(new AIObjectiveGoTo(component.Item, character));
             }
-
-            subObjectives.Add(new AIObjectiveGoTo(target.Item, character));
+            else
+            {
+                if (!character.Inventory.Items.Contains(component.Item))
+                {
+                    AddSubObjective(new AIObjectiveGetItem(character, component.Item, true));
+                }
+                else
+                {
+                    if (component.AIOperate(deltaTime, character, this)) isCompleted = true;
+                }
+            }
         }
 
         public override bool IsCompleted()
@@ -54,7 +84,7 @@ namespace Barotrauma
             AIObjectiveOperateItem operateItem = otherObjective as AIObjectiveOperateItem;
             if (operateItem == null) return false;
 
-            return (operateItem.targetItem == targetItem);
+            return (operateItem.component == component);
         }
     }
 }

@@ -103,16 +103,16 @@ namespace Barotrauma.Items.Components
 
                 if (!addNode) break;
 
-                if (Nodes.Count>0&&Nodes[0] == newConnection.Item.Position) break;
-                if (Nodes.Count > 1 && Nodes[Nodes.Count-1] == newConnection.Item.Position) break;
+                if (Nodes.Count > 0 && Nodes[0] == newConnection.Item.Position - Submarine.HiddenSubPosition) break;
+                if (Nodes.Count > 1 && Nodes[Nodes.Count-1] == newConnection.Item.Position - Submarine.HiddenSubPosition) break;
 
                 if (i == 0)
                 {
-                    Nodes.Insert(0, newConnection.Item.Position);
+                    Nodes.Insert(0, newConnection.Item.Position - Submarine.HiddenSubPosition);
                 }
                 else
                 {
-                    Nodes.Add(newConnection.Item.Position);
+                    Nodes.Add(newConnection.Item.Position - Submarine.HiddenSubPosition);
                 }
 
                 break;
@@ -121,15 +121,12 @@ namespace Barotrauma.Items.Components
             if (connections[0] != null && connections[1] != null)
             {
                 //List<Vector2> prevNodes = new List<Vector2>(Nodes);
-
-
                 foreach (ItemComponent ic in item.components)
                 {
                     if (ic == this) continue;
                     ic.Drop(null);
                 }
                 if (item.container != null) item.container.RemoveContained(this.item);
-
 
                 item.body.Enabled = false;
 
@@ -182,7 +179,7 @@ namespace Barotrauma.Items.Components
                 position.Y += item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
             }
 
-            newNodePos = RoundNode(item.Position, item.CurrentHull);
+            newNodePos = RoundNode(item.Position, item.CurrentHull)-Submarine.HiddenSubPosition;
 
             //if (Vector2.Distance(position, nodes[nodes.Count - 1]) > nodeDistance*10)
             //{

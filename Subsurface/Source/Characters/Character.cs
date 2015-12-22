@@ -866,8 +866,6 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
-            Submarine = AnimController.CurrentHull == null ? null : Submarine.Loaded;
-
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
 
             float dist = Vector2.Distance(cam.WorldViewCenter, WorldPosition);
@@ -1125,13 +1123,9 @@ namespace Barotrauma
             {
                 timer += 1.0f / 60.0f;
 
-                if (Character.controlled == this)
+                if (controlled == this)
                 {
-                    if (cam != null)
-                    {
-                        cam.TargetPos = ConvertUnits.ToDisplayUnits(AnimController.Limbs[0].SimPosition);
-                        cam.OffsetAmount = 0.0f;
-                    }
+                    if (cam != null) cam.OffsetAmount = 0.0f;
 
                     GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, darkLight, timer / dimDuration);
                 }
@@ -1139,7 +1133,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
-            while (Character.Controlled == this)
+            while (controlled == this)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -1381,7 +1375,7 @@ namespace Barotrauma
 
                     data = causeOfDeath;
 
-                    if (causeOfDeath==CauseOfDeath.Pressure)
+                    if (causeOfDeath == CauseOfDeath.Pressure)
                     {
                         Implode(true);
                     }
@@ -1525,13 +1519,11 @@ namespace Barotrauma
 
             if (controlled == this) controlled = null;
 
-            if (GameMain.Client!=null && GameMain.Client.Character == this) GameMain.Client.Character = null;
+            if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
 
-            if (aiTarget != null)
-                aiTarget.Remove();
+            if (aiTarget != null) aiTarget.Remove();
 
-            if (AnimController!=null)
-                AnimController.Remove();
+            if (AnimController!=null) AnimController.Remove();
         }
 
     }

@@ -50,9 +50,9 @@ namespace Barotrauma
         
         public void RemoveEntity(MapEntity entity)
         {
-            for (int x = 0; x <= entities.GetLength(0); x++)
+            for (int x = 0; x < entities.GetLength(0); x++)
             {
-                for (int y = 0; y <= entities.GetLength(1); y++)
+                for (int y = 0; y < entities.GetLength(1); y++)
                 {
                     if (entities[x,y].Contains(entity)) entities[x, y].Remove(entity);
                 }

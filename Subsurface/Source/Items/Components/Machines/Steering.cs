@@ -166,25 +166,25 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 diff = ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - item.WorldPosition);
 
-                //bool nextVisible = true;
-                //for (int x = -1; x < 2; x += 2)
-                //{
-                //    for (int y = -1; y < 2; y += 2)
-                //    {
-                //        Vector2 cornerPos =
-                //            new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
+                bool nextVisible = true;
+                for (int x = -1; x < 2; x += 2)
+                {
+                    for (int y = -1; y < 2; y += 2)
+                    {
+                        Vector2 cornerPos =
+                            new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
 
-                //        cornerPos = ConvertUnits.ToSimUnits(cornerPos*1.2f);
+                        cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + Submarine.Loaded.Position);
 
-                //        if (Submarine.PickBody(cornerPos, cornerPos + diff, null, Physics.CollisionLevel) == null) continue;
-                        
-                //        nextVisible = false;
-                //        x = 2;
-                //        y = 2;                        
-                //    }
-                //}
+                        if (Submarine.PickBody(cornerPos, cornerPos + diff, null, Physics.CollisionLevel) == null) continue;
 
-                //if (nextVisible) steeringPath.SkipToNextNode();
+                        nextVisible = false;
+                        x = 2;
+                        y = 2;
+                    }
+                }
+
+                if (nextVisible) steeringPath.SkipToNextNode();
 
                 autopilotRayCastTimer = AutopilotRayCastInterval;                
             }

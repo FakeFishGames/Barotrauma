@@ -22,7 +22,7 @@ namespace Barotrauma
 
         public virtual bool CanBeCompleted
         {
-            get { return false; }
+            get { return true; }
         }
 
         public string Option
@@ -51,7 +51,7 @@ namespace Barotrauma
         /// <param name="character">the character who's trying to achieve the objective</param>
         public void TryComplete(float deltaTime)
         {
-            subObjectives.RemoveAll(s => s.IsCompleted());
+            subObjectives.RemoveAll(s => s.IsCompleted() || !s.CanBeCompleted);
 
             foreach (AIObjective objective in subObjectives)
             {
@@ -66,7 +66,7 @@ namespace Barotrauma
 
         public void AddSubObjective(AIObjective objective)
         {
-            if (subObjectives.Find(o => o.IsDuplicate(objective)) != null) return;
+            if (subObjectives.Any(o => o.IsDuplicate(objective))) return;
 
             subObjectives.Add(objective);
         }

@@ -257,8 +257,8 @@ namespace Barotrauma
 
         public static Vector2 VectorToWorldGrid(Vector2 position)
         {
-            position.X = (float)Math.Floor(Convert.ToDouble(position.X / GridSize.X)) * GridSize.X;
-            position.Y = (float)Math.Ceiling(Convert.ToDouble(position.Y / GridSize.Y)) * GridSize.Y;
+            position.X = (float)Math.Floor(position.X / GridSize.X) * GridSize.X;
+            position.Y = (float)Math.Ceiling(position.Y / GridSize.Y) * GridSize.Y;
 
             return position;
         }
@@ -329,6 +329,7 @@ namespace Barotrauma
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
+            
             return closestBody;
         }
         

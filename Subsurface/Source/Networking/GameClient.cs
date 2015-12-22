@@ -420,8 +420,7 @@ namespace Barotrauma.Networking
             while ((inc = client.ReadMessage()) != null)
             {
                 if (inc.MessageType != NetIncomingMessageType.Data) continue;
-
-                //todo: exception handling
+                
                 byte packetType = inc.ReadByte();
 
                 if (packetType == (byte)PacketTypes.ReliableMessage)
@@ -522,7 +521,7 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> StartGame(NetIncomingMessage inc)
         {
-            if (this.Character != null) Character.Remove();
+            if (Character != null) Character.Remove();
 
             int seed = inc.ReadInt32();
 

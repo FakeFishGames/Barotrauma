@@ -161,7 +161,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjective objective)
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             var projectiles = GetLoadedProjectiles();
 

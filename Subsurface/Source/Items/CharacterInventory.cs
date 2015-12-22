@@ -20,7 +20,7 @@ namespace Barotrauma
 
         private Character character;
 
-        private static LimbSlot[] limbSlots = new LimbSlot[] { 
+        public static LimbSlot[] limbSlots = new LimbSlot[] { 
             LimbSlot.Head, LimbSlot.Torso, LimbSlot.Legs, LimbSlot.LeftHand, LimbSlot.RightHand,
             LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any,
             LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any};
@@ -83,7 +83,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < Items.Length; i++)
             {
-                if ( limbSlots[i] == limbSlot) return i;
+                if (limbSlots[i] == limbSlot) return i;
             }
             return -1;
         }
