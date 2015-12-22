@@ -411,7 +411,7 @@ namespace Barotrauma.Items.Components
 
 
         /// <returns>true if the operation was completed</returns>
-        public virtual bool AIOperate(float deltaTime, Character character, AIObjective objective) 
+        public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective) 
         {
             return false;
         }

@@ -19,7 +19,7 @@
   
   <Item
     name="Diving Mask"
-    Tags="smallitem"
+    Tags="smallitem,diving"
     pickdistance="200"
     price="50">
 
@@ -46,6 +46,7 @@
 
   <Item
     name="Diving Suit"
+    tags="diving"
     pickdistance="200"
     price="200"
     fireproof="true">

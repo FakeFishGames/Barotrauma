@@ -192,6 +192,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection connection in connections)
                 {
+                    if (!connection.IsPower) continue;
                     foreach (Connection recipient in connection.Recipients)
                     {
                         Item it = recipient.Item as Item;
@@ -311,7 +312,7 @@ namespace Barotrauma.Items.Components
                     new Vector2(10, 40 * (temperature / 10000.0f)), new Color(temperature / 10000.0f, 1.0f - (temperature / 10000.0f), 0.0f, 1.0f), true);
         }
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjective objective)
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
              switch (objective.Option.ToLower())
              {

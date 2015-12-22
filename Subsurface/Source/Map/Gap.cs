@@ -57,6 +57,14 @@ namespace Barotrauma
             get { return flowTargetHull; }
         }
 
+        public bool IsRoomToRoom
+        {
+            get
+            {
+                return linkedTo.Count == 2;
+            }
+        }
+
         public Gap(Rectangle newRect, Submarine submarine)
             : this(newRect, newRect.Width < newRect.Height, submarine)
         { }

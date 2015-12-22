@@ -12,13 +12,11 @@ namespace Barotrauma
         private string itemName;
 
         private ItemContainer container;
-
-        bool canBeCompleted;
-
+        
         bool isCompleted;
 
         public bool IgnoreAlreadyContainedItems;
-
+        
         public AIObjectiveContainItem(Character character, string itemName, ItemContainer container)
             : base (character, "")
         {
@@ -26,13 +24,13 @@ namespace Barotrauma
             this.container = container;
 
             //check if the container has room for more items
-            canBeCompleted = false;
-            foreach (Item contained in container.inventory.Items)
-            {
-                if (contained != null) continue;
-                canBeCompleted = true;
-                break;
-            }
+            //canBeCompleted = false;
+            //foreach (Item contained in container.inventory.Items)
+            //{
+            //    if (contained != null) continue;
+            //    canBeCompleted = true;
+            //    break;
+            //}
         }
 
         public override bool IsCompleted()
@@ -54,14 +52,28 @@ namespace Barotrauma
                 return;
             }
 
-            if (Vector2.Distance(character.SimPosition, container.Item.SimPosition) > container.Item.PickDistance
-                && !container.Item.IsInsideTrigger(character.Position))
+            if (container.Item.inventory == character.Inventory)
             {
-                AddSubObjective(new AIObjectiveGoTo(container.Item, character));
-                return;
+                var containedItems = container.inventory.Items;
+                //if there's already something in the mask (empty oxygen tank?), drop it
+                var existingItem = containedItems.FirstOrDefault(i => i != null);
+                if (existingItem != null) existingItem.Drop(character);
+                
+                character.Inventory.RemoveItem(itemToContain);
+                container.inventory.TryPutItem(itemToContain, null, false);
+            }
+            else
+            {
+                if (Vector2.Distance(character.SimPosition, container.Item.SimPosition) > container.Item.PickDistance
+                    && !container.Item.IsInsideTrigger(character.Position))
+                {
+                    AddSubObjective(new AIObjectiveGoTo(container.Item, character));
+                    return;
+                }
+
+                container.Combine(itemToContain);
             }
 
-            container.Combine(itemToContain);
             isCompleted = true;
         }
 

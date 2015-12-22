@@ -16,16 +16,16 @@ namespace Barotrauma.Items.Components
     class Controller : ItemComponent
     {
         //where the limbs of the user should be positioned when using the controller
-        List<LimbPos> limbPositions;
+        private List<LimbPos> limbPositions;
 
-        Direction dir;
+        private Direction dir;
 
         //the x-position where the user walks to when using the controller
-        float userPos;
+        private float userPos;
 
-        Camera cam;
+        private Camera cam;
 
-        Character character;
+        private Character character;
 
         [HasDefaultValue(0.0f, false)]
         public float UserPos

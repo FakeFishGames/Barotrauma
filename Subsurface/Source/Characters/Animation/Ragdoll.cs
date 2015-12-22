@@ -561,7 +561,10 @@ namespace Barotrauma
             }
             
             CurrentHull = newHull;
-                        
+
+            character.Submarine = CurrentHull == null ? null : Submarine.Loaded;
+
+
             UpdateCollisionCategories();
         }
 

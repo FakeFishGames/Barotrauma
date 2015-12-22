@@ -109,7 +109,6 @@ namespace Barotrauma
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("updatetargets");
                 UpdateTargets(Character);
                 updateTargetsTimer = UpdateTargetsInterval;
 
@@ -160,7 +159,6 @@ namespace Barotrauma
         
         private void UpdateAttack(float deltaTime)
         {
-
             if (selectedAiTarget == null) 
             {
                 state = AiState.None;
@@ -219,9 +217,7 @@ namespace Barotrauma
         {
             coolDownTimer -= deltaTime;
             attackingLimb = null;
-
-            //System.Diagnostics.Debug.WriteLine("cooldown");
-
+            
             if (selectedAiTarget.Entity is Hull ||
                 Vector2.Distance(attackPosition, Character.AnimController.Limbs[0].SimPosition) < ConvertUnits.ToSimUnits(500.0f))
             {
@@ -238,10 +234,7 @@ namespace Barotrauma
         private void GetTargetEntity()
         {
             targetEntity = null;
-
-
-
-
+            
             //check if there's a wall between the target and the Character   
             Vector2 rayStart = Character.SimPosition;
             Vector2 rayEnd = selectedAiTarget.SimPosition;
@@ -329,10 +322,6 @@ namespace Barotrauma
 
                         limb.soundTimer = Limb.SoundInterval;
                     }
-                    else
-                    {
-                        //limb.body.ApplyTorque(limb.Mass * -20.0f * Character.animController.Dir * dir);
-                    }
 
                     Vector2 diff = attackPosition - limb.SimPosition;
                     if (diff.LengthSquared() > 0.00001f)
@@ -363,7 +352,7 @@ namespace Barotrauma
         //sight/hearing range
         public void UpdateTargets(Character character)
         {
-            if (distanceAccumulator<5.0f && Rand.Range(1,3, false)==1)
+            if (distanceAccumulator<5.0f && Rand.Range(1,3)==1)
             {
                 selectedAiTarget = null;
                 character.AnimController.TargetMovement = -character.AnimController.TargetMovement;
@@ -426,49 +415,30 @@ namespace Barotrauma
 
                     Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
                     Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
-                    
-                    //if (targetCharacter != null)
-                    //{
-                    //    //if target is a Character that isn't visible, ignore
-                    //    if (closestStructure != null) continue;
 
-                    //    //prefer targets with low health
-                    //    valueModifier = valueModifier / targetCharacter.Health;
-                    //}
-                    //else
-                    //{
-                        if (targetDamageable != null)
-                        {
-                            valueModifier = valueModifier / targetDamageable.Health;                            
-                        }
-                        else if (closestStructure!=null)
-                        {
-                            valueModifier = valueModifier / (closestStructure as IDamageable).Health;
-                        }
-                        else
-                        {
-                            valueModifier = valueModifier / 1000.0f;
-                        }
+                    if (targetDamageable != null)
+                    {
+                        valueModifier = valueModifier / targetDamageable.Health;                            
+                    }
+                    else if (closestStructure!=null)
+                    {
+                        valueModifier = valueModifier / (closestStructure as IDamageable).Health;
+                    }
+                    else
+                    {
+                        valueModifier = valueModifier / 1000.0f;
+                    }
 
-                    //}
-                    
-
-
-                    //float newTargetValue = valueModifier/dist;
                     if (selectedAiTarget == null || Math.Abs(valueModifier) > Math.Abs(targetValue))
                     {
                         selectedAiTarget = target;
                         selectedTargetMemory = targetMemory;
 
                         targetValue = valueModifier;
-                        Debug.WriteLine(selectedAiTarget.Entity+": "+targetValue);
                     }
                 }
             }
-          
-            //selectedTarget = bestTarget;
-            //selectedTargetMemory = targetMemory;
-            //this.targetValue = bestTargetValue;  
+           
         }
 
         //find the targetMemory that corresponds to some AItarget or create if there isn't one yet

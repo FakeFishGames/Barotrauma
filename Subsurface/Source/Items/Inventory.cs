@@ -118,7 +118,7 @@ namespace Barotrauma
         {
             if (Owner == null) return;
 
-            if (item.inventory != null && removeItem)
+            if (removeItem)
             {
                 item.Drop(null, false);
                 if (item.inventory != null) item.inventory.RemoveItem(item);
@@ -268,7 +268,6 @@ namespace Barotrauma
 
                 if (!isSubSlot && selectedSlot == -1)
                 {
-                    System.Diagnostics.Debug.WriteLine("DSFG");
                     selectedSlot = slotIndex;
                 }
             }
@@ -284,7 +283,7 @@ namespace Barotrauma
 #if DEBUG
                     System.Diagnostics.Debug.Assert(slotIndex >= 0 && slotIndex < Items.Length);
 #else
-                if (slotIndex<0 || slotIndex>=Items.Length) return;
+                    if (slotIndex < 0 || slotIndex >= Items.Length) return;
 #endif
 
                     Rectangle containerRect = new Rectangle(rect.X - 5, rect.Y - (40 + 10) * itemCapacity - 5,
@@ -293,9 +292,7 @@ namespace Barotrauma
                     Rectangle subRect = rect;
                     subRect.Height = 40;
 
-
                     selectedSlot = containerRect.Contains(PlayerInput.MousePosition) ? slotIndex : -1;
-                    System.Diagnostics.Debug.WriteLine(selectedSlot);
 
                     GUI.DrawRectangle(spriteBatch, containerRect, Color.Black * 0.8f, true);
                     GUI.DrawRectangle(spriteBatch, containerRect, Color.White);

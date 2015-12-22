@@ -29,9 +29,7 @@ namespace Barotrauma.Items.Components
         private List<StatusEffect> effects;
 
         public readonly ushort[] wireId;
-
-        private List<Connection> recipients;
-
+        
         public bool IsPower
         {
             get;
@@ -40,7 +38,17 @@ namespace Barotrauma.Items.Components
 
         public List<Connection> Recipients
         {
-            get { return recipients; }
+            get
+            {
+                List<Connection> recipients = new List<Connection>();
+                for (int i = 0; i < MaxLinked; i++)
+                {
+                    if (Wires[i] == null) continue;
+                    Connection recipient = Wires[i].OtherConnection(this);
+                    if (recipient != null) recipients.Add(recipient);
+                }
+                return recipients;
+            }
         }
 
         public Item Item
@@ -63,9 +71,7 @@ namespace Barotrauma.Items.Components
 
             //recipient = new Connection[MaxLinked];
             Wires = new Wire[MaxLinked];
-
-            recipients = new List<Connection>();
-
+            
             IsOutput = (element.Name.ToString() == "output");
             Name = ToolBox.GetAttributeString(element, "name", (IsOutput) ? "output" : "input");
 
@@ -139,13 +145,7 @@ namespace Barotrauma.Items.Components
 
         public void UpdateRecipients()
         {
-            recipients.Clear();
-            for (int i = 0; i < MaxLinked; i++)
-            {
-                if (Wires[i] == null) continue;
-                Connection recipient = Wires[i].OtherConnection(this);
-                if (recipient != null) recipients.Add(recipient);
-            }
+
         }
 
         public void SendSignal(string signal, Item sender, float power)
@@ -180,9 +180,7 @@ namespace Barotrauma.Items.Components
 
                 Wires[i].RemoveConnection(this);
                 Wires[i] = null;
-            }
-
-            recipients.Clear();
+            }            
         }
 
 

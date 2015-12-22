@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace Barotrauma
         private float currenthullSafety;
 
         private float searchHullTimer;
+
+        private AIObjective divingGearObjective;
 
         public float? OverrideCurrentHullSafety;
 
@@ -43,6 +46,12 @@ namespace Barotrauma
                 return;
             }
 
+            var currentHull = character.AnimController.CurrentHull;
+            if (currentHull.Volume / currentHull.FullVolume > 0.5f)
+            {
+                if (!FindDivingGear(deltaTime)) return;
+            }
+
             if (searchHullTimer>0.0f)
             {
                 searchHullTimer -= deltaTime;
@@ -50,6 +59,8 @@ namespace Barotrauma
             }
             else
             {
+
+                
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
                 Hull bestHull = null;
@@ -104,6 +115,46 @@ namespace Barotrauma
             }
         }
 
+        private bool FindDivingGear(float deltaTime)
+        {
+
+
+            var item = character.Inventory.FindItem("diving");
+            if (item == null)
+            {
+                //get a diving mask/suit first
+                if (!(divingGearObjective is AIObjectiveGetItem))
+                {
+                    divingGearObjective = new AIObjectiveGetItem(character, "diving", true);
+                }
+            }
+            else
+            {
+                var containedItems = item.ContainedItems;
+                if (containedItems == null) return true;
+
+                //check if there's an oxygen tank in the mask
+                var oxygenTank = Array.Find(containedItems, i => i.Name == "Oxygen Tank" && i.Condition > 0.0f);
+
+                if (oxygenTank != null) return true;
+
+
+                if (!(divingGearObjective is AIObjectiveContainItem))
+                {
+                    divingGearObjective = new AIObjectiveContainItem(character, "Oxygen Tank", item.GetComponent<ItemContainer>());
+
+                }
+            }
+
+            if (divingGearObjective != null)
+            {
+                divingGearObjective.TryComplete(deltaTime);
+                return divingGearObjective.IsCompleted();
+            }
+
+            return false;
+        }
+
         public override bool IsDuplicate(AIObjective otherObjective)
         {
             return (otherObjective is AIObjectiveFindSafety);
@@ -128,7 +179,8 @@ namespace Barotrauma
             }
             
             float safety = 100.0f - fireAmount;
-            if (waterPercentage > 30.0f) safety -= waterPercentage; 
+            
+            if (waterPercentage > 30.0f && character.Oxygen<80.0f) safety -= waterPercentage; 
             if (hull.OxygenPercentage < 30.0f) safety -= (30.0f-hull.OxygenPercentage)*5.0f;
 
             return safety;

@@ -503,7 +503,8 @@ namespace Barotrauma
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
             }
 
-            var entities = entityGrid.GetEntities(useWorldCoordinates ? position-Submarine.Loaded.Position : position);
+            var entities = entityGrid.GetEntities(
+                useWorldCoordinates && Submarine.Loaded!=null ? position-Submarine.Loaded.Position : position);
 
             foreach (Hull hull in entities)
             {

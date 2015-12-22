@@ -117,9 +117,7 @@ namespace Barotrauma
         public Vector2 TargetPos
         {
             get { return targetPos; }
-            set { 
-                targetPos = value;
-            }
+            set { targetPos = value; }
         }
                 
         // Auxiliary function to move the camera
@@ -149,10 +147,7 @@ namespace Barotrauma
                     -interpolatedPosition.Y - resolution.Y / interpolatedZoom / 2.0f, 0)) *
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
                 viewMatrix;
-
-
-
-
+            
             Sound.CameraPos = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
         }
         
@@ -166,7 +161,7 @@ namespace Barotrauma
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
-                if (GUITextBox.KeyboardDispatcher.Subscriber == null)
+                if (GUIComponent.KeyboardDispatcher.Subscriber == null)
                 {
                     if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
                     if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;

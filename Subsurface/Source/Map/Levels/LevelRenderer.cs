@@ -181,6 +181,7 @@ namespace Barotrauma
 
             for (int side = 0; side < 2; side++)
             {
+
                 for (int i = 0; i < 2; i++)
                 {
                     graphicsDevice.SetVertexBuffer(level.WrappingWalls[side, i].BodyVertices);
