@@ -402,28 +402,28 @@ namespace Barotrauma
 
         public List<Vector2[]> CrackSegments;
 
-        private int questsCompleted;
+        private int missionsCompleted;
 
-        private Quest quest;
-        public Quest Quest
+        private Mission mission;
+        public Mission Mission
         {
             get 
             {         
-                if (quest==null || quest.Completed)
+                if (mission==null || mission.Completed)
                 {
-                    if (quest !=null && quest.Completed) questsCompleted++;
+                    if (mission !=null && mission.Completed) missionsCompleted++;
 
                     int seed = (int)locations[0].MapPosition.X + (int)locations[0].MapPosition.Y * 100;
                     seed += (int)locations[1].MapPosition.X*10000 + (int)locations[1].MapPosition.Y * 1000000;
 
-                    Random rand = new Random(seed + questsCompleted);
+                    Random rand = new Random(seed + missionsCompleted);
 
                     if (rand.NextDouble() < 0.3f) return null;
 
-                    quest = Quest.LoadRandom(locations, rand);
+                    mission = Mission.LoadRandom(locations, rand);
                 }
 
-                return quest;
+                return mission;
             }
         }
 
@@ -444,7 +444,7 @@ namespace Barotrauma
         {
             locations = new Location[] { location1, location2 };
 
-            questsCompleted = 0;
+            missionsCompleted = 0;
         }
 
         public Location OtherLocation(Location location)

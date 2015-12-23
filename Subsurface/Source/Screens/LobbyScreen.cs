@@ -230,15 +230,15 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(0, 0, 250, 0), location.Name, GUI.Style,  Alignment.TopLeft, Alignment.TopCenter, locationPanel, true, GUI.LargeFont);
 
-            if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Quest != null)
+            if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Mission != null)
             {
-                var quest = GameMain.GameSession.Map.SelectedConnection.Quest;
+                var mission = GameMain.GameSession.Map.SelectedConnection.Mission;
 
-                new GUITextBlock(new Rectangle(0, 80, 0, 20), "Quest: "+quest.Name, Color.Black*0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
+                new GUITextBlock(new Rectangle(0, 80, 0, 20), "Mission: "+mission.Name, Color.Black*0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
 
-                new GUITextBlock(new Rectangle(0, 100, 0, 20), "Reward: " + quest.Reward+" credits", Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
+                new GUITextBlock(new Rectangle(0, 100, 0, 20), "Reward: " + mission.Reward+" credits", Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
 
-                new GUITextBlock(new Rectangle(0, 120, 0, 0), quest.Description, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel, true);
+                new GUITextBlock(new Rectangle(0, 120, 0, 0), mission.Description, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel, true);
 
             }
 

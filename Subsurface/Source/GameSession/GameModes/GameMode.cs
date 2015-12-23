@@ -22,7 +22,7 @@ namespace Barotrauma
 
         private string endMessage;
 
-        public virtual Quest Quest
+        public virtual Mission Mission
         {
             get { return null; }
         }

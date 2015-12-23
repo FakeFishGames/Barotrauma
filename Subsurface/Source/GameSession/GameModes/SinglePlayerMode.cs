@@ -18,6 +18,8 @@ namespace Barotrauma
         private GUIButton endShiftButton;
 
         public readonly CargoManager CargoManager;
+
+        private ShiftSummary shiftSummary;
         
         public Map Map;
 
@@ -26,11 +28,11 @@ namespace Barotrauma
 
         private bool savedOnStart;
 
-        public override Quest Quest
+        public override Mission Mission
         {
             get
             {
-                return Map.SelectedConnection.Quest;
+                return Map.SelectedConnection.Mission;
             }
         }
 
@@ -115,6 +117,8 @@ namespace Barotrauma
             endTimer = 5.0f;
 
             CrewManager.StartShift();
+
+            shiftSummary = new ShiftSummary(GameMain.GameSession);
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
@@ -192,41 +196,31 @@ namespace Barotrauma
 
             //if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
 
+            GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame();
+            GUIMessageBox.MessageBoxes.Enqueue(summaryFrame);
+            var okButton = new GUIButton(new Rectangle(0,0,100,30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
+            okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
 
-            StringBuilder sb = new StringBuilder();
-            List<Character> casualties = CrewManager.characters.FindAll(c => c.IsDead);            
-
-            if (casualties.Count == CrewManager.characters.Count)
+            bool success = CrewManager.characters.Any(c => !c.IsDead);
+            
+            if (success)
             {
-                sb.Append("Your entire crew has died!");
-
-                var msgBox = new GUIMessageBox("", sb.ToString(), new string[] { "Load game", "Quit" });
-                msgBox.Buttons[0].OnClicked += GameMain.GameSession.LoadPrevious;
-                msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[1].OnClicked = GameMain.LobbyScreen.QuitToMainMenu;
-                msgBox.Buttons[1].OnClicked += msgBox.Close;
-            }
-            else
-            {
-                if (casualties.Any())
-                {
-                    sb.Append("Casualties: \n");
-                    foreach (Character c in casualties)
-                    {
-                        sb.Append("    - " + c.Info.Name + "\n");
-                    }
-                }
-                else
-                {
-                    sb.Append("No casualties!");
-                }
-
                 if (Submarine.Loaded.AtEndPosition)
                 {
                     Map.MoveToNextLocation();
                 }
 
                 SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
+
+
+            }
+            else
+            {
+                var msgBox = new GUIMessageBox("Game over", "Your entire crew has died!", new string[] { "Load game", "Quit" });
+                msgBox.Buttons[0].OnClicked += GameMain.GameSession.LoadPrevious;
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked = GameMain.LobbyScreen.QuitToMainMenu;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
             }
 
             CrewManager.EndShift();

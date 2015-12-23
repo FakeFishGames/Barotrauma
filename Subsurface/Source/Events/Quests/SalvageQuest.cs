@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class SalvageQuest : Quest
+    class SalvageMission : Mission
     {
         private ItemPrefab itemPrefab;
 
@@ -24,7 +24,7 @@ namespace Barotrauma
             }
         }
 
-        public SalvageQuest(XElement element)
+        public SalvageMission(XElement element)
             : base(element)
         {
             string itemName = ToolBox.GetAttributeString(element, "itemname", "");
@@ -33,7 +33,7 @@ namespace Barotrauma
 
             if (itemPrefab == null)
             {
-                DebugConsole.ThrowError("Error in salvagequest: couldn't find an item prefab with the name "+itemName);
+                DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name "+itemName);
             }
         }
 
@@ -91,11 +91,7 @@ namespace Barotrauma
         public override void End()
         {
             item.Remove();
-            if (item.CurrentHull == null)
-            {
-                new GUIMessageBox("Quest failed", failureMessage);
-                return;
-            }            
+            if (item.CurrentHull == null) return;
 
             GiveReward();
 

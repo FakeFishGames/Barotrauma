@@ -102,6 +102,8 @@
     <Compile Include="Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="Source\GameSession\GameModes\QuestMode.cs" />
     <Compile Include="Source\GameSession\GameModes\TutorialMode.cs" />
+    <Compile Include="Source\GameSession\InfoTextManager.cs" />
+    <Compile Include="Source\GameSession\ShiftSummary.cs" />
     <Compile Include="Source\GUI\GUIDropDown.cs" />
     <Compile Include="Source\GUI\GUIMessage.cs" />
     <Compile Include="Source\GUI\TitleScreen.cs" />
@@ -389,6 +391,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\TigerThresher\damagedtigerthresher.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\InfoTexts.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Artifacts\artifact.png">
@@ -831,7 +836,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Content\Quests.xml">
+    <Content Include="Content\Missions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\waterbump.png">

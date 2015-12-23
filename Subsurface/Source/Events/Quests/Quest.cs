@@ -3,16 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class Quest
+    class Mission
     {
-        private static List<Quest> list = new List<Quest>();
+        private static List<Mission> list = new List<Mission>();
 
-        private static string configFile = "Content/Quests.xml";
+        private static string configFile = "Content/Missions.xml";
 
         private string name;
 
@@ -60,7 +59,17 @@ namespace Barotrauma
             get { return Vector2.Zero; }
         }
 
-        public Quest(XElement element)
+        public string SuccessMessage
+        {
+            get { return successMessage; }
+        }
+
+        public string FailureMessage
+        {
+            get { return failureMessage; }
+        }
+
+        public Mission(XElement element)
         {
             name = ToolBox.GetAttributeString(element, "name", "");
 
@@ -68,8 +77,10 @@ namespace Barotrauma
 
             reward = ToolBox.GetAttributeInt(element, "reward", 1);
 
-            successMessage = ToolBox.GetAttributeString(element, "successmessage", "");
-            failureMessage = ToolBox.GetAttributeString(element, "failuremessage", "");
+            successMessage = ToolBox.GetAttributeString(element, "successmessage", 
+                "Mission completed successfully");
+            failureMessage = ToolBox.GetAttributeString(element, "failuremessage", 
+                "Mission failed");
 
             radarLabel = ToolBox.GetAttributeString(element, "radarlabel", "");
 
@@ -83,7 +94,7 @@ namespace Barotrauma
             }
         }
 
-        public static Quest LoadRandom(Location[] locations, Random rand)
+        public static Mission LoadRandom(Location[] locations, Random rand)
         {
             XDocument doc = ToolBox.TryLoadXml(configFile);
             if (doc == null) return null;
@@ -119,32 +130,32 @@ namespace Barotrauma
                         t = Type.GetType("Barotrauma." + type, true, true);
                         if (t == null)
                         {
-                            DebugConsole.ThrowError("Error in " + configFile + "! Could not find a quest class of the type ''" + type + "''.");
+                            DebugConsole.ThrowError("Error in " + configFile + "! Could not find a mission class of the type ''" + type + "''.");
                             continue;
                         }
                     }
                     catch
                     {
-                        DebugConsole.ThrowError("Error in " + configFile + "! Could not find a an event class of the type ''" + type + "''.");
+                        DebugConsole.ThrowError("Error in " + configFile + "! Could not find a mission class of the type ''" + type + "''.");
                         continue;
                     }
 
                     ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
                     object instance = constructor.Invoke(new object[] { element });
 
-                    Quest quest = (Quest)instance;
+                    Mission mission = (Mission)instance;
 
                     for (int n = 0; n<2; n++)
                     {
-                        quest.description = quest.description.Replace("[location"+(n+1)+"]", locations[n].Name);
+                        mission.description = mission.description.Replace("[location"+(n+1)+"]", locations[n].Name);
 
-                        quest.successMessage = quest.successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                        quest.failureMessage = quest.failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                        mission.successMessage = mission.successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                        mission.failureMessage = mission.failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
                     }
 
 
 
-                    return quest;
+                    return mission;
                 }
 
                 randomNumber -= eventProbability[i];
@@ -168,9 +179,8 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// End the quest and give a reward if it was completed successfully
+        /// End the mission and give a reward if it was completed successfully
         /// </summary>
-        /// <returns>whether the quest was completed or not</returns>
         public virtual void End()
         {
             completed = true;
@@ -180,11 +190,6 @@ namespace Barotrauma
 
         public void GiveReward()
         {
-            if (!string.IsNullOrWhiteSpace(successMessage))
-            {
-                new GUIMessageBox("Quest completed successfully", successMessage);
-            }
-
             var mode = GameMain.GameSession.gameMode as SinglePlayerMode;
             if (mode == null) return;
 

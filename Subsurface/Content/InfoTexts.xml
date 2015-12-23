@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<infotexts>
+  <progress>[sub] has made its way from [location1] to [location2].</progress>
+  <progress>[sub] has arrived at [location2].</progress>
+  <return>[sub] has returned to [location1].</return>
+  <gameover>The ocean has claimed [sub] and its crew.</gameover>
+
+  <CauseOfDeath.Damage>Succumbed to their injuries</CauseOfDeath.Damage>
+  <CauseOfDeath.Bloodloss>Bled out</CauseOfDeath.Bloodloss>
+  <CauseOfDeath.Drowning>Drowned</CauseOfDeath.Drowning>
+  <CauseOfDeath.Suffocation>Suffocated</CauseOfDeath.Suffocation>
+  <CauseOfDeath.Pressure>Crushed by water pressure</CauseOfDeath.Pressure>
+  <CauseOfDeath.Burn>Burned to death</CauseOfDeath.Burn>
+
+  <Self_CauseOfDeath.Damage>You have succumbed to your injuries.</Self_CauseOfDeath.Damage>
+  <Self_CauseOfDeath.Bloodloss>You have bled out.</Self_CauseOfDeath.Bloodloss>
+  <Self_CauseOfDeath.Drowning>You have drowned.</Self_CauseOfDeath.Drowning>
+  <Self_CauseOfDeath.Suffocation>You have suffocated.</Self_CauseOfDeath.Suffocation>
+  <Self_CauseOfDeath.Pressure>You have been crushed by water pressure.</Self_CauseOfDeath.Pressure>
+  <Self_CauseOfDeath.Burn>You have burned to death.</Self_CauseOfDeath.Burn>
+
+</infotexts>

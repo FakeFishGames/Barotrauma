@@ -618,6 +618,7 @@ namespace Barotrauma
             XDocument doc = OpenDoc(filePath);
             if (doc == null) return;
 
+            name = ToolBox.GetAttributeString(doc.Root, "name", name);
 
             foreach (XElement element in doc.Root.Elements())
             {

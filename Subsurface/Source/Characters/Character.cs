@@ -17,8 +17,6 @@ namespace Barotrauma
    
     class Character : Entity, IDamageable, IPropertyObject
     {
-        public static string[] DeathMsg = new string[Enum.GetNames(typeof(CauseOfDeath)).Length];
-
         public static List<Character> CharacterList = new List<Character>();
         
         public static Queue<CharacterInfo> NewCharacterQueue = new Queue<CharacterInfo>();
@@ -282,16 +280,9 @@ namespace Barotrauma
         {
             get { return AnimController.RefLimb.Position; }
         }
-        
-        static Character()
-        {
-            DeathMsg[(int)CauseOfDeath.Damage]      = "succumbed to your injuries";
-            DeathMsg[(int)CauseOfDeath.Bloodloss]   = "bled out";
-            DeathMsg[(int)CauseOfDeath.Drowning]    = "drowned";
-            DeathMsg[(int)CauseOfDeath.Suffocation] = "suffocated";
-            DeathMsg[(int)CauseOfDeath.Pressure]    = "been crushed by water pressure";
-            DeathMsg[(int)CauseOfDeath.Burn]        = "burnt to death";
-        }
+
+        public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
+        public OnDeathHandler OnDeath;
         
         public static Character Create(string file, Vector2 position)
         {
@@ -1159,7 +1150,7 @@ namespace Barotrauma
                 //if the Character is controlled by this client/server, let others know that the Character has died
                 if (Character.controlled == this)
                 {
-                    string chatMessage = "You have " + DeathMsg[(int)causeOfDeath] + ".";
+                    string chatMessage = InfoTextManager.GetInfoText("Self_CauseOfDeath." + causeOfDeath.ToString());
                     if (GameMain.Client!=null) chatMessage += " Your chat messages will only be visible to other dead players.";
 
                     GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
@@ -1178,6 +1169,8 @@ namespace Barotrauma
                     return;
                 }
             }
+
+            if (OnDeath != null) OnDeath(this, causeOfDeath);
 
             CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
 

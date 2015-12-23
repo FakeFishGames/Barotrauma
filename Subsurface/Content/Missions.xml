@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Quests>
-  <SalvageQuest 
+<Missions>
+  <SalvageMission 
     name="Salvaging an artifact" 
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
@@ -10,9 +10,9 @@
     successmessage="The artifact has been succesfully retrieved"
     itemname="Skyholder Artifact">
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
-  </SalvageQuest>
+  </SalvageMission>
 
-  <SalvageQuest
+  <SalvageMission
     name="Salvaging an artifact"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
@@ -22,9 +22,9 @@
     successmessage="The artifact has been succesfully retrieved"
     itemname="Thermal Artifact">
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
-  </SalvageQuest>
+  </SalvageMission>
 
-  <MonsterQuest
+  <MonsterMission
     name="Killing a Moloch"
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
     commonness="10"
@@ -33,9 +33,9 @@
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/Moloch/moloch.xml">
     <message header="Target terminated" text="The moloch is dead. Navigate the submarine out of the cavern to claim the reward."/>
-  </MonsterQuest>
+  </MonsterMission>
 
-  <MonsterQuest
+  <MonsterMission
     name="Killing a Tiger Thresher"
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 800 credits has been promised to those who kill the creature."
     commonness="10"
@@ -44,9 +44,9 @@
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/TigerThresher/tigerthresher.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
-  </MonsterQuest>
+  </MonsterMission>
 
-  <MonsterQuest
+  <MonsterMission
     name="Salvaging an artifact" 
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
@@ -54,5 +54,5 @@
     radarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for killing the Moloch."
     monsterfile="Content/Characters/Moloch/moloch.xml">
-  </MonsterQuest>
-</Quests>
+  </MonsterMission>
+</Missions>
