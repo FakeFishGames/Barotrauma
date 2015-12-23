@@ -1,14 +1,9 @@
-﻿using FarseerPhysics;
-using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class MonsterQuest : Quest
+    class MonsterMission : Mission
     {
         private string monsterFile;
 
@@ -21,7 +16,7 @@ namespace Barotrauma
             get { return monster.Position; }
         }
 
-        public MonsterQuest(XElement element)
+        public MonsterMission(XElement element)
             : base(element)
         {
             monsterFile = ToolBox.GetAttributeString(element, "monsterfile", "");
@@ -48,12 +43,8 @@ namespace Barotrauma
         
         public override void End()
         {
-            if (!monster.IsDead)
-            {
-                new GUIMessageBox("Quest failed", failureMessage);
-                return;
-            }
-            
+            if (!monster.IsDead) return;
+                        
             GiveReward();
 
             completed = true;

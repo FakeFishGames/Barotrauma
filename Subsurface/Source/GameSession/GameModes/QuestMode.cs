@@ -6,19 +6,19 @@ using System.Text;
 
 namespace Barotrauma
 {
-    class QuestMode : GameMode
+    class MissionMode : GameMode
     {
-        Quest quest;
+        Mission mission;
 
-        public override Quest Quest
+        public override Mission Mission
         {
             get
             {
-                return quest;
+                return mission;
             }
         }
 
-        public QuestMode(GameModePreset preset)
+        public MissionMode(GameModePreset preset)
             : base(preset)
         {
             Location[] locations = new Location[2];
@@ -29,14 +29,14 @@ namespace Barotrauma
             {
                 locations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f));
             }
-            quest = Quest.LoadRandom(locations, rand);
+            mission = Mission.LoadRandom(locations, rand);
         }
 
         public override void Start()
         {
             base.Start();
 
-            new GUIMessageBox(quest.Name, quest.Description, 400, 400);
+            new GUIMessageBox(mission.Name, mission.Description, 400, 400);
 
             //quest.Start(Level.Loaded);
         }

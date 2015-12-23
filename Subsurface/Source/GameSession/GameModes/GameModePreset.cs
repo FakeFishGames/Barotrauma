@@ -48,7 +48,7 @@ namespace Barotrauma
                 + "The rest of the crew will win if they reach the end of the level or kill the traitor "
                 + "before the objective is completed.";
 
-            mode = new GameModePreset("Quest", typeof(QuestMode), false);
+            mode = new GameModePreset("Mission", typeof(MissionMode), false);
             mode.Description = "The crew must work together to complete a specific task, such as retrieving "
                 + "an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends "
                 + "when the task is completed or everyone in the crew has died.";

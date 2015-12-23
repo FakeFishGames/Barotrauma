@@ -1,11 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using System.Text;
-using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -24,11 +19,11 @@ namespace Barotrauma
 
         public CrewManager CrewManager;
 
-        public Quest Quest
+        public Mission Mission
         {
             get
             {
-                if (gameMode != null) return gameMode.Quest;
+                if (gameMode != null) return gameMode.Mission;
                 return null;
             }
         }
@@ -71,7 +66,7 @@ namespace Barotrauma
 
             guiRoot = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsWidth), Color.Transparent);
 
-            if (gameModePreset!=null) this.gameMode = gameModePreset.Instantiate();
+            if (gameModePreset!=null) gameMode = gameModePreset.Instantiate();
             this.submarine = submarine;
         }
         
@@ -122,7 +117,7 @@ namespace Barotrauma
                 GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(80);
             }
 
-            if (Quest!=null) Quest.Start(Level.Loaded);
+            if (Mission!=null) Mission.Start(Level.Loaded);
 
             if (gameMode!=null) gameMode.Start();
             
@@ -131,7 +126,7 @@ namespace Barotrauma
 
         public void EndShift(string endMessage)
         {
-            if (Quest != null) Quest.End();
+            if (Mission != null) Mission.End();
 
             if (GameMain.Server!=null)
             {                
@@ -172,7 +167,7 @@ namespace Barotrauma
             guiRoot.Update(deltaTime);
 
             if (gameMode != null) gameMode.Update(deltaTime);
-            if (Quest != null) Quest.Update(deltaTime);
+            if (Mission != null) Mission.Update(deltaTime);
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -185,7 +180,7 @@ namespace Barotrauma
         public void Save(string filePath)
         {
             XDocument doc = new XDocument(
-                new XElement((XName)"Gamesession"));
+                new XElement("Gamesession"));
 
             var now = DateTime.Now;
             doc.Root.Add(new XAttribute("savetime", now.Hour + ":" + now.Minute + ", " + now.ToShortDateString()));

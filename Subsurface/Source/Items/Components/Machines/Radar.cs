@@ -236,15 +236,15 @@ namespace Barotrauma.Items.Components
                 (GameMain.GameSession.Map == null) ? "End" : GameMain.GameSession.Map.SelectedLocation.Name,
                 (Level.Loaded.EndPosition), displayScale, center, (rect.Width * 0.55f));
 
-            if (GameMain.GameSession.Quest != null)
+            if (GameMain.GameSession.Mission != null)
             {
-                var quest = GameMain.GameSession.Quest;
+                var mission = GameMain.GameSession.Mission;
 
-                if (!string.IsNullOrWhiteSpace(quest.RadarLabel))
+                if (!string.IsNullOrWhiteSpace(mission.RadarLabel))
                 {
                     DrawMarker(spriteBatch,
-                        quest.RadarLabel,
-                        quest.RadarPosition, displayScale, center, (rect.Width * 0.55f));
+                        mission.RadarLabel,
+                        mission.RadarPosition, displayScale, center, (rect.Width * 0.55f));
                 }
             }
 
