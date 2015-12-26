@@ -839,7 +839,9 @@ namespace Barotrauma
         public bool TrySelectSub(string subName, string md5Hash)
         {
 
-            Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
+            subName = subName.ToLower();
+                
+            Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name.ToLower() == subName);
             if (sub == null)
             {
                 new GUIMessageBox("Submarine not found!","The submarine ''" + subName + "'' has been selected by the server. Matching file not found in your map folder.");

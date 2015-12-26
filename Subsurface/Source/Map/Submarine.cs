@@ -301,7 +301,10 @@ namespace Barotrauma
 
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null)
         {
-            if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.0f) return null;
+            if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
+            {
+                rayEnd += Vector2.UnitX * 0.001f;
+            }
 
             float closestFraction = 1.0f;
             Body closestBody = null;

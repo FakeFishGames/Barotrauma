@@ -1104,6 +1104,8 @@ namespace Barotrauma
         {
             if (controlled != this) yield return CoroutineStatus.Success;
 
+            Character.controlled = null;
+
             float dimDuration = 8.0f;
             float timer = 0.0f;
 
@@ -1114,13 +1116,12 @@ namespace Barotrauma
             {
                 timer += CoroutineManager.DeltaTime;
 
-                if (controlled == this)
-                {
-                    if (cam != null) cam.OffsetAmount = 0.0f;
+                if (cam != null) cam.OffsetAmount = 0.0f;
 
-                    GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, darkLight, timer / dimDuration);
-                }
+                cam.TargetPos = WorldPosition;
 
+                GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, darkLight, timer / dimDuration);
+                
                 yield return CoroutineStatus.Running;
             }
 
@@ -1137,6 +1138,8 @@ namespace Barotrauma
                 GameMain.LightManager.AmbientLight = Color.Lerp(darkLight, prevAmbientLight, lerpLightBack);
                 yield return CoroutineStatus.Running;
             }
+
+            cam.TargetPos = Vector2.Zero;
 
             yield return CoroutineStatus.Success;
         }

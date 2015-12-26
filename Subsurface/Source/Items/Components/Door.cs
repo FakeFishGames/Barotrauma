@@ -143,13 +143,6 @@ namespace Barotrauma.Items.Components
 
             //string spritePath = Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\"+ ToolBox.GetAttributeString(element, "sprite", "");
             
-            Vector2[] corners = GetConvexHullCorners(doorRect);
-
-            convexHull = new ConvexHull(corners, Color.Black, item.CurrentHull == null ? null : item.CurrentHull.Submarine);            
-            if (window!=Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item.CurrentHull == null ? null : item.CurrentHull.Submarine);
-
-            UpdateConvexHulls();
-
             IsActive = true;
         }
 
@@ -210,10 +203,10 @@ namespace Barotrauma.Items.Components
         private Vector2[] GetConvexHullCorners(Rectangle rect)
         {
             Vector2[] corners = new Vector2[4];
-            corners[0] = new Vector2(rect.X, rect.Y - rect.Height);
-            corners[1] = new Vector2(rect.X, rect.Y);
-            corners[2] = new Vector2(rect.Right, rect.Y);
-            corners[3] = new Vector2(rect.Right, rect.Y - rect.Height);
+            corners[0] = new Vector2(rect.X, rect.Y - rect.Height) + Submarine.HiddenSubPosition;
+            corners[1] = new Vector2(rect.X, rect.Y) + Submarine.HiddenSubPosition;
+            corners[2] = new Vector2(rect.Right, rect.Y) + Submarine.HiddenSubPosition;
+            corners[3] = new Vector2(rect.Right, rect.Y - rect.Height) + Submarine.HiddenSubPosition;
 
             return corners;
         }
@@ -331,6 +324,13 @@ namespace Barotrauma.Items.Components
         public override void OnMapLoaded()
         {
             LinkedGap.ConnectedDoor = this;
+
+            Vector2[] corners = GetConvexHullCorners(doorRect);
+
+            convexHull = new ConvexHull(corners, Color.Black, item);
+            if (window != Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item);
+
+            UpdateConvexHulls();
         }
 
         public override void Remove()
