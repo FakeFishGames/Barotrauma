@@ -234,8 +234,23 @@ namespace Barotrauma
 
         private bool EndShift(GUIButton button, object obj)
         {
-            End("");
+            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam);
+
+            CoroutineManager.StartCoroutine(EndCinematic(cinematic));
+
             return true;
+        }
+
+        private IEnumerable<object> EndCinematic(TransitionCinematic cinematic)
+        {
+            while (cinematic.Running)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            End("");
+
+            yield return CoroutineStatus.Success;
         }
 
         public void Save(XElement element)

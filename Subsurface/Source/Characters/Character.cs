@@ -1108,11 +1108,11 @@ namespace Barotrauma
             float timer = 0.0f;
 
             Color prevAmbientLight = GameMain.LightManager.AmbientLight;
-            Color darkLight = new Color(0.2f,0.2f,0.2f, 1.0f);
+            Color darkLight = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 
             while (timer < dimDuration)
             {
-                timer += 1.0f / 60.0f;
+                timer += CoroutineManager.DeltaTime;
 
                 if (controlled == this)
                 {

@@ -20,12 +20,12 @@ namespace Barotrauma
     {
         public static GUIStyle Style;
 
-        static Texture2D t;
+        private static Texture2D t;
         public static SpriteFont Font, SmallFont, LargeFont;
 
         private static Sprite cursor;
 
-        private static GraphicsDevice graphicsDevice;        
+        private static GraphicsDevice graphicsDevice;
 
         private static List<GUIMessage> messages = new List<GUIMessage>();
 
@@ -33,6 +33,8 @@ namespace Barotrauma
 
         private static bool pauseMenuOpen;
         private static GUIFrame pauseMenu;
+
+        public static Color ScreenOverlayColor;
 
         public static void Init(ContentManager content)
         {
@@ -60,8 +62,7 @@ namespace Barotrauma
 
             // create 1x1 texture for line drawing
             t = new Texture2D(graphicsDevice, 1, 1);
-            t.SetData<Color>(
-                new Color[] { Color.White });// fill the texture with white
+            t.SetData(new Color[] { Color.White });// fill the texture with white
             
             Style = new GUIStyle("Content/UI/style.xml");
         }
@@ -294,6 +295,14 @@ namespace Barotrauma
 
         public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
+            if (ScreenOverlayColor.A>0.0f)
+            {
+                DrawRectangle(
+                    spriteBatch,
+                    new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+                    ScreenOverlayColor, true);
+            }
+
             spriteBatch.DrawString(Font,
                 "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
                 new Vector2(10, 10), Color.White);

@@ -16,6 +16,8 @@ namespace Barotrauma
     {
         static List<IEnumerator<object>> Coroutines = new List<IEnumerator<object>>();
 
+        public static float DeltaTime;
+
         // Starting a coroutine just means adding an enumerator to the list.
         // You might also want to be able to stop coroutines or delete them,
         // which might mean putting them into a dictionary
@@ -42,6 +44,8 @@ namespace Barotrauma
         // Updating just means stepping through all the coroutines
         public static void Update(float deltaTime)
         {
+            DeltaTime = deltaTime;
+
             for (int i = Coroutines.Count-1; i>=0; i--)
             {
                 if (Coroutines[i].Current != null)

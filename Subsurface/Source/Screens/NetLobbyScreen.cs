@@ -282,8 +282,8 @@ namespace Barotrauma
         public override void Select()
         {
             GameMain.LightManager.LosEnabled = false;
-
-            //infoFrame.ClearChildren();
+            
+            GUI.ScreenOverlayColor = Color.Transparent;
             
             textBox.Select();
 
@@ -297,8 +297,7 @@ namespace Barotrauma
             serverMessage.Enabled   = GameMain.Server != null;
             autoRestartBox.Enabled  = GameMain.Server != null;
             ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
-
-
+            
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));

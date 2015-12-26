@@ -19,7 +19,7 @@ namespace Barotrauma
         public const Category CollisionLevel        = Category.Cat7;
 
         public static double accumulator;
-        public static double step = 1.0f/60.0f;
+        public static double step = 1.0/60.0;
 
         public const float DisplayToSimRation = 100.0f;
 
