@@ -153,6 +153,8 @@ namespace Barotrauma
         {
             base.Select();
 
+            GUI.ScreenOverlayColor = Color.Transparent;
+
             gameMode = GameMain.GameSession.gameMode as SinglePlayerMode;
 
             foreach (GUIComponent component in topPanel.children)
@@ -163,8 +165,6 @@ namespace Barotrauma
                 button.Enabled = GameMain.GameSession.Map.CurrentLocation.Type.HasHireableCharacters;
                 break;
             }
-            //hireButton.Enabled = location.Type.HasHireableCharacters;
-            
 
             UpdateCharacterLists();            
         }
@@ -201,11 +201,7 @@ namespace Barotrauma
                         c.Salary.ToString(),
                         null, null,
                         Alignment.TopRight, GUI.Style, frame);
-                }
-            }
-            else
-            {
-                //(topPanel.FindChild(PanelTab.CurrentLocation) as GUIButton).Enabled = false;
+                }            
             }
         }
 

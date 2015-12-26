@@ -121,8 +121,9 @@
     <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
     <Compile Include="Source\Map\Levels\WrappingWall.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />
-    <Compile Include="Source\Map\LocationType.cs" />
+    <Compile Include="Source\Map\Map\LocationType.cs" />
     <Compile Include="Source\Map\SubmarineBody.cs" />
+    <Compile Include="Source\Map\TransitionCinematic.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
@@ -200,8 +201,8 @@
     <Compile Include="Source\Map\Levels\Level.cs" />
     <Compile Include="Source\Map\Lights\ConvexHull.cs" />
     <Compile Include="Source\Map\Lights\LightManager.cs" />
-    <Compile Include="Source\Map\Location.cs" />
-    <Compile Include="Source\Map\Map.cs" />
+    <Compile Include="Source\Map\Map\Location.cs" />
+    <Compile Include="Source\Map\Map\Map.cs" />
     <Compile Include="Source\Map\Md5Hash.cs" />
     <Compile Include="Source\Map\Levels\Voronoi.cs" />
     <Compile Include="Source\Map\Levels\VoronoiElements.cs" />
@@ -239,7 +240,7 @@
     <Compile Include="Source\Map\Submarine.cs" />
     <Compile Include="Source\Map\Structure.cs" />
     <Compile Include="Source\Map\StructurePrefab.cs" />
-    <Compile Include="Source\Map\WaterRenderer.cs" />
+    <Compile Include="Source\Map\Levels\WaterRenderer.cs" />
     <Compile Include="Source\Map\WayPoint.cs" />
     <Compile Include="Source\Networking\GameClient.cs" />
     <Compile Include="Source\Networking\GameServer.cs" />

@@ -87,6 +87,12 @@ namespace Barotrauma
             private set;
         }
 
+        public Body[] ShaftBodies
+        {
+            get;
+            private set;
+        }
+
         public Level(string seed, float difficulty, int width, int height, int siteInterval)
         {
             this.seed = seed;
@@ -333,14 +339,14 @@ namespace Barotrauma
             }
 
 
+            ShaftBodies = new Body[2];
             for (int i = 0; i < 2; i++)
             {
-                Body shaftBody = BodyFactory.CreateRectangle(GameMain.World, 100.0f, 10.0f, 5.0f);
-                shaftBody.BodyType = BodyType.Kinematic;
-                shaftBody.CollisionCategories = Physics.CollisionLevel;
-                shaftBody.SetTransform(ConvertUnits.ToSimUnits((i == 0) ? startPosition : endPosition), 0.0f);
-                shaftBody.SleepingAllowed = false;
-                bodies.Add(shaftBody);
+                ShaftBodies[i] = BodyFactory.CreateRectangle(GameMain.World, 100.0f, 10.0f, 5.0f);
+                ShaftBodies[i].BodyType = BodyType.Static;
+                ShaftBodies[i].CollisionCategories = Physics.CollisionLevel;
+                ShaftBodies[i].SetTransform(ConvertUnits.ToSimUnits((i == 0) ? startPosition : endPosition), 0.0f);
+                bodies.Add(ShaftBodies[i]);
             }
 
             foreach (VoronoiCell cell in cells)
