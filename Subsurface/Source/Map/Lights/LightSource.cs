@@ -21,6 +21,9 @@ namespace Barotrauma.Lights
 
         public Entity Submarine;
 
+        //what was the range of the light when HullsInRange were last updated
+        private float prevHullUpdateRange;
+
         private Vector2 position;
         public Vector2 Position
         {
@@ -64,11 +67,11 @@ namespace Barotrauma.Lights
             set
             {
 
-                float prevRange = range;
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
-                if (Math.Abs(prevRange - range)<5.0f) return;
+                if (Math.Abs(prevHullUpdateRange - range)>5.0f) return;
                 
                 UpdateHullsInRange();
+                prevHullUpdateRange = range;
             }
         }
 

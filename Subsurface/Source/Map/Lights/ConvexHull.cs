@@ -148,6 +148,8 @@ namespace Barotrauma.Lights
             cachedShadows.Clear();
 
             vertices = points;
+
+            CalculateDimensions();
         }
 
         public bool Intersects(Rectangle rect)
@@ -307,6 +309,7 @@ namespace Barotrauma.Lights
                 else
                 {
                     cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position, shadowVertexCount, 0);
+                    cachedShadows.Remove(light);
                     cachedShadows.Add(light, cachedShadow);
                 }
             }
@@ -350,7 +353,7 @@ namespace Barotrauma.Lights
                 else
                 {                    
                     shadowEffect.CurrentTechnique.Passes[0].Apply();
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, shadowVertexCount);
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, shadowVertexCount*2 - 2);
                 }               
             
             }

@@ -356,7 +356,7 @@ namespace Barotrauma.Networking
             {
                 if (myCharacter.IsDead)
                 {
-                    Character.Controlled = null;
+                    //Character.Controlled = null;
                     //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
                 }
                 else if (gameStarted)
@@ -610,7 +610,7 @@ namespace Barotrauma.Networking
                     (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
                     (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
+                GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.DrawPosition + offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
@@ -742,6 +742,7 @@ namespace Barotrauma.Networking
             float closestDist = 0.0f;
             foreach (WayPoint wp in WayPoint.WayPointList)
             {
+                if (wp.SpawnType != SpawnType.Human) continue;
                 float dist = Vector2.Distance(wp.WorldPosition, position);
                 if (closestWaypoint != null && dist > closestDist) continue;
                 

@@ -39,7 +39,15 @@ namespace Barotrauma
         {
             base.Select();
 
-            if (Submarine.Loaded != null) cam.TargetPos = Submarine.Loaded.Position;
+            if (Character.Controlled!=null)
+            {
+                cam.Position = Character.Controlled.WorldPosition;
+            }
+            else if (Submarine.Loaded != null)
+            {
+                cam.Position = Submarine.Loaded.Position;
+            }
+
 
             foreach (MapEntity entity in MapEntity.mapEntityList)
                 entity.IsHighlighted = false;

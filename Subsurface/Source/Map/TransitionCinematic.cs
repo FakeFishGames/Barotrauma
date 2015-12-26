@@ -55,12 +55,12 @@ namespace Barotrauma
 
                 GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, timer/duration);
 
-                cam.Translate((cameraPos - cam.Position) * CoroutineManager.DeltaTime);
+                cam.Translate((cameraPos - cam.Position) * CoroutineManager.DeltaTime*10.0f);
 
                 cam.Zoom = Math.Max(0.2f, cam.Zoom - CoroutineManager.DeltaTime * 0.1f);
                 sub.ApplyForce((Vector2.Normalize(diff) * targetSpeed - sub.Velocity) * 500.0f);
 
-                timer -= CoroutineManager.DeltaTime;
+                timer += CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
             }
