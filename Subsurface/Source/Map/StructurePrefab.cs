@@ -138,17 +138,20 @@ namespace Barotrauma
 
                 newRect = Submarine.AbsRect(placePosition, placeSize);
 
-                //newRect.Width = (int)Math.Max(newRect.Width, Map.gridSize.X);
-                //newRect.Height = (int)Math.Max(newRect.Height, Map.gridSize.Y);
-
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
                 {
-                    new Structure(newRect, this, Submarine.Loaded);
+                    if (Submarine.Loaded != null)
+                    {
+                        newRect.Location -= Submarine.Loaded.Position.ToPoint();
+                    }
+
+                    var structure = new Structure(newRect, this, Submarine.Loaded);
+
+                    structure.Submarine = Submarine.Loaded;
+
                     selected = null;
                     return;
                 }
-
-                //position = placePosition;                
             }
 
             sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height), Color.White);

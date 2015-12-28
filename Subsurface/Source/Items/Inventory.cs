@@ -27,6 +27,16 @@ namespace Barotrauma
 
         protected int capacity;
 
+
+
+        private Vector2 centerPos;
+
+        protected int selectedSlot;
+
+        public Item[] Items;
+
+        public bool Locked;
+
         public Vector2 CenterPos
         {
             get { return centerPos; }
@@ -37,12 +47,6 @@ namespace Barotrauma
                 centerPos.Y *= GameMain.GraphicsHeight;
             }
         }
-
-        private Vector2 centerPos;
-
-        protected int selectedSlot;
-
-        public Item[] Items;
 
         public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow=5)
         {
@@ -141,6 +145,8 @@ namespace Barotrauma
 
         public void RemoveItem(Item item)
         {
+            if (item == null) return;
+
             //go through the inventory and remove the item from all slots
             for (int n = 0; n < capacity; n++)
             {
@@ -224,8 +230,12 @@ namespace Barotrauma
             }
         }
 
-        protected void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot)
+        protected void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot)     
         {
+            int maxWidth = 300;
+
+            toolTip = ToolBox.WrapText(toolTip, maxWidth, GUI.Font);
+            
             Vector2 textSize = GUI.Font.MeasureString(toolTip);
             Vector2 rectSize = textSize * 1.2f;
 
@@ -235,15 +245,15 @@ namespace Barotrauma
             
             GUI.DrawRectangle(spriteBatch, pos, rectSize, Color.Black * 0.8f, true);
             spriteBatch.DrawString(GUI.Font, toolTip,
-                new Vector2((int)pos.X + rectSize.X * 0.5f, (int)pos.Y + rectSize.Y * 0.5f),
+                new Vector2((int)(pos.X + rectSize.X * 0.5f), (int)(pos.Y + rectSize.Y * 0.5f)),
                 Color.White, 0.0f,
-                new Vector2((int)textSize.X * 0.5f, (int)textSize.Y * 0.5f),
+                new Vector2((int)(textSize.X * 0.5f), (int)(textSize.Y * 0.5f)),
                 1.0f, SpriteEffects.None, 0.0f);
         }
 
         protected void UpdateSlot(SpriteBatch spriteBatch, Rectangle rect, int slotIndex, Item item, bool isSubSlot, bool drawItem=true)
         {
-            bool mouseOn = rect.Contains(PlayerInput.MousePosition);
+            bool mouseOn = rect.Contains(PlayerInput.MousePosition) && !Locked;
 
             if (mouseOn)
             {
@@ -292,7 +302,7 @@ namespace Barotrauma
                     Rectangle subRect = rect;
                     subRect.Height = 40;
 
-                    selectedSlot = containerRect.Contains(PlayerInput.MousePosition) ? slotIndex : -1;
+                    selectedSlot = containerRect.Contains(PlayerInput.MousePosition) && !Locked ? slotIndex : -1;
 
                     GUI.DrawRectangle(spriteBatch, containerRect, Color.Black * 0.8f, true);
                     GUI.DrawRectangle(spriteBatch, containerRect, Color.White);

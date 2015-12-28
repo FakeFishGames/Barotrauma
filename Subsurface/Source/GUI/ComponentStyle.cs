@@ -7,6 +7,34 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    public class UISprite
+    {
+        public Sprite Sprite
+        {
+            get;
+            private set;
+        }
+
+        public bool Tile
+        {
+            get;
+            private set;
+        }
+
+        public bool MaintainAspectRatio
+        {
+            get;
+            private set;
+        }
+
+        public UISprite(Sprite sprite, bool tile, bool maintainAspectRatio)
+        {
+            Sprite = sprite;
+            Tile = tile;
+            MaintainAspectRatio = maintainAspectRatio;
+        }
+    }
+
     public class GUIComponentStyle
     {
         public readonly Vector4 Padding;
@@ -20,12 +48,14 @@ namespace Barotrauma
 
         public readonly Color OutlineColor;
 
-        public readonly List<Sprite> Sprites;
+        public readonly List<UISprite> Sprites;
+
+        public readonly bool TileSprites;
 
 
         public GUIComponentStyle(XElement element)
         {
-            Sprites = new List<Sprite>();
+            Sprites = new List<UISprite>();
 
             Padding = ToolBox.GetAttributeVector4(element, "padding", Vector4.Zero);
 
@@ -43,13 +73,17 @@ namespace Barotrauma
 
             colorVector = ToolBox.GetAttributeVector4(element, "outlinecolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
             OutlineColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLower())
                 {
                     case "sprite":
-                        Sprites.Add(new Sprite(subElement));
+                        Sprite sprite = new Sprite(subElement);
+                        bool maintainAspect = ToolBox.GetAttributeBool(subElement, "maintainaspectratio",false);
+                        bool tile = ToolBox.GetAttributeBool(subElement, "tile", true);
+
+                        Sprites.Add(new UISprite(sprite, tile, maintainAspect));
                         break;
                 }
             }

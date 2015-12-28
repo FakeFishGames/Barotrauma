@@ -47,9 +47,11 @@ namespace Barotrauma
             for (int i = 0 ; i <amount; i++)
             {
                 BackgroundSpritePrefab prefab = GetRandomPrefab();
-                Vector2 pos = FindSpritePosition(level, prefab);
+                Vector2? pos = FindSpritePosition(level, prefab);
 
-                var newSprite = new BackgroundSprite(prefab, pos);
+                if (pos == null) continue;
+
+                var newSprite = new BackgroundSprite(prefab, (Vector2)pos);
 
                 int n = 0;
                 
@@ -62,16 +64,16 @@ namespace Barotrauma
                     if (existingSprite.Texture == newSprite.Prefab.Sprite.Texture) break;
                 }
 
-                sprites.Insert(i, newSprite);
+                sprites.Insert(n, newSprite);
             }
         }
 
-        private Vector2 FindSpritePosition(Level level, BackgroundSpritePrefab prefab)
+        private Vector2? FindSpritePosition(Level level, BackgroundSpritePrefab prefab)
         {
             Vector2 randomPos = new Vector2(Rand.Range(0.0f, level.Size.X), Rand.Range(0.0f, level.Size.Y));
             var cells = level.GetCells(randomPos);
 
-            if (!cells.Any()) return Vector2.Zero;
+            if (!cells.Any()) return null;
 
             VoronoiCell cell = cells[Rand.Int(cells.Count)];
             GraphEdge bestEdge = null;

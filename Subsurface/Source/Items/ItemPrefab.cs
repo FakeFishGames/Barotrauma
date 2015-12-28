@@ -38,6 +38,24 @@ namespace Barotrauma
             get { return configFile; }
         }
 
+        public string Description
+        {
+            get;
+            private set;
+        }
+
+        public List<string> DeconstructItems
+        {
+            get;
+            private set;
+        }
+
+        public float DeconstructTime
+        {
+            get;
+            private set;
+        }
+
         public float PickDistance
         {
             get { return pickDistance; }
@@ -47,7 +65,6 @@ namespace Barotrauma
         {
             get { return pickThroughWalls; }
         }
-
 
         public override bool IsLinkable
         {
@@ -83,8 +100,11 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.Loaded);
+                    var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.Loaded);
                     //constructor.Invoke(lobject);
+                    item.Submarine = Submarine.Loaded;
+                    item.SetTransform(ConvertUnits.ToSimUnits(item.Position - Submarine.Loaded.Position), 0.0f);
+                    item.FindHull();
 
                     placePosition = Vector2.Zero;
 
@@ -112,8 +132,13 @@ namespace Barotrauma
 
                     if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
                     {
-                        new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this, Submarine.Loaded);
+                        var item = new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this, Submarine.Loaded);
                         placePosition = Vector2.Zero;
+
+                        item.Submarine = Submarine.Loaded;
+                        item.SetTransform(ConvertUnits.ToSimUnits(item.Position - Submarine.Loaded.Position), 0.0f);
+                        item.FindHull();
+                        
                         //selected = null;
                         return;
                     }
@@ -161,6 +186,8 @@ namespace Barotrauma
             name = ToolBox.GetAttributeString(element, "name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
 
+            Description = ToolBox.GetAttributeString(element, "description", "");
+
             pickThroughWalls    = ToolBox.GetAttributeBool(element, "pickthroughwalls", false);
             pickDistance        = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f));
             
@@ -172,8 +199,12 @@ namespace Barotrauma
             focusOnSelected     = ToolBox.GetAttributeBool(element, "focusonselected", false);
 
             offsetOnSelected    = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
-
+            
             FireProof = ToolBox.GetAttributeBool(element, "fireproof", false);
+
+            MapEntityCategory category;
+            Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Item"), out category);
+            Category = category;
 
             string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");
             SpriteColor = new Color(ToolBox.ParseToVector4(spriteColorStr));
@@ -182,6 +213,9 @@ namespace Barotrauma
             
             Triggers            = new List<Rectangle>();
 
+            DeconstructItems    = new List<string>();
+            DeconstructTime     = 1.0f;
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLower())
@@ -189,6 +223,15 @@ namespace Barotrauma
                     case "sprite":
                         sprite = new Sprite(subElement, Path.GetDirectoryName(filePath));
                         size = sprite.size;
+                        break;
+                    case "deconstruct":
+                        DeconstructTime = ToolBox.GetAttributeFloat(subElement, "time", 10.0f);
+
+                        foreach (XElement deconstructItem in subElement.Elements())
+                        {
+                            DeconstructItems.Add(ToolBox.GetAttributeString(deconstructItem, "name", "not found"));
+                        }
+
                         break;
                     case "trigger":
                         Rectangle trigger = new Rectangle(0, 0, 10,10);

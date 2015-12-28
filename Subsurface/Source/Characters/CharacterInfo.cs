@@ -235,7 +235,7 @@ namespace Barotrauma
             textBlock.Font = GUI.SmallFont;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-            new GUIImage(new Rectangle(-10, -5, 0, 0), HeadSprite, Alignment.Left, frame);
+            new GUIImage(new Rectangle(-5, -5, 0, 0), HeadSprite, Alignment.Left, frame);
 
             return frame;
         }

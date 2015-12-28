@@ -7,6 +7,11 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
+    enum MapEntityCategory
+    {
+        Structure, Machine, Item, Electrical, Equipment, Material
+    }
+
     class MapEntityPrefab
     {
         public static List<MapEntityPrefab> list = new List<MapEntityPrefab>();
@@ -55,6 +60,12 @@ namespace Barotrauma
         public bool ResizeVertical
         {
             get { return resizeVertical; }
+        }
+
+        public MapEntityCategory Category
+        {
+            get;
+            protected set;
         }
 
         public Color SpriteColor

@@ -213,7 +213,9 @@ namespace Barotrauma
         protected virtual void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
         {
             if (explosion != null) explosion.Explode(entity.WorldPosition);
-            if (Fire) new FireSource(ConvertUnits.ToDisplayUnits(entity.SimPosition));            
+
+
+            if (Fire) new FireSource(entity.WorldPosition);            
 
             if (sound != null) sound.Play(1.0f, 1000.0f, entity.WorldPosition);
 

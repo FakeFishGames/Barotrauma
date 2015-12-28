@@ -54,13 +54,13 @@ namespace Barotrauma
 
             if (container.Item.inventory == character.Inventory)
             {
-                var containedItems = container.inventory.Items;
+                var containedItems = container.Inventory.Items;
                 //if there's already something in the mask (empty oxygen tank?), drop it
                 var existingItem = containedItems.FirstOrDefault(i => i != null);
                 if (existingItem != null) existingItem.Drop(character);
                 
                 character.Inventory.RemoveItem(itemToContain);
-                container.inventory.TryPutItem(itemToContain, null, false);
+                container.Inventory.TryPutItem(itemToContain, null, false);
             }
             else
             {
