@@ -164,7 +164,7 @@ namespace Barotrauma
         {
             TaskManager.Update(deltaTime);
             
-            guiRoot.Update(deltaTime);
+            //guiRoot.Update(deltaTime);
 
             if (gameMode != null) gameMode.Update(deltaTime);
             if (Mission != null) Mission.Update(deltaTime);
@@ -172,7 +172,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            guiRoot.Draw(spriteBatch);
+            //guiRoot.Draw(spriteBatch);
             
             if (gameMode != null) gameMode.Draw(spriteBatch);
         }

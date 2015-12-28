@@ -3,14 +3,35 @@
 	<Item
 		name="Fabricator"
 		linkable="true"
-		pickdistance="150">
+		pickdistance="150"
+    category="Machine"
+    description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
 		
 		<Sprite texture ="fabricator.png" depth="0.8"/>
 
 		<Fabricator canbeselected = "true">
-			<fabricableitem name="Harpoon Gun" requireditems="ID Card, Spear"/>
-			<fabricableitem name="Plasma Cutter" requireditems="Wrench, Spear"/>
-		</Fabricator>
+
+      <GuiFrame rect="0,0,600,400" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+
+      <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      
+			<fabricableitem name="Harpoon Gun" requireditems="Steel Bar" requiredtime="20"/>
+			<fabricableitem name="Plasma Cutter" requireditems="Steel Bar" requiredtime="20"/>
+
+      <fabricableitem name="And Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <fabricableitem name="Or Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <fabricableitem name="Not Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <fabricableitem name="Light Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <fabricableitem name="Oxygen Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <fabricableitem name="Water Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
+      <fabricableitem name="Signal Check Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>      
+      <fabricableitem name="RegEx Find Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
+      <fabricableitem name="Wifi Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+
+      <fabricableitem name="Fuel Rod" requireditems="Steel Bar, Uranium Bar"/>
+
+      <fabricableitem name="Incendium Fuel Rod" requireditems="Steel Bar, Incendium Bar"/>
+    </Fabricator>
 		
 		<ConnectionPanel canbeselected = "true">
 			<requireditem name="Screwdriver" type="Equipped"/>
@@ -21,4 +42,27 @@
 		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.8, 0.7" slotsperrow="1"/>
 	</Item>
 
+  <Item
+    name="Deconstructor"
+    linkable="true"
+    pickdistance="150"
+    category="Machine"
+    description="Disassembles and breaks down items to reusable components and material bars.">
+
+    <Sprite texture ="fabricator.png" depth="0.8"/>
+
+    <Deconstructor canbeselected = "true">
+      <sound file="deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
+      
+      <GuiFrame rect="0,0,300,200" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+    </Deconstructor>
+
+    <ConnectionPanel canbeselected = "true">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <output name="power_in"/>
+    </ConnectionPanel>
+
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="5"/>
+    <ItemContainer capacity="10" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5"/>
+  </Item>
 </Items>

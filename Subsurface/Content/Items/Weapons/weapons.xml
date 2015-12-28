@@ -3,9 +3,14 @@
 <Items>
   <Item
     name="Spear"
+    category="Equipment"
     pickdistance="200"
     pickthroughwalls="true"
     price="50">
+
+    <Deconstruct time="5">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
 
     <Sprite texture="weapons.png" sourcerect="0,50,65,7" depth="0.55"/>
 
@@ -19,9 +24,14 @@
   
   <Item
     name="Harpoon Gun"
+    category="Equipment"
     pickdistance="200"
     price="500"
     tags="weapon">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
   
     <Sprite texture="weapons.png" sourcerect="0,25,98,25" depth="0.5"/>
 
@@ -44,6 +54,7 @@
 
   <Item
     name="Stun Grenade"
+    category="Equipment"
     pickdistance="200"
     price="200"
     tags="smallitem,weapon">
@@ -61,9 +72,11 @@
 
   <Item
     name="Stun Baton"
+    category="Equipment"
     Tags="smallitem,weapon"
     pickdistance="150"
-    price="100">
+    price="100"
+    description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
 
     <Sprite texture="weapons.png" sourcerect="20,0,77,23" depth="0.5"/>
     
@@ -85,9 +98,11 @@
 
   <Item
     name="Battery Cell"
+    category="Equipment"
     pickdistance="150"
     tags="smallitem,loadable"
-    price="50">
+    price="50"
+    description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
 
     <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
 

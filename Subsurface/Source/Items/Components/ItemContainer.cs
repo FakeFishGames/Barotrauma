@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
     class ItemContainer : ItemComponent
     {
         List<RelatedItem> containableItems;
-        public ItemInventory inventory;
+        public ItemInventory Inventory;
 
         private bool hasStatusEffects;
 
@@ -94,7 +94,7 @@ namespace Barotrauma.Items.Components
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
-            inventory = new ItemInventory(item, this, capacity, hudPos, slotsPerRow);            
+            Inventory = new ItemInventory(item, this, capacity, hudPos, slotsPerRow);            
             containableItems = new List<RelatedItem>();
             
             foreach (XElement subElement in element.Elements())
@@ -119,7 +119,7 @@ namespace Barotrauma.Items.Components
 
         public void RemoveContained(Item item)
         {
-            inventory.RemoveItem(item);
+            Inventory.RemoveItem(item);
         }
 
         public bool CanBeContained(Item item)
@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
         {
             if (!hasStatusEffects) return;
 
-            foreach (Item contained in inventory.Items)
+            foreach (Item contained in Inventory.Items)
             {
                 if (contained == null || contained.Condition <= 0.0f) continue;
                 //if (contained.body != null) contained.body.Enabled = false;
@@ -185,7 +185,7 @@ namespace Barotrauma.Items.Components
                 currentRotation += item.body.Rotation;
             }
 
-            foreach (Item containedItem in inventory.Items)
+            foreach (Item containedItem in Inventory.Items)
             {
                 if (containedItem == null) continue;
 
@@ -204,7 +204,7 @@ namespace Barotrauma.Items.Components
         {
             if (!drawInventory && false) return;
 
-            inventory.Draw(spriteBatch);
+            Inventory.Draw(spriteBatch);
         }
 
         public override bool Pick(Character picker)
@@ -217,7 +217,7 @@ namespace Barotrauma.Items.Components
         {
             if (containableItems.Find(x => x.MatchesItem(item)) == null) return false;
             
-            if (inventory.TryPutItem(item))
+            if (Inventory.TryPutItem(item))
             {            
                 IsActive = true;
                 if (hideItems || (item.body!=null && !item.body.Enabled)) item.body.Enabled = false;
@@ -239,7 +239,7 @@ namespace Barotrauma.Items.Components
                 Item item = MapEntity.FindEntityByID(itemIds[i]) as Item;
                 if (item == null) continue;
 
-                inventory.TryPutItem(item, i, false);
+                Inventory.TryPutItem(item, i, false);
             }
 
             itemIds = null;
@@ -249,7 +249,7 @@ namespace Barotrauma.Items.Components
         {
             base.Remove();
 
-            foreach (Item item in inventory.Items)
+            foreach (Item item in Inventory.Items)
             {
                 if (item == null) continue;
                 item.Remove();
@@ -280,10 +280,10 @@ namespace Barotrauma.Items.Components
         {
             XElement componentElement = base.Save(parentElement);
             
-            string[] itemIdStrings = new string[inventory.Items.Length];
-            for (int i = 0; i < inventory.Items.Length; i++)
+            string[] itemIdStrings = new string[Inventory.Items.Length];
+            for (int i = 0; i < Inventory.Items.Length; i++)
             {
-                itemIdStrings[i] = (inventory.Items[i]==null) ? "0" : inventory.Items[i].ID.ToString();
+                itemIdStrings[i] = (Inventory.Items[i]==null) ? "0" : Inventory.Items[i].ID.ToString();
             }
 
             componentElement.Add(new XAttribute("contained",  string.Join(",",itemIdStrings)));

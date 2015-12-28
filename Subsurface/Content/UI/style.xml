@@ -2,7 +2,7 @@
 <style>
   <GUIFrame
     padding="40.0, 40.0, 40.0, 40.0"
-    color="0.0, 0.0, 0.0, 0.7"
+    color="0.8, 0.8, 0.8, 0.85"
   
     textcolor="0.0, 0.0, 0.0, 1.0"
   
@@ -10,15 +10,21 @@
     selectedcolor="1.0, 0.82, 0.05, 1.0"    
     
     outlinecolor="0.5, 0.57, 0.6, 1.0">
+
+    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
   </GUIFrame>
 
   <GUIButton
-    color="0.88, 0.25, 0.15, 0.3"
+    color="0.88, 0.25, 0.15, 0.8"
   
     textcolor="1.0, 1.0, 1.0, 1.0"
   
     hovercolor="0.88, 0.25, 0.15, 1.0"
-    selectedcolor="1.0, 0.0, 0.0, 1.0"/>
+    selectedcolor="1.0, 0.0, 0.0, 1.0">
+
+    <Sprite texture="Content/UI/uiButton.png" size="1.0, 1.0" tile="false" maintainaspectratio="false" sourcerect ="0.0, 0.0, 0.0, 71.0"/>
+
+  </GUIButton>
 
   <GUITextBlock
     textcolor="1.0, 1.0, 1.0, 1.0"
@@ -27,11 +33,9 @@
     padding="10.0, 0.0, 10.0, 0.0"/>
   
   <GUIListBox
-    color="0.5, 0.5, 0.5, 1.0"
+    color="0.0, 0.0, 0.0, 1.0"
     textcolor="1.0, 1.0, 1.0, 1.0"
     outlinecolor="0.5, 0.57, 0.6, 1.0">
-    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
-    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
   </GUIListBox>
 
   <GUIScrollBar
@@ -50,11 +54,10 @@
   </GUIDropDown>
 
   <GUITextBox
-    color="0.5, 0.5, 0.5, 1.0"  
+    color="0.0, 0.0, 0.0, 1.0"  
     hovercolor="0.8, 0.8, 0.8, 1.0"
     textcolor="1.0, 1.0, 1.0, 1.0"
     outlinecolor="0.5, 0.57, 0.6, 1.0">
-    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
   </GUITextBox>
 
   <GUITickBox

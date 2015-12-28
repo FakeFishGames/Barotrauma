@@ -144,7 +144,7 @@ namespace Barotrauma.Items.Components
             { 
                 if (guiFrame==null)
                 {
-                    DebugConsole.ThrowError("Error: the component "+name+" in "+item.Name+" doesn't have a guiFrame");
+                    DebugConsole.ThrowError("Error: the component "+name+" in "+item.Name+" doesn't have a GuiFrame component");
                     guiFrame = new GUIFrame(new Rectangle(0, 0, 100, 100), Color.Black);
                 }
                 return guiFrame; 

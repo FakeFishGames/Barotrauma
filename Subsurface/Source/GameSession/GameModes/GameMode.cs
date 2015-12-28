@@ -59,7 +59,6 @@ namespace Barotrauma
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            //if (timerBar != null) timerBar.Draw(spriteBatch);
         }
 
         public virtual void Start()

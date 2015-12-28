@@ -90,34 +90,41 @@ namespace Barotrauma
                     {
                         character.Inventory.TryPutItem(targetItem, targetSlot, false);
                     }
+
                 }
 
                 return;
             }
             
 
-            for (int i = 0; i<10 && currSearchIndex<Item.ItemList.Count; i++)
+            for (int i = 0; i<10 && currSearchIndex<Item.ItemList.Count-2; i++)
             {
                 currSearchIndex++;
 
                 if (!Item.ItemList[currSearchIndex].HasTag(itemName) && Item.ItemList[currSearchIndex].Name != itemName) continue;
                 if (IgnoreContainedItems && Item.ItemList[currSearchIndex].container != null) continue;
                 if (Item.ItemList[currSearchIndex].inventory is CharacterInventory) continue;
-            
-                targetItem = Item.ItemList[currSearchIndex];
                 
+                targetItem = Item.ItemList[currSearchIndex];
 
-                Item moveToTarget = targetItem;
-                while (moveToTarget.container != null)
-                {
-                    moveToTarget = moveToTarget.container;
-                }
+                AddGoToObjective(targetItem);
 
-                subObjectives.Add(new AIObjectiveGoTo(moveToTarget, character));
+
                 return;
             }
 
             if (currSearchIndex >= Item.ItemList.Count) canBeCompleted = false;
+        }
+
+        private void AddGoToObjective(Item item)
+        {
+            Item moveToTarget = item;
+            while (moveToTarget.container != null)
+            {
+                moveToTarget = moveToTarget.container;
+            }
+
+            AddSubObjective(new AIObjectiveGoTo(moveToTarget, character));
         }
         
         public override bool IsDuplicate(AIObjective otherObjective)

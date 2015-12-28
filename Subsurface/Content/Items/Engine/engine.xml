@@ -4,6 +4,7 @@
   <Item
     name="Engine"
     linkable="true"
+    category="Machine"
     pickdistance="150">
 
     <Sprite texture ="engine.png" depth="0.8"/>
@@ -23,6 +24,7 @@
   <Item
     name="Navigation Terminal"
     linkable="true"
+    category="Machine"
     pickdistance="150">
 
     <Sprite texture ="fabricator.png" depth="0.8"/>
@@ -50,6 +52,7 @@
   <Item
     name="Sonar Monitor"
     linkable="true"
+    category="Machine"
     pickdistance="150">
 
     <Sprite texture ="fabricator.png" depth="0.8"/>

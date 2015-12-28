@@ -2,7 +2,8 @@
   <Item
     name="Nuclear Reactor"
     type ="Reactor"
-    linkable="true">
+    linkable="true"
+    category="Machine">
     
     <trigger/>
 
@@ -42,6 +43,9 @@
       <Containable name="Fuel Rod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="2000.0" disabledeltatime="true"/>
       </Containable>
+      <Containable name="Incendium Fuel Rod">
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="5000.0" disabledeltatime="true"/>
+      </Containable>
       <Containable name="Heat Absorber"/>
       <Containable name="Temperature Control Circuit"/>  
     </ItemContainer>
@@ -60,6 +64,22 @@
     <Holdable handle1="0,0"/>
     <Pickable slots="RightHand,Any"/>
   </Item>
+
+  <Item
+    name="Incendium Fuel Rod"
+    Tags="smallitem"
+    pickdistance="150"
+    spritecolor="0.5,0.0,0.0,1.0"
+    price="200">
+
+    <Sprite texture ="fuelrod.png"/>
+
+    <Body radius="6" height="22" density="5"/>
+
+    <Holdable handle1="0,0"/>
+    <Pickable slots="RightHand,Any"/>
+  </Item>
+  
 
   <Item
     name="Heat Absorber"

@@ -1,91 +1,26 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Barotrauma
+namespace Barotrauma.Tutorials
 {
-    class TutorialMode : GameMode
+    class BasicTutorial : TutorialType
     {
-        public readonly CrewManager CrewManager;
-                
-        private GUIComponent infoBox;
-        
-        public static void StartTutorial()
+        public BasicTutorial(string name)
+            :base (name)
         {
-            Submarine.Load("Content/Map/TutorialSub.sub", "");
 
-            GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLower()=="tutorial"));
-
-            GameMain.GameSession.StartShift("tuto");
-
-            GameMain.GameSession.TaskManager.Tasks.Clear();
-
-            GameMain.GameScreen.Select();
         }
 
-        public TutorialMode(GameModePreset preset)
-            : base(preset)
+        protected override IEnumerable<object> UpdateState()
         {
-            CrewManager = new CrewManager();
-        }
-
-        public override void Start()
-        {
-            base.Start();
-
-            WayPoint wayPoint = WayPoint.GetRandom(SpawnType.Cargo, null);
-            if (wayPoint==null)
-            {
-                DebugConsole.ThrowError("A waypoint with the spawntype ''cargo'' is required for the tutorial event");
-                return;
-            }
-
-            CharacterInfo charInfo = new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Name=="Engineer"));
-
-            Character character = Character.Create(charInfo, wayPoint.SimPosition);
-            Character.Controlled = character;
-            character.GiveJobItems(null);
-
-            var idCard = character.Inventory.FindItem("ID Card");
-            idCard.AddTag("com");
-            idCard.AddTag("eng");
-
-            CrewManager.AddCharacter(character);
-
-            //CoroutineManager.StartCoroutine(QuitChecker());
-            CoroutineManager.StartCoroutine(UpdateState());
-        }
-
-        public override void Update(float deltaTime)
-        {
-            base.Update(deltaTime);
-
-            if (Character.Controlled!=null && Character.Controlled.IsDead)
-            {
-                Character.Controlled = null;
-
-                    CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
-                    infoBox = null;
-                    CoroutineManager.StartCoroutine(Dead());
-            }
-
-            CrewManager.Update(deltaTime);
-
-            if (infoBox!=null) infoBox.Update(deltaTime);
-        }
-
-        
-        private IEnumerable<object> UpdateState()
-        {            
             Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
 
             //spawn some fish next to the player
-            GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2, 
+            GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2,
                 Submarine.Loaded.Position + Character.Controlled.Position);
 
             yield return new WaitForSeconds(4.0f);
@@ -99,7 +34,7 @@ namespace Barotrauma
             infoBox = CreateInfoFrame("Open the door at your right side by highlighting the button next to it with your cursor and pressing E");
 
             Door tutorialDoor = Item.ItemList.Find(i => i.HasTag("tutorialdoor")).GetComponent<Door>();
-            
+
             while (!tutorialDoor.IsOpen)
             {
                 yield return CoroutineStatus.Running;
@@ -111,7 +46,7 @@ namespace Barotrauma
 
             infoBox = CreateInfoFrame("Hold W or S to walk up or down stairs. Use shift to run.", true);
 
-            while (infoBox!=null)
+            while (infoBox != null)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -123,7 +58,7 @@ namespace Barotrauma
             Reactor reactor = Item.ItemList.Find(i => i.HasTag("tutorialreactor")).GetComponent<Reactor>();
             reactor.MeltDownTemp = 20000.0f;
 
-            while (Vector2.Distance(Character.Controlled.Position, reactor.Item.Position)>200.0f)
+            while (Vector2.Distance(Character.Controlled.Position, reactor.Item.Position) > 200.0f)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -133,7 +68,7 @@ namespace Barotrauma
             while (Character.Controlled.SelectedConstruction != reactor.Item)
             {
                 yield return CoroutineStatus.Running;
-            }            
+            }
             yield return new WaitForSeconds(0.5f);
 
             infoBox = CreateInfoFrame("This is the control panel of the reactor. Try turning it on by increasing the fission rate.");
@@ -145,9 +80,9 @@ namespace Barotrauma
             yield return new WaitForSeconds(0.5f);
 
             infoBox = CreateInfoFrame("The reactor core has started generating heat, which in turn generates power for the submarine. The power generation is very low at the moment,"
-            +" because the reactor is set to shut itself down when the temperature rises above 500 degrees Celsius. You can adjust the temperature limit by changing the ''Shutdown Temperature'' in the control panel.", true);
-            
-            while (infoBox!=null)
+            + " because the reactor is set to shut itself down when the temperature rises above 500 degrees Celsius. You can adjust the temperature limit by changing the ''Shutdown Temperature'' in the control panel.", true);
+
+            while (infoBox != null)
             {
                 reactor.ShutDownTemp = Math.Min(reactor.ShutDownTemp, 5000.0f);
                 yield return CoroutineStatus.Running;
@@ -155,10 +90,10 @@ namespace Barotrauma
             yield return new WaitForSeconds(0.5f);
 
             infoBox = CreateInfoFrame("The amount of power generated by the reactor should be kept close to the amount of power consumed by the devices in the submarine. "
-                +"If there isn't enough power, devices won't function properly (or at all), and if there's too much power, some devices may be damaged."
-                +" Try to raise the temperature of the reactor close to 3000 degrees by adjusting the fission and cooling rates.", true);
-            
-            while (Math.Abs(reactor.Temperature-3000.0f) > 100.0f)
+                + "If there isn't enough power, devices won't function properly (or at all), and if there's too much power, some devices may be damaged."
+                + " Try to raise the temperature of the reactor close to 3000 degrees by adjusting the fission and cooling rates.", true);
+
+            while (Math.Abs(reactor.Temperature - 3000.0f) > 100.0f)
             {
                 reactor.AutoTemp = false;
                 reactor.ShutDownTemp = Math.Min(reactor.ShutDownTemp, 5000.0f);
@@ -167,9 +102,9 @@ namespace Barotrauma
             yield return new WaitForSeconds(0.5f);
 
             infoBox = CreateInfoFrame("Looks like we're up and running! Now you should turn on the ''Automatic temperature control'', which will make the reactor "
-                +"automatically adjust the temperature to a suitable level. Even though it's an easy way to keep the reactor up and running most of the time, "
-                +"you should keep in mind that it changes the temperature very slowly and carefully, which may cause issues if there are sudden changes in grid load.");
-            
+                + "automatically adjust the temperature to a suitable level. Even though it's an easy way to keep the reactor up and running most of the time, "
+                + "you should keep in mind that it changes the temperature very slowly and carefully, which may cause issues if there are sudden changes in grid load.");
+
             while (!reactor.AutoTemp)
             {
                 yield return CoroutineStatus.Running;
@@ -177,7 +112,7 @@ namespace Barotrauma
             yield return new WaitForSeconds(0.5f);
 
             infoBox = CreateInfoFrame("That's the basics of operating the reactor! Now that there's power available for the engines, it's time to get the submarine moving. "
-                +"Deselect the reactor by pressing E and head to the command room at the right edge of the vessel.");
+                + "Deselect the reactor by pressing E and head to the command room at the right edge of the vessel.");
 
             Steering steering = Item.ItemList.Find(i => i.HasTag("tutorialsteering")).GetComponent<Steering>();
             Radar radar = steering.Item.GetComponent<Radar>();
@@ -188,19 +123,19 @@ namespace Barotrauma
             }
 
             CoroutineManager.StartCoroutine(KeepReactorRunning(reactor));
-            
+
             infoBox = CreateInfoFrame("Select the navigation terminal by walking next to it and pressing E.");
-            
+
             while (Character.Controlled.SelectedConstruction != steering.Item)
             {
                 yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
-            infoBox = CreateInfoFrame("There seems to be something wrong with the navigation terminal."+
+            infoBox = CreateInfoFrame("There seems to be something wrong with the navigation terminal." +
                 " There's nothing on the monitor, so it's probably out of power. The reactor must still be"
-                +" running or the lights would've gone out, so it's most likely a problem with the wiring."
-                +" Deselect the terminal by pressing E to start checking the wiring.");
+                + " running or the lights would've gone out, so it's most likely a problem with the wiring."
+                + " Deselect the terminal by pressing E to start checking the wiring.");
 
             while (Character.Controlled.SelectedConstruction == steering.Item)
             {
@@ -221,15 +156,15 @@ namespace Barotrauma
             infoBox = CreateInfoFrame("Here you can see all the wires connected to the terminal. Apparently there's no wire"
                 + " going into the to the power connection - that's why the monitor isn't working."
                 + " You should find a piece of wire to connect it. Try searching some of the cabinets scattered around the sub.");
-
+            
             while (!HasItem("Wire"))
             {
                 yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Head back to the navigation terminal to fix the wiring.");
-            
-            PowerTransfer junctionBox = Item.ItemList.Find(i => i!=null && i.HasTag("tutorialjunctionbox")).GetComponent<PowerTransfer>();
+
+            PowerTransfer junctionBox = Item.ItemList.Find(i => i != null && i.HasTag("tutorialjunctionbox")).GetComponent<PowerTransfer>();
 
             while ((Character.Controlled.SelectedConstruction != junctionBox.Item &&
                 Character.Controlled.SelectedConstruction != steering.Item) ||
@@ -237,8 +172,8 @@ namespace Barotrauma
             {
                 yield return CoroutineStatus.Running;
             }
-            
-            if (Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>()!=null) == null)
+
+            if (Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>() != null) == null)
             {
                 infoBox = CreateInfoFrame("Equip the wire by dragging it to one of the slots with a hand symbol.");
 
@@ -255,13 +190,13 @@ namespace Barotrauma
             while (steeringConnection.Wires.FirstOrDefault(w => w != null) == null)
             {
                 yield return CoroutineStatus.Running;
-                
+
             }
-            
+
             infoBox = CreateInfoFrame("Now you have to connect the other end of the wire to a power source. "
                 + "The junction box in the room just below the command room should do.");
 
-            while (Character.Controlled.SelectedConstruction!=null)
+            while (Character.Controlled.SelectedConstruction != null)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -270,16 +205,16 @@ namespace Barotrauma
 
             infoBox = CreateInfoFrame("You can now move the other end of the wire around, and attach it on the wall by left clicking or "
                 + "remove the previous attachment by right clicking. Or if you don't care for neatly laid out wiring, you can just "
-                +"run it straight to the junction box.");
+                + "run it straight to the junction box.");
 
-            while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.GetComponent<PowerTransfer>()==null)
+            while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.GetComponent<PowerTransfer>() == null)
             {
                 yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Connect the wire to the junction box by pulling it to the power connection, the same way you did with the navigation terminal.");
 
-            while (radar.Voltage<0.1f)
+            while (radar.Voltage < 0.1f)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -293,7 +228,7 @@ namespace Barotrauma
             }
 
             infoBox = CreateInfoFrame("You can take a look at the area around the sub by pressing ''Activate Radar''.");
-            
+
             while (!radar.IsActive)
             {
                 yield return CoroutineStatus.Running;
@@ -310,21 +245,21 @@ namespace Barotrauma
             yield return new WaitForSeconds(4.0f);
 
             infoBox = CreateInfoFrame("The submarine moves up and down by pumping water in and out of the two ballast tanks at the bottom of the submarine. "
-                +"The engine at the back of the sub moves it forwards and backwards.", true);    
-        
-            while (infoBox!=null)
+                + "The engine at the back of the sub moves it forwards and backwards.", true);
+
+            while (infoBox != null)
             {
                 yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
-            
+
             while (Submarine.Loaded.Position.Y > 31000.0f)
             {
                 yield return CoroutineStatus.Running;
             }
-            yield return new WaitForSeconds(1.0f); 
-      
+            yield return new WaitForSeconds(1.0f);
+
             var moloch = Character.Create("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 25.0f);
             moloch.PlaySound(AIController.AiState.Attack);
 
@@ -373,14 +308,14 @@ namespace Barotrauma
 
             yield return new WaitForSeconds(0.5f);
 
-            Submarine.Loaded.GodMode = true;            
+            Submarine.Loaded.GodMode = true;
 
             var capacitor1 = Item.ItemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
             var capacitor2 = Item.ItemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
             CoroutineManager.StartCoroutine(KeepEnemyAway(moloch, new PowerContainer[] { capacitor1, capacitor2 }));
-            
+
             infoBox = CreateInfoFrame("The hull has been breached! Close all the doors to the command room to stop the water from flooding the entire sub!");
-            
+
             Door commandDoor1 = Item.ItemList.Find(i => i.HasTag("commanddoor1")).GetComponent<Door>();
             Door commandDoor2 = Item.ItemList.Find(i => i.HasTag("commanddoor2")).GetComponent<Door>();
             Door commandDoor3 = Item.ItemList.Find(i => i.HasTag("commanddoor3")).GetComponent<Door>();
@@ -390,24 +325,24 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("You should quickly find yourself a diving mask or a diving suit. "+
+            infoBox = CreateInfoFrame("You should quickly find yourself a diving mask or a diving suit. " +
                 "There are some in the room next to the airlock.");
 
             while (!HasItem("Diving Mask") && !HasItem("Diving Suit"))
             {
-                yield return CoroutineStatus.Running; 
+                yield return CoroutineStatus.Running;
             }
 
             if (HasItem("Diving Mask"))
             {
-                infoBox = CreateInfoFrame("The diving mask will let you breathe underwater, but it won't protect from the water pressure outside the sub. "+
+                infoBox = CreateInfoFrame("The diving mask will let you breathe underwater, but it won't protect from the water pressure outside the sub. " +
                     "It should be fine for the situation at hand, but you still need to find an oxygen tank and drag it into the same slot as the mask." +
                     "You should grab one or two from one of the cabinets.");
             }
             else if (HasItem("Diving Suit"))
             {
                 infoBox = CreateInfoFrame("In addition to letting you breathe underwater, the suit will protect you from the water pressure outside the sub " +
-                    "(unlike the diving mask). However, you still need to drag an oxygen tank into the same slot as the suit to supply oxygen. "+
+                    "(unlike the diving mask). However, you still need to drag an oxygen tank into the same slot as the suit to supply oxygen. " +
                     "You should grab one or two from one of the cabinets.");
             }
 
@@ -420,35 +355,35 @@ namespace Barotrauma
 
             infoBox = CreateInfoFrame("Now you should stop the creature attacking the submarine before it does any more damage. Head to the railgun room at the upper right corner of the sub.");
 
-            var railGun = Item.ItemList.Find(i => i.GetComponent<Turret>()!=null);
+            var railGun = Item.ItemList.Find(i => i.GetComponent<Turret>() != null);
 
-            while (Vector2.Distance(Character.Controlled.Position, railGun.Position)>500)
+            while (Vector2.Distance(Character.Controlled.Position, railGun.Position) > 500)
             {
                 yield return new WaitForSeconds(1.0f);
             }
 
             infoBox = CreateInfoFrame("The railgun requires a large power surge to fire. The reactor can't provide a surge large enough, so we need to use the "
-                +" supercapacitors in the railgun room. The capacitors need to be charged first; select them and crank up the recharge rate.");
+                + " supercapacitors in the railgun room. The capacitors need to be charged first; select them and crank up the recharge rate.");
 
-            while (capacitor1.RechargeSpeed<0.5f && capacitor2.RechargeSpeed<0.5f)
+            while (capacitor1.RechargeSpeed < 0.5f && capacitor2.RechargeSpeed < 0.5f)
             {
                 yield return new WaitForSeconds(1.0f);
             }
 
-            infoBox = CreateInfoFrame("The capacitors consume large amounts of power when they're being charged at a high rate, so "+
-                "be careful not to overload the electrical grid or the reactor. They also take some time to recharge, so now is a good "+
+            infoBox = CreateInfoFrame("The capacitors consume large amounts of power when they're being charged at a high rate, so " +
+                "be careful not to overload the electrical grid or the reactor. They also take some time to recharge, so now is a good " +
                 "time to head to the room below and load some shells for the railgun.");
 
 
             var loader = Item.ItemList.Find(i => i.Name == "Railgun Loader").GetComponent<ItemContainer>();
 
-            while (Math.Abs(Character.Controlled.Position.Y - loader.Item.Position.Y)>80)
+            while (Math.Abs(Character.Controlled.Position.Y - loader.Item.Position.Y) > 80)
             {
                 yield return CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Grab one of the shells. You can load it by selecting the railgun loader and dragging the shell to. "
-                +"one of the free slots. You need two hands to carry a shell, so make sure you don't have anything else in either hand.");
+                + "one of the free slots. You need two hands to carry a shell, so make sure you don't have anything else in either hand.");
 
             while (loader.Item.ContainedItems.FirstOrDefault(i => i != null && i.Name == "Railgun Shell") == null)
             {
@@ -467,7 +402,7 @@ namespace Barotrauma
             }
 
             infoBox = CreateInfoFrame("Use the right mouse button to aim and wait for the creature to come closer. When you're ready to shoot, "
-                +"press the left mouse button.");
+                + "press the left mouse button.");
 
             while (!moloch.IsDead)
             {
@@ -476,7 +411,7 @@ namespace Barotrauma
 
             Submarine.Loaded.GodMode = false;
 
-            infoBox = CreateInfoFrame("The creature has died. Now you should fix the damages in the control room: "+
+            infoBox = CreateInfoFrame("The creature has died. Now you should fix the damages in the control room: " +
                 "Grab a welding tool from the closet in the railgun room.");
 
             while (!HasItem("Welding Tool"))
@@ -484,20 +419,20 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("The welding tool requires fuel to work. Grab a welding fuel tank and attach it to the tool "+
+            infoBox = CreateInfoFrame("The welding tool requires fuel to work. Grab a welding fuel tank and attach it to the tool " +
                 "by dragging it into the same slot.");
 
             do
             {
                 var weldingTool = Character.Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Name == "Welding Tool");
-                if (weldingTool != null && 
+                if (weldingTool != null &&
                     weldingTool.ContainedItems.FirstOrDefault(contained => contained != null && contained.Name == "Welding Fuel Tank") != null) break;
 
                 yield return CoroutineStatus.Running;
             } while (true);
 
 
-            infoBox = CreateInfoFrame("You can aim with the tool using the right mouse button and weld using the left button. "+
+            infoBox = CreateInfoFrame("You can aim with the tool using the right mouse button and weld using the left button. " +
                 "Head to the command room to fix the leaks there.");
 
             do
@@ -518,7 +453,7 @@ namespace Barotrauma
             } while (broken);
 
             infoBox = CreateInfoFrame("Great! However, there's still quite a bit of water inside the sub. It should be pumped out "
-                +"using the pump in the room at the bottom of the submarine.");
+                + "using the pump in the room at the bottom of the submarine.");
 
             Pump pump = Item.ItemList.Find(i => i.HasTag("tutorialpump")).GetComponent<Pump>();
 
@@ -528,16 +463,16 @@ namespace Barotrauma
             }
 
             infoBox = CreateInfoFrame("The two pumps inside the ballast tanks "
-                +"are connected straight to the navigation terminal and can't be manually controlled unless you mess with their wiring, "+
-                "so you should only use the pump in the middle room to pump out the water. Select it, turn it on and adjust the pumping speed "+
+                + "are connected straight to the navigation terminal and can't be manually controlled unless you mess with their wiring, " +
+                "so you should only use the pump in the middle room to pump out the water. Select it, turn it on and adjust the pumping speed " +
                 "to start pumping water out.");
 
-            while (pump.Item.CurrentHull.Volume>1000.0f)
+            while (pump.Item.CurrentHull.Volume > 1000.0f)
             {
                 yield return CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("That was all there is to this tutorial! Now you should be able to handle "+
+            infoBox = CreateInfoFrame("That was all there is to this tutorial! Now you should be able to handle " +
             "most of the basic tasks on board the submarine.");
 
             yield return new WaitForSeconds(4.0f);
@@ -572,34 +507,28 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> Dead()
+        private bool HasItem(string itemName)
         {
-            yield return new WaitForSeconds(3.0f);
+            if (Character.Controlled == null) return false;
 
-            var messageBox = new GUIMessageBox("You have died", "Do you want to try again?", new string[] { "Yes", "No" });
+            return Character.Controlled.Inventory.FindItem(itemName) != null;
+        }
 
-            messageBox.Buttons[0].OnClicked += Restart;
-            messageBox.Buttons[0].OnClicked += messageBox.Close;
 
-            
-            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.SelectTab;
-            messageBox.Buttons[1].OnClicked += messageBox.Close;
+
+        protected IEnumerable<object> KeepReactorRunning(Reactor reactor)
+        {
+            do
+            {
+                reactor.AutoTemp = true;
+                reactor.ShutDownTemp = 5000.0f;
+
+                yield return CoroutineStatus.Running;
+            } while (Item.ItemList.Contains(reactor.Item));
 
             yield return CoroutineStatus.Success;
         }
 
-        private bool Restart(GUIButton button, object obj)
-        {
-            TutorialMode.StartTutorial();
-
-            return true;
-        }
-
-        private bool HasItem(string itemName)
-        {
-            if (Character.Controlled == null) return false;
-            return Character.Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Name == itemName)!=null;
-        }
 
         /// <summary>
         /// keeps the enemy away from the sub until the capacitors are loaded
@@ -619,7 +548,7 @@ namespace Barotrauma
                 Vector2 steering = targetPos - enemy.Position;
                 if (steering != Vector2.Zero) steering = Vector2.Normalize(steering);
 
-                enemy.AIController.Steering = steering*2.0f;
+                enemy.AIController.Steering = steering * 2.0f;
 
                 yield return CoroutineStatus.Running;
             } while (capacitors.FirstOrDefault(c => c.Charge > 0.4f) == null);
@@ -627,60 +556,5 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> KeepReactorRunning(Reactor reactor)
-        {
-            do
-            {
-                reactor.AutoTemp = true;
-                reactor.ShutDownTemp = 5000.0f;
-
-                yield return CoroutineStatus.Running;
-            } while (Item.ItemList.Contains(reactor.Item));
-
-            yield return CoroutineStatus.Success;
-        }
-
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            base.Draw(spriteBatch);
-
-            CrewManager.Draw(spriteBatch);
-            if (infoBox != null) infoBox.Draw(spriteBatch);
-        }
-
-        private bool CloseInfoFrame(GUIButton button, object userData)
-        {
-            infoBox = null;
-
-            return true;
-        }
-
-        private GUIComponent CreateInfoFrame(string text, bool hasButton = false)
-        {
-            int width = 300;
-            int height = hasButton ? 110 : 80;
-
-            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);
-
-            height += wrappedText.Split('\n').Length*25;
-
-            var infoBlock = new GUIFrame(new Rectangle(-20, 20, width, height), null, Alignment.TopRight, GUI.Style);
-            //infoBlock.Color = infoBlock.Color * 0.8f;
-            infoBlock.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            infoBlock.Flash(Color.Green);
-
-            var textBlock = new GUITextBlock(new Rectangle(10, 10, width - 40, height), text, GUI.Style, infoBlock, true);
-
-            if (hasButton)
-            {
-                var okButton = new GUIButton(new Rectangle(0,-40,80,25), "OK", Alignment.BottomCenter, GUI.Style, textBlock);
-                okButton.OnClicked = CloseInfoFrame;
-            }
-
-
-            GUI.PlayMessageSound();
-
-            return infoBlock;
-        }
     }
 }

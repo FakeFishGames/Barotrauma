@@ -2,9 +2,11 @@
 <Items>
   <Item
     name="Welding Tool"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="200"
-    price="100">
+    price="100"
+    description="One of the most crucial tools on board the submarine. Also works underwater.">
 
     <Sprite texture ="weldingtool.png"  depth="0.5"/>
 
@@ -48,9 +50,11 @@
 
   <Item
     name="Plasma Cutter"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="200"
-    price="100">
+    price="100"
+    description="Cuts through various materials using a jet of ionized oxygen.">
 
     <Sprite texture ="plasmacutter.png"  depth="0.5"/>
 
@@ -85,6 +89,7 @@
 
   <Item
     name="Welding Fuel Tank"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="150"
     price="50">
@@ -102,9 +107,11 @@
   
   <Item
     name="Fire Extinguisher"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="200"
-    price="100">
+    price="100"
+    description="A handheld carbon dioxide extinguisher.">
 
     <Sprite texture ="extinguisher.png"  depth="0.5" sourcerect="0,0,34,64" origin="0.4,0.5"/>
 
@@ -124,6 +131,7 @@
 
   <Item
     name="Screwdriver"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="200"
     price="10">
@@ -139,6 +147,7 @@
 
   <Item
     name="Wrench"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="200"
     price="10">

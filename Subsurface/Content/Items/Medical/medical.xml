@@ -2,9 +2,11 @@
 <Items>
   <Item
     name="Medical Syringe"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="150"
-    price="50">
+    price="50"
+    description="A syringe filled with a potent general-purpose medical compound.">
 
     <Sprite texture ="med.png" sourcerect="0,0,24,5" depth="0.6"/>
 
@@ -17,9 +19,11 @@
 
   <Item
     name="Bandage"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="150"
-    price="20">
+    price="20"
+    description="Treated with a hemostatic agent that quickly seals most minor wounds.">
 
     <Sprite texture ="med.png" sourcerect="0,14,14,18" depth="0.6"/>
 

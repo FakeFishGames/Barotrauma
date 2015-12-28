@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Oxygen Generator"
+    category="Machine"
     linkable="true">
 
 
@@ -25,6 +26,7 @@
 
   <Item
     name="Vent"
+    category="Machine"
     linkable="true">
 
     <Sprite texture ="vent.png" depth="0.91"/>

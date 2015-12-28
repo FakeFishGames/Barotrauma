@@ -17,6 +17,10 @@ namespace Barotrauma
 
         private Character character;
 
+        private Vector2 currentTarget;
+
+        private float findPathTimer;
+
         public SteeringPath CurrentPath
         {
             get { return currentPath; }
@@ -27,9 +31,10 @@ namespace Barotrauma
             get { return pathFinder; }
         }
 
-        private Vector2 currentTarget;
-
-        private float findPathTimer;
+        public Vector2 CurrentTarget
+        {
+            get { return currentTarget; }
+        }
 
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors)
             : base(host)

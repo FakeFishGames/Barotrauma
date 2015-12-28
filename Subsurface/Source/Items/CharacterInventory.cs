@@ -261,14 +261,16 @@ namespace Barotrauma
                     }
                 }
 
+
                 if (multiSlot) continue;
 
-                UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
-                if (Items[i]!=null && slotRect.Contains(PlayerInput.MousePosition))
+                if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition))
                 {
-                    toolTip = Items[i].Name;
+                    toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;
                     highlightedSlot = slotRect;
                 }
+
+                UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
                 
                 if (draggingItem!=null && draggingItem == Items[i]) draggingItemSlot = slotRect;
             }
@@ -304,6 +306,12 @@ namespace Barotrauma
                 }
 
                 if (!multiSlot) continue;
+
+                if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition))
+                {
+                    toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;
+                    highlightedSlot = slotRect;
+                }
 
                 UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
             }

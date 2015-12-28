@@ -27,6 +27,7 @@ namespace Barotrauma
         protected ItemPrefab prefab;
 
         public static ItemSpawner Spawner = new ItemSpawner();
+        public static ItemRemover Remover = new ItemRemover();
 
         private List<string> tags;
         
@@ -70,6 +71,11 @@ namespace Barotrauma
         public override string Name
         {
             get { return prefab.Name; }
+        }
+
+        public string Description
+        {
+            get { return prefab.Description; }
         }
 
         public override Sprite Sprite
@@ -211,7 +217,7 @@ namespace Barotrauma
             get
             {
                 ItemContainer c = GetComponent<ItemContainer>();
-                return (c == null) ? null : Array.FindAll(c.inventory.Items, i=>i!=null);
+                return (c == null) ? null : Array.FindAll(c.Inventory.Items, i=>i!=null);
             }
         }
 
@@ -296,6 +302,7 @@ namespace Barotrauma
                         break;
                     case "trigger":
                     case "sprite":
+                    case "deconstruct":
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);
@@ -328,6 +335,17 @@ namespace Barotrauma
             }
 
             return default(T);
+        }
+
+        public List<T> GetComponents<T>()
+        {
+            List<T> components = new List<T>();
+            foreach (ItemComponent ic in this.components)
+            {
+                if (ic is T) components.Add((T)(object)ic);
+            }
+
+            return components;
         }
         
         public void RemoveContained(Item contained)
@@ -548,7 +566,7 @@ namespace Barotrauma
                 {
                     ic.Update(deltaTime, cam);
                     
-                    ic.PlaySound(ActionType.OnActive, WorldPosition);
+                    if (ic.IsActive) ic.PlaySound(ActionType.OnActive, WorldPosition);
                     //ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                    
                 }
                 else
@@ -1306,8 +1324,8 @@ namespace Barotrauma
                     break;
                 case NetworkEventType.InventoryUpdate:
                     var itemContainer = GetComponent<ItemContainer>();
-                    if (itemContainer == null || itemContainer.inventory == null) return false;
-                    return itemContainer.inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
+                    if (itemContainer == null || itemContainer.Inventory == null) return false;
+                    return itemContainer.Inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
                 case NetworkEventType.ComponentUpdate:
                 case NetworkEventType.ImportantComponentUpdate:
 
@@ -1385,8 +1403,8 @@ namespace Barotrauma
                 case NetworkEventType.InventoryUpdate:
 
                     var itemContainer = GetComponent<ItemContainer>();
-                    if (itemContainer == null || itemContainer.inventory == null) return;
-                    itemContainer.inventory.ReadNetworkData(NetworkEventType.DropItem, message, sendingTime);
+                    if (itemContainer == null || itemContainer.Inventory == null) return;
+                    itemContainer.Inventory.ReadNetworkData(NetworkEventType.DropItem, message, sendingTime);
                     break;
                 case NetworkEventType.ComponentUpdate:
                 case NetworkEventType.ImportantComponentUpdate:

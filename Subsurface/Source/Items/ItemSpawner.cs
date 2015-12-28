@@ -8,18 +8,27 @@ namespace Barotrauma
 {
     class ItemSpawner
     {
-        private Queue<Pair<ItemPrefab, Vector2>> spawnQueue;
+        private Queue<Pair<ItemPrefab, object>> spawnQueue;
 
         public ItemSpawner()
         {
-            spawnQueue = new Queue<Pair<ItemPrefab, Vector2>>();
+            spawnQueue = new Queue<Pair<ItemPrefab, object>>();
         }
 
         public void QueueItem(ItemPrefab itemPrefab, Vector2 position)
         {
-            var itemInfo = new Pair<ItemPrefab, Vector2>();
+            var itemInfo = new Pair<ItemPrefab, object>();
             itemInfo.First = itemPrefab;
             itemInfo.Second = position;
+
+            spawnQueue.Enqueue(itemInfo);
+        }
+
+        public void QueueItem(ItemPrefab itemPrefab, Inventory inventory)
+        {
+            var itemInfo = new Pair<ItemPrefab, object>();
+            itemInfo.First = itemPrefab;
+            itemInfo.Second = inventory;
 
             spawnQueue.Enqueue(itemInfo);
         }
@@ -30,8 +39,45 @@ namespace Barotrauma
             {
                 var itemInfo = spawnQueue.Dequeue();
 
+                if (itemInfo.Second is Vector2)
+                {
+                    new Item(itemInfo.First, (Vector2)itemInfo.Second - Submarine.HiddenSubPosition, null);
+                }
+                else if (itemInfo.Second is Inventory)
+                {
+
+                    var item = new Item(itemInfo.First, Vector2.Zero, null);
+
+                    var inventory = itemInfo.Second as Inventory;
+                    inventory.TryPutItem(item, null, false);
+                }
                 //!!!!!!!!!!!!!!!!!!!!!!
-                new Item(itemInfo.First, itemInfo.Second, null);
+                
+            }
+        }
+    }
+
+    class ItemRemover
+    {
+        private Queue<Item> removeQueue;
+
+        public ItemRemover()
+        {
+            removeQueue = new Queue<Item>();
+        }
+
+        public void QueueItem(Item item)
+        {
+            removeQueue.Enqueue(item);
+        }
+
+        public void Update()
+        {
+            while (removeQueue.Count > 0)
+            {
+                var item = removeQueue.Dequeue();
+
+                item.Remove();
             }
         }
     }

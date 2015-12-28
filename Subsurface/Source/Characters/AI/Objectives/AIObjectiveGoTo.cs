@@ -22,7 +22,14 @@ namespace Barotrauma
             {
                 if (repeat) return true;
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-                return (pathSteering.CurrentPath == null || !pathSteering.CurrentPath.Unreachable);
+
+                //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable
+                if (pathSteering.CurrentPath == null) return true;
+                //steeringmanager is still targeting some other position, assume for now that the target is reachable
+                if ((target != null && Vector2.Distance(target.Position, targetPos) > 5.0f) ||
+                    Vector2.Distance(pathSteering.CurrentTarget, targetPos) > 5.0f) return true;
+
+                return (!pathSteering.CurrentPath.Unreachable);
             }
         }
 

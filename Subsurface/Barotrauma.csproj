@@ -101,7 +101,9 @@
     <Compile Include="Source\GameSession\CargoManager.cs" />
     <Compile Include="Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="Source\GameSession\GameModes\QuestMode.cs" />
-    <Compile Include="Source\GameSession\GameModes\TutorialMode.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
     <Compile Include="Source\GameSession\InfoTextManager.cs" />
     <Compile Include="Source\GameSession\ShiftSummary.cs" />
     <Compile Include="Source\GUI\GUIDropDown.cs" />
@@ -110,6 +112,7 @@
     <Compile Include="Source\Items\Components\Holdable\MeleeWeapon.cs" />
     <Compile Include="Source\Items\Components\Holdable\Propulsion.cs" />
     <Compile Include="Source\Items\Components\Label.cs" />
+    <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
     <Compile Include="Source\Items\Components\Signal\WaterDetector.cs" />
     <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="Source\Items\Components\Signal\SignalCheckComponent.cs" />
@@ -427,12 +430,6 @@
     <Content Include="Content\Items\Electricity\supercapacitor.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Electricity\wifi.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Items\Electricity\regex.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\Items\Electricity\lights.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -441,6 +438,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Electricity\monitors.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Fabricators\materials.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Fabricators\materials.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\itemlabel.xml">
@@ -548,19 +551,7 @@
     <Content Include="Content\Items\Lockers\lockers.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Electricity\and.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Items\Electricity\light.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\Items\Electricity\lightsprite.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Items\Electricity\not.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Items\Electricity\or.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Electricity\signalitems.xml">
@@ -642,6 +633,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Particles\flames.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\UI\uiButton.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\caret.png">
@@ -959,6 +953,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Engine\radarPing.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Fabricators\deconstructor.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Fabricators\fabricator.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Medical\bandage.ogg">

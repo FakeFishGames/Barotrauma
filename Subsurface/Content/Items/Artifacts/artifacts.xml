@@ -6,6 +6,14 @@
 
     <Sprite texture="artifact.png" depth="0.8" sourcerect="0,0,38,60"/>
 
+    <Deconstruct time="30">
+      <Item name="Steel Bar"/>
+      <Item name="Copper Bar"/>
+      <Item name="Uranium Bar"/>
+      <Item name="Uranium Bar"/>
+    </Deconstruct>
+    
+    
     <Body width="36" height="60" density="5"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
@@ -17,6 +25,13 @@
 
     <Sprite texture="artifact.png" depth="0.8" sourcerect="74,0,44,61"/>
 
+    <Deconstruct time="30">
+      <Item name="Steel Bar"/>
+      <Item name="Incendium Bar"/>
+      <Item name="Incendium Bar"/>
+      <Item name="Incendium Bar"/>
+    </Deconstruct>
+    
     <Body radius="20" height="20" density="5"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">

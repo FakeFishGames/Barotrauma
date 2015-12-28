@@ -98,7 +98,7 @@ namespace Barotrauma
             }
         }
 
-        public List<Sprite> sprites;
+        public List<UISprite> sprites;
         //public Alignment SpriteAlignment { get; set; }
         //public bool RepeatSpriteX, RepeatSpriteY;
 
@@ -160,7 +160,7 @@ namespace Barotrauma
 
             Font = GUI.Font;
 
-            sprites = new List<Sprite>();
+            sprites = new List<UISprite>();
             children = new List<GUIComponent>();
 
             CanBeFocused = true;
@@ -229,29 +229,38 @@ namespace Barotrauma
                     flashColor * (flashTimer / FlashDuration), true);
             }
 
-            GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
+            if (currColor.A>0.0f && !sprites.Any()) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
             if (sprites != null)
             {
-                foreach (Sprite sprite in sprites)
+                foreach (UISprite uiSprite in sprites)
                 {
-                    if (TileSprites)
+                    if (uiSprite.Tile)
                     {
                         Vector2 startPos = new Vector2(rect.X, rect.Y);
-                        Vector2 size = new Vector2(Math.Min(sprite.SourceRect.Width,rect.Width), Math.Min(sprite.SourceRect.Height,rect.Height));
+                        Vector2 size = new Vector2(Math.Min(uiSprite.Sprite.SourceRect.Width, rect.Width), Math.Min(uiSprite.Sprite.SourceRect.Height, rect.Height));
 
-                        if (sprite.size.X == 0.0f) size.X = rect.Width;
-                        if (sprite.size.Y == 0.0f) size.Y = rect.Height;
+                        if (uiSprite.Sprite.size.X == 0.0f) size.X = rect.Width;
+                        if (uiSprite.Sprite.size.Y == 0.0f) size.Y = rect.Height;
 
-                        sprite.DrawTiled(spriteBatch, startPos, size, currColor * (currColor.A / 255.0f));
+                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, currColor * (currColor.A / 255.0f));
                     }
                     else
                     {
-                        float scale = (float)(rect.Width) / sprite.SourceRect.Width;
+                        if (uiSprite.MaintainAspectRatio)
+                        {
+                            float scale = (float)(rect.Width) / uiSprite.Sprite.SourceRect.Width;
 
-                        spriteBatch.Draw(sprite.Texture, rect,
-                            new Rectangle(sprite.SourceRect.X, sprite.SourceRect.Y, (int)(sprite.SourceRect.Width), (int)(rect.Height / scale)), 
-                            currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect,
+                                new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)), 
+                                currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                        }
+                        else
+                        {
+                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect, uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f));
+                        }
+
+
                     }
                 }
             }
@@ -271,10 +280,13 @@ namespace Barotrauma
             int width = 400;
             if (toolTipBlock==null || (string)toolTipBlock.userData != ToolTip)
             {
-                string wrappedText = ToolBox.WrapText(ToolTip, width, GUI.SmallFont);
-                toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, wrappedText.Split('\n').Length*15), ToolTip, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
-                toolTipBlock.Color = Color.Black*0.7f;
-                toolTipBlock.OutlineColor = Color.White;
+                //string wrappedText = ToolBox.WrapText(ToolTip, width, GUI.SmallFont);
+                toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, 18), ToolTip, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
+                toolTipBlock.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                toolTipBlock.rect.Width = (int)(GUI.SmallFont.MeasureString(toolTipBlock.Text).X + 20);
+                toolTipBlock.rect.Height = toolTipBlock.Text.Split('\n').Length * 18;
+                toolTipBlock.Color = Color.Black * 0.7f;
+                //toolTipBlock.OutlineColor = Color.White;
                 toolTipBlock.userData = ToolTip;
             }
 
@@ -353,7 +365,7 @@ namespace Barotrauma
             selectedColor = style.SelectedColor;
             
             padding = style.Padding;
-            sprites = new List<Sprite>(style.Sprites);
+            sprites = new List<UISprite>(style.Sprites);
 
             OutlineColor = style.OutlineColor;
 

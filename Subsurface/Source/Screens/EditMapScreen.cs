@@ -70,62 +70,90 @@ namespace Barotrauma
             //GUITextBlock physicsBodyCount = new GUITextBlock(new Rectangle(0, 120, 0, 20), "", GUI.Style, GUIpanel);
             //physicsBodyCount.TextGetter = GetPhysicsBodyCount;
             
-            GUIButton button = new GUIButton(new Rectangle(0, 150, 0, 20), "Items", Alignment.Left, GUI.Style, GUIpanel);
-            button.UserData = 0;
-            button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 180, 0, 20), "Structures", Alignment.Left, GUI.Style, GUIpanel);
-            button.UserData = 1;
-            button.OnClicked = SelectTab;
+            //button = new GUIButton(new Rectangle(0, 180, 0, 20), "Structures", Alignment.Left, GUI.Style, GUIpanel);
+            //button.UserData = 1;
+            //button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 220, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
+            
+            GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];
+
+            int width = 400, height = 400;
+            int y = 150;
+            foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
+            {
+
+                var catButton = new GUIButton(new Rectangle(0, y, 0, 20), category.ToString(), Alignment.Left, GUI.Style, GUIpanel);
+                catButton.UserData = (int)category;
+                catButton.OnClicked = SelectTab;
+                y+=25;
+
+                GUItabs[(int)category] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+                GUItabs[(int)category].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+
+                GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[(int)category]);
+                itemList.OnSelected = SelectPrefab;
+                itemList.CheckSelected = MapEntityPrefab.GetSelected;
+
+
+                foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+                {
+                    if (ep.Category != category) continue;
+
+                    Color color = ((itemList.CountChildren % 2) == 0) ? Color.Transparent : Color.White * 0.1f;
+
+                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, itemList);
+                    frame.UserData = ep;
+                    frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                    frame.Color = color;
+                    frame.HoverColor = Color.Gold * 0.2f;
+                    frame.SelectedColor = Color.Gold * 0.5f;
+
+                    GUITextBlock textBlock = new GUITextBlock(
+                        new Rectangle(40, 0, 0, 25),
+                        ep.Name,
+                        Color.Transparent, Color.White,
+                        Alignment.Left, Alignment.Left,
+                        null, frame);
+                    textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+
+                    ItemPrefab ip = ep as ItemPrefab;
+                    if (ip != null && !string.IsNullOrWhiteSpace(ip.Description))
+                    {
+                        textBlock.ToolTip = ip.Description;
+                    }
+
+                    if (ep.sprite != null)
+                    {
+                        GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.Left, frame);
+                        img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
+                        img.Color = ep.SpriteColor;
+                    }
+                }
+            }
+
+
+            var button = new GUIButton(new Rectangle(0, y+50, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
 
-            button = new GUIButton(new Rectangle(0, 270, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, GUIpanel);
+            button = new GUIButton(new Rectangle(0, y+100, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, GUIpanel);
             button.OnClicked = GenerateWaypoints;
-            
-            GUItabs = new GUIComponent[2];
-            int width = 400, height = 400;
-            GUItabs[0] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth/2-width/2, GameMain.GraphicsHeight/2-height/2, width, height), GUI.Style);
-            GUItabs[0].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[0]);
-            itemList.OnSelected = SelectPrefab;
-            itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
-            GUItabs[1] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
-            GUItabs[1].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            GUIListBox structureList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.Style, GUItabs[1]);
-            structureList.OnSelected = SelectPrefab;
-            structureList.CheckSelected = MapEntityPrefab.GetSelected;
 
-            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
-            {
-                GUIListBox parent = ((ep as ItemPrefab) == null) ? structureList : itemList;
-                Color color = ((parent.CountChildren % 2) == 0) ? Color.Transparent : Color.White * 0.1f;
-                
-                GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, parent);
-                frame.UserData = ep;
-                frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                frame.Color = color;
-                frame.HoverColor = Color.Gold * 0.2f;
-                frame.SelectedColor = Color.Gold * 0.5f;
 
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(40, 0, 0, 25),
-                    ep.Name,
-                    Color.Transparent, Color.White,
-                    Alignment.Left, Alignment.Left,
-                    null, frame);
-                textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+            //GUItabs[0] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth/2-width/2, GameMain.GraphicsHeight/2-height/2, width, height), GUI.Style);
+            //GUItabs[0].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            //GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[0]);
+            //itemList.OnSelected = SelectPrefab;
+            //itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
-                if (ep.sprite != null)
-                {
-                    GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.Left, frame);
-                    img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
-                    img.Color = ep.SpriteColor;
-                }
-            }
+            //GUItabs[1] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+            //GUItabs[1].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            //GUIListBox structureList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[1]);
+            //structureList.OnSelected = SelectPrefab;
+            //structureList.CheckSelected = MapEntityPrefab.GetSelected;
+
         }
 
         public override void Select()

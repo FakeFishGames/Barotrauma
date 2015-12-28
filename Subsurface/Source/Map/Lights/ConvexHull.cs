@@ -353,7 +353,7 @@ namespace Barotrauma.Lights
                 else
                 {                    
                     shadowEffect.CurrentTechnique.Passes[0].Apply();
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, shadowVertexCount*2 - 2);
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, shadowVertexCount * 2 - 2);
                 }               
             
             }

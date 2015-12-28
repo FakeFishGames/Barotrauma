@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="C-4 Block"
+    category="Equipment"
     Tags="smallitem,explosive"
     pickdistance="150"
     price="100">
@@ -19,6 +20,7 @@
 
   <Item
     name="Detonator"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="150"
     price="50">

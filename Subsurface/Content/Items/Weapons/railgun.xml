@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Railgun"
+    category="Machine"
     focusonselected="true"
     offsetonselected="700"
     linkable="true"
@@ -26,6 +27,7 @@
 
   <Item
     name="Railgun Controller"
+    category="Machine"
     type="Controller"
     linkable="true"
     pickdistance="150">
@@ -48,6 +50,7 @@
 
   <Item
     name="Railgun Loader"
+    category="Machine"
     linkable="true"
     pickdistance="150">
 
@@ -61,6 +64,7 @@
   
   <Item
     name="Railgun Shell"
+    category="Equipment"
     pickdistance="200"
     price="100">
 

@@ -4,6 +4,7 @@
   
   <Item
     name="Lamp"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150">
 

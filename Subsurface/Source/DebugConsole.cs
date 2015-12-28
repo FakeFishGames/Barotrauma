@@ -294,6 +294,7 @@ namespace Barotrauma
                     if (Character.Controlled != null)
                     {
                         Character.Controlled.Health = Character.Controlled.MaxHealth;
+                        Character.Controlled.Oxygen = 100.0f;
                         Character.Controlled.Bleeding = 0.0f;
                     }
                     break;
@@ -365,7 +366,7 @@ namespace Barotrauma
                     }
                     break;
                 case "tutorial":
-                    TutorialMode.StartTutorial();
+                    TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
                     break;
                 case "lobbyscreen":
                 case "lobby":

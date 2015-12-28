@@ -1,5 +1,6 @@
 ﻿<Item
   name="MiniMap"
+  category="Machine"
   linkable="true">
 
   <Sprite texture ="fabricator.png" depth="0.8"/>

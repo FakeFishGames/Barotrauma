@@ -19,9 +19,11 @@
   
   <Item
     name="Diving Mask"
+    category="Equipment"
     Tags="smallitem,diving"
     pickdistance="200"
-    price="50">
+    price="50"
+    description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
 
     <Sprite texture ="DivingMask.png" depth="0.5"/>
   
@@ -46,10 +48,12 @@
 
   <Item
     name="Diving Suit"
+    category="Equipment"
     tags="diving"
     pickdistance="200"
     price="200"
-    fireproof="true">
+    fireproof="true"
+    description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
 
     <Sprite texture ="DivingSuit.png" sourcerect="82,0,46,128" depth="0.55"/>
 
@@ -90,9 +94,11 @@
 
   <Item
     name="Underwater Scooter"
+    category="Equipment"
     Tags="smallitem"
     pickdistance="200"
-    price="50">
+    price="50"
+    description="A battery-powered underwater propulsion device.">
 
     <Sprite texture ="DivingSuit.png" depth="0.5" sourcerect="22,98,59,32" origin="0.6,0.66"/>
 

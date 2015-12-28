@@ -2,6 +2,7 @@
 
 <Item
 	name="ID Card"
+  category="Equipment"
 	Tags="smallitem"
 	pickdistance="150">
 

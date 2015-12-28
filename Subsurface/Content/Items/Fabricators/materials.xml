@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Steel Bar"
+    category="Material"
+    Tags="smallitem"
+    pickdistance="150"
+    canbepicked="true"
+    price="10">
+
+    <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+
+    <Body width="24" height="12"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+  </Item>
+
+  <Item
+     name="Uranium Bar"
+     category="Material"
+     Tags="smallitem"
+     pickdistance="150"
+     spritecolor="0.2,0.35,0.06,1.0"
+     canbepicked="true"
+     price="50">
+
+    <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+
+    <Body width="24" height="12"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+  </Item>
+
+  <Item
+   name="Copper Bar"
+   category="Material"
+   Tags="smallitem"
+   pickdistance="150"
+   spritecolor="0.78,0.55,0.2,1.0"
+   canbepicked="true"
+   price="50">
+
+    <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+
+    <Body width="24" height="12"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+  </Item>
+  
+  <Item
+   name="Incendium Bar"
+   category="Material"
+   Tags="smallitem"
+   pickdistance="150"
+   spritecolor="0.5,0.0,0.0,1.0"
+   canbepicked="true"
+   price="50">
+
+    <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+
+    <Body width="24" height="12"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+  </Item>
+
+  <Item
+   name="Fulgurium Bar"
+   category="Material"
+   Tags="smallitem"
+   pickdistance="150"
+   spritecolor="1.0,0.7,0.05,1.0"
+   canbepicked="true"
+   price="50">
+
+    <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+
+    <Body width="24" height="12"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+  </Item>
+  
+  
+</Items>

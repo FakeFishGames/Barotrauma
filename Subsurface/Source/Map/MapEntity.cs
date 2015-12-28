@@ -222,6 +222,7 @@ namespace Barotrauma
             }
 
             Item.Spawner.Update();
+            Item.Remover.Update();
         }
 
         public virtual void Update(Camera cam, float deltaTime) { }

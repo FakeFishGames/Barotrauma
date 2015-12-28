@@ -4,11 +4,16 @@
 
   <Item
     name="Wire"
+    category="Electrical"
     Tags="smallitem,wire"
     pickdistance="150"
     linkable="true"
     canbepicked="true"
     price="10">
+
+    <Deconstruct time="5">
+      <Item name="Copper Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="wire.png" depth="0.55"/>
 
@@ -21,12 +26,17 @@
 
   <Item
     name="Red Wire"
+    category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.0,0.0,1.0"
     pickdistance="150"
     linkable="true"
     canbepicked="true"
     price="10">
+
+    <Deconstruct time="5">
+      <Item name="Copper Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="wire.png" depth="0.55"/>
     <Body radius="15"/>
@@ -37,12 +47,17 @@
 
   <Item
     name="Blue Wire"
+    category="Electrical"
     Tags="smallitem,wire"
     spritecolor="0.0,0.6,1.0,1.0"
     pickdistance="150"
     linkable="true"
     canbepicked="true"
     price="10">
+
+    <Deconstruct time="5">
+      <Item name="Copper Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="wire.png" depth="0.55"/>
     <Body radius="15"/>
@@ -53,12 +68,17 @@
 
   <Item
     name="Orange Wire"
+    category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.5,0.0,1.0"
     pickdistance="150"
     linkable="true"
     canbepicked="true"
     price="10">
+
+    <Deconstruct time="5">
+      <Item name="Copper Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="wire.png" depth="0.55"/>
     <Body radius="15"/>
@@ -68,13 +88,36 @@
   </Item>
 
   <Item
-    name="And Component"
+    name="FPGA Circuit"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    price="10">
+    price="100"
+    description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
 
-    <Sprite texture ="and.png"  depth="0.8"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16"/>
+
+    <Body width="16" height="16"/>
+
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="And Component"
+    category="Electrical"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true"
+    price="10"
+    description="Sends a signal when both inputs receive a signal within a set period of each other.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/> 
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,0,16,16"/>
 
     <AndComponent canbeselected = "true"/>
 
@@ -97,10 +140,17 @@
 
   <Item
     name="Or Component"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    price="10">
+    price="10"
+    description="Sends a signal if either of the inputs receive a signal.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16"/>
 
@@ -124,10 +174,17 @@
   
   <Item
     name="Not Component"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    price="10">
+    price="10"
+    description="Sends a signal when the input is NOT receiving a signal.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,0,16,16"/>
 
@@ -150,10 +207,16 @@
   
   <Item
     name="Light Component"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
     price="10">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16"/>
 
@@ -177,10 +240,17 @@
 
   <Item
     name="Oxygen Detector"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    price="10">
+    price="10"
+    description="Sends out a value between 0-100 depending on the quality of the surrounding air.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="96,0,31,24"/>
 
@@ -201,10 +271,17 @@
 
   <Item
     name="Water Detector"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    price="10">
+    price="10"
+    description="Sends out a signal when the detector is submerged.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="64,0,31,25"/>
 
@@ -225,10 +302,17 @@
 
   <Item
     name="Signal Check Component"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    price="10">
+    price="10"
+    description="Sends a signal when a signal matching a specific value is received.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,16,16,16"/>
 
@@ -252,10 +336,17 @@
 
   <Item
     name="RegEx Find Component"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    price="10">
+    price="10"
+    description="Sends a signal if the received signal matches a specific regular expression pattern.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,16,16,16"/>
 
@@ -277,10 +368,17 @@
 
   <Item
     name="Wifi Component"
+    category="Electrical"
     Tags="smallitem"
     pickdistance="150"
     linkable="true"
-    price="20">
+    price="20"
+    description="Allows remote communication between other Wifi Components that are using the same channel.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,32,15,19"/>
 

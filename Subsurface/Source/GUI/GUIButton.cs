@@ -17,7 +17,23 @@ namespace Barotrauma
 
         public bool CanBeSelected = true;
 
-        public bool Enabled { get; set; }
+        private bool enabled;
+
+        public bool Enabled 
+        { 
+            get
+            {
+                return enabled;
+            }
+
+            set
+            {
+                if (value == enabled) return;
+
+                enabled = value;
+                frame.Color = enabled ? color : Color.Gray * 0.7f;
+            }
+        }
 
         public override Color Color
         {
@@ -117,8 +133,6 @@ namespace Barotrauma
             if (color!=null) this.color = (Color)color;
             this.alignment = alignment;
 
-            Enabled = true;
-
             if (parent != null) parent.AddChild(this);
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
@@ -127,6 +141,8 @@ namespace Barotrauma
             textBlock = new GUITextBlock(Rectangle.Empty, text,
                 Color.Transparent, (this.style == null) ? Color.Black : this.style.textColor,
                 textAlignment, style, this);
+
+            Enabled = true;
         }
         
         public override void Draw(SpriteBatch spriteBatch)
@@ -175,7 +191,7 @@ namespace Barotrauma
 
             DrawChildren(spriteBatch);
 
-            if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f, true);
+            //if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f, true);
         }
     }
 }

@@ -189,6 +189,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (convexHull == null) return;
+
             if (rect.Height == 0)
             {
                 convexHull.Enabled = false;
@@ -219,8 +221,10 @@ namespace Barotrauma.Items.Components
 
             body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
-            convexHull.Move(amount);
-            if (convexHull2 != null) convexHull2.Move(amount);
+            UpdateConvexHulls();
+
+            //convexHull.Move(amount);
+            //if (convexHull2 != null) convexHull2.Move(amount);
         }
 
 

@@ -1,6 +1,7 @@
 ﻿<Item
   name="Pump"
   linkable="true"
+  category="Machine"
   pickdistance="200">
 
   <Sprite texture ="pump.png" depth="0.8"/>

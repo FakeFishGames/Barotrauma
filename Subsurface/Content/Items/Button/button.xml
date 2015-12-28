@@ -1,6 +1,6 @@
 ﻿<Item
   name="Button"
-  type="Controller"  
+  category="Electrical"
   linkable="true"
   tags="smallitem"
   pickdistance="150.0"
