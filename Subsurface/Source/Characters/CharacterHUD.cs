@@ -58,11 +58,12 @@ namespace Barotrauma
                 startPos = cam.WorldToScreen(startPos);
 
                 Vector2 textPos = startPos;
+                textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestCharacter.Info.Name).X / 2, 20);
 
-                float stringWidth = GUI.Font.MeasureString(character.ClosestCharacter.Info.Name).X;
-                textPos -= new Vector2(stringWidth / 2, 20);
-                spriteBatch.DrawString(GUI.Font, character.ClosestCharacter.Info.Name, textPos, Color.Black);
-                spriteBatch.DrawString(GUI.Font, character.ClosestCharacter.Info.Name, textPos + new Vector2(1, -1), Color.Orange);
+                GUI.DrawString(spriteBatch, textPos, character.ClosestCharacter.Info.Name, Color.Orange, Color.Black, 2);
+
+                //spriteBatch.DrawString(GUI.Font, character.ClosestCharacter.Info.Name, textPos, Color.Black);
+                //spriteBatch.DrawString(GUI.Font, character.ClosestCharacter.Info.Name, textPos + new Vector2(1, -1), Color.Orange);
             }
             else if (character.SelectedCharacter == null && character.ClosestItem != null && character.SelectedConstruction == null)
             {
@@ -71,19 +72,24 @@ namespace Barotrauma
                 startPos = cam.WorldToScreen(startPos);
 
                 Vector2 textPos = startPos;
+                textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestItem.Name).X / 2, 20);
+                //spriteBatch.DrawString(GUI.Font, character.ClosestItem.Prefab.Name, textPos, Color.Black);
+                //GUI.DrawRectangle(spriteBatch, textPos-Vector2.One*2.0f, textSize+Vector2.One*4.0f, Color.Black * 0.7f, true);
+                //spriteBatch.DrawString(GUI.Font, character.ClosestItem.Prefab.Name, textPos, Color.Orange);
 
-                float stringWidth = GUI.Font.MeasureString(character.ClosestItem.Prefab.Name).X;
-                textPos -= new Vector2(stringWidth / 2, 20);
-                spriteBatch.DrawString(GUI.Font, character.ClosestItem.Prefab.Name, textPos, Color.Black);
-                spriteBatch.DrawString(GUI.Font, character.ClosestItem.Prefab.Name, textPos + new Vector2(1, -1), Color.Orange);
+                GUI.DrawString(spriteBatch, textPos, character.ClosestItem.Name, Color.Orange, Color.Black * 0.7f, 2);
+
 
                 textPos.Y += 50.0f;
                 foreach (ColoredText coloredText in character.ClosestItem.GetHUDTexts(character))
                 {
                     textPos.X = startPos.X - GUI.Font.MeasureString(coloredText.Text).X / 2;
 
-                    spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos, Color.Black);
-                    spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos + new Vector2(1, -1), coloredText.Color);
+                    GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color, Color.Black*0.7f, 2);
+
+                    //spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos, Color.Black);
+                    //GUI.DrawRectangle(spriteBatch, textPos - Vector2.One * 2.0f, textSize + Vector2.One * 4.0f, Color.Black * 0.7f, true);
+                    //spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos, coloredText.Color);
 
                     textPos.Y += 25;
                 }

@@ -47,12 +47,23 @@
   </MonsterMission>
 
   <MonsterMission
+    name="Beast from the Abyss"
+    description="Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of 10,000 has been promised to those who get rid of whatever is causing the seismic activity."
+    commonness="10"
+    reward="10000"
+    radarlabel="Target"
+    successmessage="The End Worm is dead and the passageway is open for transport again."
+    monsterfile="Content/Characters/Endworm/endworm.xml">
+    <message header="Target terminated" text="The beast is dead. Navigate the submarine out of the cavern to claim the reward."/>
+  </MonsterMission>
+
+  <MonsterMission
     name="Salvaging an artifact" 
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1000"
     radarlabel="Infrasonic signal"
-    successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for killing the Moloch."
+    successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/moloch.xml">
   </MonsterMission>
 </Missions>

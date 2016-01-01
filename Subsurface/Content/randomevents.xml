@@ -33,5 +33,13 @@
     difficulty="5"
     minamount="1" maxamount="1"
     musictype="monster"/>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Endworm/endworm.xml"
+    spawndeep="true"
+    commonness="1"
+    difficulty="5"
+    minamount="1" maxamount="1"
+    musictype="deep"/>
   
 </Randomevents>

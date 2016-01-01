@@ -16,7 +16,7 @@
   <Self_CauseOfDeath.Bloodloss>You have bled out.</Self_CauseOfDeath.Bloodloss>
   <Self_CauseOfDeath.Drowning>You have drowned.</Self_CauseOfDeath.Drowning>
   <Self_CauseOfDeath.Suffocation>You have suffocated.</Self_CauseOfDeath.Suffocation>
-  <Self_CauseOfDeath.Pressure>You have been crushed by water pressure.</Self_CauseOfDeath.Pressure>
+  <Self_CauseOfDeath.Pressure>You have been crushed by water pressure.</Self_CauseOfDeath.Pressure>  
   <Self_CauseOfDeath.Burn>You have burned to death.</Self_CauseOfDeath.Burn>
 
 </infotexts>

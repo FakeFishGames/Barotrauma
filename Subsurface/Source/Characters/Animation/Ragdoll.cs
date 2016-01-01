@@ -340,17 +340,17 @@ namespace Barotrauma
                     }
                 }
                 
-                if (targetMovement.Y >= 0.0f && lowestLimb.SimPosition.Y > ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 8.0f))
-                {
-                    //stairs = null;
-                    //return false;
-                }
+                //if (targetMovement.Y >= 0.0f && lowestLimb.SimPosition.Y > ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 8.0f))
+                //{
+                //    //stairs = null;
+                //    //return false;
+                //}
                 
                 Limb limb = f1.Body.UserData as Limb;
                 if (limb != null)// && (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot))
                 {
                     if (contact.Manifold.LocalNormal.Y >= 0.0f)
-                    {
+                    { 
                         if (limb.SimPosition.Y < lowestLimb.SimPosition.Y+0.2f)
                         {
                             stairs = structure;
