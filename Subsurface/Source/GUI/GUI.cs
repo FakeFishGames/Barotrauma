@@ -15,7 +15,7 @@ namespace Barotrauma
         Center = (CenterX | CenterY),
         BottomRight = (Bottom | Right), BottomLeft = (Bottom | Left), BottomCenter = (CenterX | Bottom)
     }
-    
+
     public class GUI
     {
         public static GUIStyle Style;
@@ -42,7 +42,7 @@ namespace Barotrauma
             GUI.SmallFont = ToolBox.TryLoadFont("SmallFont", content);
             GUI.LargeFont = ToolBox.TryLoadFont("LargeFont", content);
 
-            cursor = new Sprite("Content/UI/cursor.png" ,Vector2.Zero);
+            cursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
         }
 
         public static bool PauseMenuOpen
@@ -63,7 +63,7 @@ namespace Barotrauma
             // create 1x1 texture for line drawing
             t = new Texture2D(graphicsDevice, 1, 1);
             t.SetData(new Color[] { Color.White });// fill the texture with white
-            
+
             Style = new GUIStyle("Content/UI/style.xml");
         }
 
@@ -75,18 +75,18 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu = new GUIFrame(new Rectangle(0,0,200,300), null, Alignment.Center, Style);
+                pauseMenu = new GUIFrame(new Rectangle(0, 0, 200, 300), null, Alignment.Center, Style);
 
                 int y = 0;
                 var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, GUI.Style, pauseMenu);
                 button.OnClicked = TogglePauseMenu;
 
                 y += 60;
-                
-                if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession !=null)
+
+                if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
                     SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
-                    if (spMode!=null)
+                    if (spMode != null)
                     {
                         button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, GUI.Style, pauseMenu);
                         button.OnClicked += TogglePauseMenu;
@@ -95,7 +95,7 @@ namespace Barotrauma
                         y += 60;
                     }
                 }
-                
+
                 if (Screen.Selected == GameMain.LobbyScreen)
                 {
                     SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
@@ -111,7 +111,7 @@ namespace Barotrauma
                 }
 
 
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, GUI.Style, pauseMenu);                
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, GUI.Style, pauseMenu);
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }
@@ -132,7 +132,7 @@ namespace Barotrauma
                 SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
             }
 
-            if (GameMain.NetworkMember!=null)
+            if (GameMain.NetworkMember != null)
             {
                 GameMain.NetworkMember.Disconnect();
                 GameMain.NetworkMember = null;
@@ -149,7 +149,7 @@ namespace Barotrauma
             Vector2 edge = end - start;
             // calculate angle to rotate line
             float angle = (float)Math.Atan2(edge.Y, edge.X);
-            
+
             sb.Draw(t,
                 new Rectangle(// rectangle defines shape of line and position of start of line
                     (int)start.X,
@@ -162,6 +162,16 @@ namespace Barotrauma
                 new Vector2(0, 0), // point in line about which to rotate
                 SpriteEffects.None,
                 depth);
+        }
+        
+        public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor=null, int backgroundPadding=0, SpriteFont font = null)
+        {
+            if (font == null) font = GUI.Font;
+            sb.DrawString(font, text, pos, color);
+            if (backgroundColor == null) return;
+
+            Vector2 textSize = font.MeasureString(text);
+            DrawRectangle(sb, pos - Vector2.One*backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true);
         }
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f)

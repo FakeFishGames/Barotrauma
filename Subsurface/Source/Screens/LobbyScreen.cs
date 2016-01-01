@@ -19,7 +19,8 @@ namespace Barotrauma
 
         private GUIListBox characterList, hireList;
 
-        private GUIListBox selectedItemList, itemList;
+        private GUIListBox selectedItemList;
+        private GUIListBox[] storeItemLists;
 
         private SinglePlayerMode gameMode;
 
@@ -135,18 +136,27 @@ namespace Barotrauma
             var costText = new GUITextBlock(new Rectangle(0, 0, 100, 25), "Cost: ", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, bottomPanel[(int)PanelTab.Store]);
             costText.TextGetter = CostTextGetter;
 
-            buyButton = new GUIButton(new Rectangle(sellColumnWidth+20, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, bottomPanel[(int)PanelTab.Store]);
+            buyButton = new GUIButton(new Rectangle(sellColumnWidth + 20, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             buyButton.OnClicked = BuyItems;
 
-            itemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
-            itemList.OnSelected = SelectItem;
-
-            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+            
+            storeItemLists = new GUIListBox[Enum.GetValues(typeof(MapEntityCategory)).Length];
+            
+            foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-                if (ep.Price == 0) continue;
+                storeItemLists[(int)category] = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
+                storeItemLists[(int)category].OnSelected = SelectItem;
+                storeItemLists[(int)category].UserData = category;
+                bottomPanel[(int)PanelTab.Store].RemoveChild(storeItemLists[(int)category]);
 
-                CreateItemFrame(ep, itemList);
+                foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+                {
+                    if (ep.Price == 0 || ep.Category != category) continue;
+
+                    CreateItemFrame(ep, storeItemLists[(int)category]);
+                }
             }
+            
         }
 
         public override void Select()
@@ -413,6 +423,18 @@ namespace Barotrauma
             return true;
         }
         
+        private bool SelectItemCategory(GUIButton button, object selection)
+        {
+
+            if (!(selection is MapEntityCategory)) return false;
+            var existingList = bottomPanel[(int)PanelTab.Store].children.Find(c => c.UserData is MapEntityCategory);
+            if (existingList != null) bottomPanel[(int)PanelTab.Store].RemoveChild(existingList);
+
+            bottomPanel[(int)PanelTab.Store].AddChild(storeItemLists[(int)selection]);
+
+            return true;
+        }
+
         private string GetMoney()
         {
             return "Money: " + ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", CrewManager.Money)) + " credits";
