@@ -208,10 +208,10 @@ namespace Barotrauma
             flashTimer = FlashDuration;
             flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;
 
-            foreach (GUIComponent child in children)
-            {
-                child.Flash();
-            }
+            //foreach (GUIComponent child in children)
+            //{
+            //    child.Flash();
+            //}
         }
 
         public virtual void Draw(SpriteBatch spriteBatch) 
@@ -315,6 +315,7 @@ namespace Barotrauma
 
             for (int i = 0; i < children.Count; i++)
             {
+                if (!children[i].Visible) continue;
                 children[i].Update(deltaTime);
             }
         }

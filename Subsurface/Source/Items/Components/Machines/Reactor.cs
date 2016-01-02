@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [HasDefaultValue(0.0f, true)]
         public float FissionRate
         {
             get { return fissionRate; }
@@ -89,7 +90,8 @@ namespace Barotrauma.Items.Components
                 fissionRate = MathHelper.Clamp(value, 0.0f, 100.0f); 
             }
         }
-        
+
+        [HasDefaultValue(0.0f, true)]
         public float CoolingRate
         {
             get { return coolingRate; }
@@ -100,6 +102,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [HasDefaultValue(0.0f, true)]
         public float Temperature
         {
             get { return temperature; }
@@ -115,6 +118,7 @@ namespace Barotrauma.Items.Components
             return (temperature > 0.0f);
         }
 
+        [HasDefaultValue(false, true)]
         public bool AutoTemp
         {
             get { return autoTemp; }
@@ -125,6 +129,7 @@ namespace Barotrauma.Items.Components
 
         public float AvailableFuel { get; set; }
 
+        [HasDefaultValue(500.0f, true)]
         public float ShutDownTemp
         {
             get { return shutDownTemp; }

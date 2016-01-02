@@ -412,6 +412,7 @@ namespace Barotrauma
                     if (Info.PickedItemIDs[i] == 0) continue;
 
                     Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
+                    System.Diagnostics.Debug.Assert(item != null);
                     if (item == null) continue;
 
                     item.Pick(this, true, true, true);
@@ -1100,49 +1101,44 @@ namespace Barotrauma
             Kill(CauseOfDeath.Pressure, isNetworkMessage);
         }
 
-        private IEnumerable<object> DeathAnim(Camera cam)
-        {
-            if (controlled != this) yield return CoroutineStatus.Success;
+        //private IEnumerable<object> DeathAnim(Camera cam)
+        //{
+        //    if (controlled != this) yield return CoroutineStatus.Success;
 
-            Character.controlled = null;
+        //    Character.controlled = null;
 
-            float dimDuration = 8.0f;
-            float timer = 0.0f;
+        //    float dimDuration = 8.0f;
+        //    float timer = 0.0f;
 
-            Color prevAmbientLight = GameMain.LightManager.AmbientLight;
-            Color darkLight = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+        //    Color prevAmbientLight = GameMain.LightManager.AmbientLight;
+        //    Color darkLight = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 
-            while (timer < dimDuration)
-            {
-                timer += CoroutineManager.DeltaTime;
+        //    while (timer < dimDuration && Character.controlled == null)
+        //    {
+        //        timer += CoroutineManager.DeltaTime;
 
-                if (cam != null) cam.OffsetAmount = 0.0f;
+        //        if (cam != null) cam.OffsetAmount = 0.0f;
 
-                cam.TargetPos = WorldPosition;
+        //        cam.TargetPos = WorldPosition;
 
-                GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, darkLight, timer / dimDuration);
+        //        GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, darkLight, timer / dimDuration);
                 
-                yield return CoroutineStatus.Running;
-            }
+        //        yield return CoroutineStatus.Running;
+        //    }
+            
+        //    float lerpLightBack = 0.0f;
+        //    while (lerpLightBack < 1.0f)
+        //    {
+        //        lerpLightBack = Math.Min(lerpLightBack + CoroutineManager.DeltaTime*5.0f, 1.0f);
 
-            while (controlled == this)
-            {
-                yield return CoroutineStatus.Running;
-            }
+        //        GameMain.LightManager.AmbientLight = Color.Lerp(darkLight, prevAmbientLight, lerpLightBack);
+        //        yield return CoroutineStatus.Running;
+        //    }
 
-            float lerpLightBack = 0.0f;
-            while (lerpLightBack < 1.0f)
-            {
-                lerpLightBack = Math.Min(lerpLightBack + 0.05f, 1.0f);
+        //    cam.TargetPos = Vector2.Zero;
 
-                GameMain.LightManager.AmbientLight = Color.Lerp(darkLight, prevAmbientLight, lerpLightBack);
-                yield return CoroutineStatus.Running;
-            }
-
-            cam.TargetPos = Vector2.Zero;
-
-            yield return CoroutineStatus.Success;
-        }
+        //    yield return CoroutineStatus.Success;
+        //}
 
         public void Kill(CauseOfDeath causeOfDeath, bool isNetworkMessage = false)
         {
@@ -1175,7 +1171,7 @@ namespace Barotrauma
 
             if (OnDeath != null) OnDeath(this, causeOfDeath);
 
-            CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
+            //CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
 
             health = 0.0f;
 

@@ -47,8 +47,8 @@ namespace Barotrauma
                 Vector2 tryPos = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
                 
                 if (Submarine.PickBody(
-                    tryPos, 
-                    tryPos - Vector2.UnitY*level.Size.Y, 
+                    ConvertUnits.ToSimUnits(tryPos), 
+                    ConvertUnits.ToSimUnits(tryPos - Vector2.UnitY*level.Size.Y), 
                     null, Physics.CollisionLevel) != null)
                 {
                     position = tryPos;

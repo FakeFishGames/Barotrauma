@@ -14,6 +14,8 @@ namespace Barotrauma
         private GUIComponent[] GUItabs;
         private int selectedTab;
 
+        private GUITextBox nameBox;
+
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
         
@@ -58,13 +60,19 @@ namespace Barotrauma
             //constructionList.OnSelected = MapEntityPrefab.SelectPrefab;
             //constructionList.CheckSelected = MapEntityPrefab.GetSelected;
 
-            GUITextBlock nameBlock = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, GUIpanel, true, GUI.LargeFont);
-            nameBlock.TextGetter = GetSubName;
 
-            GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 80, 0, 20), "", GUI.Style, GUIpanel);
+
+            new GUITextBlock(new Rectangle(0, 20, 0, 20), "Submarine:", GUI.Style, GUIpanel);
+            nameBox = new GUITextBox(new Rectangle(0, 40, 0, 20), GUI.Style, GUIpanel);
+            //nameBlock.TextGetter = GetSubName;
+
+            GUIButton button = new GUIButton(new Rectangle(0,70,0,20), "Save", GUI.Style, GUIpanel);
+            button.OnClicked = SaveSub;
+
+            GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 100, 0, 20), "", GUI.Style, GUIpanel);
             itemCount.TextGetter = GetItemCount;
 
-            GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 100, 0, 20), "", GUI.Style, GUIpanel);
+            GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 120, 0, 20), "", GUI.Style, GUIpanel);
             structureCount.TextGetter = GetStructureCount;
 
             //GUITextBlock physicsBodyCount = new GUITextBlock(new Rectangle(0, 120, 0, 20), "", GUI.Style, GUIpanel);
@@ -79,7 +87,7 @@ namespace Barotrauma
             GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];
 
             int width = 400, height = 400;
-            int y = 150;
+            int y = 160;
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
 
@@ -135,7 +143,7 @@ namespace Barotrauma
             }
 
 
-            var button = new GUIButton(new Rectangle(0, y+50, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
+            button = new GUIButton(new Rectangle(0, y+50, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
 
@@ -165,7 +173,11 @@ namespace Barotrauma
             GUIComponent.MouseOn = null;
             characterMode = false;
 
-            if (Submarine.Loaded != null) cam.Position = Submarine.Loaded.Position + Submarine.HiddenSubPosition;
+            if (Submarine.Loaded != null)
+            {
+                cam.Position = Submarine.Loaded.Position + Submarine.HiddenSubPosition;
+                nameBox.Text = Submarine.Loaded.Name;
+            }
              //CreateDummyCharacter();
         }
 
@@ -192,6 +204,32 @@ namespace Barotrauma
             dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero);
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
+        }
+
+        private bool SaveSub(GUIButton button, object obj)
+        {
+            if (string.IsNullOrWhiteSpace(nameBox.Text))
+            {
+                nameBox.Flash();
+                return false;
+            }
+
+            if (nameBox.Text.Contains("../"))
+            {
+                DebugConsole.ThrowError("Illegal symbols in filename (../)");
+                nameBox.Flash();
+                return false;
+            }
+
+            if (Submarine.Loaded!=null)
+            {
+                Submarine.Loaded.Name = nameBox.Text;
+            }
+
+            Submarine.SaveCurrent(nameBox.Text + ".sub");
+            
+
+            return false;
         }
 
         private bool SelectTab(GUIButton button, object obj)

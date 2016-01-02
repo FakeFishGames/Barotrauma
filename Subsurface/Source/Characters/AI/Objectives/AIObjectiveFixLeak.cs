@@ -76,7 +76,7 @@ namespace Barotrauma
         private Vector2 GetStandPosition()
         {
             Vector2 standPos = leak.Position;
-            var hull = leak.linkedTo[0];
+            var hull = leak.FlowTargetHull;
 
             if (hull == null) return standPos;
             

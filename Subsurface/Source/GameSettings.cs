@@ -56,7 +56,12 @@ namespace Barotrauma
             private set
             {
                 unsavedSettings = value;
-                if (applyButton != null) applyButton.Selected = unsavedSettings;
+                if (applyButton != null)
+                {
+                    //applyButton.Selected = unsavedSettings;
+                    applyButton.Enabled = unsavedSettings;
+                    applyButton.Text = unsavedSettings ? "Apply*" : "Apply";
+                }
             }
         }
 
@@ -424,7 +429,9 @@ namespace Barotrauma
         private bool ApplyClicked(GUIButton button, object userData)
         {
             Save("config.xml");
-            
+
+            settingsFrame.Flash(Color.Green);
+
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
                 new GUIMessageBox("Restart required", "You need to restart the game for the resolution changes to take effect.");

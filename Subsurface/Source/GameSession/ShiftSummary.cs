@@ -86,20 +86,23 @@ namespace Barotrauma
                     character.Info.Job!=null ? (character.Info.Name + '\n'+"("+character.Info.Job.Name+")") : character.Info.Name, null);
 
                 string statusText;
+                Color statusColor;
 
                 var casualty = casualties.Find(c => c.character == character.Info);
 
                 if (casualty != null)
                 {
                     statusText = InfoTextManager.GetInfoText("CauseOfDeath." + casualty.causeOfDeath.ToString());
+                    statusColor = Color.DarkRed;
                 }
                 else
                 {
                     statusText = (character.Health / character.MaxHealth > 0.8f) ? "OK" : "Injured";
+                    statusColor = Color.DarkGreen;
                 }
                 
                 new GUITextBlock(new Rectangle(0,0,0,20), statusText, 
-                    GUI.Style, Alignment.BottomLeft, Alignment.TopCenter, characterFrame, true, GUI.SmallFont).Color = Color.Black*0.7f;
+                    GUI.Style, Alignment.BottomLeft, Alignment.TopCenter, characterFrame, true, GUI.SmallFont).Color = statusColor*0.7f;
                 
                 
                 x += characterFrame.Rect.Width + 10;

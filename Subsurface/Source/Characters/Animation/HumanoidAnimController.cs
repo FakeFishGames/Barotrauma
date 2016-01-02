@@ -243,45 +243,33 @@ namespace Barotrauma
             movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
             movement.Y = 0.0f;
 
-            bool legsUp = false;
             for (int i = 0; i < 2; i++)
             {
-                Limb leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);// : leftLeg;
+                Limb leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);// : leftLeg;
 
                 float shortestAngle = leg.Rotation - torso.Rotation;
 
-                if (Math.Abs(shortestAngle)<2.4f) continue;
+                if (Math.Abs(shortestAngle) < 2.5f) continue;
 
-                leg.body.ApplyTorque(-shortestAngle*10.0f);
+                if (Math.Abs(shortestAngle) > 5.0f)
+                {
+                    TargetDir = TargetDir == Direction.Right ? Direction.Left : Direction.Right;
+                }
+                else
+                {
 
-                leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);
-                leg.body.ApplyTorque(-shortestAngle * 5.0f);
-                
-            //    float torsoRot = MathHelper.WrapAngle(torso.Rotation);
-            //    torsoRot = MathHelper.ToDegrees(torsoRot);
+                    leg.body.ApplyTorque(shortestAngle * 10.0f);
 
-                //float torque = Math.Sign(torso.SimPosition.X - leg.SimPosition.X) * leg.Mass * 10.0f;
-                //leg.body.ApplyTorque(torque);
-
-                
-                //leg.body.ApplyTorque(torque);
-   //             if (Math.Sign(Dir)==Math.Sign(torsoRot))
-   //             {
-   //leg.body.ApplyTorque(-leg.Mass * 100.0f);
-   //             }
-   //             else
-   //             {
-   //                 leg.body.ApplyTorque(leg.Mass * 100.0f);
-   //             }
-             
-                //legsUp = true;
+                    leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
+                    leg.body.ApplyTorque(-shortestAngle * 10.0f);
+                }
             }
 
-            if (legsUp || LowestLimb == null) return;
+            if (LowestLimb == null) return;
 
             if (!onGround || (LowestLimb.SimPosition.Y - floorY > 0.5f && stairs == null)) return;
 
-            getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.1f);
+            getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.5f);
 
             if (stairs != null)
             {

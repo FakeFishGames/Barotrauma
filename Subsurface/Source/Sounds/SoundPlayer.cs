@@ -55,7 +55,7 @@ namespace Barotrauma
 
         public static float MusicVolume = 1.0f;
 
-        private const float MusicLerpSpeed = 0.01f;
+        private const float MusicLerpSpeed = 0.1f;
 
         private static Sound[] waterAmbiences = new Sound[2];
         private static int[] waterAmbienceIndexes = new int[2];
@@ -70,9 +70,17 @@ namespace Barotrauma
         private static Sound startDrone;
 
         public static bool Initialized;
+
+        public static string OverrideMusicType
+        {
+            get;
+            set;
+        }
         
         public static IEnumerable<object> Init()
         {
+            OverrideMusicType = null;
+
             startDrone = Sound.Load("Content/Sounds/startDrone.ogg", false);
             startDrone.Play();
 
@@ -226,9 +234,13 @@ namespace Barotrauma
                     }
                 }
             }
-
+            
             List<BackgroundMusic> suitableMusic = null;
-            if (Submarine.Loaded!=null && Submarine.Loaded.Position.Y<SubmarineBody.DamageDepth+10000.0f)
+            if (OverrideMusicType != null)
+            {
+                suitableMusic = musicClips.Where(x => x != null && x.type == OverrideMusicType).ToList();
+            }
+            else if (Submarine.Loaded!=null && Submarine.Loaded.Position.Y<SubmarineBody.DamageDepth+10000.0f)
             {
                 suitableMusic = musicClips.Where(x => x != null && x.type == "deep").ToList();
             }
