@@ -95,7 +95,6 @@ namespace Barotrauma
                 itemList.OnSelected = SelectPrefab;
                 itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
-
                 foreach (MapEntityPrefab ep in MapEntityPrefab.list)
                 {
                     if (ep.Category != category) continue;
@@ -130,6 +129,9 @@ namespace Barotrauma
                         img.Color = ep.SpriteColor;
                     }
                 }
+
+                itemList.children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
+
             }
 
 

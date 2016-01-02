@@ -97,7 +97,7 @@ namespace Barotrauma.Items.Components
                 item.NewComponentEvent(this, true, false);
             }
 
-            int radius = GuiFrame.Rect.Height / 2 - 10;
+            int radius = GuiFrame.Rect.Height / 2 - 30;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
 
             //voltage = 0.0f;

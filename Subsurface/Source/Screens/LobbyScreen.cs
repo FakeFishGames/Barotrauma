@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -20,7 +21,7 @@ namespace Barotrauma
         private GUIListBox characterList, hireList;
 
         private GUIListBox selectedItemList;
-        private GUIListBox[] storeItemLists;
+        private GUIListBox storeItemList;
 
         private SinglePlayerMode gameMode;
 
@@ -139,23 +140,23 @@ namespace Barotrauma
             buyButton = new GUIButton(new Rectangle(sellColumnWidth + 20, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             buyButton.OnClicked = BuyItems;
 
-            
-            storeItemLists = new GUIListBox[Enum.GetValues(typeof(MapEntityCategory)).Length];
-            
+            int x = selectedItemList.Rect.Width + 40;
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-                storeItemLists[(int)category] = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
-                storeItemLists[(int)category].OnSelected = SelectItem;
-                storeItemLists[(int)category].UserData = category;
-                bottomPanel[(int)PanelTab.Store].RemoveChild(storeItemLists[(int)category]);
+                var items = MapEntityPrefab.list.FindAll(ep => ep.Price>0.0f && ep.Category == category);
+                if (!items.Any()) continue;
 
-                foreach (MapEntityPrefab ep in MapEntityPrefab.list)
-                {
-                    if (ep.Price == 0 || ep.Category != category) continue;
+                var categoryButton = new GUIButton(new Rectangle(x, 0, 100, 20), category.ToString(), GUI.Style, bottomPanel[(int)PanelTab.Store]);
+                categoryButton.UserData = category;
+                categoryButton.OnClicked = SelectItemCategory;
+                x += 110;
 
-                    CreateItemFrame(ep, storeItemLists[(int)category]);
-                }
+                storeItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
+                storeItemList.OnSelected = SelectItem;
+                storeItemList.UserData = category;
             }
+
+            SelectItemCategory(null, MapEntityCategory.Item);
             
         }
 
@@ -427,10 +428,22 @@ namespace Barotrauma
         {
 
             if (!(selection is MapEntityCategory)) return false;
-            var existingList = bottomPanel[(int)PanelTab.Store].children.Find(c => c.UserData is MapEntityCategory);
-            if (existingList != null) bottomPanel[(int)PanelTab.Store].RemoveChild(existingList);
+            //var existingList = bottomPanel[(int)PanelTab.Store].children.Find(c => c is GUIListBox && c.UserData is MapEntityCategory);
+            //if (existingList != null) bottomPanel[(int)PanelTab.Store].RemoveChild(existingList);
 
-            bottomPanel[(int)PanelTab.Store].AddChild(storeItemLists[(int)selection]);
+            //bottomPanel[(int)PanelTab.Store].AddChild(storeItemLists[(int)selection]);
+
+            storeItemList.ClearChildren();
+
+            MapEntityCategory category = (MapEntityCategory)selection;
+            var items = MapEntityPrefab.list.FindAll(ep => ep.Price > 0.0f && ep.Category == category);
+
+            foreach (MapEntityPrefab ep in items)
+            {
+                CreateItemFrame(ep, storeItemList);
+            }
+
+            storeItemList.children.Sort((x, y) => (x.UserData as MapEntityPrefab).Name.CompareTo((y.UserData as MapEntityPrefab).Name));
 
             return true;
         }

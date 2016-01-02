@@ -166,12 +166,15 @@ namespace Barotrauma
         
         public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor=null, int backgroundPadding=0, SpriteFont font = null)
         {
-            if (font == null) font = GUI.Font;
-            sb.DrawString(font, text, pos, color);
-            if (backgroundColor == null) return;
 
-            Vector2 textSize = font.MeasureString(text);
-            DrawRectangle(sb, pos - Vector2.One*backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true);
+            if (font == null) font = GUI.Font;
+            if (backgroundColor != null)
+            {
+                Vector2 textSize = font.MeasureString(text);
+                DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true);
+            }
+
+            sb.DrawString(font, text, pos, color);
         }
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f)

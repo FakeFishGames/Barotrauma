@@ -1084,12 +1084,12 @@ namespace Barotrauma
             for (int i = 0; i < 10; i++)
             {
                 Particle p = GameMain.ParticleManager.CreateParticle("waterblood",
-                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(50.0f),
-                    Vector2.Zero);
+                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(5.0f),
+                    Rand.Vector(10.0f));
                 if (p!=null) p.Size *= 2.0f;
 
                 GameMain.ParticleManager.CreateParticle("bubbles",
-                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(50.0f),
+                    ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(5.0f),
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f,50f)));
             }
 

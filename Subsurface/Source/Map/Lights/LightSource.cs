@@ -68,7 +68,7 @@ namespace Barotrauma.Lights
             {
 
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
-                if (Math.Abs(prevHullUpdateRange - range)>5.0f) return;
+                if (Math.Abs(prevHullUpdateRange - range)<5.0f) return;
                 
                 UpdateHullsInRange();
                 prevHullUpdateRange = range;
