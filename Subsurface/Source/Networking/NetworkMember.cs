@@ -195,7 +195,7 @@ namespace Barotrauma.Networking
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
 
-            GUI.PlayMessageSound();
+            GUI.PlayUISound(GUISoundType.Message);
         }
 
         public virtual void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server) { }

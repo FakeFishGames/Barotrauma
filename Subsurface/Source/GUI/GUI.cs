@@ -16,8 +16,15 @@ namespace Barotrauma
         BottomRight = (Bottom | Right), BottomLeft = (Bottom | Left), BottomCenter = (CenterX | Bottom)
     }
 
+    public enum GUISoundType
+    {
+        Message = 0,
+        Click = 1
+    }
+    
     public class GUI
     {
+
         public static GUIStyle Style;
 
         private static Texture2D t;
@@ -57,7 +64,8 @@ namespace Barotrauma
             if (loadSounds)
             {
                 sounds = new Sound[2];
-                sounds[0] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.Message] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.Click] = Sound.Load("Content/Sounds/UI/beep-shinymetal.ogg", false);
             }
 
             // create 1x1 texture for line drawing
@@ -391,12 +399,12 @@ namespace Barotrauma
             currPos.Y += messages.Count * 30;
 
             messages.Add(new GUIMessage(message, color, currPos, lifeTime));
-            if (playSound) PlayMessageSound();
+            if (playSound) PlayUISound(GUISoundType.Message);
         }
 
-        public static void PlayMessageSound()
+        public static void PlayUISound(GUISoundType soundType)
         {
-            sounds[0].Play();
+            sounds[(int)soundType].Play();
         }
 
         private static void DrawMessages(SpriteBatch spriteBatch, float deltaTime)

@@ -116,6 +116,8 @@ namespace Barotrauma
 
             endTimer = 5.0f;
 
+            isRunning = true;
+
             CrewManager.StartShift();
 
             shiftSummary = new ShiftSummary(GameMain.GameSession);
@@ -141,7 +143,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            base.Draw(spriteBatch);
+            if (!isRunning) return;
 
             CrewManager.Draw(spriteBatch);
 
@@ -166,6 +168,8 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (!isRunning) return;
+
             base.Update(deltaTime);
 
             CrewManager.Update(deltaTime);
@@ -174,16 +178,13 @@ namespace Barotrauma
 
             if (!crewDead)
             {
-                if (CrewManager.characters.Find(c => !c.IsDead) == null)
-                {
-                    crewDead = true;
-                }  
+                if (!CrewManager.characters.Any(c => !c.IsDead)) crewDead = true;                
             }
             else
             {
                 endTimer -= deltaTime;
 
-                if (endTimer <= 0.0f) End("");
+                if (endTimer <= 0.0f) EndShift(null, null);
             }  
         }
 
@@ -191,8 +192,6 @@ namespace Barotrauma
         {
 
             isRunning = false;
-
-            GameMain.GameSession.EndShift("");
 
             //if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
 
@@ -211,8 +210,6 @@ namespace Barotrauma
                 }
 
                 SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
-
-
             }
             else
             {
@@ -222,6 +219,8 @@ namespace Barotrauma
                 msgBox.Buttons[1].OnClicked = GameMain.LobbyScreen.QuitToMainMenu;
                 msgBox.Buttons[1].OnClicked += msgBox.Close;
             }
+
+            GameMain.GameSession.EndShift("");
 
             CrewManager.EndShift();
             for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
@@ -234,7 +233,11 @@ namespace Barotrauma
 
         private bool EndShift(GUIButton button, object obj)
         {
+            isRunning = false;
+
             var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam);
+
+            SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endshift" : "crewdead";
 
             CoroutineManager.StartCoroutine(EndCinematic(cinematic));
 
@@ -249,6 +252,10 @@ namespace Barotrauma
             }
 
             End("");
+
+            yield return new WaitForSeconds(18.0f);
+            
+            SoundPlayer.OverrideMusicType = null;
 
             yield return CoroutineStatus.Success;
         }

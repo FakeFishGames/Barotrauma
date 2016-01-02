@@ -203,7 +203,7 @@ namespace Barotrauma
             FireProof = ToolBox.GetAttributeBool(element, "fireproof", false);
 
             MapEntityCategory category;
-            Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Item"), out category);
+            Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), out category);
             Category = category;
 
             string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");

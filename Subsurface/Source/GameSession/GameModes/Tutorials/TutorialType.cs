@@ -73,7 +73,12 @@ namespace Barotrauma.Tutorials
         public virtual void Update(float deltaTime)
         {
 
-            if (Character.Controlled != null && Character.Controlled.IsDead)
+            if (Character.Controlled==null)
+            {
+                CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
+                infoBox = null;
+            }
+            else if (Character.Controlled.IsDead)
             {
                 Character.Controlled = null;
 
@@ -147,7 +152,7 @@ namespace Barotrauma.Tutorials
             }
 
 
-            GUI.PlayMessageSound();
+            GUI.PlayUISound(GUISoundType.Message);
 
             return infoBlock;
         }

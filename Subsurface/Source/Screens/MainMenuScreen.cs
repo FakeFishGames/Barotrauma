@@ -233,12 +233,14 @@ namespace Barotrauma
         private bool ApplySettings(GUIButton button, object obj)
         {
             GameMain.Config.Save("config.xml");
-            selectedTab = (int)obj;
+            selectedTab = 0;
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
                 new GUIMessageBox("Restart required", "You need to restart the game for the resolution changes to take effect.");
             }
+
+
 
             return true;
         }

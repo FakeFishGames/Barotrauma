@@ -55,6 +55,7 @@ namespace Barotrauma
         public string Name
         {
             get { return name; }
+            set { name = value; }
         }
 
         public static Vector2 LastPickedPosition

@@ -43,12 +43,12 @@ namespace Barotrauma
         {
             get { return selected; }
         }
-        
+
         public object SelectedData
         {
-            get 
+            get
             {
-                return (Selected == null) ? null : Selected.UserData; 
+                return (Selected == null) ? null : Selected.UserData;
             }
         }
 
@@ -87,18 +87,18 @@ namespace Barotrauma
         public bool ScrollBarEnabled
         {
             get { return scrollBarEnabled; }
-            set 
-            { 
+            set
+            {
                 if (value)
                 {
-                    if (!scrollBarEnabled && scrollBarHidden) ShowScrollBar();                    
+                    if (!scrollBarEnabled && scrollBarHidden) ShowScrollBar();
                 }
                 else
                 {
-                    if (scrollBarEnabled && !scrollBarHidden) HideScrollBar();                    
+                    if (scrollBarEnabled && !scrollBarHidden) HideScrollBar();
                 }
 
-                scrollBarEnabled = value; 
+                scrollBarEnabled = value;
             }
         }
 
@@ -114,7 +114,7 @@ namespace Barotrauma
 
         public GUIListBox(Rectangle rect, Color? color, GUIStyle style = null, GUIComponent parent = null)
             : this(rect, color, (Alignment.Left | Alignment.Top), style, parent)
-        {            
+        {
         }
 
         public GUIListBox(Rectangle rect, Color? color, Alignment alignment, GUIStyle style = null, GUIComponent parent = null, bool isHorizontal = false)
@@ -125,7 +125,7 @@ namespace Barotrauma
 
             selected = new List<GUIComponent>();
 
-            if (color!=null) this.color = (Color)color;
+            if (color != null) this.color = (Color)color;
 
             if (parent != null)
                 parent.AddChild(this);
@@ -135,7 +135,7 @@ namespace Barotrauma
             if (isHorizontal)
             {
                 scrollBar = new GUIScrollBar(
-                    new Rectangle(this.rect.X, this.rect.Bottom-20, this.rect.Width, 20), color, 1.0f, GUI.Style);
+                    new Rectangle(this.rect.X, this.rect.Bottom - 20, this.rect.Width, 20), color, 1.0f, GUI.Style);
             }
             else
             {
@@ -160,37 +160,39 @@ namespace Barotrauma
 
         public void Select(object selection)
         {
-            for (int i = 0; i < children.Count; i++ )
+            for (int i = 0; i < children.Count; i++)
             {
                 if (children[i].UserData != selection) continue;
 
                 Select(i);
 
-                if (OnSelected != null) OnSelected(Selected, Selected.UserData);
+                //if (OnSelected != null) OnSelected(Selected, Selected.UserData);
                 if (!SelectMultiple) return;
             }
         }
-        
+
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
 
             base.Update(deltaTime);
-            
+
             scrollBar.Update(deltaTime);
-            
-            if ((MouseOn==this || MouseOn==scrollBar || IsParentOf(MouseOn) )&& PlayerInput.ScrollWheelSpeed!=0)
+
+            if ((MouseOn == this || MouseOn == scrollBar || IsParentOf(MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)
             {
-                scrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed/500.0f) * BarSize;
+                scrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
             }
         }
 
         public void Select(int childIndex)
         {
-            //children[0] is the GUIFrame, ignore it
-            //childIndex += 1;
+            if (childIndex >= children.Count || childIndex < 0) return;
 
-            if (childIndex >= children.Count || childIndex<0) return;
+            bool wasSelected = true;
+            if (OnSelected != null) wasSelected = OnSelected(children[childIndex], children[childIndex].UserData);
+
+            if (!wasSelected) return;
 
             if (SelectMultiple)
             {
@@ -209,8 +211,6 @@ namespace Barotrauma
                 selected.Add(children[childIndex]);
             }
 
-            if (OnSelected != null) OnSelected(Selected, Selected.UserData);
-
         }
 
         public void Deselect()
@@ -228,8 +228,8 @@ namespace Barotrauma
                 totalSize += spacing;
             }
 
-            scrollBar.BarSize = scrollBar.IsHorizontal ? 
-                Math.Min((float)rect.Width / (float)totalSize, 1.0f) : 
+            scrollBar.BarSize = scrollBar.IsHorizontal ?
+                Math.Min((float)rect.Width / (float)totalSize, 1.0f) :
                 Math.Min((float)rect.Height / (float)totalSize, 1.0f);
 
             if (scrollBar.BarSize < 1.0f && scrollBarHidden) ShowScrollBar();
@@ -250,7 +250,7 @@ namespace Barotrauma
             //{
             //    scrollBar.BarScroll = 1.0f;
             //}
-            
+
         }
 
         public override void ClearChildren()
@@ -265,14 +265,14 @@ namespace Barotrauma
 
             if (selected.Contains(child)) selected.Remove(child);
 
-            UpdateScrollBarSize();            
+            UpdateScrollBarSize();
         }
 
         private void ShowScrollBar()
         {
             if (scrollBarHidden) Rect = new Rectangle(rect.X, rect.Y, rect.Width - scrollBar.Rect.Width, rect.Height);
             scrollBarHidden = false;
-            
+
         }
 
         private void HideScrollBar()
@@ -280,7 +280,7 @@ namespace Barotrauma
             if (!scrollBarHidden) Rect = new Rectangle(rect.X, rect.Y, rect.Width + scrollBar.Rect.Width, rect.Height);
             scrollBarHidden = true;
         }
-        
+
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
@@ -305,7 +305,7 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < children.Count; i++ )
+            for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
                 if (child == frame) continue;
@@ -320,6 +320,7 @@ namespace Barotrauma
                     y += child.Rect.Height + spacing;
                 }
 
+                child.Visible = false;
 
                 if (child.Rect.Y + child.Rect.Height < rect.Y) continue;
                 if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) break;
@@ -330,7 +331,9 @@ namespace Barotrauma
                     continue;
                 }
 
-                if (enabled && child.CanBeFocused && 
+                child.Visible = true;
+
+                if (enabled && child.CanBeFocused &&
                     (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
@@ -346,7 +349,7 @@ namespace Barotrauma
 
                     }
                 }
-                else if(selected.Contains(child))
+                else if (selected.Contains(child))
                 {
                     child.State = ComponentState.Selected;
 

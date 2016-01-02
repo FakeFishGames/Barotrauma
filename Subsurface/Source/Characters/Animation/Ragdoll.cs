@@ -590,7 +590,6 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Failed to update ragdoll limb collisioncategories", e);
                 }
-
             }
         }
 

@@ -52,8 +52,8 @@ namespace Barotrauma.Items.Components
             foreach (Hull hull in Hull.hullList)
             {
                 Rectangle hullRect = new Rectangle(
-                    miniMap.X + (int)((hull.Rect.X - Submarine.Borders.X) * size),
-                    miniMap.Y - (int)((hull.Rect.Y - Submarine.Borders.Y) * size),
+                    miniMap.X + (int)((hull.Rect.X - Submarine.HiddenSubPosition.X - Submarine.Borders.X) * size),
+                    miniMap.Y - (int)((hull.Rect.Y - Submarine.HiddenSubPosition.Y - Submarine.Borders.Y) * size),
                     (int)(hull.Rect.Width * size), 
                     (int)(hull.Rect.Height * size));
 

@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     enum MapEntityCategory
     {
-        Structure, Machine, Item, Electrical, Equipment, Material
+        Structure, Machine, Equipment, Electrical, Material, Misc
     }
 
     class MapEntityPrefab

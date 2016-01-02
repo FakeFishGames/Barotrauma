@@ -161,6 +161,8 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.LeftButtonClicked())
                 {
+                    GUI.PlayUISound(GUISoundType.Click);
+
                     if (OnClicked != null)
                     {
                         if (OnClicked(this, UserData) && CanBeSelected) state = ComponentState.Selected;

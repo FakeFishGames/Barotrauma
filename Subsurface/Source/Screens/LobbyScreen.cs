@@ -140,6 +140,9 @@ namespace Barotrauma
             buyButton = new GUIButton(new Rectangle(sellColumnWidth + 20, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             buyButton.OnClicked = BuyItems;
 
+            storeItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
+            storeItemList.OnSelected = SelectItem;
+
             int x = selectedItemList.Rect.Width + 40;
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
@@ -149,14 +152,15 @@ namespace Barotrauma
                 var categoryButton = new GUIButton(new Rectangle(x, 0, 100, 20), category.ToString(), GUI.Style, bottomPanel[(int)PanelTab.Store]);
                 categoryButton.UserData = category;
                 categoryButton.OnClicked = SelectItemCategory;
+
+                if (category==MapEntityCategory.Equipment)
+                {
+                    SelectItemCategory(categoryButton, category);
+                }
                 x += 110;
 
-                storeItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
-                storeItemList.OnSelected = SelectItem;
-                storeItemList.UserData = category;
             }
 
-            SelectItemCategory(null, MapEntityCategory.Item);
             
         }
 
@@ -183,6 +187,8 @@ namespace Barotrauma
         private void UpdateLocationTab(Location location)
         {
             topPanel.RemoveChild(topPanel.FindChild("locationtitle"));
+
+            topPanel.UserData = location;
 
             var locationTitle = new GUITextBlock(new Rectangle(0, 0, 200, 25),
                 "Location: "+location.Name, Color.Transparent, Color.White, Alignment.TopLeft, GUI.Style, topPanel);
@@ -263,7 +269,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateItemFrame(MapEntityPrefab ep, GUIListBox listBox)
+        private void CreateItemFrame(MapEntityPrefab ep, GUIListBox listBox, int width)
         {
             Color color = ((listBox.CountChildren % 2) == 0) ? Color.Transparent : Color.White * 0.1f;
 
@@ -277,20 +283,13 @@ namespace Barotrauma
             SpriteFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
             GUITextBlock textBlock = new GUITextBlock(
-                new Rectangle(40, 0, 0, 25),
+                new Rectangle(50, 0, 0, 25),
                 ep.Name,
                 Color.Transparent, Color.White,
-                Alignment.Left, Alignment.Left,
+                Alignment.Left, Alignment.CenterX | Alignment.Left,
                 null, frame);
             textBlock.Font = font;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
-
-            textBlock = new GUITextBlock(
-                new Rectangle(0, 0, 0, 25),
-                ep.Price.ToString(),
-                null, null,
-                Alignment.TopRight, GUI.Style, textBlock);
-            textBlock.Font = font;
 
             if (ep.sprite != null)
             {
@@ -298,6 +297,14 @@ namespace Barotrauma
                 img.Color = ep.SpriteColor;
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }
+
+            textBlock = new GUITextBlock(
+                new Rectangle(width - 80, 0, 80, 25),
+                ep.Price.ToString(),
+                null, null, Alignment.TopLeft,
+                Alignment.TopLeft, GUI.Style, frame);
+            textBlock.Font = font;
+
         }
 
         private bool SelectItem(GUIComponent component, object obj)
@@ -305,7 +312,7 @@ namespace Barotrauma
             MapEntityPrefab prefab = obj as MapEntityPrefab;
             if (prefab == null) return false;
 
-            CreateItemFrame(prefab, selectedItemList);
+            CreateItemFrame(prefab, selectedItemList, selectedItemList.Rect.Width);
 
             buyButton.Enabled = CrewManager.Money >= selectedItemCost;
 
@@ -388,8 +395,8 @@ namespace Barotrauma
                     bottomPanel[selectedRightPanel].Rect.Width - 310, 
                     bottomPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
             }
-     
-            if (bottomPanel[(int)selectedRightPanel].UserData as Location != GameMain.GameSession.Map.CurrentLocation)
+
+            if (topPanel.UserData as Location != GameMain.GameSession.Map.CurrentLocation)
             {
                 UpdateLocationTab(GameMain.GameSession.Map.CurrentLocation);
             }
@@ -438,13 +445,25 @@ namespace Barotrauma
             MapEntityCategory category = (MapEntityCategory)selection;
             var items = MapEntityPrefab.list.FindAll(ep => ep.Price > 0.0f && ep.Category == category);
 
+            int width = storeItemList.Rect.Width;
+
             foreach (MapEntityPrefab ep in items)
             {
-                CreateItemFrame(ep, storeItemList);
+                CreateItemFrame(ep, storeItemList, width);
             }
 
             storeItemList.children.Sort((x, y) => (x.UserData as MapEntityPrefab).Name.CompareTo((y.UserData as MapEntityPrefab).Name));
 
+            foreach (GUIComponent child in button.Parent.children)
+            {
+                var otherButton = child as GUIButton;
+                if (child.UserData is MapEntityCategory && otherButton != button)
+                {
+                    otherButton.Selected = false;
+                }
+            }
+
+            button.Selected = true;
             return true;
         }
 
