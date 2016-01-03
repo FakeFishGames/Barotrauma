@@ -240,7 +240,7 @@ namespace Barotrauma
             {
                 suitableMusic = musicClips.Where(x => x != null && x.type == OverrideMusicType).ToList();
             }
-            else if (Submarine.Loaded!=null && Submarine.Loaded.Position.Y<SubmarineBody.DamageDepth+10000.0f)
+            else if (Submarine.Loaded!=null && Submarine.Loaded.AtDamageDepth)
             {
                 suitableMusic = musicClips.Where(x => x != null && x.type == "deep").ToList();
             }
@@ -302,17 +302,8 @@ namespace Barotrauma
 
             int selectedSound = Rand.Int(sounds.Count());
 
-            int i = 0;
-            foreach (var s in sounds)
-            {
-                if (i == selectedSound)
-                {
-                    s.sound.Play(1.0f, range, position);
-                    Debug.WriteLine("playing: " + s.sound);
-                    return;
-                }
-                i++;
-            }
+            sounds[selectedSound].sound.Play(1.0f, range, position);
+            Debug.WriteLine("playing: " + sounds[selectedSound].sound);
         }
         
     }

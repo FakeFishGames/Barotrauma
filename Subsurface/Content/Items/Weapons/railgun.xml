@@ -32,12 +32,12 @@
     linkable="true"
     pickdistance="150">
 
-    <Sprite texture ="railguncontroller.png" depth="0.8"/>
+    <Sprite texture ="railguncontroller.png" depth="0.8" sourcerect="0,0,61,97"/>
     
     <Controller UserPos="-1.0" direction ="Right" canbeselected = "true">
-      <limbposition limb="Head" position="0,-124"/>
-      <limbposition limb="LeftHand" position="38,-125"/>
-      <limbposition limb="RightHand" position="38,-125"/>
+      <limbposition limb="Head" position="-5,-62"/>
+      <limbposition limb="LeftHand" position="43,-85"/>
+      <limbposition limb="RightHand" position="43,-85"/>
     </Controller>
 
     <ConnectionPanel canbeselected = "true" msg="Rewire [Screwdriver]">

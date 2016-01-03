@@ -859,7 +859,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    subList.Select(sub);
+                    subList.Select(sub, true);
                     //map.Load();
                     return true;
                 }
@@ -950,7 +950,7 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(mapName) && !GameMain.NetworkMember.Voting.AllowSubVoting) TrySelectSub(mapName, md5Hash);
 
-            if (!GameMain.NetworkMember.Voting.AllowModeVoting) modeList.Select(modeIndex);
+            if (!GameMain.NetworkMember.Voting.AllowModeVoting) modeList.Select(modeIndex, true);
 
             autoRestartBox.Selected = autoRestart;
             autoRestartTimer = restartTimer;

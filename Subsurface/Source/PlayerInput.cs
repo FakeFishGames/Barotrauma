@@ -222,6 +222,11 @@ namespace Barotrauma
 			get { return oldMouseState; }
 		}
 
+        public static bool MouseInsideWindow
+        {
+            get { return new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight).Contains(MousePosition); }
+        }
+
 		public static Vector2 MouseSpeed
 		{
 			get 

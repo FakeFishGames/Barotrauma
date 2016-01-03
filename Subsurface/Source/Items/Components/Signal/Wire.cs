@@ -21,6 +21,7 @@ namespace Barotrauma.Items.Components
 
         private Vector2 newNodePos;
 
+        private static Wire draggingWire;
         private static int? selectedNodeIndex;
                 
         public Wire(Item item, XElement element)
@@ -310,31 +311,34 @@ namespace Barotrauma.Items.Components
                 //nodes.Add(newNodePos);
             }
 
-            if (!editing) return;
+            if (!editing || !PlayerInput.MouseInsideWindow) return;
 
-            for (int i = 1; i < Nodes.Count; i++)
+            for (int i = 0; i < Nodes.Count; i++)
             {
                 Vector2 worldPos = Nodes[i];
-                if (item.Submarine != null) worldPos += item.Submarine.Position;
+                if (item.Submarine != null) worldPos += item.Submarine.Position + Submarine.HiddenSubPosition;
                 worldPos.Y = -worldPos.Y;
 
-                GUI.DrawRectangle(spriteBatch, worldPos+new Vector2(-3,-3), new Vector2(6, 6), Color.Red, true, 0.0f);
+                GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.0f);
 
                 if (GUIComponent.MouseOn != null ||
-                    Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Nodes[i]) > 10.0f)
+                    Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), new Vector2(worldPos.X, -worldPos.Y)) > 10.0f)
                 {
                     continue;
                 }
 
+
+                MapEntity.DisableSelect = true;
                 GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-10, -10), new Vector2(20, 20), Color.Red, false, 0.0f);
 
-                if (selectedNodeIndex == null && !MapEntity.SelectedAny)
+                if (selectedNodeIndex == null && draggingWire == null)// && !MapEntity.SelectedAny)
                 {
                     if (PlayerInput.LeftButtonDown() && PlayerInput.GetOldMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
                     {
                         MapEntity.SelectEntity(item);
+                        draggingWire = this;
                         selectedNodeIndex = i;
-                        MapEntity.DisableSelect = true;
+                        break;
                     }
                     else if (PlayerInput.RightButtonClicked())
                     {
@@ -346,22 +350,27 @@ namespace Barotrauma.Items.Components
 
             if (PlayerInput.LeftButtonDown())
             {
-                if (selectedNodeIndex != null && item.IsSelected)
+                if (selectedNodeIndex != null && draggingWire == this)
                 {
                     MapEntity.DisableSelect = true;
-                    Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                    //Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)-Submarine.HiddenSubPosition+Submarine.Loaded.Position;
 
-                    Vector2 nodeWorldPos = Nodes[(int)selectedNodeIndex];
+                    Vector2 nodeWorldPos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - Submarine.HiddenSubPosition - Submarine.Loaded.Position;// Nodes[(int)selectedNodeIndex];
 
-                    if (item.Submarine != null) nodeWorldPos += item.Submarine.Position;
+                    nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X/2.0f);
+                    nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y/2.0f);
 
-                    Nodes[(int)selectedNodeIndex] = RoundNode(Nodes[(int)selectedNodeIndex], Hull.FindHull(nodeWorldPos));
+                    //if (item.Submarine != null) nodeWorldPos += item.Submarine.Position;
+
+                    Nodes[(int)selectedNodeIndex] = nodeWorldPos;
+
                     MapEntity.SelectEntity(item);
                 }
             }
             else
             {
                 selectedNodeIndex = null;
+                draggingWire = null;
             }
         }
 

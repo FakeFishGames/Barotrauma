@@ -537,7 +537,7 @@ namespace Barotrauma
 
         private IEnumerable<object> ShiftLoading()
         {
-            GameMain.GameSession.StartShift(selectedLevel, false);
+            GameMain.GameSession.StartShift(selectedLevel, true);
             GameMain.GameScreen.Select();
 
             yield return CoroutineStatus.Success;

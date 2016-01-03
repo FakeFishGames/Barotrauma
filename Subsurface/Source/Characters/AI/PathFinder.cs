@@ -117,7 +117,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Pathfinding error, couldn't find a start node");
                 return new SteeringPath();
             }
-
+            
             closestDist = 0.0f;
             PathNode endNode = null;
             foreach (PathNode node in nodes)

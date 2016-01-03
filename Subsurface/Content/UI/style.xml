@@ -28,7 +28,7 @@
 
   <GUITextBlock
     textcolor="1.0, 1.0, 1.0, 1.0"
-    hovercolor="1.0, 1.0, 1.0, 0.3"
+    hovercolor="0.3, 0.3, 0.3, 0.5"
     selectedcolor="1.0, 0.6, 0.0, 0.3"
     padding="10.0, 0.0, 10.0, 0.0"/>
   

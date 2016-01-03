@@ -135,10 +135,10 @@ namespace Barotrauma
             while (Physics.accumulator >= Physics.step)
             {
                 cam.MoveCamera((float)Physics.step);
-                if (Character.Controlled != null)
+                if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
                 {
-                    cam.TargetPos = Character.Controlled.WorldPosition;
-                    Lights.LightManager.ViewPos = Character.Controlled.WorldPosition; 
+                    cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
+                    //Lights.LightManager.ViewPos = Character.Controlled.WorldPosition; 
                 }
 
                 if (Submarine.Loaded != null) Submarine.Loaded.SetPrevTransform(Submarine.Loaded.Position);
@@ -213,9 +213,11 @@ namespace Barotrauma
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
             GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
-            GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, 
-                Character.Controlled==null ? LightManager.ViewPos : Character.Controlled.CursorWorldPosition);
-
+            if (Character.Controlled!=null)
+            {
+                GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
+            }
+            
 
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
@@ -335,7 +337,7 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            GameMain.LightManager.DrawLOS(graphics, spriteBatch, cam, LightManager.ViewPos);
+            GameMain.LightManager.DrawLOS(graphics, spriteBatch, cam);
         }
     }
 }

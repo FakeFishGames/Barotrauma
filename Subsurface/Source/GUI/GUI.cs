@@ -426,9 +426,16 @@ namespace Barotrauma
                 msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime*20.0f);
 
                 spriteBatch.DrawString(Font, msg.Text,
+                    new Vector2((int)msg.Pos.X - 1, (int)msg.Pos.Y - 1),
+                    Color.Black * alpha*0.5f, 0.0f,
+                    new Vector2((int)(0.5f * msg.Size.X), (int)(0.5f * msg.Size.Y)), 1.0f, SpriteEffects.None, 0.0f);
+
+                spriteBatch.DrawString(Font, msg.Text,
                     new Vector2((int)msg.Pos.X, (int)msg.Pos.Y), 
                     msg.Color * alpha, 0.0f,
                     new Vector2((int)(0.5f * msg.Size.X), (int)(0.5f * msg.Size.Y)), 1.0f, SpriteEffects.None, 0.0f);
+
+
 
                 currPos.Y += 30.0f;
 

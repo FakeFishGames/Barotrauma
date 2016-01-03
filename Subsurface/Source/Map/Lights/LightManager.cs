@@ -7,7 +7,8 @@ namespace Barotrauma.Lights
 {
     class LightManager
     {
-        public static Vector2 ViewPos;
+        //public static Vector2 ViewPos;
+        public static Entity ViewTarget;
 
         public Color AmbientLight;
 
@@ -58,9 +59,11 @@ namespace Barotrauma.Lights
             lights.Remove(light);
         }
 
-        public void DrawLOS(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 pos)
+        public void DrawLOS(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {            
-            if (!LosEnabled) return;
+            if (!LosEnabled || ViewTarget==null) return;
+
+            Vector2 pos = ViewTarget.WorldPosition;
 
             Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
 
@@ -167,13 +170,13 @@ namespace Barotrauma.Lights
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, cam.Transform);
 
-            Vector2 diff = lookAtPosition - ViewPos;
+            Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
             diff.Y = -diff.Y;
             float rotation = MathUtils.VectorToAngle(diff);
             
             Vector2 scale = new Vector2(MathHelper.Clamp(diff.Length()/256.0f, 2.0f, 5.0f), 2.0f);
-            
-            spriteBatch.Draw(visionCircle, new Vector2(ViewPos.X, -ViewPos.Y), null, Color.White, rotation, 
+
+            spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation, 
                 new Vector2(LightSource.LightTexture.Width*0.2f, LightSource.LightTexture.Height/2), scale, SpriteEffects.None, 0.0f);
             spriteBatch.End();
 

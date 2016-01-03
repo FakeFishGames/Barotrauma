@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
                 pingState = 0.0f;
             }
 
-            voltage = 0.0f;
+            voltage -= deltaTime;
         }
 
         public override bool Use(float deltaTime, Character character = null)

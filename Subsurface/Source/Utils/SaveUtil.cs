@@ -14,18 +14,34 @@ namespace Barotrauma
 
         public delegate void ProgressDelegate(string sMessage);
 
+        public static string TempPath
+        {
+            get { return Path.Combine(SaveFolder, "temp"); }
+        }
+
         public static void SaveGame(string fileName)
         {
             fileName = Path.Combine(SaveFolder, fileName);
 
             string tempPath = Path.Combine(SaveFolder, "temp");
             
-            if (Directory.Exists(tempPath))
+            //if (Directory.Exists(tempPath))
+            //{
+            //    Directory.Delete(tempPath, true);                
+            //}
+
+            if (!Directory.Exists(tempPath))
             {
-                Directory.Delete(tempPath, true);                
+            //    DecompressToDirectory(fileName, tempPath, null);
+            //}
+            //else
+            //{
+                Directory.CreateDirectory(tempPath);
             }
 
-            Directory.CreateDirectory(tempPath);
+
+
+            //
             //Directory.CreateDirectory(Path.GetDirectoryName(filePath) + "\\temp");            
 
             try
@@ -33,10 +49,6 @@ namespace Barotrauma
                 if (Submarine.Loaded!=null)
                 {
                     Submarine.Loaded.SaveAs(Path.Combine(tempPath, "map.sub"));
-                }
-                else
-                {
-                    File.Copy(GameMain.GameSession.Submarine.FilePath, Path.Combine(tempPath, "map.sub"));
                 }
             }
             catch (Exception e)
@@ -68,12 +80,11 @@ namespace Barotrauma
         public static void LoadGame(string fileName)
         {
             string filePath = Path.Combine(SaveFolder, fileName+".save");
-            string tempPath = Path.Combine(SaveFolder, "temp");
 
-            DecompressToDirectory(filePath, tempPath, null);
+            DecompressToDirectory(filePath, TempPath, null);
 
-            Submarine selectedMap = new Submarine(Path.Combine(tempPath, "map.sub"), "");// Submarine.Load();
-            GameMain.GameSession = new GameSession(selectedMap, fileName, Path.Combine(tempPath, "gamesession.xml"));
+            Submarine selectedMap = new Submarine(Path.Combine(TempPath, "map.sub"), "");// Submarine.Load();
+            GameMain.GameSession = new GameSession(selectedMap, fileName, Path.Combine(TempPath, "gamesession.xml"));
 
             //Directory.Delete(tempPath, true);
         }
@@ -84,7 +95,14 @@ namespace Barotrauma
 
             string tempPath = Path.Combine(SaveFolder, "temp");
 
-            DecompressToDirectory(filePath, tempPath, null);
+            try
+            {
+                DecompressToDirectory(filePath, tempPath, null);
+            }
+            catch
+            {
+                return null;
+            }
 
             return ToolBox.TryLoadXml(Path.Combine(tempPath, "gamesession.xml"));            
         }

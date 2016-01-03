@@ -134,7 +134,7 @@ namespace Barotrauma.Items.Components
             var projectiles = GetLoadedProjectiles(true);
             if (projectiles.Count == 0) return false;
 
-            if (GetAvailablePower() < currPowerConsumption) return false;
+            if (GetAvailablePower() < powerConsumption) return false;
             
             var batteries = item.GetConnectedComponents<PowerContainer>();
 
