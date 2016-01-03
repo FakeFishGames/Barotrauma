@@ -26,10 +26,10 @@ namespace Barotrauma
             get { return cam; }
         }
 
-        public string GetSubName()
-        {
-            return ((Submarine.Loaded == null) ? "" : Submarine.Loaded.Name);
-        }
+        //public string GetSubName()
+        //{
+        //    return ((Submarine.Loaded == null) ? "" : Submarine.Loaded.Name);
+        //}
 
         private string GetItemCount()
         {
@@ -64,6 +64,7 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(0, 20, 0, 20), "Submarine:", GUI.Style, GUIpanel);
             nameBox = new GUITextBox(new Rectangle(0, 40, 0, 20), GUI.Style, GUIpanel);
+            nameBox.OnEnterPressed = ChangeSubName;
             //nameBlock.TextGetter = GetSubName;
 
             GUIButton button = new GUIButton(new Rectangle(0,70,0,20), "Save", GUI.Style, GUIpanel);
@@ -227,6 +228,8 @@ namespace Barotrauma
             }
 
             Submarine.SaveCurrent(nameBox.Text + ".sub");
+
+            GUI.AddMessage("Submarine saved to " + Submarine.Loaded.FilePath, Color.DarkGreen, 3.0f);
             
 
             return false;
@@ -268,6 +271,16 @@ namespace Barotrauma
                 me.IsSelected = false;
             }
             
+            return true;
+        }
+
+        private bool ChangeSubName(GUITextBox textBox, string text)
+        {
+            if (Submarine.Loaded != null) Submarine.Loaded.Name = text;
+            textBox.Deselect();
+
+            textBox.Text = text;
+
             return true;
         }
 

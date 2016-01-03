@@ -232,21 +232,19 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateSelecting(Camera cam)
         {
-            if (DisableSelect)
-            {
-                DisableSelect = false;
-                return;
-            }
-
             foreach (MapEntity e in mapEntityList)
             {
                 e.isHighlighted = false;
                 e.isSelected = false;
             }
 
-            if (GUIComponent.MouseOn != null) return;
+            if (DisableSelect)
+            {
+                DisableSelect = false;
+                return;
+            }
 
-
+            if (GUIComponent.MouseOn != null || !PlayerInput.MouseInsideWindow) return;
 
             if (MapEntityPrefab.Selected != null)
             {
@@ -261,8 +259,7 @@ namespace Barotrauma
                 selectedList.Clear();
             }
 
-            Vector2 position = new Vector2(PlayerInput.GetMouseState.X, PlayerInput.GetMouseState.Y);
-            position = cam.ScreenToWorld(position);
+            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
             MapEntity highLightedEntity = null;
 

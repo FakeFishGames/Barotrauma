@@ -81,7 +81,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (userPos != 0.0f && character.AnimController.Anim != AnimController.Animation.UsingConstruction)
+            character.AnimController.Anim = AnimController.Animation.UsingConstruction;
+
+            if (userPos != 0.0f)
             {
                 float torsoX = ConvertUnits.ToDisplayUnits(character.AnimController.RefLimb.SimPosition.X);
 
@@ -89,11 +91,15 @@ namespace Barotrauma.Items.Components
 
                 if (diff!= Vector2.Zero && diff.Length() > 10.0f)
                 {
-                    character.AnimController.Anim = AnimController.Animation.None;
+                    //character.AnimController.Anim = AnimController.Animation.None;
 
                     character.AnimController.TargetMovement = new Vector2(Math.Sign(diff.X), 0.0f);
                     character.AnimController.TargetDir = (Math.Sign(diff.X) == 1) ? Direction.Right : Direction.Left;
                     return;
+                }
+                else
+                {
+                    character.AnimController.TargetMovement = Vector2.Zero;
                 }
             }
 
@@ -103,12 +109,15 @@ namespace Barotrauma.Items.Components
 
             character.AnimController.Anim = AnimController.Animation.UsingConstruction;
             character.AnimController.ResetPullJoints();
+
             if (dir != 0) character.AnimController.TargetDir = dir;
 
             foreach (LimbPos lb in limbPositions)
             {
                 Limb limb = character.AnimController.GetLimb(lb.limbType);
                 if (limb == null) continue;
+
+                limb.Disabled = true;
 
                 FixedMouseJoint fmj = limb.pullJoint;
                 if (fmj == null) continue;
@@ -138,7 +147,7 @@ namespace Barotrauma.Items.Components
 
         public override void SecondaryUse(float deltaTime, Character character = null)
         {
-            if (this.character == null || this.character!=character || this.character.SelectedConstruction!=item)
+            if (this.character == null || this.character != character || this.character.SelectedConstruction != item)
             {
                 character = null;
                 return;
@@ -150,13 +159,13 @@ namespace Barotrauma.Items.Components
 
                 foreach (Connection c2 in c.Recipients)
                 {
-                    if (c2 == null || c2.Item==null || !c2.Item.Prefab.FocusOnSelected) continue;
+                    if (c2 == null || c2.Item == null || !c2.Item.Prefab.FocusOnSelected) continue;
 
                     Vector2 centerPos = c2.Item.WorldPosition;
 
                     if (character == Character.Controlled && cam != null)
                     {
-                        Lights.LightManager.ViewPos = centerPos;
+                        Lights.LightManager.ViewTarget = c2.Item;
                         cam.TargetPos = c2.Item.WorldPosition;
                     }
 

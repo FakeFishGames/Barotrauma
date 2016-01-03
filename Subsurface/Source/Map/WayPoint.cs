@@ -249,6 +249,56 @@ namespace Barotrauma
                 }
             }
 
+            float outSideWaypointInterval = 200.0f;
+            int outsideWaypointDist = 100;
+
+            Rectangle borders = new Rectangle(Submarine.Borders.X - outsideWaypointDist, Submarine.Borders.Y + outsideWaypointDist, 
+                Submarine.Borders.Width + outsideWaypointDist*2, Submarine.Borders.Height+outsideWaypointDist*2);
+
+            WayPoint[,] cornerWaypoint = new WayPoint[2,2];
+            for (int i = 0; i<2; i++)
+            {
+                for (float x = borders.X + outSideWaypointInterval; x < borders.Right - outSideWaypointInterval; x += outSideWaypointInterval)
+                {
+                    var wayPoint = new WayPoint(
+                        new Vector2(x, borders.Y - borders.Height * i) + Submarine.HiddenSubPosition, 
+                        SpawnType.Path, Submarine.Loaded);
+                    if (x == borders.X + outSideWaypointInterval)
+                    {
+                        cornerWaypoint[i, 0] = wayPoint;
+                    }
+                    else
+                    {
+                        wayPoint.ConnectTo(WayPoint.WayPointList[WayPointList.Count-2]);
+                    }
+                }
+
+                cornerWaypoint[i, 1] = WayPoint.WayPointList[WayPointList.Count - 1];
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                WayPoint wayPoint = null;
+                for (float y = borders.Y - borders.Height; y < borders.Y; y += outSideWaypointInterval)
+                {
+                    wayPoint = new WayPoint(
+                        new Vector2(borders.X + borders.Width * i, y) + Submarine.HiddenSubPosition, 
+                        SpawnType.Path, Submarine.Loaded);
+                    if (y == borders.Y - borders.Height)
+                    {
+                        wayPoint.ConnectTo(cornerWaypoint[1, i]);
+                    }
+                    else
+                    {
+                        wayPoint.ConnectTo(WayPoint.WayPointList[WayPointList.Count - 2]);
+
+                    }
+
+                }
+
+                wayPoint.ConnectTo(cornerWaypoint[0, i]);
+            }
+
             List<Structure> stairList = new List<Structure>();
             foreach (MapEntity me in MapEntity.mapEntityList)
             {
@@ -292,7 +342,7 @@ namespace Barotrauma
 
                 for (int dir = -1; dir <= 1; dir += 2)
                 {
-                    WayPoint closest = wayPoint.FindClosest(dir, true, 30.0f);
+                    WayPoint closest = wayPoint.FindClosest(dir, true, gap.IsRoomToRoom ? 30.0f : outSideWaypointInterval/2.0f);
                     if (closest == null) continue;
                     wayPoint.ConnectTo(closest);
                 }

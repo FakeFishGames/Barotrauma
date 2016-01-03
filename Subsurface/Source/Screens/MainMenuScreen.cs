@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
 using System.Xml.Linq;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -474,6 +475,15 @@ namespace Barotrauma
             Submarine selectedSub = mapList.SelectedData as Submarine;
             if (selectedSub == null) return false;
 
+            if (!Directory.Exists(SaveUtil.TempPath))
+            {
+                Directory.CreateDirectory(SaveUtil.TempPath);
+            }
+
+            File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, "map.sub"), true);
+
+            selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, "map.sub"), "");
+            
             GameMain.GameSession = new GameSession(selectedSub, saveNameBox.Text, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
             (GameMain.GameSession.gameMode as SinglePlayerMode).GenerateMap(seedBox.Text);
 

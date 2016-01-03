@@ -412,6 +412,12 @@ namespace Barotrauma
                     if (Info.PickedItemIDs[i] == 0) continue;
 
                     Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
+
+                    if (item==null)
+                    {
+                        int a = 1;
+                    }
+
                     System.Diagnostics.Debug.Assert(item != null);
                     if (item == null) continue;
 
@@ -891,6 +897,7 @@ namespace Barotrauma
 
             if (controlled == this)
             {
+                Lights.LightManager.ViewTarget = this;
                 CharacterHUD.Update(deltaTime,this);
                 ControlLocalPlayer(deltaTime, cam);
             }
@@ -1276,15 +1283,18 @@ namespace Barotrauma
                     
                     if (secondaryHeld)
                     {
-                        Vector2 relativeCursorPosition = cursorPosition - Position;
+                        Vector2 relativeCursorPosition = cursorPosition;
+                        relativeCursorPosition -= Lights.LightManager.ViewTarget == null ? Position : Lights.LightManager.ViewTarget.Position;
 
-                        if (relativeCursorPosition.Length()>4950.0f)
+                        if (relativeCursorPosition.Length()>500.0f)
                         {
-                            relativeCursorPosition = Vector2.Normalize(relativeCursorPosition) * 4950.0f;
+                            relativeCursorPosition = Vector2.Normalize(relativeCursorPosition) * 495.0f;
                         }
 
-                        message.WriteRangedSingle(relativeCursorPosition.X, -5000.0f, 5000.0f, 16);
-                        message.WriteRangedSingle(relativeCursorPosition.Y, -5000.0f, 5000.0f, 16);
+                        message.Write(Lights.LightManager.ViewTarget == null ? (ushort)0 : Lights.LightManager.ViewTarget.ID);
+
+                        message.WriteRangedSingle(relativeCursorPosition.X, -500.0f, 500.0f, 8);
+                        message.WriteRangedSingle(relativeCursorPosition.Y, -500.0f, 500.0f, 8);
                     }
                     else
                     {
@@ -1443,13 +1453,17 @@ namespace Barotrauma
                     float dir = 1.0f;
                     Vector2 pos = Vector2.Zero;
 
+                    ushort viewTargetId = 0;
+
                     try
                     {
                         if (secondaryKeyState)
                         {
+                            viewTargetId = message.ReadUInt16();
+
                             relativeCursorPos = new Vector2(
-                                message.ReadRangedSingle(-5000.0f, 5000.0f, 16),
-                                message.ReadRangedSingle(-5000.0f, 5000.0f, 16));
+                                message.ReadRangedSingle(-500.0f, 500.0f, 8),
+                                message.ReadRangedSingle(-500.0f, 500.0f, 8));
                         }
                         else
                         {
@@ -1481,8 +1495,12 @@ namespace Barotrauma
 
                     if (secondaryKeyState)
                     {
-                        cursorPosition = MathUtils.IsValid(relativeCursorPos) ? 
-                            ConvertUnits.ToDisplayUnits(pos)+relativeCursorPos : Vector2.Zero;
+
+                        cursorPosition = MathUtils.IsValid(relativeCursorPos) ? relativeCursorPos : Vector2.Zero;
+                        Entity viewTarget = viewTargetId == 0 ? this : Entity.FindEntityByID(viewTargetId);
+                        if (viewTarget == null) viewTarget = this;
+
+                        cursorPosition += viewTarget.Position;
                     }
                     else
                     {

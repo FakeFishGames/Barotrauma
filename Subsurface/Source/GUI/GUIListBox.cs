@@ -158,13 +158,13 @@ namespace Barotrauma
             scrollBar.BarScroll = 0.0f;
         }
 
-        public void Select(object selection)
+        public void Select(object selection, bool force = false)
         {
             for (int i = 0; i < children.Count; i++)
             {
                 if (children[i].UserData != selection) continue;
 
-                Select(i);
+                Select(i, force);
 
                 //if (OnSelected != null) OnSelected(Selected, Selected.UserData);
                 if (!SelectMultiple) return;
@@ -185,12 +185,13 @@ namespace Barotrauma
             }
         }
 
-        public void Select(int childIndex)
+        public void Select(int childIndex, bool force = false)
         {
             if (childIndex >= children.Count || childIndex < 0) return;
 
             bool wasSelected = true;
-            if (OnSelected != null) wasSelected = OnSelected(children[childIndex], children[childIndex].UserData);
+            if (OnSelected != null) wasSelected = OnSelected(children[childIndex], children[childIndex].UserData) || force;
+
 
             if (!wasSelected) return;
 
@@ -270,14 +271,14 @@ namespace Barotrauma
 
         private void ShowScrollBar()
         {
-            if (scrollBarHidden) Rect = new Rectangle(rect.X, rect.Y, rect.Width - scrollBar.Rect.Width, rect.Height);
+            if (scrollBarHidden && !scrollBar.IsHorizontal) Rect = new Rectangle(rect.X, rect.Y, rect.Width - scrollBar.Rect.Width, rect.Height);
             scrollBarHidden = false;
 
         }
 
         private void HideScrollBar()
         {
-            if (!scrollBarHidden) Rect = new Rectangle(rect.X, rect.Y, rect.Width + scrollBar.Rect.Width, rect.Height);
+            if (!scrollBarHidden && !scrollBar.IsHorizontal) Rect = new Rectangle(rect.X, rect.Y, rect.Width + scrollBar.Rect.Width, rect.Height);
             scrollBarHidden = true;
         }
 
@@ -297,7 +298,7 @@ namespace Barotrauma
                 scrollBar.Draw(spriteBatch);
                 if (scrollBar.IsHorizontal)
                 {
-                    x -= (int)((totalSize - rect.Height) * scrollBar.BarScroll);
+                    x -= (int)((totalSize - rect.Width) * scrollBar.BarScroll);
                 }
                 else
                 {
@@ -322,14 +323,30 @@ namespace Barotrauma
 
                 child.Visible = false;
 
-                if (child.Rect.Y + child.Rect.Height < rect.Y) continue;
-                if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) break;
-
-                if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
+                if (scrollBar.IsHorizontal)
                 {
-                    y = rect.Y;
-                    continue;
+                    if (child.Rect.Right < rect.X) continue;
+                    if (child.Rect.Right > rect.Right) break;
+
+                    if (child.Rect.X < rect.X && child.Rect.Right >= rect.X)
+                    {
+                        x = rect.X;
+                        continue;
+                    }
                 }
+                else
+                {
+                    if (child.Rect.Y + child.Rect.Height < rect.Y) continue;
+                    if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) break;
+
+                    if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
+                    {
+                        y = rect.Y;
+                        continue;
+                    }
+                }
+
+
 
                 child.Visible = true;
 

@@ -151,6 +151,7 @@ namespace Barotrauma
                     UpdateClimbing();
                     break;
                 case Animation.UsingConstruction:
+                    UpdateStanding();
                     break;
                 default:
                     if (inWater)

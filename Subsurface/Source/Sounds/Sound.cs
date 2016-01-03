@@ -65,7 +65,7 @@ namespace Barotrauma
 
         public int AlBufferId
         {
-             get { return oggSound.AlBufferId; }
+             get { return oggSound==null ? -1 : oggSound.AlBufferId; }
         }
 
         public static void Init()
@@ -260,7 +260,7 @@ namespace Barotrauma
             //System.Diagnostics.Debug.WriteLine("Removing sound " + filePath + " (buffer id" + AlBufferId + ")");
 
             SoundManager.ClearAlSource(AlBufferId);
-            oggSound.Dispose();
+            if (oggSound!=null) oggSound.Dispose();
         }
 
 
