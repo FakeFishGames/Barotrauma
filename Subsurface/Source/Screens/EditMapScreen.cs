@@ -143,28 +143,24 @@ namespace Barotrauma
 
             }
 
-
-            button = new GUIButton(new Rectangle(0, y+50, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
+            y+=50;
+            button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
-
-            button = new GUIButton(new Rectangle(0, y+100, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, GUIpanel);
+            
+            y+=50;
+            button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, GUIpanel);
             button.OnClicked = GenerateWaypoints;
+            
+            y+=50;
 
+            new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", GUI.Style, GUIpanel);
 
-
-            //GUItabs[0] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth/2-width/2, GameMain.GraphicsHeight/2-height/2, width, height), GUI.Style);
-            //GUItabs[0].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            //GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[0]);
-            //itemList.OnSelected = SelectPrefab;
-            //itemList.CheckSelected = MapEntityPrefab.GetSelected;
-
-            //GUItabs[1] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
-            //GUItabs[1].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            //GUIListBox structureList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[1]);
-            //structureList.OnSelected = SelectPrefab;
-            //structureList.CheckSelected = MapEntityPrefab.GetSelected;
-
+            var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), "Waypoints", Alignment.TopLeft, GUIpanel);
+            tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; };
+            tickBox = new GUITickBox(new Rectangle(0, y + 40, 20, 20), "Spawnpoints", Alignment.TopLeft, GUIpanel);
+            tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = !WayPoint.ShowSpawnPoints; return true; };
+            
         }
 
         public override void Select()

@@ -8,7 +8,16 @@ namespace Barotrauma.Lights
     class LightManager
     {
         //public static Vector2 ViewPos;
-        public static Entity ViewTarget;
+        private static Entity viewTarget;
+
+        public static Entity ViewTarget
+        {
+            get { return viewTarget; }
+            set {
+                if (viewTarget == value) return;
+                viewTarget = value; 
+            }
+        }
 
         public Color AmbientLight;
 

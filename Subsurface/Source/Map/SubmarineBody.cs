@@ -35,7 +35,7 @@ namespace Barotrauma
         
         private Body body;
 
-        private Vector2 targetPosition;
+        private Vector2? targetPosition;
                 
         float mass = 10000.0f;
 
@@ -60,7 +60,7 @@ namespace Barotrauma
 
         public Vector2 TargetPosition
         {
-            get { return targetPosition; }
+            //get { return targetPosition; }
             set
             {
                 if (!MathUtils.IsValid(value)) return;
@@ -210,25 +210,32 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {      
-            if (targetPosition != Vector2.Zero && targetPosition != Position)
+            if (targetPosition != null && targetPosition != Position)
             {
-                float dist = Vector2.Distance(targetPosition, Position);
+                Vector2 targetSimPos = ConvertUnits.ToSimUnits((Vector2)targetPosition);
 
+                float dist = Vector2.Distance((Vector2)targetPosition, Position);
                 if (dist > 1000.0f)
                 {
-                    body.SetTransform(ConvertUnits.ToSimUnits(targetPosition), 0.0f);
-                    targetPosition = Vector2.Zero;
+                    body.SetTransform(targetSimPos, 0.0f);
+                    targetPosition = null;
                 }
                 else if (dist > 50.0f)
                 {
-                    body.SetTransform((ConvertUnits.ToSimUnits(targetPosition) - body.Position) * 0.01f, 0.0f);
+                    Vector2 moveAmount = Vector2.Normalize(targetSimPos - body.Position);
+                    moveAmount *= Math.Min(dist, 100.0f);
+
+                    body.SetTransform(body.Position + moveAmount * deltaTime, 0.0f);
+                }
+                else
+                {
+                    targetPosition = null;
                 }
             }
             else
             {
-                targetPosition = Vector2.Zero;
+                targetPosition = null;
             }
-
 
             //-------------------------
 

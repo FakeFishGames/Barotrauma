@@ -499,7 +499,7 @@ namespace Barotrauma
                 
                 damagedSprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color*Math.Min(damage/50.0f,1.0f), sprite.origin,
+                    color*Math.Min(damage/50.0f,1.0f), sprite.Origin,
                     -body.DrawRotation,
                     1.0f, spriteEffect, depth);
             }

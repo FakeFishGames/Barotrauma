@@ -271,7 +271,7 @@ namespace Barotrauma.Particles
             prefab.Sprites[spriteIndex].Draw(spriteBatch, 
                 new Vector2(drawPosition.X,  -drawPosition.Y), 
                 color * alpha, 
-                prefab.Sprites[spriteIndex].origin, drawRotation,
+                prefab.Sprites[spriteIndex].Origin, drawRotation,
                 drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
 
             prevPosition = position;

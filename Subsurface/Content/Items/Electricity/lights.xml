@@ -10,7 +10,9 @@
 
     <Sprite texture="lamp.png" sourcerect="0,0,16,32"  depth="0.8"/>
 
-    <LightComponent color="1.0,1.0,1.0,1.0" range ="800.0" powerconsumption="50"/>
+    <LightComponent color="1.0,1.0,1.0,1.0" range ="800.0" powerconsumption="50">
+      <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="33,0,31,39"/>
+    </LightComponent>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>

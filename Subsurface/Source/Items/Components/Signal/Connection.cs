@@ -325,10 +325,12 @@ namespace Barotrauma.Items.Components
                     
                     if (index>-1 && wireComponent!=null && !Wires.Contains(wireComponent))
                     {
+                        bool alreadyConnected = wireComponent.IsConnectedTo(item);
+
                         wireComponent.RemoveConnection(item);
 
                         Wires[index] = wireComponent;
-                        wireComponent.Connect(this);
+                        wireComponent.Connect(this, !alreadyConnected);
                     }                    
                 }
                 //far away -> disconnect if the wire is linked to this connector

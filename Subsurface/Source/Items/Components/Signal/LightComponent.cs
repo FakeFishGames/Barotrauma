@@ -13,13 +13,11 @@ namespace Barotrauma.Items.Components
 
         private Color lightColor;
 
-        //private Sprite sprite;
+        private LightSource light;
 
-        LightSource light;
+        private float range;
 
-        float range;
-
-        float lightBrightness;
+        private float lightBrightness;
 
         private float flicker;
 
@@ -81,18 +79,17 @@ namespace Barotrauma.Items.Components
         public LightComponent(Item item, XElement element)
             : base (item, element)
         {
-            //foreach (XElement subElement in element.Elements())
-            //{
-            //    if (subElement.Name.ToString().ToLower() != "sprite") continue;
-            //    sprite = new Sprite(subElement);
-            //    break;
-            //}
-
             light = new LightSource(item.Position, 100.0f, Color.White, item.CurrentHull == null ? null : item.CurrentHull.Submarine);
 
             IsActive = true;
 
-            //lightColor = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLower() != "sprite") continue;
+                light.LightSprite = new Sprite(subElement);
+                light.LightSprite.Origin = light.LightSprite.size / 2.0f;
+                break;
+            }
         }
         
         public override void Update(float deltaTime, Camera cam)
@@ -101,9 +98,7 @@ namespace Barotrauma.Items.Components
             if (item.CurrentHull != null)
             {
                 light.Submarine = item.CurrentHull.Submarine;
-            }
-
-            
+            }            
             
             if (item.container != null)
             {
