@@ -22,7 +22,7 @@ namespace Barotrauma
         //the offset used when drawing the sprite
         Vector2 offset;
 
-        public Vector2 origin;
+        private Vector2 origin;
 
         //the size of the drawn sprite, if larger than the source,
         //the sprite is tiled to fill the target size
@@ -43,7 +43,7 @@ namespace Barotrauma
         public float Depth
         {
             get { return depth; }
-            set { depth = Math.Min(Math.Max(value, 0.0f), 1.0f); }
+            set { depth = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
         public Vector2 Origin

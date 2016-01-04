@@ -15,6 +15,8 @@ namespace Barotrauma
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
 
+        public static bool ShowWayPoints, ShowSpawnPoints;
+
         private SpawnType spawnType;
 
         //characters spawning at the waypoint will be given an ID card with these tags
@@ -84,6 +86,15 @@ namespace Barotrauma
         {
             if (!editing && !GameMain.DebugDraw) return;
 
+            if (spawnType == SpawnType.Path)
+            {
+                if (!GameMain.DebugDraw && !ShowWayPoints) return;
+            }
+            else
+            {
+                if (!GameMain.DebugDraw && !ShowSpawnPoints) return;
+            }
+
             Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
@@ -96,7 +107,7 @@ namespace Barotrauma
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(drawRect.X, -drawRect.Y),
+                    new Vector2(drawRect.X+rect.Width/2.0f, -drawRect.Y+rect.Height/2.0f),
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
                     Color.Green);
             }

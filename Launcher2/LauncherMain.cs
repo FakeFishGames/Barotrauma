@@ -367,7 +367,27 @@ namespace Launcher2
                 xml = xml.Remove(0, _byteOrderMarkUtf8.Length);
             }
 
-            return XDocument.Parse(xml);
+            try
+            {
+                return XDocument.Parse(xml);
+            }
+
+            catch
+            {
+            }
+
+            try
+            {
+                int index = xml.IndexOf('<');
+                xml = xml.Substring(index, xml.Length-index);
+
+                return XDocument.Parse(xml);
+            }
+
+            catch
+            {
+                return null;
+            }
         }
 
         private bool CheckUpdateXML(XDocument doc)

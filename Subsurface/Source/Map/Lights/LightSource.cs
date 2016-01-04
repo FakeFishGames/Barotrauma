@@ -19,6 +19,8 @@ namespace Barotrauma.Lights
 
         private Texture2D texture;
 
+        public Sprite LightSprite;
+
         public Entity Submarine;
 
         //what was the range of the light when HullsInRange were last updated
@@ -85,7 +87,7 @@ namespace Barotrauma.Lights
             this.range = range;
             this.color = color;
 
-            texture = lightTexture;
+            texture = LightTexture;
 
             GameMain.LightManager.AddLight(this);
         }
@@ -106,6 +108,11 @@ namespace Barotrauma.Lights
             Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
             float scale = range / (lightTexture.Width / 2.0f);
             spriteBatch.Draw(lightTexture, new Vector2(WorldPosition.X, -WorldPosition.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
+
+            if (LightSprite != null)
+            {
+                LightSprite.Draw(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), Color);
+            } 
         }
 
         public void Remove()

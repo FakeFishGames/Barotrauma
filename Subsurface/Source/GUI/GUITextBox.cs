@@ -70,6 +70,19 @@ namespace Barotrauma
             }
         }
 
+        public override Color HoverColor
+        {
+            get
+            {
+                return base.HoverColor;
+            }
+            set
+            {
+                base.HoverColor = value;
+                textBlock.HoverColor = value;
+            }
+        }
+
         public bool CaretEnabled;
 
         public String Text
