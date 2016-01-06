@@ -62,10 +62,26 @@ namespace Barotrauma
 
             if (target!=null) character.AIController.SelectTarget(target.AiTarget);
 
-            character.AIController.SteeringManager.SteeringSeek(
-                target != null ? target.SimPosition : targetPos);
 
-            Vector2 currTargetPos = target != null ? target.SimPosition : targetPos;
+            Vector2 currTargetPos = Vector2.Zero;
+
+            if (target == null)
+            {
+                currTargetPos = targetPos;
+            }
+            else
+            {
+                currTargetPos = target.SimPosition;
+                
+                //if character is outside the sub and target isn't, transform the position
+                if (character.Submarine == null && target.Submarine != null)
+                {
+                    currTargetPos += target.Submarine.SimPosition;
+                }
+            }
+
+            character.AIController.SteeringManager.SteeringSeek(currTargetPos);
+
             if (Vector2.Distance(currTargetPos, character.SimPosition) < 1.0f)
             {
                 character.AnimController.TargetDir = currTargetPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;

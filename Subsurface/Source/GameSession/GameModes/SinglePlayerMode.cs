@@ -235,7 +235,7 @@ namespace Barotrauma
         {
             isRunning = false;
 
-            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam);
+            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endshift" : "crewdead";
 

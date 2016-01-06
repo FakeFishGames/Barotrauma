@@ -11,9 +11,11 @@ namespace Barotrauma
 
         private Character monster;
 
+        private Vector2 radarPosition;
+
         public override Vector2 RadarPosition
         {
-            get { return monster.Position; }
+            get { return radarPosition; }
         }
 
         public MonsterMission(XElement element)
@@ -27,6 +29,7 @@ namespace Barotrauma
             Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
 
             monster = Character.Create(monsterFile, position);
+            radarPosition = monster.Position;
         }
 
         public override void Update(float deltaTime)
@@ -34,6 +37,8 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
+                    if (monster.Enabled) radarPosition = monster.Position;
+
                     if (!monster.IsDead) return;
                     ShowMessage(state);
                     state = 1;

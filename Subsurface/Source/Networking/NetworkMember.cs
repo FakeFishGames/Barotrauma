@@ -206,6 +206,8 @@ namespace Barotrauma.Networking
             {
                 inGameHUD.Update(deltaTime);
 
+                GameMain.GameSession.CrewManager.Update(deltaTime);
+
                 //if (crewFrameOpen) crewFrame.Update(deltaTime);
 
                 if (Character.Controlled == null || Character.Controlled.IsDead)
@@ -232,6 +234,8 @@ namespace Barotrauma.Networking
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (!gameStarted || Screen.Selected != GameMain.GameScreen) return;
+
+            GameMain.GameSession.CrewManager.Draw(spriteBatch);
 
             inGameHUD.Draw(spriteBatch);
         }

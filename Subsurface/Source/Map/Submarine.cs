@@ -105,6 +105,14 @@ namespace Barotrauma
             get { return subBody==null ? Vector2.Zero : subBody.Position - HiddenSubPosition; }
         }
 
+        public override Vector2 WorldPosition
+        {
+            get
+            {
+                return ConvertUnits.ToDisplayUnits(subBody.Position);
+            }
+        }
+
         public bool AtEndPosition
         {
             get 
@@ -136,7 +144,7 @@ namespace Barotrauma
                 return ConvertUnits.ToSimUnits(Position);
             }
         }
-
+        
         public Vector2 Velocity
         {
             get { return subBody==null ? Vector2.Zero : subBody.Velocity; }
@@ -660,6 +668,8 @@ namespace Barotrauma
             subBody.SetPosition(HiddenSubPosition);
             
             loaded = this;
+
+            Hull.GenerateEntityGrid();
 
             MapEntity.MapLoaded();
                

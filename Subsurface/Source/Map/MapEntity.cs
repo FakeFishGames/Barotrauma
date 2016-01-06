@@ -499,13 +499,14 @@ namespace Barotrauma
                 }
             }
 
+            for (int i = 0; i < mapEntityList.Count; i++)
+            {
+                if (mapEntityList[i].Submarine != null) mapEntityList[i].Move(Submarine.HiddenSubPosition);
+            }
+
             for (int i = 0; i<mapEntityList.Count; i++)
             {
-                MapEntity e = mapEntityList[i];
-
-                e.OnMapLoaded();
-
-                if (e.Submarine != null) e.Move(Submarine.HiddenSubPosition);
+                mapEntityList[i].OnMapLoaded();
             }
 
 

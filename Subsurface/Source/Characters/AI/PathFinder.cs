@@ -100,12 +100,22 @@ namespace Barotrauma
             PathNode startNode = null;
             foreach (PathNode node in nodes)
             {
-                float dist = System.Math.Abs(start.X-node.Position.X)+
-                    System.Math.Abs(start.Y - node.Position.Y)*10.0f +
-                    Vector2.Distance(end,node.Position)/2.0f;
+                Vector2 nodePos = node.Position;
+
+                //if node waypoint is one of submarine waypoints outside the sub, transform position
+                if (node.Waypoint != null && node.Waypoint.Submarine != null && node.Waypoint.CurrentHull == null)
+                {
+                    nodePos -= node.Waypoint.Submarine.Position;
+                }
+
+                float dist = System.Math.Abs(start.X-nodePos.X)+
+                    System.Math.Abs(start.Y - nodePos.Y)*10.0f +
+                    Vector2.Distance(end,nodePos)/2.0f;
+
                 if (dist<closestDist || startNode==null)
                 {
-                    if (insideSubmarine && Submarine.CheckVisibility(start, node.Position) != null) continue;
+                    //if searching for a path inside the sub, make sure the waypoint is visible
+                    if (insideSubmarine && node.Waypoint.CurrentHull != null && Submarine.CheckVisibility(start, node.Waypoint.SimPosition) != null) continue;
 
                     closestDist = dist;
                     startNode = node;
@@ -122,10 +132,19 @@ namespace Barotrauma
             PathNode endNode = null;
             foreach (PathNode node in nodes)
             {
-                float dist = Vector2.Distance(end, node.Position);
+                Vector2 nodePos = node.Position;
+
+                //if node waypoint is one of submarine waypoints outside the sub, transform position
+                if (node.Waypoint!=null && node.Waypoint.Submarine != null && node.Waypoint.CurrentHull==null)
+                {
+                    nodePos -= node.Waypoint.Submarine.Position;
+                }
+
+                float dist = Vector2.Distance(end, nodePos);
                 if (dist < closestDist || endNode == null)
                 {
-                    if (insideSubmarine && Submarine.CheckVisibility(end, node.Waypoint.SimPosition) != null) continue;
+                    //if searching for a path inside the sub, make sure the waypoint is visible
+                    if (insideSubmarine && node.Waypoint.CurrentHull!=null && Submarine.CheckVisibility(end, node.Waypoint.SimPosition) != null) continue;
 
                     closestDist = dist;
                     endNode = node;
