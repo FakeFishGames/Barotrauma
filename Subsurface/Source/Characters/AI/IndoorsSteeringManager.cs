@@ -72,7 +72,13 @@ namespace Barotrauma
                 if (findPathTimer > 0.0f) return Vector2.Zero;
 
                 currentTarget = target;
-                currentPath = pathFinder.FindPath(host.SimPosition, target);
+                Vector2 pos = host.SimPosition;
+                if (character!=null && character.Submarine==null)
+                {
+                    pos -= Submarine.Loaded.SimPosition;
+                }   
+
+                currentPath = pathFinder.FindPath(pos, target);
                 
                 findPathTimer = Rand.Range(1.0f,1.2f);
 
@@ -95,7 +101,13 @@ namespace Barotrauma
             float allowedDistance = character.AnimController.InWater ? 1.0f : 0.6f;
             if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
 
-            currentPath.CheckProgress(host.SimPosition, allowedDistance);
+            Vector2 pos = host.SimPosition;
+            if (character != null && character.Submarine == null)
+            {
+                pos -= Submarine.Loaded.SimPosition;
+            }   
+
+            currentPath.CheckProgress(pos, allowedDistance);
 
             if (currentPath.CurrentNode == null) return Vector2.Zero;
 
@@ -104,7 +116,7 @@ namespace Barotrauma
             //    return currentPath.PrevNode.SimPosition - host.SimPosition;
             //}
 
-            return currentPath.CurrentNode.SimPosition - host.SimPosition;
+            return currentPath.CurrentNode.SimPosition - pos;
         }
 
         private void CheckDoorsInPath()

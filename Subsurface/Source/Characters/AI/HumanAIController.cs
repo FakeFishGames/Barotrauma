@@ -12,10 +12,7 @@ namespace Barotrauma
         const float UpdateObjectiveInterval = 0.5f;
 
         private AIObjectiveManager objectiveManager;
-
-        private IndoorsSteeringManager indoorsSteeringManager;
-        private SteeringManager outdoorsSteeringManager;
-
+        
         private AITarget selectedAiTarget;
 
         private float updateObjectiveTimer;
@@ -34,8 +31,7 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
-            indoorsSteeringManager = new IndoorsSteeringManager(this, true);
-            outdoorsSteeringManager = new SteeringManager(this);
+            steeringManager = new IndoorsSteeringManager(this, true);
 
             objectiveManager = new AIObjectiveManager(c);
             objectiveManager.AddObjective(new AIObjectiveFindSafety(c));
@@ -48,7 +44,7 @@ namespace Barotrauma
         {
             Character.ClearInputs();
 
-            steeringManager = Character.AnimController.CurrentHull == null ? outdoorsSteeringManager : indoorsSteeringManager;
+            //steeringManager = Character.AnimController.CurrentHull == null ? outdoorsSteeringManager : indoorsSteeringManager;
 
             if (updateObjectiveTimer>0.0f)
             {
