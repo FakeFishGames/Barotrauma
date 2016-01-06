@@ -103,10 +103,10 @@ namespace Barotrauma
                 Vector2 nodePos = node.Position;
 
                 //if node waypoint is one of submarine waypoints outside the sub, transform position
-                if (node.Waypoint != null && node.Waypoint.Submarine != null && node.Waypoint.CurrentHull == null)
-                {
-                    nodePos -= node.Waypoint.Submarine.Position;
-                }
+                //if (node.Waypoint != null && node.Waypoint.Submarine != null && node.Waypoint.CurrentHull == null)
+                //{
+                //    nodePos -= node.Waypoint.Submarine.Position;
+                //}
 
                 float dist = System.Math.Abs(start.X-nodePos.X)+
                     System.Math.Abs(start.Y - nodePos.Y)*10.0f +
@@ -135,10 +135,10 @@ namespace Barotrauma
                 Vector2 nodePos = node.Position;
 
                 //if node waypoint is one of submarine waypoints outside the sub, transform position
-                if (node.Waypoint!=null && node.Waypoint.Submarine != null && node.Waypoint.CurrentHull==null)
-                {
-                    nodePos -= node.Waypoint.Submarine.Position;
-                }
+                //if (node.Waypoint!=null && node.Waypoint.Submarine != null && node.Waypoint.CurrentHull==null)
+                //{
+                //    nodePos -= node.Waypoint.Submarine.Position;
+                //}
 
                 float dist = Vector2.Distance(end, nodePos);
                 if (dist < closestDist || endNode == null)

@@ -76,7 +76,11 @@ namespace Barotrauma
                 //if character is outside the sub and target isn't, transform the position
                 if (character.Submarine == null && target.Submarine != null)
                 {
-                    currTargetPos += target.Submarine.SimPosition;
+                    //currTargetPos += target.Submarine.SimPosition;
+                }
+                else if (target.Submarine==null)
+                {
+                    currTargetPos -= Submarine.Loaded.SimPosition;
                 }
             }
 
