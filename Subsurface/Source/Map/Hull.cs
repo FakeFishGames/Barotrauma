@@ -170,15 +170,14 @@ namespace Barotrauma
             InsertToList();
         }
 
-        public override void OnMapLoaded()
+        public static void GenerateEntityGrid()
         {
-
-            if (entityGrid == null)
+            entityGrid = new EntityGrid(Submarine.Borders, 200.0f);
+            
+            foreach (Hull hull in hullList)
             {
-                entityGrid = new EntityGrid(Submarine.Borders, 200.0f);
+                entityGrid.InsertEntity(hull);
             }
-
-            entityGrid.InsertEntity(this);
         }
 
         public override bool Contains(Vector2 position)

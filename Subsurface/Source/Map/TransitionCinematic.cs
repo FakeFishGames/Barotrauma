@@ -15,8 +15,10 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        private float duration;
         
-        public TransitionCinematic(Submarine submarine, Camera cam)
+        public TransitionCinematic(Submarine submarine, Camera cam, float duration)
         {
             Vector2 targetPos = submarine.Position;
 
@@ -28,6 +30,8 @@ namespace Barotrauma
             {
                 targetPos = Level.Loaded.StartPosition + Vector2.UnitY * 500.0f;
             }
+
+            this.duration = duration;
 
             Running = true;
             CoroutineManager.StartCoroutine(UpdateTransitionCinematic(submarine, cam, targetPos));
@@ -46,7 +50,6 @@ namespace Barotrauma
             Level.Loaded.ShaftBodies[1].Enabled = false;
             
             cam.TargetPos = Vector2.Zero;
-            float duration = 5.0f;
             float timer = 0.0f;
 
             while (timer < duration)

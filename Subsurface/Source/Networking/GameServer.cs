@@ -288,7 +288,9 @@ namespace Barotrauma.Networking
                     {
                         if (!(c is AICharacter) || c.IsDead) continue;
 
-                        if (c.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) continue;
+                        Vector2 diff = Submarine.Loaded.WorldPosition - c.WorldPosition;
+
+                        if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
 
                         new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
                     }
@@ -318,7 +320,12 @@ namespace Barotrauma.Networking
             {
                 if (c.IsDead) continue;
 
-                if (c is AICharacter && c.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) continue;
+                if (c is AICharacter)
+                {
+                    Vector2 diff = c.WorldPosition - Submarine.Loaded.WorldPosition;
+
+                    if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
+                }
 
                 new NetworkEvent(NetworkEventType.ImportantEntityUpdate, c.ID, false);
             }
@@ -870,19 +877,20 @@ namespace Barotrauma.Networking
 
             float endPreviewLength = 10.0f;
 
-            DateTime endTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, (int)(1000.0f * endPreviewLength));
+            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, endPreviewLength);
+            
             float secondsLeft = endPreviewLength;
 
             do
             {
-                secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
+                secondsLeft -= CoroutineManager.DeltaTime;
 
-                float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
-                Vector2 offset = (new Vector2(
-                    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-                    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+                //float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
+                //Vector2 offset = (new Vector2(
+                //    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+                //    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
+                //GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
                 messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -225,7 +226,7 @@ namespace Barotrauma
                 AddCharacter(character);
             }
 
-            if (characters.Count > 0) SelectCharacter(null, characters[0]);
+            if (characters.Any()) listBox.Select(0);// SelectCharacter(null, characters[0]);
         }
 
         public void EndShift()

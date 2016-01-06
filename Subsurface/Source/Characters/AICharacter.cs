@@ -78,7 +78,7 @@ namespace Barotrauma
                     //{
                         //if (RefLimb.ignoreCollisions) continue;
 
-                        if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
+                        //if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
 
                         message.Write(AnimController.RefLimb.SimPosition.X);
                         message.Write(AnimController.RefLimb.SimPosition.Y);
@@ -94,15 +94,15 @@ namespace Barotrauma
                     aiController.FillNetworkData(message);
                     return true;
                 case NetworkEventType.EntityUpdate:
-                    if (Submarine == null)
-                    {
-                        if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
+                    //if (Submarine == null)
+                    //{
+                    //    if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
                     
-                    }
-                    else
-                    {
-                        if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;                    
-                    }
+                    //}
+                    //else
+                    //{
+                    //    if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;                    
+                    //}
 
                     
                     message.Write(AnimController.TargetDir == Direction.Right);

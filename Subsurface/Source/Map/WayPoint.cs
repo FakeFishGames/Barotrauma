@@ -80,6 +80,8 @@ namespace Barotrauma
 
             InsertToList();
             WayPointList.Add(this);
+
+            currentHull = Hull.FindHull(WorldPosition);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back=true)
@@ -472,7 +474,7 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            currentHull = Hull.FindHull(WorldPosition);
+            currentHull = Hull.FindHull(WorldPosition, currentHull);
         }
 
         public override XElement Save(XDocument doc)
