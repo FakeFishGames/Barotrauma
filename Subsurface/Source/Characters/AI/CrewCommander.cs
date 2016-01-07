@@ -187,7 +187,7 @@ namespace Barotrauma
                 new GUIImage(new Rectangle(-5, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
 
                 var humanAi = character.AIController as HumanAIController;
-                if (humanAi.CurrentOrder != null)
+                if (humanAi != null && humanAi.CurrentOrder != null)
                 {
                     CreateCharacterOrderFrame(characterButton, humanAi.CurrentOrder, humanAi.CurrentOrderOption);
                 }

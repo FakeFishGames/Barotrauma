@@ -173,17 +173,13 @@ namespace Barotrauma
 
             if (Submarine.Loaded==null)  
             {
-
-
-                if (waterAmbienceIndexes[0] > 0)
+                for (int i = 0; i < waterAmbienceIndexes.Length; i++)
                 {
-                    SoundManager.Stop(waterAmbienceIndexes[0]);
-                    SoundManager.Stop(waterAmbienceIndexes[1]);
+                    if (waterAmbienceIndexes[i] <= 0) continue;
 
-                    waterAmbienceIndexes[0] = 0;
-                    waterAmbienceIndexes[1] = 0;
-                }
-
+                    SoundManager.Stop(waterAmbienceIndexes[i]);
+                    waterAmbienceIndexes[i] = 0;
+                }  
                 return;
             }
 

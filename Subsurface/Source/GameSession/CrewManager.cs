@@ -86,7 +86,11 @@ namespace Barotrauma
                 characterInfos.Add(character.Info);
             }
 
-            commander.UpdateCharacters();
+            if (character is AICharacter)
+            {
+                commander.UpdateCharacters();
+            }
+
 
             character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
 
@@ -128,9 +132,10 @@ namespace Barotrauma
             GUIComponent characterBlock = listBox.GetChild(killedCharacter) as GUIComponent;
             if (characterBlock != null) characterBlock.Color = Color.DarkRed * 0.5f;
 
-
-            commander.UpdateCharacters();
-
+            if (killedCharacter is AICharacter)
+            {
+                commander.UpdateCharacters();
+            }
             //if (characters.Find(c => !c.IsDead)==null)
             //{
             //    Game1.GameSession.EndShift(null, null);

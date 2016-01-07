@@ -18,6 +18,9 @@ namespace Barotrauma
         private GUIListBox playerList;
 
         private GUIListBox subList, modeList, chatBox;
+
+        private GUIButton[] traitorProbabilityButtons;
+        private GUITextBlock traitorProbabilityText;
         
         private GUIListBox jobList;
 
@@ -30,8 +33,6 @@ namespace Barotrauma
         private GUIFrame playerFrame;
 
         private GUITickBox autoRestartBox;
-
-        private float camAngle;
 
         public bool IsServer;
         public string ServerName, ServerMessage;
@@ -260,6 +261,21 @@ namespace Barotrauma
             var restartText = new GUITextBlock(new Rectangle(columnX, 210, 20, 20), "", GUI.Style, infoFrame);
             restartText.TextGetter = AutoRestartText;
 
+            //traitor probability ------------------------------------------------------------------
+
+            var traitorText = new GUITextBlock(new Rectangle(columnX, 230, 20, 20), "Traitors:", GUI.Style, infoFrame);
+
+            traitorProbabilityButtons = new GUIButton[2];
+
+            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 260, 20, 20), "<", GUI.Style, infoFrame);
+            traitorProbabilityButtons[0].UserData = -1;
+
+            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX+20, 260, 150, 20), "No", null,null, Alignment.TopCenter, GUI.Style, infoFrame);
+
+            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 150, 260, 20, 20), ">", GUI.Style, infoFrame);
+            traitorProbabilityButtons[1].UserData = 1;
+
+
             //server info ------------------------------------------------------------------
             
             var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
@@ -296,6 +312,10 @@ namespace Barotrauma
             seedBox.Enabled         = GameMain.Server != null;                       
             serverMessage.Enabled   = GameMain.Server != null;
             autoRestartBox.Enabled  = GameMain.Server != null;
+
+            traitorProbabilityButtons[0].Enabled = GameMain.Server != null;
+            traitorProbabilityButtons[1].Enabled = GameMain.Server != null;
+
             ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
             
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
@@ -307,9 +327,12 @@ namespace Barotrauma
             if (IsServer && GameMain.Server != null)
             {
                 modeList.OnSelected = VotableClicked;
-                modeList.OnSelected += SelectMode;
+                modeList.OnSelected = SelectMode;
                 subList.OnSelected = VotableClicked;
-                subList.OnSelected += SelectMap;
+                subList.OnSelected = SelectMap;
+
+                traitorProbabilityButtons[0].OnClicked = ToggleTraitorsEnabled;
+                traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
 
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
                 startButton.OnClicked = GameMain.Server.StartGameClicked;
@@ -459,6 +482,29 @@ namespace Barotrauma
             GameMain.Server.UpdateNetLobby(tickBox);
 
             return true;
+        }
+
+        public bool ToggleTraitorsEnabled(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null) return false;
+
+            int dir = (int)userData;
+
+            int index = (int)GameMain.Server.TraitorsEnabled + dir;
+            if (index < 0) index = 2;
+            if (index > 2) index = 0;
+
+            SetTraitorsEnabled((YesNoMaybe)index);
+
+            return true;
+        }
+
+        private void SetTraitorsEnabled(YesNoMaybe enabled)
+        {
+
+            if (GameMain.Server != null) GameMain.Server.TraitorsEnabled = enabled;
+            (traitorProbabilityText as GUITextBlock).Text = enabled.ToString();
+
         }
 
         private bool SelectMap(GUIComponent component, object obj)
@@ -884,6 +930,8 @@ namespace Barotrauma
             msg.Write(ServerName);
             msg.Write(ServerMessage);
 
+            msg.WriteRangedInteger(0, 2, (int)GameMain.Server.TraitorsEnabled);
+
             //msg.Write(AllowSubVoting);
             //msg.Write(AllowModeVoting);
 
@@ -914,6 +962,8 @@ namespace Barotrauma
 
             float restartTimer = 0.0f;
 
+            YesNoMaybe traitorsEnabled;
+
             try
             {
                 mapName         = msg.ReadString();
@@ -921,6 +971,8 @@ namespace Barotrauma
 
                 ServerName      = msg.ReadString();
                 ServerMessage   = msg.ReadString();
+
+                traitorsEnabled = (YesNoMaybe)msg.ReadRangedInteger(0, 2);
 
                 //AllowSubVoting  = msg.ReadBoolean();
                 //AllowModeVoting = msg.ReadBoolean();
@@ -951,6 +1003,8 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(mapName) && !GameMain.NetworkMember.Voting.AllowSubVoting) TrySelectSub(mapName, md5Hash);
 
             if (!GameMain.NetworkMember.Voting.AllowModeVoting) modeList.Select(modeIndex, true);
+
+            SetTraitorsEnabled(traitorsEnabled);
 
             autoRestartBox.Selected = autoRestart;
             autoRestartTimer = restartTimer;

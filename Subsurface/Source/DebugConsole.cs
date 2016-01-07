@@ -423,6 +423,30 @@ namespace Barotrauma
 
                     GameMain.Server.ShowNetStats = !GameMain.Server.ShowNetStats;
                     break;
+                case "cleanbuild":
+                    GameMain.Config.MusicVolume = 0.5f;
+                    GameMain.Config.SoundVolume = 0.5f;
+                    GameMain.Config.Save("config.xml");
+                    DebugConsole.NewMessage("Set music and sound volume to 0.5", Color.Green);
+
+                    var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
+
+                    foreach (string saveFile in saveFiles)
+                    {
+                        System.IO.File.Delete(saveFile);
+                        DebugConsole.NewMessage("Deleted "+saveFile, Color.Green);
+                    }
+
+                    if (System.IO.File.Exists("filelist.xml"))
+                    {
+                        System.IO.File.Delete("filelist.xml");
+                    }
+
+                    if (!System.IO.File.Exists("Content/Map/TutorialSub.sub"))
+                    {
+                        DebugConsole.ThrowError("TutorialSub.sub not found!");
+                    }
+                    break;
                 default:
                     NewMessage("Command not found", Color.Red);
                     break;

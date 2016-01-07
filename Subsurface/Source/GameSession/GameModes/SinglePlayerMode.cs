@@ -18,8 +18,6 @@ namespace Barotrauma
         private GUIButton endShiftButton;
 
         public readonly CargoManager CargoManager;
-
-        private ShiftSummary shiftSummary;
         
         public Map Map;
 
@@ -119,8 +117,6 @@ namespace Barotrauma
             isRunning = true;
 
             CrewManager.StartShift();
-
-            shiftSummary = new ShiftSummary(GameMain.GameSession);
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
@@ -194,11 +190,6 @@ namespace Barotrauma
             isRunning = false;
 
             //if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
-
-            GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame();
-            GUIMessageBox.MessageBoxes.Enqueue(summaryFrame);
-            var okButton = new GUIButton(new Rectangle(0,0,100,30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
-            okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
 
             bool success = CrewManager.characters.Any(c => !c.IsDead);
             

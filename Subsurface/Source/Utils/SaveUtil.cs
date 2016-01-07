@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     public class SaveUtil
     {
-        private static string SaveFolder = "Data"+Path.DirectorySeparatorChar+"Saves";
+        public static string SaveFolder = "Data"+Path.DirectorySeparatorChar+"Saves";
 
         public delegate void ProgressDelegate(string sMessage);
 

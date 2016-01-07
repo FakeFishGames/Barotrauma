@@ -30,7 +30,8 @@ namespace Barotrauma.Items.Components
             set 
             {
                 if (expression == value) return;
-                expression = value; 
+                expression = value;
+                previousReceivedSignal = "";
 
                 try
                 {
@@ -55,12 +56,13 @@ namespace Barotrauma.Items.Components
         {
             if (string.IsNullOrWhiteSpace(expression) || regex==null) return;
 
-            if (receivedSignal!=previousReceivedSignal)
+            if (receivedSignal != previousReceivedSignal)
             {
                 try
                 {
                     Match match = regex.Match(receivedSignal);
                     previousResult =  match.Success;
+                    previousReceivedSignal = receivedSignal;
 
                 }
                 catch

@@ -18,6 +18,8 @@ namespace Barotrauma
         private Submarine submarine;
 
         public CrewManager CrewManager;
+        
+        private ShiftSummary shiftSummary;
 
         public Mission Mission
         {
@@ -52,6 +54,11 @@ namespace Barotrauma
         public string SaveFile
         {
             get { return saveFile; }
+        }
+
+        public ShiftSummary ShiftSummary
+        {
+            get { return shiftSummary; }
         }
 
         public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset = null)
@@ -119,6 +126,8 @@ namespace Barotrauma
 
             if (Mission!=null) Mission.Start(Level.Loaded);
 
+            shiftSummary = new ShiftSummary(this);
+
             if (gameMode!=null) gameMode.Start();
             
             TaskManager.StartShift(level);
@@ -138,6 +147,12 @@ namespace Barotrauma
                 //Submarine.Unload();
                 GameMain.LobbyScreen.Select();
             }
+            
+            GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame(endMessage);
+            GUIMessageBox.MessageBoxes.Enqueue(summaryFrame);
+            var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
+            okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+
             
             TaskManager.EndShift();
             //gameMode.End();
