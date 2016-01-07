@@ -37,8 +37,8 @@ namespace Barotrauma
         {
             this.gameSession = gameSession;
 
-            startLocation = gameSession.Map.CurrentLocation;
-            endLocation = gameSession.Map.SelectedLocation;
+            startLocation = gameSession.Map==null ? null : gameSession.Map.CurrentLocation;
+            endLocation = gameSession.Map==null ? null : gameSession.Map.SelectedLocation;
 
             casualties = new List<Casualty>();
 
@@ -48,7 +48,6 @@ namespace Barotrauma
             }
 
             selectedMission = gameSession.Mission;
-
         }
 
 
@@ -57,24 +56,36 @@ namespace Barotrauma
             casualties.Add(new Casualty(character.Info, causeOfDeath, ""));
         }
 
-        public GUIFrame CreateSummaryFrame()
+        public GUIFrame CreateSummaryFrame(string endMessage)
         {
+            bool singleplayer = GameMain.NetworkMember == null;
+
             bool gameOver = !gameSession.CrewManager.characters.Any(c => !c.IsDead);
             bool progress = Submarine.Loaded.AtEndPosition;
-
+            
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.8f);
-
-
+            
             int width = 760, height = 400;
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, GUI.Style, frame);
-
-
+            
             int y = 0;
-            string summaryText = InfoTextManager.GetInfoText(gameOver ? "gameover" :
-                (progress ? "progress" : "return"));
+            
+            if (singleplayer)
+            {
+                string summaryText = InfoTextManager.GetInfoText(gameOver ? "gameover" :
+                    (progress ? "progress" : "return"));
 
-            var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, GUI.Style, innerFrame, true);
-            y += infoText.Rect.Height;
+                var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, GUI.Style, innerFrame, true);
+                y += infoText.Rect.Height;
+            }
+
+
+            if (!string.IsNullOrWhiteSpace(endMessage))
+            {
+                var endText = new GUITextBlock(new Rectangle(0, y, 0, 30), endMessage, GUI.Style, innerFrame, true);
+
+                y += 30 + endText.Text.Split('\n').Length * 20;
+            }
 
             new GUITextBlock(new Rectangle(0, y, 0, 20), "Crew status:", GUI.Style, innerFrame, GUI.LargeFont);
             y += 30;
@@ -87,8 +98,11 @@ namespace Barotrauma
                 var characterFrame = new GUIFrame(new Rectangle(x, y, 170, 70), character.IsDead ? Color.DarkRed * 0.7f : Color.Transparent, GUI.Style, listBox);
                 characterFrame.OutlineColor = Color.Transparent;
                 characterFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                characterFrame.CanBeFocused = false;
+
                 character.Info.CreateCharacterFrame(characterFrame,
                     character.Info.Job != null ? (character.Info.Name + '\n' + "(" + character.Info.Job.Name + ")") : character.Info.Name, null);
+                
 
                 string statusText;
                 Color statusColor;
@@ -103,7 +117,7 @@ namespace Barotrauma
                 else
                 {
                     statusText = (character.Health / character.MaxHealth > 0.8f) ? "OK" : "Injured";
-                    statusColor = Color.DarkGreen;
+                    statusColor = (character.Health / character.MaxHealth > 0.8f) ? Color.DarkGreen : Color.DarkOrange;
                 }
 
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), statusText,
@@ -122,10 +136,12 @@ namespace Barotrauma
                 new GUITextBlock(new Rectangle(0, y, 0, 30),
                     (GameMain.GameSession.Mission.Completed) ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     GUI.Style, innerFrame);
+                y += 40;
 
-                if (GameMain.GameSession.Mission.Completed)
+                if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
-                    new GUITextBlock(new Rectangle(0, y + 40, 0, 30), "Reward: " + GameMain.GameSession.Mission.Reward, GUI.Style, innerFrame);
+                    new GUITextBlock(new Rectangle(0, y, 0, 30), "Reward: " + GameMain.GameSession.Mission.Reward, GUI.Style, innerFrame);
+                    y += 30;
                 }  
             }
 

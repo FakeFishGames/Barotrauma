@@ -1161,6 +1161,7 @@ namespace Barotrauma
 
                     GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                     GameMain.LightManager.LosEnabled = false;
+                    controlled = null;
 
                     new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);
                 }
@@ -1169,7 +1170,7 @@ namespace Barotrauma
                 {
                     new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);
                 }
-                //otherwise don't kill the Character unless received a message about the Character dying
+                //don't kill the Character unless received a message about the Character dying
                 else if (!isNetworkMessage)
                 {
                     return;

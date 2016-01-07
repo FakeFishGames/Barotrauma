@@ -43,10 +43,10 @@ namespace Barotrauma
             var mode = new GameModePreset("SandBox", typeof(GameMode), false);
             mode.Description = "A game mode with no specific objectives.";
 
-            mode = new GameModePreset("Traitor", typeof(TraitorMode), false);
-            mode.Description = "One of the players is selected as a traitor and given a secret objective. "
-                + "The rest of the crew will win if they reach the end of the level or kill the traitor "
-                + "before the objective is completed.";
+            //mode = new GameModePreset("Traitor", typeof(TraitorMode), false);
+            //mode.Description = "One of the players is selected as a traitor and given a secret objective. "
+            //    + "The rest of the crew will win if they reach the end of the level or kill the traitor "
+            //    + "before the objective is completed.";
 
             mode = new GameModePreset("Mission", typeof(MissionMode), false);
             mode.Description = "The crew must work together to complete a specific task, such as retrieving "

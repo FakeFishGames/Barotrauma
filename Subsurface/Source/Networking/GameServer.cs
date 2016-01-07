@@ -32,6 +32,8 @@ namespace Barotrauma.Networking
 
         private bool masterServerResponded;
 
+        public TraitorManager TraitorManager;
+
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
@@ -401,8 +403,6 @@ namespace Barotrauma.Networking
                             SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, inc.SenderConnection);
 
                             AddChatMessage(sender.name + " has joined the server", ChatMessageType.Server);
-
-                            UpdateNetLobby(null, null);
                         }
                     }
                     else if (inc.SenderConnection.Status == NetConnectionStatus.Disconnected)
@@ -469,6 +469,9 @@ namespace Barotrauma.Networking
                             break;
                         case (byte)PacketTypes.Vote:
                             Voting.RegisterVote(inc, ConnectedClients);
+                            break;
+                        case (byte)PacketTypes.RequestNetLobbyUpdate:
+                            UpdateNetLobby(null, null);
                             break;
                         case (byte)PacketTypes.SpectateRequest:
                             if (gameStarted && allowSpectating)
@@ -772,6 +775,9 @@ namespace Barotrauma.Networking
                 ConnectedClients[i].Character = Character.Create(
                     ConnectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
                 ConnectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
+
+                GameMain.GameSession.CrewManager.characters.Add(ConnectedClients[i].Character);
+                ConnectedClients[i].Character.OnDeath = GameMain.GameSession.ShiftSummary.AddCasualty;
             }
 
             if (characterInfo != null)
@@ -780,6 +786,9 @@ namespace Barotrauma.Networking
                 Character.Controlled = myCharacter;
 
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
+
+                GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+                myCharacter.OnDeath = GameMain.GameSession.ShiftSummary.AddCasualty;
             }
 
             var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
@@ -789,6 +798,11 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Running;
             
             UpdateCrewFrame();
+
+            if (TraitorsEnabled == YesNoMaybe.Yes || (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f)<0.5f))
+            {
+                TraitorManager = new TraitorManager(this);
+            }
 
             //give some time for the clients to load the map
             yield return new WaitForSeconds(2.0f);
@@ -838,7 +852,14 @@ namespace Barotrauma.Networking
 
         private bool EndButtonHit(GUIButton button, object obj)
         {
-            GameMain.GameSession.gameMode.End("Server admin has ended the round");
+            string endMessage = "The round has ended." + '\n';
+
+            if (TraitorManager!=null)
+            {
+                endMessage += TraitorManager.GetEndMessage();
+            }
+
+            GameMain.GameSession.gameMode.End(endMessage);
 
             if (autoRestart) AutoRestartTimer = 20.0f;
 
@@ -847,7 +868,7 @@ namespace Barotrauma.Networking
 
         public IEnumerable<object> EndGame(string endMessage)
         {
-            var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
+            //var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
             
             Character.Controlled = null;
             myCharacter = null;
@@ -893,14 +914,14 @@ namespace Barotrauma.Networking
                 //GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
-                messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
+                //messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
 
                 yield return CoroutineStatus.Running;
             } while (secondsLeft > 0.0f);
 
             Submarine.Unload();
 
-            messageBox.Close(null, null);
+            //messageBox.Close(null, null);
 
             GameMain.NetLobbyScreen.Select();
 
@@ -922,11 +943,11 @@ namespace Barotrauma.Networking
             {
                 if (GameMain.GameSession!=null && GameMain.GameSession.gameMode!=null)
                 {
-                    TraitorMode traitorMode = GameMain.GameSession.gameMode as TraitorMode;
-                    if (traitorMode!=null)
-                    {
-                        traitorMode.CharacterLeft(client.Character);
-                    }
+                    //TraitorMode traitorMode = GameMain.GameSession.gameMode as TraitorMode;
+                    //if (traitorMode!=null)
+                    //{
+                    //    traitorMode.CharacterLeft(client.Character);
+                    //}
                 }
 
                 client.Character.ClearInputs();

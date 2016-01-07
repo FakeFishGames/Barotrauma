@@ -6,9 +6,14 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-    enum SelectionMode
+    enum SelectionMode : int
     {
         Manual = 0, Random = 1, Vote = 2
+    }
+
+    enum YesNoMaybe : int
+    {
+        No = 0, Maybe = 1, Yes = 2
     }
 
     partial class GameServer : NetworkMember 
@@ -45,6 +50,12 @@ namespace Barotrauma.Networking
 
                 AutoRestartTimer = autoRestart ? 20.0f : 0.0f;
             }
+        }
+
+        public YesNoMaybe TraitorsEnabled
+        {
+            get;
+            set;
         }
 
         public SelectionMode SubSelectionMode

@@ -15,6 +15,8 @@ namespace Barotrauma.Networking
 
         PlayerJoined, PlayerLeft, KickedOut,
 
+        RequestNetLobbyUpdate,
+
         StartGame, EndGame,
 
         CharacterInfo,

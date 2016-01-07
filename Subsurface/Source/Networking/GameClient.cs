@@ -243,6 +243,10 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.AddPlayer(name);
 
                                 CanStart = true;
+
+                                NetOutgoingMessage lobbyUpdateRequest = client.CreateMessage();
+                                lobbyUpdateRequest.Write((byte)PacketTypes.RequestNetLobbyUpdate);
+                                client.SendMessage(lobbyUpdateRequest, NetDeliveryMethod.ReliableUnordered);
                             }
                             else if (packetType == (byte)PacketTypes.KickedOut)
                             {
@@ -588,14 +592,17 @@ namespace Barotrauma.Networking
 
         public IEnumerable<object> EndGame(string endMessage)
         {
-            var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
+            GameMain.GameSession.gameMode.End(endMessage);
+
+
+            //var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
 
             if (!gameStarted) yield return CoroutineStatus.Success;
             gameStarted = false;
 
             Character.Controlled = null;
+            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
-
 
             float endPreviewLength = 10.0f;
 
@@ -615,7 +622,7 @@ namespace Barotrauma.Networking
                 //GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
                 //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
-                messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
+                //messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
 
                 yield return CoroutineStatus.Running;
             } while (secondsLeft > 0.0f);
@@ -641,13 +648,13 @@ namespace Barotrauma.Networking
             //    yield return CoroutineStatus.Running;
             //} while (secondsLeft > 0.0f);
 
-            messageBox.Close(null,null);
+            //messageBox.Close(null,null);
 
             Submarine.Unload();
 
             GameMain.NetLobbyScreen.Select();
 
-            if (GameMain.GameSession!=null) GameMain.GameSession.EndShift("");
+            //if (GameMain.GameSession!=null) GameMain.GameSession.EndShift("");
 
             myCharacter = null;
             foreach (Client c in otherClients)
@@ -776,6 +783,9 @@ namespace Barotrauma.Networking
             }
 
             Character character = Character.Create(ch, position, !isMyCharacter, false);
+            GameMain.GameSession.CrewManager.characters.Add(character);
+            character.OnDeath = GameMain.GameSession.ShiftSummary.AddCasualty;
+            
 
             character.ID = ID;
             

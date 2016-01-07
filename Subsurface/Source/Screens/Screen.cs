@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
@@ -19,6 +20,8 @@ namespace Barotrauma
         {
             if (selected != null && selected!=this) selected.Deselect();
             selected = this;
+
+            GUI.ScreenOverlayColor = Color.Transparent;
         }
 
         public virtual void Update(double deltaTime)
