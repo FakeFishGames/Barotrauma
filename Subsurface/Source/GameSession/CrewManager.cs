@@ -120,7 +120,8 @@ namespace Barotrauma
 
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.C))
             {
-                commander.ToggleGUIFrame();
+                //only allow opening the command UI if there are AICharacters in the crew
+                if (commander.IsOpen || characters.Any(c => c is AICharacter)) commander.ToggleGUIFrame();                
             }
 
             if (commander.Frame != null) commander.Frame.Update(deltaTime);

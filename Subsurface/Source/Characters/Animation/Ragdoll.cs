@@ -274,8 +274,8 @@ namespace Barotrauma
             {
 
                 joint.BodyB.SetTransform(
-                    joint.BodyA.Position+joint.LocalAnchorA-joint.LocalAnchorB,
-                    (joint.LowerLimit+joint.UpperLimit)/2.0f);
+                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB)*0.1f,
+                    (joint.LowerLimit + joint.UpperLimit) / 2.0f);
             }
 
             float startDepth = 0.1f;

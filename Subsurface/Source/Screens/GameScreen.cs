@@ -134,12 +134,13 @@ namespace Barotrauma
             //Physics.accumulator = Physics.step;
             while (Physics.accumulator >= Physics.step)
             {
-                cam.MoveCamera((float)Physics.step);
                 if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
                 {
                     cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
                     //Lights.LightManager.ViewPos = Character.Controlled.WorldPosition; 
                 }
+                cam.MoveCamera((float)Physics.step);
+
 
                 if (Submarine.Loaded != null) Submarine.Loaded.SetPrevTransform(Submarine.Loaded.Position);
 
