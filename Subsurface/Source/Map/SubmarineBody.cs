@@ -215,12 +215,13 @@ namespace Barotrauma
                 //Vector2 targetSimPos = ConvertUnits.ToSimUnits((Vector2)targetPosition);
 
                 float dist = Vector2.Distance((Vector2)targetPosition, Position);
-                System.Diagnostics.Debug.WriteLine(targetPosition + " -> " + Position + "       -        " + dist);
                 if (dist > 1000.0f)
                 {
-                    body.SetTransform(ConvertUnits.ToSimUnits((Vector2)targetPosition), 0.0f);
+                    Vector2 moveAmount = ConvertUnits.ToSimUnits((Vector2)targetPosition) - body.Position;
 
-                    GameMain.GameScreen.Cam.Position = submarine.Position + Submarine.HiddenSubPosition;
+                    body.SetTransform(body.Position + moveAmount, 0.0f);
+
+                    GameMain.GameScreen.Cam.Position += ConvertUnits.ToDisplayUnits(moveAmount);
                     targetPosition = null;
                 }
                 else if (dist > 50.0f)
@@ -228,11 +229,9 @@ namespace Barotrauma
                     Vector2 moveAmount = Vector2.Normalize((Vector2)targetPosition - Position);
                     moveAmount *= ConvertUnits.ToSimUnits(Math.Min(dist, 100.0f));
 
-                    System.Diagnostics.Debug.WriteLine("moveamount: "+moveAmount);
-
                     body.SetTransform(body.Position + moveAmount * deltaTime, 0.0f);
 
-                    //GameMain.GameScreen.Cam.Position += ConvertUnits.ToDisplayUnits(moveAmount);
+                    GameMain.GameScreen.Cam.Position += ConvertUnits.ToDisplayUnits(moveAmount * deltaTime);
                 }
                 else
                 {

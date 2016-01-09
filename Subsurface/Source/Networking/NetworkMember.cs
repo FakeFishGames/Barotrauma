@@ -168,7 +168,9 @@ namespace Barotrauma.Networking
         {
             if (string.IsNullOrWhiteSpace(message)) return false;
 
-            SendChatMessage(GameMain.NetworkMember.Name + ": " + message);            
+            string senderName = gameStarted && characterInfo != null ? characterInfo.Name : name;
+
+            SendChatMessage(senderName + ": " + message);            
 
             textBox.Deselect();
 

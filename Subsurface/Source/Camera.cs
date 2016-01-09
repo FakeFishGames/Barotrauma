@@ -150,7 +150,7 @@ namespace Barotrauma
             
             Sound.CameraPos = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
         }
-        
+
         public void MoveCamera(float deltaTime)
         {            
             prevPosition = position;
