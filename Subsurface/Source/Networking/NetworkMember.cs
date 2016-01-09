@@ -104,17 +104,20 @@ namespace Barotrauma.Networking
             inGameHUD = new GUIFrame(new Rectangle(0,0,0,0), null, null);
             inGameHUD.CanBeFocused = false;
 
-            int width = 350, height = 100;
+            int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
+            int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.15f, 100, 200);
             chatBox = new GUIListBox(new Rectangle(
                 GameMain.GraphicsWidth - 20 - width,
                 GameMain.GraphicsHeight - 40 - 25 - height,
                 width, height),
                 Color.White * 0.5f, GUI.Style, inGameHUD);
+            chatBox.Padding = Vector4.Zero;
 
             chatMsgBox = new GUITextBox(
                 new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
                 Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, GUI.Style, inGameHUD);
             chatMsgBox.Font = GUI.SmallFont;
+            chatMsgBox.Padding = Vector4.Zero;
             chatMsgBox.OnEnterPressed = EnterChatMessage;
 
 

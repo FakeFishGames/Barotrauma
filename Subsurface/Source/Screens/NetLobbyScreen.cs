@@ -253,28 +253,28 @@ namespace Barotrauma
             seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
 
-            //automatic restart ------------------------------------------------------------------
-
-            autoRestartBox = new GUITickBox(new Rectangle(columnX, 190, 20, 20), "Automatic restart", Alignment.TopLeft, infoFrame);
-            autoRestartBox.OnSelected = ToggleAutoRestart;
-
-            var restartText = new GUITextBlock(new Rectangle(columnX, 210, 20, 20), "", GUI.Style, infoFrame);
-            restartText.TextGetter = AutoRestartText;
-
             //traitor probability ------------------------------------------------------------------
 
-            var traitorText = new GUITextBlock(new Rectangle(columnX, 230, 20, 20), "Traitors:", GUI.Style, infoFrame);
+            var traitorText = new GUITextBlock(new Rectangle(columnX, 180, 20, 20), "Traitors:", GUI.Style, infoFrame);
 
             traitorProbabilityButtons = new GUIButton[2];
 
-            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 260, 20, 20), "<", GUI.Style, infoFrame);
+            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 205, 20, 20), "<", GUI.Style, infoFrame);
             traitorProbabilityButtons[0].UserData = -1;
 
-            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX+20, 260, 150, 20), "No", null,null, Alignment.TopCenter, GUI.Style, infoFrame);
+            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX, 205, 120, 20), "No", null,null, Alignment.TopCenter, GUI.Style, infoFrame);
 
-            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 150, 260, 20, 20), ">", GUI.Style, infoFrame);
+            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 205, 20, 20), ">", GUI.Style, infoFrame);
             traitorProbabilityButtons[1].UserData = 1;
 
+            //automatic restart ------------------------------------------------------------------
+
+            autoRestartBox = new GUITickBox(new Rectangle(columnX, 240, 20, 20), "Automatic restart", Alignment.TopLeft, infoFrame);
+            autoRestartBox.OnSelected = ToggleAutoRestart;
+
+            var restartText = new GUITextBlock(new Rectangle(columnX, 265, 20, 20), "", GUI.Style, infoFrame);
+            restartText.Font = GUI.SmallFont;
+            restartText.TextGetter = AutoRestartText;
 
             //server info ------------------------------------------------------------------
             

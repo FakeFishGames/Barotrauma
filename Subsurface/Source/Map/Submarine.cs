@@ -109,7 +109,7 @@ namespace Barotrauma
         {
             get
             {
-                return ConvertUnits.ToDisplayUnits(subBody.Position);
+                return subBody.Position;
             }
         }
 

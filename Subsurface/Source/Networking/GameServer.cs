@@ -290,7 +290,7 @@ namespace Barotrauma.Networking
                     {
                         if (!(c is AICharacter) || c.IsDead) continue;
 
-                        Vector2 diff = Submarine.Loaded.WorldPosition - c.WorldPosition;
+                        Vector2 diff = c.WorldPosition-Submarine.Loaded.WorldPosition;
 
                         if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
 

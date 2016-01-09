@@ -352,13 +352,48 @@ namespace Barotrauma
                     FixedArray2<Vector2> points;
                     contact.GetWorldManifold(out normal2, out points);
 
-                    var pickedBody = Submarine.PickBody(
-                        points[0] - limb.LinearVelocity * ((float)Physics.step) - ConvertUnits.ToSimUnits(submarine.Position) - submarine.Velocity * ((float)Physics.step),
-                        points[0] - ConvertUnits.ToSimUnits(submarine.Position), null, Physics.CollisionWall);
+                    Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] + limb.LinearVelocity * ((float)Physics.step));
 
-                    if (pickedBody != null)
+                    Hull newHull = Hull.FindHull(targetPos, null);
+
+                    if (newHull == null) return true;
+
+                    var gaps = newHull.FindGaps();
+
+                    bool gapFound = false;
+                    foreach (Gap gap in gaps)
                     {
-                        
+                        if (gap.isHorizontal)
+                        {
+                            if (targetPos.Y < gap.WorldRect.Y && targetPos.Y > gap.WorldRect.Y - gap.WorldRect.Height)
+                            {
+                                gapFound = true;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if (targetPos.X > gap.WorldRect.X && targetPos.X < gap.WorldRect.Right)
+                            {
+                                gapFound = true;
+                                break;
+                            }
+                        }
+
+                        //if (Submarine.RectContains(gap.WorldRect, targetPos))
+                        //{
+                        //    gapFound = true;
+                        //    break;
+                        //}
+                    }
+
+                    //var pickedBody = Submarine.PickBody(
+                    //    points[0] - limb.LinearVelocity * ((float)Physics.step) - ConvertUnits.ToSimUnits(submarine.Position) - submarine.Velocity * ((float)Physics.step),
+                    //    points[0] - ConvertUnits.ToSimUnits(submarine.Position), null, Physics.CollisionWall);
+
+                    if (!gapFound)
+                    {
+
                         return true;
                     }
 
