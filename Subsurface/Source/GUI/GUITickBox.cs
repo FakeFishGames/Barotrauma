@@ -40,9 +40,8 @@ namespace Barotrauma
             box = new GUIFrame(rect, Color.DarkGray, null, this);
             box.HoverColor = Color.Gray;
             box.SelectedColor = Color.DarkGray;
-
-
-            text = new GUITextBlock(new Rectangle(rect.X + 40, rect.Y, 200, rect.Height), label, Color.Transparent, Color.White, Alignment.TopLeft, null, this);
+            
+            text = new GUITextBlock(new Rectangle(rect.X + 30, rect.Y+2, 200, rect.Height), label, Color.Transparent, Color.White, Alignment.TopLeft, null, this);
 
             this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
 

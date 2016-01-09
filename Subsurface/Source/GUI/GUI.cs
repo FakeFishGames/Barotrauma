@@ -404,7 +404,12 @@ namespace Barotrauma
 
         public static void PlayUISound(GUISoundType soundType)
         {
-            sounds[(int)soundType].Play();
+            if (sounds == null) return;
+
+            int soundIndex = (int)soundType;
+            if (soundIndex < 0 || soundIndex >= sounds.Length) return;
+
+            sounds[soundIndex].Play();
         }
 
         private static void DrawMessages(SpriteBatch spriteBatch, float deltaTime)

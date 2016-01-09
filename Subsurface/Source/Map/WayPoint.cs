@@ -297,6 +297,7 @@ namespace Barotrauma
                     wayPoint = new WayPoint(
                         new Vector2(borders.X + borders.Width * i, y) + Submarine.HiddenSubPosition, 
                         SpawnType.Path, Submarine.Loaded);
+
                     if (y == borders.Y - borders.Height)
                     {
                         wayPoint.ConnectTo(cornerWaypoint[1, i]);
@@ -304,9 +305,7 @@ namespace Barotrauma
                     else
                     {
                         wayPoint.ConnectTo(WayPoint.WayPointList[WayPointList.Count - 2]);
-
                     }
-
                 }
 
                 wayPoint.ConnectTo(cornerWaypoint[0, i]);
@@ -344,6 +343,30 @@ namespace Barotrauma
                 }
 
                 stairPoints[0].ConnectTo(stairPoints[1]);                
+            }
+
+            foreach (Item item in Item.ItemList)
+            {
+                var ladders = item.GetComponent<Items.Components.Ladder>();
+                if (ladders == null) continue;
+
+                WayPoint[] ladderPoints = new WayPoint[2];
+
+                ladderPoints[0] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height + heightFromFloor), SpawnType.Path, Submarine.Loaded);
+
+                ladderPoints[1] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - heightFromFloor), SpawnType.Path, Submarine.Loaded);
+
+                for (int i = 0; i < 2; i++)
+                {
+                    for (int dir = -1; dir <= 1; dir += 2)
+                    {
+                        WayPoint closest = ladderPoints[i].FindClosest(dir, true, 30.0f);
+                        if (closest == null) continue;
+                        ladderPoints[i].ConnectTo(closest);
+                    }
+                }
+
+                ladderPoints[0].ConnectTo(ladderPoints[1]);
             }
             
             foreach (Gap gap in Gap.GapList)

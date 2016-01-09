@@ -555,11 +555,8 @@ namespace Barotrauma.Networking
             //int gameModeIndex = inc.ReadInt32();
 
             GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode);
-
-            yield return CoroutineStatus.Running;
-
             GameMain.GameSession.StartShift(levelSeed);
-
+            
             yield return CoroutineStatus.Running;
 
             //myCharacter = ReadCharacterData(inc);
