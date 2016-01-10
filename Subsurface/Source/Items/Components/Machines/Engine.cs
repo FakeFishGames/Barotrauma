@@ -12,13 +12,11 @@ namespace Barotrauma.Items.Components
     class Engine : Powered
     {
 
-        float force;
+        private float force;
 
-        float targetForce;
+        private float targetForce;
 
-        float maxForce;
-
-        float powerPerForce;
+        private float maxForce;
 
         //[Editable, HasDefaultValue(1.0f, true)]
         //public float PowerPerForce

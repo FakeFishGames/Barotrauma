@@ -95,7 +95,7 @@ namespace Barotrauma.Networking
             {
                 IPEndPoint = new System.Net.IPEndPoint(NetUtility.Resolve(serverIP), Port);
             }
-            catch (Exception e)
+            catch
             {
                 new GUIMessageBox("Could not connect to server", "Failed to resolve address ''"+serverIP+":"+Port+"''. Please make sure you have entered a valid IP address.");
                 return;
@@ -518,6 +518,12 @@ namespace Barotrauma.Networking
                         break;
                     case  (byte)PacketTypes.VoteStatus:
                         Voting.ReadData(inc);
+                        break;
+                    case (byte)PacketTypes.NewItem:
+                        Item.Spawner.ReadNetworkData(inc);
+                        break;
+                    case (byte)PacketTypes.RemoveItem:
+                        Item.Remover.ReadNetworkData(inc);
                         break;
                 }                
             }

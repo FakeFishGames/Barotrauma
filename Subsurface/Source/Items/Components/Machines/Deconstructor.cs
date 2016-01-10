@@ -17,13 +17,15 @@ namespace Barotrauma.Items.Components
 
         ItemContainer container;
 
+        private float lastNetworkUpdate;
+
         public Deconstructor(Item item, XElement element) 
             : base(item, element)
         {
             progressBar = new GUIProgressBar(new Rectangle(0,0,200,20), Color.Green, 0.0f, Alignment.BottomCenter, GuiFrame);
 
             activateButton = new GUIButton(new Rectangle(0, 0, 200, 20), "Deconstruct", Alignment.TopCenter, GUI.Style, GuiFrame);
-            activateButton.OnClicked = Activate;
+            activateButton.OnClicked = ToggleActive;
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -73,19 +75,31 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            GuiFrame.Update((float)Physics.step);
             GuiFrame.Draw(spriteBatch);
         }
 
-        private bool Activate(GUIButton button, object obj)
+        private bool ToggleActive(GUIButton button, object obj)
+        {
+            SetActive(!IsActive);
+
+            item.NewComponentEvent(this, true, true);
+
+            return true;
+        }
+
+        private void SetActive(bool active)
         {
             container = item.GetComponent<ItemContainer>();
-            if (container==null)
+            if (container == null)
             {
                 DebugConsole.ThrowError("Error in Deconstructor.Activate: Deconstructors must have two ItemContainer components");
-                return false;
+                return;
             }
 
-            if (IsActive)
+            IsActive = active;
+
+            if (!IsActive)
             {
                 progressBar.BarSize = 0.0f;
                 progressTimer = 0.0f;
@@ -94,16 +108,38 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (!container.Inventory.Items.Any(i => i != null)) return false;
+                if (!container.Inventory.Items.Any(i => i != null)) return;
 
                 activateButton.Text = "Cancel";
             }
 
-            IsActive = !IsActive;
-
             container.Inventory.Locked = IsActive;
             
+        }
+
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        {
+
+            var containers = item.GetComponents<ItemContainer>();
+            containers[0].Inventory.FillNetworkData(type, message, null);
+            containers[1].Inventory.FillNetworkData(type, message, null);
+
+            message.Write(IsActive);
+
             return true;
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
+        {
+            if (sendingTime < lastNetworkUpdate) return;
+
+            var containers = item.GetComponents<ItemContainer>();
+            containers[0].Inventory.ReadNetworkData(type, message, sendingTime);
+            containers[1].Inventory.ReadNetworkData(type, message, sendingTime);
+
+            SetActive(message.ReadBoolean());
+
+            lastNetworkUpdate = sendingTime;
         }
     }
 }

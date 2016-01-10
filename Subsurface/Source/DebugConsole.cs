@@ -128,33 +128,6 @@ namespace Barotrauma
         {
             if (!isOpen) return;
 
-            int margin = 5;
-
-            //GUI.DrawRectangle(spriteBatch,
-            //    new Vector2(x, y),
-            //    new Vector2(width, height),
-            //    new Color(0.4f, 0.4f, 0.4f, 0.6f), true);
-
-            //GUI.DrawRectangle(spriteBatch,
-            //    new Vector2(x + margin, y + margin),
-            //    new Vector2(width - margin * 2, height - margin * 2),
-            //    new Color(0.0f, 0.0f, 0.0f, 0.6f), true);
-
-            //remove messages that won't fit on the screen
-            //while (messages.Count() * 20 > height - 70)
-            //{
-            //    messages.RemoveAt(0);
-            //}
-
-            //Vector2 messagePos = new Vector2(x + margin * 2, y + height - 70 - messages.Count()*20);
-            //foreach (ColoredText message in messages)
-            //{
-            //    spriteBatch.DrawString(GUI.Font, message.Text, messagePos, message.Color); 
-            //    messagePos.Y += 20;
-            //}
-
-            //textBox.Draw(spriteBatch);
-
             frame.Draw(spriteBatch);
         }
 

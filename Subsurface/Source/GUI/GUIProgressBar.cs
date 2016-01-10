@@ -18,6 +18,7 @@ namespace Barotrauma
         public bool IsHorizontal
         {
             get { return isHorizontal; }
+            set { isHorizontal = value; }
         }
 
         public float BarSize

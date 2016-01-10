@@ -38,8 +38,8 @@
 			<output name="power_in"/>
 		</ConnectionPanel>
 
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.2, 0.7" slotsperrow="1"/>
-		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.8, 0.7" slotsperrow="1"/>
+		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
+		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
 	</Item>
 
   <Item

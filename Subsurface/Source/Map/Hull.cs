@@ -134,6 +134,12 @@ namespace Barotrauma
             get { return fireSources; }
         }
 
+        public Hull(Rectangle rectangle)
+            : this (rectangle, Submarine.Loaded)
+        {
+
+        }
+
         public Hull(Rectangle rectangle, Submarine submarine)
             : base (submarine)
         {

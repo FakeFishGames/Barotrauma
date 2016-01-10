@@ -691,6 +691,9 @@ namespace Barotrauma
                     if (triangles[i][0].Y == triangles[i][1].Y && triangles[i][0].Y == triangles[i][2].Y) continue;
                     if (triangles[i][0].X == triangles[i][1].X && triangles[i][0].X == triangles[i][2].X) continue;
 
+                    if (Vector2.DistanceSquared(triangles[i][0], triangles[i][1]) < 0.1f) continue;
+                    if (Vector2.DistanceSquared(triangles[i][1], triangles[i][2]) < 0.1f) continue;
+
                     Vertices bodyVertices = new Vertices(triangles[i]);
                     FixtureFactory.AttachPolygon(bodyVertices, 5.0f, edgeBody);
                 }

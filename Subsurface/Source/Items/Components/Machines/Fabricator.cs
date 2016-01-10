@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
         public readonly List<ItemPrefab> RequiredItems;
 
         public readonly float RequiredTime;
-        
+
         //ListOrSomething requiredLevels
 
         public FabricableItem(XElement element)
@@ -45,14 +45,19 @@ namespace Barotrauma.Items.Components
 
     class Fabricator : ItemComponent
     {
-        List<FabricableItem> fabricableItems;
+        private List<FabricableItem> fabricableItems;
 
-        GUIListBox itemList;
+        private GUIListBox itemList;
 
-        GUIFrame selectedItemFrame;
+        private GUIFrame selectedItemFrame;
 
-        FabricableItem fabricatedItem;
-        float timeUntilReady;
+        GUIProgressBar progressBar;
+        GUIButton activateButton;
+
+        private FabricableItem fabricatedItem;
+        private float timeUntilReady;
+
+        private float lastNetworkUpdate;
 
         public Fabricator(Item item, XElement element) 
             : base(item, element)
@@ -96,9 +101,12 @@ namespace Barotrauma.Items.Components
             if (selectedItemFrame != null) GuiFrame.RemoveChild(selectedItemFrame);
 
             //int width = 200, height = 150;
-            selectedItemFrame = new GUIFrame(new Rectangle(0,0,(int)(GuiFrame.Rect.Width*0.4f),200), Color.Black*0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
+            selectedItemFrame = new GUIFrame(new Rectangle(0,0,(int)(GuiFrame.Rect.Width*0.4f),250), Color.Black*0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
 
             selectedItemFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+
+            progressBar = new GUIProgressBar(new Rectangle(0, 0, 0, 20), Color.Green, GUI.Style, 0.0f, Alignment.BottomCenter, selectedItemFrame);
+            progressBar.IsHorizontal = true;
 
             if (targetItem.TargetItem.sprite != null)
             {
@@ -119,7 +127,7 @@ namespace Barotrauma.Items.Components
                 {
                     text += "   - " + ip.Name + "\n";
                 }
-                text += "Required time: "+targetItem.RequiredTime+" s";
+                text += "Required time: " + targetItem.RequiredTime + " s";
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 50, 0, 25),
@@ -129,11 +137,10 @@ namespace Barotrauma.Items.Components
                     Alignment.TopLeft, null,
                     selectedItemFrame);
 
-                GUIButton button = new GUIButton(new Rectangle(0,0,100,20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, GUI.Style, selectedItemFrame);
-                button.OnClicked = StartFabricating;
-                button.UserData = targetItem;
-
-
+                activateButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, GUI.Style, selectedItemFrame);
+                activateButton.OnClicked = StartButtonClicked;
+                activateButton.UserData = targetItem;
+                activateButton.Enabled = false;
             }
 
             return true;
@@ -144,24 +151,79 @@ namespace Barotrauma.Items.Components
             return (picker != null);
         }
 
-        private bool StartFabricating(GUIButton button, object obj)
+        private bool StartButtonClicked(GUIButton button, object obj)
         {
-            GUIComponent listElement = itemList.GetChild(obj);
+            if (fabricatedItem == null)
+            {
+                StartFabricating(obj as FabricableItem);
+
+                item.NewComponentEvent(this, true, true);
+            }
+            else
+            {
+                CancelFabricating();
+
+                item.NewComponentEvent(this, true, true);
+            }
             
-            listElement.Color = Color.Green;
+            //listElement.Color = Color.Green;
+            //itemList.Enabled = false;
+
+            //activateButton.Text = "Cancel";
+
+            //fabricatedItem = obj as FabricableItem;
+            //IsActive = true;
+
+            //timeUntilReady = fabricatedItem.RequiredTime;
+
+            return true;
+        }
+
+        private void StartFabricating(FabricableItem selectedItem)
+        {
+            if (selectedItem == null) return;
+
             itemList.Enabled = false;
 
-            fabricatedItem = obj as FabricableItem;
+            activateButton.Text = "Cancel";
+
+            fabricatedItem = selectedItem;
             IsActive = true;
 
             timeUntilReady = fabricatedItem.RequiredTime;
 
-            return true;
+            var containers = item.GetComponents<ItemContainer>();
+            containers[0].Inventory.Locked = true;
+            containers[1].Inventory.Locked = true;
+        }
+
+        private void CancelFabricating()
+        {
+            itemList.Enabled = true;
+            IsActive = false;
+            fabricatedItem = null;
+
+            if (activateButton != null)
+            {
+                activateButton.Text = "Create";
+            }
+            if (progressBar != null) progressBar.BarSize = 0.0f;
+
+            timeUntilReady = 0.0f;
+
+            var containers = item.GetComponents<ItemContainer>();
+            containers[0].Inventory.Locked = false;
+            containers[1].Inventory.Locked = false;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
             timeUntilReady -= deltaTime;
+
+            if (progressBar!=null)
+            {
+                progressBar.BarSize = fabricatedItem == null ? 0.0f : (fabricatedItem.RequiredTime - timeUntilReady) / fabricatedItem.RequiredTime;
+            }
 
             if (timeUntilReady > 0.0f) return;
 
@@ -180,9 +242,7 @@ namespace Barotrauma.Items.Components
                         
             Item.Spawner.QueueItem(fabricatedItem.TargetItem, containers[1].Inventory);
 
-            itemList.Enabled = true;
-            IsActive = false;
-            fabricatedItem = null;
+            CancelFabricating();
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -190,13 +250,13 @@ namespace Barotrauma.Items.Components
             FabricableItem targetItem = itemList.SelectedData as FabricableItem;
             if (targetItem != null)
             {
-                selectedItemFrame.GetChild<GUIButton>().Enabled = true;
+                activateButton.Enabled = true;
 
                 ItemContainer container = item.GetComponent<ItemContainer>();
                 foreach (ItemPrefab ip in targetItem.RequiredItems)
                 {
                     if (Array.Find(container.Inventory.Items, it => it != null && it.Prefab == ip) != null) continue;
-                    selectedItemFrame.GetChild<GUIButton>().Enabled = false;
+                    activateButton.Enabled = false;
                     break;
                 }
             }
@@ -212,6 +272,40 @@ namespace Barotrauma.Items.Components
             //    selectedItemFrame.Update(0.016f);
             //    selectedItemFrame.Draw(spriteBatch);
             //}
+        }
+
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        {
+            int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
+
+            message.WriteRangedInteger(-1, fabricableItems.Count-1, itemIndex);
+            
+            return true;
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
+        {
+            if (sendingTime < lastNetworkUpdate) return;
+
+            int itemIndex = message.ReadRangedInteger(-1, fabricableItems.Count-1);
+
+            if (itemIndex == -1)
+            {
+                CancelFabricating();
+            }
+            else
+            {
+                //if already fabricating the selected item, return
+                if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) != itemIndex) return;
+
+                if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
+
+                SelectItem(null, fabricableItems[itemIndex]);
+                StartFabricating(fabricableItems[itemIndex]);
+                timeUntilReady -= sendingTime - (float)Lidgren.Network.NetTime.Now;
+            }
+
+            lastNetworkUpdate = sendingTime;
         }
     }
 }
