@@ -81,7 +81,7 @@ namespace Barotrauma
         private static void CreateGUIFrame(Item item)
         {
             int width = 400, height = 500;
-            int x = 0, y = 0;
+            int y = 0;
 
             frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, GUI.Style);
             frame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);

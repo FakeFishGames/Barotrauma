@@ -167,7 +167,7 @@ namespace Barotrauma.Networking
                 }
                 catch
                 {
-                    int afghj = 1;
+                    
                 }
                 //+1 because msgLength is one additional byte
                 currPos += msgLength + 1;

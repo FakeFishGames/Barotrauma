@@ -413,11 +413,6 @@ namespace Barotrauma
 
                     Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
 
-                    if (item==null)
-                    {
-                        int a = 1;
-                    }
-
                     System.Diagnostics.Debug.Assert(item != null);
                     if (item == null) continue;
 

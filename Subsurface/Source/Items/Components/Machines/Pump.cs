@@ -16,7 +16,7 @@ namespace Barotrauma.Items.Components
 
         float lastUpdate;
 
-        Hull hull1, hull2;
+        Hull hull1;
 
         [HasDefaultValue(0.0f, true)]
         public float FlowPercentage
@@ -82,7 +82,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (hull2 == null && hull1 == null) return;
+            if (hull1 == null) return;
             
             float powerFactor = (currPowerConsumption==0.0f) ? 1.0f : voltage;
             //flowPercentage = maxFlow * powerFactor;
@@ -92,11 +92,11 @@ namespace Barotrauma.Items.Components
             hull1.Volume += currFlow;
             if (hull1.Volume > hull1.FullVolume) hull1.Pressure += 0.5f;
 
-            if (hull2 != null)
-            {
-                hull2.Volume -= currFlow;
-                if (hull2.Volume > hull1.FullVolume) hull2.Pressure += 0.5f;
-            }
+            //if (hull2 != null)
+            //{
+            //    hull2.Volume -= currFlow;
+            //    if (hull2.Volume > hull1.FullVolume) hull2.Pressure += 0.5f;
+            //}
 
             voltage = 0.0f;
         }

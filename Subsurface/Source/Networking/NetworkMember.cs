@@ -19,6 +19,8 @@ namespace Barotrauma.Networking
 
         StartGame, EndGame,
 
+        NewItem, RemoveItem,
+
         CharacterInfo,
 
         Chatmessage, UpdateNetLobby,

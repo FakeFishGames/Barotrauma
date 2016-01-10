@@ -192,7 +192,7 @@ namespace Barotrauma
                         //vel.Y = message.ReadFloat();
                 
                     }
-                    catch (Exception e)
+                    catch
                     {
                         return;
                     }

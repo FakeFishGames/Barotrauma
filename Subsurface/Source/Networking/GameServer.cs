@@ -1264,6 +1264,29 @@ namespace Barotrauma.Networking
             message.Write(character.Info.Job.Name);
         }
 
+        public void SendItemSpawnMessage(List<Item> items, List<Inventory> inventories = null)
+        {
+            if (items == null || !items.Any()) return;
+
+            NetOutgoingMessage message = server.CreateMessage();
+            message.Write((byte)PacketTypes.NewItem);
+
+            Item.Spawner.FillNetworkData(message, items, inventories);
+
+            SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void SendItemRemoveMessage(List<Item> items)
+        {
+            if (items == null || !items.Any()) return;
+
+            NetOutgoingMessage message = server.CreateMessage();
+
+            Item.Remover.FillNetworkData(message, items);
+
+            SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
         private void AssignJobs()
         {
             List<Client> unassigned = new List<Client>(ConnectedClients);
@@ -1305,16 +1328,7 @@ namespace Barotrauma.Networking
                     if (assignedClientCount[i] < JobPrefab.List[i].MinNumber) unassignedJobsFound = true;
                 }
             }
-
-            //share the rest of the jobs according to the ''commonness'' of the job
-            //float totalCommonness = 0.0f;
-            //for (int i = 0; i < JobPrefab.List.Count; i++)
-            //{
-            //    if (JobPrefab.List[i].AllowAlways || JobPrefab.List[i].MaxNumber == 0) continue;
-
-            //    totalCommonness += JobPrefab.List[i].Commonness;
-            //}
-
+            
             //find a suitable job for the rest of the players
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {

@@ -228,7 +228,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return (GameMain.DebugDraw) ? Name +"(ID: "+ID+")" : Name;
+            return (GameMain.DebugDraw) ? Name + "(ID: " + ID + ")" : Name;
         }
 
         public List<IPropertyObject> AllPropertyObjects
