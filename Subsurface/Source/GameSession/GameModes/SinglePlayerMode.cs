@@ -204,14 +204,38 @@ namespace Barotrauma
             }
             else
             {
-                var msgBox = new GUIMessageBox("Game over", "Your entire crew has died!", new string[] { "Load game", "Quit" });
-                msgBox.Buttons[0].OnClicked += GameMain.GameSession.LoadPrevious;
-                msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[1].OnClicked = GameMain.LobbyScreen.QuitToMainMenu;
-                msgBox.Buttons[1].OnClicked += msgBox.Close;
+
+
+            //                    var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
+            //okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+
+            //    var msgBox = new GUIMessageBox("Game over", "Your entire crew has died!", new string[] { "Load game", "Quit" });
+            //    msgBox.Buttons[0].OnClicked += GameMain.GameSession.LoadPrevious;
+            //    msgBox.Buttons[0].OnClicked += msgBox.Close;
+            //    msgBox.Buttons[1].OnClicked = GameMain.LobbyScreen.QuitToMainMenu;
+            //    msgBox.Buttons[1].OnClicked += msgBox.Close;
             }
 
             GameMain.GameSession.EndShift("");
+
+            if (!success)
+            {
+                var summaryScreen = GUIMessageBox.MessageBoxes.Peek();
+
+                if (summaryScreen != null)
+                {
+                    summaryScreen = summaryScreen.children[0];
+                    summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
+
+                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), "Load game", Alignment.BottomRight, GUI.Style, summaryScreen);
+                    okButton.OnClicked += GameMain.GameSession.LoadPrevious;
+                    okButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+
+                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Quit", Alignment.BottomRight, GUI.Style, summaryScreen);
+                    quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
+                    quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+                }
+            }
 
             CrewManager.EndShift();
             for (int i = Character.CharacterList.Count - 1; i >= 0; i--)

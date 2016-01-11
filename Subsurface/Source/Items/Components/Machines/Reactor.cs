@@ -10,6 +10,8 @@ namespace Barotrauma.Items.Components
 {
     class Reactor : Powered
     {
+        const float NetworkUpdateInterval = 3.0f;
+
         //the rate at which the reactor is being run un
         //higher rates generate more power (and heat)
         private float fissionRate;
@@ -49,6 +51,9 @@ namespace Barotrauma.Items.Components
         private float lastUpdate;
 
         private PropertyTask powerUpTask;
+
+        private bool unsentChanges;
+        private float sendUpdateTimer;
 
         [Editable, HasDefaultValue(9500.0f, true)]
         public float MeltDownTemp
@@ -248,6 +253,15 @@ namespace Barotrauma.Items.Components
             AvailableFuel = 0.0f;
 
             item.SendSignal(((int)temperature).ToString(), "temperature_out");
+              
+            sendUpdateTimer = Math.Max(sendUpdateTimer - deltaTime, 0.0f);
+
+            if (unsentChanges && sendUpdateTimer<= 0.0f)
+            {
+                item.NewComponentEvent(this, true, true);
+                sendUpdateTimer = NetworkUpdateInterval;
+                unsentChanges = false;
+            }            
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -353,9 +367,7 @@ namespace Barotrauma.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             IsActive = true;
-
-            bool valueChanged = false;
-
+            
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
@@ -380,12 +392,12 @@ namespace Barotrauma.Items.Components
             spriteBatch.DrawString(GUI.Font, "Shutdown Temperature: " + shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 450, y + 110, 40, 40), "+", true))
             {
-                valueChanged = true;
+                unsentChanges = true;
                 ShutDownTemp += 100.0f;
             }
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 500, y + 110, 40, 40), "-", true))
             {
-                valueChanged = true;
+                unsentChanges = true;
                 ShutDownTemp -= 100.0f;
             }
 
@@ -393,7 +405,7 @@ namespace Barotrauma.Items.Components
             spriteBatch.DrawString(GUI.Font, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 450, y + 180), Color.White);
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 450, y + 210, 100, 40), ((autoTemp) ? "TURN OFF" : "TURN ON")))
             {
-                valueChanged = true;
+                unsentChanges = true;
                 autoTemp = !autoTemp;
             }
 
@@ -407,12 +419,12 @@ namespace Barotrauma.Items.Components
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 30, 40, 40), "+", true))
             {
-                valueChanged = true;
+                unsentChanges = true;
                 FissionRate += 1.0f;
             }
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 80, 40, 40), "-", true))
             {
-                valueChanged = true;
+                unsentChanges = true;
                 FissionRate -= 1.0f;
             }
 
@@ -422,21 +434,17 @@ namespace Barotrauma.Items.Components
 
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 540, y + 30, 40, 40), "+", true))
             {
-                valueChanged = true;
+                unsentChanges = true;
                 CoolingRate += 1.0f;
             }
             if (GUI.DrawButton(spriteBatch, new Rectangle(x + 540, y + 80, 40, 40), "-", true))
             {
-                valueChanged = true;
+                unsentChanges = true;
                 CoolingRate -= 1.0f;
             }
 
             //y = y - 260;
 
-            if (valueChanged)
-            {
-                item.NewComponentEvent(this, true, false);
-            }
         }
 
         static void UpdateGraph<T>(IList<T> graph, T newValue)

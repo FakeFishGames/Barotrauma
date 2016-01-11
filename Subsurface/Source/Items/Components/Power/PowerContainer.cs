@@ -122,7 +122,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
-                charge += currPowerConsumption*voltage / 3600.0f;
+                Charge += currPowerConsumption*voltage / 3600.0f;
             }
             //provide power to the grid
             else if (gridLoad > 0.0f)

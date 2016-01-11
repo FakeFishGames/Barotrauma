@@ -95,7 +95,7 @@ namespace Barotrauma
             int x = 0;
             foreach (Character character in gameSession.CrewManager.characters)
             {
-                var characterFrame = new GUIFrame(new Rectangle(x, y, 170, 70), character.IsDead ? Color.DarkRed * 0.7f : Color.Transparent, GUI.Style, listBox);
+                var characterFrame = new GUIFrame(new Rectangle(x, y, 170, 70), Color.Transparent, GUI.Style, listBox);
                 characterFrame.OutlineColor = Color.Transparent;
                 characterFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 characterFrame.CanBeFocused = false;

@@ -233,7 +233,7 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
-                if (item.inventory != null) return;
+                if (item.Inventory != null) return;
 
                 float range = (float)Math.Sqrt(size.X) * 10.0f;
                 if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) continue;

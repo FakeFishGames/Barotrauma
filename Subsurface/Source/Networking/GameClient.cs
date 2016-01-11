@@ -609,49 +609,29 @@ namespace Barotrauma.Networking
 
             float endPreviewLength = 10.0f;
 
-            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, endPreviewLength);
-
-            float secondsLeft = endPreviewLength;
-
-            do
+            if (Screen.Selected == GameMain.GameScreen)
             {
-                secondsLeft -= CoroutineManager.DeltaTime;
+                var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, endPreviewLength);
 
-                //float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
-                //Vector2 offset = (new Vector2(
-                //    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-                //    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+                float secondsLeft = endPreviewLength;
 
-                //GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
-                //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
+                do
+                {
+                    secondsLeft -= CoroutineManager.DeltaTime;
 
-                //messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
+                    //float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
+                    //Vector2 offset = (new Vector2(
+                    //    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+                    //    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
 
-                yield return CoroutineStatus.Running;
-            } while (secondsLeft > 0.0f);
+                    //GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
+                    //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
 
-            //float endPreviewLength = 10.0f;
+                    //messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
 
-            //DateTime endTime = DateTime.Now + new TimeSpan(0,0,0,0,(int)(1000.0f*endPreviewLength));
-            //float secondsLeft = endPreviewLength;
-
-            //do
-            //{
-            //    secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
-
-            //    float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
-            //    Vector2 offset = (new Vector2(
-            //        (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-            //        (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
-
-            //    GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.DrawPosition + offset * 0.8f;
-            //    //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
-
-            //    messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
-            //    yield return CoroutineStatus.Running;
-            //} while (secondsLeft > 0.0f);
-
-            //messageBox.Close(null,null);
+                    yield return CoroutineStatus.Running;
+                } while (secondsLeft > 0.0f);
+            }
 
             Submarine.Unload();
 

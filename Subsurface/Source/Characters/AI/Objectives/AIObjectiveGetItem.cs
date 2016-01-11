@@ -102,8 +102,8 @@ namespace Barotrauma
                 currSearchIndex++;
 
                 if (!Item.ItemList[currSearchIndex].HasTag(itemName) && Item.ItemList[currSearchIndex].Name != itemName) continue;
-                if (IgnoreContainedItems && Item.ItemList[currSearchIndex].container != null) continue;
-                if (Item.ItemList[currSearchIndex].inventory is CharacterInventory) continue;
+                if (IgnoreContainedItems && Item.ItemList[currSearchIndex].Container != null) continue;
+                if (Item.ItemList[currSearchIndex].Inventory is CharacterInventory) continue;
                 
                 targetItem = Item.ItemList[currSearchIndex];
 
@@ -119,9 +119,9 @@ namespace Barotrauma
         private void AddGoToObjective(Item item)
         {
             Item moveToTarget = item;
-            while (moveToTarget.container != null)
+            while (moveToTarget.Container != null)
             {
-                moveToTarget = moveToTarget.container;
+                moveToTarget = moveToTarget.Container;
             }
 
             AddSubObjective(new AIObjectiveGoTo(moveToTarget, character));

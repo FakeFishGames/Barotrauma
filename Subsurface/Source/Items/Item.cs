@@ -61,11 +61,29 @@ namespace Barotrauma
 
         private bool inWater;
 
-        //the inventory in which the item is contained in
-        public Inventory inventory;
+        private Inventory inventory;
 
-        public Item container;
-        
+        //the inventory in which the item is contained in
+        public Inventory Inventory
+        {
+            get
+            {
+                return inventory;
+            }
+            set
+            {
+                inventory = value;
+
+                if (inventory != null) Container = inventory.Owner as Item;                
+            }
+        }
+
+        public Item Container
+        {
+            get;
+            private set;
+        }
+
         public List<FixRequirement> FixRequirements;
 
         public override string Name
@@ -354,7 +372,7 @@ namespace Barotrauma
             if (c == null) return;
             
             c.RemoveContained(contained);
-            contained.container = null;            
+            contained.Container = null;            
         }
 
 
@@ -517,7 +535,7 @@ namespace Barotrauma
                 //effect.Apply(type, deltaTime, null, Character);
                 //ApplyStatusEffect(effect, type, deltaTime, null, Character, limb);
 
-            if (container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(container);
+            if (Container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(Container);
             //{
             //    effect.Apply(type, deltaTime, container);
             //    //container.ApplyStatusEffect(effect, type, deltaTime, container);
@@ -558,7 +576,7 @@ namespace Barotrauma
                 }
                 ic.WasUsed = false;
 
-                if (container != null) ic.ApplyStatusEffects(ActionType.OnContained, deltaTime);
+                if (Container != null) ic.ApplyStatusEffects(ActionType.OnContained, deltaTime);
 
                 if (!ic.IsActive) continue;
 
@@ -1005,7 +1023,7 @@ namespace Barotrauma
                 }
             }
 
-            if (container!=null) container.RemoveContained(this);
+            if (Container!=null) Container.RemoveContained(this);
 
             return true;
         }
@@ -1079,7 +1097,7 @@ namespace Barotrauma
             
             foreach (ItemComponent ic in components) ic.Drop(dropper);
 
-            if (container != null) container.RemoveContained(this);
+            if (Container != null) Container.RemoveContained(this);
         }
 
         public void Equip(Character character)

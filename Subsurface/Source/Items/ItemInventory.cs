@@ -57,7 +57,7 @@ namespace Barotrauma
                     item.Unequip(c);
                     break;                    
                 }
-                item.container = container.Item;
+                //item.Container = container.Item;
                 container.IsActive = true;
             }
             return wasPut;

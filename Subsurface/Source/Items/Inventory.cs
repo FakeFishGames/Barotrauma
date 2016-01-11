@@ -125,11 +125,11 @@ namespace Barotrauma
             if (removeItem)
             {
                 item.Drop(null, false);
-                if (item.inventory != null) item.inventory.RemoveItem(item);
+                if (item.Inventory != null) item.Inventory.RemoveItem(item);
             }
 
             Items[i] = item;
-            item.inventory = this;
+            item.Inventory = this;
             if (item.body != null)
             {
                 item.body.Enabled = false;
@@ -152,7 +152,7 @@ namespace Barotrauma
             {
                 if (Items[n] != item) continue;
                 Items[n] = null;
-                item.inventory = null;
+                item.Inventory = null;
             }
         }
 
@@ -201,7 +201,7 @@ namespace Barotrauma
                 }
             }
 
-            if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition) && draggingItem.container == this.Owner)
+            if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition) && draggingItem.Container == this.Owner)
             {
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
                 {

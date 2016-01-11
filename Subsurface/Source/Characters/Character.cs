@@ -968,7 +968,7 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
-            Vector2 pos = AnimController.Limbs[0].WorldPosition;
+            Vector2 pos = DrawPosition;
             pos.Y = -pos.Y;
             
             if (this == controlled) return;
@@ -992,7 +992,7 @@ namespace Barotrauma
 
             if (isDead) return;
 
-            Vector2 healthBarPos = new Vector2(DrawPosition.X - 50, -DrawPosition.Y - 100.0f);
+            Vector2 healthBarPos = new Vector2(pos.X - 50, pos.Y - 100.0f);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f * (health / maxHealth)), 15), Color.Red, true);
         }
