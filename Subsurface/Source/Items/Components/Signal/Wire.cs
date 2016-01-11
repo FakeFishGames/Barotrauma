@@ -133,7 +133,7 @@ namespace Barotrauma.Items.Components
                     if (ic == this) continue;
                     ic.Drop(null);
                 }
-                if (item.container != null) item.container.RemoveContained(this.item);
+                if (item.Container != null) item.Container.RemoveContained(this.item);
 
                 item.body.Enabled = false;
 

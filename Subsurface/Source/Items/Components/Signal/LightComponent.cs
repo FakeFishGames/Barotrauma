@@ -100,7 +100,7 @@ namespace Barotrauma.Items.Components
                 light.Submarine = item.CurrentHull.Submarine;
             }            
             
-            if (item.container != null)
+            if (item.Container != null)
             {
                 light.Color = Color.Transparent;
                 return;

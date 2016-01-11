@@ -156,7 +156,7 @@ namespace Barotrauma.Items.Components
             projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y)), -rotation);
 
             projectiles[0].Use(deltaTime);
-            if (projectile.container != null) projectile.container.RemoveContained(projectile);
+            if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
 
             return true;
         }

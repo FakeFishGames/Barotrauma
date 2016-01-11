@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -29,6 +30,7 @@ namespace Barotrauma
             Vector2 position = level.PositionsOfInterest[Rand.Int(level.PositionsOfInterest.Count, false)];
 
             monster = Character.Create(monsterFile, position);
+            monster.Enabled = false;
             radarPosition = monster.Position;
         }
 
@@ -37,7 +39,14 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
-                    if (monster.Enabled) radarPosition = monster.Position;
+                    if (monster.Enabled)
+                    {
+                        radarPosition = monster.Position;
+                    }
+                    else
+                    {   Vector2 diff = monster.WorldPosition-Submarine.Loaded.WorldPosition;
+                        monster.Enabled = FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) < NetConfig.CharacterIgnoreDistance;
+                    }
 
                     if (!monster.IsDead) return;
                     ShowMessage(state);

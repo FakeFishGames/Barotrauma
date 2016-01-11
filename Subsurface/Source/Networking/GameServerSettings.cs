@@ -90,6 +90,7 @@ namespace Barotrauma.Networking
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,400,400), null, Alignment.Center, GUI.Style, settingsFrame);
 
             var randomizeLevelBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Randomize level seed", Alignment.Left, innerFrame);
+            randomizeLevelBox.Selected = randomizeSeed;
             randomizeLevelBox.OnSelected = ToggleRandomizeSeed;
             
             new GUITextBlock(new Rectangle(0, 35, 100, 20), "Submarine selection:", GUI.Style, innerFrame);

@@ -51,7 +51,7 @@ namespace Barotrauma
                     ConvertUnits.ToSimUnits(tryPos - Vector2.UnitY*level.Size.Y), 
                     null, Physics.CollisionLevel) != null)
                 {
-                    position = tryPos;
+                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition);
                     break;
                 }
 
@@ -67,7 +67,7 @@ namespace Barotrauma
 
             item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;
-            item.body.FarseerBody.GravityScale = 0.5f;
+            item.body.FarseerBody.IsKinematic = true;
             //item.MoveWithLevel = true;
         }
 
@@ -76,7 +76,10 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
+                    //item.body.LinearVelocity = Vector2.Zero;
+                    if (item.Inventory!=null) item.body.FarseerBody.IsKinematic = false;
                     if (item.CurrentHull == null) return;
+                    
                     ShowMessage(state);
                     state = 1;
                     break;

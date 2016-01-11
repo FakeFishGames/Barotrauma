@@ -222,7 +222,7 @@ namespace Barotrauma.Items.Components
                 IsActive = true;
                 if (hideItems || (item.body!=null && !item.body.Enabled)) item.body.Enabled = false;
 
-                item.container = this.item;
+                //item.Container = this.item;
             
                 return true;
             }
