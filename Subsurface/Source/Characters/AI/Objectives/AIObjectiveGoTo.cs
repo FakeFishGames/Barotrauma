@@ -55,7 +55,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {            
-            if (character.SelectedConstruction!=null)
+            if (character.SelectedConstruction!=null && character.SelectedConstruction.GetComponent<Ladder>()==null)
             {
                 character.SelectedConstruction = null;
             }

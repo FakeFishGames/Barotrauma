@@ -794,9 +794,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    correctionMovement =
-                        Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
-                        
+                    Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.5f, 5.0f);
+                    newCorrectionMovement.X = Math.Max(newCorrectionMovement.X, 0.5f) * Math.Sign(newCorrectionMovement.X);
+
+                    correctionMovement = Vector2.Lerp(targetMovement, newCorrectionMovement, 0.2f);
+                    
                     if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
                 }
             }

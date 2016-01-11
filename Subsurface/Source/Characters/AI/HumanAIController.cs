@@ -58,7 +58,31 @@ namespace Barotrauma
 
             objectiveManager.DoCurrentObjective(deltaTime);
          
-            Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
+            float currObjectivePriority = objectiveManager.GetCurrentPriority(Character);
+            float moveSpeed = MathHelper.Clamp(currObjectivePriority/10.0f, 1.0f, 3.0f);
+            
+            steeringManager.Update(moveSpeed);
+
+            Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X*0.5f));
+
+            if (!Character.AnimController.InWater)
+            {
+                Character.AnimController.TargetMovement = new Vector2(
+                    Character.AnimController.TargetMovement.X,
+                    MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f)) * Character.SpeedMultiplier;
+
+                Character.SpeedMultiplier = 1.0f;
+            }
+
+            if (Character.SelectedConstruction != null && Character.SelectedConstruction.GetComponent<Items.Components.Ladder>()!=null)
+            {
+                var currPath = (steeringManager as IndoorsSteeringManager).CurrentPath;
+                if (currPath != null && currPath.CurrentNode != null && currPath.CurrentNode.Ladders != null)
+                {
+                    Character.AnimController.TargetMovement = new Vector2( 0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
+                }
+
+            }
 
             if (Character.IsKeyDown(InputType.Aim))
             {
@@ -69,10 +93,8 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
 
-            float currObjectivePriority = objectiveManager.GetCurrentPriority(Character);
-            float moveSpeed = MathHelper.Clamp(currObjectivePriority/10.0f, 1.0f, 3.0f);
-            
-            steeringManager.Update(moveSpeed);
+
+
         }
 
         public override void OnAttacked(IDamageable attacker, float amount)
