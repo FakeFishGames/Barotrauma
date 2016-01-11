@@ -88,8 +88,8 @@ namespace Barotrauma
             Vector2 diff = DiffToCurrentNode();
             
             if (diff == Vector2.Zero) return -host.Steering;
-            
-            return (diff == Vector2.Zero) ? Vector2.Zero : Vector2.Normalize(diff)*speed;            
+
+            return Vector2.Normalize(diff) * speed;          
         }
 
         private Vector2 DiffToCurrentNode()
@@ -107,14 +107,22 @@ namespace Barotrauma
                 pos -= Submarine.Loaded.SimPosition;
             }   
 
+            if (currentPath.CurrentNode!= null && currentPath.CurrentNode.Ladders!=null)
+            {
+                if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item && currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
+                {
+                    currentPath.CurrentNode.Ladders.Item.Pick(character, false, true);
+                }
+
+                if (Math.Sign(host.Steering.Y) == currentPath.CurrentNode.SimPosition.Y - pos.Y)
+                {
+                    allowedDistance = 0.0f;
+                }
+            }
+
             currentPath.CheckProgress(pos, allowedDistance);
 
             if (currentPath.CurrentNode == null) return Vector2.Zero;
-
-            //if (currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f && character.AnimController.Stairs == null)
-            //{
-            //    return currentPath.PrevNode.SimPosition - host.SimPosition;
-            //}
 
             return currentPath.CurrentNode.SimPosition - pos;
         }
