@@ -88,11 +88,11 @@ namespace Barotrauma
             if (flip)
             {
                 //targetDir = (movement.X > 0.0f) ? Direction.Right : Direction.Left;
-                if (movement.X > 0.1f && movement.X > Math.Abs(movement.Y)*0.5f)
+                if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.5f)
                 {
                     TargetDir = Direction.Right;
                 }
-                else if (movement.X < -0.1f && movement.X < -Math.Abs(movement.Y)*0.5f)
+                else if (targetMovement.X < -0.1f && targetMovement.X < -Math.Abs(targetMovement.Y) * 0.5f)
                 {
                     TargetDir = Direction.Left;
                 }
@@ -191,7 +191,7 @@ namespace Barotrauma
 
             for (int i = 0; i < Limbs.Count(); i++)
             {
-                if (steerForce!=Vector2.Zero)
+                if (steerForce != Vector2.Zero)
                     Limbs[i].body.ApplyForce(steerForce * Limbs[i].SteerForce * Limbs[i].Mass);
 
                 if (Limbs[i].type != LimbType.Torso) continue;
@@ -369,7 +369,7 @@ namespace Barotrauma
                 }
             }
         }
-
+        
         void UpdateDying(float deltaTime)
         {
             Limb head = GetLimb(LimbType.Head);
@@ -403,20 +403,29 @@ namespace Barotrauma
             }
         }
 
+        public override Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)
+        {
+            timePassed = MathHelper.Clamp(timePassed, 0.0f, 1.0f);
+
+            Vector2 currPosition = prevPosition + targetMovement * timePassed;
+
+            return currPosition;
+        }
+
         private void Mirror()
         {
-            float leftX = Limbs[0].SimPosition.X, rightX = Limbs[0].SimPosition.X;
-            for (int i = 1; i < Limbs.Count(); i++ )
-            {
-                if (Limbs[i].SimPosition.X < leftX)
-                {
-                    leftX = Limbs[i].SimPosition.X;
-                }
-                else if (Limbs[i].SimPosition.X > rightX)
-                {
-                    rightX = Limbs[i].SimPosition.X;
-                }
-            }
+            //float leftX = Limbs[0].SimPosition.X, rightX = Limbs[0].SimPosition.X;
+            //for (int i = 1; i < Limbs.Count(); i++ )
+            //{
+            //    if (Limbs[i].SimPosition.X < leftX)
+            //    {
+            //        leftX = Limbs[i].SimPosition.X;
+            //    }
+            //    else if (Limbs[i].SimPosition.X > rightX)
+            //    {
+            //        rightX = Limbs[i].SimPosition.X;
+            //    }
+            //}
 
             float midX = GetCenterOfMass().X;
 
@@ -424,7 +433,7 @@ namespace Barotrauma
             {
                 Vector2 newPos = new Vector2(midX - (l.SimPosition.X - midX), l.SimPosition.Y);
 
-                if (Submarine.CheckVisibility(l.SimPosition, newPos)!=null)
+                if (Submarine.CheckVisibility(l.SimPosition, newPos) != null)
                 {
                     Vector2 diff = newPos - l.SimPosition;
 

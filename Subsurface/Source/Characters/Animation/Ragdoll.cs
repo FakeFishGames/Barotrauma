@@ -38,7 +38,7 @@ namespace Barotrauma
         //the movement speed of the ragdoll
         public Vector2 movement;
         //the target speed towards which movement is interpolated
-        private Vector2 targetMovement;
+        protected Vector2 targetMovement;
 
         //a movement vector that overrides targetmovement if trying to steer
         //a Character to the position sent by server in multiplayer mode
@@ -782,15 +782,24 @@ namespace Barotrauma
             {
                 if (inWater)
                 {
-                    //foreach (Limb limb in Limbs)
-                    //{
-                    //    //if (limb.body.TargetPosition == Vector2.Zero) continue;
 
-                    //    limb.body.SetTransform(limb.SimPosition + Vector2.Normalize(diff) * 0.1f, limb.Rotation);
-                    //}
 
-                    correctionMovement =
-                        Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 8.0f, 0.1f, 8.0f), 0.2f);
+                    if (character is AICharacter)
+                    {
+                        correctionMovement =
+                            Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 8.0f, 0.1f, 8.0f), 0.5f);
+                    }
+                    else
+                    {
+                        foreach (Limb limb in Limbs)
+                        {
+                            //if (limb.body.TargetPosition == Vector2.Zero) continue;
+
+                            limb.body.SetTransform(limb.SimPosition + Vector2.Normalize(diff) * 0.1f, limb.Rotation);
+                        }
+                    }
+
+
                 }
                 else
                 {
@@ -809,7 +818,7 @@ namespace Barotrauma
 
                 SetPosition(refLimb.body.TargetPosition);
 
-                if (character is AICharacter) SetRotation(refLimb.body.TargetRotation);
+                //if (character is AICharacter) SetRotation(refLimb.body.TargetRotation);
 
                 //foreach (Limb limb in Limbs)
                 //{

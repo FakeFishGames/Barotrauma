@@ -32,10 +32,23 @@ namespace Barotrauma
             set { controlled = value; }
         }
 
+        private bool enabled;
+
         public bool Enabled
         {
-            get;
-            set;
+            get
+            {
+                return enabled;
+            }
+            set
+            {
+                enabled = value;
+
+                foreach (Limb limb in AnimController.Limbs)
+                {
+                    limb.body.Enabled = enabled;
+                }
+            }
         }
 
         public readonly bool IsNetworkPlayer;
@@ -237,6 +250,13 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value)) return;
                 bleeding = Math.Max(value, 0.0f); 
             }
+        }
+
+
+        public float PressureTimer
+        {
+            get;
+            private set;
         }
 
         public float SpeedMultiplier
@@ -652,6 +672,9 @@ namespace Barotrauma
         private Item FindClosestItem(Vector2 mouseSimPos)
         {
             Limb torso = AnimController.GetLimb(LimbType.Torso);
+
+            if (torso == null) return null;
+
             Vector2 pos = (torso.body.TargetPosition != Vector2.Zero) ? torso.body.TargetPosition : torso.SimPosition;
 
             return Item.FindPickable(pos, selectedConstruction == null ? mouseSimPos : selectedConstruction.SimPosition, AnimController.CurrentHull, selectedItems);
@@ -885,8 +908,19 @@ namespace Barotrauma
                 if (!protectedFromPressure && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 100.0f))
                 {
-                    Implode();
-                    return;
+
+                    PressureTimer += ((AnimController.CurrentHull == null) ?
+                        100.0f : AnimController.CurrentHull.LethalPressure) * deltaTime;
+
+                    if (PressureTimer >= 100.0f)
+                    {
+                        Implode();
+                        return;
+                    }
+                }
+                else
+                {
+                    PressureTimer = 0.0f;
                 }
             }
 
@@ -1503,10 +1537,12 @@ namespace Barotrauma
                     else
                     {
                         cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
+
+                        AnimController.TargetDir = dir < 0 ? Direction.Left : Direction.Right;
                     }   
 
                     AnimController.RefLimb.body.TargetPosition = 
-                        AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now + message.SenderConnection.RemoteTimeOffset) - sendingTime);
+                        AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);
 
                     LastNetworkUpdate = sendingTime;
 

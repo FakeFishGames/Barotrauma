@@ -14,8 +14,6 @@ namespace Barotrauma
 
         private static GUIProgressBar drowningBar, healthBar;
 
-        private static float pressureTimer;
-
         public static void TakeDamage()
         {
             healthBar.Flash();
@@ -29,9 +27,6 @@ namespace Barotrauma
                 if (character.Oxygen < 10.0f) drowningBar.Flash();
             }
             if (healthBar != null) healthBar.Update(deltaTime);
-
-            pressureTimer += ((character.AnimController.CurrentHull == null) ?
-                100.0f : character.AnimController.CurrentHull.LethalPressure)*deltaTime;
         }
 
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
@@ -134,7 +129,7 @@ namespace Barotrauma
 
             if (pressureFactor>0.0f)
             {
-                float indicatorAlpha = ((float)Math.Sin(pressureTimer * 0.1f) + 1.0f) * 0.5f;
+                float indicatorAlpha = ((float)Math.Sin(character.PressureTimer * 0.1f) + 1.0f) * 0.5f;
 
                 indicatorAlpha = MathHelper.Clamp(indicatorAlpha, 0.1f, pressureFactor/100.0f);
 

@@ -45,7 +45,15 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //renderTarget = new RenderTarget2D(Game1.CurrGraphicsDevice, GuiFrame.Rect.Width, GuiFrame.Rect.Height);
+            var tickBox = new GUITickBox(new Rectangle(0,0,20,20), "Sonar", Alignment.TopLeft, GuiFrame);
+            tickBox.OnSelected = (GUITickBox box) =>
+            {
+                IsActive = box.Selected;
+                item.NewComponentEvent(this, true, false);
+
+                return true;
+            };
+
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -86,16 +94,12 @@ namespace Barotrauma.Items.Components
         {
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
-            
+
+            GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
             if (voltage < minVoltage) return;
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 0, y + 0, 150, 30), "Activate Sonar"))
-            {
-                IsActive = !IsActive;
-                item.NewComponentEvent(this, true, false);
-            }
 
             int radius = GuiFrame.Rect.Height / 2 - 30;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));

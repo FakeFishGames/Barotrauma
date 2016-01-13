@@ -159,18 +159,11 @@ namespace Barotrauma
                 characterButton.UserData = character;
                 characterButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 
-                if (character == Character.Controlled)
-                {
-                    characterButton.CanBeSelected = false;
-                    characterButton.Color = Color.LightGray * 0.3f;
-                }
-                else
-                {
-                    characterButton.Color = Color.Black * 0.5f;
-                    characterButton.HoverColor = Color.LightGray * 0.5f;
-                    characterButton.SelectedColor = Color.Gold * 0.5f;
-                    characterButton.OutlineColor = Color.LightGray * 0.8f;
-                }
+                characterButton.Color = Character.Controlled == character ? Color.Gold * 0.3f : Color.Black * 0.5f;
+                characterButton.HoverColor = Color.LightGray * 0.5f;
+                characterButton.SelectedColor = Color.Gold * 0.5f;
+                characterButton.OutlineColor = Color.LightGray * 0.8f;
+                
 
                 string name = character.Info.Name;
                 if (character.Info.Job != null) name += '\n' + "(" + character.Info.Job.Name + ")";
