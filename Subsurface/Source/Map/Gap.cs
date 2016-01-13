@@ -187,7 +187,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < linkedTo.Count; i++)
                 {
-                    if (linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f > WorldRect.Y)
+                    if (linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f > rect.Y-rect.Height/2.0f)
                     {
                         GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y - 10, rect.Width, 10), Color.Green * 0.3f, true);
                     }

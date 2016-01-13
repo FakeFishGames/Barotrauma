@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
     {
         public readonly ItemPrefab TargetItem;
 
-        public readonly List<ItemPrefab> RequiredItems;
+        public readonly List<Tuple<ItemPrefab, int>> RequiredItems;
 
         public readonly float RequiredTime;
 
@@ -29,14 +29,27 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            RequiredItems = new List<ItemPrefab>();
+            RequiredItems = new List<Tuple<ItemPrefab, int>>();
 
             string[] requiredItemNames = ToolBox.GetAttributeString(element, "requireditems", "").Split(',');
             foreach (string requiredItemName in requiredItemNames)
             {
                 ItemPrefab requiredItem = ItemPrefab.list.Find(ip => ip.Name.ToLower() == requiredItemName.Trim().ToLower()) as ItemPrefab;
                 if (requiredItem == null) continue;
-                RequiredItems.Add(requiredItem);
+
+                var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
+
+                if (existing == null)
+                {
+
+                    RequiredItems.Add(new Tuple<ItemPrefab, int>(requiredItem, 1));
+                }
+                else
+                {
+                    RequiredItems.Remove(existing);
+                    RequiredItems.Add(new Tuple<ItemPrefab, int>(requiredItem, existing.Item2+1));
+                }
+
             }
 
             RequiredTime = ToolBox.GetAttributeFloat(element, "requiredtime", 1.0f);
@@ -123,9 +136,9 @@ namespace Barotrauma.Items.Components
                     selectedItemFrame, true);
 
                 string text = "Required items:\n";
-                foreach (ItemPrefab ip in targetItem.RequiredItems)
+                foreach (Tuple<ItemPrefab,int> ip in targetItem.RequiredItems)
                 {
-                    text += "   - " + ip.Name + "\n";
+                    text += "   - " + ip.Item1.Name + " x"+ip.Item2+"\n";
                 }
                 text += "Required time: " + targetItem.RequiredTime + " s";
 
@@ -234,9 +247,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            foreach (ItemPrefab ip in fabricatedItem.RequiredItems)
+            foreach (Tuple<ItemPrefab,int> ip in fabricatedItem.RequiredItems)
             {
-                var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip);
+                var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1);
                 containers[0].Inventory.RemoveItem(requiredItem);
             }
                         
@@ -253,9 +266,9 @@ namespace Barotrauma.Items.Components
                 activateButton.Enabled = true;
 
                 ItemContainer container = item.GetComponent<ItemContainer>();
-                foreach (ItemPrefab ip in targetItem.RequiredItems)
+                foreach (Tuple<ItemPrefab,int> ip in targetItem.RequiredItems)
                 {
-                    if (Array.Find(container.Inventory.Items, it => it != null && it.Prefab == ip) != null) continue;
+                    if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1).Count() < ip.Item2) continue;
                     activateButton.Enabled = false;
                     break;
                 }

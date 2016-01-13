@@ -73,6 +73,8 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
+            GUI.ScreenOverlayColor = Color.TransparentBlack;
+
             Running = false;
 
             yield return CoroutineStatus.Success;

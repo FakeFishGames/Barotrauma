@@ -343,85 +343,97 @@ namespace Barotrauma
             if (cell == null)
             {
                 Limb limb = f2.Body.UserData as Limb;
-                if (limb!=null)
+                if (limb != null)
                 {
-                    if (limb.character.Submarine != null) return false;
+                    bool collision = HandleLimbCollision(contact, limb);
 
-                    Vector2 normal2;
-                    FixedArray2<Vector2> points;
-                    contact.GetWorldManifold(out normal2, out points);
-
-                    Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] + limb.LinearVelocity * ((float)Physics.step));
-
-                    Hull newHull = Hull.FindHull(targetPos, null);
-
-                    if (newHull == null) return true;
-
-                    var gaps = newHull.FindGaps();
-
-                    bool gapFound = false;
-                    foreach (Gap gap in gaps)
+                    if (collision)
                     {
-                        if (gap.isHorizontal)
-                        {
-                            if (targetPos.Y < gap.WorldRect.Y && targetPos.Y > gap.WorldRect.Y - gap.WorldRect.Height)
-                            {
-                                gapFound = true;
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            if (targetPos.X > gap.WorldRect.X && targetPos.X < gap.WorldRect.Right)
-                            {
-                                gapFound = true;
-                                break;
-                            }
-                        }
+                        Vector2 normal = Vector2.Normalize(body.Position - limb.SimPosition);
 
-                        //if (Submarine.RectContains(gap.WorldRect, targetPos))
-                        //{
-                        //    gapFound = true;
-                        //    break;
-                        //}
+                        normal *= limb.Mass/100.0f;
+
+                        ApplyImpact(normal, contact);
                     }
 
-                    //var pickedBody = Submarine.PickBody(
-                    //    points[0] - limb.LinearVelocity * ((float)Physics.step) - ConvertUnits.ToSimUnits(submarine.Position) - submarine.Velocity * ((float)Physics.step),
-                    //    points[0] - ConvertUnits.ToSimUnits(submarine.Position), null, Physics.CollisionWall);
-
-                    if (!gapFound)
-                    {
-
-                        return true;
-                    }
-
-                    var ragdoll = limb.character.AnimController;
-                    ragdoll.FindHull();
-              
-                    return false;
-
+                    return collision;
                 }
 
                 return true;
             }
 
-            Vector2 normal;
-            FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
-            contact.GetWorldManifold(out normal, out worldPoints);
-
-            Vector2 lastContactPoint = worldPoints[0];
-
-            normal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(body.Position) - cell.Center);
-
-            float impact = Vector2.Dot(Velocity, -normal);
+            var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(body.Position) - cell.Center);
+            ApplyImpact(collisionNormal, contact);
+            
 
             //Vector2 u = Vector2.Dot(Velocity, -normal) * normal;
             //Vector2 w = (Velocity + u);
 
             //speed = ConvertUnits.ToDisplayUnits(w * (1.0f - Friction) + u * Restitution);
 
-            if (impact < 3.0f) return true;
+            return true;
+        }
+
+        private bool HandleLimbCollision(Contact contact, Limb limb)
+        {
+            if (limb.character.Submarine != null) return false;
+
+            Vector2 normal2;
+            FixedArray2<Vector2> points;
+            contact.GetWorldManifold(out normal2, out points);
+
+            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] + limb.LinearVelocity * ((float)Physics.step));
+
+            Hull newHull = Hull.FindHull(targetPos, null);
+
+            if (newHull == null) return true;
+
+            var gaps = newHull.FindGaps();
+
+            bool gapFound = false;
+            foreach (Gap gap in gaps)
+            {
+                if (gap.isHorizontal)
+                {
+                    if (targetPos.Y < gap.WorldRect.Y && targetPos.Y > gap.WorldRect.Y - gap.WorldRect.Height)
+                    {
+                        gapFound = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (targetPos.X > gap.WorldRect.X && targetPos.X < gap.WorldRect.Right)
+                    {
+                        gapFound = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!gapFound) return true;
+
+            var ragdoll = limb.character.AnimController;
+            ragdoll.FindHull();
+
+            return false;
+        }
+
+        private void ApplyImpact(Vector2 normal,Contact contact)
+        {
+            Vector2 tempNormal;
+
+            FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
+            contact.GetWorldManifold(out tempNormal, out worldPoints);
+
+
+
+            Vector2 lastContactPoint = worldPoints[0];
+
+            float impact = Vector2.Dot(Velocity, -normal);
+
+            if (impact < 3.0f) return;
+
 
             SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(lastContactPoint));
             GameMain.GameScreen.Cam.Shake = impact * 2.0f;
@@ -446,7 +458,6 @@ namespace Barotrauma
 
             Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * DamageMultiplier);
 
-            return true;
         }
 
     }

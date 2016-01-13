@@ -501,7 +501,7 @@ namespace Barotrauma.Networking
                         
                         break;
                     case (byte)PacketTypes.UpdateNetLobby:
-                        if (gameStarted) continue;
+                        //if (gameStarted) continue;
                         GameMain.NetLobbyScreen.ReadData(inc);
                         break;
                     case (byte)PacketTypes.Traitor:

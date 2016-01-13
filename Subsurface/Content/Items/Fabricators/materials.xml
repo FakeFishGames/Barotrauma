@@ -6,7 +6,7 @@
     Tags="smallitem"
     pickdistance="150"
     canbepicked="true"
-    price="10">
+    price="50">
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
@@ -22,7 +22,7 @@
      pickdistance="150"
      spritecolor="0.2,0.35,0.06,1.0"
      canbepicked="true"
-     price="50">
+     price="100">
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
@@ -46,6 +46,22 @@
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
+
+  <Item
+   name="Polycarbonate Bar"
+   category="Material"
+   Tags="smallitem"
+   pickdistance="150"
+   spritecolor="1.0,1.0,1.0,0.9"
+   canbepicked="true"
+   price="50">
+
+    <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
+
+    <Body width="24" height="12"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+  </Item>
   
   <Item
    name="Incendium Bar"
@@ -53,8 +69,7 @@
    Tags="smallitem"
    pickdistance="150"
    spritecolor="0.5,0.0,0.0,1.0"
-   canbepicked="true"
-   price="50">
+   canbepicked="true">
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
@@ -69,8 +84,7 @@
    Tags="smallitem"
    pickdistance="150"
    spritecolor="1.0,0.7,0.05,1.0"
-   canbepicked="true"
-   price="50">
+   canbepicked="true">
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 

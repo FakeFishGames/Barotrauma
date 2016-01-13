@@ -72,6 +72,16 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
+
+            var tickBox = new GUITickBox(new Rectangle(0,25,20,20), "Autopilot", Alignment.TopLeft, GuiFrame);
+
+            tickBox.OnSelected = (GUITickBox box) =>
+            {
+                AutoPilot = box.Selected;
+                item.NewComponentEvent(this, true, true);
+
+                return true;
+            };
         }
         
         public override void Update(float deltaTime, Camera cam)
@@ -116,18 +126,12 @@ namespace Barotrauma.Items.Components
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 
+            GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
-
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + width - 150, y + height - 30, 150, 30), "Autopilot"))
-            {
-                AutoPilot = !AutoPilot;
-
-                item.NewComponentEvent(this, true, true);
-            }
-
+            
             GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X,velRect.Center.Y), 
                 new Vector2(velRect.Center.X + currVelocity.X, velRect.Center.Y - currVelocity.Y), 

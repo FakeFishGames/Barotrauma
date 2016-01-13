@@ -29,8 +29,9 @@
     price="500"
     tags="weapon">
 
-    <Deconstruct time="10">
+    <Deconstruct time="10">      
       <Item name="Steel Bar"/>
+      <Item name="Polycarbonate Bar"/>
     </Deconstruct>
   
     <Sprite texture="weapons.png" sourcerect="0,25,98,25" depth="0.5"/>

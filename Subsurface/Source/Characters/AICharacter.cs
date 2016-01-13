@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -108,7 +109,9 @@ namespace Barotrauma
                     message.Write(AnimController.TargetDir == Direction.Right);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
-            
+                    
+                    message.Write(Submarine != null);
+
                     message.Write(AnimController.RefLimb.SimPosition.X);
                     message.Write(AnimController.RefLimb.SimPosition.Y);
 
@@ -177,6 +180,8 @@ namespace Barotrauma
                                                   
                     if (sendingTime <= LastNetworkUpdate) return;
 
+                    bool inSub = false;
+
                     Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
 
                     try
@@ -184,6 +189,8 @@ namespace Barotrauma
                         targetDir = message.ReadBoolean();
                         targetMovement.X = message.ReadRangedSingle(-1.0f, 1.0f, 8);
                         targetMovement.Y = message.ReadRangedSingle(-1.0f, 1.0f, 8);
+
+                        inSub = message.ReadBoolean();
 
                         pos.X = message.ReadFloat();
                         pos.Y = message.ReadFloat();
@@ -199,9 +206,19 @@ namespace Barotrauma
 
                     AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
                     AnimController.TargetMovement = targetMovement;
-        
-                    AnimController.RefLimb.body.TargetPosition = pos;
-                    AnimController.RefLimb.body.TargetVelocity = vel;
+                        
+                    AnimController.TargetMovement = AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);
+                            
+
+                    if (inSub)
+                    {
+                        Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
+                        if (newHull != null)
+                        {
+                            AnimController.CurrentHull = newHull;
+                            Submarine = newHull.Submarine;
+                        }
+                    }
                       
                     LastNetworkUpdate = sendingTime;
                     return;

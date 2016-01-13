@@ -16,6 +16,8 @@ namespace Barotrauma
         private const float UpdateTargetsInterval = 5.0f;
 
         private const float RaycastInterval = 1.0f;
+
+        private bool attackWhenProvoked;
         
         //the preference to attack a specific type of target (-1.0 - 1.0)
         //0.0 = doesn't attack targets of the type
@@ -83,6 +85,8 @@ namespace Barotrauma
 
             sight           = ToolBox.GetAttributeFloat(aiElement, "sight", 0.0f);
             hearing         = ToolBox.GetAttributeFloat(aiElement, "hearing", 0.0f);
+
+            attackWhenProvoked = ToolBox.GetAttributeBool(aiElement, "attackwhenprovoked", false);
 
             steeringManager = new SteeringManager(this);
 
@@ -285,6 +289,12 @@ namespace Barotrauma
         {
             updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
             coolDownTimer *= 0.1f;
+
+            if (amount > 1.0f && attackWhenProvoked)
+            {
+                attackHumans = 100.0f;
+                attackRooms = 100.0f;
+            }
 
             if (attacker==null || attacker.AiTarget==null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
@@ -508,11 +518,13 @@ namespace Barotrauma
 
             message.Write(wallAttack);
 
-            if (wallAttack)
-            {
-                message.WriteRangedSingle(MathHelper.Clamp(wallAttackPos.X, -50.0f, 50.0f), -50.0f, 50.0f, 10);
-                message.WriteRangedSingle(MathHelper.Clamp(wallAttackPos.Y, -50.0f, 50.0f), -50.0f, 50.0f, 10);
-            }
+            //if (wallAttack)
+            //{
+            //    Vector2 relativeWallAttackPos = wallAttackPos - Submarine.Loaded.SimPosition;
+
+            //    message.WriteRangedSingle(MathHelper.Clamp(relativeWallAttackPos.X, -50.0f, 50.0f), -50.0f, 50.0f, 10);
+            //    message.WriteRangedSingle(MathHelper.Clamp(relativeWallAttackPos.Y, -50.0f, 50.0f), -50.0f, 50.0f, 10);
+            //}
 
             //message.Write(Velocity.X);
             //message.Write(Velocity.Y);
@@ -542,14 +554,16 @@ namespace Barotrauma
 
                 newState = (AiState)(message.ReadByte());
 
-                bool wallAttack = message.ReadBoolean();
+                //bool wallAttack = message.ReadBoolean();
 
-                if (wallAttack)
-                {
-                    newWallAttackPos = new Vector2(
-                        message.ReadRangedSingle(-50.0f, 50.0f, 10),
-                        message.ReadRangedSingle(-50.0f, 50.0f, 10));
-                }
+                //if (wallAttack)
+                //{
+                //    newWallAttackPos = new Vector2(
+                //        message.ReadRangedSingle(-50.0f, 50.0f, 10),
+                //        message.ReadRangedSingle(-50.0f, 50.0f, 10));
+
+                //    newWallAttackPos += Submarine.Loaded.SimPosition;
+                //}
 
                 //newVelocity = new Vector2(message.ReadFloat(), message.ReadFloat());
 
@@ -565,7 +579,7 @@ namespace Barotrauma
 
             catch { return; }
 
-            wallAttackPos = newWallAttackPos;
+            //wallAttackPos = newWallAttackPos;
 
             steeringManager.WanderAngle = wanderAngle;
             //this.updateTargetsTimer = updateTargetsTimer;
