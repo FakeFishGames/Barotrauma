@@ -9,14 +9,16 @@ namespace Barotrauma.Items.Components
 {
     class Pump : Powered
     {
-        float flowPercentage;
-        float maxFlow;
+        private float flowPercentage;
+        private float maxFlow;
 
-        float? targetLevel;
+        private float? targetLevel;
 
-        float lastUpdate;
+        private float lastUpdate;
 
-        Hull hull1;
+        private Hull hull1;
+
+        private GUITickBox isActiveTickBox;
 
         [HasDefaultValue(0.0f, true)]
         public float FlowPercentage
@@ -47,10 +49,53 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override bool IsActive
+        {
+            get
+            {
+                return base.IsActive;
+            }
+            set
+            {
+                base.IsActive = value;
+
+                if (isActiveTickBox != null) isActiveTickBox.Selected = value;
+            }
+        }
+
         public Pump(Item item, XElement element)
             : base(item, element)
         {
             GetHull();
+
+            isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Running", Alignment.TopLeft, GuiFrame);
+            isActiveTickBox.OnSelected = (GUITickBox box) =>
+            {
+                targetLevel = null;
+                IsActive = !IsActive;
+                if (!IsActive) currPowerConsumption = 0.0f;
+                item.NewComponentEvent(this, true, true);
+
+                return true;
+            };
+
+            var button = new GUIButton(new Rectangle(160, 40, 35, 30), "OUT", GUI.Style, GuiFrame);
+            button.OnClicked = (GUIButton btn, object obj) =>
+            {
+                FlowPercentage -= 10.0f;
+                item.NewComponentEvent(this, true, true);
+
+                return true;
+            };
+
+            button = new GUIButton(new Rectangle(210, 40, 35, 30), "IN", GUI.Style, GuiFrame);
+            button.OnClicked = (GUIButton btn, object obj) =>
+            {
+                FlowPercentage += 10.0f;
+                item.NewComponentEvent(this, true, true);
+
+                return true;
+            };     
         }
 
         public override void Move(Vector2 amount)
@@ -112,28 +157,11 @@ namespace Barotrauma.Items.Components
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 
+            GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
-
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 20, y + 20, 100, 40), ((IsActive) ? "TURN OFF" : "TURN ON")))
-            {
-                targetLevel = null;
-                IsActive = !IsActive;
-                if (!IsActive) currPowerConsumption = 0.0f;
-                item.NewComponentEvent(this, true, true);
-            }
             
-            spriteBatch.DrawString(GUI.Font, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 20, y + 80), Color.White);
-            
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 70, 40, 40), "OUT", false))
-            {
-                FlowPercentage -= 10.0f;
-                item.NewComponentEvent(this, true, true);
-            }
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 70, 40, 40), "IN", false))
-            {
-                FlowPercentage += 10.0f;
-                item.NewComponentEvent(this, true, true);
-            }            
+            spriteBatch.DrawString(GUI.Font, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
+     
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)

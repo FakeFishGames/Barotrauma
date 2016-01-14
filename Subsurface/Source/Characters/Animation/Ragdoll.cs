@@ -429,13 +429,13 @@ namespace Barotrauma
                     pos.Y = -pos.Y;
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
 
-                    if (limb.AnimTargetPos == Vector2.Zero) continue;
+                    //if (limb.AnimTargetPos == Vector2.Zero) continue;
 
-                    Vector2 pos2 = ConvertUnits.ToDisplayUnits(limb.AnimTargetPos);
-                    pos2.Y = -pos2.Y;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos2.X, (int)pos2.Y, 5, 5), Color.Blue, true, 0.01f);
+                    //Vector2 pos2 = ConvertUnits.ToDisplayUnits(limb.AnimTargetPos);
+                    //pos2.Y = -pos2.Y;
+                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos2.X, (int)pos2.Y, 5, 5), Color.Blue, true, 0.01f);
 
-                    GUI.DrawLine(spriteBatch, pos, pos2, Color.Green);
+                    //GUI.DrawLine(spriteBatch, pos, pos2, Color.Green);
                 }
             }
 
@@ -456,7 +456,7 @@ namespace Barotrauma
                     pos.Y = -pos.Y;
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
-                    GUI.DrawLine(spriteBatch, pos, new Vector2(limb.Position.X, -limb.Position.Y), limb==RefLimb ? Color.Orange : Color.Cyan);
+                    GUI.DrawLine(spriteBatch, pos, new Vector2(limb.Position.X, -limb.Position.Y), limb == RefLimb ? Color.Orange : Color.Cyan);
                 }
             }
 

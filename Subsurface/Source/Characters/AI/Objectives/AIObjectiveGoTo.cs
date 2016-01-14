@@ -16,18 +16,18 @@ namespace Barotrauma
 
         bool repeat;
 
+        //how long until the path to the target is declared unreachable
+        private float waitUntilPathUnreachable;
+
         public override bool CanBeCompleted
         {
             get
             {
-                if (repeat) return true;
+                if (repeat || waitUntilPathUnreachable > 0.0f) return true;
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
                 //path doesn't exist (= hasn't been searched for yet), assume for now that the target is reachable
                 if (pathSteering.CurrentPath == null) return true;
-                //steeringmanager is still targeting some other position, assume for now that the target is reachable
-                if ((target != null && Vector2.Distance(target.Position, targetPos) > 5.0f) ||
-                    Vector2.Distance(pathSteering.CurrentTarget, targetPos) > 5.0f) return true;
 
                 return (!pathSteering.CurrentPath.Unreachable);
             }
@@ -43,6 +43,8 @@ namespace Barotrauma
         {
             this.target = target;
             this.repeat = repeat;
+
+            waitUntilPathUnreachable = 5.0f;
         }
 
 
@@ -51,17 +53,20 @@ namespace Barotrauma
         {
             this.targetPos = simPos;
             this.repeat = repeat;
+
+            waitUntilPathUnreachable = 5.0f;
         }
 
         protected override void Act(float deltaTime)
-        {            
+        {
+            waitUntilPathUnreachable -= deltaTime;
+
             if (character.SelectedConstruction!=null && character.SelectedConstruction.GetComponent<Ladder>()==null)
             {
                 character.SelectedConstruction = null;
             }
 
-            if (target!=null) character.AIController.SelectTarget(target.AiTarget);
-
+            if (target != null) character.AIController.SelectTarget(target.AiTarget);
 
             Vector2 currTargetPos = Vector2.Zero;
 

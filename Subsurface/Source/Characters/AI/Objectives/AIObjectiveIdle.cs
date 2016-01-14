@@ -71,8 +71,15 @@ namespace Barotrauma
                     }
                 }
 
+                if (character.AnimController.InWater)
+                {
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, new Vector2(0.0f, 0.5f));
+                }
+                else
+                {
+                    character.AIController.SteeringManager.SteeringWander();
+                }
 
-                character.AIController.SteeringManager.SteeringWander(1.0f);
                 return;                
             }
  

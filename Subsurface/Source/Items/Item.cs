@@ -459,6 +459,8 @@ namespace Barotrauma
 
         public bool HasTag(string tag)
         {
+            if (tag == null) return true;
+
             return (tags.Contains(tag) || tags.Contains(tag.ToLower()));
         }
 

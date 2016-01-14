@@ -25,10 +25,12 @@ namespace Barotrauma
 
         public override float GetPriority(Character character)
         {
-            float leakSize = (leak.isHorizontal ? leak.Rect.Height : leak.Rect.Width) * leak.Open;
+            if (leak.Open == 0.0f) return 0.0f;
+
+            float leakSize = (leak.isHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
 
             float dist = Vector2.DistanceSquared(character.SimPosition, leak.SimPosition);
-            dist = Math.Max(dist/1000.0f, 1.0f);
+            dist = Math.Max(dist/100.0f, 1.0f);
             return Math.Min(leakSize/dist, 40.0f);
         }
 
@@ -69,7 +71,7 @@ namespace Barotrauma
             {
                 var repairTool = weldingTool.GetComponent<RepairTool>();
                 if (repairTool == null) return;
-                AddSubObjective(new AIObjectiveOperateItem(repairTool, character, ""));
+                AddSubObjective(new AIObjectiveOperateItem(repairTool, character, "", leak));
             }            
         }
 

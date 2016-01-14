@@ -73,6 +73,24 @@ namespace Barotrauma.Items.Components
             //maxOutput = ToolBox.GetAttributeFloat(element, "maxoutput", 10.0f);
             
             IsActive = true;
+
+            var button = new GUIButton(new Rectangle(160, 50, 30,30), "-", GUI.Style, GuiFrame);
+            button.OnClicked = (GUIButton btn, object obj) =>
+            {
+                rechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);
+                item.NewComponentEvent(this, true, false);
+
+                return true;
+            };
+
+            button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", GUI.Style, GuiFrame);
+            button.OnClicked = (GUIButton btn, object obj) =>
+            {
+                rechargeSpeed = Math.Max(rechargeSpeed + maxRechargeSpeed * 0.1f, 0.0f);
+                item.NewComponentEvent(this, true, false);
+
+                return true;
+            };
         }
 
         public override bool Pick(Character picker)
@@ -189,18 +207,8 @@ namespace Barotrauma.Items.Components
                 "Charge: " + (int)charge + "/" + (int)capacity + " (" + (int)((charge / capacity) * 100.0f) + " %)",
                 new Vector2(x + 30, y + 30), Color.White);
 
-            spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed)*100.0f)+" %", new Vector2(x + 30, y + 100), Color.White);
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 200, y + 90, 40, 40), "+"))
-            {
-               rechargeSpeed = Math.Min(rechargeSpeed + maxRechargeSpeed*0.1f, maxRechargeSpeed);
-               item.NewComponentEvent(this, true, false);
-            }
+            spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed)*100.0f)+" %", new Vector2(x + 30, y + 95), Color.White);
 
-            if (GUI.DrawButton(spriteBatch, new Rectangle(x + 250, y + 90, 40, 40), "-"))
-            {
-                rechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);                
-                item.NewComponentEvent(this, true, false);
-            }
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)

@@ -214,6 +214,8 @@ namespace Barotrauma.Items.Components
             Gap leak = objective.OperateTarget as Gap;
             if (leak == null) return true;
 
+            if (Vector2.Distance(leak.WorldPosition, item.WorldPosition) > range) return true;
+
             character.CursorPosition = leak.Position;
             character.SetInput(InputType.Aim, false, true);
 

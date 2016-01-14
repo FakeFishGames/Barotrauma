@@ -140,6 +140,8 @@ namespace Barotrauma
 
         public Item FindItem(string itemName)
         {
+            if (itemName == null) return null;
+
             return Items.FirstOrDefault(i => i != null && (i.Name == itemName || i.HasTag(itemName)));
         }
 

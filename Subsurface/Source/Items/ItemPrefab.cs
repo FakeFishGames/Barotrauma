@@ -112,7 +112,7 @@ namespace Barotrauma
                     return;
                 }
 
-                sprite.Draw(spriteBatch, new Vector2(position.X + sprite.size.X / 2.0f, -position.Y + sprite.size.Y / 2.0f));
+                sprite.Draw(spriteBatch, new Vector2(position.X + sprite.size.X / 2.0f, -position.Y + sprite.size.Y / 2.0f), SpriteColor);
             }
             else
             {
@@ -146,7 +146,7 @@ namespace Barotrauma
                     position = placePosition;
                 }
 
-                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, Color.White);
+                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, SpriteColor);
             }
             
             //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;

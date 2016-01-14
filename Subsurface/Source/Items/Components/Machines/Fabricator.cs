@@ -249,8 +249,11 @@ namespace Barotrauma.Items.Components
 
             foreach (Tuple<ItemPrefab,int> ip in fabricatedItem.RequiredItems)
             {
-                var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1);
-                containers[0].Inventory.RemoveItem(requiredItem);
+                for (int i = 0; i<ip.Item2; i++)
+                {
+                    var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1);
+                    containers[0].Inventory.RemoveItem(requiredItem);
+                }
             }
                         
             Item.Spawner.QueueItem(fabricatedItem.TargetItem, containers[1].Inventory);
@@ -268,7 +271,7 @@ namespace Barotrauma.Items.Components
                 ItemContainer container = item.GetComponent<ItemContainer>();
                 foreach (Tuple<ItemPrefab,int> ip in targetItem.RequiredItems)
                 {
-                    if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1).Count() < ip.Item2) continue;
+                    if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1).Count() >= ip.Item2) continue;
                     activateButton.Enabled = false;
                     break;
                 }
@@ -276,15 +279,6 @@ namespace Barotrauma.Items.Components
 
             GuiFrame.Update((float)Physics.step);
             GuiFrame.Draw(spriteBatch);
-
-            //itemList.Update(0.016f);
-            //itemList.Draw(spriteBatch);
-
-            //if (selectedItemFrame != null)
-            //{
-            //    selectedItemFrame.Update(0.016f);
-            //    selectedItemFrame.Draw(spriteBatch);
-            //}
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
