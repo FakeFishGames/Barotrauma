@@ -37,10 +37,8 @@ namespace Barotrauma
             {
                 Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.Position;
 
-                //!!!!!!!!!!!!!!!!!!
                 if (spawnDeep)
                 {
-
                     position.Y -= Level.Loaded.Size.Y;
                 }
 
@@ -70,8 +68,8 @@ namespace Barotrauma
                 monstersDead = false;
                 break;                    
             }
-            if (monstersDead) Finished();
-            
+
+            if (monstersDead) Finished();            
         }
     }
 }

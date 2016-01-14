@@ -31,6 +31,10 @@
       <fabricableitem name="RegEx Find Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
       <fabricableitem name="Wifi Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
 
+      <fabricableitem name="Fulgurium Battery Cell" requireditems="Steel Bar, Fulgurium Bar, FPGA Circuit" requiredtime="10"/>
+      
+      <fabricableitem name="Battery Cell" requireditems="Steel Bar, Copper Bar, FPGA Circuit" requiredtime="10"/>
+
       <fabricableitem name="Fuel Rod" requireditems="Steel Bar, Uranium Bar"/>
 
       <fabricableitem name="Incendium Fuel Rod" requireditems="Steel Bar, Incendium Bar"/>

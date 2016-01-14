@@ -39,5 +39,23 @@
         <Fire/>
       </StatusEffect>
     </Holdable>
+  </Item>
+
+  <Item
+    name="Faraday Artifact"
+    pickdistance="150">
+
+    <Sprite texture="artifact.png" depth="0.8" sourcerect="40,0,33,61"/>
+
+    <Deconstruct time="30">
+      <Item name="Steel Bar"/>
+      <Item name="Fulgurium Bar"/>
+      <Item name="Fulgurium Bar"/>
+      <Item name="Fulgurium Bar"/>
+    </Deconstruct>
+
+    <Body radius="20" height="20" density="5"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
   </Item> 
 </Items>

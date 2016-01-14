@@ -149,7 +149,10 @@ namespace Barotrauma
             if (divingGearObjective != null)
             {
                 divingGearObjective.TryComplete(deltaTime);
-                return divingGearObjective.IsCompleted();
+
+                bool isCompleted = divingGearObjective.IsCompleted();
+                if (isCompleted) divingGearObjective = null;
+                return isCompleted;
             }
 
             return false;
@@ -165,6 +168,10 @@ namespace Barotrauma
             if (character.AnimController.CurrentHull == null) return 0.0f;
             currenthullSafety = GetHullSafety(character.AnimController.CurrentHull);
             priority = 100.0f - currenthullSafety;
+
+
+            if (divingGearObjective != null && !divingGearObjective.IsCompleted()) priority += 20.0f;
+
             return priority;
         }
 

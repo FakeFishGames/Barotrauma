@@ -98,6 +98,7 @@
     <Compile Include="Source\Events\Quests\Quest.cs" />
     <Compile Include="Source\Events\Quests\MonsterQuest.cs" />
     <Compile Include="Source\Events\Quests\SalvageQuest.cs" />
+    <Compile Include="Source\Events\ArtifactEvent.cs" />
     <Compile Include="Source\GameSession\CargoManager.cs" />
     <Compile Include="Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="Source\GameSession\GameModes\QuestMode.cs" />

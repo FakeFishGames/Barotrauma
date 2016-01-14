@@ -854,6 +854,40 @@ namespace Barotrauma
             return normal;            
         }
 
+        public Vector2 GetRandomItemPos(float offsetFromWall = 10.0f)
+        {
+            Vector2 position = Vector2.Zero;
+
+            offsetFromWall = ConvertUnits.ToSimUnits(offsetFromWall);
+
+            int tries = 0;
+            do
+            {
+                Vector2 startPos = ConvertUnits.ToSimUnits(PositionsOfInterest[Rand.Int(PositionsOfInterest.Count, false)]);
+
+                Vector2 endPos = startPos - ConvertUnits.ToSimUnits(Vector2.UnitY * Size.Y);
+
+                if (Submarine.PickBody(
+                    startPos,
+                    endPos,
+                    null, Physics.CollisionLevel) != null)
+                {
+                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition -  Vector2.Normalize(startPos - endPos)*offsetFromWall);
+                    break;
+                }
+
+                tries++;
+
+                if (tries == 10)
+                {
+                    position = EndPosition - Vector2.UnitY * 300.0f;
+                }
+
+            } while (tries < 10);
+
+            return position;
+        }
+
         //public void SetPosition(Vector2 pos)
         //{
         //    Vector2 amount = pos - Position;

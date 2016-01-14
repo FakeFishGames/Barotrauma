@@ -1044,7 +1044,7 @@ namespace Barotrauma
                 if (soundStates[i] != state) continue;
                 if (n == selectedSound && sounds[i]!=null)
                 {
-                    sounds[i].Play(1.0f, 2000.0f, AnimController.Limbs[0].WorldPosition);
+                    sounds[i].Play(1.0f, soundRange[i], AnimController.Limbs[0].WorldPosition);
                     return;
                 }
                 n++;

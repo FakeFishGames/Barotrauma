@@ -8,23 +8,15 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class SalvageMission : Mission
+    class ArtifactEvent : ScriptedEvent
     {
         private ItemPrefab itemPrefab;
 
         private Item item;
 
         private int state;
-
-        public override Vector2 RadarPosition
-        {
-            get
-            {
-                return ConvertUnits.ToDisplayUnits(item.SimPosition);
-            }
-        }
-
-        public SalvageMission(XElement element)
+        
+        public ArtifactEvent(XElement element)
             : base(element)
         {
             string itemName = ToolBox.GetAttributeString(element, "itemname", "");
@@ -37,10 +29,10 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void Start()
         {
             Vector2 position = Level.Loaded.GetRandomItemPos(30.0f);
-            
+
             item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;
             item.body.FarseerBody.IsKinematic = true;
@@ -51,29 +43,24 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
-                    //item.body.LinearVelocity = Vector2.Zero;
-                    if (item.Inventory!=null) item.body.FarseerBody.IsKinematic = false;
-                    if (item.CurrentHull == null) return;
-                    
-                    ShowMessage(state);
+                    Start();
                     state = 1;
                     break;
                 case 1:
-                    if (!Submarine.Loaded.AtEndPosition && !Submarine.Loaded.AtStartPosition) return;
-                    ShowMessage(state);
+
+                    //item.body.LinearVelocity = Vector2.Zero;
+                    if (item.Inventory!=null) item.body.FarseerBody.IsKinematic = false;
+                    if (item.CurrentHull == null) return;
+
                     state = 2;
                     break;
+                case 2:
+                    if (!Submarine.Loaded.AtEndPosition && !Submarine.Loaded.AtStartPosition) return;
+
+                    Finished();
+                    state = 3;
+                    break;
             }    
-        }
-
-        public override void End()
-        {
-            item.Remove();
-            if (item.CurrentHull == null) return;
-
-            GiveReward();
-
-            completed = true;
         }
     }
 }

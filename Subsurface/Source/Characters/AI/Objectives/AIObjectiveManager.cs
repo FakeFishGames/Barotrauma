@@ -57,7 +57,7 @@ namespace Barotrauma
 
             foreach (Gap gap in Gap.GapList)
             {
-                if (gap.IsRoomToRoom || gap.ConnectedDoor != null || gap.Open<0.1f) continue;
+                if (gap.IsRoomToRoom || gap.ConnectedDoor != null || gap.Open<0.01f) continue;
 
                 AddObjective(new AIObjectiveFixLeak(gap, character));
             }

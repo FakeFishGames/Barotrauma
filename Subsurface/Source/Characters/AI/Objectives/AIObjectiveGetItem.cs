@@ -46,7 +46,7 @@ namespace Barotrauma
             this.equip = equip;
 
             currSearchIndex = 0;
-
+            
             this.itemName = itemName;
         }
 
@@ -136,7 +136,18 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return character.Inventory.FindItem(itemName) != null;
+            if (itemName!=null)
+            {
+                return character.Inventory.FindItem(itemName) != null;
+            }
+            else if (targetItem!= null)
+            {
+                return character.Inventory.Items.Contains(targetItem);
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

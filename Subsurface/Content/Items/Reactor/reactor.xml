@@ -23,7 +23,6 @@
 
     <Reactor canbeselected = "true">
       <GuiFrame rect="0,0,760,460" alignment="Center" color="0.0,0.0,0.0,0.6"/>
-      <requireditem name="Fuel Rod" type="Contained" msg="Fuel required to run the engine"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Fuel Rod, Heat Absorber, Temperature Control Circuit" Condition="-0.1" />
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
 
@@ -45,6 +44,7 @@
       </Containable>
       <Containable name="Incendium Fuel Rod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="5000.0" disabledeltatime="true"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-0.05"/>
       </Containable>
       <Containable name="Heat Absorber"/>
       <Containable name="Temperature Control Circuit"/>  

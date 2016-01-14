@@ -96,6 +96,17 @@ namespace Barotrauma
         {
             if (currentPath == null) return Vector2.Zero;
 
+            if (currentPath.CurrentIndex == currentPath.Nodes.Count)
+            {
+
+                Vector2 pos2 = host.SimPosition;
+                if (character != null && character.Submarine == null)
+                {
+                    pos2 -= Submarine.Loaded.SimPosition;
+                }   
+                return currentTarget-pos2;
+            }
+
             if (canOpenDoors) CheckDoorsInPath();
 
             float allowedDistance = character.AnimController.InWater ? 1.0f : 0.6f;

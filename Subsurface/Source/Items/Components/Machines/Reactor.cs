@@ -52,6 +52,8 @@ namespace Barotrauma.Items.Components
 
         private PropertyTask powerUpTask;
 
+        private GUITickBox autoTempTickBox;
+
         private bool unsentChanges;
         private float sendUpdateTimer;
 
@@ -127,7 +129,11 @@ namespace Barotrauma.Items.Components
         public bool AutoTemp
         {
             get { return autoTemp; }
-            set { autoTemp = value; }
+            set 
+            { 
+                autoTemp = value;
+                if (autoTempTickBox!=null) autoTempTickBox.Selected = value;
+            }
         }
 
         public float ExtraCooling { get; set; }
@@ -173,8 +179,8 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            button = new GUIButton(new Rectangle(410, 170, 100, 40), "TURN ON", GUI.Style, GuiFrame);
-            button.OnClicked = ToggleAutoTemp;
+            autoTempTickBox = new GUITickBox(new Rectangle(410, 170, 20, 20), "Automatic temperature control", Alignment.TopLeft, GuiFrame);
+            autoTempTickBox.OnSelected = ToggleAutoTemp;
 
             button = new GUIButton(new Rectangle(210, 290, 40, 40), "+", GUI.Style, GuiFrame);
             button.OnPressed = () =>
@@ -449,7 +455,7 @@ namespace Barotrauma.Items.Components
 
             spriteBatch.DrawString(GUI.Font, "Shutdown Temperature: " + shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
 
-            spriteBatch.DrawString(GUI.Font, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 450, y + 180), Color.White);
+            //spriteBatch.DrawString(GUI.Font, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 450, y + 180), Color.White);
             
             y += 300;
 
@@ -466,12 +472,10 @@ namespace Barotrauma.Items.Components
             //y = y - 260;
         }
 
-        private bool ToggleAutoTemp(GUIButton button, object userdata)
+        private bool ToggleAutoTemp(GUITickBox tickBox)
         {
             unsentChanges = true;
-            autoTemp = !autoTemp;
-
-            button.Text = autoTemp ? "TURN OFF" : "TURN ON";
+            autoTemp = tickBox.Selected;
 
             return true;
         }

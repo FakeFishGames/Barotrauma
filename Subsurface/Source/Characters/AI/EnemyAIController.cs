@@ -143,7 +143,6 @@ namespace Barotrauma
         private void UpdateNone(float deltaTime)
         {
             //wander around randomly
-            //UpdateSteeringWander(deltaTime, 0.8f);
             steeringManager.SteeringWander(0.8f);            
             steeringManager.SteeringAvoid(deltaTime, 1.0f);
 
@@ -328,9 +327,12 @@ namespace Barotrauma
                         attackTimer += deltaTime;
                         limb.body.ApplyTorque(limb.Mass * 50.0f * Character.AnimController.Dir * dir);
 
-                        limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, deltaTime, (limb.soundTimer <= 0.0f));
+                        if (attackTimer >= limb.attack.Duration)
+                        {
+                            limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, 1.0f, (limb.soundTimer <= 0.0f));
 
-                        limb.soundTimer = Limb.SoundInterval;
+                            limb.soundTimer = Limb.SoundInterval;
+                        }
                     }
 
                     Vector2 diff = attackPosition - limb.SimPosition;

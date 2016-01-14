@@ -89,11 +89,16 @@
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
         <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
         <Explosion range="100.0" force="0.1" shockwave="false" flames="false" camerashake="5.0"/>
-      </StatusEffect>         
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="15.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
+        <RequiredItem name="Fulgurium Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
+        <Explosion range="100.0" force="0.5" shockwave="false" flames="false" camerashake="5.0"/>
+      </StatusEffect>      
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Battery Cell"/>
+      <Containable name="Fulgurium Battery Cell"/>      
     </ItemContainer>
   </Item>
 
@@ -111,6 +116,20 @@
 
     <Pickable slots="Any,RightHand,LeftHand"/>
   </Item>
+  
+  <Item
+    name="Fulgurium Battery Cell"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem,loadable"
+    description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
+
+    <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
+
+    <Body width="20" height="9" density="15"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+  </Item>  
 </Items>
 
 

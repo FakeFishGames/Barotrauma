@@ -41,5 +41,26 @@
     difficulty="5"
     minamount="1" maxamount="1"
     musictype="deep"/>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Watcher/watcher.xml"
+    commonness="3"
+    difficulty="5"
+    minamount="1" maxamount="1"/>
+
+  <ArtifactEvent name="Artifact" description=""
+    itemname="Skyholder Artifact"
+    commonness="1"
+    difficulty="0"/>
+
+  <ArtifactEvent name="Artifact" description=""
+    itemname="Thermal Artifact"
+    commonness="1"
+    difficulty="0"/>
+
+  <ArtifactEvent name="Artifact" description=""
+    itemname="Faraday Artifact"
+    commonness="1"
+    difficulty="0"/>
   
 </Randomevents>
