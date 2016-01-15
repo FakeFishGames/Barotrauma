@@ -158,7 +158,7 @@ namespace Barotrauma
 
                     foreach (Controller controller in buttons)
                     {
-                        if (Vector2.Distance(controller.Item.SimPosition, character.SimPosition) > controller.Item.PickDistance * 2.0f) continue;
+                        if (Vector2.Distance(controller.Item.Position, character.Position) > controller.Item.PickDistance * 2.0f) continue;
 
                         controller.Item.Pick(character, false, true);
                         break;

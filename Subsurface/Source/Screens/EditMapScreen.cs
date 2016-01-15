@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         private Camera cam;
 
-        private GUIComponent GUIpanel;
+        public GUIComponent GUIpanel;
 
         private GUIComponent[] GUItabs;
         private int selectedTab;
@@ -21,9 +21,16 @@ namespace Barotrauma
         
         private bool characterMode;
 
+        private Tutorials.EditorTutorial tutorial;
+
         public Camera Cam
         {
             get { return cam; }
+        }
+
+        public int SelectedTab
+        {
+            get { return selectedTab; }
         }
 
         //public string GetSubName()
@@ -125,10 +132,9 @@ namespace Barotrauma
                         null, frame);
                     textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-                    ItemPrefab ip = ep as ItemPrefab;
-                    if (ip != null && !string.IsNullOrWhiteSpace(ip.Description))
+                    if (!string.IsNullOrWhiteSpace(ep.Description))
                     {
-                        textBlock.ToolTip = ip.Description;
+                        textBlock.ToolTip = ep.Description;
                     }
 
                     if (ep.sprite != null)
@@ -161,6 +167,13 @@ namespace Barotrauma
             tickBox = new GUITickBox(new Rectangle(0, y + 40, 20, 20), "Spawnpoints", Alignment.TopLeft, GUIpanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = !WayPoint.ShowSpawnPoints; return true; };
             
+        }
+
+        public void StartTutorial()
+        {
+            tutorial = new Tutorials.EditorTutorial("EditorTutorial");
+
+            CoroutineManager.StartCoroutine(tutorial.UpdateState());
         }
 
         public override void Select()
@@ -302,6 +315,7 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Update(double deltaTime)
         {
+            if (tutorial!=null) tutorial.Update((float)deltaTime);
 
             if (GUIComponent.MouseOn == null)
             {
@@ -419,6 +433,8 @@ namespace Barotrauma
             {
                 MapEntity.Edit(spriteBatch, cam);
             }
+
+            if (tutorial != null) tutorial.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, cam);
 

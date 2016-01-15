@@ -47,7 +47,7 @@ namespace Barotrauma
         {
             if (component.CanBeSelected)
             { 
-                if (Vector2.Distance(character.SimPosition, component.Item.SimPosition) < component.Item.PickDistance
+                if (Vector2.Distance(character.Position, component.Item.Position) < component.Item.PickDistance
                     || component.Item.IsInsideTrigger(character.WorldPosition))
                 {
                     if (character.SelectedConstruction != component.Item && component.CanBeSelected)

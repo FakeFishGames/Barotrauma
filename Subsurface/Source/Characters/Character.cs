@@ -676,8 +676,15 @@ namespace Barotrauma
             if (torso == null) return null;
 
             Vector2 pos = (torso.body.TargetPosition != Vector2.Zero) ? torso.body.TargetPosition : torso.SimPosition;
+            Vector2 pickPos = selectedConstruction == null ? mouseSimPos : selectedConstruction.SimPosition;
 
-            return Item.FindPickable(pos, selectedConstruction == null ? mouseSimPos : selectedConstruction.SimPosition, AnimController.CurrentHull, selectedItems);
+            if (Submarine != null)
+            {
+                pos += Submarine.SimPosition;
+                pickPos += Submarine.SimPosition;
+            }
+
+            return Item.FindPickable(pos, pickPos, AnimController.CurrentHull, selectedItems);
         }
 
         private Character FindClosestCharacter(Vector2 mouseSimPos, float maxDist = 150.0f)

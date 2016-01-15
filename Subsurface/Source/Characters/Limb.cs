@@ -210,7 +210,7 @@ namespace Barotrauma
                 body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionMisc;
             }
 
-            impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", character.IsHumanoid ? 15.0f : 50.0f);
+            impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", character.IsHumanoid ? 10.0f : 50.0f);
 
             body.UserData = this;
 

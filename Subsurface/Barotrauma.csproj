@@ -103,6 +103,7 @@
     <Compile Include="Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="Source\GameSession\GameModes\QuestMode.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
     <Compile Include="Source\GameSession\InfoTextManager.cs" />
@@ -457,14 +458,14 @@
     <Content Include="Content\Items\itemlabel.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Items\machines.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Items\Medical\medical.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\Medical\med.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Items\MiniMap\fabricator.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\OxygenGenerator\oxygengenerator.png">
@@ -537,16 +538,10 @@
     <Content Include="Content\Items\Engine\engine.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Engine\fabricator.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Content\Items\Engine\pingCircle.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Engine\radarOverlay.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Content\Items\Fabricators\fabricator.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Fabricators\fabricators.xml">

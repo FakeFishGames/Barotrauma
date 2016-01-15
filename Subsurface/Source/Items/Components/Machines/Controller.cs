@@ -69,7 +69,7 @@ namespace Barotrauma.Items.Components
 
             if (character == null 
                 || character.SelectedConstruction != item
-                || Vector2.Distance(character.SimPosition, item.SimPosition) > item.PickDistance * 1.5f)
+                || Vector2.Distance(character.Position, item.Position) > item.PickDistance * 1.5f)
             {
                 if (character != null)
                 {

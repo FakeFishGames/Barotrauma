@@ -20,6 +20,18 @@ namespace Barotrauma.Items.Components
         ConvexHull convexHull;
         ConvexHull convexHull2;
 
+        private bool isOpen;
+
+        private float openState;
+
+        private PhysicsBody body;
+
+        private Sprite doorSprite, weldedSprite;
+
+        private bool isHorizontal;
+
+        private bool isStuck;
+
         private float stuck;
         public float Stuck
         {
@@ -32,8 +44,6 @@ namespace Barotrauma.Items.Components
                 if (stuck == 100.0f) isStuck = true;
             }
         }
-
-        private bool isStuck;
 
         Gap LinkedGap
         {
@@ -53,10 +63,6 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        bool isOpen;
-        
-        float openState;
-
         [HasDefaultValue("0.0,0.0,0.0,0.0", false)]
         public string Window
         {
@@ -97,10 +103,6 @@ namespace Barotrauma.Items.Components
                 UpdateConvexHulls();
             }
         }
-
-        PhysicsBody body;
-
-        Sprite doorSprite, weldedSprite;
         
         public Door(Item item, XElement element)
             : base(item, element)

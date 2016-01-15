@@ -38,12 +38,6 @@ namespace Barotrauma
             get { return configFile; }
         }
 
-        public string Description
-        {
-            get;
-            private set;
-        }
-
         public List<string> DeconstructItems
         {
             get;
@@ -189,7 +183,7 @@ namespace Barotrauma
             Description = ToolBox.GetAttributeString(element, "description", "");
 
             pickThroughWalls    = ToolBox.GetAttributeBool(element, "pickthroughwalls", false);
-            pickDistance        = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f));
+            pickDistance        = ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f);
             
             isLinkable          = ToolBox.GetAttributeBool(element, "linkable", false);
 
@@ -221,7 +215,13 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLower())
                 {
                     case "sprite":
-                        sprite = new Sprite(subElement, Path.GetDirectoryName(filePath));
+                        string spriteFolder = "";
+                        if (!ToolBox.GetAttributeString(subElement, "texture", "").Contains("/"))
+                        {
+                            spriteFolder = Path.GetDirectoryName(filePath);
+                        }
+
+                        sprite = new Sprite(subElement, spriteFolder);
                         size = sprite.size;
                         break;
                     case "deconstruct":

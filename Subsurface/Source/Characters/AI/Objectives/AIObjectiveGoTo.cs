@@ -108,7 +108,7 @@ namespace Barotrauma
 
             if (item != null)
             {
-                allowedDistance = Math.Max(item.PickDistance, allowedDistance);
+                allowedDistance = Math.Max(ConvertUnits.ToSimUnits(item.PickDistance), allowedDistance);
                 if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
             }
 
