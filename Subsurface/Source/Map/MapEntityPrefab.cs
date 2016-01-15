@@ -117,8 +117,13 @@ namespace Barotrauma
 
             if (placePosition == Vector2.Zero)
             {
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
-                    placePosition = Submarine.MouseToWorldGrid(cam);
+                Vector2 position = Submarine.MouseToWorldGrid(cam);
+
+                GUI.DrawLine(spriteBatch, new Vector2(position.X-GameMain.GraphicsWidth, -position.Y), new Vector2(position.X+GameMain.GraphicsWidth, -position.Y), Color.White);
+
+                GUI.DrawLine(spriteBatch, new Vector2(position.X, position.Y - GameMain.GraphicsHeight), new Vector2(position.X, position.Y+GameMain.GraphicsHeight), Color.White);
+
+                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed) placePosition = position;
             }
             else
             {

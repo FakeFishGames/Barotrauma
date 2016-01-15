@@ -55,7 +55,19 @@ namespace Barotrauma.Items.Components
                     linkedGap = e as Gap;                    
                     if (linkedGap != null) return linkedGap;
                 }
-                linkedGap = new Gap(item.Rect, Item.Submarine);
+                Rectangle rect = item.Rect;
+                if (isHorizontal)
+                {
+                    rect.Y += 5;
+                    rect.Height += 10;
+                }
+                else
+                {
+                    rect.X -= 5;
+                    rect.Width += 10;
+                }
+
+                linkedGap = new Gap(rect, Item.Submarine);
                 linkedGap.Submarine = item.Submarine;
                 linkedGap.Open = openState;
                 item.linkedTo.Add(linkedGap);
@@ -341,7 +353,7 @@ namespace Barotrauma.Items.Components
 
             doorSprite.Remove();
 
-            convexHull.Remove();
+            if (convexHull!=null) convexHull.Remove();
             if (convexHull2 != null) convexHull2.Remove();
         }
 

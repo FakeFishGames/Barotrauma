@@ -97,7 +97,7 @@ namespace Barotrauma
                     var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.Loaded);
                     //constructor.Invoke(lobject);
                     item.Submarine = Submarine.Loaded;
-                    item.SetTransform(ConvertUnits.ToSimUnits(item.Position - Submarine.Loaded.Position), 0.0f);
+                    item.SetTransform(ConvertUnits.ToSimUnits(Submarine.Loaded==null ? item.Position : item.Position - Submarine.Loaded.Position), 0.0f);
                     item.FindHull();
 
                     placePosition = Vector2.Zero;

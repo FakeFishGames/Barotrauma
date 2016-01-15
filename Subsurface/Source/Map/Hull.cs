@@ -16,6 +16,8 @@ namespace Barotrauma
         public static List<Hull> hullList = new List<Hull>();
         private static EntityGrid entityGrid;
 
+        public static bool ShowHulls = true;
+
         public static bool EditWater, EditFire;
 
         public static WaterRenderer renderer;
@@ -186,8 +188,10 @@ namespace Barotrauma
             }
         }
 
-        public override bool Contains(Vector2 position)
+        public override bool IsMouseOn(Vector2 position)
         {
+            if (!GameMain.DebugDraw && !ShowHulls) return false;
+
             return (Submarine.RectContains(WorldRect, position) &&
                 !Submarine.RectContains(MathUtils.ExpandRect(WorldRect, -8), position));
         }
@@ -228,7 +232,7 @@ namespace Barotrauma
 
             //renderer.Dispose();
 
-            entityGrid.RemoveEntity(this);
+            if (entityGrid!=null) entityGrid.RemoveEntity(this);
 
             hullList.Remove(this);
         }
@@ -371,6 +375,8 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
+            if (!ShowHulls && !GameMain.DebugDraw) return;
+
             if (!editing && !GameMain.DebugDraw) return;
 
             Rectangle drawRect =

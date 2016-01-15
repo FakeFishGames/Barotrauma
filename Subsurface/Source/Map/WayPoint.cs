@@ -16,7 +16,7 @@ namespace Barotrauma
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
 
-        public static bool ShowWayPoints, ShowSpawnPoints;
+        public static bool ShowWayPoints = true, ShowSpawnPoints = true;
 
         private SpawnType spawnType;
 
@@ -75,6 +75,10 @@ namespace Barotrauma
             ConnectedGap = gap;
         }
 
+        public WayPoint(Rectangle rectangle)
+           : this (rectangle, Submarine.Loaded)
+        { }
+
         public WayPoint(Rectangle newRect, Submarine submarine)
             : base (submarine)
         {
@@ -88,18 +92,18 @@ namespace Barotrauma
             currentHull = Hull.FindHull(WorldPosition);
         }
 
+        public override bool IsMouseOn(Vector2 position)
+        {
+            if (IsHidden()) return false;
+
+            return base.IsMouseOn(position);
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back=true)
         {
             if (!editing && !GameMain.DebugDraw) return;
 
-            if (spawnType == SpawnType.Path)
-            {
-                if (!GameMain.DebugDraw && !ShowWayPoints) return;
-            }
-            else
-            {
-                if (!GameMain.DebugDraw && !ShowSpawnPoints) return;
-            }
+            if (IsHidden()) return;
 
             Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
@@ -116,6 +120,18 @@ namespace Barotrauma
                     new Vector2(drawRect.X+rect.Width/2.0f, -drawRect.Y+rect.Height/2.0f),
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
                     Color.Green);
+            }
+        }
+
+        private bool IsHidden()
+        {
+            if (spawnType == SpawnType.Path)
+            {
+                return (!GameMain.DebugDraw && !ShowWayPoints);
+            }
+            else
+            {
+                 return (!GameMain.DebugDraw && !ShowSpawnPoints);
             }
         }
 
@@ -247,6 +263,8 @@ namespace Barotrauma
 
             foreach (Hull hull in Hull.hullList)
             {
+                if (hull.Rect.Height < 150) continue;
+
                 WayPoint prevWaypoint = null;
 
                 if (hull.Rect.Width<minDist*3.0f)

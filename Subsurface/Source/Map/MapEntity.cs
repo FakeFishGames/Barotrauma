@@ -152,7 +152,7 @@ namespace Barotrauma
             rect.Y += (int)amount.Y;
         }
 
-        public virtual bool Contains(Vector2 position)
+        public virtual bool IsMouseOn(Vector2 position)
         {
             return (Submarine.RectContains(WorldRect, position));
         }
@@ -268,7 +268,7 @@ namespace Barotrauma
                 if (highLightedEntity == null || e.Sprite == null ||
                     (highLightedEntity.Sprite!=null && e.Sprite.Depth < highLightedEntity.Sprite.Depth))
                 {
-                    if (e.Contains(position)) highLightedEntity = e;
+                    if (e.IsMouseOn(position)) highLightedEntity = e;
                 }
                 e.isSelected = false;
             }
@@ -359,7 +359,7 @@ namespace Barotrauma
                     //if clicking a selected entity, start moving it
                     foreach (MapEntity e in selectedList)
                     {
-                        if (e.Contains(position)) startMovingPos = position;
+                        if (e.IsMouseOn(position)) startMovingPos = position;
                     }
 
                     selectionPos = position;
@@ -415,6 +415,16 @@ namespace Barotrauma
             }
             else
             {
+                if (editingHUD == null) return;
+
+                foreach (GUIComponent component in editingHUD.children)
+                {
+                    var textBox = component as GUITextBox;
+                    if (textBox == null) continue;
+
+                    textBox.Deselect();
+                }
+
                 editingHUD = null;
             }
         }

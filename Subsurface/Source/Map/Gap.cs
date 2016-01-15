@@ -13,6 +13,8 @@ namespace Barotrauma
     {
         public static List<Gap> GapList = new List<Gap>();
 
+        public static bool ShowGaps = true;
+
         public bool isHorizontal;
 
         //private Sound waterSound;
@@ -65,6 +67,10 @@ namespace Barotrauma
             }
         }
 
+        public Gap(Rectangle rectangle)
+           : this (rectangle, Submarine.Loaded)
+        { }
+
         public Gap(Rectangle newRect, Submarine submarine)
             : this(newRect, newRect.Width < newRect.Height, submarine)
         { }
@@ -102,9 +108,9 @@ namespace Barotrauma
             }
         }
 
-        public override bool Contains(Vector2 position)
+        public override bool IsMouseOn(Vector2 position)
         {
-            return (Submarine.RectContains(WorldRect, position) &&
+            return (ShowGaps && Submarine.RectContains(WorldRect, position) &&
                 !Submarine.RectContains(MathUtils.ExpandRect(WorldRect, -5), position));
         }
 
@@ -162,10 +168,11 @@ namespace Barotrauma
 
                 GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + lerpedFlowForce / 10.0f + Vector2.One * 5.0f, Color.Orange);
             }
-
-            if (!editing) return;
+            
+            if (!editing || !ShowGaps) return;
 
             Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
+            if (isHighlighted) clr = Color.Gold;
 
             GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), clr * 0.5f, true);
 
