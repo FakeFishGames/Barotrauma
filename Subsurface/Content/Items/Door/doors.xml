@@ -4,11 +4,11 @@
     linkable="true"
     pickdistance="150.0">
 
-    <Sprite texture ="door.png" sourcerect="0,0,48,208" depth="0.01" origin="0.5,0.5"/>
+    <Sprite texture ="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
     <Door canbeselected="true">
       <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0"/>
-      <WeldedSprite texture ="door.png" sourcerect="104,0,48,208" depth="0.0" origin="0.0,0.0"/>
+      <WeldedSprite texture ="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
     </Door>
 
@@ -32,11 +32,39 @@
     linkable="true"
     pickdistance="150.0">
 
-    <Sprite texture ="door.png" sourcerect="0,0,48,208" depth="0.01" origin="0.5,0.5"/>
+    <Sprite texture ="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
     <Door window="0,-18,10,89" canbeselected="true">
-      <Sprite texture ="door.png" sourcerect="56,0,19,208" depth="0.0" origin="0.5,0.0"/>
-      <WeldedSprite texture ="door.png" sourcerect="104,0,48,208" depth="0.0" origin="0.0,0.0"/>
+      <Sprite texture ="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0"/>
+      <WeldedSprite texture ="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5"/>
+      <sound file="door.ogg" type="OnUse" range="500.0"/>
+    </Door>
+
+    <AiTarget sightrange="5000.0"/>
+
+    <fixrequirement name="Mechanical repairs">
+      <skill name="Construction" level="40"/>
+      <item name="Welding Tool"/>
+    </fixrequirement>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
+      <output name="state_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Hatch"
+    linkable="true"
+    pickdistance="150.0">
+
+    <Sprite texture ="door.png" sourcerect="0,209,128,46" depth="0.01" origin="0.5,0.5"/>
+
+    <Door canbeselected="true" horizontal="true">
+      <Sprite texture ="door.png" sourcerect="128,208,128,19" depth="0.05" origin="0.0,0.5"/>
+      <WeldedSprite texture ="door.png" sourcerect="0,148,108,33" depth="0.0" origin="0.5,0.5"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
     </Door>
 

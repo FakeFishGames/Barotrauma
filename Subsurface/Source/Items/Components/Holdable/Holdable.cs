@@ -110,7 +110,7 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
-            item.body.Enabled = true;
+            if (item.body != null) item.body.Enabled = true;
             IsActive = false;
 
             if (picker == null)

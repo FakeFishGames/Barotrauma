@@ -108,7 +108,9 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             //Vector2 position = new Vector2(newRect.X, newRect.Y);
-            
+
+            isHorizontal = ToolBox.GetAttributeBool(element, "horizontal", false);
+
            // isOpen = false;
             foreach (XElement subElement in element.Elements())
             {
@@ -245,36 +247,9 @@ namespace Barotrauma.Items.Components
                 LinkedGap.Open = openState;
             }
             
-            if (openState > 0.0f && openState < 1.0f)
+            if (openState > 0.0f && openState < 1.0f && !isOpen)
             {
-                //push characters out of the doorway when the door is closing/opening
-                Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
-                Vector2 simSize = ConvertUnits.ToSimUnits(new Vector2(doorSprite.size.X,
-                    item.Rect.Height * (1.0f - openState)));
-
-                foreach (Character c in Character.CharacterList)
-                {
-                    int dir = Math.Sign(c.SimPosition.X - item.SimPosition.X);
-                    foreach (Limb l in c.AnimController.Limbs)
-                    {
-                        if (l.SimPosition.Y > simPos.Y || l.SimPosition.Y < simPos.Y - simSize.Y) continue;
-
-                        if (Math.Sign(l.SimPosition.X - item.SimPosition.X) != dir)
-                        {
-                            l.body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X*1.2f, item.SimPosition.Y), l.body.Rotation);
-                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, l.body);
-                            //c.AddDamage(item.SimPosition, DamageType.Blunt, 1.0f, 0.0f, 0.0f, true);
-
-                            l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
-                        }
-
-                        if (Math.Abs(l.SimPosition.X - item.SimPosition.X) > simSize.X*0.5f) continue;
-
-
-                        l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -0.5f));
-                        c.StartStun(0.2f);
-                    }
-                }
+                PushCharactersAway();
             }
             else
             {
@@ -303,7 +278,7 @@ namespace Barotrauma.Items.Components
 
             if (stuck>0.0f && weldedSprite!=null)
             {
-                Vector2 weldSpritePos = new Vector2(item.Rect.X, item.Rect.Y);
+                Vector2 weldSpritePos = new Vector2(item.Rect.Center.X, item.Rect.Y-item.Rect.Height/2.0f);
                 if (item.Submarine != null) weldSpritePos += item.Submarine.Position;
                 weldSpritePos.Y = -weldSpritePos.Y;
 
@@ -317,14 +292,31 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y);
-            if (item.Submarine != null) pos += item.Submarine.DrawPosition;
-            pos.Y = -pos.Y;
 
-            spriteBatch.Draw(doorSprite.Texture, pos,
-                new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
-                (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
-                color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);            
+
+            if (isHorizontal)
+            {
+                Vector2 pos = new Vector2(item.Rect.X, item.Rect.Y - item.Rect.Height/2);
+                if (item.Submarine != null) pos += item.Submarine.DrawPosition;
+                pos.Y = -pos.Y;
+
+                spriteBatch.Draw(doorSprite.Texture, pos,
+                    new Rectangle((int)(doorSprite.SourceRect.X + doorSprite.size.X * openState), (int)doorSprite.SourceRect.Y, 
+                     (int)(doorSprite.size.X * (1.0f - openState)),(int)doorSprite.size.Y),
+                    color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);  
+            }
+            else
+            {
+                Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y);
+                if (item.Submarine != null) pos += item.Submarine.DrawPosition;
+                pos.Y = -pos.Y;
+
+                spriteBatch.Draw(doorSprite.Texture, pos,
+                    new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
+                    (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
+                    color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);  
+            }
+          
         }
 
         public override void OnMapLoaded()
@@ -351,6 +343,72 @@ namespace Barotrauma.Items.Components
 
             convexHull.Remove();
             if (convexHull2 != null) convexHull2.Remove();
+        }
+
+        private void PushCharactersAway()
+        {
+            //push characters out of the doorway when the door is closing/opening
+            Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
+
+            Vector2 currSize = isHorizontal ?
+                new Vector2(item.Rect.Width * (1.0f - openState), doorSprite.size.Y) :
+                new Vector2(doorSprite.size.X, item.Rect.Height * (1.0f - openState));
+
+            Vector2 simSize = ConvertUnits.ToSimUnits(currSize);
+
+            foreach (Character c in Character.CharacterList)
+            {
+                int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
+
+                foreach (Limb l in c.AnimController.Limbs)
+                {
+                    float diff = 0.0f;
+
+                    if (isHorizontal)
+                    {
+                        if (l.SimPosition.X < simPos.X || l.SimPosition.X > simPos.X + simSize.X) continue;
+
+                        diff = l.SimPosition.Y - item.SimPosition.Y;
+                    }
+                    else
+                    {
+                        if (l.SimPosition.Y > simPos.Y || l.SimPosition.Y < simPos.Y - simSize.Y) continue;
+
+                        diff = l.SimPosition.X - item.SimPosition.X;
+                    }
+                   
+                    if (Math.Sign(diff) != dir)
+                    {
+                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, l.body);
+
+                        if (isHorizontal)
+                        {
+                            l.body.SetTransform(new Vector2(l.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 1.2f), l.body.Rotation);
+                            l.body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 0.5f));
+                        }
+                        else
+                        {
+                            l.body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X * 1.2f, l.SimPosition.Y), l.body.Rotation);
+                            l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
+                        }
+                    }
+
+                    if (isHorizontal)
+                    {
+                        if (Math.Abs(l.SimPosition.Y - item.SimPosition.Y) > simSize.Y * 0.5f) continue;
+
+                        l.body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 0.5f));
+                    }
+                    else
+                    {
+                        if (Math.Abs(l.SimPosition.X - item.SimPosition.X) > simSize.X * 0.5f) continue;
+
+                        l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
+                    }
+
+                    c.StartStun(0.2f);
+                }
+            }
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
