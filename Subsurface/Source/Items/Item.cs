@@ -29,6 +29,8 @@ namespace Barotrauma
         public static ItemSpawner Spawner = new ItemSpawner();
         public static ItemRemover Remover = new ItemRemover();
 
+        public static bool ShowLinks = true;
+
         private List<string> tags;
         
         public Hull CurrentHull;
@@ -698,6 +700,8 @@ namespace Barotrauma
                     Color.Green);
             }
 
+            if (!ShowLinks) return;
+
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
@@ -727,7 +731,7 @@ namespace Barotrauma
             {
                 if (entity == this || !entity.IsHighlighted) continue;
                 if (linkedTo.Contains(entity)) continue;
-                if (!entity.Contains(position)) continue;
+                if (!entity.IsMouseOn(position)) continue;
 
                 linkedTo.Add(entity);
                 if (entity.IsLinkable && entity.linkedTo != null) entity.linkedTo.Add(this);
@@ -790,7 +794,7 @@ namespace Barotrauma
             
             foreach (var objectProperty in editableProperties)
             {
-                new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, null, editingHUD);
+                new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, GUI.Style, editingHUD);
 
                 int height = 20;
                 var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault<Editable>();
@@ -905,11 +909,9 @@ namespace Barotrauma
                             transformedTrigger.Y - transformedTrigger.Height / 2.0f);
 
                     dist = MathHelper.Min(Math.Abs(triggerCenter.X - displayPos.X), Math.Abs(triggerCenter.Y-displayPos.Y));
-                    dist = ConvertUnits.ToSimUnits(dist);
                     if (dist > closestDist && closest!=null) continue;
 
                     dist = MathHelper.Min(Math.Abs(triggerCenter.X - displayPickPos.X), Math.Abs(triggerCenter.Y - displayPickPos.Y));
-                    dist = ConvertUnits.ToSimUnits(dist);
                     if (closest == null || dist < closestDist)
                     {
                         closest = item;
@@ -993,7 +995,8 @@ namespace Barotrauma
 
                 if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
-                if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, picker == Character.Controlled)) continue;
+                bool showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.EditMapScreen;
+                if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) continue;
                 if ((ic.CanBePicked && pickHit && ic.Pick(picker)) || 
                     (ic.CanBeSelected && selectHit && ic.Select(picker)))                     
                 {
@@ -1133,7 +1136,7 @@ namespace Barotrauma
 
         private bool EnterProperty(GUITextBox textBox, string text)
         {
-            textBox.Color = Color.White;
+            textBox.Color = Color.DarkGreen;
 
             var objectProperty = textBox.UserData as ObjectProperty;
             if (objectProperty == null) return false;

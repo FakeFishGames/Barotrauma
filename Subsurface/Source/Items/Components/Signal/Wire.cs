@@ -173,18 +173,19 @@ namespace Barotrauma.Items.Components
 
             item.FindHull();
 
-            Vector2 position = item.Position;
-            position.X = MathUtils.Round(item.Position.X, nodeDistance);
-            if (item.CurrentHull == null)
-            {
-                position.Y = MathUtils.Round(item.Position.Y, nodeDistance);
-            }
-            else
-            {
-                position.Y -= item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
-                position.Y = Math.Max(MathUtils.Round(position.Y, nodeDistance), heightFromFloor);
-                position.Y += item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
-            }
+            //Vector2 position = item.Position;
+
+            //position.X = MathUtils.Round(item.Position.X, nodeDistance);
+            //if (item.CurrentHull == null)
+            //{
+            //    position.Y = MathUtils.Round(item.Position.Y, nodeDistance);
+            //}
+            //else
+            //{
+            //    position.Y -= item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
+            //    position.Y = Math.Max(MathUtils.Round(position.Y, nodeDistance), heightFromFloor);
+            //    position.Y += item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
+            //}
 
             newNodePos = RoundNode(item.Position, item.CurrentHull)-Submarine.HiddenSubPosition;
 
@@ -249,16 +250,26 @@ namespace Barotrauma.Items.Components
 
         private Vector2 RoundNode(Vector2 position, Hull hull)
         {
-            position.X = MathUtils.Round(position.X, nodeDistance);
-            if (hull == null)
+            if (Screen.Selected == GameMain.EditMapScreen)
             {
-                position.Y = MathUtils.Round(position.Y, nodeDistance);
+                //position = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - Submarine.Loaded.Position;// Nodes[(int)selectedNodeIndex];
+
+                position.X = MathUtils.Round(position.X, Submarine.GridSize.X / 2.0f);
+                position.Y = MathUtils.Round(position.Y, Submarine.GridSize.Y / 2.0f);
             }
             else
             {
-                position.Y -= hull.Rect.Y - hull.Rect.Height;
-                position.Y = Math.Max(MathUtils.Round(position.Y, nodeDistance), heightFromFloor);
-                position.Y += hull.Rect.Y -hull.Rect.Height;
+                position.X = MathUtils.Round(position.X, nodeDistance);
+                if (hull == null)
+                {
+                    position.Y = MathUtils.Round(position.Y, nodeDistance);
+                }
+                else
+                {
+                    position.Y -= hull.Rect.Y - hull.Rect.Height;
+                    position.Y = Math.Max(MathUtils.Round(position.Y, nodeDistance), heightFromFloor);
+                    position.Y += hull.Rect.Y -hull.Rect.Height;
+                }
             }
 
             return position;
@@ -322,10 +333,12 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Nodes.Count; i++)
             {
                 Vector2 worldPos = Nodes[i];
-                if (item.Submarine != null) worldPos += item.Submarine.Position + Submarine.HiddenSubPosition;
+                if (Submarine.Loaded != null) worldPos += Submarine.Loaded.Position + Submarine.HiddenSubPosition;
                 worldPos.Y = -worldPos.Y;
 
                 GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.0f);
+
+                if (IsActive) continue;
 
                 if (GUIComponent.MouseOn != null ||
                     Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), new Vector2(worldPos.X, -worldPos.Y)) > 10.0f)
@@ -382,10 +395,10 @@ namespace Barotrauma.Items.Components
 
         private void DrawSection(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color)
         {
-            if (item.Submarine!=null)
+            if (Submarine.Loaded!=null)
             {
-                start += item.Submarine.DrawPosition+Submarine.HiddenSubPosition;
-                end += item.Submarine.DrawPosition+Submarine.HiddenSubPosition;
+                start += Submarine.Loaded.DrawPosition + Submarine.HiddenSubPosition;
+                end += Submarine.Loaded.DrawPosition + Submarine.HiddenSubPosition;
             }
 
             start.Y = -start.Y;

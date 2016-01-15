@@ -33,10 +33,10 @@ namespace Barotrauma
             get { return selectedTab; }
         }
 
-        //public string GetSubName()
-        //{
-        //    return ((Submarine.Loaded == null) ? "" : Submarine.Loaded.Name);
-        //}
+        public string GetSubName()
+        {
+            return ((Submarine.Loaded == null) ? "" : Submarine.Loaded.Name);
+        }
 
         private string GetItemCount()
         {
@@ -57,7 +57,7 @@ namespace Barotrauma
         public EditMapScreen()
         {
             cam = new Camera(); 
-            cam.Translate(new Vector2(-10.0f, 50.0f));
+            //cam.Translate(new Vector2(-10.0f, 50.0f));
 
             selectedTab = -1;
 
@@ -69,10 +69,10 @@ namespace Barotrauma
 
 
 
-            new GUITextBlock(new Rectangle(0, 20, 0, 20), "Submarine:", GUI.Style, GUIpanel);
-            nameBox = new GUITextBox(new Rectangle(0, 40, 0, 20), GUI.Style, GUIpanel);
-            nameBox.OnEnterPressed = ChangeSubName;
-            //nameBlock.TextGetter = GetSubName;
+            var nameBlock =new GUITextBlock(new Rectangle(0, 20, 0, 20), "Submarine:", GUI.Style, GUIpanel);
+            //nameBox = new GUITextBox(new Rectangle(0, 40, 0, 20), GUI.Style, GUIpanel);
+            //nameBox.OnEnterPressed = ChangeSubName;
+            nameBlock.TextGetter = GetSubName;
 
             GUIButton button = new GUIButton(new Rectangle(0,70,0,20), "Save", GUI.Style, GUIpanel);
             button.OnClicked = SaveSub;
@@ -162,11 +162,24 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", GUI.Style, GUIpanel);
 
+
+
             var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), "Waypoints", Alignment.TopLeft, GUIpanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; };
-            tickBox = new GUITickBox(new Rectangle(0, y + 40, 20, 20), "Spawnpoints", Alignment.TopLeft, GUIpanel);
+            tickBox.Selected = true;
+            tickBox = new GUITickBox(new Rectangle(0, y + 45, 20, 20), "Spawnpoints", Alignment.TopLeft, GUIpanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = !WayPoint.ShowSpawnPoints; return true; };
-            
+            tickBox.Selected = true;
+            tickBox = new GUITickBox(new Rectangle(0, y + 70, 20, 20), "Links", Alignment.TopLeft, GUIpanel);
+            tickBox.OnSelected = (GUITickBox obj) => { Item.ShowLinks = !Item.ShowLinks; return true; };
+            tickBox.Selected = true;
+            tickBox = new GUITickBox(new Rectangle(0, y + 95, 20, 20), "Hulls", Alignment.TopLeft, GUIpanel);
+            tickBox.OnSelected = (GUITickBox obj) => { Hull.ShowHulls = !Hull.ShowHulls; return true; };
+            tickBox.Selected = true;
+            tickBox = new GUITickBox(new Rectangle(0, y + 120, 20, 20), "Gaps", Alignment.TopLeft, GUIpanel);
+            tickBox.OnSelected = (GUITickBox obj) => { Gap.ShowGaps = !Gap.ShowGaps; return true; };
+            tickBox.Selected = true;
+
         }
 
         public void StartTutorial()
@@ -186,9 +199,14 @@ namespace Barotrauma
             if (Submarine.Loaded != null)
             {
                 cam.Position = Submarine.Loaded.Position + Submarine.HiddenSubPosition;
-                nameBox.Text = Submarine.Loaded.Name;
+                //nameBox.Text = Submarine.Loaded.Name;
             }
-             //CreateDummyCharacter();
+            else
+            {
+                cam.Position = Submarine.HiddenSubPosition;
+            }
+
+            cam.UpdateTransform();
         }
 
         public override void Deselect()
@@ -354,7 +372,7 @@ namespace Barotrauma
                 MapEntity.UpdateSelecting(cam);
             }
 
-
+            GUIComponent.MouseOn = null;
             GUIpanel.Update((float)deltaTime);
             if (selectedTab > -1)
             {

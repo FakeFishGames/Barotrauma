@@ -268,6 +268,27 @@ namespace Barotrauma
 
             InsertToList();
         }
+
+        public override bool IsMouseOn(Vector2 position)
+        {
+            if (StairDirection == Direction.None)
+            {
+                return base.IsMouseOn(position);
+            }
+            else
+            {
+                if (!base.IsMouseOn(position)) return false;
+
+                if (StairDirection == Direction.Left)
+                {
+                    return MathUtils.LineToPointDistance(new Vector2(rect.X, rect.Y), new Vector2(rect.Right, rect.Y - rect.Height), position)< 40.0f;
+                }
+                else
+                {                    
+                    return MathUtils.LineToPointDistance(new Vector2(rect.X,rect.Y-rect.Height), new Vector2(rect.Right, rect.Y), position) <40.0f;
+                }
+            }
+        }
         
         public override void Remove()
         {
