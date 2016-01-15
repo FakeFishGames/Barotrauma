@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
             if (character == null || reloadTimer>0.0f) return false;
             if (!character.IsKeyDown(InputType.Aim) || hitting) return false;
 
-            user = character;
+            SetUser(character);
 
             if (hitPos < MathHelper.Pi * 0.69f) return false;
 
@@ -154,9 +154,36 @@ namespace Barotrauma.Items.Components
                     hitting = false;
                 }
             }
-             
+        }
 
-        }    
+
+        private void SetUser(Character character)
+        {
+            if (user == character) return;
+
+            if (user != null)
+            {
+                foreach (Limb limb in user.AnimController.Limbs)
+                {
+                    try
+                    {
+                        item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
+                    }
+
+                    catch
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            foreach (Limb limb in character.AnimController.Limbs)
+            {
+                item.body.FarseerBody.IgnoreCollisionWith(limb.body.FarseerBody);
+            }
+
+            user = character;
+        }
 
         private void RestoreCollision()
         {

@@ -340,6 +340,12 @@ namespace Barotrauma
                     break;
                 case "tutorial":
                     TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
+
+
+                    break;
+                case "editortutorial":
+                    GameMain.EditMapScreen.Select();
+                    GameMain.EditMapScreen.StartTutorial();
                     break;
                 case "lobbyscreen":
                 case "lobby":

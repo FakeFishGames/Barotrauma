@@ -14,6 +14,8 @@ namespace Barotrauma.Tutorials
 
         protected GUIComponent infoBox;
 
+        Character character;
+
 
         public string Name
         {
@@ -26,6 +28,7 @@ namespace Barotrauma.Tutorials
             TutorialTypes = new List<TutorialType>();
 
             TutorialTypes.Add(new BasicTutorial("Basic tutorial"));
+
         }
 
         public TutorialType(string name)
@@ -58,7 +61,7 @@ namespace Barotrauma.Tutorials
 
             CharacterInfo charInfo = new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Name == "Engineer"));
 
-            Character character = Character.Create(charInfo, wayPoint.WorldPosition);
+            character = Character.Create(charInfo, wayPoint.WorldPosition);
             Character.Controlled = character;
             character.GiveJobItems(null);
 
@@ -72,27 +75,30 @@ namespace Barotrauma.Tutorials
 
         public virtual void Update(float deltaTime)
         {
-
-            if (Character.Controlled==null)
+            if (character!=null)
             {
-                CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
-                infoBox = null;
-            }
-            else if (Character.Controlled.IsDead)
-            {
-                Character.Controlled = null;
+                if (Character.Controlled==null)
+                {
+                    CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
+                    infoBox = null;
+                }
+                else if (Character.Controlled.IsDead)
+                {
+                    Character.Controlled = null;
 
-                CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
-                infoBox = null;
-                CoroutineManager.StartCoroutine(Dead());
+                    CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
+                    infoBox = null;
+                    CoroutineManager.StartCoroutine(Dead());
+                }
             }
+
 
             //CrewManager.Update(deltaTime);
 
             if (infoBox != null) infoBox.Update(deltaTime);
         }
 
-        protected virtual IEnumerable<object> UpdateState()
+        public virtual IEnumerable<object> UpdateState()
         {
             yield return CoroutineStatus.Success;
         }

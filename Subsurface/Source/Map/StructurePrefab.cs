@@ -89,6 +89,8 @@ namespace Barotrauma
                 if (ToolBox.GetAttributeBool(element, "flipvertical", false)) sp.sprite.effects = SpriteEffects.FlipVertically;
             }
 
+            sp.Description = ToolBox.GetAttributeString(element, "description", "");
+
             sp.size = Vector2.Zero;
             sp.size.X = ToolBox.GetAttributeFloat(element, "width", 0.0f);
             sp.size.Y = ToolBox.GetAttributeFloat(element, "height", 0.0f);

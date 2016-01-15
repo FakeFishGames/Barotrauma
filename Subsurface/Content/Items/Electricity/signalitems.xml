@@ -100,7 +100,7 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand"/>
+    <Holdable slots="Any,RightHand,LeftHand"/>
   </Item>
 
   <Item

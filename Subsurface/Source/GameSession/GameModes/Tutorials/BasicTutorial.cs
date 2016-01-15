@@ -15,7 +15,7 @@ namespace Barotrauma.Tutorials
 
         }
 
-        protected override IEnumerable<object> UpdateState()
+        public override IEnumerable<object> UpdateState()
         {
             Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
 

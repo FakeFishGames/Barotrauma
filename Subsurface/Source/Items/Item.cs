@@ -895,7 +895,7 @@ namespace Barotrauma
 
                 foreach (Rectangle trigger in item.prefab.Triggers)
                 {
-                    Rectangle transformedTrigger = item.TransformTrigger(trigger);
+                    Rectangle transformedTrigger = item.TransformTrigger(trigger, true);
                     
                     if (!Submarine.RectContains(transformedTrigger, displayPos)) continue;
                                         
@@ -917,16 +917,16 @@ namespace Barotrauma
                     }
                 }
                 
-                if (item.prefab.PickDistance == 0.0f) continue;  
-                if (Vector2.Distance(position, item.SimPosition) > item.prefab.PickDistance) continue;
+                if (item.prefab.PickDistance == 0.0f) continue;
+                if (Vector2.Distance(displayPos, item.WorldPosition) > item.prefab.PickDistance) continue;
 
                 if (!item.prefab.PickThroughWalls)
                 {
-                    Body body = Submarine.CheckVisibility(position, item.SimPosition);
+                    Body body = Submarine.CheckVisibility(item.Submarine == null ? position : position - item.Submarine.SimPosition, item.SimPosition);
                     if (body != null && body.UserData as Item != item) continue;
                 }
 
-                dist = Vector2.Distance(pickPosition, item.SimPosition);
+                dist = Vector2.Distance(displayPickPos, item.WorldPosition);
                 if (dist < item.prefab.PickDistance && (closest == null || dist < closestDist))
                 {
                     closest = item;

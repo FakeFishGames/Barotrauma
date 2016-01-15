@@ -383,7 +383,7 @@ namespace Barotrauma
 
             avgVelocity = avgVelocity / Limbs.Count();
             
-            float impact = Vector2.Dot((f1.Body.LinearVelocity + avgVelocity) / 2.0f, -normal);
+            float impact = Vector2.Dot(avgVelocity, -normal);
             
             if (GameMain.Server != null) impact = impact / 2.0f;
 

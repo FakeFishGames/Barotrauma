@@ -27,7 +27,7 @@
     category="Machine"
     pickdistance="150">
 
-    <Sprite texture ="fabricator.png" depth="0.8"/>
+    <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
     <Steering minvoltage="0.5" canbeselected = "true">
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.6"/>
@@ -54,8 +54,8 @@
     linkable="true"
     category="Machine"
     pickdistance="150">
-
-    <Sprite texture ="fabricator.png" depth="0.8"/>
+    
+    <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 
     <Radar canbeselected = "true" powerconsumption="100">
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.6"/>

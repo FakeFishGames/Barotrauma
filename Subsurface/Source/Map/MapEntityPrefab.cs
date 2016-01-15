@@ -47,6 +47,13 @@ namespace Barotrauma
             set { selected = value; }
         }
 
+
+        public string Description
+        {
+            get;
+            protected set;
+        }
+
         public virtual bool IsLinkable
         {
             get { return isLinkable; }
@@ -83,6 +90,7 @@ namespace Barotrauma
         {
             MapEntityPrefab ep = new MapEntityPrefab();
             ep.name = "hull";
+            ep.Description = "Hulls determine which parts are considered to be ''inside the sub''. Generally every room should be enclosed by a hull.";
             ep.constructor = typeof(Hull).GetConstructor(new Type[] { typeof(Rectangle) });
             ep.resizeHorizontal = true;
             ep.resizeVertical = true;
@@ -90,6 +98,7 @@ namespace Barotrauma
 
             ep = new MapEntityPrefab();
             ep.name = "gap";
+            ep.Description = "Gaps allow water and air to flow between two hulls. ";
             ep.constructor = typeof(Gap).GetConstructor(new Type[] { typeof(Rectangle) });
             ep.resizeHorizontal = true;
             ep.resizeVertical = true;

@@ -64,7 +64,7 @@ namespace Barotrauma
             }
             else
             {
-                if (Vector2.Distance(character.SimPosition, container.Item.SimPosition) > container.Item.PickDistance
+                if (Vector2.Distance(character.Position, container.Item.Position) > container.Item.PickDistance
                     && !container.Item.IsInsideTrigger(character.Position))
                 {
                     AddSubObjective(new AIObjectiveGoTo(container.Item, character));

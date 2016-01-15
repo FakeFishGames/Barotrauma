@@ -25,7 +25,6 @@
       <input name="set_state"/>
       <output name="state_out"/>
     </ConnectionPanel>
-
   </Item>
 
   <Item
@@ -54,6 +53,5 @@
       <input name="set_state"/>
       <output name="state_out"/>
     </ConnectionPanel>
-
   </Item>
 </Items>

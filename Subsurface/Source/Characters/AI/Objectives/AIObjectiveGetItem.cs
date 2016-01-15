@@ -54,7 +54,7 @@ namespace Barotrauma
         {
             if (targetItem != null)
             {
-                if (Vector2.Distance(character.SimPosition, targetItem.SimPosition) < targetItem.PickDistance)
+                if (Vector2.Distance(character.Position, targetItem.Position) < targetItem.PickDistance)
                 {
                     int targetSlot = -1;
                     if (equip)
