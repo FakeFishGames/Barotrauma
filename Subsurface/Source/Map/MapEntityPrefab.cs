@@ -89,25 +89,31 @@ namespace Barotrauma
         public static void Init()
         {
             MapEntityPrefab ep = new MapEntityPrefab();
-            ep.name = "hull";
+            ep.name = "Hull";
             ep.Description = "Hulls determine which parts are considered to be ''inside the sub''. Generally every room should be enclosed by a hull.";
-            ep.constructor = typeof(Hull).GetConstructor(new Type[] { typeof(Rectangle) });
+            ep.constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             ep.resizeHorizontal = true;
             ep.resizeVertical = true;
             list.Add(ep);
 
             ep = new MapEntityPrefab();
-            ep.name = "gap";
+            ep.name = "Gap";
             ep.Description = "Gaps allow water and air to flow between two hulls. ";
-            ep.constructor = typeof(Gap).GetConstructor(new Type[] { typeof(Rectangle) });
+            ep.constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             ep.resizeHorizontal = true;
             ep.resizeVertical = true;
             list.Add(ep);
 
             ep = new MapEntityPrefab();
-            ep.name = "waypoint";
-            ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(Rectangle) });
+            ep.name = "Waypoint";
+            ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             list.Add(ep);
+
+            ep = new MapEntityPrefab();
+            ep.name = "Spawnpoint";
+            ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
+            list.Add(ep);
+
         }
 
 
@@ -121,7 +127,7 @@ namespace Barotrauma
 
                 GUI.DrawLine(spriteBatch, new Vector2(position.X-GameMain.GraphicsWidth, -position.Y), new Vector2(position.X+GameMain.GraphicsWidth, -position.Y), Color.White);
 
-                GUI.DrawLine(spriteBatch, new Vector2(position.X, position.Y - GameMain.GraphicsHeight), new Vector2(position.X, position.Y+GameMain.GraphicsHeight), Color.White);
+                GUI.DrawLine(spriteBatch, new Vector2(position.X, -(position.Y - GameMain.GraphicsHeight)), new Vector2(position.X, -(position.Y + GameMain.GraphicsHeight)), Color.White);
 
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed) placePosition = position;
             }
@@ -138,7 +144,7 @@ namespace Barotrauma
 
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
                 {
-                    object[] lobject = new object[] { newRect };
+                    object[] lobject = new object[] { this, newRect };
                     constructor.Invoke(lobject);
                     placePosition = Vector2.Zero;
                     selected = null;

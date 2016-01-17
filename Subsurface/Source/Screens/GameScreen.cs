@@ -191,7 +191,7 @@ namespace Barotrauma
                 {
                     Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, Character.Controlled);
                 }
-                else
+                else if (!Character.Controlled.SelectedConstruction.IsInPickRange(Character.Controlled.WorldPosition))
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }

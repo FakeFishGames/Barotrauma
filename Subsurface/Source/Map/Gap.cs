@@ -67,7 +67,7 @@ namespace Barotrauma
             }
         }
 
-        public Gap(Rectangle rectangle)
+        public Gap(MapEntityPrefab prefab, Rectangle rectangle)
            : this (rectangle, Submarine.Loaded)
         { }
 
@@ -225,7 +225,6 @@ namespace Barotrauma
             soundIndex = SoundPlayer.flowSounds[index].Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
             
             flowForce = Vector2.Zero;
-            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, 0.05f);
 
             if (open == 0.0f) return;
 
@@ -242,7 +241,9 @@ namespace Barotrauma
                 UpdateRoomToRoom(deltaTime);
             }
 
-            if (LerpedFlowForce.Length() > 150.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
+            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime*2.0f);
+
+            if (LerpedFlowForce.Length() > 100.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {
                 //UpdateFlowForce();
 
@@ -256,8 +257,10 @@ namespace Barotrauma
                         MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
                         flowForce.Y * Rand.Range(0.5f, 0.7f));
 
-                    var particle = GameMain.ParticleManager.CreateParticle("watersplash",
-                        new Vector2(pos.X, pos.Y - Rand.Range(0.0f, 10.0f)), velocity);
+                    var particle = GameMain.ParticleManager.CreateParticle(
+                        "watersplash",
+                        (Submarine.Loaded==null ? pos : pos + Submarine.Loaded.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f), 
+                        velocity);
 
                     if (particle != null)
                     {
@@ -266,7 +269,10 @@ namespace Barotrauma
 
                     pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
 
-                    GameMain.ParticleManager.CreateParticle("bubbles", pos, flowForce / 200.0f);
+                    GameMain.ParticleManager.CreateParticle(
+                        "bubbles", 
+                        Submarine.Loaded==null ? pos : pos + Submarine.Loaded.Position, 
+                        flowForce / 200.0f);
                 }
                 else
                 {
@@ -278,13 +284,18 @@ namespace Barotrauma
                         Vector2 velocity = new Vector2(
                             flowForce.X * Rand.Range(0.5f, 0.7f), 
                             Math.Max(flowForce.Y,-100.0f) * Rand.Range(0.5f, 0.7f));
-                        
-                        var splash = GameMain.ParticleManager.CreateParticle("watersplash", pos,
+
+                        var splash = GameMain.ParticleManager.CreateParticle(
+                            "watersplash", 
+                            Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position,
                             velocity);
 
                         if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 
-                        GameMain.ParticleManager.CreateParticle("bubbles", pos, flowForce / 2.0f);
+                        GameMain.ParticleManager.CreateParticle(
+                            "bubbles", 
+                            Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position, 
+                            flowForce / 2.0f);
                     }
                 }
 

@@ -8,17 +8,22 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
 using Barotrauma.Items.Components;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma
 {
-    public enum SpawnType { None, Human, Enemy, Cargo, Path };
+    public enum SpawnType { Path, Human, Enemy, Cargo };
     class WayPoint : MapEntity
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
 
         public static bool ShowWayPoints = true, ShowSpawnPoints = true;
 
-        private SpawnType spawnType;
+        private static Texture2D iconTexture;
+        private const int IconSize = 32;
+        private static int[] iconIndices = { 3, 0, 1, 2 };
+
+        protected SpawnType spawnType;
 
         //characters spawning at the waypoint will be given an ID card with these tags
         private string[] idCardTags;
@@ -47,13 +52,13 @@ namespace Barotrauma
             set { spawnType = value; }
         }
 
-        public override string Name
-        {
-            get
-            {
-                return "WayPoint";
-            }
-        }
+        //public override string Name
+        //{
+        //    get
+        //    {
+        //        return spawnType == SpawnType.Path ? "WayPoint" : "SpawnPoint";
+        //    }
+        //}
 
         public string[] IdCardTags
         {
@@ -75,9 +80,18 @@ namespace Barotrauma
             ConnectedGap = gap;
         }
 
-        public WayPoint(Rectangle rectangle)
+        public WayPoint(MapEntityPrefab prefab, Rectangle rectangle)
            : this (rectangle, Submarine.Loaded)
-        { }
+        { 
+            if (prefab.Name.Contains("Spawn"))
+            {
+                spawnType = SpawnType.Human;
+            }
+            else
+            {
+                SpawnType = SpawnType.Path;
+            }
+        }
 
         public WayPoint(Rectangle newRect, Submarine submarine)
             : base (submarine)
@@ -85,6 +99,11 @@ namespace Barotrauma
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();
             idCardTags = new string[0];
+
+            if (iconTexture==null)
+            {
+                iconTexture = Sprite.LoadTexture("Content/Map/waypointIcons.png");
+            }
 
             InsertToList();
             WayPointList.Add(this);
@@ -105,19 +124,31 @@ namespace Barotrauma
 
             if (IsHidden()) return;
 
-            Rectangle drawRect =
-                Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+            //Rectangle drawRect =
+            //    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
+            Vector2 drawPos = Position;
+            if (Submarine!=null) drawPos += Submarine.DrawPosition;
+            drawPos.Y = -drawPos.Y;
 
-            Color clr = (isSelected) ? Color.Red : Color.LightGreen;
-            GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height), clr, true);
+            Color clr = (isSelected) ? Color.Red : Color.White;
+            if (isHighlighted) clr = Color.DarkRed;
+            
+            int iconX = iconIndices[(int)spawnType]*IconSize % iconTexture.Width;
+            int iconY = (int)(Math.Floor(iconIndices[(int)spawnType]*IconSize / (float)iconTexture.Width))*IconSize;
+
+            spriteBatch.Draw(iconTexture, 
+                new Rectangle((int)(drawPos.X - IconSize/2), (int)(drawPos.Y - IconSize/2), IconSize, IconSize),
+                new Rectangle(iconX, iconY, IconSize,IconSize), clr);
+
+            //GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height), clr, true);
             
             //spriteBatch.DrawString(GUI.SmallFont, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
 
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(drawRect.X+rect.Width/2.0f, -drawRect.Y+rect.Height/2.0f),
+                    drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
                     Color.Green);
             }
@@ -167,8 +198,8 @@ namespace Barotrauma
 
             spawnType += (int)button.UserData;
 
-            if (spawnType > SpawnType.Cargo) spawnType = SpawnType.None;
-            if (spawnType < SpawnType.None) spawnType = SpawnType.Enemy;
+            if (spawnType > SpawnType.Path) spawnType = SpawnType.Human;
+            if (spawnType < SpawnType.Human) spawnType = SpawnType.Path;
 
             spawnTypeText.Text = spawnType.ToString();
 
@@ -179,7 +210,7 @@ namespace Barotrauma
         {
             IdCardTags = text.Split(',');
             textBox.Text = text;
-            textBox.Color = Color.White;
+            textBox.Color = Color.Green;
 
             return true;
         }
@@ -191,7 +222,7 @@ namespace Barotrauma
 
             if (assignedJob !=null && trimmedName!="none")
             {
-                textBox.Color = Color.White;
+                textBox.Color = Color.Green;
                 textBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
             }
 
@@ -378,16 +409,59 @@ namespace Barotrauma
 
                 ladderPoints[1] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y-1.0f), SpawnType.Path, Submarine.Loaded);
 
-                WayPoint prevPoint = ladderPoints[0];
-                for (float y = ladderPoints[0].Position.Y+100.0f; y < ladderPoints[1].Position.Y; y+=100.0f )
-                {
-                    var midPoint = new WayPoint(new Vector2(item.Rect.Center.X, y), SpawnType.Path, Submarine.Loaded);
-                    midPoint.Ladders = ladders;
 
-                    midPoint.ConnectTo(prevPoint);
-                    prevPoint = midPoint;
+
+                WayPoint prevPoint = ladderPoints[0];
+                Vector2 prevPos = prevPoint.SimPosition;
+
+                List<Body> ignoredBodies = new List<Body>();
+
+                while (prevPoint != ladderPoints[1])
+                {
+                    var pickedBody = Submarine.PickBody(prevPos, ladderPoints[1].SimPosition, ignoredBodies);
+
+                    if (pickedBody == null) break;
+
+                    ignoredBodies.Add(pickedBody);
+
+                    if (pickedBody.UserData is Item)
+                    {
+                        var door = (pickedBody.UserData as Item).GetComponent<Door>();
+                        if (door != null)
+                        {
+                            WayPoint newPoint = new WayPoint(door.Item.Position, SpawnType.Path, Submarine.Loaded);
+                            newPoint.ConnectedGap = door.LinkedGap;
+
+                            newPoint.ConnectTo(prevPoint);
+
+                            prevPoint = newPoint;
+
+                            prevPos = ConvertUnits.ToSimUnits(door.Item.Position - Vector2.UnitY * door.Item.Rect.Height);
+                        }
+                        else
+                        {
+                            prevPos = Submarine.LastPickedPosition;
+                        }
+                    }
+                    else
+                    {
+                        prevPos = Submarine.LastPickedPosition;
+                    }
                 }
-                ladderPoints[1].ConnectTo(prevPoint);
+
+                prevPoint.ConnectTo(ladderPoints[1]);
+
+
+
+                //for (float y = ladderPoints[0].Position.Y+100.0f; y < ladderPoints[1].Position.Y; y+=100.0f )
+                //{
+                //    var midPoint = new WayPoint(new Vector2(item.Rect.Center.X, y), SpawnType.Path, Submarine.Loaded);
+                //    midPoint.Ladders = ladders;
+
+                //    midPoint.ConnectTo(prevPoint);
+                //    prevPoint = midPoint;
+                //}
+                //ladderPoints[1].ConnectTo(prevPoint);
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -395,13 +469,13 @@ namespace Barotrauma
 
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
-                        WayPoint closest = ladderPoints[i].FindClosest(dir, true, new Vector2(-100.0f, 0f));
+                        WayPoint closest = ladderPoints[i].FindClosest(dir, true, new Vector2(-150.0f, 10f));
                         if (closest == null) continue;
                         ladderPoints[i].ConnectTo(closest);
                     }
                 }
 
-                ladderPoints[0].ConnectTo(ladderPoints[1]);
+                //ladderPoints[0].ConnectTo(ladderPoints[1]);
             }
             
             foreach (Gap gap in Gap.GapList)
@@ -423,6 +497,24 @@ namespace Barotrauma
                 }
             }
 
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (gap.isHorizontal || gap.IsRoomToRoom) continue;
+
+                //too small to walk through
+                if (gap.Rect.Width < 100.0f) continue;
+
+                var wayPoint = new WayPoint(
+                    new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height/2), SpawnType.Path, Submarine.Loaded, gap);
+
+                for (int dir = -1; dir <= 1; dir += 2)
+                {
+                    WayPoint closest = wayPoint.FindClosest(dir, false, new Vector2(-outSideWaypointInterval, outSideWaypointInterval) / 2.0f);
+                    if (closest == null) continue;
+                    wayPoint.ConnectTo(closest);
+                }
+            }
+
             var orphans = WayPointList.FindAll(w => w.spawnType == SpawnType.Path && !w.linkedTo.Any());
 
             foreach (WayPoint wp in orphans)
@@ -438,27 +530,37 @@ namespace Barotrauma
             float closestDist = 0.0f;
             WayPoint closest = null;
 
-            if (horizontalSearch)
-            {
+
                 foreach (WayPoint wp in WayPointList)
                 {
                     if (wp.SpawnType != SpawnType.Path || wp == this) continue;
 
-                    if ((wp.Position.Y - Position.Y) < tolerance.X || (wp.Position.Y - Position.Y) > tolerance.Y) continue;
+                    float diff = 0.0f;
+                    if (horizontalSearch)
+                    {
+                        if ((wp.Position.Y - Position.Y) < tolerance.X || (wp.Position.Y - Position.Y) > tolerance.Y) continue;
 
-                    float diff = wp.Position.X - Position.X;
+                        diff = wp.Position.X - Position.X;
+                    }
+                    else
+                    {
+                        if ((wp.Position.X - Position.X) < tolerance.X || (wp.Position.X - Position.X) > tolerance.Y) continue;
+
+                        diff = wp.Position.Y - Position.Y;
+                    }
+
                     if (Math.Sign(diff) != dir) continue;
 
-                    diff = Math.Abs(diff);
-                    if (closest == null || diff < closestDist)
+                    float dist = Vector2.Distance(wp.Position, Position);
+                    if (closest == null || dist < closestDist)
                     {
                         if (Submarine.CheckVisibility(SimPosition, wp.SimPosition) != null) continue;
 
-                        closestDist = diff;
+                        closestDist = dist;
                         closest = wp;
                     }
                 }
-            }
+            
 
             return closest;
         }
@@ -469,13 +571,13 @@ namespace Barotrauma
             if (!wayPoint2.linkedTo.Contains(this)) wayPoint2.linkedTo.Add(this);
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.None, Job assignedJob = null)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null)
         {
             List<WayPoint> wayPoints = new List<WayPoint>();
 
             foreach (WayPoint wp in WayPointList)
             {
-                if (spawnType != SpawnType.None && wp.spawnType != spawnType) continue;
+                if (wp.spawnType != spawnType) continue;
                 if (assignedJob != null && wp.assignedJob != assignedJob.Prefab) continue;
 
                 wayPoints.Add(wp);
@@ -525,6 +627,16 @@ namespace Barotrauma
 
                 if (assignedWayPoints[i] != null) continue;
 
+                //try to assign a spawnpoint that isn't meant for any specific job
+                var nonJobSpecificPoints = WayPointList.FindAll(wp => wp.spawnType == SpawnType.Human && wp.assignedJob == null);
+
+                if (nonJobSpecificPoints.Any())
+                {
+                    assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, false)];
+                }
+
+                if (assignedWayPoints[i] != null) continue;
+
                 //everything else failed -> just give a random spawnpoint
                 assignedWayPoints[i] = GetRandom(SpawnType.Human);
             }
@@ -548,7 +660,7 @@ namespace Barotrauma
 
         public override XElement Save(XDocument doc)
         {
-            if (MoveWithLevel || spawnType == SpawnType.Path) return null;
+            if (MoveWithLevel) return null;
             XElement element = new XElement("WayPoint");
 
             element.Add(new XAttribute("ID", ID),
@@ -591,8 +703,8 @@ namespace Barotrauma
             WayPoint w = new WayPoint(rect, submarine);
 
             w.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-            w.spawnType = (SpawnType)Enum.Parse(typeof(SpawnType), 
-                ToolBox.GetAttributeString(element, "spawn", "None"));
+
+            Enum.TryParse<SpawnType>(ToolBox.GetAttributeString(element, "spawn", "Path"), out w.spawnType);
 
             string idCardTagString = ToolBox.GetAttributeString(element, "idcardtags", "");
             if (!string.IsNullOrWhiteSpace(idCardTagString))

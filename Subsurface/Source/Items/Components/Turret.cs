@@ -89,6 +89,24 @@ namespace Barotrauma.Items.Components
                  drawPos + barrelPos, Color.White,
                 rotation + MathHelper.PiOver2, 1.0f, 
                 SpriteEffects.None, item.Sprite.Depth+0.01f);
+
+            if (!editing) return;
+
+            GUI.DrawLine(spriteBatch, 
+                drawPos + barrelPos, 
+                drawPos + barrelPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation))*60.0f, 
+                Color.Green);
+
+            GUI.DrawLine(spriteBatch,
+                drawPos + barrelPos,
+                drawPos + barrelPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * 60.0f,
+                Color.Green);
+
+            GUI.DrawLine(spriteBatch,
+                drawPos + barrelPos,
+                drawPos + barrelPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * 60.0f,
+                Color.LightGreen);
+
         }
 
         public override void Update(float deltaTime, Camera cam)

@@ -651,7 +651,7 @@ namespace Barotrauma
             MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, head.SimPosition.Y + 0.05f), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, torso.SimPosition.Y), 10.5f);
             MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, waist.SimPosition.Y), 10.5f);
-
+            
             float stepHeight = ConvertUnits.ToSimUnits(30.0f);
 
             handPos = new Vector2(

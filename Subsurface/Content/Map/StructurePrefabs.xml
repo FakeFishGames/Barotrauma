@@ -76,8 +76,8 @@
   <largeplatform sprite="Content/Map/testroom.png" sourcerect="896,0,128,64" depth="0.9"
     width = "64" height ="64" resizehorizontal="true" body="true" platform="true"/>
 
-  <platform sprite="Content/Map/testroom.png" sourcerect="896,64,128,32" depth ="0.9"
-    width = "64" height ="32" resizehorizontal="true" body="true" platform="true"/>
+  <platform sprite="Content/Map/testroom.png" sourcerect="896,53,128,32" depth ="0.9"
+    width = "64" height ="26" resizehorizontal="true" body="true" platform="true"/>
 
   <roughbgwall sprite="Content/Map/testroom.png" sourcerect="200,104,240,240" depth = "1.0"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
