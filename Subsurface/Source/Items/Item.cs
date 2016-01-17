@@ -908,8 +908,8 @@ namespace Barotrauma
                             transformedTrigger.X + transformedTrigger.Width / 2.0f,
                             transformedTrigger.Y - transformedTrigger.Height / 2.0f);
 
-                    dist = MathHelper.Min(Math.Abs(triggerCenter.X - displayPos.X), Math.Abs(triggerCenter.Y-displayPos.Y));
-                    if (dist > closestDist && closest!=null) continue;
+                    //dist = MathHelper.Min(Math.Abs(triggerCenter.X - displayPos.X), Math.Abs(triggerCenter.Y-displayPos.Y));
+                    //if (dist > closestDist && closest!=null) continue;
 
                     dist = MathHelper.Min(Math.Abs(triggerCenter.X - displayPickPos.X), Math.Abs(triggerCenter.Y - displayPickPos.Y));
                     if (closest == null || dist < closestDist)
@@ -949,6 +949,13 @@ namespace Barotrauma
             }
 
             return false;
+        }
+
+        public bool IsInPickRange(Vector2 worldPosition)
+        {
+            if (IsInsideTrigger(worldPosition)) return true;
+
+            return Vector2.Distance(WorldPosition, worldPosition) < PickDistance;
         }
 
         public bool Pick(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)
@@ -1019,7 +1026,7 @@ namespace Barotrauma
                 picker.SelectedConstruction = this;
             }
             
-            if (!hasRequiredSkills && Character.Controlled==picker)
+            if (!hasRequiredSkills && Character.Controlled==picker && Screen.Selected != GameMain.EditMapScreen)
             {
                 GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);
                 if (requiredSkill != null)

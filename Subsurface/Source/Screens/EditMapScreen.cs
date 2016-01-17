@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -15,6 +16,9 @@ namespace Barotrauma
         private int selectedTab;
 
         private GUITextBox nameBox;
+
+        const int PreviouslyUsedCount = 10;
+        private GUIListBox previouslyUsedList;
 
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
@@ -161,9 +165,7 @@ namespace Barotrauma
             y+=50;
 
             new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", GUI.Style, GUIpanel);
-
-
-
+            
             var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), "Waypoints", Alignment.TopLeft, GUIpanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; };
             tickBox.Selected = true;
@@ -179,6 +181,16 @@ namespace Barotrauma
             tickBox = new GUITickBox(new Rectangle(0, y + 120, 20, 20), "Gaps", Alignment.TopLeft, GUIpanel);
             tickBox.OnSelected = (GUITickBox obj) => { Gap.ShowGaps = !Gap.ShowGaps; return true; };
             tickBox.Selected = true;
+
+            y+=150;
+
+            if (y < GameMain.GraphicsHeight - 100)
+            {
+                new GUITextBlock(new Rectangle(0, y, 0, 15), "Previously used:", GUI.Style, GUIpanel);
+
+                previouslyUsedList = new GUIListBox(new Rectangle(0, y + 15, 0, Math.Min(GameMain.GraphicsHeight - y - 40, 150)), GUI.Style, GUIpanel);
+                previouslyUsedList.OnSelected = SelectPrefab;
+            }
 
         }
 
@@ -230,6 +242,12 @@ namespace Barotrauma
             if (dummyCharacter != null) dummyCharacter.Remove();
 
             dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero);
+
+            for (int i = 0; i<dummyCharacter.Inventory.SlotPositions.Length; i++)
+            {
+                dummyCharacter.Inventory.SlotPositions[i].X += GUIpanel.Rect.Width+10;
+            }
+
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
         }
@@ -313,16 +331,45 @@ namespace Barotrauma
 
         private bool SelectPrefab(GUIComponent component, object obj)
         {
+            AddPreviouslyUsed(obj as MapEntityPrefab);
+
             MapEntityPrefab.SelectPrefab(obj);
             selectedTab = -1;
             GUIComponent.MouseOn = null;
-            return true;
+            return false;
         }
 
         private bool GenerateWaypoints(GUIButton button, object obj)
         {
             WayPoint.GenerateSubWaypoints();
             return true;
+        }
+
+        private void AddPreviouslyUsed(MapEntityPrefab mapEntityPrefab)
+        {
+            if (previouslyUsedList == null || mapEntityPrefab == null) return;
+
+            previouslyUsedList.Deselect();
+
+            if (previouslyUsedList.CountChildren == PreviouslyUsedCount)
+            {
+                previouslyUsedList.RemoveChild(previouslyUsedList.children.Last());
+            }
+
+            var existing = previouslyUsedList.FindChild(mapEntityPrefab);
+            if (existing != null) previouslyUsedList.RemoveChild(existing);
+
+            string name = mapEntityPrefab.Name;
+            if (name.Length>15)
+            {
+                name = name.Substring(0,12)+"...";
+            }
+
+            var textBlock = new GUITextBlock(new Rectangle(0,0,0,15), name, GUI.Style, previouslyUsedList);
+            textBlock.UserData = mapEntityPrefab;
+
+            previouslyUsedList.RemoveChild(textBlock);
+            previouslyUsedList.children.Insert(0, textBlock);
         }
 
 

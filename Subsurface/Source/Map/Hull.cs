@@ -136,7 +136,7 @@ namespace Barotrauma
             get { return fireSources; }
         }
 
-        public Hull(Rectangle rectangle)
+        public Hull(MapEntityPrefab prefab, Rectangle rectangle)
             : this (rectangle, Submarine.Loaded)
         {
 

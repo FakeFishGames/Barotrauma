@@ -363,6 +363,16 @@ namespace Barotrauma
                         return;
                     }
                     if (Submarine.SaveCurrent(fileName +".sub")) NewMessage("map saved", Color.Green);
+
+                    if (WayPoint.WayPointList.Find(wp => !wp.MoveWithLevel && wp.SpawnType == SpawnType.Path)==null)
+                    {
+                        DebugConsole.ThrowError("No waypoints found in the submarine. Did you forget to generate the waypoints?");
+                    }
+
+                    if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
+                    {
+                        DebugConsole.ThrowError("The submarine doesn't have a waypoint marked as ''Cargo'', which are used for determining where to place bought items.");
+                    }
                     break;
                 case "loadmap":
                 case "loadsub":
@@ -454,7 +464,7 @@ namespace Barotrauma
 
             //messages.Add(new ColoredText(msg, color));
 
-            if (textBox != null && textBox.Text == "") selectedIndex = listBox.children.Count;
+            selectedIndex = listBox.children.Count;
         }
 
         public static void ThrowError(string error, Exception e = null)

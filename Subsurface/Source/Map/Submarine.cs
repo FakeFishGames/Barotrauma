@@ -673,7 +673,7 @@ namespace Barotrauma
 
             MapEntity.MapLoaded();
                
-            WayPoint.GenerateSubWaypoints();
+            //WayPoint.GenerateSubWaypoints();
 
             GameMain.LightManager.OnMapLoaded();
 

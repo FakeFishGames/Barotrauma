@@ -25,7 +25,7 @@ namespace Barotrauma
             LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any,
             LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any};
 
-        private Vector2[] slotPositions;
+        public Vector2[] SlotPositions;
 
         public CharacterInventory(int capacity, Character character)
             : base(character, capacity)
@@ -34,11 +34,11 @@ namespace Barotrauma
 
             if (icons == null) icons = TextureLoader.FromFile("Content/UI/inventoryIcons.png");
 
-            slotPositions = new Vector2[limbSlots.Length];
+            SlotPositions = new Vector2[limbSlots.Length];
             
             int rectWidth = 40, rectHeight = 40;
             int spacing = 10;
-            for (int i = 0; i < slotPositions.Length; i++)
+            for (int i = 0; i < SlotPositions.Length; i++)
             {
                 switch (i)
                 {
@@ -46,19 +46,19 @@ namespace Barotrauma
                     case 0:
                     case 1:
                     case 2:
-                        slotPositions[i] = new Vector2(
+                        SlotPositions[i] = new Vector2(
                             spacing, 
                             GameMain.GraphicsHeight - (spacing + rectHeight) * (3 - i));
                         break;
                     //lefthand, righthand
                     case 3:
                     case 4:
-                        slotPositions[i] = new Vector2(
+                        SlotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 3),
                             GameMain.GraphicsHeight - (spacing + rectHeight)*3);
                         break;
                     default:
-                        slotPositions[i] = new Vector2(
+                        SlotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 3)%5),
                             GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>9) ? 2 : 1));
                         break;
@@ -225,8 +225,8 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = (int)slotPositions[i].X;
-                slotRect.Y = (int)slotPositions[i].Y;
+                slotRect.X = (int)SlotPositions[i].X;
+                slotRect.Y = (int)SlotPositions[i].Y;
 
                 if (i==1) //head
                 {
@@ -246,8 +246,8 @@ namespace Barotrauma
             
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = (int)slotPositions[i].X;
-                slotRect.Y = (int)slotPositions[i].Y;
+                slotRect.X = (int)SlotPositions[i].X;
+                slotRect.Y = (int)SlotPositions[i].Y;
 
                 bool multiSlot = false;
                 //skip if the item is in multiple slots
@@ -285,8 +285,8 @@ namespace Barotrauma
                 //check if the item is in multiple slots
                 if (Items[i] != null)
                 {
-                    slotRect.X = (int)slotPositions[i].X;
-                    slotRect.Y = (int)slotPositions[i].Y;
+                    slotRect.X = (int)SlotPositions[i].X;
+                    slotRect.Y = (int)SlotPositions[i].Y;
                     slotRect.Width = 40;
                     slotRect.Height = 40;
 
@@ -300,7 +300,7 @@ namespace Barotrauma
                         {
                             multiSlot = true;
                             slotRect = Rectangle.Union(
-                                new Rectangle((int)slotPositions[n].X, (int)slotPositions[n].Y, rectWidth, rectHeight), slotRect);
+                                new Rectangle((int)SlotPositions[n].X, (int)SlotPositions[n].Y, rectWidth, rectHeight), slotRect);
                         }
                     }
                 }

@@ -13,12 +13,12 @@ namespace Barotrauma.Items.Components
 {
     class Door : ItemComponent
     {
-        Gap linkedGap;
+        private Gap linkedGap;
 
-        Rectangle window;
+        private Rectangle window;
 
-        ConvexHull convexHull;
-        ConvexHull convexHull2;
+        private ConvexHull convexHull;
+        private ConvexHull convexHull2;
 
         private bool isOpen;
 
@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        Gap LinkedGap
+        public Gap LinkedGap
         {
             get
             {
@@ -139,7 +139,7 @@ namespace Barotrauma.Items.Components
 
             doorRect = new Rectangle(
                 item.Rect.Center.X - (int)(doorSprite.size.X / 2),
-                item.Rect.Y,
+                item.Rect.Y - item.Rect.Height/2 + (int)(doorSprite.size.Y / 2.0f),
                 (int)doorSprite.size.X,
                 (int)doorSprite.size.Y);
 
@@ -165,23 +165,22 @@ namespace Barotrauma.Items.Components
         private void UpdateConvexHulls()
         {
             Rectangle rect = doorRect;
-
-            rect.Height = (int)(rect.Height * (1.0f - openState));
-            if (window.Height == 0 || window.Width == 0)
+            if (isHorizontal)
             {
-
+                rect.Width = (int)(rect.Width * (1.0f - openState));
             }
             else
             {
-                //Rectangle rect = item.Rect;
-                //rect.Height = (int)(rect.Height * (1.0f - openState));
+                rect.Height = (int)(rect.Height * (1.0f - openState));
+            }
 
+            if (window.Height > 0 && window.Width > 0)
+            {
                 rect.Height = -window.Y;
 
                 rect.Y += (int)(doorRect.Height * openState);
                 rect.Height = Math.Max(rect.Height - (rect.Y - doorRect.Y), 0);
                 rect.Y = Math.Min(doorRect.Y, rect.Y);
-
 
                 if (convexHull2 != null)
                 {
@@ -395,8 +394,8 @@ namespace Barotrauma.Items.Components
 
                         if (isHorizontal)
                         {
-                            l.body.SetTransform(new Vector2(l.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 1.2f), l.body.Rotation);
-                            l.body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 0.5f));
+                            l.body.SetTransform(new Vector2(l.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 2.0f), l.body.Rotation);
+                            l.body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 2.0f));
                         }
                         else
                         {
