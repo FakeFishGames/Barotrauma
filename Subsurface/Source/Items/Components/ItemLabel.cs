@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("", true), Editable(100)]
         public string Text
         {
-            get { return textBlock.Text; }
+            get { return textBlock.Text.Replace("\n", ""); }
             set 
             {
                 if (value == TextBlock.Text || item.Rect.Width < 5) return;

@@ -7,9 +7,10 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
+    [Flags]
     enum MapEntityCategory
     {
-        Structure, Machine, Equipment, Electrical, Material, Misc
+        Structure = 1, Machine = 2, Equipment = 4, Electrical = 8, Material = 16, Misc = 32
     }
 
     class MapEntityPrefab
@@ -116,6 +117,10 @@ namespace Barotrauma
 
         }
 
+        public MapEntityPrefab()
+        {
+            Category = MapEntityCategory.Structure;
+        }
 
         public virtual void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
         {

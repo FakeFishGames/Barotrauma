@@ -83,7 +83,7 @@
     
     <Body width="90" height="30" density="10"/>
 
-    <MeleeWeapon slots="Any,RightHand"
+    <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
       <Attack damage="2" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
@@ -104,7 +104,7 @@
 
   <Item
     name="Battery Cell"
-    category="Equipment"
+    category="Equipment,Electrical"
     pickdistance="150"
     tags="smallitem,loadable"
     price="50"
@@ -119,7 +119,7 @@
   
   <Item
     name="Fulgurium Battery Cell"
-    category="Equipment"
+    category="Equipment,Electrical"
     pickdistance="150"
     tags="smallitem,loadable"
     description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">

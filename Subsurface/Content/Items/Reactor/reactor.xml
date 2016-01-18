@@ -69,8 +69,7 @@
     name="Incendium Fuel Rod"
     Tags="smallitem"
     pickdistance="150"
-    spritecolor="0.5,0.0,0.0,1.0"
-    price="200">
+    spritecolor="0.5,0.0,0.0,1.0">
 
     <Sprite texture ="fuelrod.png"/>
 

@@ -17,7 +17,7 @@
     <Sprite texture="Content/UI/orderSymbols.png" sourcerect="192,0,64,64"/>
   </Order>
 
-  <Order name="Operate Railgun" doingtext="Operating Railgun" targetitemtype="Turret" options="Fire at will, Hold fire" color="1.0,0.0,0.0,1.0">
+  <Order name="Operate Railgun" doingtext="Operating Railgun" targetitemtype="Turret" usecontroller="true" options="Fire at will, Hold fire" color="1.0,0.0,0.0,1.0">
     <Sprite texture="Content/UI/orderSymbols.png" sourcerect="0,64,64,64"/>
   </Order> 
 </Orders>

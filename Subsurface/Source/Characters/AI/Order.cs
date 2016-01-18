@@ -24,6 +24,8 @@ namespace Barotrauma
 
         public readonly Color Color;
 
+        public readonly bool UseController;
+
         public ItemComponent TargetItem;
 
         public readonly string[] Options;
@@ -76,6 +78,8 @@ namespace Barotrauma
 
             Color = new Color(ToolBox.GetAttributeVector4(orderElement, "color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f)));
 
+            UseController = ToolBox.GetAttributeBool(orderElement, "usecontroller", false);
+
             string optionStr = ToolBox.GetAttributeString(orderElement, "options", "");
 
             if (string.IsNullOrWhiteSpace(optionStr))
@@ -112,12 +116,13 @@ namespace Barotrauma
 
         public Order(Order prefab, ItemComponent targetItem)
         {
-            Name = prefab.Name;
-            DoingText = prefab.DoingText;
-            ItemComponentType = prefab.ItemComponentType;
-            Options = prefab.Options;
-            SymbolSprite = prefab.SymbolSprite;
-            Color = prefab.Color;
+            Name                = prefab.Name;
+            DoingText           = prefab.DoingText;
+            ItemComponentType   = prefab.ItemComponentType;
+            Options             = prefab.Options;
+            SymbolSprite        = prefab.SymbolSprite;
+            Color               = prefab.Color;
+            UseController       = prefab.UseController;
 
             TargetItem = targetItem;
         }

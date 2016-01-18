@@ -328,8 +328,8 @@ namespace Barotrauma.Items.Components
                 //nodes.Add(newNodePos);
             }
 
-            if (!editing || !PlayerInput.MouseInsideWindow) return;
-
+            if (!editing || !PlayerInput.MouseInsideWindow || GameMain.EditMapScreen.CharacterMode) return;
+            
             for (int i = 0; i < Nodes.Count; i++)
             {
                 Vector2 worldPos = Nodes[i];
@@ -347,13 +347,13 @@ namespace Barotrauma.Items.Components
                 }
 
 
-                MapEntity.DisableSelect = true;
                 GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-10, -10), new Vector2(20, 20), Color.Red, false, 0.0f);
 
                 if (selectedNodeIndex == null && draggingWire == null)// && !MapEntity.SelectedAny)
                 {
                     if (PlayerInput.LeftButtonDown() && PlayerInput.GetOldMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
                     {
+                        MapEntity.DisableSelect = true;
                         MapEntity.SelectEntity(item);
                         draggingWire = this;
                         selectedNodeIndex = i;
@@ -371,6 +371,7 @@ namespace Barotrauma.Items.Components
             {
                 if (selectedNodeIndex != null && draggingWire == this)
                 {
+
                     MapEntity.DisableSelect = true;
                     //Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)-Submarine.HiddenSubPosition+Submarine.Loaded.Position;
 

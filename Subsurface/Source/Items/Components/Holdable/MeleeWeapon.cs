@@ -54,6 +54,17 @@ namespace Barotrauma.Items.Components
             if (character == null || reloadTimer>0.0f) return false;
             if (!character.IsKeyDown(InputType.Aim) || hitting) return false;
 
+            //don't allow hitting if the character is already hitting with another weapon
+            for (int i = 0; i < 2; i++ )
+            {
+                if (character.SelectedItems[i] == null || character.SelectedItems[i] == Item) continue;
+
+                var otherWeapon = character.SelectedItems[i].GetComponent<MeleeWeapon>();
+                if (otherWeapon == null) continue;
+
+                if (otherWeapon.hitting) return false;
+            }
+
             SetUser(character);
 
             if (hitPos < MathHelper.Pi * 0.69f) return false;

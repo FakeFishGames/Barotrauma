@@ -146,7 +146,7 @@ namespace Barotrauma
             int x = selectedItemList.Rect.Width + 40;
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-                var items = MapEntityPrefab.list.FindAll(ep => ep.Price>0.0f && ep.Category == category);
+                var items = MapEntityPrefab.list.FindAll(ep => ep.Price>0.0f && ep.Category.HasFlag(category));
                 if (!items.Any()) continue;
 
                 var categoryButton = new GUIButton(new Rectangle(x, 0, 100, 20), category.ToString(), GUI.Style, bottomPanel[(int)PanelTab.Store]);
@@ -443,7 +443,7 @@ namespace Barotrauma
             storeItemList.ClearChildren();
 
             MapEntityCategory category = (MapEntityCategory)selection;
-            var items = MapEntityPrefab.list.FindAll(ep => ep.Price > 0.0f && ep.Category == category);
+            var items = MapEntityPrefab.list.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category));
 
             int width = storeItemList.Rect.Width;
 

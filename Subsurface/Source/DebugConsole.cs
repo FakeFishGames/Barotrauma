@@ -150,11 +150,11 @@ namespace Barotrauma
                     NewMessage("menu: go to main menu", Color.Cyan);
                     NewMessage("game: enter the ''game screen''", Color.Cyan);
                     NewMessage("edit: switch to submarine editor", Color.Cyan);
-                    NewMessage("load [submarine name]: load a submarine!", Color.Cyan);
+                    NewMessage("edit [submarine name]: load a submarine and switch to submarine editor", Color.Cyan);
+                    NewMessage("load [submarine name]: load a submarine", Color.Cyan);
                     NewMessage("save [submarine name]: save the current submarine using the specified name", Color.Cyan);
 
-                    NewMessage(" ", Color.Cyan);
-                    
+                    NewMessage(" ", Color.Cyan);                    
 
                     NewMessage("spawn: spawn a creature at a random spawnpoint", Color.Cyan);
                     NewMessage("spawn: spawn a creature at a random spawnpoint", Color.Cyan);
@@ -186,7 +186,6 @@ namespace Barotrauma
 
                     NewMessage("debugdraw: toggles the ''debug draw mode''", Color.Cyan);
                     NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
-
                     
                     break;
                 case "createfilelist":
@@ -241,7 +240,11 @@ namespace Barotrauma
                     break;
                 case "editmapscreen":
                 case "editmap":
-                case "edit":              
+                case "edit":
+                    if (commands.Length>1)
+                    {
+                        Submarine.Load(string.Join(" ", commands.Skip(1)));
+                    }
                     GameMain.EditMapScreen.Select();
                     break;
                 case "test":

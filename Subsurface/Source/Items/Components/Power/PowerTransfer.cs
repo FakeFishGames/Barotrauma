@@ -63,7 +63,8 @@ namespace Barotrauma.Items.Components
                 pt.Item.SendSignal("", "power", fullPower / Math.Max(fullLoad, 1.0f));
 
                 //damage the item if voltage is too high
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * 2.0f, 200.0f)) continue;
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.95f,2.05f), 200.0f)) continue;
+
                 
                 float prevCondition = pt.item.Condition;
                 pt.item.Condition -= deltaTime * 10.0f;

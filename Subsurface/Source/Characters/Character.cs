@@ -89,6 +89,7 @@ namespace Barotrauma
         private Character closestCharacter, selectedCharacter;
 
         protected bool isDead;
+        private CauseOfDeath causeOfDeath;
         
         public readonly bool IsHumanoid;
 
@@ -289,6 +290,11 @@ namespace Barotrauma
         public bool IsDead
         {
             get { return isDead; }
+        }
+
+        public CauseOfDeath CauseOfDeath
+        {
+            get { return causeOfDeath; }
         }
 
         public override Vector2 SimPosition
@@ -915,7 +921,6 @@ namespace Barotrauma
                 if (!protectedFromPressure && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 100.0f))
                 {
-
                     PressureTimer += ((AnimController.CurrentHull == null) ?
                         100.0f : AnimController.CurrentHull.LethalPressure) * deltaTime;
 
@@ -1222,6 +1227,7 @@ namespace Barotrauma
             health = 0.0f;
 
             isDead = true;
+            this.causeOfDeath = causeOfDeath;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
 

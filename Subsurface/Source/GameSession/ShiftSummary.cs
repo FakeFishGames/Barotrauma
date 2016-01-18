@@ -10,26 +10,24 @@ namespace Barotrauma
 {
     class ShiftSummary
     {
-        class Casualty
-        {
-            public readonly CharacterInfo character;
-            public readonly CauseOfDeath causeOfDeath;
+        //class Casualty
+        //{
+        //    public readonly CharacterInfo character;
+        //    public readonly CauseOfDeath causeOfDeath;
 
-            public readonly string description;
+        //    public readonly string description;
 
-            public Casualty(CharacterInfo characterInfo, CauseOfDeath causeOfDeath, string description)
-            {
-                this.character = characterInfo;
-                this.causeOfDeath = causeOfDeath;
-                this.description = description;
-            }
-        }
+        //    public Casualty(CharacterInfo characterInfo, CauseOfDeath causeOfDeath, string description)
+        //    {
+        //        this.character = characterInfo;
+        //        this.causeOfDeath = causeOfDeath;
+        //        this.description = description;
+        //    }
+        //}
 
         private Location startLocation, endLocation;
 
         private GameSession gameSession;
-
-        private List<Casualty> casualties;
 
         private Mission selectedMission;
                
@@ -39,22 +37,15 @@ namespace Barotrauma
 
             startLocation = gameSession.Map==null ? null : gameSession.Map.CurrentLocation;
             endLocation = gameSession.Map==null ? null : gameSession.Map.SelectedLocation;
-
-            casualties = new List<Casualty>();
-
-            foreach (Character character in gameSession.CrewManager.characters)
-            {
-                character.OnDeath = AddCasualty;
-            }
-
+            
             selectedMission = gameSession.Mission;
         }
 
 
-        public void AddCasualty(Character character, CauseOfDeath causeOfDeath)
-        {
-            casualties.Add(new Casualty(character.Info, causeOfDeath, ""));
-        }
+        //public void AddCasualty(Character character, CauseOfDeath causeOfDeath)
+        //{
+        //    casualties.Add(new Casualty(character.Info, causeOfDeath, ""));
+        //}
 
         public GUIFrame CreateSummaryFrame(string endMessage)
         {
@@ -106,12 +97,10 @@ namespace Barotrauma
 
                 string statusText;
                 Color statusColor;
-
-                var casualty = casualties.Find(c => c.character == character.Info);
-
-                if (casualty != null)
+                
+                if (character.IsDead)
                 {
-                    statusText = InfoTextManager.GetInfoText("CauseOfDeath." + casualty.causeOfDeath.ToString());
+                    statusText = InfoTextManager.GetInfoText("CauseOfDeath." + character.CauseOfDeath.ToString());
                     statusColor = Color.DarkRed;
                 }
                 else

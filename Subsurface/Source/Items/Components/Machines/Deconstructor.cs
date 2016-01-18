@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Deconstructor : ItemComponent
+    class Deconstructor : Powered
     {
         GUIProgressBar progressBar;
         GUIButton activateButton;
@@ -39,7 +39,12 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            progressTimer += deltaTime;
+            if (voltage < minVoltage) return;
+
+            if (powerConsumption == 0.0f) voltage = 1.0f;
+
+            progressTimer += deltaTime*voltage;
+            Voltage -= deltaTime * 10.0f;
 
             var targetItem = container.Inventory.Items.FirstOrDefault(i => i != null);
             progressBar.BarSize = Math.Min(progressTimer / targetItem.Prefab.DeconstructTime, 1.0f);
@@ -82,6 +87,8 @@ namespace Barotrauma.Items.Components
         private bool ToggleActive(GUIButton button, object obj)
         {
             SetActive(!IsActive);
+
+            currPowerConsumption = IsActive ? powerConsumption : 0.0f;
 
             item.NewComponentEvent(this, true, true);
 

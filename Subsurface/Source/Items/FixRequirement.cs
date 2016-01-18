@@ -118,7 +118,7 @@ namespace Barotrauma
                 y2 = 20;
                 foreach (Skill skill in requirement.requiredSkills)
                 {
-                    var skillBlock = new GUITextBlock(new Rectangle(150, y2, 200, 15), skill.Name + " - " + skill.Level, GUI.Style, Alignment.Right, Alignment.TopLeft, reqFrame);
+                    var skillBlock = new GUITextBlock(new Rectangle(0, y2, 200, 15), skill.Name + " - " + skill.Level, GUI.Style, Alignment.Right, Alignment.TopLeft, reqFrame);
                     skillBlock.Font = GUI.SmallFont;
                     skillBlock.UserData = skill;
 

@@ -33,8 +33,10 @@ namespace Barotrauma
 
         private Hull currentHull;
 
+        private ushort ladderId;
         public Ladder Ladders;
 
+        private ushort gapId;
         public Gap ConnectedGap
         {
             get;
@@ -198,8 +200,8 @@ namespace Barotrauma
 
             spawnType += (int)button.UserData;
 
-            if (spawnType > SpawnType.Path) spawnType = SpawnType.Human;
-            if (spawnType < SpawnType.Human) spawnType = SpawnType.Path;
+            if (spawnType > SpawnType.Cargo) spawnType = SpawnType.Path;
+            if (spawnType < SpawnType.Path) spawnType = SpawnType.Cargo;
 
             spawnTypeText.Text = spawnType.ToString();
 
@@ -430,6 +432,7 @@ namespace Barotrauma
                         if (door != null)
                         {
                             WayPoint newPoint = new WayPoint(door.Item.Position, SpawnType.Path, Submarine.Loaded);
+                            newPoint.Ladders = ladders;
                             newPoint.ConnectedGap = door.LinkedGap;
 
                             newPoint.ConnectTo(prevPoint);
@@ -656,6 +659,15 @@ namespace Barotrauma
         public override void OnMapLoaded()
         {
             currentHull = Hull.FindHull(WorldPosition, currentHull);
+
+            if (gapId > 0) ConnectedGap = FindEntityByID(gapId) as Gap;
+
+            if (ladderId > 0)
+            {
+                var ladderItem = FindEntityByID(ladderId) as Item;
+
+                if (ladderItem != null) Ladders = ladderItem.GetComponent<Ladder>();
+            }
         }
 
         public override XElement Save(XDocument doc)
@@ -673,10 +685,11 @@ namespace Barotrauma
                 element.Add(new XAttribute("idcardtags", string.Join(",", idCardTags)));
             }
 
-            if (assignedJob != null)
-            {
-                element.Add(new XAttribute("job", assignedJob.Name));
-            }
+            if (assignedJob != null) element.Add(new XAttribute("job", assignedJob.Name));
+            
+
+            if (ConnectedGap != null) element.Add(new XAttribute("gap", ConnectedGap.ID));
+            if (Ladders != null) element.Add(new XAttribute("ladders", Ladders.Item.ID));
 
             doc.Root.Add(element);
 
@@ -717,6 +730,9 @@ namespace Barotrauma
             {
                 w.assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLower() == jobName);
             }
+
+            w.ladderId = (ushort)ToolBox.GetAttributeInt(element, "ladders", 0);
+            w.gapId = (ushort)ToolBox.GetAttributeInt(element, "gap", 0);
 
             w.linkedToID = new List<ushort>();
             int i = 0;

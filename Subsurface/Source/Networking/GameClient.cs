@@ -766,9 +766,7 @@ namespace Barotrauma.Networking
             }
 
             Character character = Character.Create(ch, position, !isMyCharacter, false);
-            GameMain.GameSession.CrewManager.characters.Add(character);
-            character.OnDeath = GameMain.GameSession.ShiftSummary.AddCasualty;
-            
+            GameMain.GameSession.CrewManager.characters.Add(character);            
 
             character.ID = ID;
             

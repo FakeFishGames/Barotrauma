@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="Oxygen Tank"
+    category="Equipment,Misc"
     Tags="smallitem"
     pickdistance="150"
     price="50">

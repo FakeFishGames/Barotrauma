@@ -64,7 +64,7 @@
   
   <Item
     name="Railgun Shell"
-    category="Equipment"
+    category="Misc"
     pickdistance="200"
     price="100">
 

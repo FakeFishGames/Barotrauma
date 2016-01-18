@@ -196,10 +196,20 @@ namespace Barotrauma
             
             FireProof = ToolBox.GetAttributeBool(element, "fireproof", false);
 
-            MapEntityCategory category;
-            Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), out category);
-            Category = category;
 
+            string categoriesStr = ToolBox.GetAttributeString(element, "category", "Misc");
+            string[] categories = categoriesStr.Split(',');
+
+            for (int i = 0; i<categories.Length; i++)
+            {
+
+                MapEntityCategory category;
+                if (Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), out category))
+                {
+                    Category = i == 0 ? category : Category | category;
+                }
+            }
+            
             string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");
             SpriteColor = new Color(ToolBox.ParseToVector4(spriteColorStr));
 

@@ -740,7 +740,7 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD(bool inGame=false)
         {
-            int width = 400;
+            int width = 450;
             int x = GameMain.GraphicsWidth/2-width/2, y = 10;
 
             List<ObjectProperty> editableProperties = inGame ? GetProperties<InGameEditable>() : GetProperties<Editable>();
@@ -768,7 +768,7 @@ namespace Barotrauma
                 if (prefab.IsLinkable) 
                 {
                     new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", 
-                        GUI.Style, Alignment.TopLeft, Alignment.TopRight, editingHUD);
+                        GUI.Style, Alignment.TopRight, Alignment.TopRight, editingHUD).Font = GUI.SmallFont;
                     y += 25;
                 }
                 foreach (ItemComponent ic in components)
@@ -776,7 +776,7 @@ namespace Barotrauma
                     foreach (RelatedItem relatedItem in ic.requiredItems)
                     {
                         new GUITextBlock(new Rectangle(0, y, 100, 20), ic.Name + ": " + relatedItem.Type.ToString() + " required", GUI.Style, editingHUD);
-                        GUITextBox namesBox = new GUITextBox(new Rectangle(0, y, 200, 20), Alignment.Right, GUI.Style, editingHUD);
+                        GUITextBox namesBox = new GUITextBox(new Rectangle(-10, y, 160, 20), Alignment.Right, GUI.Style, editingHUD);
 
                         PropertyDescriptorCollection properties = TypeDescriptor.GetProperties (relatedItem);
                         PropertyDescriptor property = properties.Find("JoinedNames", false);
@@ -800,7 +800,7 @@ namespace Barotrauma
                 var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault<Editable>();
                 if (editable != null) height = (int)(Math.Ceiling(editable.MaxLength / 20.0f) * 20.0f);
 
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, height), GUI.Style, editingHUD);
+                GUITextBox propertyBox = new GUITextBox(new Rectangle(180, y, 250, height), GUI.Style, editingHUD);
                 if (height>20) propertyBox.Wrap = true;
 
                 object value = objectProperty.GetValue();
