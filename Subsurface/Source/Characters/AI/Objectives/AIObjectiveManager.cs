@@ -54,13 +54,6 @@ namespace Barotrauma
 
             //sort objectives according to priority
             objectives.Sort((x, y) => y.GetPriority(character).CompareTo(x.GetPriority(character)));
-
-            foreach (Gap gap in Gap.GapList)
-            {
-                if (gap.IsRoomToRoom || gap.ConnectedDoor != null || gap.Open<0.01f) continue;
-
-                AddObjective(new AIObjectiveFixLeak(gap, character));
-            }
         }
 
         public void DoCurrentObjective(float deltaTime)
@@ -86,6 +79,10 @@ namespace Barotrauma
                     break;
                 case "wait":
                     currentObjective = new AIObjectiveGoTo(character, character, true);
+                    break;
+                case "fixleaks":
+                case "fix leaks":
+                    currentObjective = new AIObjectiveFixLeaks(character);
                     break;
                 default:
                     if (order.TargetItem == null) return;
