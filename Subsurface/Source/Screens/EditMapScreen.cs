@@ -57,6 +57,11 @@ namespace Barotrauma
             return "Physics bodies: " + GameMain.World.BodyList.Count;
         }
 
+        public bool CharacterMode
+        {
+            get { return characterMode; }
+        }
+
 
         public EditMapScreen()
         {
@@ -97,27 +102,28 @@ namespace Barotrauma
 
             
             GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];
+                       
 
             int width = 400, height = 400;
             int y = 160;
+            int i = 0;
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-
                 var catButton = new GUIButton(new Rectangle(0, y, 0, 20), category.ToString(), Alignment.Left, GUI.Style, GUIpanel);
-                catButton.UserData = (int)category;
+                catButton.UserData = i;
                 catButton.OnClicked = SelectTab;
                 y+=25;
 
-                GUItabs[(int)category] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
-                GUItabs[(int)category].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+                GUItabs[i] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+                GUItabs[i].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-                GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[(int)category]);
+                GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[i]);
                 itemList.OnSelected = SelectPrefab;
                 itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
                 foreach (MapEntityPrefab ep in MapEntityPrefab.list)
                 {
-                    if (ep.Category != category) continue;
+                    if (!ep.Category.HasFlag(category)) continue;
 
                     Color color = ((itemList.CountChildren % 2) == 0) ? Color.Transparent : Color.White * 0.1f;
 
@@ -151,6 +157,7 @@ namespace Barotrauma
 
                 itemList.children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
 
+                i++;
             }
 
             y+=50;

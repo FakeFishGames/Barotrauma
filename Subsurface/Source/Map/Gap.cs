@@ -120,50 +120,39 @@ namespace Barotrauma
 
             linkedTo.Clear();
 
-            foreach (Hull h in Hull.hullList)
+            Vector2[] searchPos = new Vector2[2];
+            if (isHorizontal)
             {
-                if (!Submarine.RectsOverlap(h.Rect, rect, false)) continue;
-                
-                //if the gap is inside the hull completely, ignore it
-                if (rect.X > h.Rect.X && rect.X + rect.Width < h.Rect.X+h.Rect.Width && 
-                    rect.Y < h.Rect.Y && rect.Y - rect.Height > h.Rect.Y - h.Rect.Height) continue;
-
-                for (int i = 0; i < 2; i++ )
-                {
-                    if (hulls[i] != null) continue;
-                    hulls[i] = h;
-                    break;
-                }
-
-                if (hulls[1] != null) break;
+                searchPos[0] = new Vector2(rect.X, rect.Y - rect.Height / 2);
+                searchPos[1] = new Vector2(rect.Right, rect.Y - rect.Height / 2);
             }
+            else
+            {
+                searchPos[0] = new Vector2(rect.Center.X, rect.Y);
+                searchPos[1] = new Vector2(rect.Center.X, rect.Y - rect.Height);
+            }
+
+            hulls[0] = Hull.FindHullOld(searchPos[0], null, false);
+            hulls[1] = Hull.FindHullOld(searchPos[1], null, false);
 
             if (hulls[0] == null && hulls[1] == null) return;
 
-            if (hulls[0] != null && hulls[1] != null)
+            if (hulls[0]==null && hulls[1]!=null)
             {
-                if ((isHorizontal && hulls[0].Rect.X > hulls[1].Rect.X) || (!isHorizontal && hulls[0].Rect.Y < hulls[1].Rect.Y))
-                {
-                    //make sure that hull1 is the lefthand room if the gap is horizontal,
-                    //or that hull1 is the upper hull if the gap is vertical
-                    
-                    Hull temp = hulls[0];
-                    hulls[0] = hulls[1];
-                    hulls[1] = temp;
-           
-                }
+                Hull temp = hulls[0];
+                hulls[0] = hulls[1];
+                hulls[1] = temp;
             }
 
             linkedTo.Add(hulls[0]);
             if (hulls[1] != null) linkedTo.Add(hulls[1]);
-
         }
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
         {
             if (GameMain.DebugDraw)
             {
-                Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Width / 2.0f));
+                Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Height/ 2.0f));
                 GUI.DrawLine(sb, center, center + flowForce/10.0f, Color.Red);
 
                 GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + lerpedFlowForce / 10.0f + Vector2.One * 5.0f, Color.Orange);
@@ -241,7 +230,7 @@ namespace Barotrauma
                 UpdateRoomToRoom(deltaTime);
             }
 
-            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime*2.0f);
+            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime);
 
             if (LerpedFlowForce.Length() > 100.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {
@@ -276,19 +265,21 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) return;
+
                     pos.Y += Math.Sign(flowForce.Y) * rect.Height / 2.0f;
                     for (int i = 0; i < rect.Width; i += (int)Rand.Range(80, 100))
                     {
                         pos.X = Rand.Range(rect.X, rect.X + rect.Width);
 
                         Vector2 velocity = new Vector2(
-                            flowForce.X * Rand.Range(0.5f, 0.7f), 
-                            Math.Max(flowForce.Y,-100.0f) * Rand.Range(0.5f, 0.7f));
+                            lerpedFlowForce.X * Rand.Range(0.5f, 0.7f),
+                            Math.Max(lerpedFlowForce.Y, -100.0f) * Rand.Range(0.5f, 0.7f));
 
                         var splash = GameMain.ParticleManager.CreateParticle(
                             "watersplash", 
                             Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position,
-                            velocity);
+                            -velocity);
 
                         if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 
@@ -411,20 +402,10 @@ namespace Barotrauma
 
                     flowTargetHull = hull1;
 
-                    //delta = (water2.Pressure - water1.Pressure) * 0.1f;
-                    //if (delta > 0.1f)
-                    //{
-                    //    int posX = (int)((rect.X + size / 2.0f - water1.Rect.X) / Hull.WaveWidth);
-                    //    //water1.WaveY[posX] = delta;
-                    //    water1.WaveVel[posX] = delta * 0.01f;
-                    //}
-                    
                     if (hull1.Volume > hull1.FullVolume)
                     {
                         hull1.Pressure = Math.Max(hull1.Pressure, (hull1.Pressure + hull2.Pressure) / 2);
-                    }
-
-                    
+                    }                   
 
                 }
                 //there's water in the upper room, drop to lower

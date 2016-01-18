@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
             if (powerConsumption == 0.0f) voltage = 1.0f;
 
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
-            if (Force != 0.0f)
+            if (Force > 1.0f)
             {
                 Vector2 currForce = new Vector2((force / 100.0f) * maxForce * (voltage / minVoltage), 0.0f);
 
@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
 
                 for (int i = 0; i < 5; i++)
                 {
-                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition,
+                    var bubbles = GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition - (Vector2.UnitX * item.Rect.Width/2),
                         -currForce / 5.0f + new Vector2(Rand.Range(-100.0f, 100.0f), Rand.Range(-50f, 50f)),
                         0.0f, item.CurrentHull);
                 }

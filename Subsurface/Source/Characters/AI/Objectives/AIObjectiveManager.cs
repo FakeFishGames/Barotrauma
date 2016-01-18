@@ -85,12 +85,12 @@ namespace Barotrauma
                     currentObjective = new AIObjectiveGoTo(Character.Controlled, character, true);
                     break;
                 case "wait":
-                    currentObjective = new AIObjectiveGoTo(character.SimPosition, character, true);
+                    currentObjective = new AIObjectiveGoTo(character, character, true);
                     break;
                 default:
                     if (order.TargetItem == null) return;
 
-                    currentObjective = new AIObjectiveOperateItem(order.TargetItem, character, option);
+                    currentObjective = new AIObjectiveOperateItem(order.TargetItem, character, option, null, order.UseController);
 
                     break;
             }

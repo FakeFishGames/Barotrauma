@@ -777,7 +777,6 @@ namespace Barotrauma.Networking
                 ConnectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
 
                 GameMain.GameSession.CrewManager.characters.Add(ConnectedClients[i].Character);
-                ConnectedClients[i].Character.OnDeath = GameMain.GameSession.ShiftSummary.AddCasualty;
             }
 
             if (characterInfo != null)
@@ -788,7 +787,6 @@ namespace Barotrauma.Networking
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
 
                 GameMain.GameSession.CrewManager.characters.Add(myCharacter);
-                myCharacter.OnDeath = GameMain.GameSession.ShiftSummary.AddCasualty;
             }
 
             var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);

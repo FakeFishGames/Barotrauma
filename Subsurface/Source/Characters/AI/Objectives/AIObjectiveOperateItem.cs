@@ -30,15 +30,19 @@ namespace Barotrauma
             get { return operateTarget; }
         }
 
-        public AIObjectiveOperateItem(ItemComponent item, Character character, string option, Entity operateTarget = null)
+        public AIObjectiveOperateItem(ItemComponent item, Character character, string option, Entity operateTarget = null, bool useController = false)
             :base (character, option)
         {
             component = item;
 
             this.operateTarget = operateTarget;
 
-            var controllers = item.Item.GetConnectedComponents<Controller>();
-            if (controllers.Any()) component = controllers[0];
+            if (useController)
+            {
+                var controllers = item.Item.GetConnectedComponents<Controller>();
+                if (controllers.Any()) component = controllers[0];
+            }
+
 
             canBeCompleted = true;
         }

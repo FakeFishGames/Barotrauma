@@ -59,6 +59,8 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (target == character) return;
+
             waitUntilPathUnreachable -= deltaTime;
 
             if (character.SelectedConstruction!=null && character.SelectedConstruction.GetComponent<Ladder>()==null)

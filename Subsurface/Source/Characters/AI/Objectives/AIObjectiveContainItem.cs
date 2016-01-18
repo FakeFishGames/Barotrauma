@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return isCompleted;
+            return isCompleted || container.Inventory.FindItem(itemName)!=null;
         }
 
         protected override void Act(float deltaTime)

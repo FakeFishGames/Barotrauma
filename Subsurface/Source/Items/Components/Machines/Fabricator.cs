@@ -56,7 +56,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    class Fabricator : ItemComponent
+    class Fabricator : Powered
     {
         private List<FabricableItem> fabricableItems;
 
@@ -64,8 +64,8 @@ namespace Barotrauma.Items.Components
 
         private GUIFrame selectedItemFrame;
 
-        GUIProgressBar progressBar;
-        GUIButton activateButton;
+        private GUIProgressBar progressBar;
+        private GUIButton activateButton;
 
         private FabricableItem fabricatedItem;
         private float timeUntilReady;
@@ -208,6 +208,8 @@ namespace Barotrauma.Items.Components
             var containers = item.GetComponents<ItemContainer>();
             containers[0].Inventory.Locked = true;
             containers[1].Inventory.Locked = true;
+
+            currPowerConsumption = powerConsumption;
         }
 
         private void CancelFabricating()
@@ -215,6 +217,8 @@ namespace Barotrauma.Items.Components
             itemList.Enabled = true;
             IsActive = false;
             fabricatedItem = null;
+
+            currPowerConsumption = 0.0f;
 
             if (activateButton != null)
             {
@@ -231,12 +235,18 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            timeUntilReady -= deltaTime;
-
             if (progressBar!=null)
             {
                 progressBar.BarSize = fabricatedItem == null ? 0.0f : (fabricatedItem.RequiredTime - timeUntilReady) / fabricatedItem.RequiredTime;
             }
+
+            if (voltage < minVoltage) return;
+
+            if (powerConsumption == 0) voltage = 1.0f;
+
+            timeUntilReady -= deltaTime*voltage;
+
+            voltage -= deltaTime * 10.0f;
 
             if (timeUntilReady > 0.0f) return;
 

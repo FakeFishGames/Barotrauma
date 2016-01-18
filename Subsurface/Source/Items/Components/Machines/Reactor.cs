@@ -406,14 +406,14 @@ namespace Barotrauma.Items.Components
                      //temperature too high/low
                      if (Math.Abs(tempDiff)>500.0f)
                      {
-                         autoTemp = false;
+                         AutoTemp = false;
                          FissionRate += deltaTime * 100.0f * Math.Sign(tempDiff);
                          CoolingRate -= deltaTime * 100.0f * Math.Sign(tempDiff);
                      }
                      //temperature OK
                      else
                      {
-                         autoTemp = true;
+                         AutoTemp = true;
                      }
 
                      break;
@@ -566,7 +566,7 @@ namespace Barotrauma.Items.Components
                 return; 
             }
 
-            autoTemp = newAutoTemp;
+            AutoTemp = newAutoTemp;
             Temperature = newTemperature;
             ShutDownTemp = newShutDownTemp;
 
