@@ -63,6 +63,7 @@
     <Compile Include="Source\Characters\AI\IndoorsSteeringManager.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveCombat.cs" />
     <Compile Include="Source\Characters\AI\Objectives\AIObjectiveContainItem.cs" />
+    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFixLeaks.cs" />
     <Compile Include="Source\Characters\AI\Order.cs" />
     <Compile Include="Source\Characters\AI\CrewCommander.cs" />
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
