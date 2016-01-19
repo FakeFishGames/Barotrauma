@@ -57,10 +57,7 @@ namespace Barotrauma
             if (GameMain.GameSession != null && GameMain.GameSession.Map != null)
             {
                 if (GameMain.GameSession.Map.CurrentLocation!=null)
-                    text = text.Replace("[location1]", GameMain.GameSession.Map.CurrentLocation.Name);
-
-                if (GameMain.GameSession.Map.SelectedLocation!= null)
-                    text = text.Replace("[location2]", GameMain.GameSession.Map.SelectedLocation.Name);
+                    text = text.Replace("[location]", GameMain.GameSession.Map.CurrentLocation.Name);
             }
 
             return text;

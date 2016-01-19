@@ -71,8 +71,8 @@ namespace Barotrauma
 
             this.sourceRect = sourceRect;
 
-            if (parent != null)
-                parent.AddChild(this);
+            if (parent != null) parent.AddChild(this);
+            this.parent = parent;
         }
 
         public override void Draw(SpriteBatch spriteBatch)

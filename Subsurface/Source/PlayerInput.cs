@@ -10,7 +10,8 @@ namespace Barotrauma
         Use,
         Aim,
         Up, Down, Left, Right,
-        Run, Chat
+        Run, 
+        Chat, CrewOrders
     }
 
     public class KeyOrMouse

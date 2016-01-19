@@ -174,6 +174,8 @@ namespace Barotrauma.Items.Components
             projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y)), -rotation);
 
             projectiles[0].Use(deltaTime);
+            projectiles[0].User = character;
+
             if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
 
             return true;
@@ -236,7 +238,7 @@ namespace Barotrauma.Items.Components
                 //ignore humans and characters that are inside the sub
                 if (enemy.IsDead || enemy.SpeciesName == "human" || enemy.AnimController.CurrentHull != null) continue;
 
-                float dist = Vector2.Distance(enemy.Position, item.Position);
+                float dist = Vector2.Distance(enemy.WorldPosition, item.WorldPosition);
                 if (dist < closestDist)
                 {
                     closestEnemy = enemy;
@@ -246,18 +248,29 @@ namespace Barotrauma.Items.Components
 
             if (closestEnemy == null) return false;
 
-            character.CursorPosition = closestEnemy.Position;
-            SecondaryUse(deltaTime, character);
+            character.CursorPosition = closestEnemy.WorldPosition;
+            if (item.Submarine!=null) character.CursorPosition -= item.Submarine.Position;
+            character.SetInput(InputType.Aim, false, true);
+            //Vector2 receive
 
-            float enemyAngle = MathUtils.VectorToAngle(closestEnemy.Position-item.Position);
-            float turretAngle = -(rotation - MathHelper.TwoPi);
+            //Vector2 centerPos = new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y);
 
-            if (Math.Abs(enemyAngle - turretAngle) > 0.01f) return false;
+            //Vector2 offset = receivedPos - centerPos;
+            //offset.Y = -offset.Y;
 
-            var pickedBody = Submarine.PickBody(item.SimPosition, closestEnemy.SimPosition, null);
+            //targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+
+            float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition-item.WorldPosition);
+            float turretAngle = -rotation;
+
+
+
+            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.01f) return false;
+
+            var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
             if (pickedBody != null && pickedBody.UserData as Limb == null) return false;
 
-            Use(deltaTime, character);
+            if (objective.Option.ToLower()=="fire at will") Use(deltaTime, character);
 
 
             return false;

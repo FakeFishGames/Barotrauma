@@ -27,6 +27,8 @@ namespace Barotrauma.Items.Components
         private bool valueChanged;
 
         private float autopilotRayCastTimer;
+
+        private float neutralBallastLevel;
         
         bool AutoPilot
         {
@@ -44,6 +46,17 @@ namespace Barotrauma.Items.Components
                         ConvertUnits.ToSimUnits(item.WorldPosition),
                         ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
                 }
+            }
+        }
+
+
+        [Editable, HasDefaultValue(0.5f, true)]
+        public float NeutralBallastLevel
+        {
+            get { return neutralBallastLevel; }
+            set
+            {
+                neutralBallastLevel = MathHelper.Clamp(value, 0.0f, 1.0f);
             }
         }
 
@@ -115,7 +128,11 @@ namespace Barotrauma.Items.Components
 
             item.SendSignal(targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out");
 
-            item.SendSignal((-targetVelocity.Y).ToString(CultureInfo.InvariantCulture), "velocity_y_out");
+            float targetLevel = -targetVelocity.Y;
+
+            targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
+
+            item.SendSignal(targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out");
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)

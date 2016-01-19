@@ -72,6 +72,8 @@ namespace Barotrauma
 
         public List<MapEntity> GetEntities(Vector2 position)
         {
+            if (!MathUtils.IsValid(position)) new List<MapEntity>();
+
             if (Submarine.Loaded != null) position -= Submarine.HiddenSubPosition;
 
             if (position.X < limits.X || position.Y > limits.Y ||
@@ -81,7 +83,7 @@ namespace Barotrauma
             }
 
             Point indices = GetIndices(position);
-            
+
             return entities[indices.X, indices.Y];
         }
 

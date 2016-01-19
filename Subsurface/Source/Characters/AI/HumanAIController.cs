@@ -38,6 +38,14 @@ namespace Barotrauma
             objectiveManager.AddObjective(new AIObjectiveIdle(c));
 
             updateObjectiveTimer = Rand.Range(0.0f, UpdateObjectiveInterval);
+
+            if (GameMain.GameSession!=null && GameMain.GameSession.CrewManager!=null)
+            {
+                CurrentOrder = Order.PrefabList.Find(o => o.Name.ToLower() == "dismissed");
+                objectiveManager.SetOrder(CurrentOrder, "");
+                GameMain.GameSession.CrewManager.SetCharacterOrder(Character, CurrentOrder);
+            }
+
         }
 
         public override void Update(float deltaTime)
@@ -87,6 +95,8 @@ namespace Barotrauma
             if (Character.IsKeyDown(InputType.Aim))
             {
                 Character.AnimController.TargetDir = Character.CursorPosition.X > Character.Position.X ? Direction.Right : Direction.Left;
+                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
+
             }
             else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
             {
@@ -110,6 +120,8 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option);
+
+            GameMain.GameSession.CrewManager.SetCharacterOrder(Character, order);
         }
 
         public override void SelectTarget(AITarget target)

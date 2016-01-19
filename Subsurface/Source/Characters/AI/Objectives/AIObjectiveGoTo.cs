@@ -59,7 +59,12 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (target == character) return;
+            if (target == character)
+            {
+                character.AIController.SteeringManager.Reset();
+
+                return;
+            }
 
             waitUntilPathUnreachable -= deltaTime;
 
@@ -116,7 +121,7 @@ namespace Barotrauma
 
             completed = completed || Vector2.Distance(target != null ? target.SimPosition : targetPos, character.SimPosition) < allowedDistance;
 
-            if (completed) character.AIController.SteeringManager.SteeringManual(0.0f, -character.AIController.Steering);
+            if (completed) character.AIController.SteeringManager.Reset();
 
             return completed;
         }

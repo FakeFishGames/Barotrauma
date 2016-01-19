@@ -55,6 +55,11 @@ namespace Barotrauma
             steering += velocity;
         }
 
+        public void Reset()
+        {
+            steering = Vector2.Zero;
+        }
+
         public virtual void Update(float speed = 1.0f)
         {
             float steeringSpeed = steering.Length();

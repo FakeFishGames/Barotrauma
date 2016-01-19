@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveOperateItem : AIObjective
     {
-        private ItemComponent component;
+        private ItemComponent component, controller;
 
         private Entity operateTarget;
 
@@ -33,14 +33,14 @@ namespace Barotrauma
         public AIObjectiveOperateItem(ItemComponent item, Character character, string option, Entity operateTarget = null, bool useController = false)
             :base (character, option)
         {
-            component = item;
+            this.component = item;
 
             this.operateTarget = operateTarget;
 
             if (useController)
             {
                 var controllers = item.Item.GetConnectedComponents<Controller>();
-                if (controllers.Any()) component = controllers[0];
+                if (controllers.Any()) controller = controllers[0];
             }
 
 
@@ -49,21 +49,23 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (component.CanBeSelected)
+            ItemComponent target = controller == null ? component : controller;
+
+            if (target.CanBeSelected)
             { 
-                if (Vector2.Distance(character.Position, component.Item.Position) < component.Item.PickDistance
-                    || component.Item.IsInsideTrigger(character.WorldPosition))
+                if (Vector2.Distance(character.Position, target.Item.Position) < target.Item.PickDistance
+                    || target.Item.IsInsideTrigger(character.WorldPosition))
                 {
-                    if (character.SelectedConstruction != component.Item && component.CanBeSelected)
+                    if (character.SelectedConstruction != target.Item && target.CanBeSelected)
                     {
-                        component.Item.Pick(character, false, true);
+                        target.Item.Pick(character, false, true);
                     }
 
                     if (component.AIOperate(deltaTime, character, this)) isCompleted = true;
                     return;
                 }
 
-                AddSubObjective(new AIObjectiveGoTo(component.Item, character));
+                AddSubObjective(new AIObjectiveGoTo(target.Item, character));
             }
             else
             {

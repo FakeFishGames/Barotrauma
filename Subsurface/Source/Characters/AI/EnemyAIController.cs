@@ -289,7 +289,7 @@ namespace Barotrauma
             updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
             coolDownTimer *= 0.1f;
 
-            if (amount > 1.0f && attackWhenProvoked)
+            if (amount > 0.1f && attackWhenProvoked)
             {
                 attackHumans = 100.0f;
                 attackRooms = 100.0f;
