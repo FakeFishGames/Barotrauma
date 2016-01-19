@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <infotexts>
-  <progress>[sub] has made its way from [location1] to [location2].</progress>
-  <progress>[sub] has arrived at [location2].</progress>
-  <return>[sub] has returned to [location1].</return>
+  <progress>[sub] has made its way to [location].</progress>
+  <progress>[sub] has arrived at [location].</progress>
+  <return>[sub] has returned to [location].</return>
   <gameover>The ocean has claimed [sub] and its crew.</gameover>
 
   <CauseOfDeath.Damage>Succumbed to their injuries</CauseOfDeath.Damage>
