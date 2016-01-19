@@ -16,7 +16,7 @@ namespace Barotrauma
         private int money;
         
         private GUIFrame guiFrame;
-        private GUIListBox listBox;
+        private GUIListBox listBox, orderListBox;
 
         private bool crewFrameOpen;
         private GUIButton crewButton;
@@ -37,11 +37,15 @@ namespace Barotrauma
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
 
-            listBox = new GUIListBox(new Rectangle(0, 30, 150, 0), Color.Transparent, null, guiFrame);
+            listBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
             listBox.ScrollBarEnabled = false;
             listBox.OnSelected = SelectCharacter;
 
-            crewButton = new GUIButton(new Rectangle(0, 00, 100, 20), "Crew", GUI.Style, guiFrame);
+            orderListBox = new GUIListBox(new Rectangle(5, 30, 30, 0), Color.Transparent, null, guiFrame);
+            orderListBox.ScrollBarEnabled = false;
+            orderListBox.OnSelected = SelectCharacterOrder;
+
+            crewButton = new GUIButton(new Rectangle(5, 0, 100, 20), "Crew", GUI.Style, guiFrame);
             crewButton.OnClicked = ToggleCrewFrame;
 
             commander = new CrewCommander(this);
@@ -78,6 +82,31 @@ namespace Barotrauma
             return false;
         }
 
+        public void SetCharacterOrder(Character character, Order order)
+        {
+            if (order == null) return;
+
+            var characterFrame = listBox.FindChild(character);
+
+            if (characterFrame == null) return;
+
+            int characterIndex = listBox.children.IndexOf(characterFrame);
+
+            orderListBox.children[characterIndex].ClearChildren();
+            
+            var img = new GUIImage(new Rectangle(0, 0, 30, 30), order.SymbolSprite, Alignment.Center, orderListBox.children[characterIndex]);
+            img.Scale = 30.0f / img.SourceRect.Width;
+            img.Color = order.Color;
+            img.ToolTip ="Order: "+ order.Name; 
+        }
+
+        public bool SelectCharacterOrder(GUIComponent component, object selection)
+        {
+            GameMain.GameSession.CrewManager.commander.ToggleGUIFrame();
+
+            return false;
+        }
+
         public void AddCharacter(Character character)
         {
             characters.Add(character);
@@ -94,11 +123,16 @@ namespace Barotrauma
 
             character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
 
-            //GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, listBox);
-            //frame.UserData = character;
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, null, orderListBox);
+            frame.UserData = character;
             //frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            //frame.HoverColor = Color.LightGray * 0.5f;
-            //frame.SelectedColor = Color.Gold * 0.5f;
+            frame.HoverColor = Color.LightGray * 0.5f;
+            frame.SelectedColor = Color.Gold * 0.5f;
+
+            var ai = character.AIController as HumanAIController;
+            SetCharacterOrder(character, ai.CurrentOrder);
+
+           
 
             //string name = character.Info.Name.Replace(' ', '\n');
 
@@ -118,8 +152,17 @@ namespace Barotrauma
         {
             guiFrame.Update(deltaTime);
 
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.C))
+
+            if (GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
             {
+                //deselect construction unless it's the ladders the character is climbing
+                if (!commander.IsOpen && Character.Controlled != null && 
+                    Character.Controlled.SelectedConstruction != null && 
+                    Character.Controlled.SelectedConstruction.GetComponent<Items.Components.Ladder>() == null)
+                {
+                    Character.Controlled.SelectedConstruction = null;
+                }
+
                 //only allow opening the command UI if there are AICharacters in the crew
                 if (commander.IsOpen || characters.Any(c => c is AICharacter)) commander.ToggleGUIFrame();                
             }
@@ -142,7 +185,6 @@ namespace Barotrauma
             //    Game1.GameSession.EndShift(null, null);
             //}            
         }
-
 
         public void CreateCrewFrame(List<Character> crew)
         {

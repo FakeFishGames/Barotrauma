@@ -136,7 +136,11 @@ namespace Barotrauma
             keyMapping[(int)InputType.Left]     = new KeyOrMouse(Keys.A);
             keyMapping[(int)InputType.Right]    = new KeyOrMouse(Keys.D);
             keyMapping[(int)InputType.Run]      = new KeyOrMouse(Keys.LeftShift);
-            keyMapping[(int)InputType.Chat]     = new KeyOrMouse(Keys.Tab);
+
+
+            keyMapping[(int)InputType.Chat]         = new KeyOrMouse(Keys.Tab);
+            keyMapping[(int)InputType.CrewOrders]   = new KeyOrMouse(Keys.C);
+
             keyMapping[(int)InputType.Select]   = new KeyOrMouse(Keys.E);
 
             keyMapping[(int)InputType.Use] = new KeyOrMouse(0);

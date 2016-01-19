@@ -101,6 +101,9 @@ namespace Barotrauma
             {
                 currSearchIndex++;
 
+                //don't try to get items from outside the sub
+                if (Item.ItemList[currSearchIndex].CurrentHull == null) continue;
+
                 if (!Item.ItemList[currSearchIndex].HasTag(itemName) && Item.ItemList[currSearchIndex].Name != itemName) continue;
                 if (IgnoreContainedItems && Item.ItemList[currSearchIndex].Container != null) continue;
                 if (Item.ItemList[currSearchIndex].Inventory is CharacterInventory) continue;

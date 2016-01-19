@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
             if (powerConsumption == 0.0f) voltage = 1.0f;
 
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
-            if (Force > 1.0f)
+            if (Math.Abs(Force) > 1.0f)
             {
                 Vector2 currForce = new Vector2((force / 100.0f) * maxForce * (voltage / minVoltage), 0.0f);
 

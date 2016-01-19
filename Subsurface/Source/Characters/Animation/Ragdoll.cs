@@ -553,10 +553,12 @@ namespace Barotrauma
                 if (newHull == null && currentHull.Submarine != null)
                 {
                     SetPosition(refLimb.SimPosition + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
+                    character.CursorPosition += currentHull.Submarine.Position;
                 }
                 else if (currentHull == null && newHull != null && newHull.Submarine != null)
                 {
                    SetPosition(refLimb.SimPosition - ConvertUnits.ToSimUnits(newHull.Submarine.Position));
+                   character.CursorPosition -= newHull.Submarine.Position;
                 }
             }
             

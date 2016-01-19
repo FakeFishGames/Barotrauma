@@ -212,26 +212,28 @@ namespace Barotrauma
         {      
             if (targetPosition != null && targetPosition != Position)
             {
-                //Vector2 targetSimPos = ConvertUnits.ToSimUnits((Vector2)targetPosition);
-
                 float dist = Vector2.Distance((Vector2)targetPosition, Position);
                 if (dist > 1000.0f)
                 {
                     Vector2 moveAmount = ConvertUnits.ToSimUnits((Vector2)targetPosition) - body.Position;
+                    Vector2 displayerMoveAmount = ConvertUnits.ToDisplayUnits(moveAmount);
 
                     body.SetTransform(body.Position + moveAmount, 0.0f);
+                    if (Character.Controlled != null) Character.Controlled.CursorPosition += displayerMoveAmount;
 
-                    GameMain.GameScreen.Cam.Position += ConvertUnits.ToDisplayUnits(moveAmount);
+                    GameMain.GameScreen.Cam.Position += displayerMoveAmount;
                     targetPosition = null;
                 }
                 else if (dist > 50.0f)
                 {
                     Vector2 moveAmount = Vector2.Normalize((Vector2)targetPosition - Position);
                     moveAmount *= ConvertUnits.ToSimUnits(Math.Min(dist, 100.0f));
+                    Vector2 displayerMoveAmount = ConvertUnits.ToDisplayUnits(moveAmount);
 
                     body.SetTransform(body.Position + moveAmount * deltaTime, 0.0f);
 
-                    GameMain.GameScreen.Cam.Position += ConvertUnits.ToDisplayUnits(moveAmount * deltaTime);
+                    GameMain.GameScreen.Cam.Position += displayerMoveAmount * deltaTime;
+                    if (Character.Controlled != null) Character.Controlled.CursorPosition += displayerMoveAmount;
                 }
                 else
                 {
@@ -351,7 +353,7 @@ namespace Barotrauma
                     {
                         Vector2 normal = Vector2.Normalize(body.Position - limb.SimPosition);
 
-                        normal *= limb.Mass/100.0f;
+                        normal *= Math.Min(limb.Mass,100)/100.0f;
 
                         ApplyImpact(normal, contact);
                     }
@@ -382,20 +384,34 @@ namespace Barotrauma
             FixedArray2<Vector2> points;
             contact.GetWorldManifold(out normal2, out points);
 
-            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] + limb.LinearVelocity * ((float)Physics.step));
+            Vector2 normalizedVel = limb.character.AnimController.RefLimb.LinearVelocity == Vector2.Zero ? 
+                Vector2.Zero : Vector2.Normalize(limb.character.AnimController.RefLimb.LinearVelocity);
+
+            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] + normalizedVel);
 
             Hull newHull = Hull.FindHull(targetPos, null);
 
-            if (newHull == null) return true;
+            if (newHull == null)
+            {
+                targetPos = ConvertUnits.ToDisplayUnits(points[0] - normalizedVel);
+
+               newHull = Hull.FindHull(targetPos, null);
+
+                if (newHull == null) return true;
+            }
 
             var gaps = newHull.FindGaps();
 
+            targetPos = limb.character.WorldPosition;
+
             bool gapFound = false;
-            foreach (Gap gap in gaps)
+            foreach (Gap gap in Gap.GapList)
             {
+                if (gap.Open == 0.0f || gap.IsRoomToRoom) continue;
                 if (gap.isHorizontal)
                 {
-                    if (targetPos.Y < gap.WorldRect.Y && targetPos.Y > gap.WorldRect.Y - gap.WorldRect.Height)
+                    if (targetPos.Y < gap.WorldRect.Y && targetPos.Y > gap.WorldRect.Y - gap.WorldRect.Height && 
+                        Math.Abs(gap.WorldRect.Center.X-targetPos.X)<200.0f)
                     {
                         gapFound = true;
                         break;
@@ -403,7 +419,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (targetPos.X > gap.WorldRect.X && targetPos.X < gap.WorldRect.Right)
+                    if (targetPos.X > gap.WorldRect.X && targetPos.X < gap.WorldRect.Right &&
+                        Math.Abs(gap.WorldRect.Y - gap.WorldRect.Height/2 - targetPos.Y) < 200.0f)
                     {
                         gapFound = true;
                         break;

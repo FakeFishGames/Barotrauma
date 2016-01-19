@@ -15,6 +15,8 @@ namespace Barotrauma
         GUIFrame frame;
         //GUIListBox characterList;
 
+        private int characterFrameBottom;
+
         public GUIFrame Frame
         {
             get { return IsOpen ? frame : null; }
@@ -29,7 +31,6 @@ namespace Barotrauma
         public CrewCommander(CrewManager crewManager)
         {
             this.crewManager = crewManager;
-
         }
 
         public void ToggleGUIFrame()
@@ -47,20 +48,19 @@ namespace Barotrauma
         {
             frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.6f);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
-
+            
             //UpdateCharacters();
 
             int buttonWidth = 130;
             int spacing = 20;
 
-                int y = 250;  
+            int y = 50;
 
             for (int n = 0; n<2; n++)
-            {          
-                            
+            {                                      
                 List<Order> orders = (n==0) ? 
                     Order.PrefabList.FindAll(o => o.ItemComponentType == null) : 
-                    Order.PrefabList.FindAll(o=> o.ItemComponentType!=null);
+                    Order.PrefabList.FindAll(o=> o.ItemComponentType != null);
 
                 int startX = (int)-(buttonWidth * orders.Count + spacing * (orders.Count - 1)) / 2;
                 
@@ -117,7 +117,7 @@ namespace Barotrauma
 
         public void UpdateCharacters()
         {
-            if (frame == null) CreateGUIFrame();
+            CreateGUIFrame();
 
             List<GUIComponent> prevCharacterFrames = new List<GUIComponent>();
             foreach (GUIComponent child in frame.children)
@@ -134,10 +134,11 @@ namespace Barotrauma
 
             List<Character> aliveCharacters = crewManager.characters.FindAll(c => !c.IsDead);
 
+            characterFrameBottom = 0;
+
             int charactersPerRow = 4;
 
             int spacing = 5;
-
 
             int rows = (int)Math.Ceiling((double)aliveCharacters.Count / charactersPerRow);
 
@@ -145,7 +146,7 @@ namespace Barotrauma
             foreach (Character character in aliveCharacters)
             {
                 int rowCharacterCount = Math.Min(charactersPerRow, aliveCharacters.Count);
-                if (aliveCharacters.Count - i < charactersPerRow-1) rowCharacterCount = aliveCharacters.Count % charactersPerRow;
+                //if (i >= aliveCharacters.Count - charactersPerRow && aliveCharacters.Count % charactersPerRow > 0) rowCharacterCount = aliveCharacters.Count % charactersPerRow;
 
                // rowCharacterCount = Math.Min(rowCharacterCount, aliveCharacters.Count - i);
                 int startX = (int)-(150 * rowCharacterCount + spacing * (rowCharacterCount - 1)) / 2;
@@ -159,12 +160,13 @@ namespace Barotrauma
                 characterButton.UserData = character;
                 characterButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 
-                characterButton.Color = Character.Controlled == character ? Color.Gold * 0.3f : Color.Black * 0.5f;
+                characterButton.Color = Character.Controlled == character ? Color.Gold * 0.2f : Color.Black * 0.5f;
                 characterButton.HoverColor = Color.LightGray * 0.5f;
-                characterButton.SelectedColor = Color.Gold * 0.5f;
+                characterButton.SelectedColor = Color.Gold * 0.6f;
                 characterButton.OutlineColor = Color.LightGray * 0.8f;
-                
 
+                characterFrameBottom = Math.Max(characterFrameBottom, characterButton.Rect.Bottom);
+                
                 string name = character.Info.Name;
                 if (character.Info.Job != null) name += '\n' + "(" + character.Info.Job.Name + ")";
 
@@ -186,6 +188,16 @@ namespace Barotrauma
                 }
 
                 i++;
+            }
+
+            foreach (GUIComponent child in frame.children)
+            {
+                if (!(child.UserData is Order)) continue;
+
+                Rectangle rect = child.Rect;
+                rect.Y += characterFrameBottom;
+
+                child.Rect = rect;
             }
         }
 
@@ -225,11 +237,21 @@ namespace Barotrauma
             var existingOrder = characterFrame.children.Find(c => c.UserData as Order != null);
             if (existingOrder != null) characterFrame.RemoveChild(existingOrder);
 
-            var orderFrame = new GUIFrame(new Rectangle(0, characterFrame.Rect.Height, 0, 30 + order.Options.Length * 15), null, characterFrame);
-            orderFrame.OutlineColor = Color.LightGray * 0.8f;
+            var orderFrame = new GUIFrame(new Rectangle(-5, characterFrame.Rect.Height, characterFrame.Rect.Width, 30 + order.Options.Length * 15), null, characterFrame);
+            orderFrame.OutlineColor = Color.LightGray * 0.5f;
             orderFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             orderFrame.UserData = order;
+
+            var img = new GUIImage(new Rectangle(0, 0, 20, 20), order.SymbolSprite, Alignment.TopLeft, orderFrame);
+            img.Scale = 20.0f / img.SourceRect.Width;
+            img.Color = order.Color;
+            img.CanBeFocused = false;
+
             new GUITextBlock(new Rectangle(0, 0, 0, 20), order.DoingText, GUI.Style, Alignment.TopLeft, Alignment.TopCenter, orderFrame);
+
+
+
+
 
             var optionList = new GUIListBox(new Rectangle(0, 20, 0, 80), Color.Transparent, null, orderFrame);
             optionList.UserData = order;

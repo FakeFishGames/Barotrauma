@@ -553,15 +553,8 @@ namespace Barotrauma
             foreach (Gap gap in Gap.GapList)
             {
                 if (gap.Open < 0.01f) continue;
-                if (gap.linkedTo.Count == 0) continue;
 
-                var gapHull = gap.linkedTo[0] as Hull;
-                if (gapHull == this) gaps.Add(gap);
-
-                if (gap.linkedTo.Count < 2) continue;
-
-                gapHull = gap.linkedTo[1] as Hull;
-                if (gapHull == this) gaps.Add(gap);
+                if (gap.linkedTo.Contains(this)) gaps.Add(gap);
             }
 
             return gaps;

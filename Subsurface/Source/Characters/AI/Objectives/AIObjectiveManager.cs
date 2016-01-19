@@ -70,6 +70,8 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string option)
         {
+            if (order == null) return;
+
             currentObjective = null;
 
             switch (order.Name.ToLower())

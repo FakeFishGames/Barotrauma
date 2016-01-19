@@ -219,7 +219,7 @@ namespace Barotrauma
             if (musicClips == null) return;
             
             Task criticalTask = null;
-            if (GameMain.GameSession!=null)
+            if (GameMain.GameSession!=null && GameMain.GameSession.TaskManager != null)
             {
                 foreach (Task task in GameMain.GameSession.TaskManager.Tasks)
                 {

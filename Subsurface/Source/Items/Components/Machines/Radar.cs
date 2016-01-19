@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
             {
                 var mission = GameMain.GameSession.Mission;
 
-                if (!string.IsNullOrWhiteSpace(mission.RadarLabel))
+                if (!string.IsNullOrWhiteSpace(mission.RadarLabel) && mission.RadarPosition != Vector2.Zero)
                 {
                     DrawMarker(spriteBatch,
                         mission.RadarLabel,
