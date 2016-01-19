@@ -16,7 +16,7 @@ namespace Barotrauma
 
         public override Vector2 RadarPosition
         {
-            get { return radarPosition; }
+            get { return monster != null && !monster.IsDead ? radarPosition : Vector2.Zero; }
         }
 
         public MonsterMission(XElement element)

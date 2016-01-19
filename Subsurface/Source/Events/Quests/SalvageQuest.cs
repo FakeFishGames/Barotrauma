@@ -20,7 +20,7 @@ namespace Barotrauma
         {
             get
             {
-                return ConvertUnits.ToDisplayUnits(item.SimPosition);
+                return state>0 ? Vector2.Zero : ConvertUnits.ToDisplayUnits(item.SimPosition);
             }
         }
 

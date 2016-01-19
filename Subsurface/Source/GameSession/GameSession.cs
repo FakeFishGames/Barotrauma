@@ -21,11 +21,13 @@ namespace Barotrauma
         
         private ShiftSummary shiftSummary;
 
+        private Mission currentMission;
+
         public Mission Mission
         {
             get
             {
-                if (gameMode != null) return gameMode.Mission;
+                return currentMission;
                 return null;
             }
         }
@@ -124,7 +126,11 @@ namespace Barotrauma
                 GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(80);
             }
 
-            if (Mission!=null) Mission.Start(Level.Loaded);
+            if (gameMode.Mission!=null)
+            {
+                currentMission = gameMode.Mission;
+                Mission.Start(Level.Loaded);
+            }
 
             shiftSummary = new ShiftSummary(this);
 
@@ -153,8 +159,9 @@ namespace Barotrauma
             var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
             okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
 
-            
             TaskManager.EndShift();
+
+            currentMission = null;
             //gameMode.End();
 
             //return true;
