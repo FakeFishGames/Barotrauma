@@ -52,7 +52,7 @@
    category="Material"
    Tags="smallitem"
    pickdistance="150"
-   spritecolor="1.0,1.0,1.0,0.9"
+   spritecolor="0.9,0.9,1.0,0.9"
    canbepicked="true"
    price="50">
 

@@ -97,6 +97,7 @@ namespace Barotrauma
             var img = new GUIImage(new Rectangle(0, 0, 30, 30), order.SymbolSprite, Alignment.Center, orderListBox.children[characterIndex]);
             img.Scale = 30.0f / img.SourceRect.Width;
             img.Color = order.Color;
+            img.CanBeFocused = false;
             img.ToolTip ="Order: "+ order.Name; 
         }
 

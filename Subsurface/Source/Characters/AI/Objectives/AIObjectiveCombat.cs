@@ -56,8 +56,8 @@ namespace Barotrauma
                 Vector2 enemyDiff = Vector2.Normalize(enemy.Position - character.Position);
                 float weaponAngle = ((weapon.body.Dir == 1.0f) ? weapon.body.Rotation : weapon.body.Rotation - MathHelper.Pi);
                 Vector2 weaponDir = new Vector2((float)Math.Cos(weaponAngle), (float)Math.Sin(weaponAngle));
-                
-                if (Vector2.Dot(enemyDiff, weaponDir)<0.9f) return;
+
+                if (Vector2.Dot(enemyDiff, weaponDir) < 0.9f) return;
 
                 List<FarseerPhysics.Dynamics.Body> ignoredBodies = new List<FarseerPhysics.Dynamics.Body>();
                 foreach (Limb limb in character.AnimController.Limbs)

@@ -253,7 +253,7 @@ namespace Barotrauma
                 1.0f, SpriteEffects.None, 0.0f);
         }
 
-        protected void UpdateSlot(SpriteBatch spriteBatch, Rectangle rect, int slotIndex, Item item, bool isSubSlot, bool drawItem=true)
+        protected void UpdateSlot(SpriteBatch spriteBatch, Rectangle rect, int slotIndex, Item item, bool isSubSlot, float alpha = 0.4f, bool drawItem=true)
         {
             bool mouseOn = rect.Contains(PlayerInput.MousePosition) && !Locked;
 
@@ -326,14 +326,14 @@ namespace Barotrauma
 
             }
 
-            DrawSlot(spriteBatch, rect, (draggingItem == item && !mouseOn) ? null : item, mouseOn, isSubSlot, drawItem);
+            DrawSlot(spriteBatch, rect, (draggingItem == item && !mouseOn) ? null : item, mouseOn, isSubSlot, alpha, drawItem);
 
         }
 
-        protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot, bool drawItem=true)
+        protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot, float alpha=0.4f, bool drawItem=true)
         {
-            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.1f : 0.3f), true);
-
+            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * alpha*0.75f, true);
+            
             if (item != null && item.Condition < 100.0f)
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 4, rect.Width, 4), Color.Black, true);
@@ -342,7 +342,7 @@ namespace Barotrauma
                     Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f), true);
             }
 
-            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * ((isSubSlot) ? 0.2f : 0.4f), false);
+            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * alpha, false);
 
             if (item == null || !drawItem) return;
 

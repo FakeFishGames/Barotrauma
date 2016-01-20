@@ -123,7 +123,7 @@ namespace Barotrauma
                 y += 30;
 
                 new GUITextBlock(new Rectangle(0, y, innerFrame.Rect.Width - 170, 0),
-                    (GameMain.GameSession.Mission.Completed) ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage+" asdf asdf rthdrthfgdh dsrt dfgh dftsret dfth dftdthdft sdre sdr ds askjinflaje wwwwwwwwww wwwwwwww wwwwwwwwwwwwwww wwwwwwwwwww",
+                    (GameMain.GameSession.Mission.Completed) ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     GUI.Style, innerFrame, true);
                 //y += 50;
 

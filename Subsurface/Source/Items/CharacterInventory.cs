@@ -270,7 +270,7 @@ namespace Barotrauma
                     highlightedSlot = slotRect;
                 }
 
-                UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
+                UpdateSlot(spriteBatch, slotRect, i, Items[i], false, i>4 ? 0.2f : 0.4f);
                 
                 if (draggingItem!=null && draggingItem == Items[i]) draggingItemSlot = slotRect;
             }

@@ -81,6 +81,11 @@
     tags="smallitem"
     description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
 
+    <Deconstruct time="10">
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+    
     <Sprite texture ="securitygear.png" sourcerect="40,32,34,25" depth="0.6"/>
 
     <Body radius="12"/>

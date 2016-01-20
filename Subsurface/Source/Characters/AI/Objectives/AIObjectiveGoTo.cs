@@ -96,11 +96,16 @@ namespace Barotrauma
                 }
             }
 
-            character.AIController.SteeringManager.SteeringSeek(currTargetPos);
-
             if (Vector2.Distance(currTargetPos, character.SimPosition) < 1.0f)
             {
+                character.AIController.SteeringManager.Reset();
                 character.AnimController.TargetDir = currTargetPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
+            }
+            else
+            {
+
+            character.AIController.SteeringManager.SteeringSeek(currTargetPos);
+
             }
         }
 
