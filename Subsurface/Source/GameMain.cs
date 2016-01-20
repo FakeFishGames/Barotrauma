@@ -182,9 +182,6 @@ namespace Barotrauma
         {
             GUI.Init(Content);
 
-            sw = new Stopwatch();
-
-
             GUIComponent.Init(Window);
             DebugConsole.Init(Window);
             yield return CoroutineStatus.Running;
@@ -338,10 +335,7 @@ namespace Barotrauma
             //{
             //    System.Threading.Thread.Sleep((int)((Physics.step - elapsed) * 1000.0));
             //}
-            sw.Restart();
         }
-
-        Stopwatch sw;
 
         static bool waitForKeyHit = true;
         public static void ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)

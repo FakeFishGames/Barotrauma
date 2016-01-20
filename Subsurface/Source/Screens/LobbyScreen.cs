@@ -168,8 +168,6 @@ namespace Barotrauma
         {
             base.Select();
 
-            GUI.ScreenOverlayColor = Color.Transparent;
-
             gameMode = GameMain.GameSession.gameMode as SinglePlayerMode;
 
             foreach (GUIComponent component in topPanel.children)
