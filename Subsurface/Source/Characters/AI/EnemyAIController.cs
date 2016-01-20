@@ -345,6 +345,23 @@ namespace Barotrauma
                     steeringManager.SteeringSeek(attackPosition + (limb.SimPosition-SimPosition), 5.0f);
 
                     break;
+                case AttackType.Hit:
+                    damageTarget = (wallAttackPos != Vector2.Zero && targetEntity != null) ? targetEntity : selectedAiTarget.Entity as IDamageable;
+                                        
+                    if (damageTarget == null)
+                    {
+                        attackTimer = limb.attack.Duration;
+                        break;
+                    }
+
+                    if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackPosition)) < limb.attack.Range)
+                    {
+                        attackTimer += deltaTime;
+                        limb.body.ApplyForce(limb.Mass * limb.attack.Force * Vector2.Normalize(attackPosition - limb.SimPosition));
+                    }
+                    
+                    steeringManager.SteeringSeek(attackPosition + (limb.SimPosition-SimPosition), 5.0f);
+                    break;
                 default:
                     attackTimer = limb.attack.Duration;
                     break;

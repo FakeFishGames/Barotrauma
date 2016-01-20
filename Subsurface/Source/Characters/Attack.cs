@@ -15,7 +15,7 @@ namespace Barotrauma
 
     public enum AttackType
     {
-        None, PinchCW, PinchCCW
+        None, PinchCW, PinchCCW, Hit
     }
 
     struct AttackResult
@@ -46,6 +46,8 @@ namespace Barotrauma
         private readonly float structureDamage;
         private readonly float damage;
         private readonly float bleedingDamage;
+
+        public readonly float Force;
 
         private Sound sound;
 
@@ -100,6 +102,8 @@ namespace Barotrauma
             damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
             structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
             bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
+
+            Force = ToolBox.GetAttributeFloat(element,"force", 0.0f);
 
             Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
