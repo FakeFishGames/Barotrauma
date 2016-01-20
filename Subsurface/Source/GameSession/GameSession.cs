@@ -28,7 +28,6 @@ namespace Barotrauma
             get
             {
                 return currentMission;
-                return null;
             }
         }
 
@@ -137,6 +136,8 @@ namespace Barotrauma
             if (gameMode!=null) gameMode.Start();
             
             TaskManager.StartShift(level);
+
+            GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
         }
 
         public void EndShift(string endMessage)

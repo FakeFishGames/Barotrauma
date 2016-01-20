@@ -54,6 +54,14 @@ namespace Barotrauma
 
             while (timer < duration)
             {
+                if (Screen.Selected != GameMain.GameScreen)
+                {
+                    yield return new WaitForSeconds(0.1f);
+
+                    GUI.ScreenOverlayColor = Color.TransparentBlack;
+                    yield return CoroutineStatus.Success;
+                }
+
                 cam.Zoom = Math.Max(0.2f, cam.Zoom - CoroutineManager.DeltaTime * 0.1f);
 
                 Vector2 cameraPos = sub.Position + Submarine.HiddenSubPosition;
@@ -73,9 +81,11 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
-            GUI.ScreenOverlayColor = Color.TransparentBlack;
-
             Running = false;
+
+            yield return new WaitForSeconds(0.1f);
+
+            GUI.ScreenOverlayColor = Color.TransparentBlack;
 
             yield return CoroutineStatus.Success;
         }

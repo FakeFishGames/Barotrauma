@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -20,8 +22,6 @@ namespace Barotrauma
         {
             if (selected != null && selected!=this) selected.Deselect();
             selected = this;
-
-            GUI.ScreenOverlayColor = Color.Transparent;
         }
 
         public virtual void Update(double deltaTime)
@@ -30,6 +30,37 @@ namespace Barotrauma
 
         public virtual void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+        }
+
+        public void ColorFade(Color from, Color to, float duration)
+        {
+            if (duration <= 0.0f) return;
+            
+            CoroutineManager.StartCoroutine(UpdateColorFade(from, to, duration));
+        }
+
+        private IEnumerable<object> UpdateColorFade(Color from, Color to, float duration)
+        {
+            while (Screen.Selected != this)
+            {
+                yield return CoroutineStatus.Running;
+            }
+            
+
+            float timer = 0.0f;
+
+            while (timer < duration)
+            {
+                GUI.ScreenOverlayColor = Color.Lerp(from, to, Math.Min(timer / duration, 1.0f));
+
+                timer += CoroutineManager.DeltaTime;
+
+                yield return CoroutineStatus.Running;
+            }
+
+            GUI.ScreenOverlayColor = to;
+
+            yield return CoroutineStatus.Success;
         }
 
     }
