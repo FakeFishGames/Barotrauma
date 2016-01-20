@@ -872,7 +872,7 @@ namespace Barotrauma
                     endPos,
                     null, Physics.CollisionLevel) != null)
                 {
-                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition -  Vector2.Normalize(startPos - endPos)*offsetFromWall);
+                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition +  Vector2.Normalize(startPos - endPos)*offsetFromWall);
                     break;
                 }
 
@@ -888,109 +888,13 @@ namespace Barotrauma
             return position;
         }
 
-        //public void SetPosition(Vector2 pos)
-        //{
-        //    Vector2 amount = pos - Position;
-        //    Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
-        //    //foreach (VoronoiCell cell in cells)
-        //    //{
-        //    //    if (cell.body == null) continue;
-        //    //    cell.body.SleepingAllowed = false;
-        //    //    cell.body.SetTransform(cell.body.Position + simAmount, cell.body.Rotation);
-        //    //}
-
-        //    foreach (Body body in bodies)
-        //    {
-        //        body.SetTransform(body.Position + simAmount, body.Rotation);
-        //    }
-
-        //    foreach (MapEntity mapEntity in MapEntity.mapEntityList)
-        //    {
-        //        Item item = mapEntity as Item;
-        //        if (item == null)
-        //        {
-        //            //if (!mapEntity.MoveWithLevel) continue;
-        //            //mapEntity.Move(amount);
-        //        }
-        //        else if (item.body != null)
-        //        {
-        //            if (item.CurrentHull != null) continue;
-        //            item.SetTransform(item.SimPosition+amount, item.body.Rotation);
-        //        }
-        //    }
-
-        //    //WrappingWall.UpdateWallShift(Position, wrappingWalls);
-        //}
-
-        //Vector2 prevVelocity;
-        //public void Move(Vector2 amount)
-        //{
-        //    Vector2 simVelocity = ConvertUnits.ToSimUnits(amount / (float)Physics.step);
-
-        //    foreach (Body body in bodies)
-        //    {
-        //        body.LinearVelocity = simVelocity;
-        //    }
-
-        //    foreach (Character character in Character.CharacterList)
-        //    {
-        //        foreach (Limb limb in character.AnimController.Limbs)
-        //        {
-        //            if (character.AnimController.CurrentHull != null) continue;
-                    
-        //            limb.body.LinearVelocity += simVelocity;                    
-        //        }
-        //    }
-
-        //    foreach (Item item in Item.ItemList)
-        //    {        
-        //        if (item.body==null || item.CurrentHull != null) continue;
-        //        item.body.LinearVelocity += simVelocity;                
-        //    }
-
-        //    AtStartPosition = Vector2.Distance(startPosition, -Position) < ExitDistance;
-        //    AtEndPosition = Vector2.Distance(endPosition, -Position) < ExitDistance;
-            
-        //    prevVelocity = simVelocity;
-
-        //    WrappingWall.UpdateWallShift(-Position, wrappingWalls);
-        //}
-
-        //public static void AfterWorldStep()
-        //{
-        //    if (loaded == null) return;
-
-        //    loaded.ResetBodyVelocities();
-        //}
-
-        //private void ResetBodyVelocities()
-        //{
-        //    if (prevVelocity == Vector2.Zero) return;
-        //    if (!MathUtils.IsValid(prevVelocity))
-        //    {
-        //        prevVelocity = Vector2.Zero;
-        //        return;
-        //    }
-
-        //    foreach (Character character in Character.CharacterList)
-        //    {
-        //        if (character.AnimController.CurrentHull != null) continue;
-
-        //        foreach (Limb limb in character.AnimController.Limbs)
-        //        {
-        //            limb.body.LinearVelocity -= prevVelocity;
-        //        }
-        //    }
-
-        //    foreach (Item item in Item.ItemList)
-        //    {
-        //        if (item.body == null || item.CurrentHull != null) continue;
-        //        item.body.LinearVelocity -= prevVelocity;
-        //    }
-        //}
-
         public void Update (float deltaTime)
         {
+            if (Submarine.Loaded!=null)
+            {
+                WrappingWall.UpdateWallShift(Submarine.Loaded.WorldPosition, wrappingWalls);
+            }
+
             renderer.Update(deltaTime);
         }
 
@@ -1044,11 +948,7 @@ namespace Barotrauma
                 {
                     foreach (VoronoiCell cell in cellGrid[x, y])
                     {
-                        for (int i = 0; i < cell.edges.Count; i++)
-                        {
-                            cells.Add(cell);
-                            //GUI.DrawLine(spriteBatch, start, end, (cell.body != null && cell.body.Enabled) ? Color.Green : Color.Red);
-                        }
+                        cells.Add(cell);
                     }
                 }
             }

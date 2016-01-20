@@ -183,8 +183,9 @@ namespace Barotrauma
             foreach (VoronoiCell cell in cells)
             {
                 cell.body.SetTransform(cell.body.Position + simMoveAmount, 0.0f);
+                cell.Translation += moveAmount;
             }
-
+            
             midPos += moveAmount;
             offset += moveAmount;
         }

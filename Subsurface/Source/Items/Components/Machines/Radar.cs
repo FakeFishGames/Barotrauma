@@ -134,19 +134,22 @@ namespace Barotrauma.Items.Components
                     foreach (GraphEdge edge in cell.edges)
                     {
                         if (!edge.isSolid) continue;
-                        float cellDot = Vector2.Dot(cell.Center - item.WorldPosition, edge.Center - cell.Center);
+                        float cellDot = Vector2.Dot(cell.Center - item.WorldPosition, (edge.Center+cell.Translation) - cell.Center);
                         if (cellDot > 0) continue;
 
-                        float facingDot = Vector2.Dot(Vector2.Normalize(edge.point1 - edge.point2), Vector2.Normalize(cell.Center-item.WorldPosition));
-                        facingDot = 1.0f;// MathHelper.Clamp(facingDot, -1.0f, 1.0f);
+                        float facingDot = Vector2.Dot(
+                            Vector2.Normalize(edge.point1 - edge.point2), 
+                            Vector2.Normalize(cell.Center-item.WorldPosition));
 
-                        Vector2 point1 = (edge.point1);
-                        Vector2 point2 = (edge.point2);
+                        //if (Math.Abs(facingDot) > 0.5f) continue;
 
-                        float length = (point1 - point2).Length();
-                        for (float x = 0; x < length; x += Rand.Range(600.0f, 800.0f))
+                        //facingDot = 1.0f;// MathHelper.Clamp(facingDot, -1.0f, 1.0f);
+                        
+                        float length = (edge.point1 - edge.point2).Length();
+                        for (float x = 0; x < length; x += Rand.Range(300.0f, 400.0f))
                         {
-                            Vector2 point = point1 + Vector2.Normalize(point2 - point1) * x;
+                            Vector2 point = edge.point1 + Vector2.Normalize(edge.point2 - edge.point1) * x;
+                            point += cell.Translation;
 
                             float pointDist = Vector2.Distance(item.WorldPosition, point) * displayScale;
 
