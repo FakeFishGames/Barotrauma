@@ -70,12 +70,12 @@ namespace Barotrauma
 
         private Vector2? FindSpritePosition(Level level, BackgroundSpritePrefab prefab)
         {
-            Vector2 randomPos = new Vector2(Rand.Range(0.0f, level.Size.X), Rand.Range(0.0f, level.Size.Y));
+            Vector2 randomPos = new Vector2(Rand.Range(0.0f, level.Size.X, false), Rand.Range(0.0f, level.Size.Y, false));
             var cells = level.GetCells(randomPos);
 
             if (!cells.Any()) return null;
 
-            VoronoiCell cell = cells[Rand.Int(cells.Count)];
+            VoronoiCell cell = cells[Rand.Int(cells.Count, false)];
             GraphEdge bestEdge = null;
             foreach (GraphEdge edge in cell.edges)
             {
@@ -128,7 +128,7 @@ namespace Barotrauma
                 totalCommonness += prefab.Commonness;
             }
 
-            float randomNumber = Rand.Int(totalCommonness+1);
+            float randomNumber = Rand.Int(totalCommonness+1, false);
 
             foreach (BackgroundSpritePrefab prefab in prefabs)
             {
