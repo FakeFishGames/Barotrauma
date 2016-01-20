@@ -353,9 +353,13 @@ namespace Barotrauma
                     {
                         Vector2 normal = Vector2.Normalize(body.Position - limb.SimPosition);
 
-                        normal *= Math.Min(limb.Mass,100)/100.0f;
+                        //normal *= Math.Min(limb.Mass,100)/100.0f;
 
-                        ApplyImpact(normal, contact);
+                        float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal),5.0f);
+
+                        ApplyImpact(impact * Math.Min(limb.Mass/200.0f, 1), -normal, contact);
+
+                        //ApplyImpact((-limb.LinearVelocity * Math.Min(limb.Mass, 100)) / 50.0f, contact);
                     }
 
                     return collision;
@@ -365,7 +369,18 @@ namespace Barotrauma
             }
 
             var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(body.Position) - cell.Center);
-            ApplyImpact(collisionNormal, contact);
+
+
+            Vector2 tempNormal;
+
+            FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
+            contact.GetWorldManifold(out tempNormal, out worldPoints);
+
+            Vector2 lastContactPoint = worldPoints[0];
+
+            float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
+
+            ApplyImpact(wallImpact, -collisionNormal, contact);
             
 
             //Vector2 u = Vector2.Dot(Velocity, -normal) * normal;
@@ -436,26 +451,21 @@ namespace Barotrauma
             return false;
         }
 
-        private void ApplyImpact(Vector2 normal,Contact contact)
+        private void ApplyImpact(float impact, Vector2 direction, Contact contact)
         {
+            if (impact < 3.0f) return;
+
             Vector2 tempNormal;
 
             FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
             contact.GetWorldManifold(out tempNormal, out worldPoints);
 
-
-
             Vector2 lastContactPoint = worldPoints[0];
-
-            float impact = Vector2.Dot(Velocity, -normal);
-
-            if (impact < 3.0f) return;
-
 
             SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(lastContactPoint));
             GameMain.GameScreen.Cam.Shake = impact * 2.0f;
 
-            Vector2 limbForce = -normal * impact * 0.5f;
+            Vector2 limbForce = direction * impact * 0.5f;
 
             float length = limbForce.Length();
             if (length > 10.0f) limbForce = (limbForce / length) * 10.0f;

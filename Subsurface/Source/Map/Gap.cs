@@ -253,7 +253,7 @@ namespace Barotrauma
 
                     if (particle != null)
                     {
-                        particle.Size = particle.Size * Math.Abs(flowForce.X / 1000.0f);
+                        particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f),5.0f);
                     }
 
                     pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
@@ -279,14 +279,14 @@ namespace Barotrauma
                         var splash = GameMain.ParticleManager.CreateParticle(
                             "watersplash", 
                             Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position,
-                            -velocity);
+                            -velocity, 0, FlowTargetHull);
 
                         if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 
                         GameMain.ParticleManager.CreateParticle(
                             "bubbles", 
-                            Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position, 
-                            flowForce / 2.0f);
+                            Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position,
+                            flowForce / 2.0f, 0, FlowTargetHull);
                     }
                 }
 

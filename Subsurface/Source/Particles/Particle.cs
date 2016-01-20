@@ -74,7 +74,16 @@ namespace Barotrauma.Particles
             spriteIndex = Rand.Int(prefab.Sprites.Count);
 
             currentHull = Hull.FindHull(position, hullGuess);
-            if (currentHull != null && currentHull.Submarine != null) speed += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+            //if (currentHull != null && currentHull.Submarine != null)
+            //{
+            //    Vector2 subVel = ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+            //    //subVel.Y = -subVel.Y;
+            //    speed += subVel;
+            //}
+            //else
+            //{
+            //    int a = 1;
+            //}
             //if (currentHull == null) position = Submarine.Loaded == null ? position : position + Submarine.Loaded.Position;
 
             this.position = position;
@@ -133,9 +142,12 @@ namespace Barotrauma.Particles
 
         public bool Update(float deltaTime)
         {
+
+            Vector2 subVel = currentHull ==null || currentHull.Submarine==null ? Vector2.Zero : ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+
             //over 3 times faster than position += velocity * deltatime
-            position.X += velocity.X * deltaTime;
-            position.Y += velocity.Y * deltaTime;
+            position.X += (velocity.X+subVel.X) * deltaTime;
+            position.Y += (velocity.Y+subVel.Y) * deltaTime;
 
             if (prefab.RotateToDirection)
             {
@@ -237,7 +249,7 @@ namespace Barotrauma.Particles
             {
                 position.Y = prevHullRect.Y - 1.0f;
                 velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
-                velocity.Y = -velocity.Y*0.1f;
+                velocity.Y = -velocity.Y * 0.1f;
             }
 
             if (position.X < prevHullRect.X)

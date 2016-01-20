@@ -114,7 +114,6 @@
     <Compile Include="Source\GUI\TitleScreen.cs" />
     <Compile Include="Source\Items\Components\Holdable\MeleeWeapon.cs" />
     <Compile Include="Source\Items\Components\Holdable\Propulsion.cs" />
-    <Compile Include="Source\Items\Components\Label.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
     <Compile Include="Source\Items\Components\Signal\WaterDetector.cs" />
     <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />

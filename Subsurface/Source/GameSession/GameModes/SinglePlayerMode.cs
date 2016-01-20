@@ -263,8 +263,12 @@ namespace Barotrauma
         {
             while (cinematic.Running)
             {
+                if (Submarine.Loaded == null) yield return CoroutineStatus.Success;
+
                 yield return CoroutineStatus.Running;
             }
+
+            if (Submarine.Loaded == null) yield return CoroutineStatus.Success;
 
             End("");
 

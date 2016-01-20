@@ -806,7 +806,15 @@ namespace Barotrauma
                 object value = objectProperty.GetValue();
                 if (value != null)
                 {
-                    propertyBox.Text = value.ToString();
+                    if (value is float)
+                    {
+                        propertyBox.Text = ((float)value).ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+
+                        propertyBox.Text = value.ToString();
+                    }
                 }
 
                 propertyBox.UserData = objectProperty;
@@ -924,7 +932,7 @@ namespace Barotrauma
 
                 if (!item.prefab.PickThroughWalls)
                 {
-                    Body body = Submarine.CheckVisibility(item.Submarine == null ? position : position - item.Submarine.SimPosition, item.SimPosition);
+                    Body body = Submarine.CheckVisibility(item.Submarine == null ? position : position - item.Submarine.SimPosition, item.SimPosition, true);
                     if (body != null && body.UserData as Item != item) continue;
                 }
 
