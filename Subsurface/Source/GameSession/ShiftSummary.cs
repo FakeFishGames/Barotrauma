@@ -35,8 +35,8 @@ namespace Barotrauma
         {
             this.gameSession = gameSession;
 
-            startLocation = gameSession.Map==null ? null : gameSession.Map.CurrentLocation;
-            endLocation = gameSession.Map==null ? null : gameSession.Map.SelectedLocation;
+            startLocation   = gameSession.Map==null ? null : gameSession.Map.CurrentLocation;
+            endLocation     = gameSession.Map==null ? null : gameSession.Map.SelectedLocation;
             
             selectedMission = gameSession.Mission;
         }
@@ -122,15 +122,15 @@ namespace Barotrauma
                 new GUITextBlock(new Rectangle(0, y, 0, 20), "Mission: " + GameMain.GameSession.Mission.Name, GUI.Style, innerFrame, GUI.LargeFont);
                 y += 30;
 
-                new GUITextBlock(new Rectangle(0, y, 0, 30),
-                    (GameMain.GameSession.Mission.Completed) ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
-                    GUI.Style, innerFrame);
-                y += 40;
+                new GUITextBlock(new Rectangle(0, y, innerFrame.Rect.Width - 170, 0),
+                    (GameMain.GameSession.Mission.Completed) ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage+" asdf asdf rthdrthfgdh dsrt dfgh dftsret dfth dftdthdft sdre sdr ds askjinflaje wwwwwwwwww wwwwwwww wwwwwwwwwwwwwww wwwwwwwwwww",
+                    GUI.Style, innerFrame, true);
+                //y += 50;
 
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
-                    new GUITextBlock(new Rectangle(0, y, 0, 30), "Reward: " + GameMain.GameSession.Mission.Reward, GUI.Style, innerFrame);
-                    y += 30;
+                    new GUITextBlock(new Rectangle(0, 0, 0, 30), "Reward: " + GameMain.GameSession.Mission.Reward, GUI.Style, Alignment.BottomLeft, Alignment.BottomLeft, innerFrame);
+                    //y += 30;
                 }  
             }
 
