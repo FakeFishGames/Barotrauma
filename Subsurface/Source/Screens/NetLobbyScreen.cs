@@ -299,8 +299,6 @@ namespace Barotrauma
         {
             GameMain.LightManager.LosEnabled = false;
             
-            GUI.ScreenOverlayColor = Color.Transparent;
-            
             textBox.Select();
 
             Character.Controlled = null;
@@ -429,15 +427,15 @@ namespace Barotrauma
                         GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
                     jobText.UserData = job;
 
-                    GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 15, 15), "?", GUI.Style, jobText);
+                    GUIButton infoButton = new GUIButton(new Rectangle(0, 2, 15, 15), "?", GUI.Style, jobText);
                     infoButton.UserData = -1;
                     infoButton.OnClicked += ViewJobInfo;
 
-                    GUIButton upButton = new GUIButton(new Rectangle(30, 0, 15, 15), "^", GUI.Style, jobText);
+                    GUIButton upButton = new GUIButton(new Rectangle(30, 2, 15, 15), "^", GUI.Style, jobText);
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
-                    GUIButton downButton = new GUIButton(new Rectangle(50, 0, 15, 15), "˅", GUI.Style, jobText);
+                    GUIButton downButton = new GUIButton(new Rectangle(50, 2, 15, 15), "˅", GUI.Style, jobText);
                     downButton.UserData = 1;
                     downButton.OnClicked += ChangeJobPreference;
                 }
