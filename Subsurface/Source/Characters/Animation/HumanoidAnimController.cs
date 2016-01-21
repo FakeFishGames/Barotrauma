@@ -631,10 +631,10 @@ namespace Barotrauma
             IgnorePlatforms = true;
 
             Vector2 tempTargetMovement = TargetMovement;
-            if (TargetMovement.Y != 0.0f)
-            {
-                tempTargetMovement.Y = Math.Max(Math.Abs(TargetMovement.Y), 0.6f) * Math.Sign(TargetMovement.Y);
-            }
+            //if (TargetMovement.Y != 0.0f)
+            //{
+            //    tempTargetMovement.Y = Math.Max(Math.Abs(TargetMovement.Y), 0.6f) * Math.Sign(TargetMovement.Y);
+            //}
             movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
             Vector2 footPos, handPos;
@@ -703,7 +703,8 @@ namespace Barotrauma
             float movementFactor = (handPos.Y / stepHeight) * (float)Math.PI;
             movementFactor = 0.8f + (float)Math.Abs(Math.Sin(movementFactor));
 
-            Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.4f) * movementFactor;
+            Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.6f) * movementFactor;
+            if (climbForce.Y > 0.5f) climbForce.Y = Math.Max(climbForce.Y, 1.3f);
             torso.body.ApplyForce(climbForce * 40.0f * torso.Mass);
             head.body.SmoothRotate(0.0f);
 
@@ -722,7 +723,7 @@ namespace Barotrauma
             if (Math.Abs(torso.LinearVelocity.Y) > 5.0f ||
                 TargetMovement.X != 0.0f ||
                 (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition * 1.5f) ||
-                (TargetMovement.Y > 0.0f && handPos.Y > 0.3f))
+                (TargetMovement.Y > 0.0f && handPos.Y > 0.1f))
             {
                 Anim = Animation.None;
                 character.SelectedConstruction = null;
@@ -825,7 +826,7 @@ namespace Barotrauma
             Vector2 itemPos = aim ? aimPos : holdPos;
 
             float itemAngle;
-            if (stunTimer <= 0.0f && aim && itemPos != Vector2.Zero)
+            if (Anim != Animation.Climbing && stunTimer <= 0.0f && aim && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
@@ -858,7 +859,7 @@ namespace Barotrauma
             Vector2 shoulderPos = limbJoints[2].WorldAnchorA;
             Vector2 transformedHoldPos = shoulderPos;
 
-            if (itemPos == Vector2.Zero)
+            if (itemPos == Vector2.Zero || Anim == Animation.Climbing)
             {
 
                 if (character.SelectedItems[1] == item)
@@ -899,6 +900,8 @@ namespace Barotrauma
             item.SetTransform(currItemPos, itemAngle);
 
             //item.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
+
+            if (Anim == Animation.Climbing) return;
 
             for (int i = 0; i < 2; i++)
             {
