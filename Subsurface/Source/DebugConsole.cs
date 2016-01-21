@@ -418,8 +418,20 @@ namespace Barotrauma
                 case "cleanbuild":
                     GameMain.Config.MusicVolume = 0.5f;
                     GameMain.Config.SoundVolume = 0.5f;
+                    DebugConsole.NewMessage("Music and sound volume set to 0.5", Color.Green);
+
+                    GameMain.Config.GraphicsWidth = 0;
+                    GameMain.Config.GraphicsHeight = 0;
+                    GameMain.Config.FullScreenEnabled = true;
+                    DebugConsole.NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
+                    DebugConsole.NewMessage("Fullscreen enabled", Color.Green);
+
+                    if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
+                    {
+                        DebugConsole.ThrowError("MasterServerUrl ''"+GameMain.Config.MasterServerUrl+"''!");
+                    }
+
                     GameMain.Config.Save("config.xml");
-                    DebugConsole.NewMessage("Set music and sound volume to 0.5", Color.Green);
 
                     var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
 
@@ -432,6 +444,14 @@ namespace Barotrauma
                     if (System.IO.File.Exists("filelist.xml"))
                     {
                         System.IO.File.Delete("filelist.xml");
+                        DebugConsole.NewMessage("Deleted filelist", Color.Green);
+                    }
+
+                    if (System.IO.File.Exists("Data/SavedSubs/TutorialSub.sub"))
+                    {
+                        System.IO.File.Delete("Data/SavedSubs/TutorialSub.sub");
+
+                        DebugConsole.NewMessage("Deleted TutorialSub from SavedSubs", Color.Green);
                     }
 
                     if (!System.IO.File.Exists("Content/Map/TutorialSub.sub"))

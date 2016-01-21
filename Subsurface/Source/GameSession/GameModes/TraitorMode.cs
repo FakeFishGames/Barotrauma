@@ -17,14 +17,14 @@ namespace Barotrauma
         {
             if (GameMain.Server == null || traitorCharacter == null || targetCharacter == null) return "";
 
-            if (targetCharacter == null || targetCharacter.IsDead)
+            if (targetCharacter.IsDead)
             {
                 string endMessage = traitorCharacter.Name + " was a traitor! ";
                 endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
                 endMessage += " task was to assassinate " + targetCharacter.Name + ". The task was successful.";
                 //End(endMessage);
             }
-            else if (traitorCharacter == null || traitorCharacter.IsDead)
+            else if (traitorCharacter.IsDead)
             {
                 string endMessage = traitorCharacter.Name + " was a traitor! ";
                 endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
@@ -35,12 +35,14 @@ namespace Barotrauma
 
                 return endMessage;
             }
-            else if (Submarine.Loaded.AtEndPosition)
+            else
             {
                 string endMessage = traitorCharacter.Name + " was a traitor! ";
                 endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
                 endMessage += " task was to assassinate " + targetCharacter.Name + ". ";
-                endMessage += "The task was unsuccessful - the has submarine reached its destination.";
+                endMessage += (Submarine.Loaded.AtEndPosition) ? 
+                    "The task was unsuccessful - the has submarine reached its destination." : 
+                    "The task was unsuccessful.";
 
                 return endMessage;
             }

@@ -130,14 +130,14 @@ namespace Barotrauma
             maxPlayersBox.Text = "8";
             maxPlayersBox.Enabled = false;
 
-            var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", GUI.Style, menuTabs[(int)Tab.HostServer]);
-            plusPlayersBox.UserData = 1;
-            plusPlayersBox.OnClicked = ChangeMaxPlayers;
-
             var minusPlayersBox = new GUIButton(new Rectangle(160, 100, 30, 30), "-", GUI.Style, menuTabs[(int)Tab.HostServer]);
             minusPlayersBox.UserData = -1;
             minusPlayersBox.OnClicked = ChangeMaxPlayers;
 
+            var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", GUI.Style, menuTabs[(int)Tab.HostServer]);
+            plusPlayersBox.UserData = 1;
+            plusPlayersBox.OnClicked = ChangeMaxPlayers;
+            
             new GUITextBlock(new Rectangle(0, 150, 0, 30), "Password (optional):", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tab.HostServer]);
             

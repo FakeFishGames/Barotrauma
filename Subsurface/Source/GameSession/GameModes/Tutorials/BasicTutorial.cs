@@ -156,7 +156,7 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("Here you can see all the wires connected to the terminal. Apparently there's no wire"
                 + " going into the to the power connection - that's why the monitor isn't working."
                 + " You should find a piece of wire to connect it. Try searching some of the cabinets scattered around the sub.");
-            
+
             while (!HasItem("Wire"))
             {
                 yield return CoroutineStatus.Running;
@@ -227,7 +227,7 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("You can take a look at the area around the sub by pressing ''Activate Radar''.");
+            infoBox = CreateInfoFrame("You can take a look at the area around the sub by selecting the ''Sonar'' checkbox.");
 
             while (!radar.IsActive)
             {
@@ -235,7 +235,7 @@ namespace Barotrauma.Tutorials
             }
             yield return new WaitForSeconds(0.5f);
 
-            infoBox = CreateInfoFrame("The white box in the middle is the submarine, and the white lines outside it are the walls of an underwater cavern. "
+            infoBox = CreateInfoFrame("The green rectangle in the middle is the submarine, and the flickering shapes outside it are the walls of an underwater cavern. "
                 + "Try moving the submarine by clicking somewhere on the monitor and dragging the pointer to the direction you want to go to.");
 
             while (steering.CurrTargetVelocity == Vector2.Zero && steering.CurrTargetVelocity.Length() < 50.0f)
@@ -254,13 +254,13 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.Loaded.Position.Y > 10000.0f)
+            while (Submarine.Loaded.WorldPosition.Y > 33000.0f)
             {
                 yield return CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(1.0f);
 
-            var moloch = Character.Create("Content/Characters/Moloch/moloch.xml", steering.Item.SimPosition + Vector2.UnitX * 25.0f);
+            var moloch = Character.Create("Content/Characters/Moloch/moloch.xml", steering.Item.WorldPosition + Vector2.UnitX * 3000.0f);
             moloch.PlaySound(AIController.AiState.Attack);
 
             yield return new WaitForSeconds(1.0f);
@@ -281,7 +281,7 @@ namespace Barotrauma.Tutorials
                 Submarine.Loaded.Velocity = Vector2.Zero;
 
                 moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
-                Vector2 steeringDir = windows[0].Position - moloch.Position;
+                Vector2 steeringDir = windows[0].WorldPosition - moloch.WorldPosition;
                 if (steeringDir != Vector2.Zero) steeringDir = Vector2.Normalize(steeringDir);
 
                 //foreach (Limb limb in moloch.AnimController.Limbs)
@@ -305,6 +305,18 @@ namespace Barotrauma.Tutorials
 
                 yield return new WaitForSeconds(0.1f);
             } while (!broken);
+
+            //fix everything except the command windows
+            foreach (Structure w in Structure.WallList)
+            {
+                for (int i = 0; i < w.SectionCount; i++)
+                {
+                    if (!w.SectionHasHole(i)) continue;
+                    if (windows.Contains(w)) continue;
+
+                    w.AddDamage(i, -100000.0f);
+                }
+            }
 
             yield return new WaitForSeconds(0.5f);
 
@@ -486,20 +498,27 @@ namespace Barotrauma.Tutorials
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
 
-            do
+            //do
+            //{
+            //    secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
+
+            //    float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
+            //    Vector2 offset = (new Vector2(
+            //        (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
+            //        (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
+
+            //    GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
+            //    //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
+
+            //    yield return CoroutineStatus.Running;
+            //} while (secondsLeft > 0.0f);
+
+            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, 5.0f);
+
+            while (cinematic.Running)
             {
-                secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
-
-                float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
-                Vector2 offset = (new Vector2(
-                    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-                    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
-
-                GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
-                //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
-
                 yield return CoroutineStatus.Running;
-            } while (secondsLeft > 0.0f);
+            }
 
             Submarine.Unload();
             GameMain.MainMenuScreen.Select();
@@ -543,9 +562,9 @@ namespace Barotrauma.Tutorials
 
                 enemy.AIController.State = AIController.AiState.None;
 
-                Vector2 targetPos = Character.Controlled.Position + new Vector2(0.0f, 3000.0f);
+                Vector2 targetPos = Character.Controlled.WorldPosition + new Vector2(0.0f, 3000.0f);
 
-                Vector2 steering = targetPos - enemy.Position;
+                Vector2 steering = targetPos - enemy.WorldPosition;
                 if (steering != Vector2.Zero) steering = Vector2.Normalize(steering);
 
                 enemy.AIController.Steering = steering * 2.0f;

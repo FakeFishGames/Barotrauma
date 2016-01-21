@@ -210,10 +210,18 @@ namespace Barotrauma
                 doc.Root.Add(gMode);
             }
 
-            gMode.ReplaceAttributes(
-                new XAttribute("width", GraphicsWidth),
-                new XAttribute("height", GraphicsHeight),
-                new XAttribute("fullscreen", FullScreenEnabled ? "true" : "false"));
+            if (GraphicsWidth==0 || GraphicsHeight==0)
+            {
+                gMode.ReplaceAttributes(new XAttribute("fullscreen", FullScreenEnabled ? "true" : "false"));
+            }
+            else
+            {
+                gMode.ReplaceAttributes(
+                    new XAttribute("width", GraphicsWidth),
+                    new XAttribute("height", GraphicsHeight),
+                    new XAttribute("fullscreen", FullScreenEnabled ? "true" : "false"));
+            }
+
 
             if (SelectedContentPackage != null)
             {

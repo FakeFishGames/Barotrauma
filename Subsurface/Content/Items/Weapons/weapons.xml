@@ -84,7 +84,7 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
         <Explosion range="500" damage="5" stun="1" force="0.1"/>
-        <Fire size="100.0f"/>
+        <Fire size="300.0"/>
       </StatusEffect>
     </Throwable>
   </Item>

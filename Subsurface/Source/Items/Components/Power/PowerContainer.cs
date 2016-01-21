@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
             var button = new GUIButton(new Rectangle(160, 50, 30,30), "-", GUI.Style, GuiFrame);
             button.OnClicked = (GUIButton btn, object obj) =>
             {
-                rechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);
+                RechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);
                 item.NewComponentEvent(this, true, false);
 
                 return true;
@@ -86,7 +86,7 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", GUI.Style, GuiFrame);
             button.OnClicked = (GUIButton btn, object obj) =>
             {
-                rechargeSpeed = Math.Max(rechargeSpeed + maxRechargeSpeed * 0.1f, 0.0f);
+                RechargeSpeed = Math.Max(rechargeSpeed + maxRechargeSpeed * 0.1f, 0.0f);
                 item.NewComponentEvent(this, true, false);
 
                 return true;
@@ -213,8 +213,8 @@ namespace Barotrauma.Items.Components
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
-            message.WriteRangedSingle(MathHelper.Clamp(rechargeSpeed/MaxRechargeSpeed, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-            message.WriteRangedSingle(MathHelper.Clamp(charge/capacity,0.0f, 1.0f), 0.0f, 1.0f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(charge / capacity, 0.0f, 1.0f), 0.0f, 1.0f, 8);
 
             return true;
         }
