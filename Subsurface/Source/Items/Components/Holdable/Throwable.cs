@@ -122,7 +122,7 @@ namespace Barotrauma.Items.Components
                 if (throwPos < -0.0)
                 {
 
-                    Vector2 throwVector = picker.CursorPosition - picker.AnimController.RefLimb.Position;
+                    Vector2 throwVector = picker.CursorWorldPosition - picker.WorldPosition;
                     throwVector = Vector2.Normalize(throwVector);
 
                     item.Drop();

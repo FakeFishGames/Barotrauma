@@ -262,7 +262,7 @@ namespace Barotrauma
             traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 205, 20, 20), "<", GUI.Style, infoFrame);
             traitorProbabilityButtons[0].UserData = -1;
 
-            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX, 205, 120, 20), "No", null,null, Alignment.TopCenter, GUI.Style, infoFrame);
+            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX+20, 205, 80, 20), "No", null,null, Alignment.TopCenter, GUI.Style, infoFrame);
 
             traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 205, 20, 20), ">", GUI.Style, infoFrame);
             traitorProbabilityButtons[1].UserData = 1;

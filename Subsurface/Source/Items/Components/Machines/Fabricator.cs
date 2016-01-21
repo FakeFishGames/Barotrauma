@@ -20,12 +20,12 @@ namespace Barotrauma.Items.Components
 
         public FabricableItem(XElement element)
         {
-            string name = ToolBox.GetAttributeString(element, "name", "").ToLower();
+            string name = ToolBox.GetAttributeString(element, "name", "");
 
-            TargetItem = ItemPrefab.list.Find(ip => ip.Name.ToLower() == name) as ItemPrefab;
+            TargetItem = ItemPrefab.list.Find(ip => ip.Name.ToLower() == name.ToLower()) as ItemPrefab;
             if (TargetItem == null)
             {
-                DebugConsole.ThrowError("Error in Fabricable Item! Item ''" + element.Name + "'' not found.");
+                DebugConsole.ThrowError("Error in fabricable item "+name+"! Item ''" + element.Name + "'' not found.");
                 return;
             }
 
@@ -35,7 +35,12 @@ namespace Barotrauma.Items.Components
             foreach (string requiredItemName in requiredItemNames)
             {
                 ItemPrefab requiredItem = ItemPrefab.list.Find(ip => ip.Name.ToLower() == requiredItemName.Trim().ToLower()) as ItemPrefab;
-                if (requiredItem == null) continue;
+                if (requiredItem == null)
+                {
+                    DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item ''" + requiredItemName + "'' not found.");
+
+                    continue;
+                }
 
                 var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
 

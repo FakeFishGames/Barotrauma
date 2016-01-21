@@ -83,8 +83,8 @@ namespace Barotrauma
             //nameBox.OnEnterPressed = ChangeSubName;
             nameBlock.TextGetter = GetSubName;
 
-            GUIButton button = new GUIButton(new Rectangle(0,70,0,20), "Save", GUI.Style, GUIpanel);
-            button.OnClicked = SaveSub;
+            //GUIButton button = new GUIButton(new Rectangle(0,70,0,20), "Save", GUI.Style, GUIpanel);
+            //button.OnClicked = SaveSub;
 
             GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 100, 0, 20), "", GUI.Style, GUIpanel);
             itemCount.TextGetter = GetItemCount;
@@ -161,7 +161,7 @@ namespace Barotrauma
             }
 
             y+=50;
-            button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
+            var button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
             

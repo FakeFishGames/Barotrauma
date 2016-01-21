@@ -161,20 +161,20 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
 
-            var button = new GUIButton(new Rectangle(410, 70, 40,40), "+", GUI.Style, GuiFrame);
-            button.OnPressed = () =>
-            {
-                unsentChanges = true;
-                ShutDownTemp += 100.0f;
-
-                return true;
-            };
-
-            button = new GUIButton(new Rectangle(460, 70, 40, 40), "-", GUI.Style, GuiFrame);
+            var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", GUI.Style, GuiFrame);
             button.OnPressed = () =>
             {
                 unsentChanges = true;
                 ShutDownTemp -= 100.0f;
+
+                return true;
+            };
+
+            button = new GUIButton(new Rectangle(460, 70, 40,40), "+", GUI.Style, GuiFrame);
+            button.OnPressed = () =>
+            {
+                unsentChanges = true;
+                ShutDownTemp += 100.0f;
 
                 return true;
             };
@@ -453,7 +453,7 @@ namespace Barotrauma.Items.Components
             DrawGraph(loadGraph, spriteBatch,
                 new Rectangle(x + 30, y + 30, 400, 250), 10000.0f, xOffset, Color.Yellow);
 
-            spriteBatch.DrawString(GUI.Font, "Shutdown Temperature: " + shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
+            spriteBatch.DrawString(GUI.Font, "Shutdown Temperature: " + (int)shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
 
             //spriteBatch.DrawString(GUI.Font, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 450, y + 180), Color.White);
             

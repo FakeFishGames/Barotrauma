@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -73,7 +74,7 @@ namespace Barotrauma.Items.Components
 
             running = true;
 
-            CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount * 1000.0f;
+            CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount*100.0f;
             item.CurrentHull.Oxygen += CurrFlow * deltaTime;
 
             UpdateVents(CurrFlow);
@@ -88,7 +89,9 @@ namespace Barotrauma.Items.Components
         }
 
         private void GetVents()
-        {            
+        {
+            ventList.Clear();
+
             foreach (MapEntity entity in item.linkedTo)
             {
                 Item linkedItem = entity as Item;
@@ -101,7 +104,7 @@ namespace Barotrauma.Items.Components
                 
         private void UpdateVents(float deltaOxygen)
         {
-            if (ventList.Count == 0) return;
+            if (!ventList.Any()) return;
 
             deltaOxygen = deltaOxygen / ventList.Count;
             foreach (Vent v in ventList)

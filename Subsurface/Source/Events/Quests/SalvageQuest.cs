@@ -68,8 +68,8 @@ namespace Barotrauma
 
         public override void End()
         {
+            if (item.CurrentHull == null || item.Removed) return;
             item.Remove();
-            if (item.CurrentHull == null) return;
 
             GiveReward();
 

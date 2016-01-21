@@ -134,6 +134,8 @@ namespace Barotrauma.Items.Components
         {
             picker = character;
 
+            if (character != null) item.Submarine = character.Submarine;
+
             if (item.body == null)
             {
                 if (body!=null)

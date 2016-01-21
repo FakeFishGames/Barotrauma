@@ -59,6 +59,8 @@ namespace Barotrauma
                     yield return new WaitForSeconds(0.1f);
 
                     GUI.ScreenOverlayColor = Color.TransparentBlack;
+
+                    Running = false;
                     yield return CoroutineStatus.Success;
                 }
 

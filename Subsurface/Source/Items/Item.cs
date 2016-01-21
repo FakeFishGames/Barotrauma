@@ -203,6 +203,12 @@ namespace Barotrauma
             get { return prefab.ConfigFile; }
         }
 
+        public bool Removed
+        {
+            get;
+            private set;
+        }
+
         //which type of inventory slots (head, torso, any, etc) the item can be placed in
         public List<LimbSlot> AllowedSlots
         {
@@ -1503,6 +1509,8 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
+
+            Removed = true;
 
             //sprite.Remove();
             //if (body != null) body.Remove();

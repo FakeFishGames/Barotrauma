@@ -30,7 +30,7 @@ namespace Barotrauma
             shockwave   = ToolBox.GetAttributeBool(element, "shockwave", true);
             flames      = ToolBox.GetAttributeBool(element, "flames", true); 
 
-            CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range);
+            CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range*0.1f);
         }
 
         public void Explode(Vector2 worldPosition)
