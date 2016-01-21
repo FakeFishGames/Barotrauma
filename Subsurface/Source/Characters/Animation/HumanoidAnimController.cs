@@ -630,7 +630,12 @@ namespace Barotrauma
             onGround = false;
             IgnorePlatforms = true;
 
-            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
+            Vector2 tempTargetMovement = TargetMovement;
+            if (TargetMovement.Y != 0.0f)
+            {
+                tempTargetMovement.Y = Math.Max(Math.Abs(TargetMovement.Y), 0.6f) * Math.Sign(TargetMovement.Y);
+            }
+            movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
             Vector2 footPos, handPos;
 

@@ -14,7 +14,7 @@ namespace Barotrauma
         {
             This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget=32
         }
-
+        
         private TargetType targetTypes;
         private string[] targetNames;
 
@@ -33,7 +33,7 @@ namespace Barotrauma
 
         private Explosion explosion;
 
-        public readonly bool Fire;
+        public readonly float FireSize;
 
         private Sound sound;
         
@@ -146,7 +146,7 @@ namespace Barotrauma
                         explosion = new Explosion(subElement);
                         break;
                     case "fire":
-                        Fire = true;
+                        FireSize = ToolBox.GetAttributeFloat(subElement,"size",10.0f);
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -215,7 +215,12 @@ namespace Barotrauma
             if (explosion != null) explosion.Explode(entity.WorldPosition);
 
 
-            if (Fire) new FireSource(entity.WorldPosition);            
+            if (FireSize > 0.0f)
+            {
+                var fire = new FireSource(entity.WorldPosition);
+                
+                fire.Size = new Vector2(FireSize, fire.Size.Y);
+            }            
 
             if (sound != null) sound.Play(1.0f, 1000.0f, entity.WorldPosition);
 
