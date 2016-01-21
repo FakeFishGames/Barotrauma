@@ -75,7 +75,12 @@
 
     <Body width="24" height="12"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
+    <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
+        <Explosion range="500.0" structuredamage="2" damage="20" stun="5" force="20.0"/>
+        <Fire size="100.0"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item

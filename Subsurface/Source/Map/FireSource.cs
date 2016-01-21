@@ -44,6 +44,16 @@ namespace Barotrauma
         public Vector2 Size
         {
             get { return size; }
+            set
+            {
+                if (value == size) return;
+
+                Vector2 sizeChange = value - size;
+
+                size = value;
+                position.X -= sizeChange.X * 0.5f;
+                LimitSize();
+            }
         }
 
         public FireSource(Vector2 worldPosition, Hull spawningHull = null, bool networkEvent=false)

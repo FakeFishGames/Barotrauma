@@ -72,6 +72,24 @@
   </Item>
 
   <Item
+    name="Incendium Grenade"
+    category="Equipment"
+    pickdistance="200"
+    tags="smallitem,weapon">
+
+    <Sprite texture="weapons.png" sourcerect="98,0,11,24"/>
+
+    <Body width="11" height="24" density="15" friction="0.8f"/>
+
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
+        <Explosion range="500" damage="5" stun="1" force="0.1"/>
+        <Fire size="100.0f"/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+
+  <Item
     name="Stun Baton"
     category="Equipment"
     Tags="smallitem,weapon"

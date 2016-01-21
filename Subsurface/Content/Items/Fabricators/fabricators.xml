@@ -33,6 +33,10 @@
 
       <fabricableitem name="Fulgurium Battery Cell" requireditems="Steel Bar, Fulgurium Bar, FPGA Circuit" requiredtime="10"/>
       
+      <fabricableitem name ="Incendium Grenade" requireditems="Stun Grenage, Incendium Bar" requiredtime="20"/>
+
+      <fabricableitem name ="IC-4 Block" requireditems="C-4 Block, Incendium Bar" requiredtime="20"/>
+      
       <fabricableitem name="Battery Cell" requireditems="Steel Bar, Copper Bar, FPGA Circuit" requiredtime="10"/>
 
       <fabricableitem name="Fuel Rod" requireditems="Steel Bar, Uranium Bar"/>
