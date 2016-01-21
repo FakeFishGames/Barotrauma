@@ -910,25 +910,6 @@ namespace Barotrauma
             renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager);
         }
 
-
-        public void DebugCheckPos()
-        {
-
-            Vector2 avgPos = Vector2.Zero;
-            foreach (VoronoiCell cell in cells)
-            {
-                if (cell.body == null) continue;
-
-
-                System.Diagnostics.Debug.WriteLine(cell.body.Position);
-                avgPos += cell.body.Position;
-            }
-
-            System.Diagnostics.Debug.WriteLine("avgpos: " + avgPos / cells.Count);
-
-            //System.Diagnostics.Debug.WriteLine("pos: " + Position);
-        }
-        
         public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)
         {
             int gridPosX = (int)Math.Floor(pos.X / GridCellWidth);
