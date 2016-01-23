@@ -13,7 +13,6 @@
       <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="0,0,628,1024" depth="0.02" origin ="0.4,0.5"/>
       <attack type="Hit" range="700" duration="0.2" force="400" damagetype="blunt"/>
     </limb>
-
     
     <limb id = "1" width="50" height="440" flip="true">
       <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="865,7,117,448" depth="0.025" origin="0.5,0.5"/>
@@ -59,5 +58,8 @@
 
   </ragdoll>
 
-  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="0.5" hearing="1.0"/>
+  <ai attackhumans="100.0" attackrooms="50.0" 
+      attackweaker="50.0" attackstronger="-30.0" 
+      attackcooldown="15.0"
+      sight="0.5" hearing="1.0"/>
 </Character>

@@ -306,13 +306,17 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(0.1f);
             } while (!broken);
 
+            yield return new WaitForSeconds(0.1f);
+
+
             //fix everything except the command windows
             foreach (Structure w in Structure.WallList)
             {
+                if (windows.Contains(w)) continue;
+
                 for (int i = 0; i < w.SectionCount; i++)
                 {
-                    if (!w.SectionHasHole(i)) continue;
-                    if (windows.Contains(w)) continue;
+                    if (!w.SectionIsLeaking(i)) continue;
 
                     w.AddDamage(i, -100000.0f);
                 }
@@ -465,7 +469,7 @@ namespace Barotrauma.Tutorials
             } while (broken);
 
             infoBox = CreateInfoFrame("Great! However, there's still quite a bit of water inside the sub. It should be pumped out "
-                + "using the pump in the room at the bottom of the submarine.");
+                + "using the bilge pump in the room at the bottom of the submarine.");
 
             Pump pump = Item.ItemList.Find(i => i.HasTag("tutorialpump")).GetComponent<Pump>();
 

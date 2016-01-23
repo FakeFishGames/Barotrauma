@@ -197,6 +197,8 @@ namespace Barotrauma
                 }
             }
 
+            if (Character.Controlled != null && cam != null) Character.Controlled.DrawHUD(spriteBatch, cam);
+
             if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, cam);

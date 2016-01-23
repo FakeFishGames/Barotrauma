@@ -1,3 +1,62 @@
+
+---------------------------------------------------------------------------------------------------------
+v0.3
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+- a summary screen which shows some details about the previous round
+- no separate traitor mode: they can be enabled for any game mode
+- an option to randomize whether there is a traitor or not
+- larger chatbox
+- a ton of syncing bugfixes and optimization
+
+Items:
+- fabricators, which can be used for crafting items out of raw materials or other items
+- deconstructors, which break items down to their basic components/materials
+- a bunch of new sprites
+- there are some artifacts scattered around every level regardless of the quest, and they can be collected
+and used as a source of useful raw materials for the fabricator
+- added hatches (which are basically doors rotated by 90 degrees)
+- characters can't get stuck inside doors anymore
+- stairs are easier to climb (less tripping down!)
+- navigation terminals have a ''default ballast level'' setting which determines how much water there
+should be in the ballast tanks when not steering in any direction
+- ladders can be climbed with a diving suit on, just very slowly
+- ladder climbing animation now works properly even when holding an item
+- items have a short description which can be read by hovering the mouse over the inventory slots
+- if the reactor is connected to multiple junction boxes, automatic temperature control will adjust
+the power output to the highest load instead of the sum of the loads
+- reactor state is saved (it will stay running when between levels)
+- using a stun baton while running won't make the character trip anymore
+
+Submarines:
+- a new sub, Nehalennia
+- the collider of the submarine now matches the shape of the hull
+- the airlock pumps in each sub are set to pump water out instead of just turning the pump on when pressing 
+the button outside the airlock
+
+Submarine editor:
+- items/structures are sorted by category in alphabetical order
+- tickboxes for hiding hulls, gaps, waypoints and links between items
+- a list of the most recently used items/structures
+- placed wires are much easier to move around
+- more accurate staircase selecting (the ''bounding box'' of the staircase won't prevent selecting items that 
+are behind it anymore)
+- visible indicators for railgun rotation limits
+
+Crew:
+- the crew members not controlled by the player now have an AI: they can take orders, do some basic tasks
+and avoid various hazards
+- fixed equipped items disappearing when loading the game
+- bodies can be dragged up stairs
+
+Misc:
+- two new monsters
+- improved UI graphics
+- better looking cavern walls
+- major optimization to light/shadow rendering
+- some new quests (which are now called ''missions'')
+
 ---------------------------------------------------------------------------------------------------------
 v0.2.6.2
 ---------------------------------------------------------------------------------------------------------

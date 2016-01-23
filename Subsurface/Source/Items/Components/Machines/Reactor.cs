@@ -167,7 +167,7 @@ namespace Barotrauma.Items.Components
                 unsentChanges = true;
                 ShutDownTemp -= 100.0f;
 
-                return true;
+                return false;
             };
 
             button = new GUIButton(new Rectangle(460, 70, 40,40), "+", GUI.Style, GuiFrame);
@@ -176,7 +176,7 @@ namespace Barotrauma.Items.Components
                 unsentChanges = true;
                 ShutDownTemp += 100.0f;
 
-                return true;
+                return false;
             };
 
             autoTempTickBox = new GUITickBox(new Rectangle(410, 170, 20, 20), "Automatic temperature control", Alignment.TopLeft, GuiFrame);
@@ -188,7 +188,7 @@ namespace Barotrauma.Items.Components
                 unsentChanges = true;
                 FissionRate += 1.0f;
 
-                return true;
+                return false;
             };
 
             button = new GUIButton(new Rectangle(210, 340, 40, 40), "-", GUI.Style, GuiFrame);
@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
                 unsentChanges = true;
                 FissionRate -= 1.0f;
 
-                return true;
+                return false;
             };
 
             button = new GUIButton(new Rectangle(500, 290, 40, 40), "+", GUI.Style, GuiFrame);
@@ -206,7 +206,7 @@ namespace Barotrauma.Items.Components
                 unsentChanges = true;
                 CoolingRate += 1.0f;
 
-                return true;
+                return false;
             };
 
             button = new GUIButton(new Rectangle(500, 340, 40, 40), "-", GUI.Style, GuiFrame);
@@ -215,7 +215,7 @@ namespace Barotrauma.Items.Components
                 unsentChanges = true;
                 CoolingRate -= 1.0f;
 
-                return true;
+                return false;
             };
         }
 
