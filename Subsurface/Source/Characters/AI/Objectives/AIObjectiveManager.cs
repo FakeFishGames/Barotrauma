@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveManager
     {
-        const float OrderPriority = 50.0f;
+        public const float OrderPriority = 50.0f;
 
         private List<AIObjective> objectives;
 

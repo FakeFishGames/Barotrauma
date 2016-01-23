@@ -196,6 +196,7 @@ namespace Barotrauma
         public void Draw(SpriteBatch spriteBatch)
         {
             //guiRoot.Draw(spriteBatch);
+
             
             if (gameMode != null) gameMode.Draw(spriteBatch);
         }

@@ -398,11 +398,17 @@ namespace Launcher2
                 return false;
             }
 
-            string latestVersion = ToolBox.GetAttributeString(doc.Root, "latestversion", "");
+            Version currentVersion = new Version(version);
+
+
+            string latestVersionStr = ToolBox.GetAttributeString(doc.Root, "latestversion", "");
             latestVersionFolder = ToolBox.GetAttributeString(doc.Root, "latestversionfolder", "");
             latestVersionFileList = ToolBox.GetAttributeString(doc.Root, "latestversionfilelist", "");
 
-            if (latestVersion == version)
+
+            Version latestVersion = new Version(latestVersionStr);
+
+            if (currentVersion.CompareTo(latestVersion) >= 0)
             {
                 updateInfoText.Text =  "Game is up to date!";
                 return false;
@@ -426,6 +432,9 @@ namespace Launcher2
 
                     //read the patch notes until we reach the user's version
                     if (patchNumber == version) break;
+
+                    Version patchVersion = new Version(patchNumber);
+                    if (currentVersion.CompareTo(patchVersion) >= 0) break;
 
                     string innerText = ToolBox.ElementInnerText(patchNote);
 

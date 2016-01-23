@@ -843,7 +843,7 @@
     <Content Include="Content\Orders.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Data\ContentPackages\Vanilla 0.2.xml">
+    <Content Include="Data\ContentPackages\Vanilla 0.3.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Icon.ico" />

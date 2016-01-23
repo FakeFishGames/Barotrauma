@@ -115,7 +115,7 @@ namespace Barotrauma
                 if (enemyAI.SelectedAiTarget == character.AiTarget) enemyDanger *= 2.0f;
             }
 
-            return Math.Max(enemyDanger, 30.0f);
+            return Math.Max(enemyDanger, AIObjectiveManager.OrderPriority);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
