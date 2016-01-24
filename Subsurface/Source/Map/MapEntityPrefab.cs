@@ -147,6 +147,11 @@ namespace Barotrauma
                 newRect.Width = (int)Math.Max(newRect.Width, Submarine.GridSize.X);
                 newRect.Height = (int)Math.Max(newRect.Height, Submarine.GridSize.Y);
 
+                if (Submarine.Loaded != null)
+                {
+                    newRect.Location -= Submarine.Loaded.Position.ToPoint();
+                }
+
                 if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
                 {
                     object[] lobject = new object[] { this, newRect };

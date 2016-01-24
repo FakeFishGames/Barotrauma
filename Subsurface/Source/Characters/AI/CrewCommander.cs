@@ -57,7 +57,7 @@ namespace Barotrauma
             frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.6f);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
 
-            GUIButton closeButton = new GUIButton(new Rectangle(0, 50, 100, 20), "Close", GUI.Style, frame);
+            GUIButton closeButton = new GUIButton(new Rectangle(0, 50, 100, 20), "Close", Alignment.BottomCenter, GUI.Style, frame);
             closeButton.OnClicked = (GUIButton button, object userData) =>
             {
                 ToggleGUIFrame();

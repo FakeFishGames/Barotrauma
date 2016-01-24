@@ -178,6 +178,34 @@ namespace Barotrauma
             InsertToList();
         }
 
+        public static Rectangle GetBorders()
+        {
+            if (!hullList.Any()) return Rectangle.Empty;
+
+            Rectangle rect = hullList[0].rect;
+            
+            foreach (Hull hull in hullList)
+            {
+                if (hull.Rect.X < rect.X)
+                {
+                    rect.Width += rect.X - hull.rect.X;
+                    rect.X = hull.rect.X;
+
+                }
+                if (hull.rect.Right > rect.Right) rect.Width = hull.rect.Right - rect.X;
+
+                if (hull.rect.Y > rect.Y)
+                {
+                    rect.Height += hull.rect.Y - rect.Y;
+
+                    rect.Y = hull.rect.Y;
+                }
+                if (hull.rect.Y - hull.rect.Height < rect.Y - rect.Height) rect.Height = rect.Y - (hull.rect.Y - hull.rect.Height);
+            }
+
+            return rect;
+        }
+
         public static void GenerateEntityGrid()
         {
             entityGrid = new EntityGrid(Submarine.Borders, 200.0f);

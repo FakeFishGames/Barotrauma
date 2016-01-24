@@ -177,7 +177,7 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            scrollBar.Update(deltaTime);
+            if (scrollBarEnabled && !scrollBarHidden) scrollBar.Update(deltaTime);
 
             if ((MouseOn == this || MouseOn == scrollBar || IsParentOf(MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)
             {

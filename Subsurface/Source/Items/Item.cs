@@ -1023,6 +1023,9 @@ namespace Barotrauma
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
+
+                    GUIComponent.MouseOn = null;
+
                     if (ic.CanBeSelected) selected = true;
                 }
             }

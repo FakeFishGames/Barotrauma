@@ -98,7 +98,8 @@ namespace Barotrauma
             img.Scale = 30.0f / img.SourceRect.Width;
             img.Color = order.Color;
             img.CanBeFocused = false;
-            img.ToolTip ="Order: "+ order.Name; 
+
+            orderListBox.children[characterIndex].ToolTip = "Order: " + order.Name; 
         }
 
         public bool SelectCharacterOrder(GUIComponent component, object selection)

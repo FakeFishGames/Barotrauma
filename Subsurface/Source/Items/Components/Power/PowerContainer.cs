@@ -186,12 +186,12 @@ namespace Barotrauma.Items.Components
             base.Draw(spriteBatch);
 
             GUI.DrawRectangle(spriteBatch,
-                new Vector2(item.Rect.X + item.Rect.Width / 2 - 4, -item.Rect.Y + 9),
+                new Vector2(item.DrawPosition.X- 4, -item.DrawPosition.Y),
                 new Vector2(8, 22), Color.Black);
 
             if (charge > 0)
                 GUI.DrawRectangle(spriteBatch,
-                    new Vector2(item.Rect.X + item.Rect.Width / 2 - 3, -item.Rect.Y + 10 + (20.0f * (1.0f - charge / capacity))),
+                    new Vector2(item.DrawPosition.X - 3, -item.DrawPosition.Y + 1 + (20.0f * (1.0f - charge / capacity))),
                     new Vector2(6, 20 * (charge / capacity)), Color.Green, true);
         }
 

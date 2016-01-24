@@ -560,7 +560,9 @@ namespace Barotrauma
         {
             XElement element = new XElement("Gap");
 
-            element.Add(new XAttribute("ID", ID));
+            element.Add(
+                new XAttribute("ID", ID), 
+                new XAttribute("horizontal", isHorizontal ? "true" : "false"));
 
             element.Add(new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
@@ -608,7 +610,15 @@ namespace Barotrauma
                     int.Parse(element.Attribute("height").Value));
             }
 
-            Gap g = new Gap(rect, submarine);
+            bool isHorizontal = rect.Height > rect.Width;
+
+            var horizontalAttribute = element.Attribute("horizontal");
+            if (horizontalAttribute!=null)
+            {
+                isHorizontal = horizontalAttribute.Value.ToString() == "true";
+            }
+
+            Gap g = new Gap(rect, isHorizontal, submarine);
             g.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             
             g.linkedToID = new List<ushort>();
