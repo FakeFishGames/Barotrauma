@@ -216,6 +216,15 @@ namespace Barotrauma
             }
         }
 
+        public void SelectCharacter(Character character)
+        {
+            var characterButton = frame.FindChild(character) as GUIButton;
+
+            if (characterButton == null) return;
+
+            characterButton.Selected = true;
+        }
+
         private bool SetOrder(GUIButton button, object userData)
         {
             Order order = userData as Order;
