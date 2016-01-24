@@ -1,5 +1,19 @@
 
 ---------------------------------------------------------------------------------------------------------
+v0.3.0.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed inventory not being visible when using character mode in the editor
+- adding hulls and gaps works properly when switching to editor after a round has been started
+- fixed item selecting when switching to character mode after a round has been started
+- fixed a bug that made it impossible to fix broken walls after saving and reloading
+- fixed crashing when trying to place ladders when no submarine has been loaded
+- trying to generate waypoints for an empty sub won't crash the game anymore
+- when opening the crew commander menu for the first time, there's a text notifying about the hotkey for 
+opening/closing the menu
+
+
+---------------------------------------------------------------------------------------------------------
 v0.3
 ---------------------------------------------------------------------------------------------------------
 

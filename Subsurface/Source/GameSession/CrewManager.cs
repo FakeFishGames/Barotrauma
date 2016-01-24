@@ -106,6 +106,14 @@ namespace Barotrauma
         {
             GameMain.GameSession.CrewManager.commander.ToggleGUIFrame();
 
+            int orderIndex = orderListBox.children.IndexOf(component);
+            if (orderIndex<0 || orderIndex >= listBox.children.Count) return false;
+
+            var characterFrame = listBox.children[orderIndex];
+            if (characterFrame == null) return false;
+
+            GameMain.GameSession.CrewManager.commander.SelectCharacter(characterFrame.UserData as Character);
+
             return false;
         }
 
