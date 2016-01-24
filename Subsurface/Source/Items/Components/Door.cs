@@ -7,7 +7,6 @@ using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
-using System.Collections.Generic;
 
 namespace Barotrauma.Items.Components
 {
@@ -248,6 +247,12 @@ namespace Barotrauma.Items.Components
             isOpen = !isOpen;
 
             return true;
+        }
+
+        public override bool Select(Character character)
+        {
+            //can only be selected if the item is broken
+            return item.Condition <= 0.0f;
         }
 
         public override void Update(float deltaTime, Camera cam)
