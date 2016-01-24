@@ -287,6 +287,12 @@ namespace Barotrauma
 
         public static void GenerateSubWaypoints()
         {
+            if (!Hull.hullList.Any())
+            {
+                DebugConsole.ThrowError("Couldn't generate waypoints: no hulls found.");
+                return;
+            }
+
             List<WayPoint> existingWaypoints = WayPointList.FindAll(wp => wp.spawnType == SpawnType.Path);
             foreach (WayPoint wayPoint in existingWaypoints)
             {

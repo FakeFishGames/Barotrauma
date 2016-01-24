@@ -10,10 +10,12 @@ namespace Barotrauma
 {
     class CrewCommander
     {
-        CrewManager crewManager;
+        private CrewManager crewManager;
 
-        GUIFrame frame;
+        private GUIFrame frame;
         //GUIListBox characterList;
+
+        private bool infoTextShown;
 
         private int characterFrameBottom;
 
@@ -39,6 +41,12 @@ namespace Barotrauma
 
             if (IsOpen) 
             {
+                if (!infoTextShown)
+                {
+                    GUI.AddMessage("Press " + GameMain.Config.KeyBind(InputType.CrewOrders) + " to open/close the command menu", Color.Cyan, 5.0f);
+                    infoTextShown = true;
+                }
+
                 if (frame == null) CreateGUIFrame();
                 UpdateCharacters();
             }
@@ -48,7 +56,14 @@ namespace Barotrauma
         {
             frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.6f);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
-            
+
+            GUIButton closeButton = new GUIButton(new Rectangle(0, 50, 100, 20), "Close", GUI.Style, frame);
+            closeButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                ToggleGUIFrame();
+                return false;
+            };
+
             //UpdateCharacters();
 
             int buttonWidth = 130;
@@ -62,7 +77,7 @@ namespace Barotrauma
                     Order.PrefabList.FindAll(o => o.ItemComponentType == null) : 
                     Order.PrefabList.FindAll(o=> o.ItemComponentType != null);
 
-                int startX = (int)-(buttonWidth * orders.Count + spacing * (orders.Count - 1)) / 2;
+                int startX = -(buttonWidth * orders.Count + spacing * (orders.Count - 1)) / 2;
                 
                 int i=0;
                 foreach (Order order in orders)

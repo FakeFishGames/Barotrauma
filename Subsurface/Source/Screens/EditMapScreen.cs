@@ -467,8 +467,6 @@ namespace Barotrauma
 
             GUIpanel.Draw(spriteBatch);
 
-            if (selectedTab > -1) GUItabs[selectedTab].Draw(spriteBatch);
-            
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
             if (characterMode)
@@ -497,12 +495,15 @@ namespace Barotrauma
                             dummyCharacter.SelectedConstruction = null;
                         }
                     }
-
                 }
+
+                dummyCharacter.DrawHUD(spriteBatch, cam);
 
             }
             else
             {
+                if (selectedTab > -1) GUItabs[selectedTab].Draw(spriteBatch);
+
                 MapEntity.Edit(spriteBatch, cam);
             }
 

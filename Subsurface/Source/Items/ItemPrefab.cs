@@ -130,7 +130,7 @@ namespace Barotrauma
                         placePosition = Vector2.Zero;
 
                         item.Submarine = Submarine.Loaded;
-                        item.SetTransform(ConvertUnits.ToSimUnits(item.Position - Submarine.Loaded.Position), 0.0f);
+                        item.SetTransform(ConvertUnits.ToSimUnits(Submarine.Loaded == null ? item.Position : item.Position - Submarine.Loaded.Position), 0.0f);
                         item.FindHull();
                         
                         //selected = null;
