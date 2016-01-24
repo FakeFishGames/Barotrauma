@@ -328,10 +328,31 @@ namespace Barotrauma
             float outSideWaypointInterval = 200.0f;
             int outsideWaypointDist = 100;
 
-            Rectangle borders = new Rectangle(Submarine.Borders.X - outsideWaypointDist, Submarine.Borders.Y + outsideWaypointDist, 
-                Submarine.Borders.Width + outsideWaypointDist*2, Submarine.Borders.Height+outsideWaypointDist*2);
+            Rectangle borders = Hull.GetBorders();
 
+            borders.X -= outsideWaypointDist;
+            borders.Y += outsideWaypointDist;
+
+            borders.Width += outsideWaypointDist * 2;
+            borders.Height += outsideWaypointDist * 2;
+
+            borders.Location -= Submarine.HiddenSubPosition.ToPoint();
+                
+            if (borders.Width <= outSideWaypointInterval*2)
+            {
+                borders.Inflate(outSideWaypointInterval*2 - borders.Width, 0);
+            }
+
+            if (borders.Height <= outSideWaypointInterval * 2)
+            {
+                int inflateAmount = (int)(outSideWaypointInterval * 2) - borders.Height;
+                borders.Y += inflateAmount / 2;
+
+                borders.Height += inflateAmount;
+            }
+            
             WayPoint[,] cornerWaypoint = new WayPoint[2,2];
+
             for (int i = 0; i<2; i++)
             {
                 for (float x = borders.X + outSideWaypointInterval; x < borders.Right - outSideWaypointInterval; x += outSideWaypointInterval)
@@ -351,7 +372,7 @@ namespace Barotrauma
 
                 cornerWaypoint[i, 1] = WayPoint.WayPointList[WayPointList.Count - 1];
             }
-
+             
             for (int i = 0; i < 2; i++)
             {
                 WayPoint wayPoint = null;

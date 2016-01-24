@@ -409,7 +409,7 @@ namespace Barotrauma
 
                 if (dummyCharacter.SelectedConstruction==null)
                 {
-                    Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(cam.ScreenToWorld(PlayerInput.MousePosition));
+                    Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition);
                     foreach (Limb limb in dummyCharacter.AnimController.Limbs)
                     {
                         limb.body.SetTransform(mouseSimPos, 0.0f);
@@ -473,7 +473,7 @@ namespace Barotrauma
             {
                 if (dummyCharacter != null)                     
                 {
-                    dummyCharacter.AnimController.FindHull(); 
+                    dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false); 
 
                     foreach (Item item in dummyCharacter.SelectedItems)
                     {

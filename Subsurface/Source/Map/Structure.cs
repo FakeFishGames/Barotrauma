@@ -21,6 +21,8 @@ namespace Barotrauma
         public float damage;
         public Gap gap;
 
+        public int GapIndex;
+
         public float lastSentDamage;
 
         public bool isHighLighted;
@@ -613,9 +615,17 @@ namespace Barotrauma
             {
                 if (sections[i].damage == 0.0f) continue;
 
-                element.Add(new XElement("section",
-                    new XAttribute("i", i),
-                    new XAttribute("damage", sections[i].damage)));
+                var sectionElement = 
+                    new XElement("section",
+                        new XAttribute("i", i),
+                        new XAttribute("damage", sections[i].damage));
+
+                if (sections[i].gap!=null)
+                {
+                    sectionElement.Add(new XAttribute("gap", sections[i].gap.ID));
+                }
+
+                element.Add(sectionElement);
             }
             
             doc.Root.Add(element);
@@ -660,15 +670,27 @@ namespace Barotrauma
                 switch (subElement.Name.ToString())
                 {
                     case "section":
-                        if (subElement.Attribute("i") == null) continue;
+                        int index = ToolBox.GetAttributeInt(subElement, "i", -1);
+                        if (index == -1) continue;
 
-                        s.sections[int.Parse(subElement.Attribute("i").Value)].damage = 
+                        s.sections[index].damage = 
                             ToolBox.GetAttributeFloat(subElement, "damage", 0.0f);
+
+                        s.sections[index].GapIndex = ToolBox.GetAttributeInt(subElement, "gap", -1);
 
                         break;
                 }
             }
+        }
 
+        public override void OnMapLoaded()
+        {
+            foreach (WallSection s in sections)
+            {
+                if (s.GapIndex == -1) continue;
+
+                s.gap = FindEntityByID((ushort)s.GapIndex) as Gap;
+            }
         }
 
         public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
