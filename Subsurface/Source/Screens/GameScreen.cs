@@ -45,7 +45,7 @@ namespace Barotrauma
             }
             else if (Submarine.Loaded != null)
             {
-                cam.Position = Submarine.Loaded.Position;
+                cam.Position = Submarine.Loaded.WorldPosition;
             }
 
 
