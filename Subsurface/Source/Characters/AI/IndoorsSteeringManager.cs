@@ -36,6 +36,12 @@ namespace Barotrauma
             get { return currentTarget; }
         }
 
+        public bool HasOutdoorsNodes
+        {
+            get;
+            private set;
+        }
+
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors)
             : base(host)
         {
@@ -79,6 +85,8 @@ namespace Barotrauma
                 }   
 
                 currentPath = pathFinder.FindPath(pos, target);
+
+                HasOutdoorsNodes = currentPath.Nodes.Find(n => n.CurrentHull == null) != null;
                 
                 findPathTimer = Rand.Range(1.0f,1.2f);
 
@@ -150,6 +158,22 @@ namespace Barotrauma
 
                 bool open = currentPath.CurrentNode != null &&
                     Math.Sign(door.Item.SimPosition.X - host.SimPosition.X) == Math.Sign(currentPath.CurrentNode.SimPosition.X - host.SimPosition.X);
+
+                if (currentPath.CurrentNode==null)
+                {
+                    open = false;
+                }
+                else
+                {
+                    if (door.LinkedGap.isHorizontal)
+                    {
+                        open = Math.Sign(door.Item.SimPosition.X - character.SimPosition.X) == Math.Sign(currentPath.CurrentNode.SimPosition.X - character.SimPosition.X);
+                    }
+                    else
+                    {
+                        open = Math.Sign(door.Item.SimPosition.Y - character.SimPosition.Y) == Math.Sign(currentPath.CurrentNode.SimPosition.Y - character.SimPosition.Y);
+                    }
+                }
 
                 //toggle the door if it's the previous node and open, or if it's current node and closed
                 if (door.IsOpen != open)

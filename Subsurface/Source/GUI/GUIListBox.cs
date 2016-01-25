@@ -135,14 +135,14 @@ namespace Barotrauma
             if (isHorizontal)
             {
                 scrollBar = new GUIScrollBar(
-                    new Rectangle(this.rect.X, this.rect.Bottom - 20, this.rect.Width, 20), color, 1.0f, GUI.Style);
+                    new Rectangle(this.rect.X, this.rect.Bottom - 20, this.rect.Width, 20), null, 1.0f, GUI.Style);
             }
             else
             {
                 scrollBar = new GUIScrollBar(
-                    new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height), color, 1.0f, GUI.Style);
+                    new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height), null, 1.0f, GUI.Style);
             }
-
+            
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
             if (style != null) style.Apply(frame, this);

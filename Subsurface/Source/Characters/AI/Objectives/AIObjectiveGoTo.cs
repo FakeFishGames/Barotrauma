@@ -10,11 +10,11 @@ namespace Barotrauma
 {
     class AIObjectiveGoTo : AIObjective
     {
-        Entity target;
+        private Entity target;
 
-        Vector2 targetPos;
+        private Vector2 targetPos;
 
-        bool repeat;
+        private bool repeat;
 
         //how long until the path to the target is declared unreachable
         private float waitUntilPathUnreachable;
@@ -90,7 +90,7 @@ namespace Barotrauma
                 {
                     //currTargetPos += target.Submarine.SimPosition;
                 }
-                else if (target.Submarine==null)
+                else if (target.Submarine == null)
                 {
                     currTargetPos -= Submarine.Loaded.SimPosition;
                 }
@@ -103,9 +103,15 @@ namespace Barotrauma
             }
             else
             {
+                character.AIController.SteeringManager.SteeringSeek(currTargetPos);
 
-            character.AIController.SteeringManager.SteeringSeek(currTargetPos);
+                var indoorsSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
+                if (indoorsSteering.CurrentPath != null && indoorsSteering.HasOutdoorsNodes)
+                {
+
+                    AddSubObjective(new AIObjectiveGetItem(character, "Diving Suit", true));
+                }
             }
         }
 

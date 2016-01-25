@@ -595,12 +595,12 @@ namespace Barotrauma.Networking
 
         public IEnumerable<object> EndGame(string endMessage)
         {
-            GameMain.GameSession.gameMode.End(endMessage);
+            if (!gameStarted) yield return CoroutineStatus.Success;
 
+            GameMain.GameSession.gameMode.End(endMessage);
 
             //var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
 
-            if (!gameStarted) yield return CoroutineStatus.Success;
             gameStarted = false;
 
             Character.Controlled = null;

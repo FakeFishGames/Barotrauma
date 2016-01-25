@@ -494,6 +494,8 @@ namespace Barotrauma
 
             SetTraitorsEnabled((YesNoMaybe)index);
 
+            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(null);
+
             return true;
         }
 

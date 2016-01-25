@@ -85,6 +85,8 @@ namespace Barotrauma
 
         private void LimitSize()
         {
+            if (hull == null) return;
+
             position.X = Math.Max(hull.Rect.X, position.X);
             position.Y = Math.Min(hull.Rect.Y, position.Y);
 
