@@ -117,45 +117,50 @@ namespace Barotrauma
 
         private bool FindDivingGear(float deltaTime)
         {
-
-
-            var item = character.Inventory.FindItem("diving");
-            if (item == null)
+            if (divingGearObjective==null)
             {
-                //get a diving mask/suit first
-                if (!(divingGearObjective is AIObjectiveGetItem))
-                {
-                    divingGearObjective = new AIObjectiveGetItem(character, "diving", true);
-                }
-            }
-            else
-            {
-                var containedItems = item.ContainedItems;
-                if (containedItems == null) return true;
-
-                //check if there's an oxygen tank in the mask
-                var oxygenTank = Array.Find(containedItems, i => i.Name == "Oxygen Tank" && i.Condition > 0.0f);
-
-                if (oxygenTank != null) return true;
-
-
-                if (!(divingGearObjective is AIObjectiveContainItem))
-                {
-                    divingGearObjective = new AIObjectiveContainItem(character, "Oxygen Tank", item.GetComponent<ItemContainer>());
-
-                }
+                divingGearObjective = new AIObjectiveFindDivingGear(character, false);
             }
 
-            if (divingGearObjective != null)
-            {
-                divingGearObjective.TryComplete(deltaTime);
+            divingGearObjective.TryComplete(deltaTime);
+            return divingGearObjective.IsCompleted();
 
-                bool isCompleted = divingGearObjective.IsCompleted();
-                if (isCompleted) divingGearObjective = null;
-                return isCompleted;
-            }
+            //var item = character.Inventory.FindItem("diving");
+            //if (item == null)
+            //{
+            //    //get a diving mask/suit first
+            //    if (!(divingGearObjective is AIObjectiveGetItem))
+            //    {
+            //        divingGearObjective = new AIObjectiveGetItem(character, "diving", true);
+            //    }
+            //}
+            //else
+            //{
+            //    var containedItems = item.ContainedItems;
+            //    if (containedItems == null) return true;
 
-            return false;
+            //    //check if there's an oxygen tank in the mask
+            //    var oxygenTank = Array.Find(containedItems, i => i.Name == "Oxygen Tank" && i.Condition > 0.0f);
+
+            //    if (oxygenTank != null) return true;
+
+
+            //    if (!(divingGearObjective is AIObjectiveContainItem))
+            //    {
+            //        divingGearObjective = new AIObjectiveContainItem(character, "Oxygen Tank", item.GetComponent<ItemContainer>());
+            //    }
+            //}
+
+            //if (divingGearObjective != null)
+            //{
+            //    divingGearObjective.TryComplete(deltaTime);
+
+            //    bool isCompleted = divingGearObjective.IsCompleted();
+            //    if (isCompleted) divingGearObjective = null;
+            //    return isCompleted;
+            //}
+
+            //return false;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

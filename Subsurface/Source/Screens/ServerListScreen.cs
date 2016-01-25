@@ -302,15 +302,28 @@ namespace Barotrauma
 
             if (serverList.Selected!=null && (serverList.Selected.GetChild("password") as GUITickBox).Selected)
             {
-                var msgBox = new GUIMessageBox("Password required:", "");
-                var passwordBox = new GUITextBox(new Rectangle(0,40,150,25), Alignment.TopLeft, GUI.Style, msgBox);
+                var msgBox = new GUIMessageBox("Password required:", "", new string[] { "OK", "Cancel" });
+                var passwordBox = new GUITextBox(new Rectangle(0,40,150,25), Alignment.TopLeft, GUI.Style, msgBox.children[0]);
                 passwordBox.UserData = "password";
 
-                var okButton = msgBox.GetChild<GUIButton>();                
+                var okButton = msgBox.Buttons[0];
+                var cancelButton = msgBox.Buttons[1];
 
                 while (GUIMessageBox.MessageBoxes.Contains(msgBox))
                 {
                     okButton.Enabled = !string.IsNullOrWhiteSpace(passwordBox.Text);
+
+                    if (okButton.Selected)
+                    {
+                        msgBox.Close(null,null);
+                        break;
+                    }
+                    else if (cancelButton.Selected)
+                    {
+                        msgBox.Close(null, null);
+                        yield return CoroutineStatus.Success;
+                    }
+
                     yield return CoroutineStatus.Running;
                 }
 
