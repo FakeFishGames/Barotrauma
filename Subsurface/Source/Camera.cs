@@ -170,15 +170,14 @@ namespace Barotrauma
                     if (PlayerInput.KeyDown(Keys.D)) moveCam.X += moveSpeed;
                     if (PlayerInput.KeyDown(Keys.S)) moveCam.Y -= moveSpeed;
                     if (PlayerInput.KeyDown(Keys.W)) moveCam.Y += moveSpeed;
-
-                    if (Submarine.Loaded!=null && Screen.Selected == GameMain.GameScreen)
-                    {
-                        moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(Submarine.Loaded.Velocity*deltaTime);
-                    }
-                 
-                    moveCam = moveCam * deltaTime * 60.0f;
                 }
 
+                if (Submarine.Loaded!=null && Screen.Selected == GameMain.GameScreen)
+                {
+                    moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(Submarine.Loaded.Velocity*deltaTime);
+                }
+                 
+                moveCam = moveCam * deltaTime * 60.0f; 
 
                 Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, 0.1f, 2.0f); 
             }

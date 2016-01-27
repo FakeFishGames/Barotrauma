@@ -26,6 +26,8 @@ namespace Barotrauma.Lights
         //what was the range of the light when HullsInRange were last updated
         private float prevHullUpdateRange;
 
+        private Vector2 prevHullUpdatePosition;
+
         private Vector2 position;
         public Vector2 Position
         {
@@ -33,9 +35,12 @@ namespace Barotrauma.Lights
             set
             {
                 if (position == value) return;
-
                 position = value;
+
+                if (Vector2.Distance(prevHullUpdatePosition, position) < 5.0f) return;
+                
                 UpdateHullsInRange();
+                prevHullUpdatePosition = position;
             }
         }
 

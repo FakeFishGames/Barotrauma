@@ -597,7 +597,7 @@ namespace Barotrauma.Networking
         {
             if (!gameStarted) yield return CoroutineStatus.Success;
 
-            GameMain.GameSession.gameMode.End(endMessage);
+            if (GameMain.GameSession != null) GameMain.GameSession.gameMode.End(endMessage);
 
             //var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
 

@@ -182,7 +182,7 @@ namespace Barotrauma.Items.Components
             {
                 if (character.IsKeyDown(InputType.Aim))
                 {
-                    targetLimb.character.Health += LimbFixAmount * degreeOfSuccess;
+                    targetLimb.character.AddDamage(CauseOfDeath.Damage, LimbFixAmount * degreeOfSuccess);
                     //isActive = true;
                 }
             }
