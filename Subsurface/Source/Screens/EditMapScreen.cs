@@ -485,15 +485,17 @@ namespace Barotrauma
 
                     if (dummyCharacter.SelectedConstruction != null)
                     {
-                        if (dummyCharacter.SelectedConstruction == dummyCharacter.ClosestItem)
-                        {
+                        //if (dummyCharacter.SelectedConstruction == dummyCharacter.ClosestItem)
+                        //{
                             dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, dummyCharacter);
 
-                        }
-                        else
-                        {
-                            dummyCharacter.SelectedConstruction = null;
-                        }
+                        //}
+                        //else
+                        //{
+                        //    dummyCharacter.SelectedConstruction = null;
+                        //}
+
+                            if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.ClosestItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;
                     }
                 }
 

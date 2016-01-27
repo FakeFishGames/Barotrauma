@@ -278,9 +278,6 @@ namespace Barotrauma
         {
             Oxygen -= OxygenDetoriationSpeed * deltaTime;
 
-
-            surface = MathHelper.Lerp(surface, GetSurfaceY(), deltaTime * 10.0f);
-
             if (EditWater)
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -447,13 +444,13 @@ namespace Barotrauma
         {
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
 
-            ////calculate where the surface should be based on the water volume
+            //calculate where the surface should be based on the water volume
             float top = rect.Y+Submarine.DrawPosition.Y;
             float bottom = top - rect.Height;
-            //float surfaceY = bottom + Volume / rect.Width;
+            float surfaceY = bottom + Volume / rect.Width;
 
-            ////interpolate the position of the rendered surface towards the "target surface"
-            //surface = surface + ((surfaceY - Submarine.DrawPosition.Y) - surface) / 10.0f;
+            //interpolate the position of the rendered surface towards the "target surface"
+            surface = surface + ((surfaceY - Submarine.DrawPosition.Y) - surface) / 10.0f;
             float drawSurface = surface + Submarine.DrawPosition.Y;
 
             Matrix transform =  cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
