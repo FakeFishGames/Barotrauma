@@ -385,18 +385,20 @@ namespace Barotrauma
             
             float impact = Vector2.Dot(avgVelocity, -normal);
             
-            if (GameMain.Server != null) impact = impact / 2.0f;
-
             Limb l = (Limb)f1.Body.UserData;
 
-            float volume = stairs == null ? impact/5.0f : impact;
-               volume=  Math.Min(impact, 1.0f);
+            float volume = stairs == null ? impact / 5.0f : impact;
+            volume = Math.Min(impact, 1.0f);
 
             if (impact > 0.8f && l.HitSound != null && l.soundTimer <= 0.0f) l.HitSound.Play(volume, impact * 100.0f, l.WorldPosition);
 
             if (impact > l.impactTolerance)
             {   
-                character.Health -= (impact - l.impactTolerance * 0.1f);
+                if (!character.IsNetworkPlayer)
+                {
+                    character.AddDamage(CauseOfDeath.Damage, impact - l.impactTolerance * 0.1f);
+                }
+
                 strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
 
                 SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body);                

@@ -56,6 +56,11 @@ namespace Barotrauma
             }
         }
 
+        public Hull Hull
+        {
+            get { return hull; }
+        }
+
         public FireSource(Vector2 worldPosition, Hull spawningHull = null, bool networkEvent=false)
         {
             hull = Hull.FindHull(worldPosition, spawningHull);
@@ -193,18 +198,18 @@ namespace Barotrauma
 
             if (hull.Volume > 0.0f) HullWaterExtinquish(deltaTime);
 
-            lightSource.Range = Math.Max(size.X, size.Y) * Rand.Range(8.0f, 10.0f)/2.0f;
-            lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f); 
-
-            hull.Oxygen -= size.X*deltaTime*OxygenConsumption;
+            hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
 
             position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
-            //position.Y += GrowSpeed*0.5f * deltaTime;
 
             size.X += GrowSpeed * growModifier * deltaTime;
-            //size.Y += GrowSpeed * deltaTime;
-            
+
             LimitSize();
+
+            lightSource.Range = Math.Max(size.X, size.Y) * Rand.Range(8.0f, 10.0f) / 2.0f;
+            lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
+            lightSource.Position = position;
+
         }
 
         private void OnChangeHull(Vector2 pos, Hull particleHull)
@@ -222,7 +227,7 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull == null) continue;
+                if (c.AnimController.CurrentHull == null || c.IsDead) continue;
 
                 float range = (float)Math.Sqrt(size.X) * 20.0f;
                 if (c.Position.X < position.X - range || c.Position.X > position.X + size.X + range) continue;

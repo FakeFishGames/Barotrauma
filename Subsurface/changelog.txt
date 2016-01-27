@@ -1,3 +1,13 @@
+---------------------------------------------------------------------------------------------------------
+v0.3.0.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed crashing when picking up a thermal artifact outside the sub
+- fixed clients crashing if in the lobby when a round ends
+- fixed crashing when attempting to join a password-protected server
+- camera position is set at the position of the sub when entering spectator mode
+- AI crew equips a diving suit before going outside the sub
+
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.0.1

@@ -89,6 +89,7 @@ namespace Barotrauma
         private Character closestCharacter, selectedCharacter;
 
         protected bool isDead;
+        private CauseOfDeath lastAttackCauseOfDeath;
         private CauseOfDeath causeOfDeath;
         
         public readonly bool IsHumanoid;
@@ -230,11 +231,10 @@ namespace Barotrauma
         public float Health
         {
             get { return health; }
-            set 
+            set
             {
                 if (!MathUtils.IsValid(value)) return;
                 health = MathHelper.Clamp(value, 0.0f, maxHealth);
-                if (health <= 0.0f) Kill(CauseOfDeath.Damage);
             }
         }    
     
@@ -968,7 +968,7 @@ namespace Barotrauma
                 PressureProtection -= deltaTime*100.0f;
             }
 
-            health = MathHelper.Clamp(health - bleeding * deltaTime, 0.0f, maxHealth);
+            Health -= bleeding;
             if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss, false);
         }
 
@@ -1063,6 +1063,13 @@ namespace Barotrauma
             }
         }
 
+        public void AddDamage(CauseOfDeath causeOfDeath, float amount)
+        {
+            health = MathHelper.Clamp(health-amount, 0.0f, maxHealth);
+            if (amount>0.0f) lastAttackCauseOfDeath = causeOfDeath;
+            if (health <= 0.0f) Kill(causeOfDeath);
+        }
+
         public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             return AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
@@ -1091,8 +1098,11 @@ namespace Barotrauma
 
 
             AttackResult attackResult = closestLimb.AddDamage(simPosition, damageType, amount, bleedingAmount, playSound);
-            health -= attackResult.Damage;
-            if (health <= 0.0f && damageType == DamageType.Burn) Kill(CauseOfDeath.Burn);
+
+            AddDamage(damageType == DamageType.Burn ? CauseOfDeath.Burn : causeOfDeath, attackResult.Damage);
+
+            //health -= attackResult.Damage;
+            //if (health <= 0.0f && damageType == DamageType.Burn) Kill(CauseOfDeath.Burn);
 
             Bleeding += attackResult.Bleeding;
 
@@ -1291,9 +1301,16 @@ namespace Barotrauma
                 case NetworkEventType.InventoryUpdate:
                     if (inventory == null) return false;
                     return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
-                case NetworkEventType.ImportantEntityUpdate:
-                    
-                    message.Write((byte)((health / maxHealth) * 255.0f));
+                case NetworkEventType.ImportantEntityUpdate:   
+                    if (health>0.0f)
+                    {
+                        message.Write(Math.Max((byte)((health / maxHealth) * 255.0f), (byte)1));
+                    }
+                    else
+                    {
+                        message.Write((byte)0);
+                        message.WriteRangedInteger((int)lastAttackCauseOfDeath, 0, Enum.GetValues(typeof(CauseOfDeath)).Length);
+                    }
 
                     if (AnimController.StunTimer<=0.0f && bleeding<=0.0f && oxygen>99.0f)
                     {
@@ -1437,7 +1454,13 @@ namespace Barotrauma
                     return;
                 case NetworkEventType.ImportantEntityUpdate:
                    
-                    Health = (message.ReadByte() / 255.0f) * maxHealth;
+                    health = MathHelper.Clamp((message.ReadByte() / 255.0f) * maxHealth, 0.0f, maxHealth);
+
+                    if (health == 0.0f)
+                    {
+                        causeOfDeath = (CauseOfDeath)message.ReadRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length);
+                        Kill(causeOfDeath, true);
+                    }
 
                     bool allOk = message.ReadBoolean();
                     if (allOk) return;

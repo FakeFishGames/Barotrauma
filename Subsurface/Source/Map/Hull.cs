@@ -278,6 +278,9 @@ namespace Barotrauma
         {
             Oxygen -= OxygenDetoriationSpeed * deltaTime;
 
+
+            surface = MathHelper.Lerp(surface, GetSurfaceY(), deltaTime * 10.0f);
+
             if (EditWater)
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -432,17 +435,25 @@ namespace Barotrauma
             }
         }
 
+        private float GetSurfaceY()
+        {            
+            float top = rect.Y + Submarine.DrawPosition.Y;
+            float bottom = top - rect.Height;
+
+            return  bottom + Volume / rect.Width;
+        }
+
         public void Render(GraphicsDevice graphicsDevice, Camera cam)
         {
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
 
-            //calculate where the surface should be based on the water volume
+            ////calculate where the surface should be based on the water volume
             float top = rect.Y+Submarine.DrawPosition.Y;
             float bottom = top - rect.Height;
-            float surfaceY = bottom + Volume / rect.Width;
+            //float surfaceY = bottom + Volume / rect.Width;
 
-            //interpolate the position of the rendered surface towards the "target surface"
-            surface = surface + ((surfaceY - Submarine.DrawPosition.Y) - surface) / 10.0f;
+            ////interpolate the position of the rendered surface towards the "target surface"
+            //surface = surface + ((surfaceY - Submarine.DrawPosition.Y) - surface) / 10.0f;
             float drawSurface = surface + Submarine.DrawPosition.Y;
 
             Matrix transform =  cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
@@ -643,13 +654,17 @@ namespace Barotrauma
             message.WriteRangedSingle(MathHelper.Clamp(volume/FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 6);
 
             message.Write((byte)fireSources.Count, 4);
-            foreach (FireSource fireSource in fireSources)
+            for (int i = 0; i < Math.Min(fireSources.Count, 16) ;i++ )
             {
+                var fireSource = fireSources[i];
+
                 Vector2 normalizedPos = new Vector2(
-                    (fireSource.Position.X - rect.X) / rect.Width, 
-                    (fireSource.Position.Y - (rect.Y - rect.Height))/rect.Height);
+                    (fireSource.Position.X - rect.X) / rect.Width,
+                    (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
                 message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 4);
                 message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 4);
+
+                message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 6);
             }
 
             return true;
@@ -680,8 +695,10 @@ namespace Barotrauma
             for (int i = 0; i < fireSourceCount; i++)
             {
                 Vector2 pos = Vector2.Zero;
+                float size = 0.0f;
                 pos.X = message.ReadRangedSingle(0.0f, 1.0f, 4);
                 pos.Y = message.ReadRangedSingle(0.0f, 1.0f, 4);
+                size = message.ReadRangedSingle(0.0f, 1.0f, 6);
                 if (!MathUtils.IsValid(pos)) continue;
 
                 pos.X = MathHelper.Clamp(pos.X, 0.05f, 0.95f);
@@ -694,10 +711,16 @@ namespace Barotrauma
                 {
                     newFireSources.Add(existingFire);
                     existingFire.Position = pos;
+                    existingFire.Size = new Vector2(
+                        existingFire.Hull == null ?  size : size*existingFire.Hull.rect.Width, 
+                        existingFire.Size.Y);
                 }
                 else
                 {
-                    var newFire = new FireSource(pos, this, true);
+                    var newFire = new FireSource(pos + Submarine.Loaded.Position, this, true);
+                    newFire.Size = new Vector2(
+                        newFire.Hull == null ? size : size * newFire.Hull.rect.Width, 
+                        newFire.Size.Y);
 
                     //ignore if the fire wasn't added to this room (invalid position)?
                     if (!fireSources.Contains(newFire)) continue;
