@@ -214,14 +214,14 @@ namespace Barotrauma
 			get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
 		}
 
-		public static MouseState GetMouseState
-		{
-			get { return mouseState; }
-		}
-		public static MouseState GetOldMouseState
-		{
-			get { return oldMouseState; }
-		}
+        //public static MouseState GetMouseState
+        //{
+        //    get { return mouseState; }
+        //}
+        //public static MouseState GetOldMouseState
+        //{
+        //    get { return oldMouseState; }
+        //}
 
         public static bool MouseInsideWindow
         {
@@ -231,73 +231,90 @@ namespace Barotrauma
 		public static Vector2 MouseSpeed
 		{
 			get 
-			{ 
-				return MousePosition - new Vector2(oldMouseState.X, oldMouseState.Y); 
+			{
+                return GameMain.Instance.IsActive ? MousePosition - new Vector2(oldMouseState.X, oldMouseState.Y) : Vector2.Zero; 
 			}
 		}
 
-		public static KeyboardState GetKeyboardState
-		{
-			get { return keyboardState; }
-		}
+        public static KeyboardState GetKeyboardState
+        {
+            get { return keyboardState; }
+        }
 
-		public static KeyboardState GetOldKeyboardState
-		{
-			get { return oldKeyboardState; }
-		}
+        public static KeyboardState GetOldKeyboardState
+        {
+            get { return oldKeyboardState; }
+        }
 
 		public static int ScrollWheelSpeed
 		{
-			get { return mouseState.ScrollWheelValue - oldMouseState.ScrollWheelValue; }
+			get {  return GameMain.Instance.IsActive ? mouseState.ScrollWheelValue - oldMouseState.ScrollWheelValue : 0; }
 			
 		}
 
 		public static bool LeftButtonDown()
 		{
-			return mouseState.LeftButton == ButtonState.Pressed;
+            return GameMain.Instance.IsActive && mouseState.LeftButton == ButtonState.Pressed;
+		}
+
+		public static bool LeftButtonReleased()
+		{
+            return GameMain.Instance.IsActive && mouseState.LeftButton == ButtonState.Released;
 		}
 
 		public static bool LeftButtonClicked()
 		{
-			return (oldMouseState.LeftButton == ButtonState.Pressed
+            return (GameMain.Instance.IsActive && 
+                oldMouseState.LeftButton == ButtonState.Pressed
 				&& mouseState.LeftButton == ButtonState.Released);
 		}
 
         public static bool RightButtonDown()
         {
-            return mouseState.RightButton == ButtonState.Pressed;
+            return GameMain.Instance.IsActive && mouseState.RightButton == ButtonState.Pressed;
         }
 
         public static bool RightButtonClicked()
 		{
-			return (oldMouseState.RightButton == ButtonState.Pressed
+            return (GameMain.Instance.IsActive && 
+                oldMouseState.RightButton == ButtonState.Pressed
 				&& mouseState.RightButton == ButtonState.Released);
 		}
 
 		public static bool DoubleClicked()
 		{
-			return doubleClicked;
+            return GameMain.Instance.IsActive && doubleClicked;
 		}
 
         public static bool KeyHit(InputType inputType)
         {
-            return GameMain.Config.KeyBind(inputType).IsHit();
+            return GameMain.Instance.IsActive && GameMain.Config.KeyBind(inputType).IsHit();
         }
 
         public static bool KeyDown(InputType inputType)
         {
-            return GameMain.Config.KeyBind(inputType).IsDown();
+            return GameMain.Instance.IsActive && GameMain.Config.KeyBind(inputType).IsDown();
+        }
+
+        public static bool KeyUp(InputType inputType)
+        {
+            return GameMain.Instance.IsActive && !GameMain.Config.KeyBind(inputType).IsDown();
         }
 
 		public static bool KeyHit(Keys button)
 		{
-			return (oldKeyboardState.IsKeyDown(button) && keyboardState.IsKeyUp(button));
+            return (GameMain.Instance.IsActive && oldKeyboardState.IsKeyDown(button) && keyboardState.IsKeyUp(button));
 		}
 
 		public static bool KeyDown(Keys button)
 		{
-			return (keyboardState.IsKeyDown(button));
+			return (GameMain.Instance.IsActive && keyboardState.IsKeyDown(button));
 		}
+
+        public static bool KeyUp(Keys button)
+        {
+            return GameMain.Instance.IsActive && keyboardState.IsKeyUp(button);
+        }
 
 		public static void Update(double deltaTime)
 		{

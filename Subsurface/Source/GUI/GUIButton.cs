@@ -152,7 +152,7 @@ namespace Barotrauma
             if (rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
             {
                 state = ComponentState.Hover;
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
+                if (PlayerInput.LeftButtonDown())
                 {
                     if (OnPressed != null)
                     {

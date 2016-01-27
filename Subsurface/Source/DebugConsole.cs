@@ -99,7 +99,7 @@ namespace Barotrauma
                 
                 //textBox.Update(deltaTime);
 
-                if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.Enter) && textBox.Text != "")
+                if (PlayerInput.KeyDown(Keys.Enter) && textBox.Text != "")
                 {
                     NewMessage(textBox.Text, Color.White);
                     ExecuteCommand(textBox.Text, game);

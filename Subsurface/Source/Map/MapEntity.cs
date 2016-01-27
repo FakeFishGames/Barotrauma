@@ -253,7 +253,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.Delete))
+            if (PlayerInput.KeyDown(Keys.Delete))
             {
                 foreach (MapEntity e in selectedList) e.Remove();
                 selectedList.Clear();
@@ -283,7 +283,7 @@ namespace Barotrauma
             //started moving selected entities
             if (startMovingPos != Vector2.Zero)
             { 
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
+                if (PlayerInput.LeftButtonReleased())
                 {
                     //mouse released -> move the entities to the new position of the mouse
 
@@ -320,10 +320,10 @@ namespace Barotrauma
                     e.isHighlighted = true;
                 }
 
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
+                if (PlayerInput.LeftButtonReleased())
                 {
-                    if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.LeftControl) ||
-                        PlayerInput.GetKeyboardState.IsKeyDown(Keys.RightControl))
+                    if (PlayerInput.KeyDown(Keys.LeftControl) ||
+                        PlayerInput.KeyDown(Keys.RightControl))
                     {
                         foreach (MapEntity e in newSelection)
                         {
@@ -353,8 +353,8 @@ namespace Barotrauma
             else
             {
 
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed &&
-                    PlayerInput.GetKeyboardState.IsKeyUp(Keys.Space))
+                if (PlayerInput.LeftButtonDown() &&
+                    PlayerInput.KeyUp(Keys.Space))
                 {
                     //if clicking a selected entity, start moving it
                     foreach (MapEntity e in selectedList)
@@ -377,7 +377,7 @@ namespace Barotrauma
         {
             if (GUIComponent.MouseOn != null) return;
 
-            Vector2 position = new Vector2(PlayerInput.GetMouseState.X, PlayerInput.GetMouseState.Y);
+            Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 
             if (startMovingPos != Vector2.Zero)

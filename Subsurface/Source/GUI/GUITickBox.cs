@@ -61,7 +61,7 @@ namespace Barotrauma
 
                 box.State = ComponentState.Hover;
 
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
+                if (PlayerInput.LeftButtonDown())
                 {
                     box.State = ComponentState.Selected;                    
                 }

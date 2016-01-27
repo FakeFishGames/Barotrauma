@@ -351,7 +351,7 @@ namespace Barotrauma.Items.Components
 
                 if (selectedNodeIndex == null && draggingWire == null)// && !MapEntity.SelectedAny)
                 {
-                    if (PlayerInput.LeftButtonDown() && PlayerInput.GetOldMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
+                    if (PlayerInput.LeftButtonClicked())
                     {
                         MapEntity.DisableSelect = true;
                         MapEntity.SelectEntity(item);

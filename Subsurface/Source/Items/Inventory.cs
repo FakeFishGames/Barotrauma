@@ -205,10 +205,10 @@ namespace Barotrauma
 
             if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition) && draggingItem.Container == this.Owner)
             {
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
+                if (PlayerInput.LeftButtonDown())
                 {
-                    slotRect.X = PlayerInput.GetMouseState.X - slotRect.Width / 2;
-                    slotRect.Y = PlayerInput.GetMouseState.Y - slotRect.Height / 2;
+                    slotRect.X = (int)PlayerInput.MousePosition.X - slotRect.Width / 2;
+                    slotRect.Y = (int)PlayerInput.MousePosition.Y - slotRect.Height / 2;
                     //GUI.DrawRectangle(spriteBatch, rect, Color.White, true);
                     //draggingItem.sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.White);
 
@@ -261,12 +261,12 @@ namespace Barotrauma
             {
                 if (draggingItem == null)
                 {
-                    if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
+                    if (PlayerInput.LeftButtonDown())
                     {
                         draggingItem = item;
                     }  
                 }
-                else if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
+                else if (PlayerInput.LeftButtonReleased())
                 {
                     if (PlayerInput.DoubleClicked())
                     {
