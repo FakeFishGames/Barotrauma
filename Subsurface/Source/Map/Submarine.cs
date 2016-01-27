@@ -258,7 +258,7 @@ namespace Barotrauma
 
         public static Vector2 MouseToWorldGrid(Camera cam)
         {
-            Vector2 position = new Vector2(PlayerInput.GetMouseState.X, PlayerInput.GetMouseState.Y);
+            Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 
             return VectorToWorldGrid(position);

@@ -525,6 +525,8 @@ namespace Barotrauma
 
         private bool StartShift(GUIButton button, object selection)
         {
+            if (GameMain.GameSession.Map.SelectedConnection == null) return false;
+
             GameMain.ShowLoading(ShiftLoading());
 
             //GameMain.GameSession.StartShift(selectedLevel, false);

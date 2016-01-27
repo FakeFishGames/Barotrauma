@@ -114,8 +114,7 @@ namespace Barotrauma
 
                 if (placePosition == Vector2.Zero)
                 {
-                    if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed)
-                        placePosition = position;
+                    if (PlayerInput.LeftButtonDown()) placePosition = position;
                 }
                 else
                 {
@@ -124,7 +123,7 @@ namespace Barotrauma
                     if (resizeVertical)
                         placeSize.Y = Math.Max(placePosition.Y - position.Y, size.Y);
 
-                    if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
+                    if (PlayerInput.LeftButtonReleased())
                     {
                         var item = new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this, Submarine.Loaded);
                         placePosition = Vector2.Zero;

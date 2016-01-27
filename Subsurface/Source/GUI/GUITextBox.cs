@@ -152,7 +152,7 @@ namespace Barotrauma
             if (style != null) style.Apply(textBlock, this);
             textBlock.Padding = new Vector4(3.0f, 0.0f, 3.0f, 0.0f);
 
-            previousMouse = PlayerInput.GetMouseState;
+            //previousMouse = PlayerInput.GetMouseState;
 
             CaretEnabled = true;
             //SetTextPos();
@@ -171,7 +171,7 @@ namespace Barotrauma
             if (keyboardDispatcher.Subscriber == this) keyboardDispatcher.Subscriber = null;
         }
 
-        MouseState previousMouse;
+        //MouseState previousMouse;
         public override void Update(float deltaTime)
         {
             if (!Visible) return;

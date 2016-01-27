@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
 
-            Vector2 rayStart = item.WorldPosition + TransformedBarrelPos;
+            Vector2 rayStart = item.WorldPosition;
             Vector2 rayEnd = targetPosition;
 
             Body targetBody = Submarine.PickBody(

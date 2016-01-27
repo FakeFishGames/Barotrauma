@@ -283,11 +283,11 @@ namespace Barotrauma
 
                 if (StairDirection == Direction.Left)
                 {
-                    return MathUtils.LineToPointDistance(new Vector2(rect.X, rect.Y), new Vector2(rect.Right, rect.Y - rect.Height), position)< 40.0f;
+                    return MathUtils.LineToPointDistance(new Vector2(WorldRect.X, WorldRect.Y), new Vector2(WorldRect.Right, WorldRect.Y - WorldRect.Height), position) < 40.0f;
                 }
                 else
-                {                    
-                    return MathUtils.LineToPointDistance(new Vector2(rect.X,rect.Y-rect.Height), new Vector2(rect.Right, rect.Y), position) <40.0f;
+                {
+                    return MathUtils.LineToPointDistance(new Vector2(WorldRect.X, WorldRect.Y - rect.Height), new Vector2(WorldRect.Right, WorldRect.Y), position) < 40.0f;
                 }
             }
         }

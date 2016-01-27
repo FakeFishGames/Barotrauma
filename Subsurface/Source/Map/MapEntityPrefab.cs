@@ -134,7 +134,7 @@ namespace Barotrauma
 
                 GUI.DrawLine(spriteBatch, new Vector2(position.X, -(position.Y - GameMain.GraphicsHeight)), new Vector2(position.X, -(position.Y + GameMain.GraphicsHeight)), Color.White);
 
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Pressed) placePosition = position;
+                if (PlayerInput.LeftButtonDown()) placePosition = position;
             }
             else
             {
@@ -152,7 +152,7 @@ namespace Barotrauma
                     newRect.Location -= Submarine.Loaded.Position.ToPoint();
                 }
 
-                if (PlayerInput.GetMouseState.LeftButton == ButtonState.Released)
+                if (PlayerInput.LeftButtonReleased())
                 {
                     object[] lobject = new object[] { this, newRect };
                     constructor.Invoke(lobject);
@@ -164,7 +164,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, newRect, Color.DarkBlue);
             }
 
-            if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed)
+            if (PlayerInput.RightButtonDown())
             {
                 placePosition = Vector2.Zero;
                 selected = null;

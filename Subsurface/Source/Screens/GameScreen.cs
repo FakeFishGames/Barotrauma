@@ -202,7 +202,7 @@ namespace Barotrauma
 
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         
-            if (PlayerInput.GetMouseState.LeftButton != ButtonState.Pressed) Inventory.draggingItem = null;
+            if (!PlayerInput.LeftButtonDown()) Inventory.draggingItem = null;
 
             spriteBatch.End();
         }

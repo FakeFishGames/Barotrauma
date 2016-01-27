@@ -183,7 +183,7 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 mousePos = new Vector2(PlayerInput.GetMouseState.X, PlayerInput.GetMouseState.Y);
+                Vector2 mousePos = PlayerInput.MousePosition;
 
                 Vector2 offset = mousePos - new Vector2(resolution.X / 2.0f, resolution.Y / 2.0f);
 
