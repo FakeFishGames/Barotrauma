@@ -28,11 +28,10 @@ namespace Barotrauma
         {
             using (var game = new GameMain())
             {
-#if !DEBUG
+#if !DEBUG                
                 try
                 {
 #endif
-
                     game.Run();
 #if !DEBUG
                 }
@@ -92,7 +91,7 @@ namespace Barotrauma
     #if WINDOWS
             MessageBox.Show( "A crash report (''crashreport.txt'') was saved in the root folder of the game."+
                 " If you'd like to help fix this bug, please post the report on the Undertow Games forums.",
-                "Oops! Subsurface just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                "Oops! Barotrauma just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
     #endif
 
             Sounds.SoundManager.Dispose();

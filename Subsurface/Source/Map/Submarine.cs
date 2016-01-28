@@ -55,7 +55,7 @@ namespace Barotrauma
         public string Name
         {
             get { return name; }
-            set { name = value; }
+            //set { name = value; }
         }
 
         public static Vector2 LastPickedPosition
@@ -482,6 +482,8 @@ namespace Barotrauma
 
         public bool SaveAs(string filePath)
         {
+            name = System.IO.Path.GetFileNameWithoutExtension(filePath);
+
             XDocument doc = new XDocument(new XElement("Submarine"));
             doc.Root.Add(new XAttribute("name", name));
 
@@ -632,7 +634,7 @@ namespace Barotrauma
             XDocument doc = OpenDoc(filePath);
             if (doc == null) return;
 
-            name = ToolBox.GetAttributeString(doc.Root, "name", name);
+            //name = ToolBox.GetAttributeString(doc.Root, "name", name);
 
             foreach (XElement element in doc.Root.Elements())
             {

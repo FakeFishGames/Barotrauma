@@ -133,7 +133,7 @@ namespace Barotrauma.Lights
                 
         public void Move(Vector2 amount)
         {
-            cachedShadows.Clear();
+            ClearCachedShadows();
 
             for (int i = 0; i < vertices.Count(); i++)
             {
@@ -145,11 +145,32 @@ namespace Barotrauma.Lights
 
         public void SetVertices(Vector2[] points)
         {
-            cachedShadows.Clear();
+            ClearCachedShadows();
 
             vertices = points;
 
             CalculateDimensions();
+        }
+
+        private void RemoveCachedShadow(Lights.LightSource light)
+        {
+            CachedShadow shadow = null;
+            cachedShadows.TryGetValue(light, out shadow);
+
+            if (shadow != null)
+            {
+                shadow.Dispose();
+                cachedShadows.Remove(light);
+            }
+        }
+
+        private void ClearCachedShadows()
+        {
+            foreach (KeyValuePair<LightSource, CachedShadow> cachedShadow in cachedShadows)
+            {
+                cachedShadow.Value.Dispose();
+            }
+            cachedShadows.Clear();
         }
 
         public bool Intersects(Rectangle rect)
@@ -309,7 +330,7 @@ namespace Barotrauma.Lights
                 else
                 {
                     cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position, shadowVertexCount, 0);
-                    cachedShadows.Remove(light);
+                    RemoveCachedShadow(light);
                     cachedShadows.Add(light, cachedShadow);
                 }
             }
@@ -373,11 +394,7 @@ namespace Barotrauma.Lights
 
         public void Remove()
         {
-            foreach (KeyValuePair<LightSource, CachedShadow> cachedShadow in cachedShadows)
-            {
-                cachedShadow.Value.Dispose();
-            }
-            cachedShadows.Clear();
+            ClearCachedShadows();
 
             list.Remove(this);
         }
