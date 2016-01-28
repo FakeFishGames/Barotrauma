@@ -716,12 +716,20 @@ namespace Barotrauma
             }
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
+            bool notClimbing = false;
+            if (character.IsNetworkPlayer)
+            {
+                notClimbing = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
+            }
+            else
+            {
+                notClimbing = targetMovement.X != 0.0f;
+            }
+
             //stop climbing if:
-            //   - going too fast (can't grab a ladder while falling)
             //   - moving sideways
             //   - reached the top or bottom of the ladder
-            if (Math.Abs(torso.LinearVelocity.Y) > 5.0f ||
-                TargetMovement.X != 0.0f ||
+            if (notClimbing ||
                 (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition * 1.5f) ||
                 (TargetMovement.Y > 0.0f && handPos.Y > 0.1f))
             {

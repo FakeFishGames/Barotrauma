@@ -274,10 +274,10 @@ namespace Barotrauma
                 return false;
             }
 
-            if (Submarine.Loaded!=null)
-            {
-                Submarine.Loaded.Name = nameBox.Text;
-            }
+            //if (Submarine.Loaded!=null)
+            //{
+            //    Submarine.Loaded.Name = nameBox.Text;
+            //}
 
             Submarine.SaveCurrent(nameBox.Text + ".sub");
 
@@ -326,15 +326,15 @@ namespace Barotrauma
             return true;
         }
 
-        private bool ChangeSubName(GUITextBox textBox, string text)
-        {
-            if (Submarine.Loaded != null) Submarine.Loaded.Name = text;
-            textBox.Deselect();
+        //private bool ChangeSubName(GUITextBox textBox, string text)
+        //{
+        //    if (Submarine.Loaded != null) Submarine.Loaded.Name = text;
+        //    textBox.Deselect();
 
-            textBox.Text = text;
+        //    textBox.Text = text;
 
-            return true;
-        }
+        //    return true;
+        //}
 
         private bool SelectPrefab(GUIComponent component, object obj)
         {
