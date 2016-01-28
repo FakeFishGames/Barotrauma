@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.0.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed selecting stairs and items outside the sub in editor
+- fixed crashing when pressing the ''start'' button while no route is chosen in single player 
+- fixed fire syncing
+- fixed another bug that crashed the game if in the lobby when a round ends 
+- camera keeps moving with the sub when typing into chatbox in spectator mode
+
+---------------------------------------------------------------------------------------------------------
 v0.3.0.2
 ---------------------------------------------------------------------------------------------------------
 

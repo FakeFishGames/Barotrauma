@@ -22,6 +22,11 @@ namespace Barotrauma
 
         public static GameMain Instance;
 
+        public static bool WindowActive
+        {
+            get { return Instance == null ? true : GameMain.Instance.IsActive; }
+        }
+
         public static bool DebugDraw;
 
         public static GraphicsDevice CurrGraphicsDevice;
