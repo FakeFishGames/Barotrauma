@@ -617,7 +617,7 @@ namespace Barotrauma
 
             if (!wayPoints.Any()) return null;
 
-            return wayPoints[Rand.Int(wayPoints.Count())];
+            return wayPoints[Rand.Int(wayPoints.Count(), false)];
         }
 
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew)

@@ -34,8 +34,18 @@ namespace Barotrauma
         public override void Update(Camera cam, float deltaTime)
         {
             base.Update(cam, deltaTime);
+            
+            float dist = Vector2.Distance(cam.WorldViewCenter, WorldPosition);
+            if (dist > 8000.0f)
+            {
+                AnimController.SimplePhysicsEnabled = true;
+            }
+            else if (dist < 7000.0f)
+            {
+                AnimController.SimplePhysicsEnabled = false;
+            }
 
-            if (isDead) return;
+            if (isDead || health <= 0.0f) return;
 
             if (Controlled == this) return;
 
@@ -91,6 +101,9 @@ namespace Barotrauma
 
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
                     message.Write((byte)((health / maxHealth) * 255.0f));
+
+                    Bleeding = MathHelper.Clamp(Bleeding, 0.0f, 5.0f);
+                    message.WriteRangedSingle(Bleeding, 0.0f, 5.0f, 8);
 
                     aiController.FillNetworkData(message);
                     return true;
@@ -160,17 +173,22 @@ namespace Barotrauma
                         }
                     //}
 
-                    float newStunTimer = 0.0f, newHealth = 0.0f;
+                    float newStunTimer = 0.0f, newHealth = 0.0f, newBleeding = 0.0f;
 
                     try
                     {
                         newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
                         newHealth = (message.ReadByte() / 255.0f) * maxHealth;
+
+
+                        newBleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);
                     }
                     catch { return; }
 
                     AnimController.StunTimer = newStunTimer;
                     health = newHealth;
+
+                    Bleeding = newBleeding;
 
                     aiController.ReadNetworkData(message);
                     return;

@@ -873,7 +873,7 @@ namespace Barotrauma
         {
             foreach (Character c in CharacterList)
             {
-                if (c.isDead || !c.Enabled) continue;
+                if (c.isDead || c.health <= 0.0f || !c.Enabled) continue;
                 c.AnimController.UpdateAnim(deltaTime);
             }
         }
@@ -897,16 +897,6 @@ namespace Barotrauma
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
 
-            float dist = Vector2.Distance(cam.WorldViewCenter, WorldPosition);
-            if (dist > 8000.0f)
-            {
-                AnimController.SimplePhysicsEnabled = true;
-            }
-            else if (dist < 7000.0f)
-            {
-                AnimController.SimplePhysicsEnabled = false;
-            }
-            
             if (isDead) return;
 
             if (!(AnimController is FishAnimController))

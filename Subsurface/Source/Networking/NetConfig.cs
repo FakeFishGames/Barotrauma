@@ -16,7 +16,7 @@ namespace Barotrauma.Networking
 
         //if a Character is further than this from the sub, the server will ignore it
         //(in sim units)
-        public const float CharacterIgnoreDistance = 100.0f;
+        public const float CharacterIgnoreDistance = 300.0f;
 
         //if a ragdoll is further than this from the correct position, teleport it there
         //(in sim units)
@@ -32,7 +32,7 @@ namespace Barotrauma.Networking
         public const float IdSendInterval = 0.2f;
         public const float RerequestInterval = 0.2f;
 
-        public const int ReliableMessageBufferSize = 100;
+        public const int ReliableMessageBufferSize = 500;
         public const int ResendAttempts = 10;
     }
 }
