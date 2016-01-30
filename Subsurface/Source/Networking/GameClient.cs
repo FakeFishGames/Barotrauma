@@ -30,6 +30,10 @@ namespace Barotrauma.Networking
 
         public GameClient(string newName)
         {
+            GameMain.DebugDraw = false;
+            Hull.EditFire = false;
+            Hull.EditWater = false;
+
             name = newName;
 
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name);

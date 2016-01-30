@@ -393,13 +393,13 @@ namespace Barotrauma
             if (impact > 0.8f && l.HitSound != null && l.soundTimer <= 0.0f) l.HitSound.Play(volume, impact * 100.0f, l.WorldPosition);
 
             if (impact > l.impactTolerance)
-            {   
+            {
                 if (!character.IsNetworkPlayer)
                 {
                     character.AddDamage(CauseOfDeath.Damage, impact - l.impactTolerance * 0.1f);
-                }
 
-                strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
+                    strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
+                }
 
                 SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body);                
 
@@ -824,8 +824,10 @@ namespace Barotrauma
 
                 //if (character is AICharacter) SetRotation(refLimb.body.TargetRotation);
 
-                //foreach (Limb limb in Limbs)
-                //{
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.LinearVelocity = Vector2.Zero;
+                    limb.body.AngularVelocity = Vector2.Zero;
                 //    if (limb.body.TargetPosition == Vector2.Zero)
                 //    {
                 //        limb.body.SetTransform(limb.body.SimPosition + diff, limb.body.Rotation);
@@ -837,7 +839,7 @@ namespace Barotrauma
 
                 //    limb.body.SetTransform(limb.body.TargetPosition, limb.body.TargetRotation);
                 //    limb.body.TargetPosition = Vector2.Zero;
-                //}
+                }
             } 
         }
 

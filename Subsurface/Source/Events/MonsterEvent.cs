@@ -42,8 +42,8 @@ namespace Barotrauma
                     position.Y -= Level.Loaded.Size.Y;
                 }
 
-                position.X += Rand.Range(-0.5f, 0.5f);
-                position.Y += Rand.Range(-0.5f, 0.5f);
+                position.X += Rand.Range(-0.5f, 0.5f, false);
+                position.Y += Rand.Range(-0.5f, 0.5f, false);
                 monsters[i] = Character.Create(characterFile, position);
             }
         }
