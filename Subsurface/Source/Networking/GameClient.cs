@@ -373,7 +373,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            var message = ComposeNetworkEventMessage(true);
+            var message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableChannel);
             if (message != null)
             {
                 ReliableMessage reliableMessage = reliableChannel.CreateMessage();
@@ -383,9 +383,12 @@ namespace Barotrauma.Networking
                 reliableChannel.SendMessage(reliableMessage, client.ServerConnection);
             }
 
-            message = ComposeNetworkEventMessage(false);
+            message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.Unreliable);
             if (message != null) client.SendMessage(message, NetDeliveryMethod.Unreliable);
-                                      
+
+            message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableLindgren);
+            if (message != null) client.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+
             //foreach (NetworkEvent networkEvent in NetworkEvent.Events)
             //{
             //    if (networkEvent.IsImportant)

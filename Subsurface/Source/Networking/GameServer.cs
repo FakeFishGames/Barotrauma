@@ -632,7 +632,7 @@ namespace Barotrauma.Networking
 
             foreach (Client c in recipients)
             {
-                var message = ComposeNetworkEventMessage(true, c.Connection);
+                var message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableChannel, c.Connection);
                 if (message != null)
                 {
                     ReliableMessage reliableMessage = c.ReliableChannel.CreateMessage();
@@ -642,7 +642,13 @@ namespace Barotrauma.Networking
                     c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
                 }
 
-                message = ComposeNetworkEventMessage(false, c.Connection);
+                message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableLindgren, c.Connection);
+                if (message!=null)
+                {
+                    server.SendMessage(message, c.Connection, NetDeliveryMethod.ReliableUnordered);
+                }
+
+                message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.Unreliable, c.Connection);
                 if (message != null)
                 {
                     server.SendMessage(message, c.Connection, NetDeliveryMethod.Unreliable, 0);                        

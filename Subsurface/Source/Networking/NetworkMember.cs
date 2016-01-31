@@ -126,11 +126,11 @@ namespace Barotrauma.Networking
             Voting = new Voting();
         }
 
-        protected NetOutgoingMessage ComposeNetworkEventMessage(bool isImportant, NetConnection excludedConnection = null)
+        protected NetOutgoingMessage ComposeNetworkEventMessage(NetworkEventDeliveryMethod deliveryMethod, NetConnection excludedConnection = null)
         {
             if (netPeer == null) return null;
 
-            var events = NetworkEvent.Events.FindAll(e => e.IsImportant == isImportant);
+            var events = NetworkEvent.Events.FindAll(e => e.DeliveryMethod == deliveryMethod);
             if (events.Count == 0) return null;
 
             List<byte[]> msgBytes = new List<byte[]>();

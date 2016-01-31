@@ -4,6 +4,13 @@ using System;
 
 namespace Barotrauma.Networking
 {
+    enum NetworkEventDeliveryMethod
+    {
+        Unreliable = 0,
+        ReliableChannel = 1,
+        ReliableLindgren = 2
+    }
+
     enum NetworkEventType
     {
         EntityUpdate = 0,
@@ -28,27 +35,27 @@ namespace Barotrauma.Networking
     {
         public static List<NetworkEvent> Events = new List<NetworkEvent>();
 
-        private static bool[] isImportant;
+        private static NetworkEventDeliveryMethod[] deliveryMethod;
         private static bool[] overridePrevious;
 
         static NetworkEvent()
         {
-            isImportant = new bool[Enum.GetNames(typeof(NetworkEventType)).Length];
-            isImportant[(int)NetworkEventType.ImportantEntityUpdate] = true;
-            isImportant[(int)NetworkEventType.ImportantComponentUpdate] = true;
-            isImportant[(int)NetworkEventType.KillCharacter] = true;
-            isImportant[(int)NetworkEventType.SelectCharacter] = true;
+            deliveryMethod = new NetworkEventDeliveryMethod[Enum.GetNames(typeof(NetworkEventType)).Length];
+            deliveryMethod[(int)NetworkEventType.ImportantEntityUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.ImportantComponentUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.KillCharacter] = NetworkEventDeliveryMethod.ReliableLindgren;
+            deliveryMethod[(int)NetworkEventType.SelectCharacter] = NetworkEventDeliveryMethod.ReliableChannel;
 
-            isImportant[(int)NetworkEventType.ImportantComponentUpdate] = true;
-            isImportant[(int)NetworkEventType.PickItem] = true;
-            isImportant[(int)NetworkEventType.DropItem] = true;
-            isImportant[(int)NetworkEventType.InventoryUpdate] = true;
-            isImportant[(int)NetworkEventType.ItemFixed] = true;
+            deliveryMethod[(int)NetworkEventType.ImportantComponentUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.PickItem] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.DropItem] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.InventoryUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.ItemFixed] = NetworkEventDeliveryMethod.ReliableLindgren;
 
-            isImportant[(int)NetworkEventType.UpdateProperty] = true;
-            isImportant[(int)NetworkEventType.WallDamage] = true;
+            deliveryMethod[(int)NetworkEventType.UpdateProperty] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.WallDamage] = NetworkEventDeliveryMethod.ReliableChannel;
 
-            overridePrevious = new bool[isImportant.Length];
+            overridePrevious = new bool[deliveryMethod.Length];
             for (int i = 0; i < overridePrevious.Length; i++ )
             {
                 overridePrevious[i] = true;
@@ -82,9 +89,9 @@ namespace Barotrauma.Networking
             get { return isClientEvent; }
         }
 
-        public bool IsImportant
+        public NetworkEventDeliveryMethod DeliveryMethod
         {
-            get { return isImportant[(int)eventType]; }
+            get { return deliveryMethod[(int)eventType]; }
         }
 
         public NetworkEventType Type
