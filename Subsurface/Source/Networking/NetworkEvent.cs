@@ -125,7 +125,7 @@ namespace Barotrauma.Networking
 
         public bool FillData(NetBuffer message)
         {
-            message.Write((byte)eventType);
+            message.WriteRangedInteger(0, Enum.GetValues(typeof(NetworkEventType)).Length, (int)eventType);
 
             Entity e = Entity.FindEntityByID(id);
             if (e == null) return false;
@@ -182,7 +182,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                eventType = (NetworkEventType)message.ReadByte();
+                eventType = (NetworkEventType)message.ReadRangedInteger(0, Enum.GetValues(typeof(NetworkEventType)).Length);
                 id = message.ReadUInt16();
             }
             catch

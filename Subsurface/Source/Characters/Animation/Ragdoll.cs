@@ -827,7 +827,7 @@ namespace Barotrauma
                 foreach (Limb limb in Limbs)
                 {
                     limb.body.LinearVelocity = Vector2.Zero;
-                    limb.body.AngularVelocity = Vector2.Zero;
+                    limb.body.AngularVelocity = 0.0f;
                 //    if (limb.body.TargetPosition == Vector2.Zero)
                 //    {
                 //        limb.body.SetTransform(limb.body.SimPosition + diff, limb.body.Rotation);
