@@ -953,7 +953,7 @@ namespace Barotrauma
 
             Vector2 targetMovement = character.GetTargetMovement();
 
-            Vector2 currPosition = prevPosition + targetMovement * timePassed/1000.0f;
+            Vector2 currPosition = prevPosition + targetMovement * timePassed/500.0f;
 
             return currPosition;
         }

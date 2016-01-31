@@ -188,7 +188,9 @@ namespace Barotrauma.Networking.ReliableMessages
 
             sender.SendMessage(message, recipient, NetDeliveryMethod.Unreliable);
 
-            idSendTimer = Math.Max(recipient.AverageRoundtripTime, NetConfig.IdSendInterval+idSendInterval);
+            float roundTripTime = Math.Min(recipient.AverageRoundtripTime, 0.5f);
+
+            idSendTimer = Math.Max(roundTripTime, NetConfig.IdSendInterval+idSendInterval);
             idSendInterval += 0.1f;
         }
     }
@@ -246,8 +248,9 @@ namespace Barotrauma.Networking.ReliableMessages
                 receiver.SendMessage(resendRequest, recipient, 
                     missingMessage.ResendRequestsSent==0 ? NetDeliveryMethod.ReliableUnordered : NetDeliveryMethod.Unreliable);
 
+                float roundTripTime = Math.Min(recipient.AverageRoundtripTime, 0.5f);
 
-                missingMessage.ResendTimer = Math.Max(recipient.AverageRoundtripTime, NetConfig.RerequestInterval);
+                missingMessage.ResendTimer = Math.Max(roundTripTime, NetConfig.RerequestInterval);
                 missingMessage.ResendRequestsSent++;
                 
             }

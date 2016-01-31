@@ -25,6 +25,11 @@ namespace Barotrauma
             spawnDeep = ToolBox.GetAttributeBool(element, "spawndeep", false);
         }
 
+        protected override void Start()
+        {
+            SpawnMonsters();
+        }
+
         private void SpawnMonsters()
         {
             WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Enemy);
@@ -63,13 +68,13 @@ namespace Barotrauma
             {
                 if (monsters[i].IsDead) continue;
 
-                if (!isStarted && monsters[i].SimPosition != Vector2.Zero && monsters[i].SimPosition.Length() < 20.0) isStarted = true;
+                if (!isStarted && Vector2.Distance(monsters[i].WorldPosition, Submarine.Loaded.WorldPosition) < 5000.0f) isStarted = true;
                     
                 monstersDead = false;
                 break;                    
             }
 
-            if (monstersDead) Finished();            
+            if (monstersDead) Finished();
         }
     }
 }
