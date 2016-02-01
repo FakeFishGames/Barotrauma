@@ -7,6 +7,10 @@
     pickdistance="150"
     price="50">
 
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+    
     <Sprite texture ="oxygentank.png" depth="0.5"/>
 
     <Body radius="6" height="22" density="5"/>
@@ -26,6 +30,10 @@
     price="50"
     description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
 
+    <Deconstruct time="10">
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+    
     <Sprite texture ="DivingMask.png" depth="0.5"/>
   
     <Body radius="18" density="5"/>
@@ -101,6 +109,12 @@
     price="50"
     description="A battery-powered underwater propulsion device.">
 
+    <Deconstruct time="20">
+      <Item name="Steel Bar"/>
+      <Item name="Copper Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+    
     <Sprite texture ="DivingSuit.png" depth="0.5" sourcerect="22,98,59,32" origin="0.6,0.66"/>
 
     <Body width="55" height="30" density="5"/>

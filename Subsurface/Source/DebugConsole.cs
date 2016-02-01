@@ -359,6 +359,11 @@ namespace Barotrauma
                 case "save":
                     if (commands.Length < 2) break;
 
+                    if (GameMain.EditMapScreen.CharacterMode)
+                    {
+                        GameMain.EditMapScreen.ToggleCharacterMode();
+                    }
+
                     string fileName = string.Join(" ", commands.Skip(1));
                     if (fileName.Contains("../"))
                     {
@@ -369,7 +374,7 @@ namespace Barotrauma
 
                     if (WayPoint.WayPointList.Find(wp => !wp.MoveWithLevel && wp.SpawnType == SpawnType.Path)==null)
                     {
-                        DebugConsole.ThrowError("No waypoints found in the submarine. Did you forget to generate the waypoints?");
+                        DebugConsole.ThrowError("No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.");
                     }
 
                     if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)

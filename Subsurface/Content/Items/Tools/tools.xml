@@ -10,6 +10,11 @@
 
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.5"/>
 
+    <Deconstruct time="10">
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
     <!-- physics body -->
     <Body width="41" height="17" density="5"/>
 
@@ -56,6 +61,11 @@
     price="100"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
+    <Deconstruct time="10">
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+    
     <Sprite texture ="tools.png" sourcerect="0,0,41,16" depth="0.5"/>
 
     <Body width="41" height="16" density="5"/>
@@ -94,6 +104,10 @@
     pickdistance="150"
     price="50">
 
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="fueltank.png" depth="0.5"/>
 
     <Body radius="6" height="22" density="5"/>
@@ -112,6 +126,11 @@
     pickdistance="200"
     price="100"
     description="A handheld carbon dioxide extinguisher.">
+
+    <Deconstruct time="10">
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Steel Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="extinguisher.png"  depth="0.5" sourcerect="0,0,34,64" origin="0.4,0.5"/>
 
@@ -135,7 +154,7 @@
     Tags="smallitem"
     pickdistance="200"
     price="10">
-
+       
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.5"/>
 
     <Body width="31" height="6" density="20"/>

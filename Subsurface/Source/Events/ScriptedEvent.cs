@@ -10,10 +10,10 @@ namespace Barotrauma
     {
         private static string configFile = "Content/randomevents.xml";
 
-        const int MaxPreviousEvents = 6;
-        const float PreviouslyUsedWeight = 10.0f;
+        //const int MaxPreviousEvents = 6;
+        //const float PreviouslyUsedWeight = 10.0f;
 
-        static List<int> previousEvents = new List<int>();
+        //static List<int> previousEvents = new List<int>();
         
         protected string name;
         protected string description;
@@ -109,16 +109,16 @@ namespace Barotrauma
                 eventProbability[i] = ToolBox.GetAttributeInt(element, "commonness", 1);
 
                 //if the event has been previously selected, it's less likely to be selected now
-                int previousEventIndex = previousEvents.FindIndex(x => x == i);
-                if (previousEventIndex >= 0)
-                {
-                    //how many shifts ago was the event last selected
-                    int eventDist = eventCount - previousEventIndex;
+                //int previousEventIndex = previousEvents.FindIndex(x => x == i);
+                //if (previousEventIndex >= 0)
+                //{
+                //    //how many shifts ago was the event last selected
+                //    int eventDist = eventCount - previousEventIndex;
 
-                    float weighting = (1.0f / eventDist) * PreviouslyUsedWeight;
+                //    float weighting = (1.0f / eventDist) * PreviouslyUsedWeight;
 
-                    eventProbability[i] *= weighting;
-                }
+                //    eventProbability[i] *= weighting;
+                //}
 
                 probabilitySum += eventProbability[i];
 
@@ -153,7 +153,7 @@ namespace Barotrauma
                     ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
                     object instance = constructor.Invoke(new object[] { element });
 
-                    previousEvents.Add(i);
+                    //previousEvents.Add(i);
 
                     return (ScriptedEvent)instance;
                 }

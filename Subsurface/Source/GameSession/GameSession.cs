@@ -78,15 +78,14 @@ namespace Barotrauma
             this.submarine = submarine;
         }
         
-        public GameSession(Submarine selectedSub, string saveFile, string filePath)
+        public GameSession(Submarine selectedSub, string saveFile, XDocument doc)
             : this(selectedSub, saveFile)
         {
             GameMain.GameSession = this;
 
             CrewManager = new CrewManager();
 
-            XDocument doc = ToolBox.TryLoadXml(filePath);
-            if (doc == null) return;
+            selectedSub.Name = ToolBox.GetAttributeString(doc.Root, "submarine", selectedSub.Name);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
