@@ -17,7 +17,11 @@ namespace Barotrauma.Items.Components
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
 
+        private GUITickBox maintainPosTickBox;
+
         private bool autoPilot;
+
+        private Vector2? posToMaintain;
 
         private SteeringPath steeringPath;
 
@@ -39,12 +43,20 @@ namespace Barotrauma.Items.Components
 
                 autoPilot = value;
 
+                maintainPosTickBox.Enabled = autoPilot;
+
+
                 if (autoPilot)
                 {
                     if (pathFinder==null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
                     steeringPath = pathFinder.FindPath(
                         ConvertUnits.ToSimUnits(item.WorldPosition),
                         ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+                }
+                else
+                {
+                    maintainPosTickBox.Selected = false;
+                    posToMaintain = null;
                 }
             }
         }
@@ -87,7 +99,6 @@ namespace Barotrauma.Items.Components
             IsActive = true;
 
             var tickBox = new GUITickBox(new Rectangle(0,25,20,20), "Autopilot", Alignment.TopLeft, GuiFrame);
-
             tickBox.OnSelected = (GUITickBox box) =>
             {
                 AutoPilot = box.Selected;
@@ -95,6 +106,10 @@ namespace Barotrauma.Items.Components
 
                 return true;
             };
+
+            maintainPosTickBox = new GUITickBox(new Rectangle(0, 50, 20, 20), "Maintain position", Alignment.TopLeft, GuiFrame);
+            maintainPosTickBox.Enabled = false;
+            maintainPosTickBox.OnSelected = ToggleMaintainPosition;
         }
         
         public override void Update(float deltaTime, Camera cam)
@@ -179,47 +194,95 @@ namespace Barotrauma.Items.Components
 
         private void UpdateAutoPilot(float deltaTime)
         {
-            autopilotRayCastTimer -= deltaTime;
-
-            steeringPath.CheckProgress(ConvertUnits.ToSimUnits(item.WorldPosition), 10.0f);
-
-            if (autopilotRayCastTimer<=0.0f && steeringPath.NextNode != null)
+            if (posToMaintain==null)
             {
-                Vector2 diff = ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - item.WorldPosition);
 
-                bool nextVisible = true;
-                for (int x = -1; x < 2; x += 2)
+                autopilotRayCastTimer -= deltaTime;
+
+                steeringPath.CheckProgress(ConvertUnits.ToSimUnits(item.WorldPosition), 10.0f);
+
+                if (autopilotRayCastTimer<=0.0f && steeringPath.NextNode != null)
                 {
-                    for (int y = -1; y < 2; y += 2)
+                    Vector2 diff = Vector2.Normalize(ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - Submarine.Loaded.WorldPosition));
+
+                    bool nextVisible = true;
+                    for (int x = -1; x < 2; x += 2)
                     {
-                        Vector2 cornerPos =
-                            new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
+                        for (int y = -1; y < 2; y += 2)
+                        {
+                            Vector2 cornerPos =
+                                new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
 
-                        cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + Submarine.Loaded.Position);
+                            cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + Submarine.Loaded.WorldPosition);
 
-                        if (Submarine.PickBody(cornerPos, cornerPos + diff, null, Physics.CollisionLevel) == null) continue;
+                            float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
 
-                        nextVisible = false;
-                        x = 2;
-                        y = 2;
+                            if (Submarine.PickBody(cornerPos, cornerPos + diff*dist, null, Physics.CollisionLevel) == null) continue;
+
+                            nextVisible = false;
+                            x = 2;
+                            y = 2;
+                        }
                     }
+
+                    if (nextVisible) steeringPath.SkipToNextNode();
+
+                    autopilotRayCastTimer = AutopilotRayCastInterval;                
                 }
 
-                if (nextVisible) steeringPath.SkipToNextNode();
-
-                autopilotRayCastTimer = AutopilotRayCastInterval;                
+                if (steeringPath.CurrentNode != null)
+                {
+                    SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
+                }
+            }
+            else
+            {
+                SteerTowardsPosition((Vector2)posToMaintain);
             }
 
-            if (steeringPath.CurrentNode != null)
+        }
+
+        private void SteerTowardsPosition(Vector2 worldPosition)
+        {
+            float prediction = 10.0f;
+
+            Vector2 futurePosition = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity) * prediction;
+            Vector2 targetSpeed = ((worldPosition - item.WorldPosition) - futurePosition);
+
+            if (targetSpeed.Length()>500.0f)
             {
-                float prediction = 5.0f;
-
-                Vector2 futurePosition = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity) * prediction;
-                Vector2 targetSpeed = ((steeringPath.CurrentNode.WorldPosition - item.WorldPosition) - futurePosition);
-
                 targetSpeed = Vector2.Normalize(targetSpeed);
                 TargetVelocity = targetSpeed * 100.0f;
             }
+            else
+            {
+                targetVelocity = targetSpeed/5.0f;
+            }
+
+
+        }
+
+        private bool ToggleMaintainPosition(GUITickBox tickBox)
+        {
+            item.NewComponentEvent(this, true, true);
+
+            if (tickBox.Selected)
+            {
+                if (Submarine.Loaded == null)
+                {
+                    posToMaintain = null;
+                }
+                else
+                {
+                    posToMaintain = item.WorldPosition;
+                }
+            }
+            else
+            {
+                posToMaintain = null;
+            }
+
+            return true;
         }
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
@@ -236,6 +299,15 @@ namespace Barotrauma.Items.Components
             message.Write(targetVelocity.Y);
 
             message.Write(autoPilot);
+            if (autoPilot)
+            {
+                message.Write(posToMaintain != null);
+                if (posToMaintain != null)
+                {
+                    message.Write(((Vector2)posToMaintain).X);
+                    message.Write(((Vector2)posToMaintain).Y);
+                }
+            }
 
             return true;
         }
@@ -245,10 +317,22 @@ namespace Barotrauma.Items.Components
             Vector2 newTargetVelocity   = Vector2.Zero;
             bool newAutoPilot           = false;
 
+            Vector2? newPosToMaintain = null;
+
             try
             {
                 newTargetVelocity = new Vector2(message.ReadFloat(), message.ReadFloat());
                 newAutoPilot = message.ReadBoolean();
+                if (newAutoPilot)
+                {
+                    bool maintainPos = message.ReadBoolean();
+                    if (maintainPos)
+                    {
+                        newPosToMaintain = new Vector2(
+                            message.ReadFloat(), 
+                            message.ReadFloat());
+                    }
+                }
             }
 
             catch
@@ -258,6 +342,9 @@ namespace Barotrauma.Items.Components
 
             TargetVelocity = newTargetVelocity;
             AutoPilot = newAutoPilot;
+
+            maintainPosTickBox.Selected = newPosToMaintain != null;
+            posToMaintain = newPosToMaintain;
         }
     }
 }

@@ -468,7 +468,7 @@ namespace Barotrauma
             Vector2 limbForce = direction * impact * 0.5f;
 
             float length = limbForce.Length();
-            if (length > 10.0f) limbForce = (limbForce / length) * 10.0f;
+            if (length > 5.0f) limbForce = (limbForce / length) * 5.0f;
 
             foreach (Character c in Character.CharacterList)
             {

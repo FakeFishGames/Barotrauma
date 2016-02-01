@@ -174,7 +174,7 @@ namespace Barotrauma
                 string relativePath = GetRelativePath(file, currentDir);
 
                 string dirRoot = relativePath.Split(Path.DirectorySeparatorChar).First();
-                if (dirRoot == "Data") continue;
+                if (dirRoot != "Content" && dirRoot != "") continue;
 
                 if (filesToKeep.Contains(relativePath)) continue;
 

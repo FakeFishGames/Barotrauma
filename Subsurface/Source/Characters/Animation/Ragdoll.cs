@@ -315,7 +315,7 @@ namespace Barotrauma
                 //the collision is ignored if the lowest limb is under the platform
                 if (lowestLimb==null || lowestLimb.Position.Y < structure.Rect.Y) return false; 
             }
-            else if (structure.StairDirection!=Direction.None && lowestLimb != null)
+            else if (structure.StairDirection != Direction.None && lowestLimb != null)
             {
                 float stairPosY = structure.StairDirection == Direction.Right ? 
                     lowestLimb.Position.X - structure.Rect.X : structure.Rect.Width - (lowestLimb.Position.X - structure.Rect.X);

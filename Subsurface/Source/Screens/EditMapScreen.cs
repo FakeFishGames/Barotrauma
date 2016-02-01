@@ -292,7 +292,13 @@ namespace Barotrauma
             selectedTab = (int)obj;
             return true;
         }
-        
+
+
+        public void ToggleCharacterMode()
+        {
+            ToggleCharacterMode(null,null);
+        }
+
         private bool ToggleCharacterMode(GUIButton button, object obj)
         {
             selectedTab = -1;
@@ -397,28 +403,30 @@ namespace Barotrauma
 
             if (characterMode)
             {
-                if (Entity.FindEntityByID(dummyCharacter.ID)!=dummyCharacter)
+                if (dummyCharacter == null || Entity.FindEntityByID(dummyCharacter.ID)!=dummyCharacter)
                 {
                     ToggleCharacterMode(null, null);
                 }
-
-                foreach (MapEntity me in MapEntity.mapEntityList)
+                else
                 {
-                    me.IsHighlighted = false;
-                }
-
-                if (dummyCharacter.SelectedConstruction==null)
-                {
-                    Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition);
-                    foreach (Limb limb in dummyCharacter.AnimController.Limbs)
+                    foreach (MapEntity me in MapEntity.mapEntityList)
                     {
-                        limb.body.SetTransform(mouseSimPos, 0.0f);
+                        me.IsHighlighted = false;
                     }
-                }
 
-                dummyCharacter.ControlLocalPlayer((float)deltaTime, cam, false);
-                dummyCharacter.Control((float)deltaTime, cam);
-                cam.TargetPos = Vector2.Zero;
+                    if (dummyCharacter.SelectedConstruction==null)
+                    {
+                        Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition);
+                        foreach (Limb limb in dummyCharacter.AnimController.Limbs)
+                        {
+                            limb.body.SetTransform(mouseSimPos, 0.0f);
+                        }
+                    }
+
+                    dummyCharacter.ControlLocalPlayer((float)deltaTime, cam, false);
+                    dummyCharacter.Control((float)deltaTime, cam);
+                    cam.TargetPos = Vector2.Zero;
+                }
             }
             else
             {

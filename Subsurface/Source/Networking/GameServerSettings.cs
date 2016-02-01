@@ -20,7 +20,7 @@ namespace Barotrauma.Networking
     {
         public bool ShowNetStats;
 
-        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 40);
+        private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
 
         private SelectionMode subSelectionMode, modeSelectionMode;
@@ -40,6 +40,8 @@ namespace Barotrauma.Networking
         private bool autoRestart;
 
         private bool allowSpectating = true;
+
+        private bool endRoundAtLevelEnd = true;
 
         public bool AutoRestart
         {
@@ -85,16 +87,22 @@ namespace Barotrauma.Networking
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsHeight), Color.Black*0.5f);
+            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,400,400), null, Alignment.Center, GUI.Style, settingsFrame);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 400), null, Alignment.Center, GUI.Style, settingsFrame);
 
-            var randomizeLevelBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Randomize level seed", Alignment.Left, innerFrame);
+            new GUITextBlock(new Rectangle(0, -15, 0, 20), "Server settings", GUI.Style, innerFrame, GUI.LargeFont);
+
+            var randomizeLevelBox = new GUITickBox(new Rectangle(0, 30, 20, 20), "Randomize level seed", Alignment.Left, innerFrame);
             randomizeLevelBox.Selected = randomizeSeed;
             randomizeLevelBox.OnSelected = ToggleRandomizeSeed;
+
+            var endBox = new GUITickBox(new Rectangle(0, 60, 20, 20), "End round when destination reached", Alignment.Left, innerFrame);
+            endBox.Selected = endRoundAtLevelEnd;
+            endBox.OnSelected = (GUITickBox) => { endRoundAtLevelEnd = GUITickBox.Selected; return true; };
             
-            new GUITextBlock(new Rectangle(0, 35, 100, 20), "Submarine selection:", GUI.Style, innerFrame);
-            var selectionFrame = new GUIFrame(new Rectangle(0, 60, 300, 20), null, innerFrame);
+            new GUITextBlock(new Rectangle(0, 95, 100, 20), "Submarine selection:", GUI.Style, innerFrame);
+            var selectionFrame = new GUIFrame(new Rectangle(0, 120, 300, 20), null, innerFrame);
             for (int i = 0; i<3; i++)
             {
                 var selectionTick = new GUITickBox(new Rectangle(i * 100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
@@ -103,8 +111,8 @@ namespace Barotrauma.Networking
                 selectionTick.UserData = (SelectionMode)i;
             }
             
-            new GUITextBlock(new Rectangle(0, 85, 100, 20), "Mode selection:", GUI.Style, innerFrame);
-            selectionFrame = new GUIFrame(new Rectangle(0, 110, 300, 20), null, innerFrame);
+            new GUITextBlock(new Rectangle(0, 145, 100, 20), "Mode selection:", GUI.Style, innerFrame);
+            selectionFrame = new GUIFrame(new Rectangle(0, 170, 300, 20), null, innerFrame);
             for (int i = 0; i<3; i++)
             {
                 var selectionTick = new GUITickBox(new Rectangle(i*100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
@@ -113,7 +121,7 @@ namespace Barotrauma.Networking
                 selectionTick.UserData = (SelectionMode)i;
             }
             
-            var allowSpecBox = new GUITickBox(new Rectangle(0, 150, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
+            var allowSpecBox = new GUITickBox(new Rectangle(0, 210, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
             allowSpecBox.Selected = true;
             allowSpecBox.OnSelected = ToggleAllowSpectating;            
             

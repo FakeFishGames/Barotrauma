@@ -181,13 +181,15 @@ namespace Barotrauma.Networking
                 if (DateTime.Now > timeOut)
                 {
                     restRequestHandle.Abort();
-                    DebugConsole.ThrowError("Couldn't connect to master server (request timed out)");
-                    registeredToMaster = false;
+                    DebugConsole.NewMessage("Couldn't connect to master server (request timed out)", Color.Red);
+                    break;
+                    //registeredToMaster = false;
                 }
-            System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
                 
                 yield return CoroutineStatus.Running;
             }
+
+            System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
 
             yield return CoroutineStatus.Success;
         }
@@ -198,15 +200,13 @@ namespace Barotrauma.Networking
 
             if (response.ErrorException != null)
             {
-                DebugConsole.ThrowError("Error while registering to master server", response.ErrorException);
-                registeredToMaster = false;
+                DebugConsole.NewMessage("Error while registering to master server (" + response.ErrorException + ")", Color.Red);
                 return;
             }
 
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 DebugConsole.NewMessage("Error while reporting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")", Color.Red);
-                //registeredToMaster = false;
                 return;
             }
         }
@@ -224,10 +224,14 @@ namespace Barotrauma.Networking
             {
                 inGameHUD.Update((float)Physics.step);
 
-                //if all characters dead
-                if (AutoRestart &&
+                bool isCrewDead =  
                     ConnectedClients.Find(c => c.Character != null && !c.Character.IsDead)==null &&
-                   (myCharacter == null || myCharacter.IsDead))
+                   (myCharacter == null || myCharacter.IsDead);
+
+                //restart if all characters are dead or submarine is at the end of the level
+                if ((AutoRestart && isCrewDead) 
+                    || 
+                    (endRoundAtLevelEnd && Submarine.Loaded!=null && Submarine.Loaded.AtEndPosition))
                 {
                     EndButtonHit(null, null);                    
                     UpdateNetLobby(null,null);
@@ -284,7 +288,7 @@ namespace Barotrauma.Networking
             {
                 if (gameStarted)
                 {
-                    if (myCharacter != null) new NetworkEvent(NetworkEventType.EntityUpdate, myCharacter.ID, false);
+                    if (myCharacter != null && !myCharacter.IsDead) new NetworkEvent(NetworkEventType.EntityUpdate, myCharacter.ID, false);
 
                     foreach (Character c in Character.CharacterList)
                     {

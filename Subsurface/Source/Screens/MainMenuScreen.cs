@@ -480,9 +480,9 @@ namespace Barotrauma
                 Directory.CreateDirectory(SaveUtil.TempPath);
             }
 
-            File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, "map.sub"), true);
+            File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name+".sub"), true);
 
-            selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, "map.sub"), "");
+            selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
             
             GameMain.GameSession = new GameSession(selectedSub, saveNameBox.Text, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
             (GameMain.GameSession.gameMode as SinglePlayerMode).GenerateMap(seedBox.Text);
@@ -515,7 +515,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading map ''"+saveFile+"'' failed", e);
+                DebugConsole.ThrowError("Loading save ''"+saveFile+"'' failed", e);
                 return false;
             }
 

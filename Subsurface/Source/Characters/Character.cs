@@ -253,6 +253,12 @@ namespace Barotrauma
             }
         }
 
+        public bool DoesBleed
+        {
+            get;
+            private set;
+        }
+
 
         public float PressureTimer
         {
@@ -401,6 +407,8 @@ namespace Barotrauma
 
             maxHealth = ToolBox.GetAttributeFloat(doc.Root, "health", 100.0f);
             health = maxHealth;
+
+            DoesBleed = ToolBox.GetAttributeBool(doc.Root, "doesbleed", true);
 
             needsAir = ToolBox.GetAttributeBool(doc.Root, "needsair", false);
             drowningTime = ToolBox.GetAttributeFloat(doc.Root, "drowningtime", 10.0f);
@@ -958,7 +966,7 @@ namespace Barotrauma
                 PressureProtection -= deltaTime*100.0f;
             }
 
-            Health -= bleeding;
+            Health -= bleeding*deltaTime;
             if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss, false);
         }
 
@@ -1093,9 +1101,11 @@ namespace Barotrauma
 
             //health -= attackResult.Damage;
             //if (health <= 0.0f && damageType == DamageType.Burn) Kill(CauseOfDeath.Burn);
-
-            Bleeding += attackResult.Bleeding;
-
+            if (DoesBleed)
+            {
+                Bleeding += attackResult.Bleeding;
+            }
+            
             return attackResult;
         }
 
