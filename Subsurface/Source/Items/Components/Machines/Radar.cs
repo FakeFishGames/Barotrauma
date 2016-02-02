@@ -20,6 +20,8 @@ namespace Barotrauma.Items.Components
 
         private Sprite pingCircle, screenOverlay;
 
+        private GUITickBox isActiveTickBox;
+
         [HasDefaultValue(0.0f, false)]
         public float Range
         {
@@ -45,8 +47,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            var tickBox = new GUITickBox(new Rectangle(0,0,20,20), "Sonar", Alignment.TopLeft, GuiFrame);
-            tickBox.OnSelected = (GUITickBox box) =>
+            isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Sonar", Alignment.TopLeft, GuiFrame);
+            isActiveTickBox.OnSelected = (GUITickBox box) =>
             {
                 IsActive = box.Selected;
                 item.NewComponentEvent(this, true, false);
@@ -330,6 +332,7 @@ namespace Barotrauma.Items.Components
             try
             {
                 IsActive = message.ReadBoolean();
+                isActiveTickBox.Selected = IsActive;
             }
             catch
             {
