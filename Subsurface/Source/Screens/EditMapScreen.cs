@@ -10,10 +10,12 @@ namespace Barotrauma
     {
         private Camera cam;
 
-        public GUIComponent GUIpanel;
+        public GUIComponent topPanel, leftPanel;
 
         private GUIComponent[] GUItabs;
         private int selectedTab;
+
+        private GUIFrame loadFrame;
 
         private GUITextBox nameBox;
 
@@ -70,26 +72,35 @@ namespace Barotrauma
 
             selectedTab = -1;
 
-            GUIpanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), GUI.Style);
-            GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            topPanel = new GUIFrame(new Rectangle(0, 0, 0, 31), GUI.Style);
+            topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+
+            var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", GUI.Style, topPanel);
+            button.OnClicked = CreateLoadScreen;
+
+           // var nameBlock =new GUITextBlock(new Rectangle(0, 20, 0, 20), "Submarine:", GUI.Style, leftPanel);
+            nameBox = new GUITextBox(new Rectangle(150, 0, 150, 20), GUI.Style, topPanel);
+            nameBox.OnEnterPressed = ChangeSubName;
+
+            button = new GUIButton(new Rectangle(310,0,70,20), "Save", GUI.Style, topPanel);
+            button.OnClicked = SaveSub;
+            
+            leftPanel = new GUIFrame(new Rectangle(0, 30, 150, GameMain.GraphicsHeight-30), GUI.Style);
+            leftPanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             //GUIListBox constructionList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUIpanel);
             //constructionList.OnSelected = MapEntityPrefab.SelectPrefab;
             //constructionList.CheckSelected = MapEntityPrefab.GetSelected;
 
 
 
-            var nameBlock =new GUITextBlock(new Rectangle(0, 20, 0, 20), "Submarine:", GUI.Style, GUIpanel);
-            //nameBox = new GUITextBox(new Rectangle(0, 40, 0, 20), GUI.Style, GUIpanel);
-            //nameBox.OnEnterPressed = ChangeSubName;
-            nameBlock.TextGetter = GetSubName;
 
             //GUIButton button = new GUIButton(new Rectangle(0,70,0,20), "Save", GUI.Style, GUIpanel);
             //button.OnClicked = SaveSub;
 
-            GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 100, 0, 20), "", GUI.Style, GUIpanel);
+            GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, leftPanel);
             itemCount.TextGetter = GetItemCount;
 
-            GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 120, 0, 20), "", GUI.Style, GUIpanel);
+            GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 50, 0, 20), "", GUI.Style, leftPanel);
             structureCount.TextGetter = GetStructureCount;
 
             //GUITextBlock physicsBodyCount = new GUITextBlock(new Rectangle(0, 120, 0, 20), "", GUI.Style, GUIpanel);
@@ -105,11 +116,11 @@ namespace Barotrauma
                        
 
             int width = 400, height = 400;
-            int y = 160;
+            int y = 90;
             int i = 0;
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-                var catButton = new GUIButton(new Rectangle(0, y, 0, 20), category.ToString(), Alignment.Left, GUI.Style, GUIpanel);
+                var catButton = new GUIButton(new Rectangle(0, y, 0, 20), category.ToString(), Alignment.Left, GUI.Style, leftPanel);
                 catButton.UserData = i;
                 catButton.OnClicked = SelectTab;
                 y+=25;
@@ -161,31 +172,32 @@ namespace Barotrauma
             }
 
             y+=50;
-            var button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, GUI.Style, GUIpanel);
+            button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, GUI.Style, leftPanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
             
             y+=50;
-            button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, GUIpanel);
+            button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, leftPanel);
+            button.ToolTip = "AI controlled crew members require waypoints to navigate around the sub.";
             button.OnClicked = GenerateWaypoints;
             
             y+=50;
 
-            new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", GUI.Style, GUIpanel);
+            new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", GUI.Style, leftPanel);
             
-            var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), "Waypoints", Alignment.TopLeft, GUIpanel);
+            var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), "Waypoints", Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 45, 20, 20), "Spawnpoints", Alignment.TopLeft, GUIpanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 45, 20, 20), "Spawnpoints", Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = !WayPoint.ShowSpawnPoints; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 70, 20, 20), "Links", Alignment.TopLeft, GUIpanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 70, 20, 20), "Links", Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Item.ShowLinks = !Item.ShowLinks; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 95, 20, 20), "Hulls", Alignment.TopLeft, GUIpanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 95, 20, 20), "Hulls", Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Hull.ShowHulls = !Hull.ShowHulls; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 120, 20, 20), "Gaps", Alignment.TopLeft, GUIpanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 120, 20, 20), "Gaps", Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Gap.ShowGaps = !Gap.ShowGaps; return true; };
             tickBox.Selected = true;
 
@@ -193,9 +205,9 @@ namespace Barotrauma
 
             if (y < GameMain.GraphicsHeight - 100)
             {
-                new GUITextBlock(new Rectangle(0, y, 0, 15), "Previously used:", GUI.Style, GUIpanel);
+                new GUITextBlock(new Rectangle(0, y, 0, 15), "Previously used:", GUI.Style, leftPanel);
 
-                previouslyUsedList = new GUIListBox(new Rectangle(0, y + 15, 0, Math.Min(GameMain.GraphicsHeight - y - 40, 150)), GUI.Style, GUIpanel);
+                previouslyUsedList = new GUIListBox(new Rectangle(0, y + 15, 0, Math.Min(GameMain.GraphicsHeight - y - 40, 150)), GUI.Style, leftPanel);
                 previouslyUsedList.OnSelected = SelectPrefab;
             }
 
@@ -218,12 +230,15 @@ namespace Barotrauma
             if (Submarine.Loaded != null)
             {
                 cam.Position = Submarine.Loaded.Position + Submarine.HiddenSubPosition;
-                //nameBox.Text = Submarine.Loaded.Name;
+                nameBox.Text = Submarine.Loaded.Name;
             }
             else
             {
                 cam.Position = Submarine.HiddenSubPosition;
+                nameBox.Text = "";
             }
+
+            nameBox.Deselect();
 
             cam.UpdateTransform();
         }
@@ -252,7 +267,7 @@ namespace Barotrauma
 
             for (int i = 0; i<dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
-                dummyCharacter.Inventory.SlotPositions[i].X += GUIpanel.Rect.Width+10;
+                dummyCharacter.Inventory.SlotPositions[i].X += leftPanel.Rect.Width+10;
             }
 
             Character.Controlled = dummyCharacter;
@@ -263,6 +278,8 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text))
             {
+                GUI.AddMessage("Name your submarine before saving it", Color.Red, 3.0f);
+
                 nameBox.Flash();
                 return false;
             }
@@ -274,17 +291,99 @@ namespace Barotrauma
                 return false;
             }
 
-            //if (Submarine.Loaded!=null)
-            //{
-            //    Submarine.Loaded.Name = nameBox.Text;
-            //}
-
             Submarine.SaveCurrent(nameBox.Text + ".sub");
 
-            GUI.AddMessage("Submarine saved to " + Submarine.Loaded.FilePath, Color.DarkGreen, 3.0f);
+            GUI.AddMessage("Submarine saved to " + Submarine.Loaded.FilePath, Color.Green, 3.0f);
             
-
             return false;
+        }
+
+        private bool CreateLoadScreen(GUIButton button, object obj)
+        {
+            Submarine.Preload();
+
+            int width = 300, height = 400;
+            loadFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style, null);
+            loadFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+
+            var subList = new GUIListBox(new Rectangle(0, 0, 0, height - 50), Color.White, GUI.Style, loadFrame);
+            subList.OnSelected = (GUIComponent selected, object userData) =>
+                {
+                    var deleteBtn = loadFrame.FindChild("delete") as GUIButton;
+                    if (deleteBtn != null) deleteBtn.Enabled = true;
+
+                    return true;
+                };
+
+            foreach (Submarine sub in Submarine.SavedSubmarines)
+            {
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(0, 0, 0, 25),
+                    sub.Name,
+                    GUI.Style,
+                    Alignment.Left, Alignment.Left, subList);
+                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
+                textBlock.UserData = sub;
+                textBlock.ToolTip = sub.FilePath;
+            }
+
+            var deleteButton = new GUIButton(new Rectangle(0, 0, 70, 20), "Delete", Alignment.BottomLeft, GUI.Style, loadFrame);
+            deleteButton.Enabled = false;
+            deleteButton.UserData = "delete";
+            deleteButton.OnClicked = (GUIButton btn, object userdata) =>
+            {
+                var subListBox = loadFrame.GetChild<GUIListBox>();
+
+                if (subList.Selected!=null)
+                {
+                    Submarine sub = subList.Selected.UserData as Submarine;
+                    try
+                    {
+                        System.IO.File.Delete(sub.FilePath);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Couldn't delete file ''"+sub.FilePath+"''!", e);
+                    }
+                }
+
+                deleteButton.Enabled = false;
+
+                CreateLoadScreen(null, null);
+
+                return true;
+            };
+
+            var loadButton = new GUIButton(new Rectangle(-90, 0, 80, 20), "Load", Alignment.Right | Alignment.Bottom, GUI.Style, loadFrame);
+            loadButton.OnClicked = LoadSub;
+
+            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Cancel", Alignment.Right | Alignment.Bottom, GUI.Style, loadFrame);
+            cancelButton.OnClicked = (GUIButton btn, object userdata) =>
+                {
+                    loadFrame = null;
+                    return true;
+                };
+
+            return true;
+        }
+
+        private bool LoadSub(GUIButton button, object obj)
+        {
+            GUIListBox subList = loadFrame.GetChild<GUIListBox>();
+
+            if (subList.Selected == null) return false;
+
+            Submarine selectedSub = subList.Selected.UserData as Submarine;
+
+            if (selectedSub == null) return false;
+
+            selectedSub.Load();
+
+            nameBox.Text = selectedSub.Name;
+
+            loadFrame = null;
+
+            return true;
         }
 
         private bool SelectTab(GUIButton button, object obj)
@@ -332,15 +431,23 @@ namespace Barotrauma
             return true;
         }
 
-        //private bool ChangeSubName(GUITextBox textBox, string text)
-        //{
-        //    if (Submarine.Loaded != null) Submarine.Loaded.Name = text;
-        //    textBox.Deselect();
+        private bool ChangeSubName(GUITextBox textBox, string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                textBox.Flash(Color.Red);
+                return false;
+            }
 
-        //    textBox.Text = text;
+            if (Submarine.Loaded != null) Submarine.Loaded.Name = text;
+            textBox.Deselect();
 
-        //    return true;
-        //}
+            textBox.Text = text;
+
+            textBox.Flash(Color.Green);
+
+            return true;
+        }
 
         private bool SelectPrefab(GUIComponent component, object obj)
         {
@@ -393,10 +500,15 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Update(double deltaTime)
         {
-            if (tutorial!=null) tutorial.Update((float)deltaTime);
+            if (tutorial != null) tutorial.Update((float)deltaTime);
 
             if (GUIComponent.MouseOn == null)
             {
+                if (nameBox.Selected && PlayerInput.LeftButtonClicked())
+                {
+                    ChangeSubName(nameBox, nameBox.Text);
+                }
+
                 cam.MoveCamera((float)deltaTime);
                 //cam.Zoom = MathHelper.Clamp(cam.Zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f)*cam.Zoom, 0.1f, 2.0f);
             }
@@ -435,8 +547,16 @@ namespace Barotrauma
             }
 
             GUIComponent.MouseOn = null;
-            GUIpanel.Update((float)deltaTime);
-            if (selectedTab > -1)
+
+            leftPanel.Update((float)deltaTime);
+            topPanel.Update((float)deltaTime);
+
+            if (loadFrame!=null)
+            {
+                loadFrame.Update((float)deltaTime);
+                if (PlayerInput.RightButtonClicked()) loadFrame = null;
+            }
+            else if (selectedTab > -1)
             {
                 GUItabs[selectedTab].Update((float)deltaTime);
                 if (PlayerInput.RightButtonClicked()) selectedTab = -1;
@@ -473,7 +593,8 @@ namespace Barotrauma
 
             spriteBatch.Begin();
 
-            GUIpanel.Draw(spriteBatch);
+            leftPanel.Draw(spriteBatch);
+            topPanel.Draw(spriteBatch);
 
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
@@ -512,7 +633,14 @@ namespace Barotrauma
             }
             else
             {
-                if (selectedTab > -1) GUItabs[selectedTab].Draw(spriteBatch);
+                if (loadFrame!=null)
+                {
+                    loadFrame.Draw(spriteBatch);
+                }
+                else if (selectedTab > -1)
+                {
+                    GUItabs[selectedTab].Draw(spriteBatch);
+                }
 
                 MapEntity.Edit(spriteBatch, cam);
             }

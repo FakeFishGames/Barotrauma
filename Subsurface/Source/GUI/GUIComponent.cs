@@ -203,7 +203,7 @@ namespace Barotrauma
             return false;
         }
 
-        public void Flash(Color? color = null)
+        public virtual void Flash(Color? color = null)
         {
             flashTimer = FlashDuration;
             flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;

@@ -1,18 +1,15 @@
 ﻿using FarseerPhysics;
-using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Lights;
 
 namespace Barotrauma
 {
@@ -27,7 +24,7 @@ namespace Barotrauma
 
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place
-        public static readonly Vector2 HiddenSubPosition = new Vector2(0.0f, 50000.0f);
+        public static readonly Vector2 HiddenSubPosition = new Vector2(0.0f, 50032.0f);
 
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
@@ -517,6 +514,8 @@ namespace Barotrauma
                // return;
             }
 
+            loaded.filePath = SavePath + System.IO.Path.DirectorySeparatorChar + fileName;
+
             return loaded.SaveAs(SavePath+System.IO.Path.DirectorySeparatorChar+fileName);
         }
 
@@ -524,7 +523,7 @@ namespace Barotrauma
         {
 
             //string[] mapFilePaths;
-            Unload();
+            //Unload();
             SavedSubmarines.Clear();
 
             if (!Directory.Exists(SavePath))
