@@ -25,10 +25,19 @@ namespace Barotrauma
             }
         }
 
+        private bool enabled;
+
         public bool Enabled
         {
-            get;
-            set;
+            get
+            {
+                return enabled;
+            }
+            set
+            {
+                enabled = value;
+                text.TextColor = enabled ? Color.White : Color.White * 0.5f;
+            }
         }
 
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
@@ -86,12 +95,14 @@ namespace Barotrauma
 
             DrawChildren(spriteBatch);
 
+            float alpha = enabled ? 1.0f : 0.8f;
+
             GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 1, box.Rect.Y + 1, box.Rect.Width - 2, box.Rect.Height - 2),
-                box.State == ComponentState.Hover ? new Color(50,50,50,255) : Color.Black, true);
+                (box.State == ComponentState.Hover ? new Color(50, 50, 50, 255) : Color.Black) * alpha, true);
 
             if (!selected) return;
-            GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 5, box.Rect.Y + 5, box.Rect.Width - 10, box.Rect.Height - 10), 
-                Color.Green * 0.8f, true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 5, box.Rect.Y + 5, box.Rect.Width - 10, box.Rect.Height - 10),
+                Color.Green * 0.8f * alpha, true);
             
         }
     }

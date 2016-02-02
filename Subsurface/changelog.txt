@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.0.4
+---------------------------------------------------------------------------------------------------------
+
+- submarine editor can be used without the console now
+- autopilot can be set to maintain the current position of the sub
+- monster syncing bugfixes
+- ladder syncing bugfixes
+- fixed server randomly stunning the players
+- fixed "submarine not found" errors which occurred in multiplayer if the filename didn't match the
+name of the submarine
+- fixed new structures not lining up with existing ones if switching to editor while a round is running
+- fixed a bug in shadow rendering which caused memory leaks 
+- molochs and endworms are immune to bleeding!
+
+---------------------------------------------------------------------------------------------------------
 v0.3.0.3
 ---------------------------------------------------------------------------------------------------------
 

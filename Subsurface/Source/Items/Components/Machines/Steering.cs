@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
 
-        private GUITickBox maintainPosTickBox;
+        private GUITickBox autopilotTickBox, maintainPosTickBox;
 
         private bool autoPilot;
 
@@ -43,8 +43,9 @@ namespace Barotrauma.Items.Components
 
                 autoPilot = value;
 
-                maintainPosTickBox.Enabled = autoPilot;
+                autopilotTickBox.Selected = value;
 
+                maintainPosTickBox.Enabled = autoPilot;
 
                 if (autoPilot)
                 {
