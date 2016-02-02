@@ -171,6 +171,11 @@ namespace Barotrauma
             if (keyboardDispatcher.Subscriber == this) keyboardDispatcher.Subscriber = null;
         }
 
+        public override void Flash(Color? color = null)
+        {
+            textBlock.Flash(color);
+        }
+
         //MouseState previousMouse;
         public override void Update(float deltaTime)
         {

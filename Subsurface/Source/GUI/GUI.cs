@@ -324,12 +324,12 @@ namespace Barotrauma
                     ScreenOverlayColor, true);
             }
 
-            spriteBatch.DrawString(Font,
-                "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
-                new Vector2(10, 10), Color.White);
-
             if (GameMain.DebugDraw)
             {
+                spriteBatch.DrawString(Font,
+                    "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
+                    new Vector2(10, 10), Color.White);
+
                 spriteBatch.DrawString(Font,
                     "Physics: " + GameMain.World.UpdateTime,
                     new Vector2(10, 30), Color.White);
