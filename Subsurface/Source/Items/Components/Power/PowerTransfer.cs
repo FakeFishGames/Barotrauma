@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
                 if (!c.IsPower) continue;
                 foreach (Connection recipient in c.Recipients)
                 {
-                    if (recipient == null || !recipient.IsPower) continue;
+                    if (recipient == null || !c.IsPower) continue;
 
                     Item it = recipient.Item;
                     if (it == null) continue;
@@ -124,10 +124,22 @@ namespace Barotrauma.Items.Components
                     if (powered == null) continue;
 
                     PowerTransfer powerTransfer = powered as PowerTransfer;
+                    PowerContainer powerContainer = powered as PowerContainer;
                     if (powerTransfer != null)
                     {
                         if (powerTransfer.updateTimer>0) continue;
                         powerTransfer.CheckJunctions(deltaTime);
+                    }
+                    else if (powerContainer != null)
+                    {
+                        if (recipient.Name.Contains("recharge"))
+                        {
+                            fullLoad += powerContainer.CurrPowerConsumption;
+                        }
+                        else
+                        {
+                            fullPower += powerContainer.CurrPowerOutput;
+                        }
                     }
                     else
                     {

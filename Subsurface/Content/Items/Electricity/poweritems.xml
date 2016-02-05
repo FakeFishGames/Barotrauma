@@ -55,6 +55,7 @@
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power"/>
+      <input name="recharge"/>      
     </ConnectionPanel>
 
     <ItemContainer capacity="3" hideitems="true">
