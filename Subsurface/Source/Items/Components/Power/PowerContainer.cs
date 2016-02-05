@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
 
         float charge;
 
+        float rechargeVoltage, outputVoltage;
+
         //how fast the battery can be recharged
         float maxRechargeSpeed;
 
@@ -20,6 +22,12 @@ namespace Barotrauma.Items.Components
         float rechargeSpeed;
 
         float maxOutput;
+
+        public float CurrPowerOutput
+        {
+            get;
+            private set;
+        }
 
         [Editable, HasDefaultValue(10.0f, true)]
         public float MaxOutPut
@@ -112,6 +120,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection c in item.Connections)
             {
+                if (c.Name.Contains("recharge")) continue;
                 foreach (Connection c2 in c.Recipients)
                 {
                     PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
@@ -122,32 +131,37 @@ namespace Barotrauma.Items.Components
             }
 
 
-            float gridRate = voltage;
+            //float gridRate = voltage;
 
-            if (gridRate>minVoltage)
-            {
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);            
-            }
+            //if (gridRate>minVoltage)
+            //{
+            //    ApplyStatusEffects(ActionType.OnActive, deltaTime, null);            
+            //}
 
             //recharge
-            if (gridRate >= chargeRate)
+            //if (gridRate >= chargeRate)
+            //{
+            if (charge >= capacity)
             {
-                if (charge >= capacity)
-                {
-                    currPowerConsumption = 0.0f;
-                    charge = capacity;
-                    return;
-                }
+                rechargeVoltage = 0.0f;
+                charge = capacity;
 
-                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
-                Charge += currPowerConsumption*voltage / 3600.0f;
+                CurrPowerConsumption = 0.0f;
             }
+            else
+            {
+                currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
+                Charge += currPowerConsumption * rechargeVoltage / 3600.0f;
+            }
+
+            //}
+
             //provide power to the grid
-            else if (gridLoad > 0.0f)
+            if (gridLoad > 0.0f)
             {
                 if (charge <= 0.0f)
                 {
-                    currPowerConsumption = 0.0f;
+                    CurrPowerOutput = 0.0f;
                     charge = 0.0f;
                     return;
                 }
@@ -157,10 +171,22 @@ namespace Barotrauma.Items.Components
                 //   -maxOutput * chargeRate,
                 //   0.1f);
 
-                currPowerConsumption = MathHelper.Lerp(
-                   currPowerConsumption,
-                   -Math.Min(maxOutput * chargeRate, gridLoad - (gridLoad * voltage)),
+                if (outputVoltage < 1.0f)
+                {
+                    CurrPowerOutput = MathHelper.Lerp(
+                   CurrPowerOutput, Math.Min(maxOutput * chargeRate, gridLoad), 0.05f);
+                }
+                else
+                {
+                    CurrPowerOutput = MathHelper.Lerp(CurrPowerOutput, 0.0f, 0.05f);
+                }
+
+                CurrPowerOutput = MathHelper.Lerp(
+                   CurrPowerOutput,
+                   Math.Min(maxOutput * chargeRate, gridLoad - (gridLoad * outputVoltage)),
                    0.05f);
+
+                
 
                 //powerConsumption = MathHelper.Lerp(
                 //    powerConsumption,
@@ -168,10 +194,11 @@ namespace Barotrauma.Items.Components
                 //    0.1f);
 
                 //powerConsumption = Math.Min(powerConsumption, 0.0f);
-                charge -= -currPowerConsumption / chargeRate / 3600.0f;
+                charge -= CurrPowerOutput / 3600.0f;
             }
 
-            voltage = 0.0f;
+            rechargeVoltage = 0.0f;
+            outputVoltage = 0.0f;
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -181,6 +208,22 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
+        {
+            if (!connection.IsPower) return;
+
+            if (connection.Name.Contains("recharge"))
+            {
+                rechargeVoltage = power;
+            }
+            else
+            {
+                outputVoltage = power;
+            }
+            //if (currPowerConsumption == 0.0f) voltage = 0.0f;
+            //if (connection.IsPower) voltage = power;    
+        }
+        
         public override void Draw(SpriteBatch spriteBatch, bool editing)
         {
             base.Draw(spriteBatch);
