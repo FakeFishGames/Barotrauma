@@ -452,17 +452,23 @@ namespace Barotrauma
                         DebugConsole.NewMessage("Deleted filelist", Color.Green);
                     }
 
-                    if (System.IO.File.Exists("Data/SavedSubs/TutorialSub.sub"))
+                    if (System.IO.File.Exists("Submarines/TutorialSub.sub"))
                     {
-                        System.IO.File.Delete("Data/SavedSubs/TutorialSub.sub");
+                        System.IO.File.Delete("Submarines/TutorialSub.sub");
 
-                        DebugConsole.NewMessage("Deleted TutorialSub from SavedSubs", Color.Green);
+                        DebugConsole.NewMessage("Deleted TutorialSub from the submarine folder", Color.Green);
+                    }
+
+                    if (System.IO.File.Exists("crashreport.txt"))
+                    {
+                        DebugConsole.NewMessage("Deleted crashreport.txt", Color.Green);
                     }
 
                     if (!System.IO.File.Exists("Content/Map/TutorialSub.sub"))
                     {
                         DebugConsole.ThrowError("TutorialSub.sub not found!");
                     }
+
                     break;
                 default:
                     NewMessage("Command not found", Color.Red);

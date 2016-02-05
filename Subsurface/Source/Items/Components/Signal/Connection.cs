@@ -10,6 +10,7 @@ namespace Barotrauma.Items.Components
 
     class Connection
     {
+        private static Texture2D panelTexture;
         private static Sprite connector;
         private static Sprite wireCorner, wireVertical, wireHorizontal;
 
@@ -61,10 +62,14 @@ namespace Barotrauma.Items.Components
 
             if (connector == null)
             {
-                connector = new Sprite("Content/Items/connector.png", new Vector2(0.5f, 0.5f));
-                wireCorner = new Sprite("Content/Items/wireCorner.png", new Vector2(0.5f, 0.1f));
-                wireVertical = new Sprite("Content/Items/wireVertical.png", new Vector2(0.5f, 0.5f));
-                wireHorizontal = new Sprite("Content/Items/wireHorizontal.png", new Vector2(0.5f, 0.5f));
+                panelTexture = Sprite.LoadTexture("Content/Items/connectionpanel.png");
+
+                connector = new Sprite(panelTexture, new Rectangle(448, 80, 64, 64), Vector2.Zero, 0.0f);
+                connector.Origin = new Vector2(32.0f, 32.0f);
+                wireCorner = new Sprite(panelTexture, new Rectangle(448, 0, 64, 64), Vector2.Zero, 0.0f);
+                wireCorner.Origin = new Vector2(32.0f, 32.0f);
+                wireVertical = new Sprite(panelTexture, new Rectangle(480, 64, 16, 16), new Vector2(-8.0f, -8.0f), 0.0f);
+                wireHorizontal = new Sprite(panelTexture, new Rectangle(496, 64, 16, 16), new Vector2(-8.0f, -8.0f), 0.0f);
             }
 
             this.item = item;
@@ -186,13 +191,15 @@ namespace Barotrauma.Items.Components
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
-            
+
             int width = 400, height = 200;
-            int x = GameMain.GraphicsWidth/2 - width/2, y = GameMain.GraphicsHeight - height;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = GameMain.GraphicsHeight - height;
 
             Rectangle panelRect = new Rectangle(x, y, width, height);
 
-            GUI.DrawRectangle(spriteBatch, panelRect, Color.Black, true);
+            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 512 - height, width, height), Color.White);
+
+            //GUI.DrawRectangle(spriteBatch, panelRect, Color.Black, true);
 
             bool mouseInRect = panelRect.Contains(PlayerInput.MousePosition);
 
@@ -209,8 +216,8 @@ namespace Barotrauma.Items.Components
                 if (wireComponent != null) equippedWire = wireComponent;
             }
 
-            Vector2 rightPos = new Vector2(x + width - 110, y + 20);
-            Vector2 leftPos = new Vector2(x + 110, y + 20);
+            Vector2 rightPos = new Vector2(x + width - 110, y + 50);
+            Vector2 leftPos = new Vector2(x + 110, y + 50);
             
             float wireInterval = 10.0f;
 
@@ -291,6 +298,9 @@ namespace Barotrauma.Items.Components
                     draggingConnected = null;
                 }
             }
+
+            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 0, width, height), Color.White);
+
         }
 
         private void Draw(SpriteBatch spriteBatch, Item item, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, bool wireEquipped)
@@ -299,7 +309,7 @@ namespace Barotrauma.Items.Components
             spriteBatch.DrawString(GUI.Font, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)position.X-10, (int)position.Y-10, 20, 20), Color.White);
-            
+            spriteBatch.Draw(panelTexture, position - new Vector2(16.0f, 16.0f), new Rectangle(64, 256, 32, 32), Color.White);
             
             for (int i = 0; i<MaxLinked; i++)
             {
@@ -346,8 +356,13 @@ namespace Barotrauma.Items.Components
                     //    Wires[index] = null;
                     //}
                 }                    
-            }           
+            }
 
+            if (Wires.Any(w => w != null && w.Item != draggingConnected))
+            {
+                spriteBatch.Draw(panelTexture, position - new Vector2(16.0f, 16.0f), new Rectangle(32, 256, 32, 32), Color.White);
+            }
+            
         }
 
         private static void DrawWire(SpriteBatch spriteBatch, Item wireItem, Item item, Vector2 end, Vector2 start, bool mouseIn, bool wireEquipped)
@@ -373,7 +388,9 @@ namespace Barotrauma.Items.Components
                     new Vector2(end.X - wireVertical.size.X / 2, end.Y + connLength),
                     new Vector2(wireVertical.size.X, (float)Math.Abs(end.Y - start.Y)), wireItem.Color * alpha);
                 textX = (int)end.X;
-                connector.Draw(spriteBatch, end, Color.White*alpha);                
+                connector.Draw(spriteBatch, end, Color.White*alpha);
+
+                //spriteBatch.Draw(panelTexture, end, new Rectangle(32, 256, 32, 32), Color.White);
             }
             else
             {
@@ -387,7 +404,7 @@ namespace Barotrauma.Items.Components
                 float dir = (end.X > start.X) ? -1.0f : 1.0f;
 
                 wireCorner.Draw(spriteBatch,
-                    new Vector2(start.X, end.Y-1), wireItem.Color * alpha, 0.0f, 1.0f,
+                    new Vector2(start.X, end.Y+24), wireItem.Color * alpha, 0.0f, 1.0f,
                     (end.X > start.X) ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
 
                 float wireStartX = start.X - wireCorner.size.X / 2 * dir;
@@ -400,7 +417,7 @@ namespace Barotrauma.Items.Components
                 rect = new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
                 if (!wireEquipped && rect.Contains(PlayerInput.MousePosition)) mouseOn = true;
 
-                connector.Draw(spriteBatch, end, Color.White*alpha, -MathHelper.PiOver2 * dir);
+                connector.Draw(spriteBatch, end, Color.White*alpha, -MathHelper.PiOver2*dir);
             }
 
             if (draggingConnected == null && !wireEquipped)

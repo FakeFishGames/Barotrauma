@@ -34,6 +34,7 @@
   <Character file="Content\Characters\TigerThresher\tigerthresher.xml" />
   <Character file="Content\Characters\Watcher\watcher.xml" />
   <Structure file="Content\Map\StructurePrefabs.xml" />
+  <RandomEvents file="Content\randomevents.xml" />
   <Jobs file="Content\Jobs.xml" />
   <Executable file="Barotrauma.exe" />
 </contentpackage>

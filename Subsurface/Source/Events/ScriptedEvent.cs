@@ -8,8 +8,6 @@ namespace Barotrauma
 {
     class ScriptedEvent
     {
-        private static string configFile = "Content/randomevents.xml";
-
         //const int MaxPreviousEvents = 6;
         //const float PreviouslyUsedWeight = 10.0f;
 
@@ -94,6 +92,16 @@ namespace Barotrauma
 
         public static ScriptedEvent LoadRandom(Random rand)
         {
+            var configFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.RandomEvents);
+
+            if (!configFiles.Any())
+            {
+                DebugConsole.ThrowError("No config files for random events found in the selected content package");
+                return null;
+            }
+
+            string configFile = configFiles[0];
+
             XDocument doc = ToolBox.TryLoadXml(configFile);
             if (doc == null) return null;
             

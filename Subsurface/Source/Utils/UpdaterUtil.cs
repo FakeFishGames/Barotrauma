@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     public static class UpdaterUtil
     {
-        public const string Version = "1.0";
+        public const string Version = "1.1";
 
         public static void SaveFileList(string filePath)
         {
@@ -174,7 +174,7 @@ namespace Barotrauma
                 string relativePath = GetRelativePath(file, currentDir);
 
                 string dirRoot = relativePath.Split(Path.DirectorySeparatorChar).First();
-                if (dirRoot != "Content" && dirRoot != "") continue;
+                if (dirRoot != "Content") continue;
 
                 if (filesToKeep.Contains(relativePath)) continue;
 

@@ -20,7 +20,7 @@ namespace Barotrauma
 
     class Submarine : Entity
     {
-        public static string SavePath = "Data" + System.IO.Path.DirectorySeparatorChar + "SavedSubs";
+        public static string SavePath = "Submarines";
 
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place

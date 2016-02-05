@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.0.5
+---------------------------------------------------------------------------------------------------------
+
+- fixed autopilot crashing the game
+- fixed reactor not catching fire when going above the configured ''fire temperature''
+- fixed a duplicate "Play yourself" checkbox appearing in the lobby screen after rounds
+
+---------------------------------------------------------------------------------------------------------
 v0.3.0.4
 ---------------------------------------------------------------------------------------------------------
 
@@ -11,6 +19,8 @@ v0.3.0.4
 name of the submarine
 - fixed new structures not lining up with existing ones if switching to editor while a round is running
 - fixed a bug in shadow rendering which caused memory leaks 
+- the autoupdater only checks the Content folder when deleting files that don't belong to the latest version
+(i.e. the autoupdater won't delete your mods as long as they aren't saved in the Content folder)
 - molochs and endworms are immune to bleeding!
 
 ---------------------------------------------------------------------------------------------------------
