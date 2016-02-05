@@ -242,7 +242,7 @@ namespace Barotrauma.Items.Components
                     if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                 }
 
-                new FireSource(item.Position);
+                new FireSource(item.WorldPosition);
             }
 
             if (temperature > meltDownTemp)

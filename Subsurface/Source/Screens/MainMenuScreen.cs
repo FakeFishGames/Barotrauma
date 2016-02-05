@@ -38,7 +38,7 @@ namespace Barotrauma
             //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
 
 
-            int y = 170;
+            int y = (int)(GameMain.GraphicsHeight * 0.3f);
 
             Rectangle panelRect = new Rectangle(
                 290, y,
@@ -80,6 +80,8 @@ namespace Barotrauma
             button = new GUIButton(new Rectangle(0, 0, 150, 30), "Quit", Alignment.BottomRight, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             button.OnClicked = QuitClicked;
+
+            panelRect.Y += 10;
 
             //----------------------------------------------------------------------
 

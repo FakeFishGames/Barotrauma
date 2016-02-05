@@ -10,6 +10,7 @@
 
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.5"/>
 
+    <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar and a steel bar -->
     <Deconstruct time="10">
       <Item name="Polycarbonate Bar"/>
       <Item name="Steel Bar"/>
@@ -33,7 +34,8 @@
 
       <!-- welding a door, it will get stuck after a while -->
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="20.0" Condition="3.0"/>
-      
+
+      <!-- the tool can fix structures, i.e. walls and windows -->
       <Fixable name="structure"/>
 
       <!-- construction skill 20 required to use the item -->

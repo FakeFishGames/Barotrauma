@@ -99,8 +99,8 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
-            var tickBox = new GUITickBox(new Rectangle(0,25,20,20), "Autopilot", Alignment.TopLeft, GuiFrame);
-            tickBox.OnSelected = (GUITickBox box) =>
+            autopilotTickBox = new GUITickBox(new Rectangle(0,25,20,20), "Autopilot", Alignment.TopLeft, GuiFrame);
+            autopilotTickBox.OnSelected = (GUITickBox box) =>
             {
                 AutoPilot = box.Selected;
                 item.NewComponentEvent(this, true, true);

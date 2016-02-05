@@ -464,8 +464,9 @@ namespace Barotrauma
                     GameMain.Server.CharacterInfo = null;
                     GameMain.Server.Character = null;
 
-                    var playYourself = new GUITickBox(new Rectangle(0, -20, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.OnSelected = TogglePlayYourself;
+                    playYourself.UserData = "playyourself";
                 }
             }
             return false;
