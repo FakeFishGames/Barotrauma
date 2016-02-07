@@ -183,7 +183,7 @@ namespace Barotrauma.Items.Components
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)targetVelPos.X -10, (int)targetVelPos.Y - 10, 20, 20), Color.Red);
 
-                if (PlayerInput.LeftButtonDown())
+                if (PlayerInput.LeftButtonHeld())
                 {
                     TargetVelocity = PlayerInput.MousePosition - new Vector2(velRect.Center.X, velRect.Center.Y);
                     targetVelocity.Y = -targetVelocity.Y;

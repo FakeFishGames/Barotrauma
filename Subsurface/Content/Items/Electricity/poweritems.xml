@@ -54,8 +54,8 @@
         <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
-      <input name="power"/>
-      <input name="recharge"/>      
+      <input name="power_out"/>
+      <input name="power_in"/>      
     </ConnectionPanel>
 
     <ItemContainer capacity="3" hideitems="true">
@@ -68,11 +68,11 @@
     category="Electrical"
     linkable="true"
     pickdistance="150"
-    description="Can accept and deliver charge much faster than batteries.">
+    description="Can take in and deliver power much faster than batteries.">
 
     <Sprite texture ="supercapacitor.png" depth="0.8"/>
 
-    <PowerContainer capacity="2000.0" maxrechargespeed="2000.0" maxoutput="2000.0" canbeselected = "true">
+    <PowerContainer capacity="20.0" maxrechargespeed="20.0" maxoutput="2000000.0" canbeselected = "true">
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" color="0.0,0.0,0.0,0.8"/>
     </PowerContainer>
 
@@ -81,7 +81,8 @@
         <Explosion range="100.0" damage="30" stun="20" force="5.0" shockwave="false" sparks="true"/>
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
-      <input name="power"/>
+      <input name="power_out"/>
+      <input name="power_in"/>
     </ConnectionPanel>
   </Item>
 </Items>

@@ -129,7 +129,7 @@ namespace Barotrauma
             base.Update(deltaTime);
 
             if (draggingBar != this) return;
-            if (!PlayerInput.LeftButtonDown()) draggingBar = null;
+            if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
 
             MoveButton();            
         }

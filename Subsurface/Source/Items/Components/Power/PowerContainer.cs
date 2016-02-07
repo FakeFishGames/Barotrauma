@@ -42,7 +42,7 @@ namespace Barotrauma.Items.Components
             get { return charge; }
             set 
             {
-                if (float.IsNaN(value)) return;
+                if (!MathUtils.IsValid(value)) return;
                 charge = MathHelper.Clamp(value, 0.0f, capacity); 
             }
         }
@@ -60,7 +60,7 @@ namespace Barotrauma.Items.Components
             get { return rechargeSpeed; }
             set
             {
-                if (float.IsNaN(value)) return;                
+                if (!MathUtils.IsValid(value)) return;              
                 rechargeSpeed = MathHelper.Clamp(value, 0.0f, maxRechargeSpeed);
                 rechargeSpeed = MathUtils.Round(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.1f, 1.0f));
             }
@@ -120,7 +120,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection c in item.Connections)
             {
-                if (c.Name.Contains("recharge")) continue;
+                if (c.Name == "power_in") continue;
                 foreach (Connection c2 in c.Recipients)
                 {
                     PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
@@ -194,7 +194,7 @@ namespace Barotrauma.Items.Components
                 //    0.1f);
 
                 //powerConsumption = Math.Min(powerConsumption, 0.0f);
-                charge -= CurrPowerOutput / 3600.0f;
+                Charge -= CurrPowerOutput / 3600.0f;
             }
 
             rechargeVoltage = 0.0f;
@@ -212,7 +212,7 @@ namespace Barotrauma.Items.Components
         {
             if (!connection.IsPower) return;
 
-            if (connection.Name.Contains("recharge"))
+            if (connection.Name == "power_in")
             {
                 rechargeVoltage = power;
             }
@@ -247,11 +247,10 @@ namespace Barotrauma.Items.Components
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
             spriteBatch.DrawString(GUI.Font,
-                "Charge: " + (int)charge + "/" + (int)capacity + " (" + (int)((charge / capacity) * 100.0f) + " %)",
+                "Charge: " + (int)charge + "/" + (int)capacity + "kWm (" + (int)((charge / capacity) * 100.0f) + " %)",
                 new Vector2(x + 30, y + 30), Color.White);
 
-            spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed)*100.0f)+" %", new Vector2(x + 30, y + 95), Color.White);
-
+            spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)

@@ -249,8 +249,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    c.Draw(spriteBatch, panel.Item, leftPos, 
-                        new Vector2(leftPos.X - 100, leftPos.Y),
+                    c.Draw(spriteBatch, panel.Item, leftPos,
+                        new Vector2(leftPos.X - GUI.SmallFont.MeasureString(c.Name).X - 20, leftPos.Y),
                         new Vector2(leftWireX, y + height), 
                         mouseInRect, equippedWire != null);
 
@@ -291,7 +291,7 @@ namespace Barotrauma.Items.Components
 
             if (draggingConnected != null)
             {
-                if (!PlayerInput.LeftButtonDown())
+                if (!PlayerInput.LeftButtonHeld())
                 {
                     panel.Item.NewComponentEvent(panel, true, true);
                     //draggingConnected.Drop(Character);
@@ -306,7 +306,7 @@ namespace Barotrauma.Items.Components
         private void Draw(SpriteBatch spriteBatch, Item item, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, bool wireEquipped)
         {
 
-            spriteBatch.DrawString(GUI.Font, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)position.X-10, (int)position.Y-10, 20, 20), Color.White);
             spriteBatch.Draw(panelTexture, position - new Vector2(16.0f, 16.0f), new Rectangle(64, 256, 32, 32), Color.White);
@@ -323,7 +323,7 @@ namespace Barotrauma.Items.Components
             
             //dragging a wire and released the mouse -> see if the wire can be connected to this connection
             if (draggingConnected != null
-                && !PlayerInput.LeftButtonDown())
+                && !PlayerInput.LeftButtonHeld())
             {
                 //close enough to the connector -> make a new connection
                 if (Vector2.Distance(position, PlayerInput.MousePosition) < 10.0f)
@@ -404,7 +404,7 @@ namespace Barotrauma.Items.Components
                 float dir = (end.X > start.X) ? -1.0f : 1.0f;
 
                 wireCorner.Draw(spriteBatch,
-                    new Vector2(start.X, end.Y+24), wireItem.Color * alpha, 0.0f, 1.0f,
+                    new Vector2(start.X, end.Y+25), wireItem.Color * alpha, 0.0f, 1.0f,
                     (end.X > start.X) ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
 
                 float wireStartX = start.X - wireCorner.size.X / 2 * dir;
@@ -426,7 +426,7 @@ namespace Barotrauma.Items.Components
                 {
                     item.IsHighlighted = true;
                     //start dragging the wire
-                    if (PlayerInput.LeftButtonDown()) draggingConnected = wireItem;                    
+                    if (PlayerInput.LeftButtonHeld()) draggingConnected = wireItem;                    
                 }
             }
                             

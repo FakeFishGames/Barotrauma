@@ -46,11 +46,11 @@ namespace Barotrauma
             }
             else if (mouseButton == 0)
             {
-                return PlayerInput.LeftButtonDown();
+                return PlayerInput.LeftButtonHeld();
             }
             else if (mouseButton == 1)
             {
-                return PlayerInput.RightButtonDown();
+                return PlayerInput.RightButtonHeld();
             }
 
             return false;
@@ -252,15 +252,23 @@ namespace Barotrauma
 			
 		}
 
-		public static bool LeftButtonDown()
+		public static bool LeftButtonHeld()
 		{
             return GameMain.WindowActive && mouseState.LeftButton == ButtonState.Pressed;
 		}
+
+        public static bool LeftButtonDown()
+        {
+            return GameMain.WindowActive && 
+                oldMouseState.LeftButton == ButtonState.Released &&
+                mouseState.LeftButton == ButtonState.Pressed;
+        }
 
 		public static bool LeftButtonReleased()
 		{
             return GameMain.WindowActive && mouseState.LeftButton == ButtonState.Released;
 		}
+        
 
 		public static bool LeftButtonClicked()
 		{
@@ -269,7 +277,7 @@ namespace Barotrauma
 				&& mouseState.LeftButton == ButtonState.Released);
 		}
 
-        public static bool RightButtonDown()
+        public static bool RightButtonHeld()
         {
             return GameMain.WindowActive && mouseState.RightButton == ButtonState.Pressed;
         }

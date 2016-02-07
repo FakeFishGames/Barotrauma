@@ -114,7 +114,7 @@ namespace Barotrauma
 
                 if (placePosition == Vector2.Zero)
                 {
-                    if (PlayerInput.LeftButtonDown()) placePosition = position;
+                    if (PlayerInput.LeftButtonHeld()) placePosition = position;
                 }
                 else
                 {

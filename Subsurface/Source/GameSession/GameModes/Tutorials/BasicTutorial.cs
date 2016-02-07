@@ -63,6 +63,20 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
+            infoBox = CreateInfoFrame("The reactor requires fuel rods to generate power. You can grab one from the steel cabinet by walking next to it and pressing E.");
+
+            while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.Name != "Steel Cabinet")
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            infoBox = CreateInfoFrame("Pick up one of the fuel rods either by double-clicking or dragging and dropping it into your inventory.");
+
+            while (!HasItem("Fuel Rod"))
+            {
+                yield return CoroutineStatus.Running;
+            }
+
             infoBox = CreateInfoFrame("Select the reactor by walking next to it and pressing E.");
 
             while (Character.Controlled.SelectedConstruction != reactor.Item)
@@ -71,7 +85,14 @@ namespace Barotrauma.Tutorials
             }
             yield return new WaitForSeconds(0.5f);
 
-            infoBox = CreateInfoFrame("This is the control panel of the reactor. Try turning it on by increasing the fission rate.");
+            infoBox = CreateInfoFrame("Load the fuel rod into the reactor by dropping it into any of the 5 slots.");
+
+            while (reactor.AvailableFuel <= 0.0f)
+            {
+                yield return CoroutineStatus.Running;
+            }
+            
+            infoBox = CreateInfoFrame("The reactor is now fueled up. Try turning it on by increasing the fission rate.");
 
             while (reactor.FissionRate <= 0.0f)
             {

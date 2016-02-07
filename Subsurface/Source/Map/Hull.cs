@@ -101,7 +101,11 @@ namespace Barotrauma
         public float Oxygen
         {
             get { return oxygen; }
-            set { oxygen = MathHelper.Clamp(value, 0.0f, FullVolume); }
+            set 
+            {
+                if (!MathUtils.IsValid(value)) return;
+                oxygen = MathHelper.Clamp(value, 0.0f, FullVolume); 
+            }
         }
 
         public float OxygenPercentage
@@ -283,12 +287,12 @@ namespace Barotrauma
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
                 if (Submarine.RectContains(WorldRect, position))
                 {
-                    if (PlayerInput.LeftButtonDown())
+                    if (PlayerInput.LeftButtonHeld())
                     {
                         //waveY[GetWaveIndex(position.X - rect.X - Submarine.Position.X) / WaveWidth] = 100.0f;
                         Volume = Volume + 1500.0f;
                     }
-                    else if (PlayerInput.RightButtonDown())
+                    else if (PlayerInput.RightButtonHeld())
                     {
                         Volume = Volume - 1500.0f;
                     }

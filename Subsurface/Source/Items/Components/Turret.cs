@@ -159,10 +159,10 @@ namespace Barotrauma.Items.Components
             float availablePower = 0.0f;
             foreach (PowerContainer battery in batteries)
             {
-                float batteryPower = Math.Min(battery.Charge, battery.MaxOutPut);
-                float takePower = Math.Min(currPowerConsumption - availablePower, batteryPower);
+                float batteryPower = Math.Min(battery.Charge*3600.0f, battery.MaxOutPut);
+                float takePower = Math.Min(powerConsumption - availablePower, batteryPower);
 
-                battery.Charge -= takePower;
+                battery.Charge -= takePower/3600.0f;
             }
 
             reload = reloadTime;            
@@ -284,7 +284,7 @@ namespace Barotrauma.Items.Components
             float availablePower = 0.0f;
             foreach (PowerContainer battery in batteries)
             {
-                float batteryPower = Math.Min(battery.Charge, battery.MaxOutPut);
+                float batteryPower = Math.Min(battery.Charge*3600.0f, battery.MaxOutPut);
 
                 availablePower += batteryPower;
             }
