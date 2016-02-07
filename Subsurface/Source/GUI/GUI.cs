@@ -300,7 +300,7 @@ namespace Barotrauma
 
             if (rect.Contains(PlayerInput.MousePosition))
             {
-                clicked = PlayerInput.LeftButtonDown();
+                clicked = PlayerInput.LeftButtonHeld();
 
                 color = clicked ? new Color(100, 100, 100) : new Color(250, 250, 250);
 

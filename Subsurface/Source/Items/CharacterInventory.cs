@@ -326,7 +326,7 @@ namespace Barotrauma
 
             if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition))
             {
-                if (PlayerInput.LeftButtonDown())
+                if (PlayerInput.LeftButtonHeld())
                 {
                     slotRect.X = (int)PlayerInput.MousePosition.X - slotRect.Width / 2;
                     slotRect.Y = (int)PlayerInput.MousePosition.Y - slotRect.Height / 2;

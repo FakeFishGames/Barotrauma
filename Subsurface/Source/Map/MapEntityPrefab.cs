@@ -134,7 +134,7 @@ namespace Barotrauma
 
                 GUI.DrawLine(spriteBatch, new Vector2(position.X, -(position.Y - GameMain.GraphicsHeight)), new Vector2(position.X, -(position.Y + GameMain.GraphicsHeight)), Color.White);
 
-                if (PlayerInput.LeftButtonDown()) placePosition = position;
+                if (PlayerInput.LeftButtonHeld()) placePosition = position;
             }
             else
             {
@@ -164,7 +164,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, newRect, Color.DarkBlue);
             }
 
-            if (PlayerInput.RightButtonDown())
+            if (PlayerInput.RightButtonHeld())
             {
                 placePosition = Vector2.Zero;
                 selected = null;

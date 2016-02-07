@@ -353,7 +353,7 @@ namespace Barotrauma
             else
             {
 
-                if (PlayerInput.LeftButtonDown() &&
+                if (PlayerInput.LeftButtonHeld() &&
                     PlayerInput.KeyUp(Keys.Space))
                 {
                     //if clicking a selected entity, start moving it

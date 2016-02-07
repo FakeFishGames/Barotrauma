@@ -194,7 +194,7 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
                     GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
 
-                    if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos)<5.0f && PlayerInput.LeftButtonDown())
+                    if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos)<5.0f && PlayerInput.LeftButtonHeld())
                     {
                         limb.sprite.Origin += PlayerInput.MouseSpeed;
                     }
@@ -284,7 +284,7 @@ namespace Barotrauma
                 if (Vector2.Distance(PlayerInput.MousePosition, jointPos) < 6.0f)
                 {
                     GUI.DrawRectangle(spriteBatch, jointPos - new Vector2(3.0f, 3.0f), new Vector2(11.0f, 11.0f), Color.Red, false);
-                    if (PlayerInput.LeftButtonDown())
+                    if (PlayerInput.LeftButtonHeld())
                     {
                         Vector2 speed = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
                         speed.Y = -speed.Y;

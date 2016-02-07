@@ -442,9 +442,9 @@ namespace Barotrauma.Items.Components
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.Font, "Temperature: " + (int)temperature + " C", 
+            spriteBatch.DrawString(GUI.Font, "Output: " + (int)temperature + " kW", 
                 new Vector2(x + 450, y + 30), Color.Red);
-            spriteBatch.DrawString(GUI.Font, "Grid load: " + (int)load + " C",
+            spriteBatch.DrawString(GUI.Font, "Grid load: " + (int)load + " kW",
                 new Vector2(x + 620, y + 30), Color.Yellow);
 
             DrawGraph(tempGraph, spriteBatch,
