@@ -428,6 +428,7 @@ namespace Barotrauma
                 if (limb.pullJoint != null)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorA);
+                    if (currentHull != null) pos += currentHull.Submarine.Position;
                     pos.Y = -pos.Y;
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
 
@@ -455,6 +456,7 @@ namespace Barotrauma
                 if (limb.body.TargetPosition != Vector2.Zero)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.body.TargetPosition);
+                    if (currentHull != null) pos += currentHull.Submarine.Position;
                     pos.Y = -pos.Y;
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
@@ -764,6 +766,19 @@ namespace Barotrauma
             //if the limb is closer than alloweddistance, just ignore the difference
             float allowedDistance = NetConfig.AllowedRagdollDistance * ((inWater) ? 2.0f : 1.0f);
 
+            if (currentHull == null)
+            {
+                var overLappingHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(refLimb.body.TargetPosition), null, true);
+
+                if (overLappingHull != null)
+                {
+                    Submarine.PickBody(refLimb.SimPosition, refLimb.body.TargetPosition, null, Physics.CollisionWall);
+
+                    refLimb.body.TargetPosition = refLimb.SimPosition + (refLimb.body.TargetPosition - refLimb.SimPosition) * Submarine.LastPickedFraction * 0.9f;
+                }
+            }
+
+
             float dist = Vector2.Distance(refLimb.body.SimPosition, refLimb.body.TargetPosition);
             
             //if the limb is further away than resetdistance, all limbs are immediately snapped to their targetpositions
@@ -786,8 +801,6 @@ namespace Barotrauma
             {
                 if (inWater)
                 {
-
-
                     if (character is AICharacter)
                     {
                         correctionMovement =
@@ -802,8 +815,6 @@ namespace Barotrauma
                             limb.body.SetTransform(limb.SimPosition + Vector2.Normalize(diff) * 0.1f, limb.Rotation);
                         }
                     }
-
-
                 }
                 else
                 {

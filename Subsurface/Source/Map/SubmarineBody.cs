@@ -349,13 +349,13 @@ namespace Barotrauma
                 {
                     bool collision = HandleLimbCollision(contact, limb);
 
-                    if (collision)
+                    if (collision && limb.Mass>100.0f)
                     {
                         Vector2 normal = Vector2.Normalize(body.Position - limb.SimPosition);
 
                         //normal *= Math.Min(limb.Mass,100)/100.0f;
 
-                        float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal),5.0f);
+                        float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 5.0f);
 
                         ApplyImpact(impact * Math.Min(limb.Mass/200.0f, 1), -normal, contact);
 

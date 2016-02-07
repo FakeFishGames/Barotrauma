@@ -221,7 +221,7 @@ namespace Barotrauma.Items.Components
             
             float wireInterval = 10.0f;
 
-            float rightWireX = x+width / 2 + wireInterval;
+            float rightWireX = x + width / 2 + wireInterval;
             float leftWireX = x + width / 2 - wireInterval;
             foreach (Connection c in panel.Connections)
             {
@@ -291,6 +291,8 @@ namespace Barotrauma.Items.Components
 
             if (draggingConnected != null)
             {
+                DrawWire(spriteBatch, draggingConnected, draggingConnected, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height), mouseInRect, false);
+
                 if (!PlayerInput.LeftButtonHeld())
                 {
                     panel.Item.NewComponentEvent(panel, true, true);
@@ -313,7 +315,7 @@ namespace Barotrauma.Items.Components
             
             for (int i = 0; i<MaxLinked; i++)
             {
-                if (Wires[i]==null) continue;
+                if (Wires[i]==null || draggingConnected == Wires[i].Item) continue;
 
                 Connection recipient = Wires[i].OtherConnection(this);
 
@@ -358,9 +360,11 @@ namespace Barotrauma.Items.Components
                 }                    
             }
 
+            int screwIndex = (position.Y % 60 < 30) ? 0 : 1;
+
             if (Wires.Any(w => w != null && w.Item != draggingConnected))
             {
-                spriteBatch.Draw(panelTexture, position - new Vector2(16.0f, 16.0f), new Rectangle(32, 256, 32, 32), Color.White);
+                spriteBatch.Draw(panelTexture, position - new Vector2(16.0f, 16.0f), new Rectangle(screwIndex*32, 256, 32, 32), Color.White);
             }
             
         }
