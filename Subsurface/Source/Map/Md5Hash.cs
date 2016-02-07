@@ -50,6 +50,8 @@ namespace Barotrauma
 
         public Md5Hash(XDocument doc)
         {
+            if (doc == null) return;
+
             string docString = Regex.Replace(doc.ToString(), @"\s+", "");
 
             byte[] inputBytes = Encoding.ASCII.GetBytes(docString);

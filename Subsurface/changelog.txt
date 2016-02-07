@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.1.0
+---------------------------------------------------------------------------------------------------------
+
+- batteries have separate power_in and power_out connections, which allows recharging and powering devices
+simultaneously and using separate recharge circuits
+- using supercapacitors as a substitute for batteries now longer works: they have a very low energy storage
+capacity and are only suitable for providing short high-energy power surges
+- improved connection panel graphics
+- fixed a bug that caused the submarine to swoop to a random direction when a character enters it
+- fixed crashed caused by EntityGrid.GetEntites()
+
+---------------------------------------------------------------------------------------------------------
 v0.3.0.5
 ---------------------------------------------------------------------------------------------------------
 

@@ -68,7 +68,7 @@
     category="Electrical"
     linkable="true"
     pickdistance="150"
-    description="Can take in and deliver power much faster than batteries.">
+    description="Can deliver charge much faster than batteries.">
 
     <Sprite texture ="supercapacitor.png" depth="0.8"/>
 

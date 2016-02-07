@@ -162,7 +162,7 @@ namespace Barotrauma.Tutorials
             {
                 yield return CoroutineStatus.Running;
             }
-            yield return new WaitForSeconds(5.0f);
+            yield return new WaitForSeconds(1.0f);
 
             infoBox = CreateInfoFrame("You need a screwdriver to check the wiring of the terminal."
             + " Equip a screwdriver by pulling it to either of the slots with a hand symbol, and then use it on the terminal by left clicking.");
@@ -275,7 +275,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.Loaded.WorldPosition.Y > 33000.0f)
+            while (Submarine.Loaded.WorldPosition.Y > 31000.0f)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -293,7 +293,7 @@ namespace Barotrauma.Tutorials
             {
                 if (s.CastShadow || !s.HasBody) continue;
 
-                if (s.Rect.Right > steering.Item.Position.X) windows.Add(s);
+                if (s.Rect.Right > steering.Item.CurrentHull.Rect.Right) windows.Add(s);
             }
 
             bool broken = false;
@@ -407,8 +407,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(1.0f);
             }
 
-            infoBox = CreateInfoFrame("The capacitors consume large amounts of power when they're being charged at a high rate, so " +
-                "be careful not to overload the electrical grid or the reactor. They also take some time to recharge, so now is a good " +
+            infoBox = CreateInfoFrame("The capacitors take some time to recharge, so now is a good " +
                 "time to head to the room below and load some shells for the railgun.");
 
 
@@ -489,7 +488,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(1.0f);
             } while (broken);
 
-            infoBox = CreateInfoFrame("Great! However, there's still quite a bit of water inside the sub. It should be pumped out "
+            infoBox = CreateInfoFrame("The hull is fixed now, but there's still quite a bit of water inside the sub. It should be pumped out "
                 + "using the bilge pump in the room at the bottom of the submarine.");
 
             Pump pump = Item.ItemList.Find(i => i.HasTag("tutorialpump")).GetComponent<Pump>();
