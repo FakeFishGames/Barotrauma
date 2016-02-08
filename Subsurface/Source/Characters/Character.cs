@@ -600,7 +600,7 @@ namespace Barotrauma
 
             AnimController.TargetMovement = targetMovement;
 
-            AnimController.IgnorePlatforms = targetMovement.Y < 0.0f;
+            AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < 0.0f;
 
             if (AnimController.onGround &&
                 !AnimController.InWater &&

@@ -460,7 +460,7 @@ namespace Barotrauma
                     pos.Y = -pos.Y;
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
-                    GUI.DrawLine(spriteBatch, pos, new Vector2(limb.Position.X, -limb.Position.Y), limb == RefLimb ? Color.Orange : Color.Cyan);
+                    GUI.DrawLine(spriteBatch, pos, new Vector2(limb.WorldPosition.X, -limb.WorldPosition.Y), limb == RefLimb ? Color.Orange : Color.Cyan);
                 }
             }
 
@@ -794,7 +794,7 @@ namespace Barotrauma
                     limb.body.TargetPosition = Vector2.Zero;
                 }
 
-                correctionMovement = Vector2.Zero;
+                correctionMovement = targetMovement;
                 return;
             }
             else
@@ -818,10 +818,19 @@ namespace Barotrauma
                 }
                 else
                 {
+                    //clamp the magnitude of the correction movement between 0.5f - 5.0f
                     Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.5f, 5.0f);
-                    newCorrectionMovement.X = Math.Max(newCorrectionMovement.X, 0.5f) * Math.Sign(newCorrectionMovement.X);
 
-                    correctionMovement = Vector2.Lerp(targetMovement, newCorrectionMovement, 0.2f);
+                    //heading in the right direction -> use the ''normal'' movement if it's faster than correctionMovement
+                    //i.e. the character is close to the targetposition but the character is still running
+                    if (Math.Sign(targetMovement.X)==Math.Sign(newCorrectionMovement.X))
+                    {
+                        newCorrectionMovement.X = Math.Max(Math.Abs(targetMovement.X), Math.Abs(newCorrectionMovement.X)) * Math.Sign(targetMovement.X);
+                    }
+
+                    //newCorrectionMovement.X = Math.Max(newCorrectionMovement.X, 0.5f) * Math.Sign(newCorrectionMovement.X);
+
+                    correctionMovement = Vector2.Lerp(correctionMovement, newCorrectionMovement, 0.5f);
                     
                     if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
                 }

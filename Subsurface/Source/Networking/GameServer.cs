@@ -817,7 +817,7 @@ namespace Barotrauma.Networking
 
             gameStarted = true;
 
-            GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position;
+            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             GameMain.GameScreen.Select();
 
