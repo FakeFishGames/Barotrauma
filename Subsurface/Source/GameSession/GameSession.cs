@@ -173,6 +173,11 @@ namespace Barotrauma
             CrewManager.KillCharacter(character);
         }
 
+        public void ReviveCharacter(Character character)
+        {
+            CrewManager.ReviveCharacter(character);
+        }
+
         public bool LoadPrevious(GUIButton button, object obj)
         {
             SaveUtil.LoadGame(saveFile);

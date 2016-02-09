@@ -266,7 +266,15 @@ namespace Barotrauma
 
                 if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition))
                 {
-                    toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;
+                    if (GameMain.DebugDraw)
+                    {
+                        toolTip = Items[i].ToString();
+                    }
+                    else
+                    {
+                        toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;                   
+                    }
+
                     highlightedSlot = slotRect;
                 }
 

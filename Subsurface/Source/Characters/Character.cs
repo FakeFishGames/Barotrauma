@@ -296,6 +296,14 @@ namespace Barotrauma
         public bool IsDead
         {
             get { return isDead; }
+            //set 
+            //{ 
+            //    if (isDead == value) return;
+            //    if (isDead)
+            //    {
+            //        Revive(false);
+            //    }
+            //}
         }
 
         public CauseOfDeath CauseOfDeath
@@ -1234,7 +1242,7 @@ namespace Barotrauma
 
             //CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
 
-            health = 0.0f;
+            //health = 0.0f;
 
             isDead = true;
             this.causeOfDeath = causeOfDeath;
@@ -1245,9 +1253,13 @@ namespace Barotrauma
             {
                 if (selectedItems[i] != null) selectedItems[i].Drop(this);            
             }
-                
-            aiTarget.Remove();
-            aiTarget = null;
+
+            if (aiTarget!=null)
+            {
+                aiTarget.Remove();
+                aiTarget = null;
+            }
+
 
             foreach (Limb limb in AnimController.Limbs)
             {
@@ -1258,12 +1270,30 @@ namespace Barotrauma
             foreach (RevoluteJoint joint in AnimController.limbJoints)
             {
                 joint.MotorEnabled = false;
-                joint.MaxMotorTorque = 0.0f;
             }
 
             if (GameMain.GameSession != null)
             {
                 GameMain.GameSession.KillCharacter(this);
+            }
+        }
+
+        public void Revive(bool isNetworkMessage)
+        {
+            isDead = false;
+
+            aiTarget = new AITarget(this);
+
+            health = Math.Max(maxHealth * 0.1f, health);
+
+            foreach (RevoluteJoint joint in AnimController.limbJoints)
+            {
+                joint.MotorEnabled = true;
+            }
+
+            if (GameMain.GameSession != null)
+            {
+                GameMain.GameSession.ReviveCharacter(this);
             }
         }
 
