@@ -168,6 +168,11 @@ namespace Barotrauma
             get { return subBody == null ? false : subBody.AtDamageDepth; }
         }
 
+        public override string ToString()
+        {
+            return "Barotrauma.Submarine ("+name+")";
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "") : base(null)
@@ -199,8 +204,8 @@ namespace Barotrauma
                 //this.mapHash = new MapHash(md5Hash);
             }
 
-            base.Remove();
             ID = ushort.MaxValue;
+            base.Remove();
         }
 
         //drawing ----------------------------------------------------
@@ -218,7 +223,7 @@ namespace Barotrauma
             for (int i = 0; i < MapEntity.mapEntityList.Count(); i++)
             {
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth < 0.5f)
-                    MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
+                    MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
             }
 
         
@@ -242,7 +247,7 @@ namespace Barotrauma
             for (int i = 0; i < MapEntity.mapEntityList.Count(); i++)
             {
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth >= 0.5f)
-                    MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
+                    MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
             }
         }
 
@@ -680,8 +685,7 @@ namespace Barotrauma
 
             GameMain.LightManager.OnMapLoaded();
 
-            ID = ushort.MaxValue-10;
-
+            ID = ushort.MaxValue;
         }
 
         public static Submarine Load(string fileName)
