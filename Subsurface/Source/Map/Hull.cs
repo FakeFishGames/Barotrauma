@@ -407,12 +407,14 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
+            if (back) return;
+
             if (!ShowHulls && !GameMain.DebugDraw) return;
 
             if (!editing && !GameMain.DebugDraw) return;
 
             Rectangle drawRect =
-            Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+                Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(drawRect.X, -drawRect.Y),

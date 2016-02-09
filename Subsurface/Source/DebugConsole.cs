@@ -266,12 +266,23 @@ namespace Barotrauma
                 case "godmode":
                     Submarine.Loaded.GodMode = !Submarine.Loaded.GodMode;
                     break;
+                case "dumpids":
+                    int count = commands.Length < 2 ? 10 : int.Parse(commands[1]);
+
+                    Entity.DumpIds(count);
+                    break;
                 case "heal":
                     if (Character.Controlled != null)
                     {
                         Character.Controlled.AddDamage(CauseOfDeath.Damage, -Character.Controlled.MaxHealth);
                         Character.Controlled.Oxygen = 100.0f;
                         Character.Controlled.Bleeding = 0.0f;
+                    }
+                    break;
+                case "revive":
+                    if (Character.Controlled != null)
+                    {
+                        Character.Controlled.Revive(false);
                     }
                     break;
                 case "freecamera":

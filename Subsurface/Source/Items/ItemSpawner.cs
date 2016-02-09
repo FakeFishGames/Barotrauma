@@ -88,7 +88,7 @@ namespace Barotrauma
                 message.Write(items[i].Prefab.Name);
                 message.Write(items[i].ID);
 
-                message.Write(inventories[i].Owner == null ? 0 : inventories[i].Owner.ID);
+                message.Write((inventories[i]==null || inventories[i].Owner == null) ? (ushort)0 : inventories[i].Owner.ID);
             }
         }
 

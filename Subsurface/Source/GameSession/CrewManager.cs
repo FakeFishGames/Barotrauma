@@ -181,6 +181,17 @@ namespace Barotrauma
             if (crewFrameOpen) crewFrame.Update(deltaTime);
         }
 
+        public void ReviveCharacter(Character revivedCharacter)
+        {
+            GUIComponent characterBlock = listBox.GetChild(revivedCharacter) as GUIComponent;
+            if (characterBlock != null) characterBlock.Color = Color.Transparent;
+
+            if (revivedCharacter is AICharacter)
+            {
+                commander.UpdateCharacters();
+            }
+        }
+
         public void KillCharacter(Character killedCharacter)
         {
             GUIComponent characterBlock = listBox.GetChild(killedCharacter) as GUIComponent;
