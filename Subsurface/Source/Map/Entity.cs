@@ -18,7 +18,10 @@ namespace Barotrauma
                 
         public ushort ID
         {
-            get { return id; }
+            get 
+            {                                
+                return id;             
+            }
             set 
             {
                 Entity thisEntity;
@@ -121,6 +124,35 @@ namespace Barotrauma
         public virtual void Remove()
         {
             dictionary.Remove(ID);
+        }
+
+        public static void DumpIds(int count)
+        {
+            List<Entity> e = new List<Entity>();
+
+            foreach (Entity ent in dictionary.Values)
+            {
+                int index = 0;
+                for (int i = 0; i < e.Count; i++)
+                {
+                    if (e[i].id < ent.id)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                e.Insert(index, ent);
+            }
+
+            int c = 0;
+            foreach (Entity ent in e)
+            {
+                if (c>count) break;
+
+                DebugConsole.ThrowError(ent.id+": "+ent.ToString());
+                c++;
+            }
         }
     }
 }
