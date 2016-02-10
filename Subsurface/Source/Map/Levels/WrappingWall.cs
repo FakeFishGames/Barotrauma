@@ -10,9 +10,8 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    class WrappingWall
+    class WrappingWall : IDisposable
     {
-
         public const float WallWidth = 20000.0f;
 
         private VertexBuffer wallVertices, bodyVertices;
@@ -188,6 +187,19 @@ namespace Barotrauma
             
             midPos += moveAmount;
             offset += moveAmount;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            wallVertices.Dispose();
+            bodyVertices.Dispose();
         }
     }
 }

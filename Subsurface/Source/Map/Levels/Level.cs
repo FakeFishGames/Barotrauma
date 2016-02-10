@@ -1017,6 +1017,14 @@ namespace Barotrauma
         {
             renderer.Dispose();
             renderer = null;
+
+            for (int side = 0; side < 2; side++)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    wrappingWalls[side, i].Dispose();
+                }
+            }
             
             cells = null;
             
@@ -1024,6 +1032,8 @@ namespace Barotrauma
             bodies = null;
 
             loaded = null;
+
+           
 
             //vertexBuffer.Dispose();
             //vertexBuffer = null;
