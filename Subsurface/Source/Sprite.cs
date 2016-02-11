@@ -68,7 +68,7 @@ namespace Barotrauma
             {
                 file = ToolBox.GetAttributeString(element, "texture", "");
             }
-
+            
             if (file == "")
             {
                 DebugConsole.ThrowError("Sprite " + element + " doesn't have a texture specified!");

@@ -532,6 +532,7 @@ namespace Barotrauma
                         break;
                 }
             }
+
             spriteBatch.Draw(
                 bodyShapeTexture,
                 new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
@@ -546,7 +547,14 @@ namespace Barotrauma
         {
             sprite.Remove();
             body.Remove();
-            if (hitSound!=null) hitSound.Remove();
+
+            if (bodyShapeTexture != null)
+            {
+                bodyShapeTexture.Dispose();
+            }
+
+
+            if (hitSound != null) hitSound.Remove();
         }
     }
 }

@@ -41,10 +41,16 @@ namespace Barotrauma
             {
                 GameMain.ParticleManager.CreateParticle("shockwave", worldPosition,
                     Vector2.Zero, 0.0f, hull);
+
+
             }
 
             for (int i = 0; i < attack.Range * 0.1f; i++)
             {
+                Vector2 bubblePos = Rand.Vector(attack.Range * 0.5f);
+                GameMain.ParticleManager.CreateParticle("bubbles", worldPosition+bubblePos,
+                    bubblePos, 0.0f, hull);
+
                 if (sparks)
                 {
                     GameMain.ParticleManager.CreateParticle("spark", worldPosition,
@@ -75,16 +81,17 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
-                float dist = Vector2.Distance(c.WorldPosition, worldPosition);
 
-                if (dist > attack.Range) continue;
-
-                float distFactor = 1.0f - dist / attack.Range;
                                 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
+
+                    if (dist > attack.Range) continue;
+
+                    float distFactor = 1.0f - dist / attack.Range;
+
                     if (limb.WorldPosition == worldPosition) continue;
-                    distFactor = 1.0f - Vector2.Distance(limb.WorldPosition, worldPosition)/attack.Range;
                     
                     c.AddDamage(limb.SimPosition, DamageType.None, 
                         attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 0.0f, attack.Stun * distFactor, false);

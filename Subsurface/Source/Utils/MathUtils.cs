@@ -242,6 +242,37 @@ namespace Barotrauma
 
             return triangles;
         }
+
+        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int generations, float offsetAmount)
+        {
+            List<Vector2[]> segments = new List<Vector2[]>();
+
+            segments.Add(new Vector2[] { start, end });
+            
+            for (int n = 0; n < generations; n++)
+            {
+                for (int i = 0; i < segments.Count; i++)
+                {
+                    Vector2 startSegment = segments[i][0];
+                    Vector2 endSegment = segments[i][1];
+
+                    segments.RemoveAt(i);
+
+                    Vector2 midPoint = (startSegment + endSegment) / 2.0f;
+
+                    Vector2 normal = Vector2.Normalize(endSegment - startSegment);
+                    normal = new Vector2(-normal.Y, normal.X);
+                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, false);
+
+                    segments.Insert(i, new Vector2[] { startSegment, midPoint });
+                    segments.Insert(i + 1, new Vector2[] { midPoint, endSegment });
+
+                    i++;
+                }
+            }
+
+            return segments;
+        }
     }
 
     class CompareCCW : IComparer<Vector2>

@@ -144,7 +144,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            Vector2 pos = new Vector2(0.0f, -level.StartPosition.Y);// level.EndPosition;
+            Vector2 pos = new Vector2(0.0f, -level.Size.Y);// level.EndPosition;
 
             if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y - 512) return;
 
@@ -232,8 +232,8 @@ namespace Barotrauma
 
         protected virtual void Dispose(bool disposing)
         {
-            wallVertices.Dispose();
-            bodyVertices.Dispose();
+            if (wallVertices!=null) wallVertices.Dispose();
+            if (bodyVertices != null) bodyVertices.Dispose();
         }
 
     }

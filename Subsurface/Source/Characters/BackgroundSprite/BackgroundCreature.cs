@@ -39,7 +39,7 @@ namespace Barotrauma
 
         public Vector2 SimPosition
         {
-            get { return position; }
+            get { return FarseerPhysics.ConvertUnits.ToSimUnits(position); }
         }
 
         public Vector2 Velocity
@@ -81,29 +81,51 @@ namespace Barotrauma
             depth = MathHelper.Clamp(depth + velocity.Z * deltaTime, 0.0f, MaxDepth);
 
             checkWallsTimer -= deltaTime;
-            if (checkWallsTimer<=0.0f && Level.Loaded!=null)
+            if (checkWallsTimer <= 0.0f && Level.Loaded != null)
             {
                 checkWallsTimer = CheckWallsInterval;
 
                 obstacleDiff = Vector2.Zero;
-
-                var cells = Level.Loaded.GetCells(position, 1);
-                if (cells.Count > 0)
+                if (position.Y > Level.Loaded.Size.Y)
                 {
-
-                    foreach (Voronoi2.VoronoiCell cell in cells)
-                    {
-                        obstacleDiff += cell.Center - position;
-                    }
-
-                    obstacleDiff = Vector2.Normalize(obstacleDiff) * prefab.Speed;
+                    obstacleDiff = Vector2.UnitY;
                 }
-            }            
+                else if (position.Y < 0.0f)
+                {
+                    obstacleDiff = -Vector2.UnitY;
+                }
+                else if (position.X < 0.0f)
+                {
+                    obstacleDiff = Vector2.UnitX;
+                }
+                else if (position.X > Level.Loaded.Size.X)
+                {
+                    obstacleDiff = -Vector2.UnitX;
+                }
+                else
+                {
+                    var cells = Level.Loaded.GetCells(position, 1);
+                    if (cells.Count > 0)
+                    {
+
+                        foreach (Voronoi2.VoronoiCell cell in cells)
+                        {
+                            obstacleDiff += cell.Center - position;
+                        }
+                        obstacleDiff /= cells.Count;
+
+                        obstacleDiff = Vector2.Normalize(obstacleDiff) * prefab.Speed;
+                    }
+                }
+            }
+
+
+
 
             if (Swarm!=null)
             {
                 Vector2 midPoint = Swarm.MidPoint();
-                float midPointDist = Vector2.Distance(position, midPoint);
+                float midPointDist = Vector2.Distance(SimPosition, midPoint);
 
                 if (midPointDist > Swarm.MaxDistance)
                 {
@@ -116,9 +138,12 @@ namespace Barotrauma
                 steeringManager.SteeringWander(prefab.Speed);
             }
 
+            //Level.Loaded.Size
+
+
             if (obstacleDiff != Vector2.Zero)
             {
-                steeringManager.SteeringSeek(-obstacleDiff, prefab.Speed);
+                steeringManager.SteeringSeek(SimPosition-obstacleDiff, prefab.Speed*2.0f);
             }
 
             steeringManager.Update(prefab.Speed);

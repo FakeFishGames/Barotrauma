@@ -918,10 +918,10 @@ namespace Barotrauma
             if (!(AnimController is FishAnimController))
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
-                
-                if (Submarine.Loaded!=null && Level.Loaded !=null)
+
+                if (Submarine.Loaded != null && Level.Loaded != null)
                 {
-                    protectedFromPressure = protectedFromPressure && Position.Y > SubmarineBody.DamageDepth;
+                    protectedFromPressure = protectedFromPressure && WorldPosition.Y > SubmarineBody.DamageDepth;
                 }
                 
                 if (!protectedFromPressure && 

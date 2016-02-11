@@ -314,6 +314,7 @@ namespace Barotrauma
 
             characters.Clear();
             listBox.ClearChildren();
+            orderListBox.ClearChildren();
         }
 
         public void Draw(SpriteBatch spriteBatch)

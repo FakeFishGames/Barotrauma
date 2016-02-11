@@ -9,6 +9,8 @@ namespace Barotrauma.Items.Components
 {
     class ItemContainer : ItemComponent
     {
+        public const int MaxInventoryCount = 4;
+
         List<RelatedItem> containableItems;
         public ItemInventory Inventory;
 

@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue(false, true)]
         public bool Attached
         {
-            get { return attached; }
+            get { return attached && item.Inventory == null; }
             set { attached = value; }
         }
 
@@ -101,7 +101,7 @@ namespace Barotrauma.Items.Components
                 Msg = "";
             }
 
-            if (attachedByDefault || (Screen.Selected == GameMain.EditMapScreen && Submarine.Loaded!=null)) Use(1.0f);
+            if (attachedByDefault || (Screen.Selected == GameMain.EditMapScreen && Submarine.Loaded!=null))  Use(1.0f);
 
 
             //holdAngle = ToolBox.GetAttributeFloat(element, "holdangle", 0.0f);
@@ -259,12 +259,22 @@ namespace Barotrauma.Items.Components
         {
             //prevRequiredItems = new List<RelatedItem>(requiredItems);
 
-            if (attached)
+            if (Attached)
             {
                 Use(1.0f);
             }
             else
-            {                
+            {
+                if (item.Inventory!=null)
+                {
+                    if (body != null)
+                    {
+                        item.body = body;
+                        body.Enabled = false;
+                    }
+                    attached = false;
+                }
+
                 requiredItems.Clear();
                 Msg = "";
             }
