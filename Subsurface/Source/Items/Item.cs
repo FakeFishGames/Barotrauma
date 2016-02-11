@@ -1370,9 +1370,16 @@ namespace Barotrauma
                     message.Write(requirementIndex);
                     break;
                 case NetworkEventType.InventoryUpdate:
-                    var itemContainer = GetComponent<ItemContainer>();
-                    if (itemContainer == null || itemContainer.Inventory == null) return false;
-                    return itemContainer.Inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
+                    var itemContainers = GetComponents<ItemContainer>();
+                    if (itemContainers == null || !itemContainers.Any()) return false;
+
+                    message.WriteRangedInteger(1, ItemContainer.MaxInventoryCount, itemContainers.Count);
+                    foreach (ItemContainer container in itemContainers)
+                    {
+                        container.Inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
+                    }
+
+                    return true;
                 case NetworkEventType.ComponentUpdate:
                 case NetworkEventType.ImportantComponentUpdate:
 
@@ -1434,7 +1441,7 @@ namespace Barotrauma
             {
                 case NetworkEventType.DropItem:
                     Vector2 newSimPos = Vector2.Zero;
-                    newSimPos = new Vector2(message.ReadFloat(), message.ReadFloat());                    
+                    newSimPos = new Vector2(message.ReadFloat(), message.ReadFloat());
                     SetTransform(newSimPos, body.Rotation);
                     Drop(null, false);
                     break;
@@ -1443,15 +1450,20 @@ namespace Barotrauma
                     byte requirementIndex = message.ReadByte();
                     data = requirementIndex;
 
-                    if (requirementIndex>=FixRequirements.Count) return;
+                    if (requirementIndex >= FixRequirements.Count) return;
 
                     FixRequirements[requirementIndex].Fixed = true;
                     break;
                 case NetworkEventType.InventoryUpdate:
+                    var itemContainers = GetComponents<ItemContainer>();
+                    if (itemContainers == null || !itemContainers.Any()) return;
 
-                    var itemContainer = GetComponent<ItemContainer>();
-                    if (itemContainer == null || itemContainer.Inventory == null) return;
-                    itemContainer.Inventory.ReadNetworkData(NetworkEventType.DropItem, message, sendingTime);
+                    int containerCount = message.ReadRangedInteger(1, ItemContainer.MaxInventoryCount);
+                    for (int i = 0; i < containerCount;i++ )
+                    {
+                        itemContainers[i].Inventory.ReadNetworkData(type, message, sendingTime);
+                    }
+
                     break;
                 case NetworkEventType.ComponentUpdate:
                 case NetworkEventType.ImportantComponentUpdate:

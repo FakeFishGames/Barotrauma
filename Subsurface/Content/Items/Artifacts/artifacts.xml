@@ -4,7 +4,7 @@
     name="Skyholder Artifact"
     pickdistance="150">
 
-    <Sprite texture="artifact.png" depth="0.8" sourcerect="0,0,38,60"/>
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="0,0,38,60"/>
 
     <Deconstruct time="30">
       <Item name="Steel Bar"/>
@@ -23,7 +23,7 @@
      name="Thermal Artifact"
      pickdistance="150">
 
-    <Sprite texture="artifact.png" depth="0.8" sourcerect="74,0,44,61"/>
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="74,0,44,61"/>
 
     <Deconstruct time="30">
       <Item name="Steel Bar"/>
@@ -45,7 +45,7 @@
     name="Faraday Artifact"
     pickdistance="150">
 
-    <Sprite texture="artifact.png" depth="0.8" sourcerect="40,0,33,61"/>
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="40,0,33,61"/>
 
     <Deconstruct time="30">
       <Item name="Steel Bar"/>

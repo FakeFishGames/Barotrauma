@@ -8,7 +8,7 @@
     <Sprite texture ="oxygengenerator.png" depth="0.8"/>
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
-      <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="2.0"/>
+      <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="0.5"/>
       <sound file="oxygengenerator.ogg" type="OnActive" range="1000.0" volume="CurrFlow" volumemultiplier="0.001f" loop="true"/>
     </OxygenGenerator>
   

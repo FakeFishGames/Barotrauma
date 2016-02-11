@@ -789,6 +789,8 @@ namespace Barotrauma
 
         public override void DragCharacter(Character target)
         {
+            if (target == null) return;
+
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 

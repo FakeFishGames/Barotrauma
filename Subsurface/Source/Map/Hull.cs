@@ -407,7 +407,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (back) return;
+            //if (back) return;
 
             if (!ShowHulls && !GameMain.DebugDraw) return;
 

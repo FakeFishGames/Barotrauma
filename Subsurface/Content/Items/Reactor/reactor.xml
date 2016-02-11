@@ -57,6 +57,11 @@
     pickdistance="150"
     price="200">
 
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Uranium Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="fuelrod.png"/>
 
     <Body radius="6" height="22" density="5"/>
@@ -70,6 +75,11 @@
     Tags="smallitem"
     pickdistance="150"
     spritecolor="0.5,0.0,0.0,1.0">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Incendium Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="fuelrod.png"/>
 

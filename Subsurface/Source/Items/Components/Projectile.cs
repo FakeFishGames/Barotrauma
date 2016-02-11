@@ -177,6 +177,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, null);
+
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
             item.body.FarseerBody.IsBullet = false;

@@ -301,6 +301,10 @@ namespace Barotrauma.Items.Components
             int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
 
             message.WriteRangedInteger(-1, fabricableItems.Count-1, itemIndex);
+
+            var containers = item.GetComponents<ItemContainer>();
+            containers[0].Inventory.FillNetworkData(type, message, null);
+            containers[1].Inventory.FillNetworkData(type, message, null);
             
             return true;
         }
@@ -310,6 +314,10 @@ namespace Barotrauma.Items.Components
             if (sendingTime < lastNetworkUpdate) return;
 
             int itemIndex = message.ReadRangedInteger(-1, fabricableItems.Count-1);
+
+            var containers = item.GetComponents<ItemContainer>();
+            containers[0].Inventory.ReadNetworkData(type, message, sendingTime);
+            containers[1].Inventory.ReadNetworkData(type, message, sendingTime);
 
             if (itemIndex == -1)
             {
@@ -324,7 +332,6 @@ namespace Barotrauma.Items.Components
 
                 SelectItem(null, fabricableItems[itemIndex]);
                 StartFabricating(fabricableItems[itemIndex]);
-                timeUntilReady -= sendingTime - (float)Lidgren.Network.NetTime.Now;
             }
 
             lastNetworkUpdate = sendingTime;
