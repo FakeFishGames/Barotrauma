@@ -222,8 +222,8 @@ namespace Barotrauma
             msg.Write(AllowEndVoting);
             if (AllowEndVoting)
             {
-                msg.Write((byte)voters.Count);
                 msg.Write((byte)voters.Count(v => v.GetVote<bool>(VoteType.EndRound)));
+                msg.Write((byte)voters.Count);
             }           
 
         }

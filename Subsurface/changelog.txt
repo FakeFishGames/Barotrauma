@@ -1,4 +1,24 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.1.3
+---------------------------------------------------------------------------------------------------------
+
+- round end votes can be toggled off
+- less confusing way of displaying the number of votes (yes/no instead of yes/number of voters)
+
+---------------------------------------------------------------------------------------------------------
+v0.3.1.2
+---------------------------------------------------------------------------------------------------------
+
+- players can vote to end a round in multiplayer
+- fixed fabricator syncing
+- fixed hulls being invisible in the editor
+- spectators can only speak to dead players
+- minor changes to the map generation algorithm: there's now more variety in the cavern shapes
+- added a new type of railgun shell
+- diving suits wont protect from the water pressure in the abyss anymore
+- added some spare buttons to Vellamo
+
+---------------------------------------------------------------------------------------------------------
 v0.3.1.1
 ---------------------------------------------------------------------------------------------------------
 

@@ -259,6 +259,8 @@ namespace Barotrauma.Items.Components
         {
             //prevRequiredItems = new List<RelatedItem>(requiredItems);
 
+            if (!attachable) return;
+
             if (Attached)
             {
                 Use(1.0f);

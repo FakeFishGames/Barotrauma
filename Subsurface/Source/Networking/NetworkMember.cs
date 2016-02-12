@@ -253,7 +253,8 @@ namespace Barotrauma.Networking
 
             if (EndVoteCount > 0)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 150.0f, 40), "Votes: " + EndVoteCount + "/" + EndVoteMax, Color.White);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 140.0f, 40),
+                    "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
             }
 
         }
