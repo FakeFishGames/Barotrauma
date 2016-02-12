@@ -17,7 +17,7 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
-            Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
+            //Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
 
             //spawn some fish next to the player
             GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2,
@@ -91,7 +91,7 @@ namespace Barotrauma.Tutorials
             {
                 yield return CoroutineStatus.Running;
             }
-            
+
             infoBox = CreateInfoFrame("The reactor is now fueled up. Try turning it on by increasing the fission rate.");
 
             while (reactor.FissionRate <= 0.0f)
@@ -275,7 +275,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.Loaded.WorldPosition.Y > 31000.0f)
+            while (Submarine.Loaded.WorldPosition.Y > 39000.0f)
             {
                 yield return CoroutineStatus.Running;
             }

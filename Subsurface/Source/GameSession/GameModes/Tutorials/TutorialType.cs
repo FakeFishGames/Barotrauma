@@ -42,7 +42,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLower() == "tutorial"));
             (GameMain.GameSession.gameMode as TutorialMode).tutorialType = this;
 
-            GameMain.GameSession.StartShift("tuto");
+            GameMain.GameSession.StartShift("tutorial");
 
             GameMain.GameSession.TaskManager.Tasks.Clear();
 

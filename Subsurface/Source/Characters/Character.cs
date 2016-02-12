@@ -915,7 +915,7 @@ namespace Barotrauma
 
             if (isDead) return;
 
-            if (!(AnimController is FishAnimController))
+            if (needsAir)
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
 
@@ -1445,7 +1445,7 @@ namespace Barotrauma
                     else
                     {
                         Character character = FindEntityByID(characterId) as Character;
-                        if (character != null) SelectCharacter(character, false);
+                        if (character != null && character.IsHumanoid) SelectCharacter(character, false);
                     }
                     return;
                 case NetworkEventType.KillCharacter:

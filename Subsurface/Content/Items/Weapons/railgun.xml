@@ -110,7 +110,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
 
     <Projectile launchimpulse="80.0">
-      <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
+      <Attack damage="1000" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Reactor/explosion.ogg">
         <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
       </StatusEffect>

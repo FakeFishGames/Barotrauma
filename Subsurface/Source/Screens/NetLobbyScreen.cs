@@ -355,6 +355,8 @@ namespace Barotrauma
                     playYourself.UserData = "playyourself";
                 }
 
+                GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
+
                 if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
                 if (GameMain.Server.SubSelectionMode == SelectionMode.Random) subList.Select(Rand.Range(0,subList.CountChildren));
                 if (GameMain.Server.ModeSelectionMode == SelectionMode.Random) modeList.Select(Rand.Range(0, modeList.CountChildren));
@@ -367,6 +369,8 @@ namespace Barotrauma
                     spectateButton.OnClicked = GameMain.Client.SpectateClicked;
                     spectateButton.UserData = "spectateButton";
                 }
+
+                GameMain.Client.Voting.ResetVotes(GameMain.Client.OtherClients);
 
                 UpdatePlayerFrame(GameMain.Client.CharacterInfo);
             }

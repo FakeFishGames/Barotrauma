@@ -12,6 +12,8 @@ namespace Barotrauma
     {
         private bool allowSubVoting, allowModeVoting;
 
+        public bool AllowEndVoting = true;
+
         public bool AllowSubVoting
         {
             get { return allowSubVoting; }
@@ -83,7 +85,12 @@ namespace Barotrauma
                     UpdateVoteTexts(connectedClients, voteType);
                     break;
                 case VoteType.EndRound:
+                    if (sender.Character == null) return;
                     sender.SetVote(voteType, inc.ReadBoolean());
+
+                    GameMain.NetworkMember.EndVoteCount = connectedClients.Count(c => c.Character != null && c.GetVote<bool>(VoteType.EndRound));
+                    GameMain.NetworkMember.EndVoteMax = connectedClients.Count(c => c.Character != null);
+
                     break;
             }
 
@@ -107,7 +114,7 @@ namespace Barotrauma
                 SetVoteText(listBox, votable.First, votable.Second);
             }
         }
-        
+
         private void SetVoteText(GUIListBox listBox, object userData, int votes)
         {
             if (userData == null) return;
@@ -124,14 +131,14 @@ namespace Barotrauma
                 voteText.Text = votes.ToString();
             }
         }
-
+        
         private List<Pair<object, int>> GetVoteList(VoteType voteType, List<Client> voters)
         {
             List<Pair<object, int>> voteList = new List<Pair<object, int>>();
 
             foreach (Client voter in voters)
             {
-                object vote = voter.GetVote(voteType);
+                object vote = voter.GetVote<object>(voteType);
                 if (vote == null) continue;
 
                 var existingVotable = voteList.Find(v => v.First == vote);
@@ -167,6 +174,20 @@ namespace Barotrauma
 
             return selected;            
         }
+
+        public void ResetVotes(List<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                client.ResetVotes();
+            }
+
+            GameMain.NetworkMember.EndVoteCount = 0;
+            GameMain.NetworkMember.EndVoteMax = 0;
+
+            UpdateVoteTexts(connectedClients, VoteType.Mode);
+            UpdateVoteTexts(connectedClients, VoteType.Sub);
+        }
         
         public void WriteData(NetOutgoingMessage msg, List<Client> voters)
         {
@@ -198,17 +219,22 @@ namespace Barotrauma
                 }
             }
 
-
+            msg.Write(AllowEndVoting);
+            if (AllowEndVoting)
+            {
+                msg.Write((byte)voters.Count);
+                msg.Write((byte)voters.Count(v => v.GetVote<bool>(VoteType.EndRound)));
+            }           
 
         }
 
         public void ReadData(NetIncomingMessage msg)
         {
-            AllowSubVoting  = msg.ReadBoolean();
+            AllowSubVoting = msg.ReadBoolean();
             if (allowSubVoting)
             {
                 int votableCount = msg.ReadByte();
-                for (int i = 0; i<votableCount; i++)
+                for (int i = 0; i < votableCount; i++)
                 {
                     int votes = msg.ReadByte();
                     string subName = msg.ReadString();
@@ -228,6 +254,13 @@ namespace Barotrauma
                     GameModePreset mode = GameModePreset.list.Find(m => m.Name == modeName);
                     SetVoteText(GameMain.NetLobbyScreen.SubList, mode, votes);
                 }
+            }
+
+            AllowEndVoting = msg.ReadBoolean();
+            if (AllowEndVoting)
+            {
+                GameMain.NetworkMember.EndVoteCount = msg.ReadByte();
+                GameMain.NetworkMember.EndVoteMax = msg.ReadByte();
             }
         }
     }

@@ -524,6 +524,34 @@ namespace Barotrauma
             return loaded.SaveAs(SavePath+System.IO.Path.DirectorySeparatorChar+fileName);
         }
 
+        public void CheckForErrors()
+        {
+            if (!Hull.hullList.Any())
+            {
+                DebugConsole.ThrowError("No hulls found in the submarine. Hulls determine the ''borders'' of an individual room and are required for water and air distribution to work correctly.");
+            }
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.GetComponent<Barotrauma.Items.Components.Vent>() == null) continue;
+
+                if (!item.linkedTo.Any())
+                {
+                    DebugConsole.ThrowError("The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.");
+                }
+            }
+
+            if (WayPoint.WayPointList.Find(wp => !wp.MoveWithLevel && wp.SpawnType == SpawnType.Path) == null)
+            {
+                DebugConsole.ThrowError("No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.");
+            }
+
+            if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
+            {
+                DebugConsole.ThrowError("The submarine doesn't have a waypoint marked as ''Cargo'', which are used for determining where to place bought items.");
+            }
+        }
+
         public static void Preload()
         {
 
@@ -669,7 +697,6 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Could not find the method ''Load'' in " + t + ".", e);
                 }
-
             }
 
             subBody = new SubmarineBody(this);

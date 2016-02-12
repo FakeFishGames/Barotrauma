@@ -17,7 +17,7 @@ namespace Barotrauma
 
         private bool enabled;
 
-        public delegate bool OnMovedHandler(float barScroll);
+        public delegate bool OnMovedHandler(GUIScrollBar scrollBar, float barScroll);
         public OnMovedHandler OnMoved;
 
         public bool IsHorizontal
@@ -174,7 +174,7 @@ namespace Barotrauma
                 barScroll = (float)newY / ((float)frame.Rect.Height - (float)bar.Rect.Height);
             }
 
-            if (moveAmount != 0 && OnMoved != null) OnMoved(barScroll);
+            if (moveAmount != 0 && OnMoved != null) OnMoved(this, barScroll);
 
             bar.Rect = new Rectangle(newX + frame.Rect.X, newY + frame.Rect.Y, bar.Rect.Width, bar.Rect.Height);
 

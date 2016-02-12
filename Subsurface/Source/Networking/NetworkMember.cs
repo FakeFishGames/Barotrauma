@@ -47,7 +47,7 @@ namespace Barotrauma.Networking
     class NetworkMember
     {
 
-        protected static Color[] messageColor = { Color.White, Color.Red, Color.LightBlue, Color.LightGreen };
+        protected static Color[] messageColor = { Color.White, Color.Red, new Color(63,72,204), Color.LightGreen };
 
         protected NetPeer netPeer;
 
@@ -59,6 +59,10 @@ namespace Barotrauma.Networking
         protected GUIFrame inGameHUD;
         protected GUIListBox chatBox;
         protected GUITextBox chatMsgBox;
+
+
+        public int EndVoteCount, EndVoteMax;
+        //private GUITextBlock endVoteText;
 
         public int Port;
 
@@ -121,7 +125,6 @@ namespace Barotrauma.Networking
             chatMsgBox.Font = GUI.SmallFont;
             chatMsgBox.Padding = Vector4.Zero;
             chatMsgBox.OnEnterPressed = EnterChatMessage;
-
 
             Voting = new Voting();
         }
@@ -247,6 +250,12 @@ namespace Barotrauma.Networking
             GameMain.GameSession.CrewManager.Draw(spriteBatch);
 
             inGameHUD.Draw(spriteBatch);
+
+            if (EndVoteCount > 0)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 150.0f, 40), "Votes: " + EndVoteCount + "/" + EndVoteMax, Color.White);
+            }
+
         }
 
         public virtual bool SelectCrewCharacter(GUIComponent component, object obj)

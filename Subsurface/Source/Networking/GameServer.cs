@@ -473,6 +473,12 @@ namespace Barotrauma.Networking
                             break;
                         case (byte)PacketTypes.Vote:
                             Voting.RegisterVote(inc, ConnectedClients);
+
+                            if (Voting.AllowEndVoting &&
+                                ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
+                            {
+                                EndButtonHit(null,null);
+                            }
                             break;
                         case (byte)PacketTypes.RequestNetLobbyUpdate:
                             UpdateNetLobby(null, null);
@@ -860,9 +866,11 @@ namespace Barotrauma.Networking
 
         private bool EndButtonHit(GUIButton button, object obj)
         {
+            if (!gameStarted) return false;
+
             string endMessage = "The round has ended." + '\n';
 
-            if (TraitorManager!=null)
+            if (TraitorManager != null)
             {
                 endMessage += TraitorManager.GetEndMessage();
             }
@@ -1092,7 +1100,7 @@ namespace Barotrauma.Networking
             base.Draw(spriteBatch);
 
             if (settingsFrame != null) settingsFrame.Draw(spriteBatch);
-            
+
             if (!ShowNetStats) return;
 
             int width = 200, height = 300;
@@ -1465,14 +1473,22 @@ namespace Barotrauma.Networking
             jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0,3));
         }
 
-        public object GetVote(VoteType voteType)
+        public T GetVote<T>(VoteType voteType)
         {
-            return votes[(int)voteType];
+            return (votes[(int)voteType] is T) ? (T)votes[(int)voteType] : default(T);
         }
 
         public void SetVote(VoteType voteType, object value)
         {
             votes[(int)voteType] = value;
+        }
+
+        public void ResetVotes()
+        {
+            for (int i = 0; i<votes.Length; i++)
+            {
+                votes[i] = null;
+            }
         }
     }
 }

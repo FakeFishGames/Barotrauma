@@ -15,6 +15,8 @@ namespace Barotrauma.Networking
 
         private ReliableChannel reliableChannel;
 
+        private GUIButton endRoundButton;
+
         private bool connected;
 
         private int myID;
@@ -28,8 +30,17 @@ namespace Barotrauma.Networking
             get { return myID; }
         }
 
+        public List<Client> OtherClients
+        {
+            get { return otherClients; }
+        }
+
         public GameClient(string newName)
         {
+            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
+            endRoundButton.OnClicked = EndRoundClicked;
+            endRoundButton.Visible = false;
+
             GameMain.DebugDraw = false;
             Hull.EditFire = false;
             Hull.EditWater = false;
@@ -229,7 +240,6 @@ namespace Barotrauma.Networking
 
                                     new GUIMessageBox("Connection timed out", "You were disconnected for too long and your Character was deleted. Please wait for another round to start.");
                                 }
-
 
                                 GameMain.NetLobbyScreen.ClearPlayers();
 
@@ -590,6 +600,8 @@ namespace Barotrauma.Networking
 
             gameStarted = true;
 
+            endRoundButton.Visible = Voting.AllowEndVoting;
+
             GameMain.GameScreen.Select();
 
             AddChatMessage("Press TAB to chat", ChatMessageType.Server);
@@ -659,7 +671,7 @@ namespace Barotrauma.Networking
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-
+            
             if (!GameMain.DebugDraw) return;
 
             int width = 200, height = 300;
@@ -696,13 +708,16 @@ namespace Barotrauma.Networking
             {
                 case VoteType.Sub:
                     msg.Write(((Submarine)userData).Name);
-                    client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
                     break;
                 case VoteType.Mode:
                     msg.Write(((GameModePreset)userData).Name);
-                    client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+                    break;
+                case VoteType.EndRound:
+                    msg.Write((bool)userData);
                     break;
             }
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         public bool SpectateClicked(GUIButton button, object userData)
@@ -716,6 +731,23 @@ namespace Barotrauma.Networking
 
             return false;
         }
+
+        public bool EndRoundClicked(GUIButton button, object userData)
+        {
+            if (!gameStarted) return false;
+
+            if (!Voting.AllowEndVoting)
+            {
+                button.Visible = false;
+                return false;
+            }
+
+            Vote(VoteType.EndRound, true);
+
+            return false;
+        }
+
+
 
         public void SendCharacterData()
         {
@@ -794,7 +826,8 @@ namespace Barotrauma.Networking
 
             if (client.ServerConnection == null) return;
 
-            type = (gameStarted && myCharacter != null && myCharacter.IsDead) ? ChatMessageType.Dead : ChatMessageType.Default;
+            type = (Screen.Selected == GameMain.GameScreen && 
+                (myCharacter == null || myCharacter.IsDead)) ? ChatMessageType.Dead : ChatMessageType.Default;
             
             ReliableMessage msg = reliableChannel.CreateMessage();
             msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);

@@ -150,18 +150,21 @@ namespace Barotrauma
 
             float minWidth = Submarine.Loaded == null ? 3000.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
 
-            startPosition = new Vector2(minWidth * 2, borders.Height);
-            endPosition = new Vector2(borders.Width - minWidth * 2, borders.Height);
+            startPosition = new Vector2((int)minWidth * 2, Rand.Range((int)minWidth * 2, borders.Height - (int)minWidth * 2, false));
+            endPosition = new Vector2(borders.Width - (int)minWidth * 2, Rand.Range((int)minWidth * 2, borders.Height - (int)minWidth * 2, false));
+
 
 
             List<Vector2> pathNodes = new List<Vector2>();
             Rectangle pathBorders = borders;// new Rectangle((int)minWidth, (int)minWidth, borders.Width - (int)minWidth * 2, borders.Height - (int)minWidth);   
             pathBorders.Inflate(-minWidth*2, -minWidth*2);
 
-            pathNodes.Add(startPosition);
-            //pathNodes.Add(new Vector2(minWidth * 3, Rand.Range(minWidth * 2, borders.Height - minWidth * 2, false)));
 
-            for (float x = startPosition.X; x < endPosition.X; x += Rand.Range(2000.0f, 10000.0f, false))
+            pathNodes.Add(new Vector2(startPosition.X, borders.Height));
+            pathNodes.Add(startPosition);
+
+
+            for (float x = startPosition.X; x < endPosition.X; x += Rand.Range(5000.0f, 10000.0f, false))
             {
                 pathNodes.Add(new Vector2(x, Rand.Range(pathBorders.Y, pathBorders.Bottom, false)));
 
@@ -171,8 +174,8 @@ namespace Barotrauma
                 //}
             }
 
-            //pathNodes.Add(new Vector2(borders.Width - minWidth * 3, borders.Height / 2));
             pathNodes.Add(endPosition);
+            pathNodes.Add(new Vector2(endPosition.X, borders.Height));
 
             int smallTunnelCount = 5;
 
@@ -283,7 +286,8 @@ namespace Barotrauma
             //    pathNodes.Reverse();
             //}
 
-            List<VoronoiCell> pathCells = GeneratePath(pathNodes, cells, pathBorders, minWidth, 0.3f, mirror, true);
+            List<VoronoiCell> pathCells = GeneratePath(pathNodes, cells,                
+                new Rectangle(pathBorders.X, pathBorders.Y, pathBorders.Width, borders.Height), minWidth, 0.3f, mirror, true);
 
             foreach (InterestingPosition positionOfInterest in positionsOfInterest)
             {
@@ -291,8 +295,8 @@ namespace Barotrauma
                 wayPoint.MoveWithLevel = true;
             }
 
-            startPosition = pathCells[0].Center;
-            endPosition = pathCells[pathCells.Count - 1].Center;
+            //startPosition = pathCells[0].Center;
+            //endPosition = pathCells[pathCells.Count - 1].Center;
 
             foreach (List<Vector2> tunnel in smallTunnels)
             {
@@ -475,9 +479,7 @@ namespace Barotrauma
             pathCells.Add(currentCell);
 
             int currentTargetIndex = 1;
-
-            wanderAmount = 0.0f;
-            
+                        
             do
             {
                 int edgeIndex = 0;
@@ -617,30 +619,41 @@ namespace Barotrauma
             minDistance *= 0.5f;
             do
             {
-                var closeCells = GetCells(position, 2);
+                var closeCells = GetCells(position, 1);
 
                 foreach (VoronoiCell cell in closeCells)
                 {
-                    if (!cell.edges.Any(e => Vector2.Distance(position, e.point1) < minDistance || Vector2.Distance(position, e.point2) < minDistance)) continue;
+                    bool tooClose = false;
+                    foreach (GraphEdge edge in cell.edges)
+                    {
+                        if (Math.Abs(position.X - edge.point1.X) < minDistance ||
+                            Math.Abs(position.Y - edge.point1.Y) < minDistance ||
+                            Math.Abs(position.X - edge.point2.X) < minDistance ||
+                            Math.Abs(position.Y - edge.point2.Y) < minDistance)
+                        {
+                            tooClose = true;
+                            break;
+                        }
+                    }
 
-                    if (!tooCloseCells.Contains(cell)) tooCloseCells.Add(cell);
+                    if (tooClose && !tooCloseCells.Contains(cell)) tooCloseCells.Add(cell);
                 }
 
-                //for (int x = -1; x <= 1; x++)
-                //{
-                //    for (int y = -1; y <= 1; y++)
-                //    {
-                //        if (x == 0 && y == 0) continue;
-                //        Vector2 cornerPos = position + new Vector2(x * minDistance, y * minDistance);
+                for (int x = -1; x <= 1; x++)
+                {
+                    for (int y = -1; y <= 1; y++)
+                    {
+                        if (x == 0 && y == 0) continue;
+                        Vector2 cornerPos = position + new Vector2(x * minDistance, y * minDistance);
 
-                //        int cellIndex = FindCellIndex(cornerPos);
-                //        if (cellIndex == -1) continue;
-                //        if (!tooCloseCells.Contains(cells[cellIndex]))
-                //        {
-                //            tooCloseCells.Add(cells[cellIndex]);
-                //        }
-                //    }
-                //}
+                        int cellIndex = FindCellIndex(cornerPos);
+                        if (cellIndex == -1) continue;
+                        if (!tooCloseCells.Contains(cells[cellIndex]))
+                        {
+                            tooCloseCells.Add(cells[cellIndex]);
+                        }
+                    }
+                }
 
                 position += Vector2.Normalize(emptyCells[targetCellIndex].Center - position) * step;
 
@@ -664,7 +677,7 @@ namespace Barotrauma
                 foreach (GraphEdge edge in cell.edges)
                 {
                     VoronoiCell adjacent = edge.AdjacentCell(cell);
-                    if (!newCells.Contains(adjacent)) newCells.Add(adjacent);
+                    if (adjacent!=null && !newCells.Contains(adjacent)) newCells.Add(adjacent);
                 }
             }
 
@@ -964,7 +977,7 @@ namespace Barotrauma
             int tries = 0;
             do
             {
-                Vector2 startPos = ConvertUnits.ToSimUnits(positionsOfInterest[Rand.Int(positionsOfInterest.Count, false)].Position);
+                Vector2 startPos = ConvertUnits.ToSimUnits(Level.Loaded.GetRandomInterestingPosition(true, false));
 
                 Vector2 endPos = startPos - ConvertUnits.ToSimUnits(Vector2.UnitY * Size.Y);
 
@@ -989,20 +1002,21 @@ namespace Barotrauma
             return position;
         }
 
-        public Vector2 GetRandomInterestingPosition(bool requireSpace, bool useSyncedRand)
+        public Vector2 GetRandomInterestingPosition(bool useSyncedRand, bool? preferLarge)
         {
             if (!positionsOfInterest.Any()) return Size * 0.5f;
 
-            if (requireSpace)
+            if (preferLarge==null)
             {
-                var positionsWithSpace = positionsOfInterest.FindAll(p => p.IsLarge);
-                if (!positionsWithSpace.Any()) return Size * 0.5f;
+                return positionsOfInterest[Rand.Int(positionsOfInterest.Count, !useSyncedRand)].Position;
 
-                return positionsWithSpace[Rand.Int(positionsOfInterest.Count, !useSyncedRand)].Position;
             }
             else
             {
-                return positionsOfInterest[Rand.Int(positionsOfInterest.Count, !useSyncedRand)].Position;
+                var positionsWithSpace = positionsOfInterest.FindAll(p => (bool)preferLarge == p.IsLarge);
+                if (!positionsWithSpace.Any()) return Size * 0.5f;
+
+                return positionsWithSpace[Rand.Int(positionsOfInterest.Count, !useSyncedRand)].Position;
             }
         }
 

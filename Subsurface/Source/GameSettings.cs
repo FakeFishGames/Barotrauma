@@ -248,7 +248,7 @@ namespace Barotrauma
             doc.Save(filePath);
         }
 
-        private bool ChangeSoundVolume(float barScroll)
+        private bool ChangeSoundVolume(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
             SoundVolume = MathHelper.Clamp(barScroll, 0.0f, 1.0f);
@@ -256,7 +256,7 @@ namespace Barotrauma
             return true;
         }
 
-        private bool ChangeMusicVolume(float barScroll)
+        private bool ChangeMusicVolume(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
             MusicVolume = MathHelper.Clamp(barScroll, 0.0f, 1.0f);
