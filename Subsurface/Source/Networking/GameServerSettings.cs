@@ -36,7 +36,7 @@ namespace Barotrauma.Networking
         private GUIFrame settingsFrame;
 
         public float AutoRestartTimer;
-
+        
         private bool autoRestart;
 
         private bool allowSpectating = true;
@@ -85,6 +85,8 @@ namespace Barotrauma.Networking
             get { return allowSpectating; }
         }
 
+        public float EndVoteRequiredRatio;
+
         private void CreateSettingsFrame()
         {
             settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
@@ -93,16 +95,39 @@ namespace Barotrauma.Networking
 
             new GUITextBlock(new Rectangle(0, -15, 0, 20), "Server settings", GUI.Style, innerFrame, GUI.LargeFont);
 
-            var randomizeLevelBox = new GUITickBox(new Rectangle(0, 30, 20, 20), "Randomize level seed", Alignment.Left, innerFrame);
+            var randomizeLevelBox = new GUITickBox(new Rectangle(0, 30, 20, 20), "Randomize level seed between rounds", Alignment.Left, innerFrame);
             randomizeLevelBox.Selected = randomizeSeed;
             randomizeLevelBox.OnSelected = ToggleRandomizeSeed;
 
             var endBox = new GUITickBox(new Rectangle(0, 60, 20, 20), "End round when destination reached", Alignment.Left, innerFrame);
             endBox.Selected = endRoundAtLevelEnd;
             endBox.OnSelected = (GUITickBox) => { endRoundAtLevelEnd = GUITickBox.Selected; return true; };
+
+            var endVoteBox = new GUITickBox(new Rectangle(0, 90, 20, 20), "End round by voting", Alignment.Left, innerFrame);
+            endVoteBox.Selected = Voting.AllowEndVoting;
+            endVoteBox.OnSelected = (GUITickBox) => 
+            {
+                Voting.AllowEndVoting = !Voting.AllowEndVoting;
+                GameMain.Server.UpdateVoteStatus();
+                return true; 
+            };
+
+            var votesRequiredText = new GUITextBlock(new Rectangle(20, 110, 20, 20), "Votes required: 50 %", GUI.Style, innerFrame, GUI.SmallFont);
+
+            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150,115, 100, 10), GUI.Style, 0.1f, innerFrame);
+            votesRequiredSlider.UserData = votesRequiredText;
+            votesRequiredSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
+                    
+                scrollBar.BarScroll = MathUtils.Round(barScroll, 0.2f);
+                EndVoteRequiredRatio = barScroll/2.0f + 0.5f;
+                voteText.Text = "Votes required: " + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
+                return true;
+            };
             
-            new GUITextBlock(new Rectangle(0, 95, 100, 20), "Submarine selection:", GUI.Style, innerFrame);
-            var selectionFrame = new GUIFrame(new Rectangle(0, 120, 300, 20), null, innerFrame);
+            new GUITextBlock(new Rectangle(0, 95+50, 100, 20), "Submarine selection:", GUI.Style, innerFrame);
+            var selectionFrame = new GUIFrame(new Rectangle(0, 120 + 50, 300, 20), null, innerFrame);
             for (int i = 0; i<3; i++)
             {
                 var selectionTick = new GUITickBox(new Rectangle(i * 100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
@@ -110,9 +135,9 @@ namespace Barotrauma.Networking
                 selectionTick.OnSelected = SwitchSubSelection;
                 selectionTick.UserData = (SelectionMode)i;
             }
-            
-            new GUITextBlock(new Rectangle(0, 145, 100, 20), "Mode selection:", GUI.Style, innerFrame);
-            selectionFrame = new GUIFrame(new Rectangle(0, 170, 300, 20), null, innerFrame);
+
+            new GUITextBlock(new Rectangle(0, 145 + 50, 100, 20), "Mode selection:", GUI.Style, innerFrame);
+            selectionFrame = new GUIFrame(new Rectangle(0, 170 + 50, 300, 20), null, innerFrame);
             for (int i = 0; i<3; i++)
             {
                 var selectionTick = new GUITickBox(new Rectangle(i*100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
@@ -120,8 +145,8 @@ namespace Barotrauma.Networking
                 selectionTick.OnSelected = SwitchModeSelection;
                 selectionTick.UserData = (SelectionMode)i;
             }
-            
-            var allowSpecBox = new GUITickBox(new Rectangle(0, 210, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
+
+            var allowSpecBox = new GUITickBox(new Rectangle(0, 210 + 50, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
             allowSpecBox.Selected = true;
             allowSpecBox.OnSelected = ToggleAllowSpectating;            
             

@@ -87,56 +87,66 @@ namespace Barotrauma
         {
             this.submarine = sub;
 
-
-            List<Vector2> convexHull = GenerateConvexHull();
-            HullVertices = convexHull;
-
-            for (int i = 0; i < convexHull.Count; i++)
+            if (!Hull.hullList.Any())
             {
-                convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
+
+                body = BodyFactory.CreateRectangle(GameMain.World, 1.0f, 1.0f, 1.0f);
+                DebugConsole.ThrowError("WARNING: no hulls found, generating a physics body for the submarine failed.");
             }
-
-            convexHull.Reverse();
-
-            //get farseer 'vertices' from vectors
-            Vertices shapevertices = new Vertices(convexHull);
-
-            AABB hullAABB = shapevertices.GetAABB();
-
-            Borders = new Rectangle(
-                (int)ConvertUnits.ToDisplayUnits(hullAABB.LowerBound.X),
-                (int)ConvertUnits.ToDisplayUnits(hullAABB.UpperBound.Y),
-                (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.X * 2.0f),
-                (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.Y * 2.0f));
-            
-            //var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
-
-            body = BodyFactory.CreateBody(GameMain.World, this);
-
-            foreach (Hull hull in Hull.hullList)
+            else
             {
-                Rectangle rect = hull.Rect;
-                foreach (Structure wall in Structure.WallList)
+                List<Vector2> convexHull = GenerateConvexHull();
+                HullVertices = convexHull;
+
+                for (int i = 0; i < convexHull.Count; i++)
                 {
-                    if (!Submarine.RectsOverlap(wall.Rect, hull.Rect)) continue;
-
-                    Rectangle wallRect = wall.IsHorizontal ? 
-                        new Rectangle(hull.Rect.X, wall.Rect.Y, hull.Rect.Width, wall.Rect.Height) :
-                        new Rectangle(wall.Rect.X, hull.Rect.Y, wall.Rect.Width, hull.Rect.Height);
-
-                    rect = Rectangle.Union(
-                        new Rectangle(wallRect.X, wallRect.Y-wallRect.Height, wallRect.Width, wallRect.Height),
-                        new Rectangle(rect.X, rect.Y - rect.Height, rect.Width, rect.Height));
-                    rect.Y = rect.Y + rect.Height;
+                    convexHull[i] = ConvertUnits.ToSimUnits(convexHull[i]);
                 }
 
-                FixtureFactory.AttachRectangle(
-                    ConvertUnits.ToSimUnits(rect.Width), 
-                    ConvertUnits.ToSimUnits(rect.Height), 
-                    5.0f, 
-                    ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width/2, rect.Y - rect.Height/2)), 
-                    body, this);
+                convexHull.Reverse();
+
+                //get farseer 'vertices' from vectors
+                Vertices shapevertices = new Vertices(convexHull);
+
+                AABB hullAABB = shapevertices.GetAABB();
+
+                Borders = new Rectangle(
+                    (int)ConvertUnits.ToDisplayUnits(hullAABB.LowerBound.X),
+                    (int)ConvertUnits.ToDisplayUnits(hullAABB.UpperBound.Y),
+                    (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.X * 2.0f),
+                    (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.Y * 2.0f));
+
+                //var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
+
+                body = BodyFactory.CreateBody(GameMain.World, this);
+
+                foreach (Hull hull in Hull.hullList)
+                {
+                    Rectangle rect = hull.Rect;
+                    foreach (Structure wall in Structure.WallList)
+                    {
+                        if (!Submarine.RectsOverlap(wall.Rect, hull.Rect)) continue;
+
+                        Rectangle wallRect = wall.IsHorizontal ?
+                            new Rectangle(hull.Rect.X, wall.Rect.Y, hull.Rect.Width, wall.Rect.Height) :
+                            new Rectangle(wall.Rect.X, hull.Rect.Y, wall.Rect.Width, hull.Rect.Height);
+
+                        rect = Rectangle.Union(
+                            new Rectangle(wallRect.X, wallRect.Y - wallRect.Height, wallRect.Width, wallRect.Height),
+                            new Rectangle(rect.X, rect.Y - rect.Height, rect.Width, rect.Height));
+                        rect.Y = rect.Y + rect.Height;
+                    }
+
+                    FixtureFactory.AttachRectangle(
+                        ConvertUnits.ToSimUnits(rect.Width),
+                        ConvertUnits.ToSimUnits(rect.Height),
+                        5.0f,
+                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
+                        body, this);
+                }
             }
+
+
 
             body.BodyType = BodyType.Dynamic;
             body.CollisionCategories = Physics.CollisionMisc | Physics.CollisionWall;
@@ -275,7 +285,7 @@ namespace Barotrauma
                 volume += hull.FullVolume;
             }
 
-            float waterPercentage = waterVolume / volume;
+            float waterPercentage = volume==0.0f ? 0.0f : waterVolume / volume;
 
             float neutralPercentage = 0.07f;
 

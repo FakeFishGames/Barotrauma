@@ -292,6 +292,7 @@ namespace Barotrauma
             }
 
             Submarine.SaveCurrent(nameBox.Text + ".sub");
+            Submarine.Loaded.CheckForErrors();
 
             GUI.AddMessage("Submarine saved to " + Submarine.Loaded.FilePath, Color.Green, 3.0f);
             
