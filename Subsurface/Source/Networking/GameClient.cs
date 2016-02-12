@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
 
         private ReliableChannel reliableChannel;
 
-        private GUIButton endRoundButton;
+        private GUITickBox endRoundButton;
 
         private bool connected;
 
@@ -37,8 +37,8 @@ namespace Barotrauma.Networking
 
         public GameClient(string newName)
         {
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
-            endRoundButton.OnClicked = EndRoundClicked;
+            endRoundButton = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, 20, 20, 20), "End round", Alignment.TopLeft, inGameHUD);
+            endRoundButton.OnSelected = ToggleEndRoundVote;
             endRoundButton.Visible = false;
 
             GameMain.DebugDraw = false;
@@ -550,6 +550,8 @@ namespace Barotrauma.Networking
         {
             if (Character != null) Character.Remove();
 
+            endRoundButton.Selected = false;
+
             int seed = inc.ReadInt32();
 
             string levelSeed = inc.ReadString();
@@ -732,17 +734,17 @@ namespace Barotrauma.Networking
             return false;
         }
 
-        public bool EndRoundClicked(GUIButton button, object userData)
+        public bool ToggleEndRoundVote(GUITickBox tickBox)
         {
             if (!gameStarted) return false;
 
-            if (!Voting.AllowEndVoting)
+            if (!Voting.AllowEndVoting || myCharacter==null)
             {
-                button.Visible = false;
+                tickBox.Visible = false;
                 return false;
             }
 
-            Vote(VoteType.EndRound, true);
+            Vote(VoteType.EndRound, tickBox.Selected);
 
             return false;
         }

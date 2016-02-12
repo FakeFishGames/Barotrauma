@@ -375,6 +375,9 @@ namespace Barotrauma
                 UpdatePlayerFrame(GameMain.Client.CharacterInfo);
             }
 
+            GameMain.NetworkMember.EndVoteCount = 0;
+            GameMain.NetworkMember.EndVoteMax = 1;
+
             base.Select();
         }
 

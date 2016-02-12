@@ -474,7 +474,8 @@ namespace Barotrauma.Networking
                         case (byte)PacketTypes.Vote:
                             Voting.RegisterVote(inc, ConnectedClients);
 
-                            if (Voting.AllowEndVoting &&
+                            if (Voting.AllowEndVoting && EndVoteMax > 0 &&
+                                
                                 ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
                             {
                                 EndButtonHit(null,null);
