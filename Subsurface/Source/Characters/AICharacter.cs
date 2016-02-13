@@ -69,6 +69,13 @@ namespace Barotrauma
             if (GameMain.DebugDraw && !isDead) aiController.DebugDraw(spriteBatch);
         }
 
+        public override void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
+        {
+            base.AddDamage(causeOfDeath, amount, attacker);
+
+            if (attacker!=null) aiController.OnAttacked(attacker, amount);
+        }
+
         public override AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
         {
             AttackResult result = base.AddDamage(attacker, position, attack, deltaTime, playSound);

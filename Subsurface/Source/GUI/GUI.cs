@@ -205,6 +205,18 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
+        {
+            //outlinecolor = "0.5, 0.57, 0.6, 1.0" >
+
+            DrawRectangle(sb, new Vector2(start.X, -start.Y), size, new Color(0.5f, 0.57f, 0.6f, 1.0f), false, depth);
+
+            int padding = 2;
+            DrawRectangle(sb, new Rectangle((int)start.X + padding, -(int)(start.Y - padding), (int)((size.X - padding * 2)*progress), (int)size.Y - padding * 2), 
+                clr, true, depth);
+        }
+
+
         public static Texture2D CreateCircle(int radius)
         {
             int outerRadius = radius * 2 + 2; // So circle doesn't go out of bounds
