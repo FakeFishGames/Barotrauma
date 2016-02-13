@@ -110,6 +110,7 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
+            DropConnectedWires(dropper);
 
             if (body != null) item.body = body;
 
@@ -245,6 +246,8 @@ namespace Barotrauma.Items.Components
             AnimController ac = picker.AnimController;
 
             item.Submarine = picker.Submarine;
+
+            if (picker.SelectedConstruction != null && picker.SelectedConstruction.GetComponent<Controller>() != null) return;
 
             //item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;            
 

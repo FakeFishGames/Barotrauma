@@ -106,6 +106,8 @@ namespace Barotrauma
         private float[] soundRange;
         //which AIstate each sound is for
         private AIController.AiState[] soundStates;
+
+        private Entity viewTarget;
         
 
         private CharacterInfo info;
@@ -1380,15 +1382,21 @@ namespace Barotrauma
                     
                     if (secondaryHeld)
                     {
+                        if (Character.controlled==this)
+                        {
+                            viewTarget = Lights.LightManager.ViewTarget == null ? this : Lights.LightManager.ViewTarget;
+                        }
+                        if (viewTarget == null) viewTarget = this;
+
                         Vector2 relativeCursorPosition = cursorPosition;
-                        relativeCursorPosition -= Lights.LightManager.ViewTarget == null ? Position : Lights.LightManager.ViewTarget.Position;
+                        relativeCursorPosition -= viewTarget.Position;
 
                         if (relativeCursorPosition.Length()>500.0f)
                         {
                             relativeCursorPosition = Vector2.Normalize(relativeCursorPosition) * 495.0f;
                         }
 
-                        message.Write(Lights.LightManager.ViewTarget == null ? (ushort)0 : Lights.LightManager.ViewTarget.ID);
+                        message.Write(viewTarget.ID);
 
                         message.WriteRangedSingle(relativeCursorPosition.X, -500.0f, 500.0f, 8);
                         message.WriteRangedSingle(relativeCursorPosition.Y, -500.0f, 500.0f, 8);
@@ -1556,13 +1564,14 @@ namespace Barotrauma
                     float dir = 1.0f;
                     Vector2 pos = Vector2.Zero;
 
-                    ushort viewTargetId = 0;
+                    ushort viewTargetID = 0;
+                    viewTarget = null;
 
                     try
                     {
                         if (secondaryKeyState)
                         {
-                            viewTargetId = message.ReadUInt16();
+                            viewTargetID = message.ReadUInt16();
 
                             relativeCursorPos = new Vector2(
                                 message.ReadRangedSingle(-500.0f, 500.0f, 8),
@@ -1600,7 +1609,7 @@ namespace Barotrauma
                     {
 
                         cursorPosition = MathUtils.IsValid(relativeCursorPos) ? relativeCursorPos : Vector2.Zero;
-                        Entity viewTarget = viewTargetId == 0 ? this : Entity.FindEntityByID(viewTargetId);
+                        viewTarget = viewTargetID == 0 ? this : Entity.FindEntityByID(viewTargetID);
                         if (viewTarget == null) viewTarget = this;
 
                         cursorPosition += viewTarget.Position;
