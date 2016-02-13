@@ -31,6 +31,8 @@ namespace Barotrauma.Items.Components
 
         private bool isStuck;
 
+        private float lastReceivedMessage;
+
         private float stuck;
         public float Stuck
         {
@@ -429,22 +431,48 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
-            if (isStuck) return;
+            if (isStuck || GameMain.Client != null) return;
 
             if (connection.Name=="toggle")
             {
-                isOpen = !isOpen;
-                PlaySound(ActionType.OnUse, item.WorldPosition);
+                SetState(!isOpen, false);
             }
             else if (connection.Name == "set_state")
             {
-                bool newState = (signal!="0");
-                if (isOpen!=newState) PlaySound(ActionType.OnUse, item.WorldPosition);
-                isOpen = newState;             
+                SetState(signal != "0", false);      
             }
 
+            item.NewComponentEvent(this, false, true);
+        }
+
+        private void SetState(bool state, bool isNetWorkMessage)
+        {
+            if (GameMain.Client != null && !isNetWorkMessage) return;
+
+            if (isStuck || isOpen == state) return;
+
+            PlaySound(ActionType.OnUse, item.WorldPosition);
+
+            isOpen = state;
+
             //opening a partially stuck door makes it less stuck
-            if (isOpen) stuck = MathHelper.Clamp(stuck-30.0f, 0.0f, 100.0f);
+            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
+        }
+
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        {
+            message.Write(isOpen);
+
+            return true;
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
+        {
+            if (sendingTime < lastReceivedMessage) return;
+
+            lastReceivedMessage = sendingTime;
+
+            SetState(message.ReadBoolean(), true);
         }
     }
 }

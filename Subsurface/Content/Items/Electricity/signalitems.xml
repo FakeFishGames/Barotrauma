@@ -123,7 +123,7 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
@@ -158,7 +158,7 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
@@ -192,7 +192,7 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
@@ -226,7 +226,8 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
 
@@ -258,7 +259,7 @@
 
     <Body width="31" height="24"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
@@ -289,7 +290,7 @@
 
     <Body width="31" height="24"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]"
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
@@ -320,7 +321,7 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" 
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
@@ -354,7 +355,7 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable selectkey="Action" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"
+    <Holdable selectkey="Action" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0"
               slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
@@ -386,7 +387,7 @@
 
     <Body width="16" height="16"/>
 
-    <Holdable selectkey="Action" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true"
+    <Holdable selectkey="Action" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0"
         slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>

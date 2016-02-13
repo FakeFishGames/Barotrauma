@@ -274,7 +274,7 @@ namespace Barotrauma
                 case "heal":
                     if (Character.Controlled != null)
                     {
-                        Character.Controlled.AddDamage(CauseOfDeath.Damage, -Character.Controlled.MaxHealth);
+                        Character.Controlled.AddDamage(CauseOfDeath.Damage, -Character.Controlled.MaxHealth, null);
                         Character.Controlled.Oxygen = 100.0f;
                         Character.Controlled.Bleeding = 0.0f;
                     }

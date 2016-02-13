@@ -35,6 +35,8 @@ namespace Barotrauma
 
         protected double onFloorTimer;
 
+        private float splashSoundTimer;
+
         //the movement speed of the ragdoll
         public Vector2 movement;
         //the target speed towards which movement is interpolated
@@ -382,7 +384,9 @@ namespace Barotrauma
             }
 
             avgVelocity = avgVelocity / Limbs.Count();
-            
+
+            if (character.Submarine == null && f2.Body.UserData is Submarine) avgVelocity -= (f2.Body.UserData as Submarine).Velocity;
+                                    
             float impact = Vector2.Dot(avgVelocity, -normal);
             
             Limb l = (Limb)f1.Body.UserData;
@@ -396,7 +400,7 @@ namespace Barotrauma
             {
                 if (!character.IsNetworkPlayer)
                 {
-                    character.AddDamage(CauseOfDeath.Damage, impact - l.impactTolerance * 0.1f);
+                    character.AddDamage(CauseOfDeath.Damage, impact - l.impactTolerance * 0.1f, null);
 
                     strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
                 }
@@ -610,6 +614,8 @@ namespace Barotrauma
             FindLowestLimb();
 
             FindHull();
+
+            splashSoundTimer -= deltaTime;
             
             //ragdoll isn't in any room -> it's in the water
             if (currentHull == null)
@@ -678,11 +684,18 @@ namespace Barotrauma
                             limb.LinearVelocity*0.001f,
                             0.0f, limbHull);
 
-
-
                         //if the Character dropped into water, create a wave
                         if (limb.LinearVelocity.Y<0.0f)
                         {
+                            if (splashSoundTimer <= 0.0f)
+                            {
+                                SoundPlayer.PlaySplashSound(limb.WorldPosition, Math.Abs(limb.LinearVelocity.Y) + Rand.Range(-5.0f, 0.0f));
+                                splashSoundTimer = 0.5f;
+                            }
+
+
+                            
+
                             //1.0 when the limb is parallel to the surface of the water
                             // = big splash and a large impact
                             float parallel = (float)Math.Abs(Math.Sin(limb.Rotation));

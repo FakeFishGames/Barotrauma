@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -9,6 +12,9 @@ namespace Barotrauma.Items.Components
         protected Character picker;
 
         protected List<LimbSlot> allowedSlots;
+
+        private float pickTimer;
+
 
         public List<LimbSlot> AllowedSlots
         {
@@ -50,20 +56,49 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            if (picker == null) return false;
-            if (picker.Inventory == null) return false;
+            //return if someone is already trying to pick the item
+            if (pickTimer>0.0f) return false;
+            if (picker == null || picker.Inventory == null) return false;
 
-            if (picker.Inventory.TryPutItem(item, allowedSlots, picker==Character.Controlled))
+            if (PickingTime>0.0f)
             {
-                if (!picker.HasSelectedItem(item) && item.body!=null) item.body.Enabled = false;
+                CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
+
+                //create a networkevent here, because the item doesn't count as picked yet and the character won't create one
+                new NetworkEvent(NetworkEventType.PickItem, picker.ID, true,
+                    new int[] 
+                        { 
+                            item.ID, 
+                            picker.IsKeyHit(InputType.Select) ? 1 : 0, 
+                            picker.IsKeyHit(InputType.Use) ? 1 : 0 
+                        });
+                
+
+                return false;
+            }
+            else
+            {
+                return OnPicked(picker);
+            }
+
+
+        }
+
+        private bool OnPicked(Character picker)
+        {
+            if (picker.Inventory.TryPutItem(item, allowedSlots, picker == Character.Controlled))
+            {
+                if (!picker.HasSelectedItem(item) && item.body != null) item.body.Enabled = false;
                 this.picker = picker;
 
                 for (int i = item.linkedTo.Count - 1; i >= 0; i--)
+                {
                     item.linkedTo[i].RemoveLinked(item);
+                }
                 item.linkedTo.Clear();
 
                 var connectionPanel = item.GetComponent<ConnectionPanel>();
-                if (connectionPanel!=null)
+                if (connectionPanel != null)
                 {
                     foreach (Connection c in connectionPanel.Connections)
                     {
@@ -72,7 +107,7 @@ namespace Barotrauma.Items.Components
                             if (w == null) continue;
 
                             w.Item.Drop(picker);
-                            w.Item.SetTransform(item.SimPosition, 0.0f);
+                            w.Item.SetTransform(picker.SimPosition, 0.0f);
                         }
                     }
                 }
@@ -88,6 +123,63 @@ namespace Barotrauma.Items.Components
             }
 
             return false;
+        }
+
+        private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
+        {
+            var leftHand = picker.AnimController.GetLimb(LimbType.LeftHand);
+            var rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
+
+
+            pickTimer = 0.0f;
+            while (pickTimer < requiredTime)
+            {
+                if (picker.IsKeyHit(InputType.Aim) || !item.IsInPickRange(picker.WorldPosition))
+                {
+                    StopPicking(picker);
+                    yield return CoroutineStatus.Success;
+                }
+
+                picker.AnimController.Anim = AnimController.Animation.UsingConstruction;
+
+                picker.AnimController.TargetMovement = Vector2.Zero;
+
+                leftHand.Disabled = true;
+                leftHand.pullJoint.Enabled = true;
+                leftHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * (float)Math.Sin(pickTimer*10.0f)*0.1f;
+
+                rightHand.Disabled = true;
+                rightHand.pullJoint.Enabled = true;
+                rightHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * (float)Math.Sin(pickTimer*10.0f) * 0.1f;
+                
+                pickTimer += CoroutineManager.DeltaTime;
+
+                yield return CoroutineStatus.Running;
+            }
+
+            StopPicking(picker);
+
+            OnPicked(picker);
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private void StopPicking(Character picker)
+        {
+            picker.AnimController.Anim = AnimController.Animation.None;
+            pickTimer = 0.0f;            
+        }
+
+        
+        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+        {
+            if (pickTimer <= 0.0f) return;
+
+            float progressBarWidth = 100.0f;
+
+            GUI.DrawProgressBar(spriteBatch, item.DrawPosition + new Vector2(-progressBarWidth/2.0f, 50.0f), new Vector2(progressBarWidth, 15.0f), 
+                pickTimer / PickingTime,
+                Color.Lerp(Color.Red, Color.Green, pickTimer / PickingTime));
         }
 
         public override void Drop(Character dropper)

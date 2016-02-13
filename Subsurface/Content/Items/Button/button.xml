@@ -25,7 +25,7 @@
     <output name="signal_out"/>
   </ConnectionPanel>
 
-  <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]"
+  <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="10.0"
             aimpos="35,-10" handle1="0,0" attachable="true" attachedbydefault="true" aimable="true">
     <requireditem name="Wrench" type="Equipped"/>
   </Holdable>

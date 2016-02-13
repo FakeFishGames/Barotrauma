@@ -25,7 +25,7 @@ namespace Barotrauma.Networking
         private bool started;
 
         private NetServer server;
-        private NetPeerConfiguration config;        
+        private NetPeerConfiguration config;
 
         private DateTime sparseUpdateTimer;        
         private DateTime refreshMasterTimer;

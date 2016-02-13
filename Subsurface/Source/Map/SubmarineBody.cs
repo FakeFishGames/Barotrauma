@@ -159,7 +159,7 @@ namespace Barotrauma
             body.SleepingAllowed = false;
             body.IgnoreGravity = true;
             body.OnCollision += OnCollision;
-            //body.UserData = this;
+            body.UserData = submarine;
         }
 
 
