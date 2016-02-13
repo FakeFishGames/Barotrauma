@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
             List<Body> ignoredBodies = new List<Body>();
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                if (Rand.Range(0.0f, 1.0f) > degreeOfSuccess) continue;
+                if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
 
@@ -182,7 +182,7 @@ namespace Barotrauma.Items.Components
             {
                 if (character.IsKeyDown(InputType.Aim))
                 {
-                    targetLimb.character.AddDamage(CauseOfDeath.Damage, LimbFixAmount * degreeOfSuccess);
+                    targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, character);
                     //isActive = true;
                 }
             }
