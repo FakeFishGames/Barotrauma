@@ -166,11 +166,11 @@ namespace Barotrauma
             for (float x = startPosition.X; x < endPosition.X; x += Rand.Range(5000.0f, 10000.0f, false))
             {
                 pathNodes.Add(new Vector2(x, Rand.Range(pathBorders.Y, pathBorders.Bottom, false)));
+            }
 
-                //if (x > borders.Center.X)
-                //{
-                //    positionsOfInterest.Add(pathNodes.Last());
-                //}
+            for (int i = 2; i < pathNodes.Count; i+=3 )
+            {
+                positionsOfInterest.Add(new InterestingPosition(pathNodes[i], true));
             }
 
             pathNodes.Add(endPosition);
@@ -1021,7 +1021,7 @@ namespace Barotrauma
                 var positionsWithSpace = positionsOfInterest.FindAll(p => (bool)preferLarge == p.IsLarge);
                 if (!positionsWithSpace.Any()) return Size * 0.5f;
 
-                return positionsWithSpace[Rand.Int(positionsOfInterest.Count, !useSyncedRand)].Position;
+                return positionsWithSpace[Rand.Int(positionsWithSpace.Count, !useSyncedRand)].Position;
             }
         }
 

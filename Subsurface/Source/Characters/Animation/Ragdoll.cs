@@ -301,7 +301,7 @@ namespace Barotrauma
         {
             Structure structure = f2.Body.UserData as Structure;
 
-            if (f2.Body.UserData as SubmarineBody != null) return true;
+            if (f2.Body.UserData as Submarine != null && character.Submarine == f2.Body.UserData as Submarine) return false;
             
             //always collides with bodies other than structures
             if (structure == null)

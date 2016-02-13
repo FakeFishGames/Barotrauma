@@ -97,20 +97,7 @@ namespace Barotrauma.Items.Components
                 }
                 item.linkedTo.Clear();
 
-                var connectionPanel = item.GetComponent<ConnectionPanel>();
-                if (connectionPanel != null)
-                {
-                    foreach (Connection c in connectionPanel.Connections)
-                    {
-                        foreach (Wire w in c.Wires)
-                        {
-                            if (w == null) continue;
-
-                            w.Item.Drop(picker);
-                            w.Item.SetTransform(picker.SimPosition, 0.0f);
-                        }
-                    }
-                }
+                DropConnectedWires(picker);
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 
@@ -134,7 +121,9 @@ namespace Barotrauma.Items.Components
             pickTimer = 0.0f;
             while (pickTimer < requiredTime)
             {
-                if (picker.IsKeyHit(InputType.Aim) || !item.IsInPickRange(picker.WorldPosition))
+                if (picker.IsKeyDown(InputType.Aim) || 
+                    !item.IsInPickRange(picker.WorldPosition) ||
+                    picker.Stun > 0.0f || picker.IsDead)
                 {
                     StopPicking(picker);
                     yield return CoroutineStatus.Success;
@@ -159,7 +148,7 @@ namespace Barotrauma.Items.Components
 
             StopPicking(picker);
 
-            OnPicked(picker);
+            if (!picker.IsNetworkPlayer) OnPicked(picker);
 
             yield return CoroutineStatus.Success;
         }
@@ -168,6 +157,25 @@ namespace Barotrauma.Items.Components
         {
             picker.AnimController.Anim = AnimController.Animation.None;
             pickTimer = 0.0f;            
+        }
+
+        protected void DropConnectedWires(Character character)
+        {
+            if (character == null) return;
+
+            var connectionPanel = item.GetComponent<ConnectionPanel>();
+            if (connectionPanel == null) return;
+            
+            foreach (Connection c in connectionPanel.Connections)
+            {
+                foreach (Wire w in c.Wires)
+                {
+                    if (w == null) continue;
+
+                    w.Item.Drop(character);
+                    w.Item.SetTransform(character.SimPosition, 0.0f);
+                }
+            }            
         }
 
         
@@ -198,7 +206,9 @@ namespace Barotrauma.Items.Components
                 //}
             }
 
-            if (picker==null || picker.Inventory == null) return;
+            if (picker == null || picker.Inventory == null) return;
+
+            DropConnectedWires(picker);
 
             item.Submarine = picker.Submarine;
             

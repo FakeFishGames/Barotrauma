@@ -68,13 +68,14 @@ namespace Barotrauma.Items.Components
             this.cam = cam;
 
             if (character == null 
+                || character.IsDead
+                || character.Stun > 0.0f
                 || character.SelectedConstruction != item
-                || Vector2.Distance(character.Position, item.Position) > item.PickDistance * 1.5f)
+                || Vector2.Distance(character.Position, item.Position) > item.PickDistance * 2.0f)
             {
                 if (character != null)
                 {
-                    character.SelectedConstruction = null;
-                    character.AnimController.Anim = AnimController.Animation.None;
+                    CancelUsing(character);
                     character = null;
                 }
                 IsActive = false;
@@ -119,15 +120,13 @@ namespace Barotrauma.Items.Components
 
                 limb.Disabled = true;
 
-                FixedMouseJoint fmj = limb.pullJoint;
-                if (fmj == null) continue;
+                if (limb.pullJoint == null) continue;
 
                 Vector2 position = ConvertUnits.ToSimUnits(lb.position + new Vector2(item.Rect.X, item.Rect.Y));
-                fmj.Enabled = true;
-                fmj.WorldAnchorB = position;
+                limb.pullJoint.Enabled = true;
+                limb.pullJoint.WorldAnchorB = position;
             }
             
-            item.SendSignal(ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
         }
 
         public override bool Use(float deltaTime, Character activator = null)
@@ -152,6 +151,8 @@ namespace Barotrauma.Items.Components
                 character = null;
                 return;
             }
+
+            if (character!=null) item.SendSignal(ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
 
             foreach (Connection c in item.Connections)
             {
@@ -183,20 +184,42 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        private void CancelUsing(Character character)
+        {
+            foreach (LimbPos lb in limbPositions)
+            {
+                Limb limb = character.AnimController.GetLimb(lb.limbType);
+                if (limb == null) continue;
+
+                limb.Disabled = false;
+
+                limb.pullJoint.Enabled = false;
+            }
+
+            character.AnimController.Anim = AnimController.Animation.None;
+        }
+
         public override bool Select(Character activator = null)
         {
-            if (character!=null && character.SelectedConstruction == item)
-            {
-                character = null;
-                IsActive = false;
-                if (activator != null) activator.AnimController.Anim = AnimController.Animation.None;
+            if (activator == null) return false;
 
-                return true;
+            //someone already using the item
+            if (character != null)
+            {
+                if (character == activator)
+                {
+                    IsActive = false;
+                    CancelUsing(character);
+                    character = null;
+                }
+                else
+                {
+                    return false;
+                }
             }
             else
             {
                 character = activator;
-                if (activator == null) return false;
                     
                 IsActive = true;
             }
