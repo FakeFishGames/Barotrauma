@@ -59,7 +59,7 @@
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
-      <Item name="Uranium Bar"/>
+      <Item name="Uranium Bar" requirefullcondition="true"/>
     </Deconstruct>
 
     <Sprite texture ="fuelrod.png"/>
@@ -78,7 +78,7 @@
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
-      <Item name="Incendium Bar"/>
+      <Item name="Incendium Bar" requirefullcondition="true"/>
     </Deconstruct>
 
     <Sprite texture ="fuelrod.png"/>

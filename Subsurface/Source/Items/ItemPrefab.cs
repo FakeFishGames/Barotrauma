@@ -9,6 +9,18 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
+    struct DeconstructItem
+    {
+        public readonly string ItemPrefabName;
+        public readonly bool RequireFullCondition;
+
+        public DeconstructItem(string itemPrefabName, bool requireFullCondition)
+        {
+            ItemPrefabName = itemPrefabName;
+            RequireFullCondition = requireFullCondition;
+        }
+    }
+
     class ItemPrefab : MapEntityPrefab
     {
         //static string contentFolder = "Content/Items/";
@@ -38,7 +50,7 @@ namespace Barotrauma
             get { return configFile; }
         }
 
-        public List<string> DeconstructItems
+        public List<DeconstructItem> DeconstructItems
         {
             get;
             private set;
@@ -216,7 +228,7 @@ namespace Barotrauma
             
             Triggers            = new List<Rectangle>();
 
-            DeconstructItems    = new List<string>();
+            DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
 
             foreach (XElement subElement in element.Elements())
@@ -238,7 +250,12 @@ namespace Barotrauma
 
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
-                            DeconstructItems.Add(ToolBox.GetAttributeString(deconstructItem, "name", "not found"));
+
+                            string deconstructItemName = ToolBox.GetAttributeString(deconstructItem, "name", "not found");
+                            bool requireFullCondition = ToolBox.GetAttributeBool(deconstructItem, "requirefullcondition", false);
+
+                            DeconstructItems.Add(new DeconstructItem(deconstructItemName, requireFullCondition));
+
                         }
 
                         break;

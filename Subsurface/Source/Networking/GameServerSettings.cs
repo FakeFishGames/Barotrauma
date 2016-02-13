@@ -85,7 +85,7 @@ namespace Barotrauma.Networking
             get { return allowSpectating; }
         }
 
-        public float EndVoteRequiredRatio;
+        public float EndVoteRequiredRatio = 0.5f;
 
         private void CreateSettingsFrame()
         {
