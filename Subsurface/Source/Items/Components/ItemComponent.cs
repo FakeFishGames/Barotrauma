@@ -67,6 +67,13 @@ namespace Barotrauma.Items.Components
 
         public ItemComponent Parent;
 
+        [HasDefaultValue(0.0f, false)]
+        public float PickingTime
+        {
+            get;
+            private set;
+        }
+
         public readonly Dictionary<string, ObjectProperty> properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
         {

@@ -68,9 +68,7 @@ namespace Barotrauma
 
         protected override void DropItem(Item item)
         {
-            if (item.body == null) return;
-
-            bool enabled = item.body.Enabled;
+            bool enabled = item.body!=null && item.body.Enabled;
             item.Drop(character);
 
             if (!enabled)

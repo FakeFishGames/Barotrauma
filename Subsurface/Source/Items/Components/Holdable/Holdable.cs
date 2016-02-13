@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         private List<RelatedItem> prevRequiredItems;
 
         string prevMsg;
-        
+
         //the distance from the holding characters elbow to center of the physics body of the item
         protected Vector2 holdPos;
 
@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue(0.0f, false)]
         public float HoldAngle
         {
-            get { return MathHelper.ToDegrees(holdAngle);  }
+            get { return MathHelper.ToDegrees(holdAngle); }
             set { holdAngle = MathHelper.ToRadians(value); }
         }
 
@@ -101,7 +101,7 @@ namespace Barotrauma.Items.Components
                 Msg = "";
             }
 
-            if (attachedByDefault || (Screen.Selected == GameMain.EditMapScreen && Submarine.Loaded!=null))  Use(1.0f);
+            if (attachedByDefault || (Screen.Selected == GameMain.EditMapScreen && Submarine.Loaded != null)) Use(1.0f);
 
 
             //holdAngle = ToolBox.GetAttributeFloat(element, "holdangle", 0.0f);
@@ -110,12 +110,15 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
+
+            if (body != null) item.body = body;
+
             if (item.body != null) item.body.Enabled = true;
             IsActive = false;
 
             if (picker == null)
             {
-                if (dropper==null) return;
+                if (dropper == null) return;
                 picker = dropper;
             }
             if (picker.Inventory == null) return;
@@ -138,7 +141,7 @@ namespace Barotrauma.Items.Components
 
             if (item.body == null)
             {
-                if (body!=null)
+                if (body != null)
                 {
                     item.body = body;
                 }
@@ -151,7 +154,7 @@ namespace Barotrauma.Items.Components
             if (!item.body.Enabled)
             {
                 Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
-                item.SetTransform(rightHand.SimPosition, 0.0f);                
+                item.SetTransform(rightHand.SimPosition, 0.0f);
             }
 
             if (picker.TrySelectItem(item))
@@ -166,7 +169,7 @@ namespace Barotrauma.Items.Components
             if (picker == null) return;
 
             picker.DeselectItem(item);
-            
+
             item.body.Enabled = false;
             IsActive = false;
         }
@@ -189,7 +192,7 @@ namespace Barotrauma.Items.Components
             }
 
             attached = false;
-            if (body!=null) item.body = body;
+            if (body != null) item.body = body;
             //item.body.Enabled = true;
 
             return true;
@@ -197,13 +200,13 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (!attachable || item.body==null) return true;
+            if (!attachable || item.body == null) return true;
             if (character != null && !character.IsKeyDown(InputType.Aim)) return false;
 
             item.Drop();
 
             var containedItems = item.ContainedItems;
-            if (containedItems!=null)
+            if (containedItems != null)
             {
                 foreach (Item contained in containedItems)
                 {
@@ -231,12 +234,12 @@ namespace Barotrauma.Items.Components
         }
 
         public override void Update(float deltaTime, Camera cam)
-        {         
+        {
             if (!item.body.Enabled) return;
             if (!picker.HasSelectedItem(item)) IsActive = false;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
-            
+
             if (item.body.Dir != picker.AnimController.Dir) Flip(item);
 
             AnimController ac = picker.AnimController;
@@ -246,8 +249,8 @@ namespace Barotrauma.Items.Components
             //item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;            
 
             ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);
-        }    
-    
+        }
+
         protected void Flip(Item item)
         {
             handlePos[0].X = -handlePos[0].X;
@@ -267,7 +270,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (item.Inventory!=null)
+                if (item.Inventory != null)
                 {
                     if (body != null)
                     {
@@ -300,7 +303,7 @@ namespace Barotrauma.Items.Components
             }
 
             catch
-            { 
+            {
                 return;
             }
 

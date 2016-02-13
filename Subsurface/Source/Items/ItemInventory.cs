@@ -16,7 +16,7 @@ namespace Barotrauma
         protected override void DropItem(Item item)
         {
             item.Drop();
-            item.body.Enabled = true;
+            if (item.body != null) item.body.Enabled = true;
             item.SetTransform(container.Item.SimPosition, 0.0f);
         }
 

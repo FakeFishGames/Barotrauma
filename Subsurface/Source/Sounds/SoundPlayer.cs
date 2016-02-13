@@ -10,11 +10,13 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    public enum DamageSoundType { 
+    public enum DamageSoundType 
+    { 
         None, 
         StructureBlunt, StructureSlash, 
         LimbBlunt, LimbSlash, LimbArmor,
-        Implode, Pressure }
+        Implode, Pressure 
+    }
 
     public struct DamageSound
     {
@@ -53,12 +55,15 @@ namespace Barotrauma
     {
         public static Sound[] flowSounds = new Sound[3];
 
+        public static Sound[] SplashSounds = new Sound[10];
+
         public static float MusicVolume = 1.0f;
 
         private const float MusicLerpSpeed = 0.1f;
 
         private static Sound[] waterAmbiences = new Sound[2];
         private static int[] waterAmbienceIndexes = new int[2];
+
 
         private static DamageSound[] damageSounds;
 
@@ -96,6 +101,12 @@ namespace Barotrauma
             yield return CoroutineStatus.Running;
             flowSounds[2] = Sound.Load("Content/Sounds/Water/FlowLarge.ogg", false);
             yield return CoroutineStatus.Running;
+
+            for (int i = 0; i < 10; i++ )
+            {
+                SplashSounds[i] = Sound.Load("Content/Sounds/Water/Splash"+(i)+".ogg", false);
+                yield return CoroutineStatus.Running;
+            }
 
             XDocument doc = ToolBox.TryLoadXml("Content/Sounds/sounds.xml");
             if (doc == null) yield return CoroutineStatus.Failure;
@@ -280,6 +291,13 @@ namespace Barotrauma
                 currMusicVolume = MathHelper.Lerp(currMusicVolume, MusicVolume, MusicLerpSpeed);
                 Sound.StreamVolume(currMusicVolume);
             }
+        }
+
+        public static void PlaySplashSound(Vector2 worldPosition, float strength)
+        {
+            int splashIndex = MathHelper.Clamp((int)(strength + Rand.Range(-2,2)), 0, SplashSounds.Length-1);
+
+            SplashSounds[splashIndex].Play(1.0f, 800.0f, worldPosition);
         }
 
         public static void PlayDamageSound(DamageSoundType damageType, float damage, PhysicsBody body)
