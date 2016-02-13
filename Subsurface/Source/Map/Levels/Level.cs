@@ -148,13 +148,12 @@ namespace Barotrauma
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            float minWidth = Submarine.Loaded == null ? 3000.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
+            float minWidth = Submarine.Loaded == null ? 0.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
+            minWidth = Math.Max(minWidth, 3500.0f);
 
             startPosition = new Vector2((int)minWidth * 2, Rand.Range((int)minWidth * 2, borders.Height - (int)minWidth * 2, false));
             endPosition = new Vector2(borders.Width - (int)minWidth * 2, Rand.Range((int)minWidth * 2, borders.Height - (int)minWidth * 2, false));
-
-
-
+            
             List<Vector2> pathNodes = new List<Vector2>();
             Rectangle pathBorders = borders;// new Rectangle((int)minWidth, (int)minWidth, borders.Width - (int)minWidth * 2, borders.Height - (int)minWidth);   
             pathBorders.Inflate(-minWidth*2, -minWidth*2);
@@ -871,7 +870,10 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Invalid right normal");
 #endif
+                        GameMain.World.RemoveBody(cell.body);
+                        cell.body = null;
                         leftNormal = Vector2.UnitX;
+                        break;
                     }
                     
 
@@ -891,7 +893,10 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Invalid right normal");
 #endif
+                        GameMain.World.RemoveBody(cell.body);
+                        cell.body = null;
                         rightNormal = Vector2.UnitX;
+                        break;
                     }
 
 

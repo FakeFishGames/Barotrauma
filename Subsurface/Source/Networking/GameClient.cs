@@ -602,7 +602,7 @@ namespace Barotrauma.Networking
 
             gameStarted = true;
 
-            endRoundButton.Visible = Voting.AllowEndVoting;
+            endRoundButton.Visible = Voting.AllowEndVoting && myCharacter != null;
 
             GameMain.GameScreen.Select();
 

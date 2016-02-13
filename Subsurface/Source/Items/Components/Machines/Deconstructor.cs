@@ -58,9 +58,11 @@ namespace Barotrauma.Items.Components
                     return;
                 }
 
-                foreach (string deconstructProduct in targetItem.Prefab.DeconstructItems)
+                foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
                 {
-                    var itemPrefab = ItemPrefab.list.FirstOrDefault(ip => ip.Name.ToLower() == deconstructProduct.ToLower()) as ItemPrefab;
+                    if (deconstructProduct.RequireFullCondition && targetItem.Condition < 100.0f) continue;
+
+                    var itemPrefab = ItemPrefab.list.FirstOrDefault(ip => ip.Name.ToLower() == deconstructProduct.ItemPrefabName.ToLower()) as ItemPrefab;
                     if (itemPrefab==null)
                     {
                         DebugConsole.ThrowError("Tried to deconstruct item ''"+targetItem.Name+"'' but couldn't find item prefab ''"+deconstructProduct+"''!");
