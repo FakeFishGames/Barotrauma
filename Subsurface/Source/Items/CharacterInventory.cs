@@ -109,7 +109,7 @@ namespace Barotrauma
                 {
                     if (Items[i] != null || limbSlots[i] != LimbSlot.Any) continue;
 
-                    GameServer.Log(character.Name + " picked up " + item.Name);
+                    GameServer.Log(character.Name + " picked up " + item.Name, Color.Orange);
                     PutItem(item, i, createNetworkEvent);
                     item.Unequip(character);
                     return true;
@@ -144,7 +144,7 @@ namespace Barotrauma
 
                 if (placed)
                 {
-                    if (!alreadyInInventory) GameServer.Log(character.Name + " picked up " + item.Name);
+                    if (!alreadyInInventory) GameServer.Log(character.Name + " picked up " + item.Name, Color.Orange);
                     return true;
                 }
             }

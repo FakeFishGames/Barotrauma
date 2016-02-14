@@ -236,8 +236,8 @@ namespace Barotrauma.Items.Components
             var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
             if (sender != null)
             {
-                Networking.GameServer.Log("Pump settings adjusted by " + sender.name);
-                Networking.GameServer.Log("Active: " + (IsActive ? "yes" : "no ") + "  Pumping speed: " + (int)flowPercentage + " %");
+                Networking.GameServer.Log("Pump settings adjusted by " + sender.name, Color.Orange);
+                Networking.GameServer.Log("Active: " + (IsActive ? "yes" : "no ") + "  Pumping speed: " + (int)flowPercentage + " %", Color.Orange);
             }
         }
     }

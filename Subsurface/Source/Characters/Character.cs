@@ -1096,7 +1096,7 @@ namespace Barotrauma
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
-                GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding);
+                GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, Color.Orange);
             }
 
             return attackResult;
@@ -1259,7 +1259,7 @@ namespace Barotrauma
                 }
             }
 
-            GameServer.Log(Name+" has died (cause of death: "+causeOfDeath+")");
+            GameServer.Log(Name+" has died (Cause of death: "+causeOfDeath+")", Color.Red);
 
             if (OnDeath != null) OnDeath(this, causeOfDeath);
 
@@ -1464,11 +1464,11 @@ namespace Barotrauma
                     {
                         if (item == selectedConstruction)
                         {
-                            GameServer.Log(Name + " deselected " + item.Name);
+                            GameServer.Log(Name + " deselected " + item.Name, Color.Orange);
                         }
                         else
                         {
-                            GameServer.Log(Name + " selected " + item.Name);
+                            GameServer.Log(Name + " selected " + item.Name, Color.Orange);
                         }
                         item.Pick(this, false, pickHit, actionHit);
                     }

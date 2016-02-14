@@ -226,7 +226,7 @@ namespace Barotrauma.Items.Components
             fissionRate = Math.Min(fissionRate, AvailableFuel);
             
             float heat = 100 * fissionRate * (AvailableFuel/2000.0f);
-            float heatDissipation = 50 * coolingRate + ExtraCooling;
+            float heatDissipation = 50 * coolingRate + Math.Max(ExtraCooling, 5.0f);
 
             float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 10000.0f;
             Temperature = temperature + deltaTemp;
@@ -362,7 +362,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Condition <= 0.0f) return;
 
-            GameServer.Log("Reactor meltdown!");
+            GameServer.Log("Reactor meltdown!", Color.Red);
  
             new RepairTask(item, 60.0f, "Reactor meltdown!");
             item.Condition = 0.0f;
@@ -583,8 +583,8 @@ namespace Barotrauma.Items.Components
             var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
             if (sender != null)
             {
-                Networking.GameServer.Log("Reactor settings adjusted by " + sender.name);
-                Networking.GameServer.Log("Autotemp: " +(autoTemp ? "ON " : "OFF") + "  Shutdown temp: "+shutDownTemp+"  Cooling rate: "+coolingRate+"  Fission rate: "+fissionRate);
+                Networking.GameServer.Log("Reactor settings adjusted by " + sender.name+": ", Color.Orange);
+                Networking.GameServer.Log("Autotemp: " +(autoTemp ? "ON " : "OFF") + "  Shutdown temp: "+shutDownTemp+"  Cooling rate: "+(int)coolingRate+"  Fission rate: "+(int)fissionRate, Color.Orange);
             }
             
         }

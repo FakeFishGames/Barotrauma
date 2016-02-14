@@ -59,7 +59,7 @@ namespace Barotrauma.Networking
         protected GUIFrame inGameHUD;
         protected GUIListBox chatBox;
         protected GUITextBox chatMsgBox;
-
+        
 
         public int EndVoteCount, EndVoteMax;
         //private GUITextBlock endVoteText;
@@ -186,7 +186,7 @@ namespace Barotrauma.Networking
         {
             GameMain.NetLobbyScreen.NewChatMessage(message, messageColor[(int)messageType]);
 
-            GameServer.Log(message);
+            GameServer.Log(message, messageColor[(int)messageType]);
 
             while (chatBox.CountChildren > 20)
             {

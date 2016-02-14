@@ -38,8 +38,8 @@ namespace Barotrauma
 
             new GUIMessageBox(mission.Name, mission.Description, 400, 400);
 
-            Networking.GameServer.Log("Mission: " + mission.Name);
-            Networking.GameServer.Log(mission.Description);
+            Networking.GameServer.Log("Mission: " + mission.Name, Color.Cyan);
+            Networking.GameServer.Log(mission.Description, Color.Cyan);
 
             //quest.Start(Level.Loaded);
         }

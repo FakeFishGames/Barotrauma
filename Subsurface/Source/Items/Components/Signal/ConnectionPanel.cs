@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
                 var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
                 if (sender != null)
                 {
-                    Networking.GameServer.Log(item.Name + " rewired by " + sender.name);
+                    Networking.GameServer.Log(item.Name + " rewired by " + sender.name, Color.Orange);
                 }
             }
 
@@ -172,7 +172,7 @@ namespace Barotrauma.Items.Components
                     wireComponent.Connect(c, false);
 
                     var otherConnection = c.Wires[i].OtherConnection(c);
-                    Networking.GameServer.Log(c.Name + " -> " + (otherConnection == null ? "none" : otherConnection.Name));
+                    Networking.GameServer.Log(c.Name + " -> " + (otherConnection == null ? "none" : otherConnection.Name), Color.Orange);
                 }
                 c.UpdateRecipients();
             } 

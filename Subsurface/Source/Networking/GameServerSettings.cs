@@ -167,8 +167,9 @@ namespace Barotrauma.Networking
             saveLogsBox.OnSelected = (GUITickBox) =>
             {
                 saveServerLogs = GUITickBox.Selected;
+                showLogButton.Visible = saveServerLogs;
                 return true;
-            }; ;   
+            };
             
             var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
             closeButton.OnClicked = ToggleSettingsFrame;
