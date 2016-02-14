@@ -173,9 +173,12 @@ namespace Barotrauma
         {
             if (index >= headers.Count && index >= messages.Count) return;
 
-            new GUIMessageBox(
-                index < headers.Count ? headers[index] : "",
-                index < messages.Count ? messages[index] : "");
+            string header = index < headers.Count ? headers[index] : "";
+            string message = index < messages.Count ? messages[index] : "";
+
+            Barotrauma.Networking.GameServer.Log("Mission info: " + header + " - " + message);
+
+            new GUIMessageBox(header, message);
         }
 
         /// <summary>

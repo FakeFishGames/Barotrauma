@@ -152,7 +152,10 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (character!=null) item.SendSignal(ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
+            Entity focusTarget = null;
+
+            if (character == null) return;
+            
 
             foreach (Connection c in item.Connections)
             {
@@ -162,16 +165,27 @@ namespace Barotrauma.Items.Components
                 {
                     if (c2 == null || c2.Item == null || !c2.Item.Prefab.FocusOnSelected) continue;
 
-                    Vector2 centerPos = c2.Item.WorldPosition;
-
-                    if (character == Character.Controlled && cam != null)
-                    {
-                        Lights.LightManager.ViewTarget = c2.Item;
-                        cam.TargetPos = c2.Item.WorldPosition;
-                    }
+                    focusTarget = c2.Item;
 
                     break;
                 }
+            }
+
+            if (focusTarget == null)
+            {
+                item.SendSignal(ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
+                return;
+            }
+
+            if (character == Character.Controlled && cam != null)
+            {
+                Lights.LightManager.ViewTarget = focusTarget;
+                cam.TargetPos = focusTarget.WorldPosition;
+            }
+            
+            if (!character.IsNetworkPlayer || character.ViewTarget == focusTarget)
+            {
+                item.SendSignal(ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
             }
         }
 

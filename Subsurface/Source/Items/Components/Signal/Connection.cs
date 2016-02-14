@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
         private static Sprite wireCorner, wireVertical, wireHorizontal;
 
         //how many wires can be linked to a single connector
-        private const int MaxLinked = 5;
+        public const int MaxLinked = 5;
 
         public readonly string Name;
 

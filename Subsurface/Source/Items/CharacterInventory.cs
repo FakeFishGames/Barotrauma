@@ -100,15 +100,19 @@ namespace Barotrauma
         /// </summary>
         public override bool TryPutItem(Item item, List<LimbSlot> allowedSlots, bool createNetworkEvent = true)
         {
+            bool alreadyInInventory = Array.Find(Items, i => i == item)!=null;
+
             //try to place the item in LimBlot.Any slot if that's allowed
             if (allowedSlots.Contains(LimbSlot.Any))
             {
                 for (int i = 0; i < capacity; i++)
                 {
                     if (Items[i] != null || limbSlots[i] != LimbSlot.Any) continue;
+
+                    GameServer.Log(character.Name + " picked up " + item.Name);
                     PutItem(item, i, createNetworkEvent);
                     item.Unequip(character);
-                    return true;                   
+                    return true;
                 }
             }
 
@@ -138,7 +142,11 @@ namespace Barotrauma
                     }
                 }
 
-                if (placed) return true;
+                if (placed)
+                {
+                    if (!alreadyInInventory) GameServer.Log(character.Name + " picked up " + item.Name);
+                    return true;
+                }
             }
 
 
@@ -368,7 +376,7 @@ namespace Barotrauma
             for (int i = 0; i<capacity; i++)
             {
                 ushort itemId = message.ReadUInt16();
-                if (itemId==0)
+                if (itemId == 0)
                 {
                     if (Items[i] != null) Items[i].Drop(character, false);
                 }

@@ -143,8 +143,15 @@ namespace Barotrauma
         private void UpdateNone(float deltaTime)
         {
             //wander around randomly
-            steeringManager.SteeringWander(0.8f);            
-            steeringManager.SteeringAvoid(deltaTime, 1.0f);
+            if (Character.Submarine==null && SimPosition.Y < ConvertUnits.ToSimUnits(SubmarineBody.DamageDepth*0.5f))
+            {
+                steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
+            }
+            else
+            {
+                steeringManager.SteeringWander(0.8f);            
+                steeringManager.SteeringAvoid(deltaTime, 1.0f);
+            }
 
             attackingLimb = null;
             attackTimer = 0.0f;

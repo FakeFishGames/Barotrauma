@@ -107,7 +107,11 @@ namespace Barotrauma
         //which AIstate each sound is for
         private AIController.AiState[] soundStates;
 
-        private Entity viewTarget;
+        public Entity ViewTarget
+        {
+            get;
+            private set;
+        }
         
 
         private CharacterInfo info;
@@ -1085,7 +1089,17 @@ namespace Barotrauma
 
         public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            return AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
+
+
+            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
+
+            var attackingCharacter = attacker as Character;
+            if (attackingCharacter != null && attackingCharacter.AIController == null)
+            {
+                GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding);
+            }
+
+            return attackResult;
         }
 
         public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
@@ -1245,6 +1259,8 @@ namespace Barotrauma
                 }
             }
 
+            GameServer.Log(Name+" has died (cause of death: "+causeOfDeath+")");
+
             if (OnDeath != null) OnDeath(this, causeOfDeath);
 
             //CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
@@ -1384,19 +1400,19 @@ namespace Barotrauma
                     {
                         if (Character.controlled==this)
                         {
-                            viewTarget = Lights.LightManager.ViewTarget == null ? this : Lights.LightManager.ViewTarget;
+                            ViewTarget = Lights.LightManager.ViewTarget == null ? this : Lights.LightManager.ViewTarget;
                         }
-                        if (viewTarget == null) viewTarget = this;
+                        if (ViewTarget == null) ViewTarget = this;
 
                         Vector2 relativeCursorPosition = cursorPosition;
-                        relativeCursorPosition -= viewTarget.Position;
+                        relativeCursorPosition -= ViewTarget.Position;
 
                         if (relativeCursorPosition.Length()>500.0f)
                         {
                             relativeCursorPosition = Vector2.Normalize(relativeCursorPosition) * 495.0f;
                         }
 
-                        message.Write(viewTarget.ID);
+                        message.Write(ViewTarget.ID);
 
                         message.WriteRangedSingle(relativeCursorPosition.X, -500.0f, 500.0f, 8);
                         message.WriteRangedSingle(relativeCursorPosition.Y, -500.0f, 500.0f, 8);
@@ -1432,7 +1448,7 @@ namespace Barotrauma
             switch (type)
             {
                 case NetworkEventType.PickItem:
-                    System.Diagnostics.Debug.WriteLine("**************** PickItem networkevent received");
+                    
 
                     ushort itemId = message.ReadUInt16();
 
@@ -1444,7 +1460,18 @@ namespace Barotrauma
                     System.Diagnostics.Debug.WriteLine("item id: "+itemId);
 
                     Item item = FindEntityByID(itemId) as Item;
-                    if (item != null) item.Pick(this, false, pickHit, actionHit);                    
+                    if (item != null)
+                    {
+                        if (item == selectedConstruction)
+                        {
+                            GameServer.Log(Name + " deselected " + item.Name);
+                        }
+                        else
+                        {
+                            GameServer.Log(Name + " selected " + item.Name);
+                        }
+                        item.Pick(this, false, pickHit, actionHit);
+                    }
 
                     return;
                 case NetworkEventType.SelectCharacter:
@@ -1565,7 +1592,7 @@ namespace Barotrauma
                     Vector2 pos = Vector2.Zero;
 
                     ushort viewTargetID = 0;
-                    viewTarget = null;
+                    ViewTarget = null;
 
                     try
                     {
@@ -1609,10 +1636,10 @@ namespace Barotrauma
                     {
 
                         cursorPosition = MathUtils.IsValid(relativeCursorPos) ? relativeCursorPos : Vector2.Zero;
-                        viewTarget = viewTargetID == 0 ? this : Entity.FindEntityByID(viewTargetID);
-                        if (viewTarget == null) viewTarget = this;
+                        ViewTarget = viewTargetID == 0 ? this : Entity.FindEntityByID(viewTargetID);
+                        if (ViewTarget == null) ViewTarget = this;
 
-                        cursorPosition += viewTarget.Position;
+                        cursorPosition += ViewTarget.Position;
                     }
                     else
                     {

@@ -43,6 +43,8 @@ namespace Barotrauma.Networking
 
         private bool endRoundAtLevelEnd = true;
 
+        private bool saveServerLogs = true;
+
         public bool AutoRestart
         {
             get { return (ConnectedClients.Count == 0) ? false : autoRestart; }
@@ -97,7 +99,11 @@ namespace Barotrauma.Networking
 
             var randomizeLevelBox = new GUITickBox(new Rectangle(0, 30, 20, 20), "Randomize level seed between rounds", Alignment.Left, innerFrame);
             randomizeLevelBox.Selected = randomizeSeed;
-            randomizeLevelBox.OnSelected = ToggleRandomizeSeed;
+            randomizeLevelBox.OnSelected = (GUITickBox) =>
+            {
+                randomizeSeed = GUITickBox.Selected;
+                return true;
+            };
 
             var endBox = new GUITickBox(new Rectangle(0, 60, 20, 20), "End round when destination reached", Alignment.Left, innerFrame);
             endBox.Selected = endRoundAtLevelEnd;
@@ -116,6 +122,7 @@ namespace Barotrauma.Networking
 
             var votesRequiredSlider = new GUIScrollBar(new Rectangle(150,115, 100, 10), GUI.Style, 0.1f, innerFrame);
             votesRequiredSlider.UserData = votesRequiredText;
+            votesRequiredSlider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
             votesRequiredSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
@@ -125,7 +132,8 @@ namespace Barotrauma.Networking
                 voteText.Text = "Votes required: " + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
                 return true;
             };
-            
+            votesRequiredSlider.OnMoved(votesRequiredSlider, votesRequiredSlider.BarScroll);
+
             new GUITextBlock(new Rectangle(0, 95+50, 100, 20), "Submarine selection:", GUI.Style, innerFrame);
             var selectionFrame = new GUIFrame(new Rectangle(0, 120 + 50, 300, 20), null, innerFrame);
             for (int i = 0; i<3; i++)
@@ -147,8 +155,20 @@ namespace Barotrauma.Networking
             }
 
             var allowSpecBox = new GUITickBox(new Rectangle(0, 210 + 50, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
-            allowSpecBox.Selected = true;
-            allowSpecBox.OnSelected = ToggleAllowSpectating;            
+            allowSpecBox.Selected = allowSpectating;
+            allowSpecBox.OnSelected = (GUITickBox) =>
+            {
+                allowSpectating = GUITickBox.Selected;
+                return true;
+            };
+
+            var saveLogsBox = new GUITickBox(new Rectangle(0, 240 + 50, 20, 20), "Save server logs", Alignment.Left, innerFrame);
+            saveLogsBox.Selected = saveServerLogs;
+            saveLogsBox.OnSelected = (GUITickBox) =>
+            {
+                saveServerLogs = GUITickBox.Selected;
+                return true;
+            }; ;   
             
             var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
             closeButton.OnClicked = ToggleSettingsFrame;
@@ -194,17 +214,6 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        private bool ToggleRandomizeSeed(GUITickBox tickBox)
-        {
-            randomizeSeed = tickBox.Selected;
-            return true;
-        }
-
-        private bool ToggleAllowSpectating(GUITickBox tickBox)
-        {
-            allowSpectating = tickBox.Selected;
-            return true;
-        }
 
         public bool ToggleSettingsFrame(GUIButton button, object obj)
         {
