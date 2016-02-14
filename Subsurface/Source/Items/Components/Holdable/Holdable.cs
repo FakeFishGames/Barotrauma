@@ -158,10 +158,13 @@ namespace Barotrauma.Items.Components
                 item.SetTransform(rightHand.SimPosition, 0.0f);
             }
 
+            bool alreadySelected = character.HasSelectedItem(item);
             if (picker.TrySelectItem(item))
             {
                 item.body.Enabled = true;
                 IsActive = true;
+
+                if (!alreadySelected) Barotrauma.Networking.GameServer.Log(character.Name+" equipped "+item.Name);
             }
         }
 
@@ -170,6 +173,8 @@ namespace Barotrauma.Items.Components
             if (picker == null) return;
 
             picker.DeselectItem(item);
+
+            Barotrauma.Networking.GameServer.Log(character.Name + " unequipped " + item.Name);
 
             item.body.Enabled = false;
             IsActive = false;
@@ -296,7 +301,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
         {
             Vector2 newPos = Vector2.Zero;
 

@@ -135,12 +135,12 @@ namespace Barotrauma.Items.Components
 
                 leftHand.Disabled = true;
                 leftHand.pullJoint.Enabled = true;
-                leftHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * (float)Math.Sin(pickTimer*10.0f)*0.1f;
+                leftHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f);
 
                 rightHand.Disabled = true;
                 rightHand.pullJoint.Enabled = true;
-                rightHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * (float)Math.Sin(pickTimer*10.0f) * 0.1f;
-                
+                rightHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f);
+
                 pickTimer += CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
@@ -161,7 +161,7 @@ namespace Barotrauma.Items.Components
 
         protected void DropConnectedWires(Character character)
         {
-            if (character == null) return;
+            Vector2 pos = character == null ? item.SimPosition : character.SimPosition;
 
             var connectionPanel = item.GetComponent<ConnectionPanel>();
             if (connectionPanel == null) return;
@@ -173,7 +173,7 @@ namespace Barotrauma.Items.Components
                     if (w == null) continue;
 
                     w.Item.Drop(character);
-                    w.Item.SetTransform(character.SimPosition, 0.0f);
+                    w.Item.SetTransform(pos, 0.0f);
                 }
             }            
         }

@@ -731,7 +731,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message, float sendingTime)
+        public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime)
         {
         }
     }

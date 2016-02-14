@@ -205,7 +205,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
         {
             float newFlow = 0.0f;
             bool newActive;
@@ -230,6 +230,15 @@ namespace Barotrauma.Items.Components
             IsActive = newActive;
 
             lastUpdate = sendingTime;
+
+            if (GameMain.Server == null) return;
+
+            var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+            if (sender != null)
+            {
+                Networking.GameServer.Log("Pump settings adjusted by " + sender.name);
+                Networking.GameServer.Log("Active: " + (IsActive ? "yes" : "no ") + "  Pumping speed: " + (int)flowPercentage + " %");
+            }
         }
     }
 }

@@ -186,6 +186,8 @@ namespace Barotrauma.Networking
         {
             GameMain.NetLobbyScreen.NewChatMessage(message, messageColor[(int)messageType]);
 
+            GameServer.Log(message);
+
             while (chatBox.CountChildren > 20)
             {
                 chatBox.RemoveChild(chatBox.children[1]);

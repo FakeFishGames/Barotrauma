@@ -129,7 +129,7 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in Connections)
             {
                 Wire[] wires = Array.FindAll(c.Wires, w => w != null);
-                message.Write((byte)wires.Length);
+                message.WriteRangedInteger(0, Connection.MaxLinked, wires.Length);
                 for (int i = 0 ; i < wires.Length; i++)
                 {
                     message.Write(wires[i].Item.ID);
@@ -139,15 +139,24 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message, float sendingTime)
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
         {
+            if (GameMain.Server != null)
+            {
+                var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+                if (sender != null)
+                {
+                    Networking.GameServer.Log(item.Name + " rewired by " + sender.name);
+                }
+            }
+
             System.Diagnostics.Debug.WriteLine("connectionpanel update");
             foreach (Connection c in Connections)
             {
                 //int wireCount = c.Wires.Length;
                 c.ClearConnections();
 
-                byte wireCount = message.ReadByte();                
+                int wireCount = message.ReadRangedInteger(0, Connection.MaxLinked);                
 
                 for (int i = 0; i < wireCount; i++)
                 {
@@ -161,6 +170,9 @@ namespace Barotrauma.Items.Components
 
                     c.Wires[i] = wireComponent;
                     wireComponent.Connect(c, false);
+
+                    var otherConnection = c.Wires[i].OtherConnection(c);
+                    Networking.GameServer.Log(c.Name + " -> " + (otherConnection == null ? "none" : otherConnection.Name));
                 }
                 c.UpdateRecipients();
             } 

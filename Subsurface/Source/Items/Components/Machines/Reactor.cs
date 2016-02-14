@@ -361,6 +361,8 @@ namespace Barotrauma.Items.Components
         private void MeltDown()
         {
             if (item.Condition <= 0.0f) return;
+
+            GameServer.Log("Reactor meltdown!");
  
             new RepairTask(item, 60.0f, "Reactor meltdown!");
             item.Condition = 0.0f;
@@ -539,7 +541,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetBuffer message, float sendingTime)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime)
         {
             if (sendingTime < lastUpdate) return;
 
@@ -574,6 +576,17 @@ namespace Barotrauma.Items.Components
             FissionRate = newFissionRate;
 
             lastUpdate = sendingTime;
+
+
+            if (GameMain.Server == null) return;
+            
+            var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+            if (sender != null)
+            {
+                Networking.GameServer.Log("Reactor settings adjusted by " + sender.name);
+                Networking.GameServer.Log("Autotemp: " +(autoTemp ? "ON " : "OFF") + "  Shutdown temp: "+shutDownTemp+"  Cooling rate: "+coolingRate+"  Fission rate: "+fissionRate);
+            }
+            
         }
     }
 }

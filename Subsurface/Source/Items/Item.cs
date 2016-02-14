@@ -833,7 +833,7 @@ namespace Barotrauma
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (condition<=0.0f)
+            if (condition <= 0.0f)
             {
                 FixRequirement.DrawHud(spriteBatch, this, character);
                 return;
@@ -1123,6 +1123,9 @@ namespace Barotrauma
         {
             //if (dropper == Character.Controlled)
             //    new NetworkEvent(NetworkEventType.DropItem, ID, true);
+
+
+            if (dropper != null) GameServer.Log(dropper.Name + " dropped " + Name);
             
             foreach (ItemComponent ic in components) ic.Drop(dropper);
 
