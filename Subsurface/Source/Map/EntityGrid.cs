@@ -32,16 +32,17 @@ namespace Barotrauma
             Rectangle rect = entity.Rect;
             //if (Submarine.Loaded != null) rect.Offset(-Submarine.HiddenSubPosition);
             Rectangle indices = GetIndices(rect);
-            if (indices.X < 0 || indices.Width >= entities.GetLength(0) ||
-                indices.Y < 0 || indices.Height >= entities.GetLength(1))
+
+            if (indices.Width < 0 || indices.X >= entities.GetLength(0) ||
+                indices.Height < 0 || indices.Y >= entities.GetLength(1))
             {
                 DebugConsole.ThrowError("Error in EntityGrid.InsertEntity: " + entity + " is outside the grid");
                 return;
             }
 
-            for (int x = indices.X; x <= indices.Width; x++)
+            for (int x = Math.Max(indices.X, 0); x <= Math.Min(indices.Width, entities.GetLength(0)); x++)
             {
-                for (int y = indices.Y; y <= indices.Height; y++)
+                for (int y = Math.Max(indices.Y,0); y <= Math.Min(indices.Height, entities.GetLength(1)); y++)
                 {
                     entities[x, y].Add(entity);
                 }
