@@ -583,7 +583,7 @@ namespace Barotrauma
 
         public int GetSkillLevel(string skillName)
         {
-            return Info.Job.GetSkillLevel(skillName);
+            return (Info==null || Info.Job==null) ? 0 : Info.Job.GetSkillLevel(skillName);
         }
 
         float findClosestTimer;
