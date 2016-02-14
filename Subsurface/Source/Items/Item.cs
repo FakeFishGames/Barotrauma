@@ -1019,7 +1019,7 @@ namespace Barotrauma
                 bool showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.EditMapScreen;
                 if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) continue;
                 if ((ic.CanBePicked && pickHit && ic.Pick(picker)) || 
-                    (ic.CanBeSelected && selectHit && ic.Select(picker)))                     
+                    (ic.CanBeSelected && selectHit && ic.Select(picker)))
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);

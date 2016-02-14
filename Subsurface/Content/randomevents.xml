@@ -38,7 +38,7 @@
     characterfile="Content/Characters/Endworm/endworm.xml"
     spawndeep="true"
     commonness="1"
-    difficulty="5"
+    difficulty="20"
     minamount="1" maxamount="1"
     musictype="deep"/>
 
@@ -47,6 +47,13 @@
     commonness="3"
     difficulty="5"
     minamount="1" maxamount="1"/>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Husk/husk.xml"
+    commonness="5"
+    difficulty="15"
+    minamount="2" maxamount="3"
+    musictype="monster"/>
 
   <ArtifactEvent name="Artifact" description=""
     itemname="Skyholder Artifact"
