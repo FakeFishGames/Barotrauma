@@ -311,6 +311,8 @@ namespace Barotrauma
         {
             IDamageable damageTarget = null;
 
+            float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackPosition));
+
             switch (limb.attack.Type)
             {
                 case AttackType.PinchCW:
@@ -328,7 +330,6 @@ namespace Barotrauma
                         break;
                     }
 
-                    float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackPosition));
                     if (dist < limb.attack.Range * 0.5f)
                     {
                         attackTimer += deltaTime;
@@ -361,10 +362,16 @@ namespace Barotrauma
                         break;
                     }
 
-                    if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackPosition)) < limb.attack.Range)
+
+                    if (dist < limb.attack.Range)
                     {
                         attackTimer += deltaTime;
                         limb.body.ApplyForce(limb.Mass * limb.attack.Force * Vector2.Normalize(attackPosition - limb.SimPosition));
+
+                        if (damageTarget is Character && dist<limb.attack.Range*0.5f)
+                        {
+                            limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, deltaTime, false);
+                        }
                     }
                     
                     steeringManager.SteeringSeek(attackPosition + (limb.SimPosition-SimPosition), 5.0f);

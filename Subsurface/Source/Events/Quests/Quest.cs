@@ -176,7 +176,7 @@ namespace Barotrauma
             string header = index < headers.Count ? headers[index] : "";
             string message = index < messages.Count ? messages[index] : "";
 
-            Barotrauma.Networking.GameServer.Log("Mission info: " + header + " - " + message);
+            Barotrauma.Networking.GameServer.Log("Mission info: " + header + " - " + message, Color.Cyan);
 
             new GUIMessageBox(header, message);
         }

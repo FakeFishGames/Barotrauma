@@ -33,18 +33,12 @@ namespace Barotrauma.Networking
         private bool masterServerResponded;
 
         private ServerLog log;
+        private GUIButton showLogButton;
 
         public TraitorManager TraitorManager;
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
-            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 25), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
-            endRoundButton.OnClicked = EndButtonHit;
-
-            banList = new BanList();
-
-            log = new ServerLog(name);
-
             this.name = name;
             this.password = password;
             
@@ -74,6 +68,31 @@ namespace Barotrauma.Networking
                 NetIncomingMessageType.UnconnectedData);
                                     
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+
+            //----------------------------------------
+
+            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
+            endRoundButton.OnClicked = EndButtonHit;
+
+            log = new ServerLog(name);
+            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, GUI.Style, inGameHUD);
+            showLogButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                if (log.LogFrame == null)
+                {
+                    log.CreateLogFrame();
+                }
+                else
+                {
+                    log.LogFrame = null;
+                }
+                return true;
+            };
+
+            banList = new BanList();
+
+            //----------------------------------------
+
             
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
@@ -82,14 +101,14 @@ namespace Barotrauma.Networking
         {
             try
             {
-                Log("Starting the server...");
+                Log("Starting the server...", Color.Cyan);
                 server = new NetServer(config);
                 netPeer = server;
                 server.Start();
             }
             catch (Exception e)
             {
-                Log("Error while starting the server ("+e.Message+")");
+                Log("Error while starting the server ("+e.Message+")", Color.Red);
                 DebugConsole.ThrowError("Couldn't start the server", e);
             }
          
@@ -173,7 +192,7 @@ namespace Barotrauma.Networking
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
             request.AddParameter("playercount", PlayerCountToByte(ConnectedClients.Count, config.MaximumConnections));
 
-            Log("Refreshing connection with master server...");
+            Log("Refreshing connection with master server...", Color.Cyan);
 
             var sw = new Stopwatch();
             sw.Start();
@@ -189,7 +208,7 @@ namespace Barotrauma.Networking
                     restRequestHandle.Abort();
                     DebugConsole.NewMessage("Couldn't connect to master server (request timed out)", Color.Red);
 
-                    Log("Couldn't connect to master server (request timed out)");
+                    Log("Couldn't connect to master server (request timed out)", Color.Red);
 
                     break;
                     //registeredToMaster = false;
@@ -210,24 +229,25 @@ namespace Barotrauma.Networking
             if (response.ErrorException != null)
             {
                 DebugConsole.NewMessage("Error while registering to master server (" + response.ErrorException + ")", Color.Red);
-                Log("Error while registering to master server (" + response.ErrorException + ")");
+                Log("Error while registering to master server (" + response.ErrorException + ")", Color.Red);
                 return;
             }
 
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 DebugConsole.NewMessage("Error while reporting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")", Color.Red);
-                Log("Error while reporting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")");
+                Log("Error while reporting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")", Color.Red);
                 return;
             }
 
-            Log("Master server responded");
+            Log("Master server responded", Color.Cyan);
         }
         
         public override void Update(float deltaTime)
         {
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
+            if (log.LogFrame != null) log.LogFrame.Update(deltaTime);
 
             if (!started) return;
 
@@ -248,11 +268,11 @@ namespace Barotrauma.Networking
                 {
                     if (AutoRestart && isCrewDead)
                     {
-                        Log("Ending round (entire crew dead)");
+                        Log("Ending round (entire crew dead)", Color.Cyan);
                     }
                     else
                     {
-                        Log("Ending round (submarine reached the end of the level)");
+                        Log("Ending round (submarine reached the end of the level)", Color.Cyan);
                     }
                     
                     EndButtonHit(null, null);                    
@@ -499,7 +519,7 @@ namespace Barotrauma.Networking
                             if (Voting.AllowEndVoting && EndVoteMax > 0 &&                                
                                 ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
                             {
-                                Log("Ending round by votes ("+EndVoteCount+"/"+(EndVoteMax-EndVoteCount)+")");
+                                Log("Ending round by votes ("+EndVoteCount+"/"+(EndVoteMax-EndVoteCount)+")", Color.Cyan);
                                 EndButtonHit(null,null);
                             }
                             break;
@@ -791,10 +811,10 @@ namespace Barotrauma.Networking
             GameMain.GameSession = new GameSession(selectedSub, "", selectedMode);
             GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
 
-            GameServer.Log("Starting a new round...");
-            GameServer.Log("Submarine: " + selectedSub.Name);
-            GameServer.Log("Game mode: " + selectedMode.Name);
-            GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed);
+            GameServer.Log("Starting a new round...", Color.Cyan);
+            GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);
+            GameServer.Log("Game mode: " + selectedMode.Name, Color.Cyan);
+            GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
 
             yield return CoroutineStatus.Running;
 
@@ -1007,7 +1027,7 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
 
-            Log(msg);
+            Log(msg, messageColor[(int)ChatMessageType.Server]);
             
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.KickedOut);
@@ -1115,7 +1135,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            Log(traitor.Info.Name + " is the traitor and the target is " + target.Info.Name);
+            Log(traitor.Info.Name + " is the traitor and the target is " + target.Info.Name, Color.Cyan);
 
             Client traitorClient = null;
             foreach (Client c in ConnectedClients)
@@ -1138,7 +1158,14 @@ namespace Barotrauma.Networking
         {
             base.Draw(spriteBatch);
 
-            if (settingsFrame != null) settingsFrame.Draw(spriteBatch);
+            if (settingsFrame != null)
+            {
+                settingsFrame.Draw(spriteBatch);
+            }
+            else if (log.LogFrame!=null)
+            {
+                log.LogFrame.Draw(spriteBatch);
+            }
 
             if (!ShowNetStats) return;
 
@@ -1428,11 +1455,11 @@ namespace Barotrauma.Networking
             return preferredClient;
         }
 
-        public static void Log(string line)
+        public static void Log(string line, Color? color)
         {
-            if (GameMain.Server == null || GameMain.Server.saveServerLogs) return;
+            if (GameMain.Server == null || !GameMain.Server.saveServerLogs) return;
 
-            GameMain.Server.log.WriteLine(line);
+            GameMain.Server.log.WriteLine(line, color);
         }
 
         /// <summary>
@@ -1478,7 +1505,7 @@ namespace Barotrauma.Networking
 
             if (saveServerLogs)
             {
-                Log("Shutting down server...");
+                Log("Shutting down server...", Color.Cyan);
                 log.Save();
             }
 
