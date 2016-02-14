@@ -241,7 +241,7 @@ namespace Barotrauma
             
             float footMid = waist.SimPosition.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
             
-            movement = MathUtils.SmoothStep(movement, TargetMovement, movementLerp);
+            movement = MathUtils.SmoothStep(movement, TargetMovement*walkSpeed, movementLerp);
             movement.Y = 0.0f;
 
             for (int i = 0; i < 2; i++)
@@ -502,7 +502,7 @@ namespace Barotrauma
 
             if (TargetMovement == Vector2.Zero) return;
 
-            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement*swimSpeed, 0.3f);
 
             //dont try to move upwards if head is already out of water
             if (surfaceLimiter > 1.0f && TargetMovement.Y > 0.0f)

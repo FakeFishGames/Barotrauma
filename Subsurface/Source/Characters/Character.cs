@@ -391,7 +391,10 @@ namespace Barotrauma
 
             Properties = ObjectProperty.GetProperties(this);
 
-            Info = characterInfo==null ? new CharacterInfo(file) : characterInfo;
+            if (file == humanConfigFile)
+            {
+                Info = characterInfo == null ? new CharacterInfo(file) : characterInfo;
+            }
 
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
@@ -453,21 +456,25 @@ namespace Barotrauma
                 }
             }
 
-            if (Info.PickedItemIDs.Any())
+            if (file == humanConfigFile)
             {
-                for (ushort i = 0; i < Info.PickedItemIDs.Count; i++ )
+                if (Info.PickedItemIDs.Any())
                 {
-                    if (Info.PickedItemIDs[i] == 0) continue;
+                    for (ushort i = 0; i < Info.PickedItemIDs.Count; i++ )
+                    {
+                        if (Info.PickedItemIDs[i] == 0) continue;
 
-                    Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
+                        Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
 
-                    System.Diagnostics.Debug.Assert(item != null);
-                    if (item == null) continue;
+                        System.Diagnostics.Debug.Assert(item != null);
+                        if (item == null) continue;
 
-                    item.Pick(this, true, true, true);
-                    inventory.TryPutItem(item, i, false);
+                        item.Pick(this, true, true, true);
+                        inventory.TryPutItem(item, i, false);
+                    }
                 }
             }
+
 
             AnimController.FindHull(null);
             if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;

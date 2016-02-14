@@ -882,6 +882,9 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Select();
 
+
+            AddChatMessage("Press TAB to chat. Use ''/d'' to talk to dead players and spectators, and ''/playername'' to only send the message to a specific player.", ChatMessageType.Server);
+            
             yield return CoroutineStatus.Success;
         }
 
@@ -1267,16 +1270,42 @@ namespace Barotrauma.Networking
 
         public override void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server)
         {
-            AddChatMessage(message, type);
-
-            if (server.Connections.Count == 0) return;
+            string[] words = message.Split(' ');
 
             List<Client> recipients = new List<Client>();
+            Client targetClient = null;
 
-            foreach (Client c in ConnectedClients)
+            if (words.Length > 2)
             {
-                if (type!=ChatMessageType.Dead || (c.Character != null && c.Character.IsDead)) recipients.Add(c);
+                if (words[1] == "/dead" || words[1] == "/d")
+                {
+                    type = ChatMessageType.Dead;
+                }
+                else
+                {
+                    targetClient = ConnectedClients.Find(c =>
+                        words[0] == "/" + c.name.ToLower() ||
+                        c.Character != null && words[0] == "/" + c.Character.Name.ToLower());
+                }
+
+                message = words[0] + " " + string.Join(" ", words, 2, words.Length - 2);
             }
+
+            if (targetClient != null)
+            {
+                recipients.Add(targetClient);
+            }
+            else
+            {
+                foreach (Client c in ConnectedClients)
+                {
+                    if (type != ChatMessageType.Dead || (c.Character != null && c.Character.IsDead)) recipients.Add(c);
+                }
+            }
+            
+            AddChatMessage(message, type);
+
+            if (!server.Connections.Any()) return;
 
             foreach (Client c in recipients)
             {

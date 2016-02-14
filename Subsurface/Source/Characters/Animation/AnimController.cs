@@ -43,6 +43,9 @@ namespace Barotrauma
             stepSize = ToolBox.GetAttributeVector2(element, "stepsize", Vector2.One);
             stepSize = ConvertUnits.ToSimUnits(stepSize);
 
+            walkSpeed = ToolBox.GetAttributeFloat(element, "walkspeed", 1.0f);
+            swimSpeed = ToolBox.GetAttributeFloat(element, "swimspeed", 1.0f);
+
             //stepOffset = ToolBox.GetAttributeVector2(element, "stepoffset", Vector2.One);
             //stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 

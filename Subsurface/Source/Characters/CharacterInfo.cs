@@ -132,6 +132,8 @@ namespace Barotrauma
                 return;
             }
 
+            name = "";
+
             if (doc.Root.Element("name") != null)
             {
                 string firstNamePath = ToolBox.GetAttributeString(doc.Root.Element("name"), "firstname", "");

@@ -107,6 +107,14 @@ namespace Barotrauma
 
             Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
+            if (Character.AnimController is HumanoidAnimController)
+            {
+                if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
+                {
+                    Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
+                }
+            }
+
             if (updateTargetsTimer > 0.0)
             {
                 updateTargetsTimer -= deltaTime;

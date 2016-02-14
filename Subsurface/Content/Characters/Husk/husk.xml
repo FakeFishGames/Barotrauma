@@ -1,12 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="husk" humanoid="true" needsair="false">
+<Character name="husk" humanoid="true" needsair="false" doesbleed="false">
   
-  <ragdoll headposition="114" torsoposition="88" 
+  <ragdoll headposition="134" torsoposition="108" 
            stepsize="42.0, 12.0"
            walkanimspeed="4.58"
            movementlerp="0.4"
-           legtorque="-15.0"
-           thightorque="5.0">
+           legtorque="15.0"
+           thightorque="-5.0"
+           walkspeed="2.0"
+           swimspeed="2.0">
 
     <!-- head -->
     <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="5.0">
@@ -78,18 +80,18 @@
 
     <!-- body to left leg -->
     <joint limb1="12" limb1anchor="0,-1" limb2="6" limb2anchor="0,14" lowerlimit="-30" upperlimit="120"/>
-    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="0" upperlimit="150"/>
+    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10"/>
     <joint limb1="7" limb1anchor="-3,-21" limb2="8" limb2anchor="5,7" lowerlimit="20" upperlimit="90"/>
   
     <!-- body to right leg -->
     <joint limb1="12" limb1anchor="0,-1" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="120"/>
-    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="0" upperlimit="150"/>
+    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10"/>
     <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="20" upperlimit="90"/>
   
   </ragdoll>
 
 
-  <ai attackhumans="500" attackrooms="50.0" attackweaker="50" attackstronger="-30"
+  <ai attackhumans="500" attackrooms="5.0" attackweaker="50" attackstronger="-30"
       sight="0.5" hearing="1.0"
       attackcooldown="5.0"/>
 </Character>

@@ -31,9 +31,6 @@ namespace Barotrauma
             
             flip = ToolBox.GetAttributeBool(element, "flip", false);
             
-            walkSpeed = ToolBox.GetAttributeFloat(element, "walkspeed", 1.0f);
-            swimSpeed = ToolBox.GetAttributeFloat(element, "swimspeed", 1.0f);
-
             float footRot = ToolBox.GetAttributeFloat(element,"footrotation", float.NaN);
             if (float.IsNaN(footRot))
             {
