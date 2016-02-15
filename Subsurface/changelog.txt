@@ -1,15 +1,32 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.2.2
+---------------------------------------------------------------------------------------------------------
+
+- clearing the server log after saving!
+- saving the log after every round (even if it isn't full)
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed words missing from chat messages
+- the server log UI doesn't scroll to the bottom when new lines appear, making it easier to read it during
+a round
+
+---------------------------------------------------------------------------------------------------------
 v0.3.2.0
 ---------------------------------------------------------------------------------------------------------
 
-- server log
-- more reliable door syncing
-- deattaching items takes some time
-- welders and cutters do damage to players/enemies again
-- molochs can do damage to players
+- server logs 
 - server admins have the option to send messages only to dead players and spectators (/d [message]) or 
 to one specific player (/name [message])
+- more reliable door syncing
+- railgun syncing bugfixes
+- longer view distance when outside
+- deattaching items takes some time
+- welders and cutters do damage to players/enemies again
 - a new enemy
+- molochs can do damage to players
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.1.5

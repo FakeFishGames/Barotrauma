@@ -937,6 +937,8 @@ namespace Barotrauma.Networking
 
             if (autoRestart) AutoRestartTimer = 20.0f;
 
+            if (saveServerLogs) log.Save();
+
             return true;
         }
 
@@ -1275,7 +1277,7 @@ namespace Barotrauma.Networking
             List<Client> recipients = new List<Client>();
             Client targetClient = null;
 
-            if (words.Length > 2)
+            if (words.Length > 2 && words[1].FirstOrDefault()=='/' && type==ChatMessageType.Server)
             {
                 if (words[1] == "/dead" || words[1] == "/d")
                 {
@@ -1284,12 +1286,13 @@ namespace Barotrauma.Networking
                 else
                 {
                     targetClient = ConnectedClients.Find(c =>
-                        words[0] == "/" + c.name.ToLower() ||
-                        c.Character != null && words[0] == "/" + c.Character.Name.ToLower());
+                        words[1] == "/" + c.name.ToLower() ||
+                        c.Character != null && words[1] == "/" + c.Character.Name.ToLower());
 
                     if (targetClient==null)
                     {
-                        AddChatMessage("Player ''"+words[0].Replace("/", "")+"'' not found!", ChatMessageType.Admin);
+                        AddChatMessage("Player ''"+words[1].Replace("/", "")+"'' not found!", ChatMessageType.Admin);
+                        return;
                     }
                 }
 
