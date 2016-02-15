@@ -799,7 +799,7 @@ namespace Barotrauma
 
             if (moveCam)
             {
-                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, Submarine == null ? 400.0f : 250.0f, 0.05f);
             }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -807,7 +807,7 @@ namespace Barotrauma
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
 
-            if (Vector2.Distance(AnimController.Limbs[0].SimPosition, mouseSimPos)>1.0f)
+            if (Lights.LightManager.ViewTarget == this && Vector2.Distance(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
             {
                 Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
                 Structure structure = null;
@@ -1134,7 +1134,7 @@ namespace Barotrauma
             AttackResult attackResult = closestLimb.AddDamage(simPosition, damageType, amount, bleedingAmount, playSound);
 
             AddDamage(damageType == DamageType.Burn ? CauseOfDeath.Burn : causeOfDeath, attackResult.Damage, null);
-
+                        
             //health -= attackResult.Damage;
             //if (health <= 0.0f && damageType == DamageType.Burn) Kill(CauseOfDeath.Burn);
             if (DoesBleed)

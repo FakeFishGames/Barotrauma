@@ -378,7 +378,8 @@ namespace Barotrauma
 
                         if (damageTarget is Character && dist<limb.attack.Range*0.5f)
                         {
-                            limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, deltaTime, false);
+                            limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, deltaTime, (limb.soundTimer <= 0.0f));
+                            limb.soundTimer = Limb.SoundInterval;
                         }
                     }
                     

@@ -315,14 +315,14 @@ namespace Barotrauma
             body.ApplyLinearImpulse((deltaPos - vel * 0.5f) * body.Mass, pullPos);
         }
 
-        public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, bool playSound)
+        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, bool playSound)
         {
             DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
 
             bool hitArmor = false;
             float totalArmorValue = 0.0f;
 
-            if (armorValue>0.0f && SectorHit(armorSector, simPosition))
+            if (armorValue>0.0f && SectorHit(armorSector, position))
             {
                 hitArmor = true;
                 totalArmorValue += armorValue;
@@ -330,7 +330,7 @@ namespace Barotrauma
 
             if (wearingItem!=null && 
                 wearingItem.ArmorValue>0.0f && 
-                SectorHit(wearingItem.ArmorSectorLimits, simPosition))
+                SectorHit(wearingItem.ArmorSectorLimits, position))
             {
                 hitArmor = true;
                 totalArmorValue += wearingItem.ArmorValue;
@@ -347,7 +347,7 @@ namespace Barotrauma
 
             if (playSound)
             {
-                SoundPlayer.PlayDamageSound(damageSoundType, amount, ConvertUnits.ToDisplayUnits(simPosition));
+                SoundPlayer.PlayDamageSound(damageSoundType, amount, position);
             }
 
             //Bleeding += bleedingAmount;
@@ -357,7 +357,7 @@ namespace Barotrauma
             
             for (int i = 0; i < bloodAmount; i++)
             {
-                Vector2 particleVel = SimPosition - simPosition;
+                Vector2 particleVel = SimPosition - position;
                 if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
 
                 GameMain.ParticleManager.CreateParticle("blood",

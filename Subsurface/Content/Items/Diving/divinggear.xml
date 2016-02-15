@@ -89,7 +89,7 @@
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="30.0" Condition="-0.5">
         <RequiredItem type="Contained" name="Oxygen Tank"/>
       </StatusEffect>
-      <StatusEffect type="OnWearing" target="Character" Oxygen="-15.0"/>
+      <StatusEffect type="OnWearing" target="Character" Oxygen="-11.0"/>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">

@@ -560,7 +560,8 @@ namespace Barotrauma
             {
                 if (newHull == null && currentHull.Submarine != null)
                 {
-                    SetPosition(refLimb.SimPosition + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
+                    Vector2 ragdollSpeed = refLimb.LinearVelocity == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(refLimb.LinearVelocity);
+                    SetPosition(refLimb.SimPosition + ragdollSpeed + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
                     character.CursorPosition += currentHull.Submarine.Position;
                 }
                 else if (currentHull == null && newHull != null && newHull.Submarine != null)

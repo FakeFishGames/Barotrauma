@@ -6,7 +6,10 @@ v0.3.2.0
 - more reliable door syncing
 - deattaching items takes some time
 - welders and cutters do damage to players/enemies again
-
+- molochs can do damage to players
+- server admins have the option to send messages only to dead players and spectators (/d [message]) or 
+to one specific player (/name [message])
+- a new enemy
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.1.5
