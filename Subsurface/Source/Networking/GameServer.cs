@@ -1286,6 +1286,11 @@ namespace Barotrauma.Networking
                     targetClient = ConnectedClients.Find(c =>
                         words[0] == "/" + c.name.ToLower() ||
                         c.Character != null && words[0] == "/" + c.Character.Name.ToLower());
+
+                    if (targetClient==null)
+                    {
+                        AddChatMessage("Player ''"+words[0].Replace("/", "")+"'' not found!", ChatMessageType.Admin);
+                    }
                 }
 
                 message = words[0] + " " + string.Join(" ", words, 2, words.Length - 2);

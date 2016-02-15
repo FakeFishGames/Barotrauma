@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
-            if (!character.IsKeyDown(InputType.Aim)) return false;
+            if (!character.IsKeyDown(InputType.Aim) || character.Stun>0.0f) return false;
 
             if (item.InWater)
             {
