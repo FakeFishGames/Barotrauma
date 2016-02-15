@@ -17,6 +17,8 @@ namespace Barotrauma.Networking
 
         public GUIFrame LogFrame;
 
+        private GUIListBox listBox;
+
         private Queue<ColoredText> lines;
 
         public ServerLog(string serverName)
@@ -30,13 +32,19 @@ namespace Barotrauma.Networking
         {
             string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
 
-            lines.Enqueue(new ColoredText(logLine, color == null ? Color.White : (Color)color));
+            var newText = new ColoredText(logLine, color == null ? Color.White : (Color)color);
 
-            if (LogFrame != null) CreateLogFrame();
+            lines.Enqueue(newText);
 
-            if (lines.Count>=LinesPerFile)
+            if (LogFrame != null)
+            {
+                AddLine(newText);
+            }
+
+            if (lines.Count >= LinesPerFile)
             {
                 Save();
+                lines.Clear();
             }
         }
 
@@ -47,20 +55,16 @@ namespace Barotrauma.Networking
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,400, 400), null, Alignment.Center, GUI.Style, LogFrame);
             innerFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            GUIListBox listBox = new GUIListBox(new Rectangle(0,0,0,355), GUI.Style, innerFrame);
+            listBox = new GUIListBox(new Rectangle(0,0,0,355), GUI.Style, innerFrame);
 
             var currLines = lines.ToList();
 
             foreach (ColoredText line in currLines)
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
-                //textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, (line.Text.Count(c => c == '\n') + 1) * 15);
-
-                textBlock.TextColor = line.Color;
-                textBlock.CanBeFocused = false;
+                AddLine(line);
             }
 
-            listBox.BarScroll = 1.0f;
+            if (listBox.BarScroll==0.0f || listBox.BarScroll==1.0f) listBox.BarScroll = 1.0f;
 
             GUIButton closeButton = new GUIButton(new Rectangle(0,0,100, 15), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
             closeButton.OnClicked = (GUIButton button, object userData) =>
@@ -68,6 +72,15 @@ namespace Barotrauma.Networking
                 LogFrame = null;
                 return true;
             };
+        }
+
+        private void AddLine(ColoredText line)
+        {
+            var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
+            //textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, (line.Text.Count(c => c == '\n') + 1) * 15);
+
+            textBlock.TextColor = line.Color;
+            textBlock.CanBeFocused = false;
         }
 
         public void Save()
@@ -88,6 +101,8 @@ namespace Barotrauma.Networking
             string fileName = serverName+"_"+DateTime.Now.ToShortDateString()+"_"+DateTime.Now.ToShortTimeString()+".txt";
 
             fileName = fileName.Replace(":", "");
+            fileName = fileName.Replace("../", "");
+            fileName = fileName.Replace("/", "");
 
             string filePath = Path.Combine(SavePath, fileName);
             
@@ -99,6 +114,8 @@ namespace Barotrauma.Networking
             {
                 DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
             }
+
+            lines.Clear();
         }
     }
 }
