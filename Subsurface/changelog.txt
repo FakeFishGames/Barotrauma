@@ -2,8 +2,9 @@
 v0.3.2.3
 ---------------------------------------------------------------------------------------------------------
 
-- clearing the server log after saving!
-- saving the log after every round (even if it isn't full)
+- fixed characters dropping items when a spectator joins
+- fixed any selected textbox in the server lobby accepting keyboard input after a round starts
+- praise the honkmother
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.2.2

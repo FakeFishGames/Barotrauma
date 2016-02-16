@@ -449,13 +449,16 @@ namespace Barotrauma
                         DebugConsole.NewMessage("Deleted "+saveFile, Color.Green);
                     }
 
-                    var logFiles = System.IO.Directory.GetFiles(ServerLog.SavePath);
-
-                    foreach (string logFile in logFiles)
+                    if (System.IO.Directory.Exists(ServerLog.SavePath))
                     {
-                        System.IO.File.Delete(logFile);
-                        DebugConsole.NewMessage("Deleted "+logFile, Color.Green);
-                    }
+                        var logFiles = System.IO.Directory.GetFiles(ServerLog.SavePath);
+
+                        foreach (string logFile in logFiles)
+                        {
+                            System.IO.File.Delete(logFile);
+                            DebugConsole.NewMessage("Deleted "+logFile, Color.Green);
+                        }
+                    }                    
 
                     if (System.IO.File.Exists("filelist.xml"))
                     {
@@ -472,6 +475,7 @@ namespace Barotrauma
 
                     if (System.IO.File.Exists("crashreport.txt"))
                     {
+                        System.IO.File.Delete("crashreport.txt");
                         DebugConsole.NewMessage("Deleted crashreport.txt", Color.Green);
                     }
 
