@@ -668,11 +668,20 @@ namespace Barotrauma
             //GameMain.GameScreen.Cam.TargetPos = pos;
             //GameMain.GameScreen.Cam.MoveCamera((float)deltaTime);
 
+            if (jobInfoFrame != null)
+            {
+                jobInfoFrame.Update((float)deltaTime);
+            }
+            else if (playerFrame != null)
+            {
+                playerFrame.Update((float)deltaTime);
+            }
+            else
+            {
+
             menu.Update((float)deltaTime);
 
-            if (jobInfoFrame != null) jobInfoFrame.Update((float)deltaTime);
-
-            if (playerFrame != null) playerFrame.Update((float)deltaTime);
+            }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
             {

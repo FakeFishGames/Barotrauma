@@ -125,11 +125,11 @@ namespace Barotrauma
             if (removeItem)
             {
                 item.Drop(null, false);
-                if (item.Inventory != null) item.Inventory.RemoveItem(item);
+                if (item.ParentInventory != null) item.ParentInventory.RemoveItem(item);
             }
 
             Items[i] = item;
-            item.Inventory = this;
+            item.ParentInventory = this;
             if (item.body != null)
             {
                 item.body.Enabled = false;
@@ -154,7 +154,7 @@ namespace Barotrauma
             {
                 if (Items[n] != item) continue;
                 Items[n] = null;
-                item.Inventory = null;
+                item.ParentInventory = null;
             }
         }
 

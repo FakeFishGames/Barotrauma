@@ -20,7 +20,11 @@ namespace Barotrauma
 
         public virtual void Select()
         {
-            if (selected != null && selected!=this) selected.Deselect();
+            if (selected != null && selected != this)
+            {
+                selected.Deselect();
+                GUIComponent.KeyboardDispatcher.Subscriber = null;
+            }
             selected = this;
         }
 

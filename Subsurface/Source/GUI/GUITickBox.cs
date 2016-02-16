@@ -61,6 +61,8 @@ namespace Barotrauma
         {
             if (!Visible || !Enabled) return;
 
+            if (MouseOn != null && MouseOn != this && !MouseOn.IsParentOf(this)) return;
+
             if (text.Rect.Contains(PlayerInput.MousePosition)) MouseOn = this;
 
             if (box.Rect.Contains(PlayerInput.MousePosition))

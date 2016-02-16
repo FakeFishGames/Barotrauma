@@ -49,7 +49,7 @@ namespace Barotrauma
                 case 1:
 
                     //item.body.LinearVelocity = Vector2.Zero;
-                    if (item.Inventory!=null) item.body.FarseerBody.IsKinematic = false;
+                    if (item.ParentInventory!=null) item.body.FarseerBody.IsKinematic = false;
                     if (item.CurrentHull == null) return;
 
                     state = 2;

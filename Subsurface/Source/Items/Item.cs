@@ -63,20 +63,20 @@ namespace Barotrauma
 
         private bool inWater;
 
-        private Inventory inventory;
+        private Inventory parentInventory;
 
         //the inventory in which the item is contained in
-        public Inventory Inventory
+        public Inventory ParentInventory
         {
             get
             {
-                return inventory;
+                return parentInventory;
             }
             set
             {
-                inventory = value;
+                parentInventory = value;
 
-                if (inventory != null) Container = inventory.Owner as Item;                
+                if (parentInventory != null) Container = parentInventory.Owner as Item;                
             }
         }
 

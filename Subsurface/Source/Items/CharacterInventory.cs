@@ -168,8 +168,8 @@ namespace Barotrauma
                         System.Diagnostics.Debug.Assert(false);
                         return false;
                     }
-                    Inventory otherInventory = Items[index].Inventory;
-                    if (otherInventory != null && createNetworkEvent)
+                    Inventory otherInventory = Items[index].ParentInventory;
+                    if (otherInventory != null && otherInventory.Owner!=null && createNetworkEvent)
                     {
                         new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true, true);
                     }
@@ -219,7 +219,7 @@ namespace Barotrauma
             string toolTip = "";
             Rectangle highlightedSlot = Rectangle.Empty;
 
-            if (doubleClickedItem!=null &&  doubleClickedItem.Inventory!=this)
+            if (doubleClickedItem!=null &&  doubleClickedItem.ParentInventory!=this)
             {
                 TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
             }

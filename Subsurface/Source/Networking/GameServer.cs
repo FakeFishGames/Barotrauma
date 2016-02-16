@@ -262,7 +262,7 @@ namespace Barotrauma.Networking
                    (myCharacter == null || myCharacter.IsDead);
 
                 //restart if all characters are dead or submarine is at the end of the level
-                if ((AutoRestart && isCrewDead) 
+                if ((autoRestart && isCrewDead) 
                     || 
                     (endRoundAtLevelEnd && Submarine.Loaded!=null && Submarine.Loaded.AtEndPosition))
                 {
@@ -716,7 +716,7 @@ namespace Barotrauma.Networking
             yield return new WaitForSeconds(3.0f);
 
             //save all the current events to a list and clear them
-            var existingEvents = NetworkEvent.Events;
+            var existingEvents = new List<NetworkEvent>(NetworkEvent.Events);
             NetworkEvent.Events.Clear();
 
             foreach (Hull hull in Hull.hullList)
@@ -740,7 +740,7 @@ namespace Barotrauma.Networking
                     item.NewComponentEvent(item.components[i], false, true);
                 }
 
-                if (item.body == null || item.body.Enabled == false) continue;
+                if (item.body == null || !item.body.Enabled || item.ParentInventory!=null) continue;
                 new NetworkEvent(NetworkEventType.DropItem, item.ID, false);
             }
 
@@ -758,7 +758,7 @@ namespace Barotrauma.Networking
                 yield return new WaitForSeconds(0.1f);
 
                 //save "normal" events again
-                existingEvents = NetworkEvent.Events;
+                existingEvents = new List<NetworkEvent>(NetworkEvent.Events);
             }
             
             yield return CoroutineStatus.Success;
