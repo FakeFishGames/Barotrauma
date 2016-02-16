@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
 {
     class RangedWeapon : ItemComponent
     {
-        private float reload;
+        private float reload, reloadTimer;
 
         private Vector2 barrelPos;
 
@@ -19,6 +19,13 @@ namespace Barotrauma.Items.Components
         {
             get { return ToolBox.Vector2ToString(ConvertUnits.ToDisplayUnits(barrelPos)); }
             set { barrelPos = ConvertUnits.ToSimUnits(ToolBox.ParseToVector2(value)); }
+        }
+
+        [HasDefaultValue(1.0f, false)]
+        public float Reload
+        {
+            get { return reload; }
+            set { reload = Math.Max(value, 0.0f); }
         }
 
         public Vector2 TransformedBarrelPos
@@ -41,11 +48,11 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            reload -= deltaTime;
+            reloadTimer -= deltaTime;
 
-            if (reload < 0.0f)
+            if (reloadTimer < 0.0f)
             {
-                reload = 0.0f;
+                reloadTimer = 0.0f;
                 IsActive = false;
             }
         }
@@ -53,18 +60,15 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
-            if (!character.IsKeyDown(InputType.Aim) || reload > 0.0f) return false;
+            if (!character.IsKeyDown(InputType.Aim) || reloadTimer > 0.0f) return false;
             IsActive = true;
-            reload = 1.0f;
+            reloadTimer = reload;
 
             List<Body> limbBodies = new List<Body>();
             foreach (Limb l in character.AnimController.Limbs)
             {
                 limbBodies.Add(l.body.FarseerBody);
             }
-
-            Item[] containedItems = item.ContainedItems;
-            if (containedItems == null || !containedItems.Any()) return false;
 
             float degreeOfFailure = (100.0f - DegreeOfSuccess(character))/100.0f;
 
@@ -75,41 +79,47 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
             }
 
-            foreach (Item projectile in containedItems)
+            Item[] containedItems = item.ContainedItems;
+            if (containedItems != null)
             {
-                if (projectile == null) continue;
-                //find the projectile-itemcomponent of the projectile,
-                //and add the limbs of the shooter to the list of bodies to be ignored
-                //so that the player can't shoot himself
-                Projectile projectileComponent= projectile.GetComponent<Projectile>();
-                if (projectileComponent == null) continue;
+                foreach (Item projectile in containedItems)
+                {
+                    if (projectile == null) continue;
+                    //find the projectile-itemcomponent of the projectile,
+                    //and add the limbs of the shooter to the list of bodies to be ignored
+                    //so that the player can't shoot himself
+                    Projectile projectileComponent= projectile.GetComponent<Projectile>();
+                    if (projectileComponent == null) continue;
                 
-                projectile.body.ResetDynamics();
-                projectile.SetTransform(TransformedBarrelPos, 
-                    ((item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi)
-                    + Rand.Range(-degreeOfFailure, degreeOfFailure));
+                    projectile.body.ResetDynamics();
+                    projectile.SetTransform(TransformedBarrelPos, 
+                        ((item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi)
+                        + Rand.Range(-degreeOfFailure, degreeOfFailure));
 
-                projectile.Use(deltaTime);
-                projectileComponent.User = character;
+                    projectile.Use(deltaTime);
+                    projectileComponent.User = character;
 
-                projectile.body.ApplyTorque(projectile.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
+                    projectile.body.ApplyTorque(projectile.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
 
-                //recoil
-                item.body.ApplyLinearImpulse(
-                    new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);
+                    //recoil
+                    item.body.ApplyLinearImpulse(
+                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);
                 
-                projectileComponent.ignoredBodies = limbBodies;
+                    projectileComponent.ignoredBodies = limbBodies;
 
-                item.RemoveContained(projectile);
+                    item.RemoveContained(projectile);
                 
-                Rope rope = item.GetComponent<Rope>();
-                if (rope != null) rope.Attach(projectile);
+                    Rope rope = item.GetComponent<Rope>();
+                    if (rope != null) rope.Attach(projectile);
 
-                return true;
+                    return true;
+                }
             }
 
 
-            return false;      
+
+
+            return true;      
         }
             
     }

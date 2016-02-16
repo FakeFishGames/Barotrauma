@@ -39,6 +39,8 @@ namespace Barotrauma.Networking
             if (LogFrame != null)
             {
                 AddLine(newText);
+
+                listBox.UpdateScrollBarSize();
             }
 
             if (lines.Count >= LinesPerFile)
@@ -64,6 +66,8 @@ namespace Barotrauma.Networking
                 AddLine(line);
             }
 
+            listBox.UpdateScrollBarSize();
+
             if (listBox.BarScroll==0.0f || listBox.BarScroll==1.0f) listBox.BarScroll = 1.0f;
 
             GUIButton closeButton = new GUIButton(new Rectangle(0,0,100, 15), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
@@ -77,7 +81,7 @@ namespace Barotrauma.Networking
         private void AddLine(ColoredText line)
         {
             var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
-            //textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, (line.Text.Count(c => c == '\n') + 1) * 15);
+            textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, Math.Max(13, textBlock.Rect.Height));
 
             textBlock.TextColor = line.Color;
             textBlock.CanBeFocused = false;
