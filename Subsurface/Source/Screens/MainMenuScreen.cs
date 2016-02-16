@@ -134,10 +134,10 @@ namespace Barotrauma
 
             //new GUITextBlock(new Rectangle(0, -25, 0, 30), "Host Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer], false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Server Name:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 0, 100, 30), "Server Name:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tab.HostServer]);
 
-            new GUITextBlock(new Rectangle(0, 50, 0, 30), "Server port:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 50, 100, 30), "Server port:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             portBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tab.HostServer]);
             portBox.Text = NetConfig.DefaultPort.ToString();
             portBox.ToolTip = "Server port";
@@ -155,7 +155,7 @@ namespace Barotrauma
             plusPlayersBox.UserData = 1;
             plusPlayersBox.OnClicked = ChangeMaxPlayers;
             
-            new GUITextBlock(new Rectangle(0, 150, 0, 30), "Password (optional):", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 150, 100, 30), "Password (optional):", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tab.HostServer]);
             
             isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), "Public server", Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);

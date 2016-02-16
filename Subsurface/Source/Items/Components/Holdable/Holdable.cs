@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue(false, true)]
         public bool Attached
         {
-            get { return attached && item.Inventory == null; }
+            get { return attached && item.ParentInventory == null; }
             set { attached = value; }
         }
 
@@ -278,7 +278,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (item.Inventory != null)
+                if (item.ParentInventory != null)
                 {
                     if (body != null)
                     {

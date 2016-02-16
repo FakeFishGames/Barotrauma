@@ -197,9 +197,9 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
-            //for (int x = -1; x < 3; x += 2)
+            //for (int x = -1; x <= 1; x += 2)
             //{
-            //    for (int y = -1; y < 3; y += 2)
+            //    for (int y = -1; y <= 1; y += 2)
             //    {
 
             //        spriteBatch.Draw(texture, pos + offset + new Vector2(x, y) * 1.0f, sourceRect, Color.Black, rotation + rotate, origin, scale, spriteEffect, (depth == null ? this.depth : (float)depth) + 0.0001f);

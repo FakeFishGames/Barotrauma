@@ -16,7 +16,7 @@
   <Job name="Engineer" description="Engineers have above-average construction and mechanic skills, but fixing complex mechanical devices is still usually out of their skill set. They are competent at fixing electrical devices however, and are the ones to turn to when the power grid starts failing." minnumber="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
-      <Skill name="Construction" level="30,40"/>
+      <Skill name="Construction" level="30,30"/>
       <Skill name="Electrical Engineering" level="50,60"/>
     </Skills>
     <Item name="ID Card"/>
@@ -29,7 +29,7 @@
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="50,60"/>
-      <Skill name="Electrical Engineering" level="30,40"/>
+      <Skill name="Electrical Engineering" level="30,35"/>
     </Skills>
     <Item name="ID Card"/>
     <Item name="Wrench"/>

@@ -183,18 +183,21 @@ namespace Barotrauma
 
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
-
+            
             if (CaretEnabled)
             {
                 caretTimer += deltaTime;
-                caretVisible = ((caretTimer*1000.0f) % 1000) < 500;
+                caretVisible = ((caretTimer * 1000.0f) % 1000) < 500;
             }
             
             if (rect.Contains(PlayerInput.MousePosition))
             {
+
                 state = ComponentState.Hover;                
                 if (PlayerInput.LeftButtonClicked())
                 {
+                    if (MouseOn != null && MouseOn != this && MouseOn!=textBlock && !MouseOn.IsParentOf(this)) return;
+
                     Select();
                     if (OnSelected != null) OnSelected(this, Keys.None);
                 }
