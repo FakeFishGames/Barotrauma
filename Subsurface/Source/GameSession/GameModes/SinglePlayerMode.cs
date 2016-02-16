@@ -143,6 +143,8 @@ namespace Barotrauma
 
             CrewManager.Draw(spriteBatch);
 
+            if (Submarine.Loaded == null) return;
+
             if (Submarine.Loaded.AtEndPosition)
             {
                 endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;                
