@@ -425,7 +425,7 @@ namespace Barotrauma
                 if (newHull == null) return true;
             }
 
-            var gaps = newHull.FindGaps();
+            var gaps = newHull.ConnectedGaps;
 
             targetPos = limb.character.WorldPosition;
 

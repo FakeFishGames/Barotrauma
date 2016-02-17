@@ -172,7 +172,9 @@ namespace Barotrauma.Items.Components
                     wireComponent.Connect(c, false);
 
                     var otherConnection = c.Wires[i].OtherConnection(c);
-                    Networking.GameServer.Log(c.Name + " -> " + (otherConnection == null ? "none" : otherConnection.Name), Color.Orange);
+                    Networking.GameServer.Log(
+                        item.Name+" ("+ c.Name + ") -> " + 
+                        otherConnection.Item.Name+" ("+(otherConnection == null ? "none" : otherConnection.Name)+")", Color.Orange);
                 }
                 c.UpdateRecipients();
             } 

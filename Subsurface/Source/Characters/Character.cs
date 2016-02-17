@@ -653,6 +653,16 @@ namespace Barotrauma
                 if (IsKeyDown(InputType.Use)) selectedConstruction.Use(deltaTime, this);
                 if (selectedConstruction != null && IsKeyDown(InputType.Aim)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
+
+            if (selectedCharacter!=null)
+            {
+                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 3.0f ||
+                    (!selectedCharacter.isDead && selectedCharacter.Stun <= 0.0f))
+                {
+                    DeselectCharacter();
+                }
+            }
+
                   
             if (IsNetworkPlayer)
             {
@@ -828,10 +838,9 @@ namespace Barotrauma
             if (findClosestTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)
             {
                 closestCharacter = FindClosestCharacter(mouseSimPos);
-                if (closestCharacter != null)
+                if (closestCharacter != null && closestCharacter.info==null)
                 {
-                //    if (closestCharacter != selectedCharacter) selectedCharacter = null;
-                    if (!closestCharacter.IsHumanoid) closestCharacter = null;
+                    closestCharacter = null;
                 }
 
                 closestItem = FindClosestItem(mouseSimPos);
@@ -870,14 +879,6 @@ namespace Barotrauma
                                 IsKeyHit(InputType.Use) ? 1 : 0 
                             });
                     }
-                }
-            }
-            else
-            {
-                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f ||
-                    (!selectedCharacter.isDead && selectedCharacter.Stun <= 0.0f))
-                {
-                    DeselectCharacter();
                 }
             }
 

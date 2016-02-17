@@ -100,8 +100,6 @@ namespace Barotrauma
         /// </summary>
         public override bool TryPutItem(Item item, List<LimbSlot> allowedSlots, bool createNetworkEvent = true)
         {
-            bool alreadyInInventory = Array.Find(Items, i => i == item)!=null;
-
             //try to place the item in LimBlot.Any slot if that's allowed
             if (allowedSlots.Contains(LimbSlot.Any))
             {
@@ -109,7 +107,6 @@ namespace Barotrauma
                 {
                     if (Items[i] != null || limbSlots[i] != LimbSlot.Any) continue;
 
-                    GameServer.Log(character.Name + " picked up " + item.Name, Color.Orange);
                     PutItem(item, i, createNetworkEvent);
                     item.Unequip(character);
                     return true;
@@ -144,7 +141,6 @@ namespace Barotrauma
 
                 if (placed)
                 {
-                    if (!alreadyInInventory) GameServer.Log(character.Name + " picked up " + item.Name, Color.Orange);
                     return true;
                 }
             }
@@ -367,28 +363,65 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetBuffer message, float sendingTime)
+        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime)
         {
             if (sendingTime < lastUpdate) return;
 
             character.ClearInput(InputType.Use);
+
+            List<Item> droppedItems = new List<Item>();
+            List<Item> prevItems = new List<Item>(Items);
 
             for (int i = 0; i<capacity; i++)
             {
                 ushort itemId = message.ReadUInt16();
                 if (itemId == 0)
                 {
-                    if (Items[i] != null) Items[i].Drop(character, false);
+                    if (Items[i] != null)
+                    {
+                        droppedItems.Add(Items[i]);
+                        Items[i].Drop(character, false);
+                        
+                    }
                 }
                 else
                 {
                     Item item = Entity.FindEntityByID(itemId) as Item;
                     if (item == null) continue;
 
+                    Inventory existingInventory = item.ParentInventory;
+
                     if (Items[i] != item && Items[i] != null) Items[i].Drop(character, false);
-                    TryPutItem(item, i, false);
+
+                    if (TryPutItem(item, i, false))
+                    {
+                        if (droppedItems.Contains(item))
+                        {
+                            droppedItems.Remove(item);
+                        }
+                    }
                 }
             }
+
+            var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+            if (sender != null && sender.Character != null)
+            {
+                foreach (Item item in droppedItems)
+                {
+                    GameServer.Log(sender.Character == character ?
+                        character.Name + " dropped " + item.Name :
+                        sender.Character + " removed " + item.Name+" from "+character+"'s inventory", Color.Orange);
+                }
+
+                foreach (Item item in Items)
+                {
+                    if (item == null || prevItems.Contains(item)) continue;
+                    GameServer.Log(sender.Character == character ?
+                        character.Name + " picked up " + item.Name :
+                        sender.Character + " placed " + item.Name + " in " + character + "'s inventory", Color.Orange);
+                }
+            }
+
 
             lastUpdate = sendingTime;
         }
