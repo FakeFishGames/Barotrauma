@@ -1125,7 +1125,7 @@ namespace Barotrauma
             //    new NetworkEvent(NetworkEventType.DropItem, ID, true);
 
 
-            if (dropper != null) GameServer.Log(dropper.Name + " dropped " + Name, Color.Orange);
+            //if (dropper != null) GameServer.Log(dropper.Name + " dropped " + Name, Color.Orange);
             
             foreach (ItemComponent ic in components) ic.Drop(dropper);
 

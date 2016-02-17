@@ -115,7 +115,7 @@ namespace Barotrauma.Particles
 
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
-                hullGaps = currentHull==null ? new List<Gap>() : currentHull.FindGaps();
+                hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
                 //hullLimits = new List<Hull>();
                 //hullLimits = FindLimits(position);
             }
@@ -209,7 +209,7 @@ namespace Barotrauma.Particles
                     else
                     {
                         currentHull = Hull.FindHull(position);
-                        hullGaps = currentHull == null ? new List<Gap>() : currentHull.FindGaps();
+                        hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
 
                         if (OnChangeHull != null) OnChangeHull(edgePos, currentHull);
 

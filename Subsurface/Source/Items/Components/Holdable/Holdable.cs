@@ -316,7 +316,16 @@ namespace Barotrauma.Items.Components
             }
 
             item.SetTransform(newPos, 0.0f);
-            if (!attached) Use(1.0f);
+            if (!attached)
+            {
+                Use(1.0f);
+
+                var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+                if (sender != null && sender.Character != null)
+                {
+                    Networking.GameServer.Log(sender.characterInfo.Name+" attached a "+item.Name+" on a wall", Color.Orange);
+                }
+            }
         }
     }
 }

@@ -361,11 +361,13 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual void ReadNetworkData(NetworkEventType type, NetBuffer message, float sendingTime)
+        public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime)
         {
             if (sendingTime < lastUpdate) return;
 
             List<ushort> newItemIDs = new List<ushort>();
+            List<Item> droppedItems = new List<Item>();
+            List<Item> prevItems = new List<Item>(Items);
 
             byte count = message.ReadByte();
             for (int i = 0; i<count; i++)
@@ -378,7 +380,9 @@ namespace Barotrauma
                 if (Items[i] == null) continue;
                 if (!newItemIDs.Contains(Items[i].ID))
                 {
+                    droppedItems.Add(Items[i]);
                     Items[i].Drop(null, false);
+                    
                     continue;
                 }
             }
@@ -388,7 +392,25 @@ namespace Barotrauma
                 if (item == null) continue;
 
                 TryPutItem(item, item.AllowedSlots, false);
+                if (droppedItems.Contains(item)) droppedItems.Remove(item);
             }
+
+
+            var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+            if (sender != null && sender.Character != null)
+            {
+                foreach (Item item in droppedItems)
+                {
+                    GameServer.Log(sender.Character + " removed " + item.Name + " from " + Owner.ToString(), Color.Orange);
+                }
+
+                foreach (Item item in Items)
+                {
+                    if (item == null || prevItems.Contains(item)) continue;
+                    GameServer.Log(sender.Character + " placed " + item.Name + " in " + Owner.ToString(), Color.Orange);
+                }
+            }
+
 
             lastUpdate = sendingTime;
         }

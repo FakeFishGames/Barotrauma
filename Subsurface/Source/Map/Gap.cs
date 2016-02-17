@@ -30,9 +30,6 @@ namespace Barotrauma
         float higherSurface;
         float lowerSurface;
 
-        private int soundIndex;
-
-        float soundVolume;
 
         public float Open
         {
@@ -42,10 +39,10 @@ namespace Barotrauma
 
         public Door ConnectedDoor;
 
-        public Vector2 FlowForce
-        {
-            get { return flowForce*soundVolume; }
-        }
+        //public Vector2 FlowForce
+        //{
+        //    get { return flowForce*soundVolume; }
+        //}
 
         public Vector2 LerpedFlowForce
         {
@@ -144,8 +141,12 @@ namespace Barotrauma
                 hulls[1] = temp;
             }
 
-            linkedTo.Add(hulls[0]);
-            if (hulls[1] != null) linkedTo.Add(hulls[1]);
+            for (int i = 0 ; i <2; i++)
+            {
+                if (hulls[i]==null) continue;
+                linkedTo.Add(hulls[i]);
+                if (!hulls[i].ConnectedGaps.Contains(this)) hulls[i].ConnectedGaps.Add(this);
+            }
         }
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
@@ -205,14 +206,6 @@ namespace Barotrauma
         
         public override void Update(Camera cam, float deltaTime)
         {
-            soundVolume = soundVolume + ((flowForce.Length() < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
-            soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
-
-            int index = (int)Math.Floor(flowForce.Length() / 100.0f);
-            index = Math.Min(index,2);
-
-            soundIndex = SoundPlayer.flowSounds[index].Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
-            
             flowForce = Vector2.Zero;
 
             if (open == 0.0f) return;
@@ -548,7 +541,12 @@ namespace Barotrauma
 
             GapList.Remove(this);
 
-            if (soundIndex > -1) Sounds.SoundManager.Stop(soundIndex);
+            foreach (MapEntity entity in linkedTo)
+            {
+                var hull = entity as Hull;
+                if (hull.ConnectedGaps.Contains(this)) hull.ConnectedGaps.Remove(this);
+            }
+
         }
 
 

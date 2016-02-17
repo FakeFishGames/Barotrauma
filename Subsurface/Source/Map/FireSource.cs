@@ -145,13 +145,13 @@ namespace Barotrauma
             if (fireSoundBasic != null)
             {
                 basicSoundIndex = fireSoundBasic.Loop(basicSoundIndex, 
-                    Math.Min(size.X / 100.0f, 1.0f), position + size / 2.0f, 2000.0f);
+                    Math.Min(size.X / 100.0f, 1.0f), position + size / 2.0f, 1000.0f);
 
             }
             if (fireSoundLarge != null)
             {
                 largeSoundIndex = fireSoundLarge.Loop(largeSoundIndex, 
-                    MathHelper.Clamp((size.X - 200.0f) / 100.0f, 0.0f, 1.0f), position + size / 2.0f, 2000.0f);
+                    MathHelper.Clamp((size.X - 200.0f) / 100.0f, 0.0f, 1.0f), position + size / 2.0f, 1000.0f);
             }
             
             if (size.X>50.0f)

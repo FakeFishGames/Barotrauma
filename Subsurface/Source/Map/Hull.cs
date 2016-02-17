@@ -48,6 +48,9 @@ namespace Barotrauma
 
         private bool update;
 
+        private int soundIndex;
+        private float soundVolume;
+
         float[] waveY; //displacement from the surface of the water
         float[] waveVel; //velocity of the point
 
@@ -55,6 +58,8 @@ namespace Barotrauma
         float[] rightDelta;
 
         float lastSentVolume;
+
+        public List<Gap> ConnectedGaps;
 
         public override string Name
         {
@@ -173,10 +178,13 @@ namespace Barotrauma
 
             hullList.Add(this);
 
+            ConnectedGaps = new List<Gap>();
+
             Item.UpdateHulls();
             Gap.UpdateHulls();
 
             Volume = 0.0f;
+
 
 
             InsertToList();
@@ -262,9 +270,11 @@ namespace Barotrauma
                 fireSource.Remove();
             }
 
+            if (soundIndex > -1) Sounds.SoundManager.Stop(soundIndex);
+
             //renderer.Dispose();
 
-            if (entityGrid!=null) entityGrid.RemoveEntity(this);
+            if (entityGrid != null) entityGrid.RemoveEntity(this);
 
             hullList.Remove(this);
         }
@@ -311,6 +321,31 @@ namespace Barotrauma
             }
 
             FireSource.UpdateAll(fireSources, deltaTime);
+
+            float strongestFlow = 0.0f;
+            foreach (Gap gap in ConnectedGaps)
+            {
+                float gapFlow = gap.LerpedFlowForce.Length();
+                if (gapFlow > strongestFlow)
+                {
+                    strongestFlow = gapFlow;
+                }
+            }
+
+            if (strongestFlow>0.1f)
+            {
+                soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
+                soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
+
+                int index = (int)Math.Floor(strongestFlow / 100.0f);
+                index = Math.Min(index, 2);
+
+                soundIndex = SoundPlayer.flowSounds[index].Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
+            }
+            else
+            {
+                if (soundIndex > -1) Sounds.SoundManager.Stop(soundIndex);
+            }
             
             //update client hulls if the amount of water has changed by >10%
             if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f)
@@ -588,19 +623,19 @@ namespace Barotrauma
             return null;
         }
 
-        public List<Gap> FindGaps()
-        {
-            List<Gap> gaps = new List<Gap>();
+        //public List<Gap> FindGaps()
+        //{
+        //    List<Gap> gaps = new List<Gap>();
             
-            foreach (Gap gap in Gap.GapList)
-            {
-                if (gap.Open < 0.01f) continue;
+        //    foreach (Gap gap in Gap.GapList)
+        //    {
+        //        if (gap.Open < 0.01f) continue;
 
-                if (gap.linkedTo.Contains(this)) gaps.Add(gap);
-            }
+        //        if (gap.linkedTo.Contains(this)) gaps.Add(gap);
+        //    }
 
-            return gaps;
-        }
+        //    return gaps;
+        //}
 
         public override XElement Save(XDocument doc)
         {

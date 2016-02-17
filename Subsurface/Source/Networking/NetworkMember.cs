@@ -214,6 +214,24 @@ namespace Barotrauma.Networking
 
         public virtual void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server) { }
 
+        protected string GetChatMessageCommand(string message)
+        {
+            int separatorIndex = message.IndexOf(";");
+            if (separatorIndex == -1) return "";
+
+            int colonIndex = message.IndexOf(":");
+
+            string command = "";
+            try
+            {
+                command = message.Substring(colonIndex + 2, separatorIndex - colonIndex - 2);
+            }
+
+            catch { }
+            
+            return command;
+        }
+
         public virtual void Update(float deltaTime) 
         {
             if (gameStarted && Screen.Selected == GameMain.GameScreen)

@@ -883,7 +883,7 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Select();
 
 
-            AddChatMessage("Press TAB to chat. Use ''/d'' to talk to dead players and spectators, and ''/playername'' to only send the message to a specific player.", ChatMessageType.Server);
+            AddChatMessage("Press TAB to chat. Use ''d;'' to talk to dead players and spectators, and ''player name;'' to only send the message to a specific player.", ChatMessageType.Server);
             
             yield return CoroutineStatus.Success;
         }
@@ -1272,32 +1272,60 @@ namespace Barotrauma.Networking
 
         public override void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server)
         {
-            string[] words = message.Split(' ');
+
 
             List<Client> recipients = new List<Client>();
             Client targetClient = null;
 
-            if (words.Length > 2 && words[1].FirstOrDefault()=='/' && type==ChatMessageType.Server)
+            if (type==ChatMessageType.Server)
             {
-                if (words[1] == "/dead" || words[1] == "/d")
+                string command = GetChatMessageCommand(message).ToLower();
+
+                if (command=="dead" || command=="d")
                 {
                     type = ChatMessageType.Dead;
                 }
-                else
+                else if (command != "")
                 {
                     targetClient = ConnectedClients.Find(c =>
-                        words[1] == "/" + c.name.ToLower() ||
-                        c.Character != null && words[1] == "/" + c.Character.Name.ToLower());
+                        command == c.name.ToLower() ||
+                        c.Character != null && command == c.Character.Name.ToLower());
 
-                    if (targetClient==null)
+                    if (targetClient == null)
                     {
-                        AddChatMessage("Player ''"+words[1].Replace("/", "")+"'' not found!", ChatMessageType.Admin);
+                        AddChatMessage("Player ''" + command + "'' not found!", ChatMessageType.Admin);
                         return;
                     }
                 }
-
-                message = words[0] + " " + string.Join(" ", words, 2, words.Length - 2);
             }
+
+            //remove the ''name: '' part
+            //string[] words = message.Split(':');
+            //string[] newMessage = ((string[])words.Skip(1));
+
+            
+
+            //if (words.Length > 2 && words[1].FirstOrDefault()=='/' && type==ChatMessageType.Server)
+            //{
+            //    if (words[1] == "/dead" || words[1] == "/d")
+            //    {
+            //        type = ChatMessageType.Dead;
+            //    }
+            //    else
+            //    {
+            //        targetClient = ConnectedClients.Find(c =>
+            //            words[1] == "/" + c.name.ToLower() ||
+            //            c.Character != null && words[1] == "/" + c.Character.Name.ToLower());
+
+            //        if (targetClient==null)
+            //        {
+            //            AddChatMessage("Player ''"+words[1].Replace("/", "")+"'' not found!", ChatMessageType.Admin);
+            //            return;
+            //        }
+            //    }
+
+            //    message = words[0] + " " + string.Join(" ", words, 2, words.Length - 2);
+            //}
 
             if (targetClient != null)
             {
