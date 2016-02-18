@@ -286,20 +286,20 @@ namespace Launcher2
         {
             updateInfoBox.ClearChildren();
 
-            string wrappedText = ToolBox.WrapText(text, updateInfoBox.Rect.Width, GUI.SmallFont);
+            //string wrappedText = ToolBox.WrapText(text, updateInfoBox.Rect.Width, GUI.SmallFont);
 
-            int lineHeight = (int)GUI.SmallFont.MeasureString(" ").Y;
+            //int lineHeight = (int)GUI.SmallFont.MeasureString(" ").Y;
 
-            string[] lines = wrappedText.Split('\n');
+            string[] lines = text.Split('\n');
             foreach (string line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
                 GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0,0,0,lineHeight), 
+                    new Rectangle(0,0,0,0), 
                     line, GUI.Style, 
                     Alignment.TopLeft, Alignment.TopLeft, 
-                    updateInfoBox, false, GUI.SmallFont);
+                    updateInfoBox, true, GUI.SmallFont);
                 textBlock.CanBeFocused = false;
             }
 
@@ -441,7 +441,7 @@ namespace Launcher2
                     innerText = innerText.Replace("\r\n", "\n");
                     sb.Append(innerText+"\n");
                     
-                    sb.AppendLine("*************************************\n");
+                    sb.AppendLine("----------------------------\n");
                 }
 
                 SetUpdateInfoBox(sb.ToString());
