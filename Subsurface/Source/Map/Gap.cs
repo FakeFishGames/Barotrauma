@@ -208,7 +208,11 @@ namespace Barotrauma
         {
             flowForce = Vector2.Zero;
 
-            if (open == 0.0f) return;
+            if (open == 0.0f)
+            {
+                lerpedFlowForce = Vector2.Zero;
+                return;
+            }
 
             UpdateOxygen();
 

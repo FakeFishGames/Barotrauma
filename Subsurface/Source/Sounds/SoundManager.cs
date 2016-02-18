@@ -33,7 +33,15 @@ namespace Barotrauma.Sounds
 
         public static void Init()
         {
-            AC = new AudioContext();
+            try
+            {
+                AC = new AudioContext();
+            }
+            catch (DllNotFoundException e)
+            {
+                Program.CrashMessageBox("OpenAL32.dll not found");
+                throw e;
+            }
 
             for (int i = 0 ; i < DefaultSourceCount; i++)
             {

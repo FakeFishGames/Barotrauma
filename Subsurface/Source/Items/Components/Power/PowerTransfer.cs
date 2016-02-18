@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Globalization;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -105,13 +106,19 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
+            List<Connection> alreadyChecked = new List<Connection>();
+
             List<Connection> connections = item.Connections;
             if (connections == null) return;
 
             foreach (Connection c in connections)
             {
                 if (!c.IsPower) continue;
-                foreach (Connection recipient in c.Recipients)
+
+
+                var recipients = c.Recipients;
+                               
+                foreach (Connection recipient in recipients)
                 {
                     if (recipient == null || !c.IsPower) continue;
 
@@ -122,6 +129,8 @@ namespace Barotrauma.Items.Components
 
                     Powered powered = it.GetComponent<Powered>();
                     if (powered == null) continue;
+
+                    if (connectedList.Contains(powered)) continue;
 
                     PowerTransfer powerTransfer = powered as PowerTransfer;
                     PowerContainer powerContainer = powered as PowerContainer;
@@ -140,6 +149,8 @@ namespace Barotrauma.Items.Components
                         {
                             fullPower += powerContainer.CurrPowerOutput;
                         }
+
+                        alreadyChecked.Add(recipient);
                     }
                     else
                     {

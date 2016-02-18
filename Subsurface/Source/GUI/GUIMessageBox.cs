@@ -45,7 +45,11 @@ namespace Barotrauma
             var frame = new GUIFrame(new Rectangle(0,0,width,height), null, Alignment.Center, GUI.Style, this);
 
             new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, GUI.Style, frame, true);
-            new GUITextBlock(new Rectangle(0, 30, 0, height - 70), text, Color.Transparent, Color.White, textAlignment, GUI.Style, frame, true);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                new GUITextBlock(new Rectangle(0, 30, 0, height - 70), text, 
+                    Color.Transparent, Color.White, textAlignment, GUI.Style, frame, true);
+            }
 
             int x = 0;
             this.Buttons = new GUIButton[buttons.Length];

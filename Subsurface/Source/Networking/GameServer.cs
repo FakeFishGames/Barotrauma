@@ -39,6 +39,9 @@ namespace Barotrauma.Networking
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
+            name = name.Replace(":", "");
+            name = name.Replace(";", "");
+
             this.name = name;
             this.password = password;
             
@@ -1121,11 +1124,10 @@ namespace Barotrauma.Networking
             int traitorIndex = Rand.Range(0, characters.Count);
 
             int targetIndex = Rand.Range(0, characters.Count);
-            while (targetIndex==traitorIndex)
+            while (targetIndex == traitorIndex)
             {
                 targetIndex = Rand.Range(0, characters.Count);
             }
-
 
             traitor = characters[traitorIndex];
             target = characters[targetIndex];
