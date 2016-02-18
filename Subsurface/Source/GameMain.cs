@@ -253,7 +253,7 @@ namespace Barotrauma
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", Cam);
         yield return CoroutineStatus.Running;
 
-            LocationType.Init("Content/Map/locationTypes.xml");
+            LocationType.Init();
             MainMenuScreen.Select();
 
             TitleScreen.LoadState = 100.0f;

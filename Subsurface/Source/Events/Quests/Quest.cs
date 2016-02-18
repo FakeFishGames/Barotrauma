@@ -10,9 +10,7 @@ namespace Barotrauma
     class Mission
     {
         private static List<Mission> list = new List<Mission>();
-
-        private static string configFile = "Content/Missions.xml";
-
+        
         private string name;
 
         private string description;
@@ -96,6 +94,9 @@ namespace Barotrauma
 
         public static Mission LoadRandom(Location[] locations, Random rand)
         {
+            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.Missions);
+            string configFile = files[rand.Next(files.Count)];
+
             XDocument doc = ToolBox.TryLoadXml(configFile);
             if (doc == null) return null;
 

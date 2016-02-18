@@ -117,18 +117,10 @@ namespace Barotrauma.Items.Components
         {
             //base.Update(deltaTime, cam);
 
-            //if (voltage < minVoltage) return;
+            if (voltage < minVoltage) return;
                      
             if (autoPilot)
             {
-                //if (steeringPath==null)
-                //{
-                //    PathFinder pathFinder = new PathFinder(WayPoint.WayPointList, false);
-                //    steeringPath = pathFinder.FindPath(
-                //        ConvertUnits.ToSimUnits(Level.Loaded.StartPosition),
-                //        ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
-                //}
-
                 UpdateAutoPilot(deltaTime);
             }
             else if (valueChanged)
@@ -149,6 +141,9 @@ namespace Barotrauma.Items.Components
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
 
             item.SendSignal(targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out");
+
+
+            voltage -= deltaTime;
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -162,13 +157,15 @@ namespace Barotrauma.Items.Components
             GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
+            if (voltage < minVoltage) return;
+
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
 
             if (Submarine.Loaded != null && Level.Loaded != null)
             {
                 Vector2 realWorldVelocity = ConvertUnits.ToDisplayUnits(Submarine.Loaded.Velocity * Physics.DisplayToRealWorldRatio) * 3.6f;
-                float realWorldDepth = (Submarine.Loaded.Position.Y - Level.Loaded.Size.Y) *Physics.DisplayToRealWorldRatio;
+                float realWorldDepth = Math.Abs(Submarine.Loaded.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 65), 
                     "Velocity: " + (int)realWorldVelocity.X + " km/h", Color.LightGreen, null, 0, GUI.SmallFont);
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 50), 
@@ -306,7 +303,11 @@ namespace Barotrauma.Items.Components
             if (connection.Name == "velocity_in")
             {
                 currVelocity = ToolBox.ParseToVector2(signal, false);
-            }  
+            }
+            else
+            {
+                base.ReceiveSignal(signal, connection, sender, power);
+            }
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
