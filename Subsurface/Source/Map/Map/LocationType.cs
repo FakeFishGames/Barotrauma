@@ -127,20 +127,26 @@ namespace Barotrauma
             return null;
         }
 
-        public static void Init(string file)
+        public static void Init()
         {
-            XDocument doc = ToolBox.TryLoadXml(file);
-
-            if (doc==null)
+            var locationTypeFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.LocationTypes);
+            
+            foreach (string file in locationTypeFiles)
             {
-                return;
+                XDocument doc = ToolBox.TryLoadXml(file);
+
+                if (doc==null)
+                {
+                    return;
+                }
+
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    LocationType locationType = new LocationType(element);
+                    list.Add(locationType);
+                }
             }
 
-            foreach (XElement element in doc.Root.Elements())
-            {
-                LocationType locationType = new LocationType(element);
-                list.Add(locationType);
-            }
         }
     }
 }

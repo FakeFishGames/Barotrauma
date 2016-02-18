@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     public enum ContentType
     {
-        None, Jobs, Item, Character, Structure, Executable, RandomEvents
+        None, Jobs, Item, Character, Structure, Executable, LocationTypes, RandomEvents, Missions
     }
 
     public class ContentPackage
