@@ -317,7 +317,8 @@ namespace Barotrauma.Items.Components
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen);
 
             spriteBatch.DrawString(GUI.SmallFont, label, new Vector2(markerPos.X + 10, markerPos.Y), Color.LightGreen);
-            spriteBatch.DrawString(GUI.SmallFont, (int)(dist / 80.0f) + " m", new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);                
+            spriteBatch.DrawString(GUI.SmallFont, (int)(dist * Physics.DisplayToRealWorldRatio) + " m", 
+                new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);                
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)

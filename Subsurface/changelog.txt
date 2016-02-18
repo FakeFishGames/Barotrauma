@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.2.5
+---------------------------------------------------------------------------------------------------------
+
+- fixed null reference exception when starting a client
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.4
+---------------------------------------------------------------------------------------------------------
+
+- fixed crashing when highlighting a dead husk
+- fixed the unclickable checkboxes in server settings
+- sending messages to specific players using ''d; [message]'' and ''name; [message]'' (messages can be
+sent to players with spaces in their names now)
+- more descriptive log messages when taking items from cabinets or other players
+
+---------------------------------------------------------------------------------------------------------
 v0.3.2.3
 ---------------------------------------------------------------------------------------------------------
 

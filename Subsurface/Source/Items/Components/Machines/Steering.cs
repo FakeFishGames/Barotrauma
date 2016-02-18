@@ -164,7 +164,22 @@ namespace Barotrauma.Items.Components
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
+
+            if (Submarine.Loaded != null && Level.Loaded != null)
+            {
+                Vector2 realWorldVelocity = ConvertUnits.ToDisplayUnits(Submarine.Loaded.Velocity * Physics.DisplayToRealWorldRatio) * 3.6f;
+                float realWorldDepth = (Submarine.Loaded.Position.Y - Level.Loaded.Size.Y) *Physics.DisplayToRealWorldRatio;
+                GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 65), 
+                    "Velocity: " + (int)realWorldVelocity.X + " km/h", Color.LightGreen, null, 0, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 50), 
+                    "Descent velocity: " + -(int)realWorldVelocity.Y + " km/h", Color.LightGreen, null, 0, GUI.SmallFont);
+
+                GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 30),
+                    "Depth: " + (int)realWorldDepth + " m", Color.LightGreen, null, 0, GUI.SmallFont);
+            }
+
             
+
             GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X,velRect.Center.Y), 
                 new Vector2(velRect.Center.X + currVelocity.X, velRect.Center.Y - currVelocity.Y), 

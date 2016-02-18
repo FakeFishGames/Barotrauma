@@ -79,28 +79,8 @@ namespace Barotrauma
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
 
-            foreach (Character c in Character.CharacterList)
-            {
+            ApplyExplosionForces(worldPosition, attack.Range, force, attack.GetDamage(1.0f), attack.Stun);
 
-                                
-                foreach (Limb limb in c.AnimController.Limbs)
-                {
-                    float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
-
-                    if (dist > attack.Range) continue;
-
-                    float distFactor = 1.0f - dist / attack.Range;
-
-                    if (limb.WorldPosition == worldPosition) continue;
-                    
-                    c.AddDamage(limb.SimPosition, DamageType.None, 
-                        attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 0.0f, attack.Stun * distFactor, false);
-                    if (force > 0.0f)
-                    {
-                        limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.WorldPosition - worldPosition) * distFactor * force);
-                    }
-                }
-            }
         }
 
         private IEnumerable<object> DimLight()
@@ -121,6 +101,32 @@ namespace Barotrauma
             light.Remove();
             
             yield return CoroutineStatus.Success;
+        }
+
+        public static void ApplyExplosionForces(Vector2 worldPosition, float range, float force, float damage = 0.0f, float stun = 0.0f)
+        {
+            if (range <= 0.0f) return;
+
+            foreach (Character c in Character.CharacterList)
+            {
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
+
+                    if (dist > range) continue;
+
+                    float distFactor = 1.0f - dist / range;
+
+                    if (limb.WorldPosition == worldPosition) continue;
+
+                    c.AddDamage(limb.SimPosition, DamageType.None,
+                        damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor, false);
+                    if (force > 0.0f)
+                    {
+                        limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.WorldPosition - worldPosition) * distFactor * force);
+                    }
+                }
+            }
         }
 
         public static void RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)

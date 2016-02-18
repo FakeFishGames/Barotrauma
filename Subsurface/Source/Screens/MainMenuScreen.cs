@@ -288,10 +288,10 @@ namespace Barotrauma
 
         private bool ChangeMaxPlayers(GUIButton button, object obj)
         {
-            int currMaxPlayers = 10;
+            int currMaxPlayers = 8;
 
             int.TryParse(maxPlayersBox.Text, out currMaxPlayers);
-            currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers+(int)button.UserData, 1, 10);
+            currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers + (int)button.UserData, 1, NetConfig.MaxPlayers);
 
             maxPlayersBox.Text = currMaxPlayers.ToString();
 

@@ -41,6 +41,9 @@ namespace Barotrauma.Networking
             endRoundButton.OnSelected = ToggleEndRoundVote;
             endRoundButton.Visible = false;
 
+            newName = newName.Replace(":", "");
+            newName = newName.Replace(";", "");
+
             GameMain.DebugDraw = false;
             Hull.EditFire = false;
             Hull.EditWater = false;

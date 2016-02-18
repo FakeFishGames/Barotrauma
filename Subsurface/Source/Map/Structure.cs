@@ -518,7 +518,11 @@ namespace Barotrauma
 
             bool hasHole = SectionHasHole(sectionIndex);
 
-            if (hadHole != hasHole) UpdateSections();        
+            if (hadHole != hasHole)
+            {
+                if (hasHole) Explosion.ApplyExplosionForces(sections[sectionIndex].gap.WorldPosition, 500.0f, 5.0f, 0.0f, 0.0f);
+                UpdateSections();
+            }
 
         }
 

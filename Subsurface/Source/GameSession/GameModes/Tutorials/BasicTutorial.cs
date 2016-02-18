@@ -333,13 +333,21 @@ namespace Barotrauma.Tutorials
             //fix everything except the command windows
             foreach (Structure w in Structure.WallList)
             {
-                if (windows.Contains(w)) continue;
+                bool isWindow = windows.Contains(w);
 
                 for (int i = 0; i < w.SectionCount; i++)
                 {
                     if (!w.SectionIsLeaking(i)) continue;
 
-                    w.AddDamage(i, -100000.0f);
+                    if (isWindow)
+                    {
+                        w.AddDamage(i, -w.SectionDamage(i) * 0.2f);
+                    }
+                    else
+                    {
+                        w.AddDamage(i, -100000.0f);
+                    }
+
                 }
             }
 
@@ -365,8 +373,19 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("You should quickly find yourself a diving mask or a diving suit. " +
                 "There are some in the room next to the airlock.");
 
+            bool divingMaskSelected = false;
+
             while (!HasItem("Diving Mask") && !HasItem("Diving Suit"))
             {
+                if (!divingMaskSelected &&
+                    Character.Controlled.ClosestItem != null && Character.Controlled.ClosestItem.Name == "Diving Suit")
+                {
+                    infoBox = CreateInfoFrame("The can only be one item in each inventory slot, so you need to take off "
+                        +"the jumpsuit if you wish to wear a diving suit.");
+
+                    divingMaskSelected = true;
+                }
+
                 yield return CoroutineStatus.Running;
             }
 
