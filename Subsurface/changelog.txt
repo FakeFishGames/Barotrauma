@@ -3,11 +3,12 @@ v0.3.2.6
 ---------------------------------------------------------------------------------------------------------
 
 - fixed the broken password box
-- location types and missions are included in content packages
+- maximum number of players per server increased to 16 (note that none of the vanilla subs have been
+designed for a crew that large)
 - junction boxes and power sources can be connected with multiple parallel wires without multiplying
 the power output
-- 
-
+- velocity and depth readings on navigation terminals
+- location types and missions are included in content packages
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.2.5
