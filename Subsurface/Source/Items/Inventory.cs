@@ -394,8 +394,10 @@ namespace Barotrauma
                 TryPutItem(item, item.AllowedSlots, false);
                 if (droppedItems.Contains(item)) droppedItems.Remove(item);
             }
+            
+            lastUpdate = sendingTime;
 
-
+            if (GameMain.Server == null) return;
             var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
             if (sender != null && sender.Character != null)
             {
@@ -410,9 +412,6 @@ namespace Barotrauma
                     GameServer.Log(sender.Character + " placed " + item.Name + " in " + Owner.ToString(), Color.Orange);
                 }
             }
-
-
-            lastUpdate = sendingTime;
         }
     }
 }

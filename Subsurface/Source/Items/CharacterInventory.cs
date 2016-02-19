@@ -403,6 +403,10 @@ namespace Barotrauma
                 }
             }
 
+            lastUpdate = sendingTime;
+
+            if (GameMain.Server == null) return;
+
             var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
             if (sender != null && sender.Character != null)
             {
@@ -410,7 +414,7 @@ namespace Barotrauma
                 {
                     GameServer.Log(sender.Character == character ?
                         character.Name + " dropped " + item.Name :
-                        sender.Character + " removed " + item.Name+" from "+character+"'s inventory", Color.Orange);
+                        sender.Character + " removed " + item.Name + " from " + character + "'s inventory", Color.Orange);
                 }
 
                 foreach (Item item in Items)
@@ -421,9 +425,6 @@ namespace Barotrauma
                         sender.Character + " placed " + item.Name + " in " + character + "'s inventory", Color.Orange);
                 }
             }
-
-
-            lastUpdate = sendingTime;
         }
 
     }

@@ -12,13 +12,17 @@ namespace Barotrauma
 
         private static Sprite statusIcons;
 
-        private static Sprite noise;
+        private static Sprite noiseOverlay, damageOverlay;
 
         private static GUIProgressBar drowningBar, healthBar;
 
-        public static void TakeDamage()
+        private static float damageOverlayTimer;
+
+        public static void TakeDamage(float amount)
         {
             healthBar.Flash();
+
+            damageOverlayTimer = MathHelper.Clamp(amount*0.1f, 0.2f, 5.0f);
         }
 
         public static void Update(float deltaTime, Character character)
@@ -29,6 +33,8 @@ namespace Barotrauma
                 if (character.Oxygen < 10.0f) drowningBar.Flash();
             }
             if (healthBar != null) healthBar.Update(deltaTime);
+
+            if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
         }
 
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
@@ -38,9 +44,14 @@ namespace Barotrauma
                 statusIcons = new Sprite("Content/UI/statusIcons.png", Vector2.Zero);
             }
 
-            if (noise==null)
+            if (noiseOverlay==null)
             {
-                noise  = new Sprite("Content/UI/noise.png", Vector2.Zero);
+                noiseOverlay  = new Sprite("Content/UI/noise.png", Vector2.Zero);
+            }
+
+            if (damageOverlay==null)
+            {
+                damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
             }
 
             DrawStatusIcons(spriteBatch, character);
@@ -104,13 +115,13 @@ namespace Barotrauma
             //    Vector2.Zero,
             //    Color.White * 0.1f);
 
-            if (character.Oxygen < 50.0f)
+            if (character.Oxygen < 50.0f && !character.IsDead)
             {
-                Vector2 offset = Rand.Vector(noise.size.X);
+                Vector2 offset = Rand.Vector(noiseOverlay.size.X);
                 offset.X = Math.Abs(offset.X);
                 offset.Y = Math.Abs(offset.Y);
 
-                noise.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
+                noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
                     Vector2.Zero,
                     Color.White * ((50.0f - character.Oxygen) / 50.0f));
 
@@ -118,6 +129,12 @@ namespace Barotrauma
                 //    new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 //    new Rectangle(Rand.Int(GameMain.GraphicsWidth), Rand.Int(GameMain.GraphicsHeight), (int)noise.size.X, (int)noise.size.Y),
                 //    Color.White * ((100.0f - character.Oxygen) / 100.0f));
+            }
+
+            if (damageOverlayTimer>0.0f)
+            {
+                damageOverlay.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayTimer, Vector2.Zero, 0.0f,
+                    new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
         }
 

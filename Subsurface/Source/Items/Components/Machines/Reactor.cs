@@ -577,7 +577,6 @@ namespace Barotrauma.Items.Components
 
             lastUpdate = sendingTime;
 
-
             if (GameMain.Server == null) return;
             
             var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);

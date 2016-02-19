@@ -320,6 +320,8 @@ namespace Barotrauma.Items.Components
             {
                 Use(1.0f);
 
+                if (GameMain.Server == null) return;
+
                 var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
                 if (sender != null && sender.Character != null)
                 {

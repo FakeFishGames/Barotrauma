@@ -1104,7 +1104,11 @@ namespace Barotrauma
         public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
         {
             health = MathHelper.Clamp(health-amount, 0.0f, maxHealth);
-            if (amount>0.0f) lastAttackCauseOfDeath = causeOfDeath;
+            if (amount > 0.0f)
+            {
+                lastAttackCauseOfDeath = causeOfDeath;
+                if (controlled == this) CharacterHUD.TakeDamage(amount);
+            }
             if (health <= 0.0f) Kill(causeOfDeath);
         }
 
@@ -1126,7 +1130,6 @@ namespace Barotrauma
         public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
         {
             StartStun(stun);
-            if (controlled == this) CharacterHUD.TakeDamage();
             
             Limb closestLimb = null;
             float closestDistance = 0.0f;
@@ -1554,7 +1557,12 @@ namespace Barotrauma
                     }
 
                     bool allOk = message.ReadBoolean();
-                    if (allOk) return;
+                    if (allOk)
+                    {
+                        bleeding = 0.0f;
+                        Stun = 0.0f;
+                        return;
+                    }
 
                     float newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
                     StartStun(newStunTimer);
