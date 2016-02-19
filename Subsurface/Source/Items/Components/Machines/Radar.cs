@@ -321,6 +321,13 @@ namespace Barotrauma.Items.Components
                 new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);                
         }
 
+        protected override void RemoveComponentSpecific()
+        {
+            if (pingCircle!=null) pingCircle.Remove();
+            if (screenOverlay != null) screenOverlay.Remove();
+
+        }
+
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             message.Write(IsActive);

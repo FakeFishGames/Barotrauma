@@ -122,6 +122,8 @@ namespace Barotrauma.Lights
 
         public void Remove()
         {
+            if (LightSprite != null) LightSprite.Remove();
+
             GameMain.LightManager.RemoveLight(this);
         }
     }

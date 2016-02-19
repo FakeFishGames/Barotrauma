@@ -62,6 +62,11 @@ namespace Barotrauma
             get { return file; }
         }
 
+        public override string ToString()
+        {
+            return FilePath + ": " + sourceRect;
+        }
+
         public Sprite(XElement element, string path = "", string file = "")
         {
             if (file == "")
@@ -104,6 +109,8 @@ namespace Barotrauma
             size.Y *= sourceRect.Height;
 
             Depth = ToolBox.GetAttributeFloat(element, "depth", 0.0f);
+
+            list.Add(this);
         }
 
         public Sprite(string newFile, Vector2 newOrigin)

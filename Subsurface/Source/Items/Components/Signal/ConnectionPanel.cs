@@ -118,12 +118,7 @@ namespace Barotrauma.Items.Components
                 loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
             }
         }
-
-        public override void Remove()
-        {
-            base.Remove();
-        }
-
+        
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             foreach (Connection c in Connections)

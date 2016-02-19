@@ -470,12 +470,19 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public virtual void Remove() 
+        public void Remove()
         {
-            if (loopingSound!=null)
+            if (loopingSound != null)
             {
                 Sounds.SoundManager.Stop(loopingSoundIndex);
             }
+
+            RemoveComponentSpecific();
+        }
+
+        protected virtual void RemoveComponentSpecific() 
+        {
+
         }
 
         public bool HasRequiredSkills(Character character)
