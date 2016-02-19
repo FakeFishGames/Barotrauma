@@ -270,7 +270,11 @@ namespace Barotrauma
                 fireSource.Remove();
             }
 
-            if (soundIndex > -1) Sounds.SoundManager.Stop(soundIndex);
+            if (soundIndex > -1)
+            {
+                Sounds.SoundManager.Stop(soundIndex);
+                soundIndex = -1;
+            }
 
             //renderer.Dispose();
 
@@ -344,7 +348,11 @@ namespace Barotrauma
             }
             else
             {
-                if (soundIndex > -1) Sounds.SoundManager.Stop(soundIndex);
+                if (soundIndex > -1)
+                {
+                    Sounds.SoundManager.Stop(soundIndex);
+                    soundIndex = -1;
+                }
             }
             
             //update client hulls if the amount of water has changed by >10%
@@ -353,7 +361,12 @@ namespace Barotrauma
                 new Networking.NetworkEvent(ID, false);
                 lastSentVolume = volume;
             }
-            if (!update) return;
+
+            if (!update)
+            {
+                lethalPressure = 0.0f;
+                return;
+            }
 
             float surfaceY = rect.Y - rect.Height + Volume / rect.Width;
             for (int i = 0; i < waveY.Length; i++)

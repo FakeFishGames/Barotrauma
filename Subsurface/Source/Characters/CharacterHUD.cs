@@ -12,6 +12,8 @@ namespace Barotrauma
 
         private static Sprite statusIcons;
 
+        private static Sprite noise;
+
         private static GUIProgressBar drowningBar, healthBar;
 
         public static void TakeDamage()
@@ -34,6 +36,11 @@ namespace Barotrauma
             if (statusIcons==null)
             {
                 statusIcons = new Sprite("Content/UI/statusIcons.png", Vector2.Zero);
+            }
+
+            if (noise==null)
+            {
+                noise  = new Sprite("Content/UI/noise.png", Vector2.Zero);
             }
 
             DrawStatusIcons(spriteBatch, character);
@@ -88,6 +95,29 @@ namespace Barotrauma
 
                     textPos.Y += 25;
                 }
+            }
+            //Vector2 offset = Rand.Vector(noise.size.X);
+            //offset.X = Math.Abs(offset.X);
+            //offset.Y = Math.Abs(offset.Y);
+
+            //noise.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
+            //    Vector2.Zero,
+            //    Color.White * 0.1f);
+
+            if (character.Oxygen < 50.0f)
+            {
+                Vector2 offset = Rand.Vector(noise.size.X);
+                offset.X = Math.Abs(offset.X);
+                offset.Y = Math.Abs(offset.Y);
+
+                noise.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
+                    Vector2.Zero,
+                    Color.White * ((50.0f - character.Oxygen) / 50.0f));
+
+                //spriteBatch.Draw(noise.Texture,
+                //    new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+                //    new Rectangle(Rand.Int(GameMain.GraphicsWidth), Rand.Int(GameMain.GraphicsHeight), (int)noise.size.X, (int)noise.size.Y),
+                //    Color.White * ((100.0f - character.Oxygen) / 100.0f));
             }
         }
 

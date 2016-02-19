@@ -358,6 +358,7 @@ namespace Barotrauma.Items.Components
             if (linkedGap!=null) linkedGap.Remove();
 
             doorSprite.Remove();
+            weldedSprite.Remove();
 
             if (convexHull!=null) convexHull.Remove();
             if (convexHull2 != null) convexHull2.Remove();

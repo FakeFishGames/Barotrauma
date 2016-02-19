@@ -303,7 +303,6 @@ namespace Barotrauma
         public static void PlayDamageSound(DamageSoundType damageType, float damage, PhysicsBody body)
         {
             Vector2 bodyPosition = body.DrawPosition;
-            bodyPosition.Y = -bodyPosition.Y;
 
             PlayDamageSound(damageType, damage, bodyPosition);
         }

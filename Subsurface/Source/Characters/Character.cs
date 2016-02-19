@@ -809,7 +809,17 @@ namespace Barotrauma
 
             if (moveCam)
             {
-                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, Submarine == null ? 400.0f : 250.0f, 0.05f);
+                float pressureEffect = 0.0f;
+
+                if (pressureProtection < 80.0f && AnimController.CurrentHull != null && AnimController.CurrentHull.LethalPressure > 50.0f)
+                {
+                    cam.Zoom = MathHelper.Lerp(cam.Zoom,
+                        (AnimController.CurrentHull.LethalPressure / 50.0f) * Rand.Range(1.0f, 1.05f),
+                        (AnimController.CurrentHull.LethalPressure - 50.0f) / 50.0f);
+                }
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (Submarine == null ? 400.0f : 250.0f)+pressureEffect, 0.05f);
+
+
             }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -939,13 +949,14 @@ namespace Barotrauma
                 }
                 
                 if (!protectedFromPressure && 
-                    (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 100.0f))
+                    (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {
                     PressureTimer += ((AnimController.CurrentHull == null) ?
                         100.0f : AnimController.CurrentHull.LethalPressure) * deltaTime;
 
                     if (PressureTimer >= 100.0f)
                     {
+                        if (controlled == this) cam.Zoom = 5.0f;
                         Implode();
                         return;
                     }
@@ -1178,7 +1189,7 @@ namespace Barotrauma
             }
 
             SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body);
-            
+                        
             for (int i = 0; i < 10; i++)
             {
                 Particle p = GameMain.ParticleManager.CreateParticle("waterblood",
