@@ -64,10 +64,8 @@ namespace Barotrauma.Items.Components
             {
                 panelTexture = Sprite.LoadTexture("Content/Items/connectionpanel.png");
 
-                connector = new Sprite(panelTexture, new Rectangle(448, 80, 64, 64), Vector2.Zero, 0.0f);
-                connector.Origin = new Vector2(32.0f, 32.0f);
-                wireCorner = new Sprite(panelTexture, new Rectangle(448, 0, 64, 64), Vector2.Zero, 0.0f);
-                wireCorner.Origin = new Vector2(32.0f, 32.0f);
+                connector = new Sprite(panelTexture, new Rectangle(448, 80, 64, 64), new Vector2(-32.0f, -32.0f), 0.0f);
+                wireCorner = new Sprite(panelTexture, new Rectangle(448, 0, 64, 64), new Vector2(-32.0f, -32.0f), 0.0f);
                 wireVertical = new Sprite(panelTexture, new Rectangle(480, 64, 16, 16), new Vector2(-8.0f, -8.0f), 0.0f);
                 wireHorizontal = new Sprite(panelTexture, new Rectangle(496, 64, 16, 16), new Vector2(-8.0f, -8.0f), 0.0f);
             }
