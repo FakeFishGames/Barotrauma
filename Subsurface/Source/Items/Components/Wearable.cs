@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
 
     class Wearable : Pickable
     {
-        WearableSprite[] wearableSprite;
+        WearableSprite[] wearableSprites;
         LimbType[] limbType;
         Limb[] limb;
 
@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
 
             var sprites = element.Elements().Where(x => x.Name.ToString() == "sprite").ToList();
             int spriteCount = sprites.Count();
-            wearableSprite = new WearableSprite[spriteCount];
+            wearableSprites = new WearableSprite[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
 
@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
                 spritePath = Path.GetDirectoryName( item.Prefab.ConfigFile)+"/"+spritePath;
 
                 var sprite = new Sprite(subElement, "", spritePath);
-                wearableSprite[i] = new WearableSprite(sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false),
+                wearableSprites[i] = new WearableSprite(sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false),
                     (LimbType)Enum.Parse(typeof(LimbType),
                     ToolBox.GetAttributeString(subElement, "depthlimb", "None"), true));
 
@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
         public override void Equip(Character character)
         {
             picker = character;
-            for (int i = 0; i < wearableSprite.Length; i++ )
+            for (int i = 0; i < wearableSprites.Length; i++ )
             {
                 Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
@@ -118,7 +118,7 @@ namespace Barotrauma.Items.Components
 
                 limb[i] = equipLimb;
                 equipLimb.WearingItem = this;
-                equipLimb.WearingItemSprite = wearableSprite[i];
+                equipLimb.WearingItemSprite = wearableSprites[i];
             }
         }
 
@@ -135,7 +135,7 @@ namespace Barotrauma.Items.Components
         public override void Unequip(Character character)
         {
             if (picker == null) return;
-            for (int i = 0; i < wearableSprite.Length; i++)
+            for (int i = 0; i < wearableSprites.Length; i++)
             {
                 Limb equipLimb = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
@@ -162,17 +162,27 @@ namespace Barotrauma.Items.Components
             item.SetTransform(picker.SimPosition, 0.0f);
 
             Item[] containedItems = item.ContainedItems;
-          
+
             ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
             PlaySound(ActionType.OnWearing, picker.WorldPosition);
 
             if (containedItems == null) return;
-            for (int j = 0; j<containedItems.Length; j++)
+            for (int j = 0; j < containedItems.Length; j++)
             {
                 if (containedItems[j] == null) continue;
                 containedItems[j].ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
             } 
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+
+            foreach (WearableSprite wearableSprite in wearableSprites)
+            {
+                if (wearableSprite != null && wearableSprite.Sprite != null) wearableSprite.Sprite.Remove();
+            }
         }
 
     }

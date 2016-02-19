@@ -461,11 +461,11 @@ namespace Barotrauma.Items.Components
 
         }
 
-        public override void Remove()
+        protected override void RemoveComponentSpecific()
         {
             ClearConnections();
 
-            base.Remove();
+            base.RemoveComponentSpecific();
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)

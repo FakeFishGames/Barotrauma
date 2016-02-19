@@ -247,9 +247,9 @@ namespace Barotrauma.Items.Components
             itemIds = null;
         }
 
-        public override void Remove()
+        protected override void RemoveComponentSpecific()
         {
-            base.Remove();
+            base.RemoveComponentSpecific();
 
             foreach (Item item in Inventory.Items)
             {

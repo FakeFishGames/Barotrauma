@@ -124,6 +124,8 @@ namespace Barotrauma
             }
             set 
             {
+                if (info != null && info != value) info.Remove();
+
                 info = value;
                 if (info != null) info.Character = this;
             }
@@ -1684,6 +1686,8 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
+
+            if (info != null) info.Remove();
 
             CharacterList.Remove(this);
 

@@ -325,5 +325,10 @@ namespace Barotrauma
             parentElement.Add(charElement);
             return charElement;
         }
+
+        public void Remove()
+        {
+            if (headSprite != null) headSprite.Remove();
+        }
     }
 }

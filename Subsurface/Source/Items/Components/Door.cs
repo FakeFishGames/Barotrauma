@@ -349,16 +349,16 @@ namespace Barotrauma.Items.Components
             UpdateConvexHulls();
         }
 
-        public override void Remove()
+        protected override void RemoveComponentSpecific()
         {
-            base.Remove();
+            base.RemoveComponentSpecific();
 
             GameMain.World.RemoveBody(body.FarseerBody);
 
             if (linkedGap!=null) linkedGap.Remove();
 
             doorSprite.Remove();
-            weldedSprite.Remove();
+            if (weldedSprite != null) weldedSprite.Remove();
 
             if (convexHull!=null) convexHull.Remove();
             if (convexHull2 != null) convexHull2.Remove();

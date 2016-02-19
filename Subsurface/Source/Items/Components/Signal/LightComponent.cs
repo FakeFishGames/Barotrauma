@@ -145,9 +145,9 @@ namespace Barotrauma.Items.Components
             //GUI.DrawLine(spriteBatch, center - Vector2.One * range, center + Vector2.One * range, lightColor);
         }
 
-        public override void Remove()
+        protected override void RemoveComponentSpecific()
         {
-            base.Remove();
+            base.RemoveComponentSpecific();
 
             light.Remove();
         }

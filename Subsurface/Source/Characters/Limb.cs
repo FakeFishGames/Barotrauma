@@ -286,7 +286,6 @@ namespace Barotrauma
                             damagedSpritePath = damagedSpritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
                         }
 
-
                         damagedSprite = new Sprite(subElement, "", damagedSpritePath);
                         break;
                     case "attack":
@@ -546,6 +545,8 @@ namespace Barotrauma
         public void Remove()
         {
             sprite.Remove();
+            if (damagedSprite != null) damagedSprite.Remove();
+
             body.Remove();
 
             if (bodyShapeTexture != null)

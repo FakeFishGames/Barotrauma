@@ -294,9 +294,9 @@ namespace Barotrauma.Items.Components
             return availablePower;
         }
 
-        public override void Remove()
+        protected override void RemoveComponentSpecific()
         {
-            base.Remove();
+            base.RemoveComponentSpecific();
 
             barrelSprite.Remove();
         }

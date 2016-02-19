@@ -46,9 +46,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Remove()
+        protected override void RemoveComponentSpecific()
         {
-            base.Remove();
+            base.RemoveComponentSpecific();
 
             list.Remove(this);
         }
