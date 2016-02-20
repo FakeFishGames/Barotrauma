@@ -1063,7 +1063,7 @@ namespace Barotrauma
 
             if (IsNetworkPlayer)
             {
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 80.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 120.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
                 spriteBatch.DrawString(GUI.Font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
                 spriteBatch.DrawString(GUI.Font, Info.Name, namePos, Color.White);
 
@@ -1081,10 +1081,8 @@ namespace Barotrauma
             if (isDead) return;
 
             Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
-
-
-
-            GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health/maxHealth, Color.Lerp(Color.Red, Color.Green, health/maxHealth)*0.8f);
+            
+            GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);
             //GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f * (health / maxHealth)), 15), Color.Red, true);

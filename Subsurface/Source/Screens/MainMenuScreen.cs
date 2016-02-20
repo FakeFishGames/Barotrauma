@@ -31,8 +31,6 @@ namespace Barotrauma
         {
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length+1];
 
-
-
             buttonsTab = new GUIFrame(new Rectangle(0,0,0,0), Color.Transparent, Alignment.Left | Alignment.CenterY);
             buttonsTab.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
             //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
@@ -105,14 +103,14 @@ namespace Barotrauma
             }
             if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
 
-            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 0, 100, 20),
+            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 30), 0, 100, 20),
                 "Save name: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
 
             saveNameBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 30, 180, 20),
                 Alignment.TopLeft, GUI.Style, menuTabs[(int)Tab.NewGame]);
             saveNameBox.Text = SaveUtil.CreateSavePath();
 
-            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 60, 100, 20),
+            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 30), 60, 100, 20),
                 "Map Seed: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
 
             seedBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 90, 180, 20),

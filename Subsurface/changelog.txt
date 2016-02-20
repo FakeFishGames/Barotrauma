@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.3.0
+---------------------------------------------------------------------------------------------------------
+
+- more visible indicators when taking damage, running out of oxygen or being crushed by pressure
+- handcuffs
+- changes in the welding/cutting targeting logic: it's now possible to target "corners" of the hull
+even if the section of the wall is obstructed by adjacent walls
+- fixed submarines spawning in a wrong position (e.g. inside walls) if the submarine has been built
+far away from the coordinates (0,0)
+- fixed a memory leak caused by item sprites
+- character/inventory syncing bugfixes
+- fixed spectators not seeing their own chat messages
+- scrollable list of clients in the network statistics view
+
+---------------------------------------------------------------------------------------------------------
 v0.3.2.6
 ---------------------------------------------------------------------------------------------------------
 

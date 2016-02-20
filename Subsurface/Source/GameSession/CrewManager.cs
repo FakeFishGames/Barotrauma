@@ -286,7 +286,7 @@ namespace Barotrauma
                 Character character = Character.Create(characterInfos[i], waypoints[i].WorldPosition);
                 Character.Controlled = character;
 
-                if (!character.Info.StartItemsGiven)
+                if (character.Info!=null && !character.Info.StartItemsGiven)
                 {
                     character.GiveJobItems(waypoints[i]);
                     character.Info.StartItemsGiven = true;

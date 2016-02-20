@@ -64,6 +64,8 @@ namespace Barotrauma
 
         private List<InterestingPosition> positionsOfInterest;
 
+        private Color backgroundColor;
+
         public Vector2 StartPosition
         {
             get { return startPosition; }
@@ -99,6 +101,11 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        public Color BackgroundColor
+        {
+            get { return backgroundColor; }
         }
 
         public Level(string seed, float difficulty, int width, int height, int siteInterval)
@@ -147,6 +154,12 @@ namespace Barotrauma
             bodies = new List<Body>();
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
+
+            float brightness = Rand.Range(1.0f, 1.3f, false);
+            backgroundColor = Color.Lerp(new Color(11, 18, 26), new Color(11, 26, 18), Rand.Range(0.0f, 1.0f, false)) * brightness;
+
+
+            backgroundColor = new Color(backgroundColor, 1.0f);
 
             float minWidth = Submarine.Loaded == null ? 0.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
             minWidth = Math.Max(minWidth, 3500.0f);
@@ -1049,8 +1062,10 @@ namespace Barotrauma
             }
         }
 
-        public void DrawBack(SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundSpriteManager = null)
+        public void DrawBack(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundSpriteManager = null)
         {
+            graphics.Clear(backgroundColor);
+
             if (renderer == null) return;
             renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager);
         }
