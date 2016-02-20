@@ -226,9 +226,16 @@ namespace Barotrauma
             //----------------------------------------------------------------------------------------
 
             graphics.SetRenderTarget(renderTarget);
-            graphics.Clear(new Color(11, 18, 26, 255));
+            
+            if (Level.Loaded == null)
+            {
+                graphics.Clear(new Color(11, 18, 26, 255));
 
-            if (Level.Loaded != null) Level.Loaded.DrawBack(spriteBatch, cam, BackgroundCreatureManager);
+            }
+            else
+            {
+                Level.Loaded.DrawBack(graphics, spriteBatch, cam, BackgroundCreatureManager);
+            }
 
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,

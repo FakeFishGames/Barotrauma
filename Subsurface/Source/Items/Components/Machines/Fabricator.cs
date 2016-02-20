@@ -29,11 +29,15 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            RequiredItems = new List<Tuple<ItemPrefab, int>>();
+            RequiredTime = ToolBox.GetAttributeFloat(element, "requiredtime", 1.0f);
 
+            RequiredItems = new List<Tuple<ItemPrefab, int>>();
+            
             string[] requiredItemNames = ToolBox.GetAttributeString(element, "requireditems", "").Split(',');
             foreach (string requiredItemName in requiredItemNames)
             {
+                if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
+
                 ItemPrefab requiredItem = ItemPrefab.list.Find(ip => ip.Name.ToLower() == requiredItemName.Trim().ToLower()) as ItemPrefab;
                 if (requiredItem == null)
                 {
@@ -57,7 +61,6 @@ namespace Barotrauma.Items.Components
 
             }
 
-            RequiredTime = ToolBox.GetAttributeFloat(element, "requiredtime", 1.0f);
         }
     }
 

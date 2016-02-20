@@ -115,7 +115,7 @@ namespace Barotrauma
                 return currentTarget-pos2;
             }
 
-            if (canOpenDoors) CheckDoorsInPath();
+            if (canOpenDoors && !character.LockHands) CheckDoorsInPath();
 
             float allowedDistance = character.AnimController.InWater ? 1.0f : 0.6f;
             if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
@@ -199,7 +199,7 @@ namespace Barotrauma
                 if (nextNode.Waypoint.ConnectedGap.Open > 0.9f) return 0.0f;
                 if (nextNode.Waypoint.ConnectedGap.ConnectedDoor == null) return 100.0f;
 
-                if (!canOpenDoors) return null;
+                if (!canOpenDoors || character.LockHands) return null;
 
                 var doorButtons = nextNode.Waypoint.ConnectedGap.ConnectedDoor.Item.GetConnectedComponents<Controller>();
                 if (!doorButtons.Any()) return null;

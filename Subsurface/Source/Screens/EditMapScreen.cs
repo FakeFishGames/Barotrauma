@@ -578,7 +578,12 @@ namespace Barotrauma
                 cam.Transform);
 
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
-
+            if (GameMain.DebugDraw)
+            {
+                GUI.DrawLine(spriteBatch, new Vector2(0.0f, -cam.WorldView.Y), new Vector2(0.0f, -(cam.WorldView.Y - cam.WorldView.Height)), Color.White*0.5f, 1.0f, (int)(2.0f/cam.Zoom));
+                GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
+            }
+           
             Submarine.Draw(spriteBatch, true);
 
             if (!characterMode)
@@ -587,7 +592,8 @@ namespace Barotrauma
 
                 MapEntity.DrawSelecting(spriteBatch, cam);
             }
-            
+
+
             spriteBatch.End();
 
             //-------------------- HUD -----------------------------

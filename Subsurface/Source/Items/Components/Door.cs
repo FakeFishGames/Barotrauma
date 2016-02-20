@@ -165,6 +165,12 @@ namespace Barotrauma.Items.Components
 
         private void UpdateConvexHulls()
         {
+            doorRect = new Rectangle(
+                item.Rect.Center.X - (int)(doorSprite.size.X / 2),
+                item.Rect.Y - item.Rect.Height / 2 + (int)(doorSprite.size.Y / 2.0f),
+                (int)doorSprite.size.X,
+                (int)doorSprite.size.Y);
+
             Rectangle rect = doorRect;
             if (isHorizontal)
             {
@@ -221,10 +227,10 @@ namespace Barotrauma.Items.Components
         private Vector2[] GetConvexHullCorners(Rectangle rect)
         {
             Vector2[] corners = new Vector2[4];
-            corners[0] = new Vector2(rect.X, rect.Y - rect.Height) + Submarine.HiddenSubPosition;
-            corners[1] = new Vector2(rect.X, rect.Y) + Submarine.HiddenSubPosition;
-            corners[2] = new Vector2(rect.Right, rect.Y) + Submarine.HiddenSubPosition;
-            corners[3] = new Vector2(rect.Right, rect.Y - rect.Height) + Submarine.HiddenSubPosition;
+            corners[0] = new Vector2(rect.X, rect.Y - rect.Height);
+            corners[1] = new Vector2(rect.X, rect.Y);
+            corners[2] = new Vector2(rect.Right, rect.Y);
+            corners[3] = new Vector2(rect.Right, rect.Y - rect.Height);
 
             return corners;
         }

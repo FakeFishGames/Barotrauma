@@ -13,7 +13,7 @@ namespace Barotrauma
         private static BasicEffect basicEffect;
 
         private static Sprite background, backgroundTop;
-        private static Texture2D dustParticles;
+        private static Sprite dustParticles;
         private static Texture2D shaftTexture;
 
         private static BackgroundSpriteManager backgroundSpriteManager;
@@ -33,9 +33,9 @@ namespace Barotrauma
 
             if (background==null)
             {
-                background = new Sprite("Content/Map/background.png", Vector2.Zero);
-                backgroundTop = new Sprite("Content/Map/background2.png", Vector2.Zero);
-                dustParticles = Sprite.LoadTexture("Content/Map/dustparticles.png");
+                background = new Sprite("Content/Map/background2.png", Vector2.Zero);
+                backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
+                dustParticles = new Sprite("Content/Map/dustparticles.png", Vector2.Zero);
             }
 
             if (basicEffect == null)
@@ -94,16 +94,23 @@ namespace Barotrauma
                     background.DrawTiled(spriteBatch,
                         (backgroundPos.Y < 0) ? new Vector2(0.0f, -backgroundPos.Y) : Vector2.Zero,
                         new Vector2(GameMain.GraphicsWidth, 1024 - backgroundPos.Y),
-                        Vector2.Zero, Color.White);
+                        Vector2.Zero, level.BackgroundColor);
                 }
 
                 if (backgroundPos.Y < 0)
                 {
                     backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
                     backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
-                        Vector2.Zero, Color.White);
+                        Vector2.Zero, level.BackgroundColor);
                 }
             }
+
+
+            //backgroundPos = new Vector2(cam.WorldView.X, cam.WorldView.Y) + dustOffset;
+            ////if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
+
+            //Rectangle viewRect = cam.WorldView;
+            //viewRect.Y = -viewRect.Y;
 
             spriteBatch.End();
 
@@ -116,25 +123,29 @@ namespace Barotrauma
 
             if (backgroundCreatureManager!=null) backgroundCreatureManager.Draw(spriteBatch);
 
+            
+
+            //new Vector2((-offset.X*cam.Zoom) % 1024, (-offset.Y*cam.Zoom) % 1024)
+
             spriteBatch.End();
 
+
             spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                SamplerState.LinearWrap);
+                BlendState.Additive,
+                SamplerState.LinearWrap, DepthStencilState.Default, null, null,
+                cam.Transform);
 
-            backgroundPos = new Vector2(cam.WorldView.X, cam.WorldView.Y) + dustOffset;
-            //if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
 
-            Rectangle viewRect = cam.WorldView;
-            viewRect.Y = -viewRect.Y;
-
-            float multiplier = 0.8f;
-            for (int i = 1; i < 4; i++)
+            //float multiplier = 0.9f;
+            for (int i = 1; i < 2; i++)
             {
-                spriteBatch.Draw(dustParticles, new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsHeight),
-                    new Rectangle((int)((backgroundPos.X * multiplier)), (int)((-backgroundPos.Y * multiplier)), cam.WorldView.Width*2, cam.WorldView.Height*2),
-                    Color.White * multiplier, 0.0f, Vector2.Zero, SpriteEffects.None, 1.0f - multiplier);
-                multiplier -= 0.1f;
+                Vector2 offset = new Vector2(cam.WorldView.X, cam.WorldView.Y);// *multiplier;
+
+                dustParticles.SourceRect = new Rectangle((int)(offset.X), (int)(-offset.Y), (int)(1024), (int)(1024));
+
+                dustParticles.DrawTiled(spriteBatch, new Vector2(cam.WorldView.X, -cam.WorldView.Y),
+                    new Vector2(cam.WorldView.Width, cam.WorldView.Height),
+                    Vector2.Zero, Color.White);
             }
 
             spriteBatch.End();
@@ -169,6 +180,7 @@ namespace Barotrauma
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+            graphicsDevice.BlendState = BlendState.AlphaBlend;
             graphicsDevice.SetVertexBuffer(bodyVertices);
 
             basicEffect.VertexColorEnabled = true;

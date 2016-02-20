@@ -1305,7 +1305,7 @@ namespace Barotrauma.Networking
             List<Client> recipients = new List<Client>();
             Client targetClient = null;
 
-            if (type==ChatMessageType.Server)
+            if (type == ChatMessageType.Server)
             {
                 string command = GetChatMessageCommand(message).ToLower();
 
@@ -1363,7 +1363,7 @@ namespace Barotrauma.Networking
             {
                 foreach (Client c in ConnectedClients)
                 {
-                    if (type != ChatMessageType.Dead || (c.Character != null && c.Character.IsDead)) recipients.Add(c);
+                    if (type != ChatMessageType.Dead || (c.Character == null || c.Character.IsDead)) recipients.Add(c);
                 }
             }
             

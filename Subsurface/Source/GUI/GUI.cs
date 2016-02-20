@@ -152,7 +152,7 @@ namespace Barotrauma
             return true;
         }
 
-        public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f)
+        public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
         {
             Vector2 edge = end - start;
             // calculate angle to rotate line
@@ -163,7 +163,7 @@ namespace Barotrauma
                     (int)start.X,
                     (int)start.Y,
                     (int)edge.Length(), //sb will strech the texture to fill this rectangle
-                    1), //width of line, change this to make thicker line
+                    width), //width of line, change this to make thicker line
                 null,
                 clr, //colour of line
                 angle,     //angle of line (calulated above)
