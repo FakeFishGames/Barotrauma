@@ -711,6 +711,8 @@ namespace Barotrauma
             }
 
             Vector2 center = (topLeft + bottomRight) / 2.0f;
+            center.X -= center.X % GridSize.X;
+            center.Y -= center.Y % GridSize.Y;
 
             foreach (Item item in Item.ItemList)
             {

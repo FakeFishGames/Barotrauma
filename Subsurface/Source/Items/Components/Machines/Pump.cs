@@ -198,7 +198,7 @@ namespace Barotrauma.Items.Components
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
-            message.WriteRangedInteger(-10,10,(int)(flowPercentage/10.0f));
+            message.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
             message.Write(IsActive);
             message.WritePadBits();
 

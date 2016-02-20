@@ -144,10 +144,10 @@ namespace Barotrauma.Networking
                 if (!e.FillNetworkData(eventType, message, data)) return false;
             }
 
-            catch
+            catch (Exception exception)
             {
 #if DEBUG
-                DebugConsole.ThrowError("Failed to write network message for entity "+e.ToString());
+                DebugConsole.ThrowError("Failed to write network message for entity "+e.ToString(), exception);
 #endif
 
                 return false;

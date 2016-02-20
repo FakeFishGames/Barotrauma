@@ -103,17 +103,17 @@ namespace Barotrauma
             }
             if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
 
-            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 30), 0, 100, 20),
+            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 0, 100, 20),
                 "Save name: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
 
-            saveNameBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 30, 180, 20),
+            saveNameBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 30), 30, 180, 20),
                 Alignment.TopLeft, GUI.Style, menuTabs[(int)Tab.NewGame]);
             saveNameBox.Text = SaveUtil.CreateSavePath();
 
-            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 30), 60, 100, 20),
+            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 60, 100, 20),
                 "Map Seed: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
 
-            seedBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 20), 90, 180, 20),
+            seedBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 30), 90, 180, 20),
                 Alignment.TopLeft, GUI.Style, menuTabs[(int)Tab.NewGame]);
             seedBox.Text = ToolBox.RandomSeed(8);
 

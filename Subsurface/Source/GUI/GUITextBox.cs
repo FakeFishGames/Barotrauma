@@ -265,11 +265,12 @@ namespace Barotrauma
         }
         public void ReceiveCommandInput(char command)
         {
+            if (Text == null) Text = "";
+
             switch (command)
             {
                 case '\b': //backspace
-                    if (Text.Length > 0)
-                        Text = Text.Substring(0, Text.Length - 1);
+                    if (Text.Length > 0)  Text = Text.Substring(0, Text.Length - 1);
                     break;
                 //case '\r': //return
                 //    if (OnEnterPressed != null)
