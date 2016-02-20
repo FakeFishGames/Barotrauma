@@ -294,7 +294,7 @@ namespace Barotrauma
                 wayPoint.MoveWithLevel = true;
             }
 
-            //startPosition = pathCells[0].Center;
+            startPosition.X = pathCells[0].Center.X;
             //endPosition = pathCells[pathCells.Count - 1].Center;
 
             foreach (List<Vector2> tunnel in smallTunnels)
