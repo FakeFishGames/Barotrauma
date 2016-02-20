@@ -305,7 +305,7 @@ namespace Barotrauma
                 var msgBox = new GUIMessageBox("Password required:", "", new string[] { "OK", "Cancel" });
                 var passwordBox = new GUITextBox(new Rectangle(0,40,150,25), Alignment.TopLeft, GUI.Style, msgBox.children[0]);
                 passwordBox.UserData = "password";
-
+                
                 var okButton = msgBox.Buttons[0];
                 var cancelButton = msgBox.Buttons[1];
 

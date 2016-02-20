@@ -170,12 +170,18 @@ namespace Barotrauma.Items.Components
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
-                int nextSectionLength = targetStructure.SectionLength(sectionIndex + 1);
-                if (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f)
+                for (int i = -1; i<2; i+=2)
                 {
-                    targetStructure.HighLightSection(sectionIndex + 1);
-                    targetStructure.AddDamage(sectionIndex + 1, -StructureFixAmount * degreeOfSuccess);
+                    int nextSectionLength = targetStructure.SectionLength(sectionIndex + i);
+                    if ((sectionIndex==1 && i ==-1) ||
+                        (sectionIndex==targetStructure.SectionCount-2 && i == 1) || 
+                        (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f))
+                    {
+                        targetStructure.HighLightSection(sectionIndex + i);
+                        targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
+                    }
                 }
+
 
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)

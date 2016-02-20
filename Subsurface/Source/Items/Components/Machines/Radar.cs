@@ -239,11 +239,11 @@ namespace Barotrauma.Items.Components
 
             DrawMarker(spriteBatch,
                 (GameMain.GameSession.Map == null) ? "Start" : GameMain.GameSession.Map.CurrentLocation.Name,
-                (Level.Loaded.StartPosition - (Submarine.Loaded.Position + Submarine.HiddenSubPosition)), displayScale, center, (rect.Width * 0.55f));
+                (Level.Loaded.StartPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.55f));
 
             DrawMarker(spriteBatch,
                 (GameMain.GameSession.Map == null) ? "End" : GameMain.GameSession.Map.SelectedLocation.Name,
-                (Level.Loaded.EndPosition - (Submarine.Loaded.Position+Submarine.HiddenSubPosition)), displayScale, center, (rect.Width * 0.55f));
+                (Level.Loaded.EndPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.55f));
 
             if (GameMain.GameSession.Mission != null)
             {
@@ -253,7 +253,7 @@ namespace Barotrauma.Items.Components
                 {
                     DrawMarker(spriteBatch,
                         mission.RadarLabel,
-                        mission.RadarPosition - (Submarine.Loaded.Position + Submarine.HiddenSubPosition), displayScale, center, (rect.Width * 0.55f));
+                        mission.RadarPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.55f));
                 }
             }
 
