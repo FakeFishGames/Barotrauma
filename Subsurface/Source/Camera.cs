@@ -166,10 +166,10 @@ namespace Barotrauma
                     if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
                     if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
 
-                    if (PlayerInput.KeyDown(Keys.A)) moveCam.X -= moveSpeed;
-                    if (PlayerInput.KeyDown(Keys.D)) moveCam.X += moveSpeed;
-                    if (PlayerInput.KeyDown(Keys.S)) moveCam.Y -= moveSpeed;
-                    if (PlayerInput.KeyDown(Keys.W)) moveCam.Y += moveSpeed;
+                    if (GameMain.Config.KeyBind(InputType.Left).IsDown())   moveCam.X -= moveSpeed;
+                    if (GameMain.Config.KeyBind(InputType.Right).IsDown())  moveCam.X += moveSpeed;
+                    if (GameMain.Config.KeyBind(InputType.Down).IsDown())   moveCam.Y -= moveSpeed;
+                    if (GameMain.Config.KeyBind(InputType.Up).IsDown())     moveCam.Y += moveSpeed;
                 }
 
                 if (Submarine.Loaded!=null && Screen.Selected == GameMain.GameScreen)

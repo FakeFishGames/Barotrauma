@@ -120,9 +120,7 @@ namespace Barotrauma
             {
                 level.Generate();
 
-                Vector2 subOffsetFromCenter = new Vector2(Submarine.Borders.Center.X, Submarine.Borders.Y - Submarine.Borders.Height / 2);
-
-                submarine.SetPosition(level.StartPosition - subOffsetFromCenter - new Vector2(0.0f, 2000.0f));
+                submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
 
                 GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(80);
             }

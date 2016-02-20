@@ -60,9 +60,7 @@ namespace Barotrauma
 
             if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory!=null)
             {
-                character.SelectedCharacter.Inventory.DrawOwn(spriteBatch, new Vector2(GameMain.GraphicsWidth - 310, 0.0f));
-
-                //if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f) selectedCharacter = null;
+                character.SelectedCharacter.Inventory.DrawOwn(spriteBatch, new Vector2(320.0f, 0.0f));
             }
 
             if (character.ClosestCharacter != null && character.ClosestCharacter.CanBeSelected)
@@ -74,9 +72,6 @@ namespace Barotrauma
                 textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestCharacter.Info.Name).X / 2, 20);
 
                 GUI.DrawString(spriteBatch, textPos, character.ClosestCharacter.Info.Name, Color.Orange, Color.Black, 2);
-
-                //spriteBatch.DrawString(GUI.Font, character.ClosestCharacter.Info.Name, textPos, Color.Black);
-                //spriteBatch.DrawString(GUI.Font, character.ClosestCharacter.Info.Name, textPos + new Vector2(1, -1), Color.Orange);
             }
             else if (character.SelectedCharacter == null && character.ClosestItem != null && character.SelectedConstruction == null)
             {
@@ -86,9 +81,6 @@ namespace Barotrauma
 
                 Vector2 textPos = startPos;
                 textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestItem.Name).X / 2, 20);
-                //spriteBatch.DrawString(GUI.Font, character.ClosestItem.Prefab.Name, textPos, Color.Black);
-                //GUI.DrawRectangle(spriteBatch, textPos-Vector2.One*2.0f, textSize+Vector2.One*4.0f, Color.Black * 0.7f, true);
-                //spriteBatch.DrawString(GUI.Font, character.ClosestItem.Prefab.Name, textPos, Color.Orange);
 
                 GUI.DrawString(spriteBatch, textPos, character.ClosestItem.Name, Color.Orange, Color.Black * 0.7f, 2);
 
@@ -99,21 +91,10 @@ namespace Barotrauma
                     textPos.X = startPos.X - GUI.Font.MeasureString(coloredText.Text).X / 2;
 
                     GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color, Color.Black*0.7f, 2);
-
-                    //spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos, Color.Black);
-                    //GUI.DrawRectangle(spriteBatch, textPos - Vector2.One * 2.0f, textSize + Vector2.One * 4.0f, Color.Black * 0.7f, true);
-                    //spriteBatch.DrawString(GUI.Font, coloredText.Text, textPos, coloredText.Color);
-
+                    
                     textPos.Y += 25;
                 }
             }
-            //Vector2 offset = Rand.Vector(noise.size.X);
-            //offset.X = Math.Abs(offset.X);
-            //offset.Y = Math.Abs(offset.Y);
-
-            //noise.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
-            //    Vector2.Zero,
-            //    Color.White * 0.1f);
 
             if (character.Oxygen < 50.0f && !character.IsDead)
             {
@@ -124,11 +105,6 @@ namespace Barotrauma
                 noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
                     Vector2.Zero,
                     Color.White * ((50.0f - character.Oxygen) / 50.0f));
-
-                //spriteBatch.Draw(noise.Texture,
-                //    new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                //    new Rectangle(Rand.Int(GameMain.GraphicsWidth), Rand.Int(GameMain.GraphicsHeight), (int)noise.size.X, (int)noise.size.Y),
-                //    Color.White * ((100.0f - character.Oxygen) / 100.0f));
             }
 
             if (damageOverlayTimer>0.0f)

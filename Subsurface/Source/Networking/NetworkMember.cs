@@ -105,6 +105,11 @@ namespace Barotrauma.Networking
             get { return inGameHUD; }
         }
 
+        public GUIListBox ChatBox
+        {
+            get { return chatBox; }
+        }
+
         public NetworkMember()
         {
             inGameHUD = new GUIFrame(new Rectangle(0,0,0,0), null, null);

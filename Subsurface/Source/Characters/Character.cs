@@ -671,9 +671,9 @@ namespace Barotrauma
 
             if (selectedCharacter!=null)
             {
-                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f || !selectedCharacter.CanBeSelected)
+                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 3.0f || !selectedCharacter.CanBeSelected)
                 {
-                    DeselectCharacter();
+                    DeselectCharacter(controlled == this);
                 }
             }
 
@@ -905,7 +905,7 @@ namespace Barotrauma
                 {
                     if (selectedCharacter != null)
                     {
-                        DeselectCharacter();
+                        DeselectCharacter(controlled == this);
                     }
                     else if (closestCharacter != null && closestCharacter.IsHumanoid && closestCharacter.CanBeSelected)
                     {
@@ -915,7 +915,7 @@ namespace Barotrauma
             }
             else
             {
-                if (selectedCharacter != null) DeselectCharacter();
+                if (selectedCharacter != null) DeselectCharacter(controlled==this);
                 selectedConstruction = null;
                 closestItem = null;
                 closestCharacter = null;
