@@ -57,7 +57,8 @@ namespace Barotrauma
         float[] leftDelta;
         float[] rightDelta;
 
-        float lastSentVolume;
+        private float lastSentVolume;
+        private float lastNetworkUpdate;
 
         public List<Gap> ConnectedGaps;
 
@@ -705,7 +706,7 @@ namespace Barotrauma
             message.WriteRangedSingle(MathHelper.Clamp(volume/FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 6);
 
             message.Write((byte)fireSources.Count, 4);
-            for (int i = 0; i < Math.Min(fireSources.Count, 16) ;i++ )
+            for (int i = 0; i < Math.Min(fireSources.Count, 16); i++)
             {
                 var fireSource = fireSources[i];
 
@@ -724,6 +725,8 @@ namespace Barotrauma
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
+
+            if (sendingTime < lastNetworkUpdate) return;
 
             float newVolume = this.volume;
 
@@ -785,6 +788,8 @@ namespace Barotrauma
                 toBeRemoved[i].Remove(true);
             }
             fireSources = newFireSources;
+
+            lastNetworkUpdate = sendingTime;
         }
     
 

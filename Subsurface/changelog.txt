@@ -12,6 +12,8 @@ far away from the coordinates (0,0)
 - character/inventory syncing bugfixes
 - fixed spectators not seeing their own chat messages
 - scrollable list of clients in the network statistics view
+- small changes to the vanilla subs
+- fixed the water brightness in Linux version
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.2.6

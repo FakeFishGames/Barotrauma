@@ -527,7 +527,7 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.Traitor:
                         string targetName = inc.ReadString();
 
-                        new GUIMessageBox("You are the Traitor!", "Your secret task is to assassinate " + targetName + "!");
+                        TraitorManager.CreateStartPopUp(targetName);
 
                         break;
                     case (byte)PacketTypes.ResendRequest:

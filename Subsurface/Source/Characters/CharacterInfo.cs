@@ -328,7 +328,11 @@ namespace Barotrauma
 
         public void Remove()
         {
-            if (headSprite != null) headSprite.Remove();
+            //if (headSprite != null)
+            //{
+            //    headSprite.Remove();
+            //    headSprite = null;
+            //}
         }
     }
 }

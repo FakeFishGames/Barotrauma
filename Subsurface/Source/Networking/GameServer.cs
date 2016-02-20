@@ -873,7 +873,7 @@ namespace Barotrauma.Networking
             
             UpdateCrewFrame();
 
-            if (TraitorsEnabled == YesNoMaybe.Yes || (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f)<0.5f))
+            if (TraitorsEnabled == YesNoMaybe.Yes || (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
             {
                 TraitorManager = new TraitorManager(this);
             }
@@ -1022,15 +1022,6 @@ namespace Barotrauma.Networking
 
             if (gameStarted && client.Character != null)
             {
-                if (GameMain.GameSession!=null && GameMain.GameSession.gameMode!=null)
-                {
-                    //TraitorMode traitorMode = GameMain.GameSession.gameMode as TraitorMode;
-                    //if (traitorMode!=null)
-                    //{
-                    //    traitorMode.CharacterLeft(client.Character);
-                    //}
-                }
-
                 client.Character.ClearInputs();
             }
 
@@ -1106,45 +1097,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void NewTraitor(out Character traitor, out Character target)
+        public void NewTraitor(Character traitor, Character target)
         {
-            List<Character> characters = new List<Character>();
-            foreach (Client client in ConnectedClients)
-            {
-                if (!client.inGame || client.Character==null) continue;
-                characters.Add(client.Character);
-            }
-            if (myCharacter!= null) characters.Add(myCharacter);
-
-            if (characters.Count < 2)
-            {
-                traitor = null;
-                target = null;
-                return;
-            }
-
-            int traitorIndex = Rand.Range(0, characters.Count);
-
-            int targetIndex = Rand.Range(0, characters.Count);
-            while (targetIndex == traitorIndex)
-            {
-                targetIndex = Rand.Range(0, characters.Count);
-            }
-
-            traitor = characters[traitorIndex];
-            target = characters[targetIndex];
-
-            if (myCharacter==null)
-            {               
-                new GUIMessageBox("New traitor", traitor.Info.Name + " is the traitor and the target is " + target.Info.Name+".");
-            }
-            else if (myCharacter == traitor)
-            {
-                new GUIMessageBox("You are the traitor!", "Your task is to assassinate " + target.Info.Name+".");
-                return;
-            }
-
-            Log(traitor.Info.Name + " is the traitor and the target is " + target.Info.Name, Color.Cyan);
+            Log(traitor.Name + " is the traitor and the target is " + target.Name, Color.Cyan);
 
             Client traitorClient = null;
             foreach (Client c in ConnectedClients)

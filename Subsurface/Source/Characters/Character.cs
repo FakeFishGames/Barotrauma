@@ -913,6 +913,13 @@ namespace Barotrauma
                     }
                 }
             }
+            else
+            {
+                if (selectedCharacter != null) DeselectCharacter();
+                selectedConstruction = null;
+                closestItem = null;
+                closestCharacter = null;
+            }
 
             DisableControls = false;
         }
@@ -1393,7 +1400,7 @@ namespace Barotrauma
                     else
                     {
                         message.Write((byte)0);
-                        message.WriteRangedInteger((int)lastAttackCauseOfDeath, 0, Enum.GetValues(typeof(CauseOfDeath)).Length);
+                        message.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length, (int)lastAttackCauseOfDeath);
                     }
 
                     if (AnimController.StunTimer<=0.0f && bleeding<=0.0f && oxygen>99.0f)
