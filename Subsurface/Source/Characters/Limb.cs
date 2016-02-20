@@ -6,6 +6,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Items.Components;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -64,8 +65,7 @@ namespace Barotrauma
 
         private Direction dir;
 
-        private Wearable wearingItem;
-        private WearableSprite wearingItemSprite;
+        private List<WearableSprite> wearingItems;
 
         private Vector2 animTargetPos;
 
@@ -172,21 +172,23 @@ namespace Barotrauma
         //    set { bleeding = MathHelper.Clamp(value, 0.0f, 100.0f); }
         //}
 
-        public Wearable WearingItem
+        public List<WearableSprite> WearingItems
         {
-            get { return wearingItem; }
-            set { wearingItem = value; }
+            get { return wearingItems; }
+            set { wearingItems = value; }
         }
 
-        public WearableSprite WearingItemSprite
-        {
-            get { return wearingItemSprite; }
-            set { wearingItemSprite = value; }
-        }
+        //public WearableSprite WearingItemSprite
+        //{
+        //    get { return wearingItemSprite; }
+        //    set { wearingItemSprite = value; }
+        //}
 
         public Limb (Character character, XElement element, float scale = 1.0f)
         {
             this.character = character;
+
+            WearingItems = new List<WearableSprite>();
             
             dir = Direction.Right;
 
@@ -327,13 +329,16 @@ namespace Barotrauma
                 totalArmorValue += armorValue;
             }
 
-            if (wearingItem!=null && 
-                wearingItem.ArmorValue>0.0f && 
-                SectorHit(wearingItem.ArmorSectorLimits, position))
+            foreach (WearableSprite wearable in wearingItems)
             {
-                hitArmor = true;
-                totalArmorValue += wearingItem.ArmorValue;
-            }                    
+                if (wearable.WearableComponent.ArmorValue > 0.0f &&
+                    SectorHit(wearable.WearableComponent.ArmorSectorLimits, position))
+                {
+                    hitArmor = true;
+                    totalArmorValue += wearable.WearableComponent.ArmorValue;
+                }       
+            }
+              
             
             if (hitArmor)
             {
@@ -456,7 +461,7 @@ namespace Barotrauma
 
             body.Dir = Dir;
 
-            if (wearingItem == null || !wearingItemSprite.HideLimb)
+            if (wearingItems.Find(w => w != null && w.HideLimb) == null)
             {
                 body.Draw(spriteBatch, sprite, color, null, scale);
             }
@@ -464,32 +469,32 @@ namespace Barotrauma
             {
                 body.UpdateDrawPosition();
             }
-            
-            if (wearingItem != null)
+
+            foreach (WearableSprite wearable in wearingItems)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
-                Vector2 origin = wearingItemSprite.Sprite.Origin;
-                if (body.Dir == -1.0f) origin.X = wearingItemSprite.Sprite.SourceRect.Width - origin.X;
+                Vector2 origin = wearable.Sprite.Origin;
+                if (body.Dir == -1.0f) origin.X = wearable.Sprite.SourceRect.Width - origin.X;
 
                 float depth = sprite.Depth - 0.000001f;
 
-                if (wearingItemSprite.DepthLimb!=LimbType.None)
+                if (wearable.DepthLimb != LimbType.None)
                 {
-                    Limb depthLimb = character.AnimController.GetLimb(wearingItemSprite.DepthLimb);
-                    if (depthLimb!=null)
+                    Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
+                    if (depthLimb != null)
                     {
                         depth = depthLimb.sprite.Depth - 0.000001f;
                     }
                 }
 
-                wearingItemSprite.Sprite.Draw(spriteBatch,
+                wearable.Sprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     color, origin,
                     -body.DrawRotation,
                     scale, spriteEffect, depth);
             }
-
+            
             if (damage>0.0f && damagedSprite!=null)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;

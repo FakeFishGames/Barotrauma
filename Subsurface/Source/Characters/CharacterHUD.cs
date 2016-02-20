@@ -56,16 +56,16 @@ namespace Barotrauma
 
             DrawStatusIcons(spriteBatch, character);
 
-            if (character.Inventory != null) character.Inventory.DrawOwn(spriteBatch);
+            if (character.Inventory != null && !character.LockHands) character.Inventory.DrawOwn(spriteBatch, Vector2.Zero);
 
             if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory!=null)
             {
-                character.SelectedCharacter.Inventory.Draw(spriteBatch);
+                character.SelectedCharacter.Inventory.DrawOwn(spriteBatch, new Vector2(GameMain.GraphicsWidth - 310, 0.0f));
 
                 //if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f) selectedCharacter = null;
             }
 
-            if (character.ClosestCharacter != null && (character.ClosestCharacter.IsDead || character.ClosestCharacter.Stun > 0.0f))
+            if (character.ClosestCharacter != null && character.ClosestCharacter.CanBeSelected)
             {
                 Vector2 startPos = character.DrawPosition + (character.ClosestCharacter.DrawPosition - character.DrawPosition) * 0.7f;
                 startPos = cam.WorldToScreen(startPos);

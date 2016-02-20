@@ -12,8 +12,11 @@ namespace Barotrauma.Items.Components
         public bool HideLimb;
         public LimbType DepthLimb;
 
-        public WearableSprite(Sprite sprite, bool hideLimb, LimbType depthLimb = LimbType.None)
+        public Wearable WearableComponent;
+
+        public WearableSprite(Wearable item, Sprite sprite, bool hideLimb, LimbType depthLimb = LimbType.None)
         {
+            WearableComponent = item;
             Sprite = sprite;
             HideLimb = hideLimb;
 
@@ -85,7 +88,7 @@ namespace Barotrauma.Items.Components
                 spritePath = Path.GetDirectoryName( item.Prefab.ConfigFile)+"/"+spritePath;
 
                 var sprite = new Sprite(subElement, "", spritePath);
-                wearableSprites[i] = new WearableSprite(sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false),
+                wearableSprites[i] = new WearableSprite(this, sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false),
                     (LimbType)Enum.Parse(typeof(LimbType),
                     ToolBox.GetAttributeString(subElement, "depthlimb", "None"), true));
 
@@ -105,10 +108,10 @@ namespace Barotrauma.Items.Components
                 if (equipLimb == null) continue;
 
                 //something is already on the limb -> unequip it
-                if (equipLimb.WearingItem != null && equipLimb.WearingItem != this)
-                {
-                    equipLimb.WearingItem.Unequip(character);
-                }
+                //if (equipLimb.WearingItem != null && equipLimb.WearingItem != this)
+                //{
+                //    equipLimb.WearingItem.Unequip(character);
+                //}
 
                 //sprite[i].Depth = equipLimb.sprite.Depth - 0.001f;
 
@@ -117,8 +120,7 @@ namespace Barotrauma.Items.Components
                 IsActive = true;
 
                 limb[i] = equipLimb;
-                equipLimb.WearingItem = this;
-                equipLimb.WearingItemSprite = wearableSprites[i];
+                equipLimb.WearingItems.Add(wearableSprites[i]);
             }
         }
 
@@ -140,11 +142,20 @@ namespace Barotrauma.Items.Components
                 Limb equipLimb = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
 
-                if (equipLimb.WearingItem != this) continue;
+                //foreach (WearableSprite wearable in equipLimb.WearingItems)
+                //{
+                //    if (wearable != wearableSprites[i]) continue;
+
+                //    equipLimb.WearingItems.Remove(wearableSprites[i]);
+                //}
+
+                equipLimb.WearingItems.RemoveAll(w=> w!=null && w==wearableSprites[i]);
+
+                //if (equipLimb.WearingItem != this) continue;
                 
                 limb[i] = null;
-                equipLimb.WearingItem = null;
-                equipLimb.WearingItemSprite = null;
+                //equipLimb.WearingItem = null;
+                //equipLimb.WearingItemSprite = null;
             }
 
             IsActive = false;

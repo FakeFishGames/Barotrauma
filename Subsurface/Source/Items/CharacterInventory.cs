@@ -210,7 +210,7 @@ namespace Barotrauma
             return TryPutItem(item, new List<LimbSlot>() {placeToSlots}, createNetworkEvent);
         }
          
-        public void DrawOwn(SpriteBatch spriteBatch)
+        public void DrawOwn(SpriteBatch spriteBatch, Vector2 offset)
         {
             string toolTip = "";
             Rectangle highlightedSlot = Rectangle.Empty;
@@ -227,8 +227,8 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = (int)SlotPositions[i].X;
-                slotRect.Y = (int)SlotPositions[i].Y;
+                slotRect.X = (int)(SlotPositions[i].X + offset.X);
+                slotRect.Y = (int)(SlotPositions[i].Y + offset.Y);
 
                 if (i==1) //head
                 {
@@ -248,8 +248,8 @@ namespace Barotrauma
             
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = (int)SlotPositions[i].X;
-                slotRect.Y = (int)SlotPositions[i].Y;
+                slotRect.X = (int)(SlotPositions[i].X + offset.X);
+                slotRect.Y = (int)(SlotPositions[i].Y + offset.Y);
 
                 bool multiSlot = false;
                 //skip if the item is in multiple slots
@@ -295,8 +295,8 @@ namespace Barotrauma
                 //check if the item is in multiple slots
                 if (Items[i] != null)
                 {
-                    slotRect.X = (int)SlotPositions[i].X;
-                    slotRect.Y = (int)SlotPositions[i].Y;
+                    slotRect.X = (int)(SlotPositions[i].X + offset.X);
+                    slotRect.Y = (int)(SlotPositions[i].Y + offset.Y);
                     slotRect.Width = 40;
                     slotRect.Height = 40;
 
@@ -310,7 +310,7 @@ namespace Barotrauma
                         {
                             multiSlot = true;
                             slotRect = Rectangle.Union(
-                                new Rectangle((int)SlotPositions[n].X, (int)SlotPositions[n].Y, rectWidth, rectHeight), slotRect);
+                                new Rectangle((int)(SlotPositions[n].X+offset.X), (int)(SlotPositions[n].Y+offset.Y), rectWidth, rectHeight), slotRect);
                         }
                     }
                 }

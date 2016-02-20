@@ -71,14 +71,14 @@ namespace Barotrauma.Networking
 
             graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, null, 0.0f, Color.Red);
 
-            spriteBatch.DrawString(GUI.SmallFont, 
-                "Peak received: "+graphs[(int)NetStatType.ReceivedBytes].LargestValue()+" bytes/s      " +
-                "Avg received: " + graphs[(int)NetStatType.ReceivedBytes].Average() + " bytes/s", 
-                new Vector2(rect.X + 10, rect.Y+10), Color.Cyan);
+            spriteBatch.DrawString(GUI.SmallFont,
+                "Peak received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].LargestValue()) + "/s      " +
+                "Avg received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].Average()) + "/s",
+                new Vector2(rect.X + 10, rect.Y + 10), Color.Cyan);
 
 
-            spriteBatch.DrawString(GUI.SmallFont, "Peak sent: " + graphs[(int)NetStatType.SentBytes].LargestValue() + " bytes/s      " +
-                "Avg sent: " + graphs[(int)NetStatType.SentBytes].Average() + " bytes/s",
+            spriteBatch.DrawString(GUI.SmallFont, "Peak sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].LargestValue()) + "/s      " +
+                "Avg sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].Average()) + " bytes/s",
                 new Vector2(rect.X + 10, rect.Y + 30), Color.Orange);
 
             spriteBatch.DrawString(GUI.SmallFont, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
