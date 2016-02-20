@@ -35,6 +35,8 @@ namespace Barotrauma.Networking
         private ServerLog log;
         private GUIButton showLogButton;
 
+        private GUIScrollBar clientListScrollBar;
+
         public TraitorManager TraitorManager;
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
@@ -1177,33 +1179,57 @@ namespace Barotrauma.Networking
             if (!ShowNetStats) return;
 
             int width = 200, height = 300;
-            int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight*0.3f);
+            int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x,y,width,height), Color.Black*0.7f, true);
-            spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x+10, y+10), Color.White);
+
+            if (clientListScrollBar == null)
+            {
+                clientListScrollBar = new GUIScrollBar(new Rectangle(x + width - 10, y, 10, height), GUI.Style, 1.0f);
+            }
+
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
+            spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
                         
             spriteBatch.DrawString(GUI.SmallFont, "Connections: "+server.ConnectionsCount, new Vector2(x + 10, y + 30), Color.White);
-            spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + server.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + MathUtils.GetBytesReadable(server.Statistics.ReceivedBytes), new Vector2(x + 10, y + 45), Color.White);
             spriteBatch.DrawString(GUI.SmallFont, "Received packets: " + server.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
 
-            spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + server.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
+            spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + MathUtils.GetBytesReadable(server.Statistics.SentBytes), new Vector2(x + 10, y + 75), Color.White);
             spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + server.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
 
             int resentMessages = 0;
 
-            y += 110;
-            foreach (Client c in ConnectedClients)
-            {
-                spriteBatch.DrawString(GUI.SmallFont, c.name + ":", new Vector2(x + 10, y), Color.White);
-                spriteBatch.DrawString(GUI.SmallFont, "- avg roundtrip " + c.Connection.AverageRoundtripTime+" s", new Vector2(x + 20, y + 15), Color.White);
-                spriteBatch.DrawString(GUI.SmallFont, "- resent messages " + c.Connection.Statistics.ResentMessages, new Vector2(x + 20, y + 30), Color.White);
+            int clientListHeight = ConnectedClients.Count() * 40;
+            float scrollBarHeight = (height - 110) / (float)Math.Max(clientListHeight, 110);
 
-                resentMessages += (int)c.Connection.Statistics.ResentMessages;
-                
-                y += 50;            
+            if (clientListScrollBar.BarSize != scrollBarHeight)
+            {
+                clientListScrollBar.BarSize = scrollBarHeight;
             }
 
-            netStats.AddValue(NetStats.NetStatType.ResentMessages, resentMessages);
+            int startY = y + 110;
+            y = (startY - (int)(clientListScrollBar.BarScroll * (clientListHeight-(height - 110))));
+            foreach (Client c in ConnectedClients)
+            {
+                Color clientColor = c.Connection.AverageRoundtripTime > 0.3f ? Color.Red : Color.White;
+
+                if (y >= startY && y < startY + height - 120)
+                {
+                    spriteBatch.DrawString(GUI.SmallFont, c.name + ":", new Vector2(x + 10, y), clientColor);
+                    spriteBatch.DrawString(GUI.SmallFont, "Ping: " + (int)(c.Connection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x + width - 100, y), clientColor);
+                }
+                if (y + 10 >= startY && y < startY + height - 130) spriteBatch.DrawString(GUI.SmallFont, "Resent messages: " + c.Connection.Statistics.ResentMessages, new Vector2(x + 10, y + 10), clientColor);
+
+                resentMessages += (int)c.Connection.Statistics.ResentMessages;
+
+                y += 40;
+            }
+
+            clientListScrollBar.Update(1.0f / 60.0f);
+            clientListScrollBar.Draw(spriteBatch);
+
+            netStats.AddValue(NetStats.NetStatType.ResentMessages, Math.Max(resentMessages, 0));
             netStats.AddValue(NetStats.NetStatType.SentBytes, server.Statistics.SentBytes);
             netStats.AddValue(NetStats.NetStatType.ReceivedBytes, server.Statistics.ReceivedBytes);
 

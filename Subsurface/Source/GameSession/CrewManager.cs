@@ -71,7 +71,7 @@ namespace Barotrauma
             //listBox.Select(selection);
             Character character = selection as Character;
 
-            if (character == null) return false;
+            if (character == null || character.IsDead) return false;
 
             if (characters.Contains(character))
             {

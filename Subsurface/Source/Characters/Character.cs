@@ -149,6 +149,19 @@ namespace Barotrauma
             get { return inventory; }
         }
 
+        private float lockHandsTimer;
+        public bool LockHands
+        {
+            get
+            {
+                return lockHandsTimer > 0.0f;
+            }
+            set
+            {
+                lockHandsTimer = MathHelper.Clamp(lockHandsTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+            }
+        }
+
         public Vector2 CursorPosition
         {
             get { return cursorPosition; }
@@ -244,7 +257,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value)) return;
                 health = MathHelper.Clamp(value, 0.0f, maxHealth);
             }
-        }    
+        }
     
         public float MaxHealth
         {
@@ -304,19 +317,19 @@ namespace Barotrauma
         public bool IsDead
         {
             get { return isDead; }
-            //set 
-            //{ 
-            //    if (isDead == value) return;
-            //    if (isDead)
-            //    {
-            //        Revive(false);
-            //    }
-            //}
         }
 
         public CauseOfDeath CauseOfDeath
         {
             get { return causeOfDeath; }
+        }
+
+        public bool CanBeSelected
+        {
+            get
+            {
+                return isDead || Stun > 0.0f || LockHands;
+            }
         }
 
         public override Vector2 SimPosition
@@ -658,8 +671,7 @@ namespace Barotrauma
 
             if (selectedCharacter!=null)
             {
-                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 3.0f ||
-                    (!selectedCharacter.isDead && selectedCharacter.Stun <= 0.0f))
+                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 2.0f || !selectedCharacter.CanBeSelected)
                 {
                     DeselectCharacter();
                 }
@@ -765,9 +777,7 @@ namespace Barotrauma
 
             selectedCharacter = character;
 
-           if (createNetworkEvent) 
-                new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, selectedCharacter.ID);
-
+           if (createNetworkEvent) new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, selectedCharacter.ID);
         }
 
         private void DeselectCharacter(bool createNetworkEvent = true)
@@ -820,8 +830,6 @@ namespace Barotrauma
                         (AnimController.CurrentHull.LethalPressure - 50.0f) / 50.0f);
                 }
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (Submarine == null ? 400.0f : 250.0f)+pressureEffect, 0.05f);
-
-
             }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -844,68 +852,67 @@ namespace Barotrauma
             }
 
 
-            //find the closest item if selectkey has been hit, or if the Character is being
-            //controlled by the player (in order to highlight it)
-
-            if (findClosestTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)
+            if (!LockHands)
             {
-                closestCharacter = FindClosestCharacter(mouseSimPos);
-                if (closestCharacter != null && closestCharacter.info==null)
-                {
-                    closestCharacter = null;
-                }
+                //find the closest item if selectkey has been hit, or if the Character is being
+                //controlled by the player (in order to highlight it)
 
-                closestItem = FindClosestItem(mouseSimPos);
-
-                if (closestCharacter != null && closestItem != null)
+                if (findClosestTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)
                 {
-                    if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < Vector2.Distance(closestItem.SimPosition, mouseSimPos))
-                    {
-                        if (selectedConstruction != closestItem) closestItem = null;
-                    }
-                    else
+                    closestCharacter = FindClosestCharacter(mouseSimPos);
+                    if (closestCharacter != null && closestCharacter.info==null)
                     {
                         closestCharacter = null;
                     }
+
+                    closestItem = FindClosestItem(mouseSimPos);
+
+                    if (closestCharacter != null && closestItem != null)
+                    {
+                        if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < Vector2.Distance(closestItem.SimPosition, mouseSimPos))
+                        {
+                            if (selectedConstruction != closestItem) closestItem = null;
+                        }
+                        else
+                        {
+                            closestCharacter = null;
+                        }
+                    }
+
+                    findClosestTimer = 0.1f;
+                }
+                else
+                {
+                    findClosestTimer -= deltaTime;
                 }
 
-                findClosestTimer = 0.1f;
-            }
-            else
-            {
-                findClosestTimer -= deltaTime;
-            }
-
-            if (selectedCharacter == null)
-            {
-                if (closestItem != null)
+                if (selectedCharacter == null && closestItem != null)
                 {
                     closestItem.IsHighlighted = true;
-                    if (closestItem.Pick(this))
+                    if (!LockHands && closestItem.Pick(this))
                     {
                         new NetworkEvent(NetworkEventType.PickItem, ID, true,
                             new int[] 
-                            { 
-                                closestItem.ID, 
-                                IsKeyHit(InputType.Select) ? 1 : 0, 
-                                IsKeyHit(InputType.Use) ? 1 : 0 
-                            });
+                        { 
+                            closestItem.ID, 
+                            IsKeyHit(InputType.Select) ? 1 : 0, 
+                            IsKeyHit(InputType.Use) ? 1 : 0 
+                        });
+                    }
+                }
+
+                if (IsKeyHit(InputType.Select))
+                {
+                    if (selectedCharacter != null)
+                    {
+                        DeselectCharacter();
+                    }
+                    else if (closestCharacter != null && closestCharacter.IsHumanoid && closestCharacter.CanBeSelected)
+                    {
+                        SelectCharacter(closestCharacter);
                     }
                 }
             }
-
-            if (IsKeyHit(InputType.Select))
-            {
-                if (selectedCharacter != null)
-                {
-                    DeselectCharacter();
-                }
-                else if (closestCharacter != null && closestCharacter.IsHumanoid &&
-                    (closestCharacter.isDead || closestCharacter.AnimController.StunTimer > 0.0f))
-                {
-                    SelectCharacter(closestCharacter);
-                }
-            }            
 
             DisableControls = false;
         }
@@ -1003,6 +1010,8 @@ namespace Barotrauma
 
             Health -= bleeding*deltaTime;
             if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss, false);
+
+            if (!IsDead) LockHands = false;
         }
 
 

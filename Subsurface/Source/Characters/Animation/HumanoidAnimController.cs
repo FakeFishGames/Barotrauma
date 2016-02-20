@@ -127,6 +127,36 @@ namespace Barotrauma
                 character.StartStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
             }
             strongestImpact = 0.0f;
+
+            if (character.LockHands)
+            {
+                var leftHand = GetLimb(LimbType.LeftHand);
+                var rightHand = GetLimb(LimbType.RightHand);
+
+                var waist = GetLimb(LimbType.Waist);
+
+                rightHand.Disabled = true;
+                leftHand.Disabled = true;
+
+
+                Vector2 midPos = waist.SimPosition;
+                
+                Matrix torsoTransform = Matrix.CreateRotationZ(waist.Rotation);
+
+
+                midPos += Vector2.Transform(new Vector2(-0.3f*Dir,-0.2f), torsoTransform);
+
+                if (rightHand.pullJoint.Enabled) midPos = (midPos + rightHand.pullJoint.WorldAnchorB) / 2.0f;
+
+                HandIK(rightHand, midPos);
+                HandIK(leftHand, midPos);
+
+                //rightHand.pullJoint.Enabled = true;
+                //rightHand.pullJoint.WorldAnchorB = midPos;
+
+                //rightHand.pullJoint.Enabled = true;
+                //rightHand.pullJoint.WorldAnchorB = midPos;
+            }
             
             if (stunTimer > 0)
             {
@@ -134,9 +164,9 @@ namespace Barotrauma
                 return;
             }
             
-            if (Anim != Animation.UsingConstruction) ResetPullJoints(); 
-
             if (TargetDir != dir) Flip();
+
+            if (Anim != Animation.UsingConstruction) ResetPullJoints(); 
 
             if (SimplePhysicsEnabled)
             {
@@ -815,7 +845,17 @@ namespace Barotrauma
 
 
             target.AnimController.IgnorePlatforms = IgnorePlatforms;
-            target.AnimController.TargetMovement = TargetMovement;
+
+            if (target.Stun > 0.0f || target.IsDead)
+            {
+                target.AnimController.TargetMovement = TargetMovement;
+            }
+            else if (target is AICharacter)
+            {
+                target.AnimController.TargetMovement = Vector2.Lerp(target.AnimController.TargetMovement, (character.SimPosition + Vector2.UnitX*Dir) - target.SimPosition, 0.5f);
+            }
+
+
         }
 
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)
@@ -994,12 +1034,14 @@ namespace Barotrauma
                     case LimbType.LeftArm:
                     case LimbType.RightHand:
                     case LimbType.RightArm:
-                        difference = limb.body.SimPosition - torso.SimPosition;
-                        difference = Vector2.Transform(difference, torsoTransform);
-                        difference.Y = -difference.Y;
+                        if (!limb.pullJoint.Enabled)
+                        {
+                            difference = limb.body.SimPosition - torso.SimPosition;
+                            difference = Vector2.Transform(difference, torsoTransform);
+                            difference.Y = -difference.Y;
 
-                        TrySetLimbPosition(limb, limb.SimPosition, torso.SimPosition + Vector2.Transform(difference, -torsoTransform));
-
+                            TrySetLimbPosition(limb, limb.SimPosition, torso.SimPosition + Vector2.Transform(difference, -torsoTransform));
+                        }
                         limb.body.SetTransform(limb.body.SimPosition, -limb.body.Rotation);
                         break;
                     default:
