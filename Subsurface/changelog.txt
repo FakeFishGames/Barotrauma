@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.3.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed the chatbox obstructing other player's inventory when grabbing/dragging a character
+- fixed characters randomly letting go of bodies they're dragging
+- the keybinds configured in the options menu are used when moving the camera as a spectator
+
+---------------------------------------------------------------------------------------------------------
 v0.3.3.0
 ---------------------------------------------------------------------------------------------------------
 
