@@ -92,19 +92,11 @@ namespace Barotrauma
                 case NetworkEventType.KillCharacter:
                     return true;
                 case NetworkEventType.ImportantEntityUpdate:
-                    //foreach (Limb limb in AnimController.Limbs)
-                    //{
-                        //if (RefLimb.ignoreCollisions) continue;
 
-                        //if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
+                    message.Write(AnimController.RefLimb.SimPosition.X);
+                    message.Write(AnimController.RefLimb.SimPosition.Y);
 
-                        message.Write(AnimController.RefLimb.SimPosition.X);
-                        message.Write(AnimController.RefLimb.SimPosition.Y);
-
-
-                        message.Write(AnimController.RefLimb.Rotation);
-                    //    i++;
-                    //}
+                    message.Write(AnimController.RefLimb.Rotation);
 
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
                     message.Write((byte)((health / maxHealth) * 255.0f));
@@ -115,30 +107,23 @@ namespace Barotrauma
                     aiController.FillNetworkData(message);
                     return true;
                 case NetworkEventType.EntityUpdate:
-                    //if (Submarine == null)
-                    //{
-                    //    if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return false;
-                    
-                    //}
-                    //else
-                    //{
-                    //    if (AnimController.RefLimb.SimPosition.Length() > NetConfig.CharacterIgnoreDistance) return false;                    
-                    //}
 
-                    
                     message.Write(AnimController.TargetDir == Direction.Right);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -1.0f, 1.0f), -1.0f, 1.0f, 8);
                     
                     message.Write(Submarine != null);
-
+                                        
                     message.Write(AnimController.RefLimb.SimPosition.X);
                     message.Write(AnimController.RefLimb.SimPosition.Y);
 
-                    return true;                    
+                    return true;
+                default:
+#if DEBUG
+                    DebugConsole.ThrowError("AICharacter network event had a wrong type ("+type+")");
+#endif
+                    return false;                 
             }
-            
-            return true;
         }
 
         public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
@@ -152,33 +137,27 @@ namespace Barotrauma
                     Kill(CauseOfDeath.Damage, true);
                     return;
                 case NetworkEventType.ImportantEntityUpdate:
-                    //foreach (Limb limb in AnimController.Limbs)
-                    //{
-                    //    if (limb.ignoreCollisions) continue;
 
-                        Vector2 limbPos = AnimController.RefLimb.SimPosition;
-                        float rotation = AnimController.RefLimb.Rotation;
+                    Vector2 limbPos = AnimController.RefLimb.SimPosition;
+                    float rotation = AnimController.RefLimb.Rotation;
 
-                        try
-                        {
-                            limbPos.X = message.ReadFloat();
-                            limbPos.Y = message.ReadFloat();
+                    try
+                    {
+                        limbPos.X = message.ReadFloat();
+                        limbPos.Y = message.ReadFloat();
                             
-                            rotation = message.ReadFloat();
-                        }
-                        catch
-                        {
-                            return;
-                        }
+                        rotation = message.ReadFloat();
+                    }
+                    catch
+                    {
+                        return;
+                    }
 
-                        if (AnimController.RefLimb.body != null)
-                        {
-                            //AnimController.RefLimb.body.TargetVelocity = limb.body.LinearVelocity;
-                            AnimController.RefLimb.body.TargetPosition = limbPos;// +vel * (float)(deltaTime / 60.0);
-                            AnimController.RefLimb.body.TargetRotation = rotation;// +angularVel * (float)(deltaTime / 60.0);
-                            //limb.body.TargetAngularVelocity = limb.body.AngularVelocity;
-                        }
-                    //}
+                    if (AnimController.RefLimb.body != null)
+                    {
+                        AnimController.RefLimb.body.TargetPosition = limbPos;
+                        AnimController.RefLimb.body.TargetRotation = rotation;
+                    }
 
                     float newStunTimer = 0.0f, newHealth = 0.0f, newBleeding = 0.0f;
 
@@ -190,7 +169,14 @@ namespace Barotrauma
 
                         newBleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);
                     }
-                    catch { return; }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to read AICharacter update message", e);
+#endif
+
+                        return;
+                    }
 
                     AnimController.StunTimer = newStunTimer;
                     health = newHealth;
@@ -231,9 +217,9 @@ namespace Barotrauma
 
                     AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
                     AnimController.TargetMovement = targetMovement;
-                        
-                    AnimController.TargetMovement = AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);
-                            
+
+                    AnimController.RefLimb.body.TargetPosition = 
+                        AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);                            
 
                     if (inSub)
                     {

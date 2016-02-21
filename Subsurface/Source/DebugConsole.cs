@@ -449,6 +449,12 @@ namespace Barotrauma
                         DebugConsole.NewMessage("Deleted "+saveFile, Color.Green);
                     }
 
+                    if (System.IO.Directory.Exists(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp")))
+                    {
+                        System.IO.Directory.Delete(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp"), true);
+                        DebugConsole.NewMessage("Deleted temp save folder", Color.Green);
+                    }
+
                     if (System.IO.Directory.Exists(ServerLog.SavePath))
                     {
                         var logFiles = System.IO.Directory.GetFiles(ServerLog.SavePath);

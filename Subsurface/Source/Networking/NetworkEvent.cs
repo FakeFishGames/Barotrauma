@@ -132,7 +132,7 @@ namespace Barotrauma.Networking
 
         public bool FillData(NetBuffer message)
         {
-            message.WriteRangedInteger(0, Enum.GetValues(typeof(NetworkEventType)).Length, (int)eventType);
+            message.WriteRangedInteger(0, Enum.GetValues(typeof(NetworkEventType)).Length-1, (int)eventType);
 
             Entity e = Entity.FindEntityByID(id);
             if (e == null) return false;
@@ -189,13 +189,13 @@ namespace Barotrauma.Networking
 
             try
             {
-                eventType = (NetworkEventType)message.ReadRangedInteger(0, Enum.GetValues(typeof(NetworkEventType)).Length);
+                eventType = (NetworkEventType)message.ReadRangedInteger(0, Enum.GetValues(typeof(NetworkEventType)).Length-1);
                 id = message.ReadUInt16();
             }
-            catch
+            catch (Exception exception)
             {
 #if DEBUG
-                DebugConsole.ThrowError("Received invalid network message");
+                DebugConsole.ThrowError("Received invalid network message", exception);
 #endif
                 return false;
             }
