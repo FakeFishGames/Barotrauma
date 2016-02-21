@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
 
 
             spriteBatch.DrawString(GUI.SmallFont, "Peak sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].LargestValue()) + "/s      " +
-                "Avg sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].Average()) + " bytes/s",
+                "Avg sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].Average()) + "/s",
                 new Vector2(rect.X + 10, rect.Y + 30), Color.Orange);
 
             spriteBatch.DrawString(GUI.SmallFont, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",

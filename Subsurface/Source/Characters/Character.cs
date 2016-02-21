@@ -1393,17 +1393,17 @@ namespace Barotrauma
                     if (inventory == null) return false;
                     return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
                 case NetworkEventType.ImportantEntityUpdate:   
-                    if (health>0.0f)
+                    if (health > 0.0f)
                     {
                         message.Write(Math.Max((byte)((health / maxHealth) * 255.0f), (byte)1));
                     }
                     else
                     {
                         message.Write((byte)0);
-                        message.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length, (int)lastAttackCauseOfDeath);
+                        message.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length-1, (int)lastAttackCauseOfDeath);
                     }
 
-                    if (AnimController.StunTimer<=0.0f && bleeding<=0.0f && oxygen>99.0f)
+                    if (AnimController.StunTimer <= 0.0f && bleeding <= 0.0f && oxygen > 99.0f)
                     {
                         message.Write(true);
                     }
@@ -1566,7 +1566,7 @@ namespace Barotrauma
 
                     if (health == 0.0f)
                     {
-                        causeOfDeath = (CauseOfDeath)message.ReadRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length);
+                        causeOfDeath = (CauseOfDeath)message.ReadRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length-1);
                         Kill(causeOfDeath, true);
                     }
 

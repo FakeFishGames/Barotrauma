@@ -567,22 +567,36 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-
                     DebugConsole.ThrowError("Directory ''" + SavePath + "'' not found and creating the directory failed.", e);
                     return;
                 }
             }
 
-            string[] filePaths;
+            List<string> filePaths;
+            string[] subDirectories;
 
             try
             {
-                filePaths = Directory.GetFiles(SavePath);
+                filePaths = Directory.GetFiles(SavePath).ToList();
+                subDirectories = Directory.GetDirectories(SavePath);
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Couldn't open directory ''" + SavePath + "''!", e);
                 return;
+            }
+
+            foreach (string subDirectory in subDirectories)
+            {
+                try
+                {
+                    filePaths.AddRange(Directory.GetDirectories(subDirectory));
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Couldn't open subdirectory ''" + subDirectory + "''!", e);
+                    return;
+                }
             }
 
             foreach (string path in filePaths)

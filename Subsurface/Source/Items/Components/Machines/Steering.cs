@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
                 autopilotTickBox.Selected = value;
 
                 maintainPosTickBox.Enabled = autoPilot;
-
+                
                 if (autoPilot)
                 {
                     if (pathFinder==null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
@@ -103,7 +103,7 @@ namespace Barotrauma.Items.Components
             autopilotTickBox.OnSelected = (GUITickBox box) =>
             {
                 AutoPilot = box.Selected;
-                item.NewComponentEvent(this, true, true);
+                valueChanged = true;
 
                 return true;
             };
@@ -117,21 +117,22 @@ namespace Barotrauma.Items.Components
         {
             //base.Update(deltaTime, cam);
 
+            if (valueChanged)
+            {
+                networkUpdateTimer -= deltaTime;
+                if (networkUpdateTimer <= 0.0f)
+                {
+                    item.NewComponentEvent(this, true, false);
+                    networkUpdateTimer = 0.5f;
+                    valueChanged = false;
+                }
+            }
+     
             if (voltage < minVoltage) return;
-                     
+               
             if (autoPilot)
             {
                 UpdateAutoPilot(deltaTime);
-            }
-            else if (valueChanged)
-            {
-                networkUpdateTimer -= deltaTime;
-                if (networkUpdateTimer<=0.0f)
-                {
-                    item.NewComponentEvent(this, true, false);
-                    networkUpdateTimer = 1.0f;
-                    valueChanged = false;
-                }
             }
 
             item.SendSignal(targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out");
@@ -277,7 +278,7 @@ namespace Barotrauma.Items.Components
 
         private bool ToggleMaintainPosition(GUITickBox tickBox)
         {
-            item.NewComponentEvent(this, true, true);
+            valueChanged = true;
 
             if (tickBox.Selected)
             {

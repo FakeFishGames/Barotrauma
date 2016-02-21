@@ -554,7 +554,7 @@ namespace Barotrauma
 
         public override void FillNetworkData(NetBuffer message)
         {
-            message.Write((byte)state);
+            message.WriteRangedInteger(0, Enum.GetValues(typeof(AiState)).Length-1, (int)state);
 
             bool wallAttack = (wallAttackPos != Vector2.Zero && state == AiState.Attack);
 
@@ -594,7 +594,7 @@ namespace Barotrauma
             try
             {
 
-                newState = (AiState)(message.ReadByte());
+                newState =  (AiState)message.ReadRangedInteger(0, Enum.GetValues(typeof(AiState)).Length - 1);
 
                 //bool wallAttack = message.ReadBoolean();
 
@@ -619,7 +619,15 @@ namespace Barotrauma
                 targetID = message.ReadUInt16();
             }
 
-            catch { return; }
+            catch (Exception e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Failed to read enemy ai update message", e);
+#endif
+
+
+                return;
+            }
 
             //wallAttackPos = newWallAttackPos;
 
