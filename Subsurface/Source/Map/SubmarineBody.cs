@@ -232,6 +232,7 @@ namespace Barotrauma
                     if (Character.Controlled != null) Character.Controlled.CursorPosition += displayerMoveAmount;
 
                     GameMain.GameScreen.Cam.Position += displayerMoveAmount;
+                    GameMain.GameScreen.Cam.UpdateTransform();
                     targetPosition = null;
                 }
                 else if (dist > 50.0f)
@@ -494,7 +495,6 @@ namespace Barotrauma
             }
 
             Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * DamageMultiplier);
-
         }
 
     }
