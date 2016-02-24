@@ -148,8 +148,11 @@ namespace Barotrauma
                             
                         rotation = message.ReadFloat();
                     }
-                    catch
+                    catch (Exception e)
                     {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to read AICharacter update message", e);
+#endif
                         return;
                     }
 
@@ -186,15 +189,11 @@ namespace Barotrauma
                     aiController.ReadNetworkData(message);
                     return;
                 case NetworkEventType.EntityUpdate:
-                    Vector2 targetMovement  = Vector2.Zero;
-                    bool targetDir = false;
-                                                  
                     if (sendingTime <= LastNetworkUpdate) return;
 
-                    bool inSub = false;
-
-                    Vector2 pos = Vector2.Zero, vel = Vector2.Zero;
-
+                    Vector2 targetMovement  = Vector2.Zero, pos = Vector2.Zero;
+                    bool targetDir = false,inSub = false;
+                    
                     try
                     {
                         targetDir = message.ReadBoolean();
@@ -204,14 +203,13 @@ namespace Barotrauma
                         inSub = message.ReadBoolean();
 
                         pos.X = message.ReadFloat();
-                        pos.Y = message.ReadFloat();
-
-                        //vel.X = message.ReadFloat();
-                        //vel.Y = message.ReadFloat();
-                
+                        pos.Y = message.ReadFloat();                
                     }
-                    catch
+                    catch (Exception e)
                     {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to read AICharacter update message", e);
+#endif
                         return;
                     }
 
