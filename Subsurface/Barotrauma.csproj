@@ -131,6 +131,9 @@
     <Compile Include="Source\Map\SubmarineBody.cs" />
     <Compile Include="Source\Map\TransitionCinematic.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
+    <Compile Include="Source\Networking\FileStreamReceiver.cs" />
+    <Compile Include="Source\Networking\FileStreamSender.cs" />
+    <Compile Include="Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
     <Compile Include="Source\Networking\ReliableSender.cs" />

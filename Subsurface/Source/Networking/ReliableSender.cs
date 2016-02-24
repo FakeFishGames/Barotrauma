@@ -94,7 +94,8 @@ namespace Barotrauma.Networking.ReliableMessages
 
             var reliableMessage = new ReliableMessage(message, messageID);
 
-            message.Write((byte)PacketTypes.ReliableMessage);
+            message.WriteEnum(PacketTypes.ReliableMessage);
+
             message.Write(messageID);
             
             if (messageBuffer.Count > NetConfig.ReliableMessageBufferSize)
@@ -183,7 +184,8 @@ namespace Barotrauma.Networking.ReliableMessages
             //Debug.WriteLine("Sending ack message: "+messageCount);
 
             NetOutgoingMessage message = sender.CreateMessage();
-            message.Write((byte)PacketTypes.LatestMessageID);
+            message.WriteEnum(PacketTypes.LatestMessageID);
+
             message.Write(messageCount);
 
             sender.SendMessage(message, recipient, NetDeliveryMethod.Unreliable);
@@ -242,7 +244,8 @@ namespace Barotrauma.Networking.ReliableMessages
                 Debug.WriteLine("rerequest "+missingMessage.ID+" (try #"+missingMessage.ResendRequestsSent+")");
 
                 NetOutgoingMessage resendRequest = receiver.CreateMessage();
-                resendRequest.Write((byte)PacketTypes.ResendRequest);
+                resendRequest.WriteEnum(PacketTypes.ResendRequest);
+
                 resendRequest.Write(missingMessage.ID);
 
                 receiver.SendMessage(resendRequest, recipient, 

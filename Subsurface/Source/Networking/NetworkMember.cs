@@ -7,7 +7,7 @@ using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
-    enum PacketTypes
+    enum PacketTypes : int
     {
         Unknown,
 
@@ -34,6 +34,11 @@ namespace Barotrauma.Networking
         ResendRequest, ReliableMessage, LatestMessageID,
        
         SpectateRequest
+    }
+
+    enum ChatMessageType
+    {
+        Default, Admin, Dead, Server
     }
 
     enum VoteType
@@ -158,7 +163,7 @@ namespace Barotrauma.Networking
             if (msgBytes.Count == 0) return null;
 
             NetOutgoingMessage message = netPeer.CreateMessage();
-            message.Write((byte)PacketTypes.NetworkEvent);
+            message.WriteEnum(PacketTypes.NetworkEvent);
 
             message.Write((float)NetTime.Now);
 
@@ -311,8 +316,4 @@ namespace Barotrauma.Networking
 
     }
 
-    enum ChatMessageType
-    {
-        Default, Admin, Dead, Server
-    }
 }

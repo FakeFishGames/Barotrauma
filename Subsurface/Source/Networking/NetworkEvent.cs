@@ -8,7 +8,7 @@ namespace Barotrauma.Networking
     {
         Unreliable = 0,
         ReliableChannel = 1,
-        ReliableLindgren = 2
+        ReliableLidgren = 2
     }
 
     enum NetworkEventType
@@ -43,14 +43,14 @@ namespace Barotrauma.Networking
             deliveryMethod = new NetworkEventDeliveryMethod[Enum.GetNames(typeof(NetworkEventType)).Length];
             deliveryMethod[(int)NetworkEventType.ImportantEntityUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
             deliveryMethod[(int)NetworkEventType.ImportantComponentUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.KillCharacter] = NetworkEventDeliveryMethod.ReliableLindgren;
+            deliveryMethod[(int)NetworkEventType.KillCharacter] = NetworkEventDeliveryMethod.ReliableLidgren;
             deliveryMethod[(int)NetworkEventType.SelectCharacter] = NetworkEventDeliveryMethod.ReliableChannel;
 
             deliveryMethod[(int)NetworkEventType.ImportantComponentUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
             deliveryMethod[(int)NetworkEventType.PickItem] = NetworkEventDeliveryMethod.ReliableChannel;
             deliveryMethod[(int)NetworkEventType.DropItem] = NetworkEventDeliveryMethod.ReliableChannel;
             deliveryMethod[(int)NetworkEventType.InventoryUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.ItemFixed] = NetworkEventDeliveryMethod.ReliableLindgren;
+            deliveryMethod[(int)NetworkEventType.ItemFixed] = NetworkEventDeliveryMethod.ReliableLidgren;
 
             deliveryMethod[(int)NetworkEventType.UpdateProperty] = NetworkEventDeliveryMethod.ReliableChannel;
             deliveryMethod[(int)NetworkEventType.WallDamage] = NetworkEventDeliveryMethod.ReliableChannel;
@@ -132,7 +132,7 @@ namespace Barotrauma.Networking
 
         public bool FillData(NetBuffer message)
         {
-            message.WriteRangedInteger(0, Enum.GetValues(typeof(NetworkEventType)).Length-1, (int)eventType);
+            message.WriteEnum(eventType);
 
             Entity e = Entity.FindEntityByID(id);
             if (e == null) return false;
@@ -189,7 +189,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                eventType = (NetworkEventType)message.ReadRangedInteger(0, Enum.GetValues(typeof(NetworkEventType)).Length-1);
+                eventType = message.ReadEnum<NetworkEventType>();
                 id = message.ReadUInt16();
             }
             catch (Exception exception)

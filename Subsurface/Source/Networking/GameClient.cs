@@ -19,13 +19,13 @@ namespace Barotrauma.Networking
 
         private bool connected;
 
-        private int myID;
+        private byte myID;
 
         private List<Client> otherClients;
 
         private string serverIP;
                 
-        public int ID
+        public byte ID
         {
             get { return myID; }
         }
@@ -99,7 +99,7 @@ namespace Barotrauma.Networking
             NetOutgoingMessage outmsg = client.CreateMessage();                        
             client.Start();
 
-            outmsg.Write((byte)PacketTypes.Login);
+            outmsg.WriteEnum(PacketTypes.Login);
             outmsg.Write(myID);
             outmsg.Write(password);
             outmsg.Write(GameMain.Version.ToString());
@@ -221,10 +221,10 @@ namespace Barotrauma.Networking
                     {
                         // All manually sent messages are type of "Data"
                         case NetIncomingMessageType.Data:
-                            byte packetType = inc.ReadByte();
+                            byte packetType = (byte)inc.ReadEnum<PacketTypes>();
                             if (packetType == (byte)PacketTypes.LoggedIn)
                             {
-                                myID = inc.ReadInt32();
+                                myID = inc.ReadByte();
                                 gameStarted = inc.ReadBoolean();
                                 bool hasCharacter = inc.ReadBoolean();
                                 bool allowSpectating = inc.ReadBoolean();
@@ -250,7 +250,7 @@ namespace Barotrauma.Networking
                                 int existingClients = inc.ReadInt32();
                                 for (int i = 1; i <= existingClients; i++)
                                 {
-                                    Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
+                                    Client otherClient = new Client(inc.ReadString(), inc.ReadByte());
 
                                     GameMain.NetLobbyScreen.AddPlayer(otherClient.name);
                                     otherClients.Add(otherClient);
@@ -262,7 +262,7 @@ namespace Barotrauma.Networking
                                 CanStart = true;
 
                                 NetOutgoingMessage lobbyUpdateRequest = client.CreateMessage();
-                                lobbyUpdateRequest.Write((byte)PacketTypes.RequestNetLobbyUpdate);
+                                lobbyUpdateRequest.WriteEnum(PacketTypes.RequestNetLobbyUpdate);
                                 client.SendMessage(lobbyUpdateRequest, NetDeliveryMethod.ReliableUnordered);
                             }
                             else if (packetType == (byte)PacketTypes.KickedOut)
@@ -399,7 +399,7 @@ namespace Barotrauma.Networking
             message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.Unreliable);
             if (message != null) client.SendMessage(message, NetDeliveryMethod.Unreliable);
 
-            message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableLindgren);
+            message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableLidgren);
             if (message != null) client.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
 
             //foreach (NetworkEvent networkEvent in NetworkEvent.Events)
@@ -445,12 +445,12 @@ namespace Barotrauma.Networking
             {
                 if (inc.MessageType != NetIncomingMessageType.Data) continue;
                 
-                byte packetType = inc.ReadByte();
+                byte packetType = (byte)inc.ReadEnum<PacketTypes>();
 
                 if (packetType == (byte)PacketTypes.ReliableMessage)
                 {
                     if (!reliableChannel.CheckMessage(inc)) continue;
-                    packetType = inc.ReadByte();
+                    packetType = (byte)inc.ReadEnum<PacketTypes>();
                 }
 
                 switch (packetType)
@@ -467,7 +467,7 @@ namespace Barotrauma.Networking
                         break;
                     case (byte)PacketTypes.PlayerJoined:
 
-                        Client otherClient = new Client(inc.ReadString(), inc.ReadInt32());
+                        Client otherClient = new Client(inc.ReadString(), inc.ReadByte());
 
                         GameMain.NetLobbyScreen.AddPlayer(otherClient.name);
                         otherClients.Add(otherClient);
@@ -476,7 +476,7 @@ namespace Barotrauma.Networking
 
                         break;
                     case (byte)PacketTypes.PlayerLeft:
-                        int leavingID = inc.ReadInt32();
+                        byte leavingID = inc.ReadByte();
 
                         AddChatMessage(inc.ReadString(), ChatMessageType.Server);
                         Client disconnectedClient = otherClients.Find(c => c.ID == leavingID);
@@ -510,7 +510,8 @@ namespace Barotrauma.Networking
 
                         break;
                     case (byte)PacketTypes.Chatmessage:
-                        ChatMessageType messageType = (ChatMessageType)inc.ReadByte();
+                        ChatMessageType messageType = inc.ReadEnum<ChatMessageType>();
+
                         AddChatMessage(inc.ReadString(), messageType);                        
                         break;
                     case (byte)PacketTypes.NetworkEvent:
@@ -595,7 +596,7 @@ namespace Barotrauma.Networking
             int count = inc.ReadByte();
             for (int n = 0; n < count; n++)
             {
-                int id = inc.ReadInt32();
+                byte id = inc.ReadByte();
                 Character newCharacter = ReadCharacterData(inc, id == myID);
 
                 crew.Add(newCharacter);
@@ -696,7 +697,7 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.PlayerLeft);
+            msg.WriteEnum(PacketTypes.PlayerLeft);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
             client.Shutdown("");
@@ -706,8 +707,8 @@ namespace Barotrauma.Networking
         public void Vote(VoteType voteType, object userData)
         {
             NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.Vote);
-            msg.Write((byte)voteType);
+            msg.WriteEnum(PacketTypes.Vote);
+            msg.WriteEnum(voteType);
 
             switch (voteType)
             {
@@ -728,8 +729,8 @@ namespace Barotrauma.Networking
         public bool SpectateClicked(GUIButton button, object userData)
         {
             NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.SpectateRequest);
-
+            msg.WriteEnum(PacketTypes.SpectateRequest);
+            
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
             if (button != null) button.Enabled = false;
@@ -759,7 +760,8 @@ namespace Barotrauma.Networking
             if (characterInfo == null) return;
 
             NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.CharacterInfo);
+            msg.WriteEnum(PacketTypes.CharacterInfo);
+
             msg.Write(characterInfo.Name);
             msg.Write(characterInfo.Gender == Gender.Male);
             msg.Write((byte)characterInfo.HeadSpriteId);
@@ -835,8 +837,8 @@ namespace Barotrauma.Networking
                 (myCharacter == null || myCharacter.IsDead)) ? ChatMessageType.Dead : ChatMessageType.Default;
             
             ReliableMessage msg = reliableChannel.CreateMessage();
-            msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-            msg.InnerMessage.Write((byte)type);
+            msg.InnerMessage.WriteEnum(PacketTypes.Chatmessage);
+            msg.InnerMessage.WriteEnum(type);
             msg.InnerMessage.Write(message);
 
             reliableChannel.SendMessage(msg, client.ServerConnection);
@@ -852,18 +854,18 @@ namespace Barotrauma.Networking
             switch (Rand.Int(5))
             {
                 case 0:
-                    msg.Write((byte)PacketTypes.NetworkEvent);
-                    msg.Write((byte)NetworkEventType.EntityUpdate);
+                    msg.WriteEnum(PacketTypes.NetworkEvent);
+                    msg.WriteEnum(NetworkEventType.EntityUpdate);
                     msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
                     break;
                 case 1:
-                    msg.Write((byte)PacketTypes.NetworkEvent);
+                    msg.WriteEnum(PacketTypes.NetworkEvent);
                     msg.Write((byte)Enum.GetNames(typeof(NetworkEventType)).Length);
                     msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
                     break;
                 case 2:
-                    msg.Write((byte)PacketTypes.NetworkEvent);
-                    msg.Write((byte)NetworkEventType.ComponentUpdate);
+                    msg.WriteEnum(PacketTypes.NetworkEvent);
+                    msg.WriteEnum(NetworkEventType.ComponentUpdate);
                     msg.Write((int)Item.ItemList[Rand.Int(Item.ItemList.Count)].ID);
                     msg.Write(Rand.Int(8));
                     break;
