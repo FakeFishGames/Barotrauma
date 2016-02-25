@@ -94,7 +94,7 @@ namespace Barotrauma.Networking.ReliableMessages
 
             var reliableMessage = new ReliableMessage(message, messageID);
 
-            message.WriteEnum(PacketTypes.ReliableMessage);
+            message.Write((byte)PacketTypes.ReliableMessage);
 
             message.Write(messageID);
             
@@ -184,7 +184,7 @@ namespace Barotrauma.Networking.ReliableMessages
             //Debug.WriteLine("Sending ack message: "+messageCount);
 
             NetOutgoingMessage message = sender.CreateMessage();
-            message.WriteEnum(PacketTypes.LatestMessageID);
+            message.Write((byte)PacketTypes.LatestMessageID);
 
             message.Write(messageCount);
 
@@ -244,7 +244,7 @@ namespace Barotrauma.Networking.ReliableMessages
                 Debug.WriteLine("rerequest "+missingMessage.ID+" (try #"+missingMessage.ResendRequestsSent+")");
 
                 NetOutgoingMessage resendRequest = receiver.CreateMessage();
-                resendRequest.WriteEnum(PacketTypes.ResendRequest);
+                resendRequest.Write((byte)PacketTypes.ResendRequest);
 
                 resendRequest.Write(missingMessage.ID);
 
@@ -443,6 +443,7 @@ namespace Barotrauma.Networking.ReliableMessages
 
         public void SaveInnerMessage()
         {
+            innerMessage.WritePadBits();
             innerMessageBytes = innerMessage.PeekBytes(innerMessage.LengthBytes);
             //innerMessage = null;
         }

@@ -4,13 +4,36 @@ using System.IO;
 
 namespace Barotrauma.Networking
 {
-    class FileStreamReceiver
+    class FileStreamReceiver : IDisposable
     {
-        private NetClient s_client;
-        private ulong s_length;
-        private ulong s_received;
-        private FileStream s_writeStream;
-        private int s_timeStarted;
+        public delegate void OnFinished(FileStreamReceiver fileStreamReceiver);
+        private OnFinished onFinished;
+
+        private NetClient client;
+        private ulong length;
+        private ulong received;
+        private FileStream writeStream;
+        private int timeStarted;
+
+        private string filePath;
+
+        private FileTransferType fileType;
+
+        public string FileName
+        {
+            get;
+            private set;
+        }
+
+        public ulong FileSize
+        {
+            get { return length; }
+        }
+
+        public ulong Received
+        {
+            get { return received; }
+        }
 
         public FileTransferStatus Status
         {
@@ -24,47 +47,97 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public FileStreamReceiver(NetClient client)
+        public float Progress
         {
-            s_client = client;
+            get { return length / (float)received; }
+
+        }
+
+        public FileStreamReceiver(NetClient client, string filePath, FileTransferType fileType, OnFinished onFinished)
+        {
+            client = client;
+
+            this.filePath = filePath;
+            this.fileType = fileType;
+
+            this.onFinished = onFinished;
 
             Status = FileTransferStatus.NotStarted;
         }
 
         public void ReadMessage(NetIncomingMessage inc)
         {
-            int chunkLen = inc.LengthBytes;
-            if (s_length == 0)
+            try
             {
-                s_length = inc.ReadUInt64();
-                string filename = inc.ReadString();
-                s_writeStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.None);
-                s_timeStarted = Environment.TickCount;
+                TryReadMessage(inc);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error while receiving file ''"+FileName+"''", e);
+                Status = FileTransferStatus.Error;
+            }
+        }
+
+        private void TryReadMessage(NetIncomingMessage inc)
+        {
+            //int chunkLen = inc.LengthBytes;
+            if (length == 0)
+            {
+
+                if (!Directory.Exists(filePath))
+                {
+                    Directory.CreateDirectory(filePath);
+                }
+
+                byte fileTypeByte = inc.ReadByte();
+                if (fileTypeByte != (byte)fileType)
+                {
+                    Status = FileTransferStatus.Error;
+                    return;
+                }
+
+                length = inc.ReadUInt64();
+                FileName = inc.ReadString();
+                writeStream = new FileStream(Path.Combine(filePath, FileName), FileMode.Create, FileAccess.Write, FileShare.None);
+                timeStarted = Environment.TickCount;
 
                 Status = FileTransferStatus.NotStarted;
 
                 return;
             }
 
-            byte[] all = inc.ReadBytes(inc.LengthBytes);
-            s_received += (ulong)all.Length;
-            s_writeStream.Write(all, 0, all.Length);
+            byte[] all = inc.ReadBytes(inc.LengthBytes - inc.PositionInBytes);
+            received += (ulong)all.Length;
+            writeStream.Write(all, 0, all.Length);
             
-            int passed = Environment.TickCount - s_timeStarted;
+            int passed = Environment.TickCount - timeStarted;
             float psec = passed / 1000.0f;
 
-            BytesPerSecond = s_received / psec;
+            BytesPerSecond = received / psec;
 
             Status = FileTransferStatus.Receiving;
 
-            if (s_received >= s_length)
+            if (received >= length)
             {
-                s_writeStream.Flush();
-                s_writeStream.Close();
-                s_writeStream.Dispose();
-
-                Status = FileTransferStatus.Finished;                
+                Status = FileTransferStatus.Finished;
+                if (onFinished!=null) onFinished(this);
             }
         }
+        
+        public void Dispose()
+        {
+            Dispose(true);
+
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            writeStream.Flush();
+            writeStream.Close();
+            writeStream.Dispose();
+        }
     }
+    
+     
 }

@@ -713,37 +713,42 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 topLeft = new Vector2(Hull.hullList[0].Rect.X, Hull.hullList[0].Rect.Y);
-            Vector2 bottomRight = new Vector2(Hull.hullList[0].Rect.X, Hull.hullList[0].Rect.Y);
-            foreach (Hull hull in Hull.hullList)
+            Vector2 center = Vector2.Zero;
+
+            if (Hull.hullList.Any())
             {
-                if (hull.Rect.X < topLeft.X) topLeft.X = hull.Rect.X;
-                if (hull.Rect.Y > topLeft.Y) topLeft.Y = hull.Rect.Y;
-
-                if (hull.Rect.Right > bottomRight.X) bottomRight.X = hull.Rect.Right;
-                if (hull.Rect.Y - hull.Rect.Height < bottomRight.Y) bottomRight.Y = hull.Rect.Y - hull.Rect.Height;
-            }
-
-            Vector2 center = (topLeft + bottomRight) / 2.0f;
-            center.X -= center.X % GridSize.X;
-            center.Y -= center.Y % GridSize.Y;
-
-            foreach (Item item in Item.ItemList)
-            {
-                var wire = item.GetComponent<Items.Components.Wire>();
-                if (wire == null) continue;
-
-                for (int i = 0; i < wire.Nodes.Count; i++)
+                Vector2 topLeft = new Vector2(Hull.hullList[0].Rect.X, Hull.hullList[0].Rect.Y);
+                Vector2 bottomRight = new Vector2(Hull.hullList[0].Rect.X, Hull.hullList[0].Rect.Y);
+                foreach (Hull hull in Hull.hullList)
                 {
-                    wire.Nodes[i] -= center;
-                }
-            }
+                    if (hull.Rect.X < topLeft.X) topLeft.X = hull.Rect.X;
+                    if (hull.Rect.Y > topLeft.Y) topLeft.Y = hull.Rect.Y;
 
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
-            {
-                if (MapEntity.mapEntityList[i].Submarine == null) continue;
+                    if (hull.Rect.Right > bottomRight.X) bottomRight.X = hull.Rect.Right;
+                    if (hull.Rect.Y - hull.Rect.Height < bottomRight.Y) bottomRight.Y = hull.Rect.Y - hull.Rect.Height;
+                }
+
+                center = (topLeft + bottomRight) / 2.0f;
+                center.X -= center.X % GridSize.X;
+                center.Y -= center.Y % GridSize.Y;
+
+                foreach (Item item in Item.ItemList)
+                {
+                    var wire = item.GetComponent<Items.Components.Wire>();
+                    if (wire == null) continue;
+
+                    for (int i = 0; i < wire.Nodes.Count; i++)
+                    {
+                        wire.Nodes[i] -= center;
+                    }
+                }
+
+                for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+                {
+                    if (MapEntity.mapEntityList[i].Submarine == null) continue;
                 
-                MapEntity.mapEntityList[i].Move(-center);
+                    MapEntity.mapEntityList[i].Move(-center);
+                }
             }
 
             subBody = new SubmarineBody(this);

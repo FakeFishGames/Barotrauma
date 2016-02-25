@@ -132,7 +132,7 @@ namespace Barotrauma.Networking
 
         public bool FillData(NetBuffer message)
         {
-            message.WriteEnum(eventType);
+            message.Write((byte)eventType);
 
             Entity e = Entity.FindEntityByID(id);
             if (e == null) return false;
@@ -189,7 +189,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                eventType = message.ReadEnum<NetworkEventType>();
+                eventType = (NetworkEventType)message.ReadByte();
                 id = message.ReadUInt16();
             }
             catch (Exception exception)
