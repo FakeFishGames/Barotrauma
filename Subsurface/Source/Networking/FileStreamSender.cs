@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using System;
 using System.IO;
 
 namespace Barotrauma.Networking
@@ -8,13 +9,21 @@ namespace Barotrauma.Networking
         NotStarted, Sending, Receiving, Finished, Error
     }
 
-    class FileStreamSender
+    enum FileTransferType
+    {
+        Unknown, Submarine
+    }
+
+    class FileStreamSender : IDisposable
     {
         private FileStream inputStream;
         private int sentOffset;
         private int chunkLen;
         private byte[] tempBuffer;
         private NetConnection connection;
+
+
+        private FileTransferType fileType;
 
         public FileTransferStatus Status
         {
@@ -28,8 +37,8 @@ namespace Barotrauma.Networking
             private set;
         }
 
-            
-        public static FileStreamSender Create(NetConnection conn, string fileName)
+
+        public static FileStreamSender Create(NetConnection conn, string fileName, FileTransferType fileType)
         {
             if (!File.Exists(fileName))
             {
@@ -37,18 +46,20 @@ namespace Barotrauma.Networking
                 return null;
             }
 
-            return new FileStreamSender(conn, fileName);
+            return new FileStreamSender(conn, fileName, fileType);
         }
 
-        private FileStreamSender(NetConnection conn, string fileName)
+        private FileStreamSender(NetConnection conn, string fileName, FileTransferType fileType)
         {
             connection = conn;
             inputStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            chunkLen = connection.Peer.Configuration.MaximumTransmissionUnit - 20;
+            chunkLen = connection.Peer.Configuration.MaximumTransmissionUnit - 100;
             tempBuffer = new byte[chunkLen];
             sentOffset = 0;
 
             FileName = fileName;
+
+            this.fileType = fileType;
 
             Status = FileTransferStatus.NotStarted;
         }
@@ -70,7 +81,9 @@ namespace Barotrauma.Networking
             if (sentOffset == 0)
             {
                 // first message; send length, chunk length and file name
-                message = connection.Peer.CreateMessage(sendBytes + 8);
+                message = connection.Peer.CreateMessage(sendBytes + 8 + 1);
+                message.Write((byte)PacketTypes.FileStream);
+                message.Write((byte)fileType);
                 message.Write((ulong)inputStream.Length);
                 message.Write(Path.GetFileName(inputStream.Name));
                 connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, 1);
@@ -78,7 +91,8 @@ namespace Barotrauma.Networking
                 Status = FileTransferStatus.Sending;
             }
 
-            message = connection.Peer.CreateMessage(sendBytes + 8);
+            message = connection.Peer.CreateMessage(sendBytes + 8 + 1);
+            message.Write((byte)PacketTypes.FileStream);
             message.Write(tempBuffer, 0, sendBytes);
 
             connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, 1);
@@ -88,12 +102,25 @@ namespace Barotrauma.Networking
 
             if (remaining - sendBytes <= 0)
             {
-                inputStream.Close();
-                inputStream.Dispose();
-                inputStream = null;
+                //Dispose();
 
                 Status = FileTransferStatus.Finished;
             }            
+        }
+
+
+        public void Dispose()
+        {
+            Dispose(true);
+
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            inputStream.Close();
+            inputStream.Dispose();
+            inputStream = null;
         }
     }
 }

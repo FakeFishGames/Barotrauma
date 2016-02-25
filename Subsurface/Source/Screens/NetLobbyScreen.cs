@@ -37,6 +37,10 @@ namespace Barotrauma
         public bool IsServer;
         public string ServerName, ServerMessage;
 
+        const float NetworkUpdateInterval = 1.0f;
+        private float networkUpdateTimer;
+        private bool valueChanged;
+
         private Sprite backgroundSprite;
 
         private GUITextBox serverMessage;
@@ -327,7 +331,7 @@ namespace Barotrauma
                 modeList.OnSelected = VotableClicked;
                 modeList.OnSelected = SelectMode;
                 subList.OnSelected = VotableClicked;
-                subList.OnSelected = SelectMap;
+                subList.OnSelected = SelectSub;
 
                 traitorProbabilityButtons[0].OnClicked = ToggleTraitorsEnabled;
                 traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
@@ -484,8 +488,8 @@ namespace Barotrauma
             if (GameMain.Server == null) return false;
             
             GameMain.Server.AutoRestart = tickBox.Selected;
-
-            GameMain.Server.UpdateNetLobby(tickBox);
+            
+            valueChanged = true;
 
             return true;
         }
@@ -501,8 +505,8 @@ namespace Barotrauma
             if (index > 2) index = 0;
 
             SetTraitorsEnabled((YesNoMaybe)index);
-
-            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(null);
+            
+            valueChanged = true;
 
             return true;
         }
@@ -515,9 +519,9 @@ namespace Barotrauma
 
         }
 
-        private bool SelectMap(GUIComponent component, object obj)
+        private bool SelectSub(GUIComponent component, object obj)
         {
-            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(obj);
+            valueChanged = true;
 
             //Submarine sub = (Submarine)obj;
 
@@ -558,7 +562,7 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return false;
             ServerName = text;
-            GameMain.Server.UpdateNetLobby(null, null);
+            valueChanged = true;
 
             return true;
         }
@@ -567,7 +571,7 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return false;
             ServerMessage = text;
-            GameMain.Server.UpdateNetLobby(null, null);
+            valueChanged = true;
 
             return true;
         }
@@ -692,6 +696,18 @@ namespace Barotrauma
             {
                 if (GameMain.Server.BanList.BanFrame != null) GameMain.Server.BanList.BanFrame.Update((float)deltaTime);
             }
+
+            if (valueChanged && GameMain.Server != null)
+            {
+                networkUpdateTimer -= (float)deltaTime;
+                if (networkUpdateTimer <= 0.0f)
+                {
+                    GameMain.Server.UpdateNetLobby(null);
+
+                    valueChanged = false;
+                    networkUpdateTimer = NetworkUpdateInterval;
+                }
+            }
                         
             //durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
@@ -803,7 +819,7 @@ namespace Barotrauma
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
 
-            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(obj);
+            valueChanged = true;
 
             return true;
         }
@@ -818,8 +834,8 @@ namespace Barotrauma
 
             //textBox.Text = LevelSeed;
             //textBox.Selected = false;
-
-            if (GameMain.Server != null) GameMain.Server.UpdateNetLobby(null);
+            
+            valueChanged = true;
 
             return true;
         }
@@ -904,7 +920,18 @@ namespace Barotrauma
             Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
             if (sub == null)
             {
-                new GUIMessageBox("Submarine not found!","The submarine ''" + subName + "'' has been selected by the server. Matching file not found in your map folder.");
+                var requestFileBox = new GUIMessageBox("Submarine not found!", "The submarine ''" + subName + "'' has been selected by the server. "
+                +"Matching file not found in your map folder. Do you want to download the file from the server host?", new string[] { "Yes", "No" });
+                requestFileBox.Buttons[0].UserData = subName;
+                requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
+                requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
+                    {
+                        GameMain.Client.RequestFile(userdata.ToString(), FileTransferType.Submarine);
+                        return true;
+                    };
+                requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
+
+
                 return false;
             }
             else
@@ -949,7 +976,7 @@ namespace Barotrauma
             //msg.Write(AllowSubVoting);
             //msg.Write(AllowModeVoting);
 
-            msg.Write(modeList.SelectedIndex);
+            msg.Write((byte)modeList.SelectedIndex);
             //msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
@@ -991,7 +1018,7 @@ namespace Barotrauma
                 //AllowSubVoting  = msg.ReadBoolean();
                 //AllowModeVoting = msg.ReadBoolean();
 
-                modeIndex       = msg.ReadInt32();
+                modeIndex       = msg.ReadByte();
 
                 //durationScroll = msg.ReadFloat();
 
@@ -1001,9 +1028,9 @@ namespace Barotrauma
                 restartTimer    = msg.ReadFloat();
 
                 int playerCount = msg.ReadByte();
-                
+
                 playerList.ClearChildren();
-                for (int i = 0; i<playerCount; i++)
+                for (int i = 0; i < playerCount; i++)
                 {
                     AddPlayer(msg.ReadString());
                 }

@@ -165,24 +165,27 @@ namespace Barotrauma
                 string port = arguments[1];
                 string serverName = arguments[2];
                 string gameStarted = (arguments.Length > 3) ? arguments[3] : "";
-                string playerCountStr = (arguments.Length > 4) ? arguments[4] : "";
+                string currPlayersStr = (arguments.Length > 4) ? arguments[4] : "";
+                string maxPlayersStr = (arguments.Length > 5) ? arguments[5] : "";
+
 
                 string hasPassWordStr = (arguments.Length > 5) ? arguments[5] : "";
 
-                var serverFrame = new GUIFrame(new Rectangle(0,0,0,20), (i%2 == 0) ? Color.Transparent : Color.White*0.2f, null, serverList);
-                serverFrame.UserData = IP+":"+port;
+                var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 20), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, null, serverList);
+                serverFrame.UserData = IP + ":" + port;
                 serverFrame.HoverColor = Color.Gold * 0.2f;
                 serverFrame.SelectedColor = Color.Gold * 0.5f;
 
-                var passwordBox = new GUITickBox(new Rectangle(columnX[0]/2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
+                var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
                 passwordBox.Selected = hasPassWordStr == "1";
                 passwordBox.Enabled = false;
                 passwordBox.UserData = "password";
 
                 var nameText = new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, GUI.Style, serverFrame);
 
-                int playerCount, maxPlayers;
-                playerCount = GameClient.ByteToPlayerCount((byte)int.Parse(playerCountStr), out maxPlayers);
+                int playerCount = 0, maxPlayers = 1;
+                int.TryParse(currPlayersStr, out playerCount);
+                int.TryParse(maxPlayersStr, out maxPlayers);
 
                 var playerCountText = new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, GUI.Style, serverFrame);
 
@@ -208,7 +211,7 @@ namespace Barotrauma
             if (client == null) yield return CoroutineStatus.Success;
 
 
-            var request = new RestRequest("masterserver.php", Method.GET);
+            var request = new RestRequest("masterserver2.php", Method.GET);
             request.AddParameter("gamename", "barotrauma"); // adds to POST or URL querystring based on Method
             request.AddParameter("action", "listservers"); // adds to POST or URL querystring based on Method
 

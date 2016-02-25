@@ -7,7 +7,7 @@ using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
-    enum PacketTypes : int
+    enum PacketTypes : byte
     {
         Unknown,
 
@@ -32,6 +32,8 @@ namespace Barotrauma.Networking
         Vote, VoteStatus,
 
         ResendRequest, ReliableMessage, LatestMessageID,
+
+        RequestFile, FileStream,
        
         SpectateRequest
     }
@@ -163,7 +165,7 @@ namespace Barotrauma.Networking
             if (msgBytes.Count == 0) return null;
 
             NetOutgoingMessage message = netPeer.CreateMessage();
-            message.WriteEnum(PacketTypes.NetworkEvent);
+            message.Write((byte)PacketTypes.NetworkEvent);
 
             message.Write((float)NetTime.Now);
 
@@ -295,25 +297,6 @@ namespace Barotrauma.Networking
         }
 
         public virtual void Disconnect() { }
-
-        protected byte PlayerCountToByte(int playerCount, int maxPlayers)
-        {
-            byte byteVal = (byte)playerCount;
-
-            byteVal |= (byte)((maxPlayers - 1) << 4);
-
-            return byteVal;
-        }
-
-        public static int ByteToPlayerCount(byte byteVal, out int maxPlayers)
-        {
-            maxPlayers = (byteVal >> 4)+1;
-
-            int playerCount = byteVal & (byte)((1 << 4) - 1);
-
-            return playerCount;
-        }
-
     }
 
 }
