@@ -713,6 +713,11 @@ namespace Barotrauma.Networking
                     fileStreamReceiver.DeleteFile();
                     fileStreamReceiver.Dispose();
                     fileStreamReceiver = null;
+
+                    NetOutgoingMessage msg = client.CreateMessage();
+                    msg.Write((byte)PacketTypes.RequestFile);
+                    msg.Write((byte)FileTransferType.Cancel);
+                    client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
                 }
             }
 
@@ -736,7 +741,7 @@ namespace Barotrauma.Networking
         {
             if (receiver.Status == FileTransferStatus.Error)
             {
-                new GUIMessageBox("Error while receiving file from server", receiver.ErrorMessage);
+                new GUIMessageBox("Error while receiving file from server", receiver.ErrorMessage, 400, 350);
                 receiver.DeleteFile();
                 
             }

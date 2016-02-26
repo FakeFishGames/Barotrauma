@@ -312,13 +312,36 @@ namespace Barotrauma.Networking
 
             foreach (Client c in ConnectedClients)
             {
-                if (c.FileStreamSender!=null && Rand.Range(0.0f, 1.0f)<0.01f)
+                if (c.FileStreamSender != null)
                 {
+                    var clientNameBox = GameMain.NetLobbyScreen.PlayerList.FindChild(c.name);
+                    var clientInfo = clientNameBox.FindChild(c.FileStreamSender);
+
+                    if (clientInfo==null)
+                    {
+                        clientInfo = new GUIFrame(new Rectangle(0,0,180,0), Color.Transparent, Alignment.TopRight, null, clientNameBox);
+                        clientInfo.UserData = c.FileStreamSender;
+                        new GUIProgressBar(new Rectangle(0, 4, 0, clientInfo.Rect.Height-8), Color.Green, GUI.Style, 0.0f, Alignment.Left, clientInfo).IsHorizontal = true;
+                        new GUITextBlock(new Rectangle(0,2,0,0), "", GUI.Style, Alignment.TopLeft, Alignment.Left | Alignment.CenterY, clientInfo, true, GUI.SmallFont);
+                    }
+                    else
+                    {
+                        var progressBar = clientInfo.GetChild<GUIProgressBar>();
+                        progressBar.BarSize = c.FileStreamSender.Progress;
+
+                        var progressText = clientInfo.GetChild<GUITextBlock>();
+                        progressText.Text = c.FileStreamSender.FileName + "  " + 
+                            MathUtils.GetBytesReadable(c.FileStreamSender.Sent) + " / " + MathUtils.GetBytesReadable(c.FileStreamSender.FileSize);
+                    }
+                    
                     c.FileStreamSender.Update(deltaTime);
 
                     if (c.FileStreamSender.Status == FileTransferStatus.Finished ||
-                        c.FileStreamSender.Status == FileTransferStatus.Error)
+                        c.FileStreamSender.Status == FileTransferStatus.Error ||
+                        c.FileStreamSender.Status == FileTransferStatus.Canceled)
                     {
+                        clientNameBox.RemoveChild(clientInfo);
+
                         c.FileStreamSender.Dispose();
                         c.FileStreamSender = null;
                     }
@@ -522,11 +545,13 @@ namespace Barotrauma.Networking
                                 var outmsg = server.CreateMessage();
                                 outmsg.Write((byte)PacketTypes.RequestFile);
                                 outmsg.Write(false);
+                                outmsg.Write("File downloads disabled by the server");
+                                server.SendMessage(outmsg, dataSender.Connection, NetDeliveryMethod.ReliableUnordered);
                                 break;
                             }
 
                             byte fileType = inc.ReadByte();
-                            string fileName = inc.ReadString();
+                            string fileName = fileType == (byte)FileTransferType.Cancel ? "" : inc.ReadString();
 
                             switch (fileType)
                             {
@@ -542,6 +567,12 @@ namespace Barotrauma.Networking
                                     {
                                         var fileStreamSender = FileStreamSender.Create(dataSender.Connection, requestedSubmarine.FilePath, FileTransferType.Submarine);
                                         if (fileStreamSender != null) dataSender.FileStreamSender = fileStreamSender;
+                                    }
+                                    break;
+                                case (byte)FileTransferType.Cancel:
+                                    if (dataSender.FileStreamSender != null)
+                                    {
+                                        dataSender.FileStreamSender.CancelTransfer();
                                     }
                                     break;
                                 default:
@@ -1079,6 +1110,12 @@ namespace Barotrauma.Networking
                 server.SendMessage(outmsg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);
             }
 
+            if (client.FileStreamSender != null)
+            {
+                client.FileStreamSender.Dispose();
+                client.FileStreamSender = null;
+            }
+
             AddChatMessage(msg, ChatMessageType.Server);
 
             UpdateCrewFrame();
@@ -1516,38 +1553,38 @@ namespace Barotrauma.Networking
         /// sends some random data to the clients
         /// use for debugging purposes
         /// </summary>
-        //public void SendRandomData()
-        //{
-        //    NetOutgoingMessage msg = server.CreateMessage();
-        //    switch (Rand.Int(5))
-        //    {
-        //        case 0:
-        //            msg.WriteEnum(PacketTypes.NetworkEvent);
-        //            msg.Write(Rand.Int(Enum.GetNames(typeof(NetworkEventType)).Length));
-        //            msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
-        //            break;
-        //        case 1:
-        //            msg.WriteEnum(PacketTypes.NetworkEvent);
-        //            msg.WriteEnum(NetworkEventType.ComponentUpdate);
-        //            msg.Write((int)Item.ItemList[Rand.Int(Item.ItemList.Count)].ID);
-        //            msg.Write(Rand.Int(8));
-        //            break;
-        //        case 2:
-        //            msg.Write((byte)Enum.GetNames(typeof(PacketTypes)).Length);
-        //            break;
-        //        case 3:
-        //            msg.Write((byte)PacketTypes.UpdateNetLobby);
-        //            break;
-        //    }
+        public void SendRandomData()
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            switch (Rand.Int(5))
+            {
+                case 0:
+                    msg.Write((byte)PacketTypes.NetworkEvent);
+                    msg.Write((byte)Rand.Int(Enum.GetNames(typeof(NetworkEventType)).Length));
+                    msg.Write((ushort)Rand.Int(MapEntity.mapEntityList.Count));
+                    break;
+                case 1:
+                    msg.Write((byte)PacketTypes.NetworkEvent);
+                    msg.Write((byte)NetworkEventType.ComponentUpdate);
+                    msg.Write((int)Item.ItemList[Rand.Int(Item.ItemList.Count)].ID);
+                    msg.Write(Rand.Int(8));
+                    break;
+                case 2:
+                    msg.Write((byte)Enum.GetNames(typeof(PacketTypes)).Length);
+                    break;
+                case 3:
+                    msg.Write((byte)PacketTypes.UpdateNetLobby);
+                    break;
+            }
 
-        //    int bitCount = Rand.Int(100);
-        //    for (int i = 0; i < bitCount; i++)
-        //    {
-        //        msg.Write(Rand.Int(2) == 0);
-        //    }
-        //    SendMessage(msg, (Rand.Int(2) == 0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable, null);
+            int bitCount = Rand.Int(100);
+            for (int i = 0; i < bitCount; i++)
+            {
+                msg.Write(Rand.Int(2) == 0);
+            }
+            SendMessage(msg, (Rand.Int(2) == 0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable, null);
 
-        //}
+        }
 
         public override void Disconnect()
         {
@@ -1557,6 +1594,11 @@ namespace Barotrauma.Networking
             {
                 Log("Shutting down server...", Color.Cyan);
                 log.Save();
+            }
+
+            foreach (Client client in ConnectedClients)
+            {
+                if (client.FileStreamSender != null) client.FileStreamSender.Dispose();
             }
 
             server.Shutdown("The server has shut down");

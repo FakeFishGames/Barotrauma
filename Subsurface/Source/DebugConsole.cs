@@ -418,6 +418,20 @@ namespace Barotrauma
                     //Ragdoll.DebugDraw = !Ragdoll.DebugDraw;
                     GameMain.DebugDraw = !GameMain.DebugDraw;
                     break;
+                case "sendrandomdata":
+                    int messageCount = 1;
+
+                    if (commands.Length>1) int.TryParse(commands[1], out messageCount);
+
+                    for (int i = 0; i < messageCount; i++ )
+                    {
+                        if (GameMain.Server!=null)
+                        {
+                            GameMain.Server.SendRandomData();
+                        }
+                    }
+
+                    break;
                 case "netstats":
                     if (GameMain.Server == null) return;
 
