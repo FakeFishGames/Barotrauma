@@ -169,7 +169,7 @@ namespace Barotrauma
                 string maxPlayersStr = (arguments.Length > 5) ? arguments[5] : "";
 
 
-                string hasPassWordStr = (arguments.Length > 5) ? arguments[5] : "";
+                string hasPassWordStr = (arguments.Length > 6) ? arguments[6] : "";
 
                 var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 20), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, null, serverList);
                 serverFrame.UserData = IP + ":" + port;

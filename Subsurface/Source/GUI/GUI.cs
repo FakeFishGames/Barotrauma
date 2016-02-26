@@ -304,24 +304,34 @@ namespace Barotrauma
             return texture;
         }
 
-        public static bool DrawButton(SpriteBatch sb, Rectangle rect, string text, bool isHoldable = false)
+        public static bool DrawButton(SpriteBatch sb, Rectangle rect, string text, Color color, bool isHoldable = false)
         {
-            Color color = new Color(200, 200, 200);
-
             bool clicked = false;
 
             if (rect.Contains(PlayerInput.MousePosition))
             {
                 clicked = PlayerInput.LeftButtonHeld();
 
-                color = clicked ? new Color(100, 100, 100) : new Color(250, 250, 250);
+                color = clicked ? 
+                    new Color((int)(color.R * 0.8f), (int)(color.G * 0.8f), (int)(color.B * 0.8f), color.A) : 
+                    new Color((int)(color.R * 1.2f), (int)(color.G * 1.2f), (int)(color.B * 1.2f), color.A);
 
-                if (!isHoldable)
-                    clicked = PlayerInput.LeftButtonClicked();
+                if (!isHoldable) clicked = PlayerInput.LeftButtonClicked();
             }
 
             DrawRectangle(sb, rect, color, true);
-            sb.DrawString(Font, text, new Vector2(rect.X + 10, rect.Y + 10), Color.White);
+            
+            Vector2 origin;
+            try
+            {
+                origin = Font.MeasureString(text)/2;
+            }
+            catch
+            {
+                origin = Vector2.Zero;
+            }
+
+            sb.DrawString(Font, text, new Vector2(rect.Center.X, rect.Center.Y) , Color.White, 0.0f, origin, 1.0f, SpriteEffects.None, 0.0f);
 
             return clicked;
         }

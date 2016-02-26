@@ -433,11 +433,6 @@ namespace Barotrauma
                     update = false;
                 }
             }
-            else
-            {
-                
-                LethalPressure += ( Submarine.Loaded!=null && Submarine.Loaded.AtDamageDepth) ? 100.0f*deltaTime : 10.0f * deltaTime;
-            }
         }
 
         public void Extinquish(float deltaTime, float amount, Vector2 position)

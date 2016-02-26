@@ -697,6 +697,25 @@ namespace Barotrauma.Networking
         {
             base.Draw(spriteBatch);
             
+            if (fileStreamReceiver != null && 
+                (fileStreamReceiver.Status == FileTransferStatus.Receiving || fileStreamReceiver.Status == FileTransferStatus.NotStarted))
+            {
+                Vector2 pos = Screen.Selected == GameMain.NetLobbyScreen ? 
+                    new Vector2(GameMain.NetLobbyScreen.SubList.Rect.X, GameMain.NetLobbyScreen.SubList.Rect.Bottom+5) : new Vector2(GameMain.GraphicsWidth / 2 - 200, 10);
+
+                GUI.DrawString(spriteBatch, pos, "Downloading " + fileStreamReceiver.FileName, Color.White);
+                GUI.DrawString(spriteBatch, pos + Vector2.UnitX*300,
+                    MathUtils.GetBytesReadable((long)fileStreamReceiver.Received) + " / " + MathUtils.GetBytesReadable((long)fileStreamReceiver.FileSize), Color.White);
+                GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 20), new Vector2(300, 15), fileStreamReceiver.Progress, Color.Green);
+
+                if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 310, (int)pos.Y + 20, 100, 15), "Cancel", new Color(0.88f, 0.25f, 0.15f, 0.8f)))
+                {
+                    fileStreamReceiver.DeleteFile();
+                    fileStreamReceiver.Dispose();
+                    fileStreamReceiver = null;
+                }
+            }
+
             if (!GameMain.DebugDraw) return;
 
             int width = 200, height = 300;
@@ -711,27 +730,28 @@ namespace Barotrauma.Networking
             spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + client.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
             spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + client.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
 
-            if (fileStreamReceiver!=null)
-            {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 20), "Downloading "+fileStreamReceiver.FileName, Color.White);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 20), 
-                    MathUtils.GetBytesReadable((long)fileStreamReceiver.Received)+" / "+MathUtils.GetBytesReadable((long)fileStreamReceiver.FileSize), Color.White);
-                GUI.DrawProgressBar(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 20), new Vector2(200, 15), fileStreamReceiver.Progress, Color.Green);
-            }            
         }
 
         private void OnFileReceived(FileStreamReceiver receiver)
         {
             if (receiver.Status == FileTransferStatus.Error)
             {
-
+                new GUIMessageBox("Error while receiving file from server", receiver.ErrorMessage);
+                receiver.DeleteFile();
+                
             }
             else if (receiver.Status == FileTransferStatus.Finished)
             {
                 new GUIMessageBox("Download finished", "File ''"+receiver.FileName+"'' was downloaded succesfully.");
+
+                switch (receiver.FileType)
+                {
+                    case FileTransferType.Submarine:
+                        Submarine.Preload();
+                        break;
+                }
             }
 
-            receiver.Dispose();
             fileStreamReceiver = null;
         }
 

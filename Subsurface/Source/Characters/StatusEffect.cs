@@ -10,9 +10,9 @@ namespace Barotrauma
     class StatusEffect
     {
         [Flags]
-        public enum TargetType 
+        public enum TargetType
         {
-            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget=32
+            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget = 32, Hull = 64
         }
         
         private TargetType targetTypes;
