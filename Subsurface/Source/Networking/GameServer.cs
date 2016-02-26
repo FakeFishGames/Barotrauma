@@ -312,9 +312,9 @@ namespace Barotrauma.Networking
 
             foreach (Client c in ConnectedClients)
             {
-                if (c.FileStreamSender!=null)
+                if (c.FileStreamSender!=null && Rand.Range(0.0f, 1.0f)<0.01f)
                 {
-                    c.FileStreamSender.Update();
+                    c.FileStreamSender.Update(deltaTime);
 
                     if (c.FileStreamSender.Status == FileTransferStatus.Finished ||
                         c.FileStreamSender.Status == FileTransferStatus.Error)
@@ -516,8 +516,17 @@ namespace Barotrauma.Networking
                             ReadCharacterData(inc);
                             break;
                         case (byte)PacketTypes.RequestFile:
-                            string fileName = inc.ReadString();
+                            
+                            if (!allowFileTransfers)
+                            {
+                                var outmsg = server.CreateMessage();
+                                outmsg.Write((byte)PacketTypes.RequestFile);
+                                outmsg.Write(false);
+                                break;
+                            }
+
                             byte fileType = inc.ReadByte();
+                            string fileName = inc.ReadString();
 
                             switch (fileType)
                             {
@@ -552,11 +561,11 @@ namespace Barotrauma.Networking
                         case (byte)PacketTypes.Vote:
                             Voting.RegisterVote(inc, ConnectedClients);
 
-                            if (Voting.AllowEndVoting && EndVoteMax > 0 &&                                
+                            if (Voting.AllowEndVoting && EndVoteMax > 0 &&
                                 ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
                             {
-                                Log("Ending round by votes ("+EndVoteCount+"/"+(EndVoteMax-EndVoteCount)+")", Color.Cyan);
-                                EndButtonHit(null,null);
+                                Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", Color.Cyan);
+                                EndButtonHit(null, null);
                             }
                             break;
                         case (byte)PacketTypes.RequestNetLobbyUpdate:

@@ -6,7 +6,7 @@ namespace Barotrauma.Networking
 {
     enum FileTransferStatus
     {
-        NotStarted, Sending, Receiving, Finished, Error
+        NotStarted, Sending, Receiving, Finished, Error, Canceled
     }
 
     enum FileTransferType
@@ -21,6 +21,8 @@ namespace Barotrauma.Networking
         private int chunkLen;
         private byte[] tempBuffer;
         private NetConnection connection;
+
+        float waitTimer;
 
 
         private FileTransferType fileType;
@@ -56,7 +58,7 @@ namespace Barotrauma.Networking
             chunkLen = connection.Peer.Configuration.MaximumTransmissionUnit - 100;
             tempBuffer = new byte[chunkLen];
             sentOffset = 0;
-
+            
             FileName = fileName;
 
             this.fileType = fileType;
@@ -64,10 +66,13 @@ namespace Barotrauma.Networking
             Status = FileTransferStatus.NotStarted;
         }
         
-        public void Update()
+        public void Update(float deltaTime)
         {
             if (inputStream == null) return;
 
+            waitTimer -= deltaTime;
+            if (waitTimer > 0.0f) return;
+            
             if (!connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, 1)) return;
             
             // send another part of the file!
@@ -97,6 +102,8 @@ namespace Barotrauma.Networking
 
             connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, 1);
             sentOffset += sendBytes;
+
+            waitTimer = connection.AverageRoundtripTime + 0.05f;
 
             //Program.Output("Sent " + m_sentOffset + "/" + m_inputStream.Length + " bytes to " + m_connection);
 

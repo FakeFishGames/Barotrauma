@@ -1,11 +1,14 @@
 ﻿using Lidgren.Network;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma.Networking
 {
     class FileStreamReceiver : IDisposable
     {
+        const int MaxFileSize = 1000000;
+
         public delegate void OnFinished(FileStreamReceiver fileStreamReceiver);
         private OnFinished onFinished;
 
@@ -18,11 +21,16 @@ namespace Barotrauma.Networking
         private string filePath;
 
         private FileTransferType fileType;
-
+        
         public string FileName
         {
             get;
             private set;
+        }
+        
+        public string FilePath
+        {
+            get { return filePath; }
         }
 
         public ulong FileSize
@@ -35,7 +43,18 @@ namespace Barotrauma.Networking
             get { return received; }
         }
 
+        public FileTransferType FileType
+        {
+            get { return fileType; }
+        }
+                
         public FileTransferStatus Status
+        {
+            get;
+            private set;
+        }
+
+        public string ErrorMessage
         {
             get;
             private set;
@@ -49,13 +68,13 @@ namespace Barotrauma.Networking
 
         public float Progress
         {
-            get { return length / (float)received; }
+            get { return (float)received / (float)length; }
 
         }
 
         public FileStreamReceiver(NetClient client, string filePath, FileTransferType fileType, OnFinished onFinished)
         {
-            client = client;
+            this.client = client;
 
             this.filePath = filePath;
             this.fileType = fileType;
@@ -78,8 +97,75 @@ namespace Barotrauma.Networking
             }
         }
 
+        private bool ValidateInitialData(byte type, string fileName, ulong fileSize)
+        {
+            if (fileSize > MaxFileSize)
+            {
+                ErrorMessage = "File too large (" + MathUtils.GetBytesReadable((long)fileSize) + ")";
+                Status = FileTransferStatus.Error;
+                return false;
+            }
+
+            if (type != (byte)fileType)
+            {
+                ErrorMessage = "Unexpected file type ''"+type+"'' (expected "+fileType+")";
+                Status = FileTransferStatus.Error;
+                return false;
+            }
+
+            if (!Regex.Match(fileName, @"^[\w\- ]+[\w\-. ]*$").Success)
+            {
+                ErrorMessage = "Illegal characters in file name ''"+fileName+"''";
+                Status = FileTransferStatus.Error;
+                return false;
+            }
+
+            switch (type)
+            {
+                case (byte)FileTransferType.Submarine:
+                    if (Path.GetExtension(fileName) != ".sub")
+                    {
+                        ErrorMessage = "Wrong file extension ''" + Path.GetExtension(fileName)+"''! (Expected .sub)";
+
+                        Status = FileTransferStatus.Error;
+                        return false;
+                    }
+                    break;
+            }
+
+            return true;
+        }
+
+        public void DeleteFile()
+        {
+            string file = Path.Combine(filePath, FileName);
+
+            writeStream.Flush();
+            writeStream.Close();
+            writeStream.Dispose();
+            writeStream = null;
+
+            Status = FileTransferStatus.Canceled;
+
+            if (File.Exists(file))
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Couldn't delete file ''" + file + "''!", e);
+                }
+            }
+        }
+
         private void TryReadMessage(NetIncomingMessage inc)
         {
+            if (Status == FileTransferStatus.Error || 
+                Status == FileTransferStatus.Finished || 
+                Status == FileTransferStatus.Canceled) return;
+
             //int chunkLen = inc.LengthBytes;
             if (length == 0)
             {
@@ -90,19 +176,31 @@ namespace Barotrauma.Networking
                 }
 
                 byte fileTypeByte = inc.ReadByte();
-                if (fileTypeByte != (byte)fileType)
-                {
-                    Status = FileTransferStatus.Error;
-                    return;
-                }
 
                 length = inc.ReadUInt64();
                 FileName = inc.ReadString();
+
+                if (!ValidateInitialData(fileTypeByte, FileName, length))
+                {
+                    Status = FileTransferStatus.Error;
+                    if (onFinished != null) onFinished(this);
+                    return;
+                }
+
                 writeStream = new FileStream(Path.Combine(filePath, FileName), FileMode.Create, FileAccess.Write, FileShare.None);
                 timeStarted = Environment.TickCount;
 
                 Status = FileTransferStatus.NotStarted;
 
+                return;
+            }
+
+
+            if (received + (ulong)inc.LengthBytes > length*1.1f)
+            {
+                ErrorMessage = "Receiving more data than expected (> " + MathUtils.GetBytesReadable((long)(received + (ulong)inc.LengthBytes)) + ")";
+                Status = FileTransferStatus.Error;
+                if (onFinished != null) onFinished(this);
                 return;
             }
 
@@ -116,6 +214,7 @@ namespace Barotrauma.Networking
             BytesPerSecond = received / psec;
 
             Status = FileTransferStatus.Receiving;
+
 
             if (received >= length)
             {
@@ -133,9 +232,12 @@ namespace Barotrauma.Networking
 
         protected virtual void Dispose(bool disposing)
         {
-            writeStream.Flush();
-            writeStream.Close();
-            writeStream.Dispose();
+            if (writeStream != null)
+            {
+                writeStream.Flush();
+                writeStream.Close();
+                writeStream.Dispose();
+            }
         }
     }
     

@@ -590,7 +590,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    filePaths.AddRange(Directory.GetDirectories(subDirectory));
+                    filePaths.AddRange(Directory.GetFiles(subDirectory).ToList());
                 }
                 catch (Exception e)
                 {
@@ -604,6 +604,8 @@ namespace Barotrauma
                 //Map savedMap = new Map(mapPath);
                 SavedSubmarines.Add(new Submarine(path));
             }
+
+            if (GameMain.NetLobbyScreen!=null) GameMain.NetLobbyScreen.UpdateSubList();
         }
 
         private XDocument OpenDoc(string file)

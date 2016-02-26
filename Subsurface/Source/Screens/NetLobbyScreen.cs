@@ -187,24 +187,7 @@ namespace Barotrauma
             voteText.UserData = "subvotes";
             voteText.Visible = false;
 
-            if (Submarine.SavedSubmarines.Count > 0)
-            {
-                foreach (Submarine sub in Submarine.SavedSubmarines)
-                {
-                    GUITextBlock textBlock = new GUITextBlock(
-                        new Rectangle(0, 0, 0, 25),
-                        sub.Name, GUI.Style,
-                        Alignment.Left, Alignment.Left,
-                        subList);
-                    textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                    textBlock.UserData = sub;
-                }
-            }
-            else
-            {
-                DebugConsole.ThrowError("No saved submarines found!");
-                return;
-            }
+            UpdateSubList();
 
             columnX += columnWidth + 20;
 
@@ -213,8 +196,7 @@ namespace Barotrauma
             new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Game mode: ", GUI.Style, infoFrame);
             modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), GUI.Style, infoFrame);
             modeList.OnSelected = VotableClicked;
-
-
+            
             voteText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Votes: ", GUI.Style, Alignment.TopLeft, Alignment.TopRight, infoFrame);
             voteText.UserData = "modevotes";
             voteText.Visible = false;
@@ -531,6 +513,33 @@ namespace Barotrauma
             //sub.Load();
 
             return true;
+        }
+
+        public void UpdateSubList()
+        {
+            if (subList == null) return;
+
+            subList.ClearChildren();
+
+            if (Submarine.SavedSubmarines.Count > 0)
+            {
+                foreach (Submarine sub in Submarine.SavedSubmarines)
+                {
+                    GUITextBlock textBlock = new GUITextBlock(
+                        new Rectangle(0, 0, 0, 25),
+                        sub.Name, GUI.Style,
+                        Alignment.Left, Alignment.Left,
+                        subList);
+                    textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
+                    textBlock.UserData = sub;
+                }
+            }
+            else
+            {
+                DebugConsole.ThrowError("No saved submarines found!");
+                return;
+            }
+
         }
 
         public bool VotableClicked(GUIComponent component, object userData)
@@ -921,7 +930,7 @@ namespace Barotrauma
             if (sub == null)
             {
                 var requestFileBox = new GUIMessageBox("Submarine not found!", "The submarine ''" + subName + "'' has been selected by the server. "
-                +"Matching file not found in your map folder. Do you want to download the file from the server host?", new string[] { "Yes", "No" });
+                +"Matching file not found in your map folder. Do you want to download the file from the server host?", new string[] { "Yes", "No" }, 400, 300);
                 requestFileBox.Buttons[0].UserData = subName;
                 requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
                 requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
@@ -938,10 +947,20 @@ namespace Barotrauma
             {
                 if (sub.MD5Hash.Hash != md5Hash)
                 {
-                    new GUIMessageBox("Submarine not found!", 
+                    var requestFileBox = new GUIMessageBox("Submarine not found!", 
                     "Your version of the map file ''" + sub.Name + "'' doesn't match the server's version!"
                     +"\nYour file: " + sub.Name + "(MD5 hash : " + sub.MD5Hash.Hash + ")"
-                    +"\nServer's file: " + subName + "(MD5 hash : " + md5Hash + ")");
+                    +"\nServer's file: " + subName + "(MD5 hash : " + md5Hash + ")\n"
+                    +"Do you want to download the file from the server host?", new string[] { "Yes", "No" }, 400, 300);
+                    requestFileBox.Buttons[0].UserData = subName;
+                    requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
+                    requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
+                    {
+                        GameMain.Client.RequestFile(userdata.ToString(), FileTransferType.Submarine);
+                        return true;
+                    };
+                    requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
+
                     return false;
                 }
                 else

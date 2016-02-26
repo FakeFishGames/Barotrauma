@@ -45,6 +45,8 @@ namespace Barotrauma.Networking
 
         private bool saveServerLogs = true;
 
+        private bool allowFileTransfers = true;
+
         public bool AutoRestart
         {
             get { return (ConnectedClients.Count == 0) ? false : autoRestart; }

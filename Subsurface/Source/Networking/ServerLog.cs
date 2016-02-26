@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
 {
     class ServerLog
     {
-        const int LinesPerFile = 300;
+        const int LinesPerFile = 800;
 
         public const string SavePath = "ServerLogs";
 

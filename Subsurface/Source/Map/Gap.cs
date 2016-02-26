@@ -154,9 +154,12 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Height/ 2.0f));
-                GUI.DrawLine(sb, center, center + flowForce/10.0f, Color.Red);
 
-                GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + lerpedFlowForce / 10.0f + Vector2.One * 5.0f, Color.Orange);
+
+
+                GUI.DrawLine(sb, center, center + new Vector2(flowForce.X, -flowForce.Y)/10.0f, Color.Red);
+
+                GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + new Vector2(lerpedFlowForce.X, -lerpedFlowForce.Y) / 10.0f + Vector2.One * 5.0f, Color.Orange);
             }
             
             if (!editing || !ShowGaps) return;
@@ -287,6 +290,25 @@ namespace Barotrauma
                     }
                 }
 
+            }
+
+
+            if (flowTargetHull != null && lerpedFlowForce != Vector2.Zero)
+            {
+                foreach (Character character in Character.CharacterList)
+                {
+                    if (character.AnimController.CurrentHull != flowTargetHull) continue;
+
+                    foreach (Limb limb in character.AnimController.Limbs)
+                    {
+                        if (!limb.inWater) continue;
+
+                        float dist = Vector2.Distance(limb.WorldPosition, WorldPosition);
+                        if (dist > lerpedFlowForce.Length()) continue;
+
+                        limb.body.ApplyForce(lerpedFlowForce / dist/10.0f);
+                    }
+                }
             }
             
             
@@ -444,7 +466,7 @@ namespace Barotrauma
 
             if (open > 0.0f)
             {
-                if (hull1.Volume>hull1.FullVolume && hull2.Volume>hull2.FullVolume)
+                if (hull1.Volume > hull1.FullVolume - Hull.MaxCompress && hull2.Volume > hull2.FullVolume - Hull.MaxCompress)
                 {
                     float avgLethality = (hull1.LethalPressure + hull2.LethalPressure) / 2.0f;
                     hull1.LethalPressure = avgLethality;
@@ -497,20 +519,30 @@ namespace Barotrauma
                 lowerSurface = rect.Y;
 
                 if (hull1.Volume < hull1.FullVolume - Hull.MaxCompress &&
-                    hull1.Surface > -rect.Y)
+                    hull1.Surface < rect.Y)
                 {
-                    float vel = (rect.Y + hull1.Surface) * 0.03f;
+                    
 
                     if (rect.X > hull1.Rect.X + hull1.Rect.Width / 2.0f)
                     {
+                        float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1])) * 0.1f;
+
+
                         hull1.WaveVel[hull1.WaveY.Length - 1] += vel;
                         hull1.WaveVel[hull1.WaveY.Length - 2] += vel;
                     }
                     else
                     {
+                        float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[0])) * 0.1f;
+
+
                         hull1.WaveVel[0] += vel;
                         hull1.WaveVel[1] += vel;
                     }
+                }
+                else
+                {
+                    hull1.LethalPressure += (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
                 }
             }
             else
@@ -523,7 +555,12 @@ namespace Barotrauma
                 {
                     flowForce = new Vector2(0.0f, delta);
                 }
+                if (hull1.Volume >= hull1.FullVolume - Hull.MaxCompress)
+                {
+                    hull1.LethalPressure += (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
+                }
             }
+
         }
 
         private void UpdateOxygen()
