@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
 
     enum FileTransferType
     {
-        Unknown, Submarine
+        Unknown, Submarine, Cancel
     }
 
     class FileStreamSender : IDisposable
@@ -39,6 +39,20 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        public float Progress
+        {
+            get { return inputStream == null ? 0.0f : (float)sentOffset / (float)inputStream.Length; }
+        }
+
+        public int Sent
+        {
+            get { return sentOffset; }
+        }
+
+        public long FileSize
+        {
+            get { return inputStream == null ? 0 : inputStream.Length; }
+        }
 
         public static FileStreamSender Create(NetConnection conn, string fileName, FileTransferType fileType)
         {
@@ -68,7 +82,10 @@ namespace Barotrauma.Networking
         
         public void Update(float deltaTime)
         {
-            if (inputStream == null) return;
+            if (inputStream == null || 
+                Status == FileTransferStatus.Canceled || 
+                Status == FileTransferStatus.Error ||
+                Status == FileTransferStatus.Finished) return;
 
             waitTimer -= deltaTime;
             if (waitTimer > 0.0f) return;
@@ -112,7 +129,12 @@ namespace Barotrauma.Networking
                 //Dispose();
 
                 Status = FileTransferStatus.Finished;
-            }            
+            }
+        }
+
+        public void CancelTransfer()
+        {
+            Status = FileTransferStatus.Canceled;
         }
 
 

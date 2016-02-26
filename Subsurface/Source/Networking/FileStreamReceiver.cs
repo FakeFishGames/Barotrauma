@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -18,7 +19,7 @@ namespace Barotrauma.Networking
         private FileStream writeStream;
         private int timeStarted;
 
-        private string filePath;
+        private string downloadFolder;
 
         private FileTransferType fileType;
         
@@ -28,11 +29,6 @@ namespace Barotrauma.Networking
             private set;
         }
         
-        public string FilePath
-        {
-            get { return filePath; }
-        }
-
         public ulong FileSize
         {
             get { return length; }
@@ -69,14 +65,13 @@ namespace Barotrauma.Networking
         public float Progress
         {
             get { return (float)received / (float)length; }
-
         }
 
         public FileStreamReceiver(NetClient client, string filePath, FileTransferType fileType, OnFinished onFinished)
         {
             this.client = client;
 
-            this.filePath = filePath;
+            this.downloadFolder = filePath;
             this.fileType = fileType;
 
             this.onFinished = onFinished;
@@ -92,8 +87,10 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error while receiving file ''"+FileName+"''", e);
-                Status = FileTransferStatus.Error;
+                ErrorMessage = "Error while receiving file ''"+FileName+"'' {"+e.Message+"}";
+                DeleteFile();
+
+                if (onFinished != null) onFinished(this);
             }
         }
 
@@ -102,21 +99,18 @@ namespace Barotrauma.Networking
             if (fileSize > MaxFileSize)
             {
                 ErrorMessage = "File too large (" + MathUtils.GetBytesReadable((long)fileSize) + ")";
-                Status = FileTransferStatus.Error;
                 return false;
             }
 
             if (type != (byte)fileType)
             {
-                ErrorMessage = "Unexpected file type ''"+type+"'' (expected "+fileType+")";
-                Status = FileTransferStatus.Error;
+                ErrorMessage = "Unexpected file type ''" + type + "'' (expected " + fileType + ")";
                 return false;
             }
 
             if (!Regex.Match(fileName, @"^[\w\- ]+[\w\-. ]*$").Success)
             {
-                ErrorMessage = "Illegal characters in file name ''"+fileName+"''";
-                Status = FileTransferStatus.Error;
+                ErrorMessage = "Illegal characters in file name ''" + fileName + "''";
                 return false;
             }
 
@@ -125,9 +119,7 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferType.Submarine:
                     if (Path.GetExtension(fileName) != ".sub")
                     {
-                        ErrorMessage = "Wrong file extension ''" + Path.GetExtension(fileName)+"''! (Expected .sub)";
-
-                        Status = FileTransferStatus.Error;
+                        ErrorMessage = "Wrong file extension ''" + Path.GetExtension(fileName) + "''! (Expected .sub)";
                         return false;
                     }
                     break;
@@ -138,12 +130,17 @@ namespace Barotrauma.Networking
 
         public void DeleteFile()
         {
-            string file = Path.Combine(filePath, FileName);
+            if (FileName == null) return;
 
-            writeStream.Flush();
-            writeStream.Close();
-            writeStream.Dispose();
-            writeStream = null;
+            string file = Path.Combine(downloadFolder, FileName);
+
+            if (writeStream!=null)
+            {
+                writeStream.Flush();
+                writeStream.Close();
+                writeStream.Dispose();
+                writeStream = null;
+            }
 
             Status = FileTransferStatus.Canceled;
 
@@ -170,9 +167,9 @@ namespace Barotrauma.Networking
             if (length == 0)
             {
 
-                if (!Directory.Exists(filePath))
+                if (!string.IsNullOrWhiteSpace(downloadFolder) && !Directory.Exists(downloadFolder))
                 {
-                    Directory.CreateDirectory(filePath);
+                    Directory.CreateDirectory(downloadFolder);
                 }
 
                 byte fileTypeByte = inc.ReadByte();
@@ -183,11 +180,12 @@ namespace Barotrauma.Networking
                 if (!ValidateInitialData(fileTypeByte, FileName, length))
                 {
                     Status = FileTransferStatus.Error;
+                    DeleteFile();
                     if (onFinished != null) onFinished(this);
                     return;
                 }
 
-                writeStream = new FileStream(Path.Combine(filePath, FileName), FileMode.Create, FileAccess.Write, FileShare.None);
+                writeStream = new FileStream(Path.Combine(downloadFolder, FileName), FileMode.Create, FileAccess.Write, FileShare.None);
                 timeStarted = Environment.TickCount;
 
                 Status = FileTransferStatus.NotStarted;
@@ -218,9 +216,59 @@ namespace Barotrauma.Networking
 
             if (received >= length)
             {
-                Status = FileTransferStatus.Finished;
+                writeStream.Flush();
+                writeStream.Close();
+                writeStream.Dispose();
+                writeStream = null;
+
+                Status = IsReceivedFileValid() ? FileTransferStatus.Finished : FileTransferStatus.Error;
                 if (onFinished!=null) onFinished(this);
+
+                if (Status == FileTransferStatus.Error) DeleteFile();
+                Dispose();
             }
+        }
+
+        private bool IsReceivedFileValid()
+        {
+            switch (fileType)
+            {
+                case FileTransferType.Submarine:
+                    string file = Path.Combine(downloadFolder, FileName);
+                    Stream stream = null;
+
+                    try
+                    {
+                        stream = SaveUtil.DecompressFiletoStream(file);
+                    }
+                    catch (Exception e)
+                    {
+                        ErrorMessage = "Loading submarine ''" + file + "'' failed! {"+ e.Message + "}";
+                        return false;
+                    }  
+
+                    if (stream == null)
+                    {
+                        ErrorMessage = "Decompressing submarine file''" + file + "'' failed!";
+                        return false;
+                    }
+
+                    try
+                    {
+                        stream.Position = 0;
+                        var doc = XDocument.Load(stream); //ToolBox.TryLoadXml(file);
+                        stream.Close();
+                        stream.Dispose();
+                    }
+                    catch
+                    {
+                        ErrorMessage = "Failed to parse submarine file ''"+file+"''!";
+                        return false;
+                    }
+                break;
+            }
+
+            return true;
         }
         
         public void Dispose()

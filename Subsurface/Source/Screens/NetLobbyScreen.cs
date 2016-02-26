@@ -55,6 +55,11 @@ namespace Barotrauma
             get { return modeList; }
         }
 
+        public GUIListBox PlayerList
+        {
+            get { return playerList; }
+        }
+
         public GUIFrame InfoFrame
         {
             get { return infoFrame; }
@@ -505,14 +510,11 @@ namespace Barotrauma
         {
             valueChanged = true;
 
-            //Submarine sub = (Submarine)obj;
+            
+            var hash = (obj as Submarine).MD5Hash;
 
-            //submarine already loaded
-            //if (Submarine.Loaded != null && sub.FilePath == Submarine.Loaded.FilePath) return true;
-
-            //sub.Load();
-
-            return true;
+            //hash will be null if opening the sub file failed -> don't select the sub
+            return hash.Hash != null;
         }
 
         public void UpdateSubList()
@@ -657,10 +659,7 @@ namespace Barotrauma
 
         public void ClearPlayers()
         {
-            for (int i = 1; i<playerList.CountChildren; i++)
-            {
-                playerList.RemoveChild(playerList.children[i]);
-            }
+            playerList.ClearChildren();
         }
 
         public override void Update(double deltaTime)
@@ -948,9 +947,9 @@ namespace Barotrauma
                 if (sub.MD5Hash.Hash != md5Hash)
                 {
                     var requestFileBox = new GUIMessageBox("Submarine not found!", 
-                    "Your version of the map file ''" + sub.Name + "'' doesn't match the server's version!"
-                    +"\nYour file: " + sub.Name + "(MD5 hash : " + sub.MD5Hash.Hash + ")"
-                    +"\nServer's file: " + subName + "(MD5 hash : " + md5Hash + ")\n"
+                    "Your version of the map file ''" + sub.Name + "'' doesn't match the server's version! "
+                    +"Your file: " + sub.Name + "(MD5 hash: " + sub.MD5Hash.Hash + ") "
+                    +"Server's file: " + subName + "(MD5 hash: " + md5Hash + ")\n "
                     +"Do you want to download the file from the server host?", new string[] { "Yes", "No" }, 400, 300);
                     requestFileBox.Buttons[0].UserData = subName;
                     requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;

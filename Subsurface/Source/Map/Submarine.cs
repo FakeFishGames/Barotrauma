@@ -631,12 +631,16 @@ namespace Barotrauma
 
             if (extension == ".sub")
             {
-                Stream stream = SaveUtil.DecompressFiletoStream(file);
-                if (stream == null)
+                Stream stream = null;
+                try
                 {
-                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed!");
-                    return null;
+                    stream = SaveUtil.DecompressFiletoStream(file);
                 }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed!", e);
+                    return null;
+                }                
 
                 try
                 {
