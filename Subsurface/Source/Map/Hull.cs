@@ -11,7 +11,7 @@ using Lidgren.Network;
 namespace Barotrauma
 {
 
-    class Hull : MapEntity
+    class Hull : MapEntity, IPropertyObject
     {
         public static List<Hull> hullList = new List<Hull>();
         private static EntityGrid entityGrid;
@@ -19,7 +19,7 @@ namespace Barotrauma
         public static bool ShowHulls = true;
 
         public static bool EditWater, EditFire;
-
+        
         public static WaterRenderer renderer;
 
         private List<FireSource> fireSources;
@@ -36,7 +36,11 @@ namespace Barotrauma
         //how much excess water the room can contain  (= more than the volume of the room)
         public const float MaxCompress = 10000f;
         
-        public readonly Dictionary<string, PropertyDescriptor> properties;
+        public readonly Dictionary<string, ObjectProperty> properties;
+        public Dictionary<string, ObjectProperty> ObjectProperties
+        {
+            get { return properties; }
+        }
 
         private float lethalPressure;
 
@@ -161,9 +165,7 @@ namespace Barotrauma
 
             fireSources = new List<FireSource>();
 
-            properties = TypeDescriptor.GetProperties(GetType())
-                .Cast<PropertyDescriptor>()
-                .ToDictionary(pr => pr.Name);
+            properties = ObjectProperty.GetProperties(this);
 
             int arraySize = (rectangle.Width / WaveWidth + 1);
             waveY = new float[arraySize];

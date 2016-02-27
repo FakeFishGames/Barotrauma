@@ -487,7 +487,8 @@ namespace Barotrauma
         public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null)
         {
             if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
-
+            if (effect.type != type) return;
+            
             bool hasTargets = (effect.TargetNames == null);
 
             Item[] containedItems = ContainedItems;  
@@ -501,10 +502,10 @@ namespace Barotrauma
 
             List<IPropertyObject> targets = new List<IPropertyObject>();
 
-            if (containedItems!=null)
+            if (containedItems != null)
             {
                 if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained))
-                {        
+                {
                     foreach (Item containedItem in containedItems)
                     {
                         if (containedItem == null) continue;
@@ -528,9 +529,14 @@ namespace Barotrauma
                 }
             }
 
-
             if (!hasTargets) return;
-            
+
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.Hull) && CurrentHull != null)
+            {
+                targets.Add(CurrentHull);
+            }
+
+
             if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
             {
                 foreach (var pobject in AllPropertyObjects)
@@ -550,7 +556,7 @@ namespace Barotrauma
             //    effect.Apply(type, deltaTime, container);
             //    //container.ApplyStatusEffect(effect, type, deltaTime, container);
             //}
-
+            
             effect.Apply(type, deltaTime, this, targets);
             
         }
@@ -575,7 +581,10 @@ namespace Barotrauma
 
 
         public override void Update(Camera cam, float deltaTime)
-        {             
+        {
+
+            ApplyStatusEffects(ActionType.Always, deltaTime, null);
+
             foreach (ItemComponent ic in components)
             {
                 if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;

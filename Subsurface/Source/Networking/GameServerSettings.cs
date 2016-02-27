@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -18,6 +19,8 @@ namespace Barotrauma.Networking
 
     partial class GameServer : NetworkMember 
     {
+        public const string SettingsFile = "serversettings.xml";
+
         public bool ShowNetStats;
 
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
@@ -90,6 +93,66 @@ namespace Barotrauma.Networking
         }
 
         public float EndVoteRequiredRatio = 0.5f;
+
+        private void SaveSettings()
+        {
+            XDocument doc = new XDocument(new XElement("serversettings"));
+            
+            doc.Root.Add
+            (
+                new XAttribute("AllowSpectating", allowSpectating), 
+                new XAttribute("RandomizeSeed", randomizeSeed),
+                new XAttribute("EndRoundAtLevelEnd", endRoundAtLevelEnd),
+                new XAttribute("AllowFileTransfers", allowFileTransfers), 
+
+                new XAttribute("SaveServerLogs", saveServerLogs),
+                new XAttribute("LinesPerLogFile", log.LinesPerFile),
+
+                new XAttribute("SubSelection", subSelectionMode),
+                new XAttribute("ModeSelection", modeSelectionMode)
+            );
+
+            try
+            {
+                doc.Save(SettingsFile);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving server settings failed", e);
+            }
+        }
+
+        private void LoadSettings()
+        {
+            XDocument doc = null;
+            if (System.IO.File.Exists(SettingsFile))
+            {
+                doc = ToolBox.TryLoadXml(SettingsFile);
+            }
+            else
+            {
+                return;
+            }
+
+            if (doc == null)
+            {
+                doc = new XDocument(new XElement("serversettings"));
+            }
+
+            allowSpectating = ToolBox.GetAttributeBool(doc.Root, "AllowSpectating", true);
+            randomizeSeed = ToolBox.GetAttributeBool(doc.Root, "RandomizeSeed", true);
+            endRoundAtLevelEnd = ToolBox.GetAttributeBool(doc.Root, "EndRoundAtLevelEnd", true);
+            allowFileTransfers = ToolBox.GetAttributeBool(doc.Root, "AllowFileTransfers", true);
+
+            saveServerLogs = ToolBox.GetAttributeBool(doc.Root, "SaveServerLogs", true);
+            log.LinesPerFile = ToolBox.GetAttributeInt(doc.Root, "LinesPerLogFile", 800);
+
+            subSelectionMode = SelectionMode.Manual;
+            Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "SubSelection", "Manual"), out subSelectionMode);
+
+            modeSelectionMode = SelectionMode.Manual;
+            Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
+        }
 
         private void CreateSettingsFrame()
         {
@@ -227,6 +290,7 @@ namespace Barotrauma.Networking
             else
             {
                 settingsFrame = null;
+                SaveSettings();
             }
 
             return false;

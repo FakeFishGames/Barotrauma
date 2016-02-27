@@ -193,7 +193,7 @@ namespace Barotrauma
             return editableProperties;
         }
 
-        public static Dictionary<string, ObjectProperty> GetProperties(object obj)        
+        public static Dictionary<string, ObjectProperty> GetProperties(IPropertyObject obj)        
         {
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
 
@@ -207,12 +207,12 @@ namespace Barotrauma
             return dictionary;
         }
 
-        public static Dictionary<string, ObjectProperty> InitProperties(object obj)
+        public static Dictionary<string, ObjectProperty> InitProperties(IPropertyObject obj)
         {
             return InitProperties(obj, null);
         }
 
-        public static Dictionary<string, ObjectProperty> InitProperties(object obj, XElement element)
+        public static Dictionary<string, ObjectProperty> InitProperties(IPropertyObject obj, XElement element)
         {
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
 

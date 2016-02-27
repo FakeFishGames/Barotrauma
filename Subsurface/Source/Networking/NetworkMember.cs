@@ -172,7 +172,7 @@ namespace Barotrauma.Networking
             message.Write((byte)msgBytes.Count);
             foreach (byte[] msgData in msgBytes)
             {
-                if (msgData.Length > 255) DebugConsole.ThrowError("too large networkevent (" + msgData.Length + " bytes)");
+                if (msgData.Length > 255) DebugConsole.ThrowError("Too large networkevent (" + msgData.Length + " bytes)");
 
                 message.Write((byte)msgData.Length);
                 message.Write(msgData);

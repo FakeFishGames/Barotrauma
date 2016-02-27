@@ -21,7 +21,7 @@ namespace Barotrauma.Networking
 
         private string downloadFolder;
 
-        private FileTransferType fileType;
+        private FileTransferMessageType fileType;
         
         public string FileName
         {
@@ -39,7 +39,7 @@ namespace Barotrauma.Networking
             get { return received; }
         }
 
-        public FileTransferType FileType
+        public FileTransferMessageType FileType
         {
             get { return fileType; }
         }
@@ -67,7 +67,7 @@ namespace Barotrauma.Networking
             get { return (float)received / (float)length; }
         }
 
-        public FileStreamReceiver(NetClient client, string filePath, FileTransferType fileType, OnFinished onFinished)
+        public FileStreamReceiver(NetClient client, string filePath, FileTransferMessageType fileType, OnFinished onFinished)
         {
             this.client = client;
 
@@ -116,7 +116,7 @@ namespace Barotrauma.Networking
 
             switch (type)
             {
-                case (byte)FileTransferType.Submarine:
+                case (byte)FileTransferMessageType.Submarine:
                     if (Path.GetExtension(fileName) != ".sub")
                     {
                         ErrorMessage = "Wrong file extension ''" + Path.GetExtension(fileName) + "''! (Expected .sub)";
@@ -163,9 +163,12 @@ namespace Barotrauma.Networking
                 Status == FileTransferStatus.Finished || 
                 Status == FileTransferStatus.Canceled) return;
 
+            byte transferMessageType = inc.ReadByte();
+
             //int chunkLen = inc.LengthBytes;
             if (length == 0)
             {
+                if (transferMessageType != (byte)FileTransferMessageType.Initiate) return;
 
                 if (!string.IsNullOrWhiteSpace(downloadFolder) && !Directory.Exists(downloadFolder))
                 {
@@ -173,6 +176,7 @@ namespace Barotrauma.Networking
                 }
 
                 byte fileTypeByte = inc.ReadByte();
+
 
                 length = inc.ReadUInt64();
                 FileName = inc.ReadString();
@@ -233,7 +237,7 @@ namespace Barotrauma.Networking
         {
             switch (fileType)
             {
-                case FileTransferType.Submarine:
+                case FileTransferMessageType.Submarine:
                     string file = Path.Combine(downloadFolder, FileName);
                     Stream stream = null;
 
@@ -255,16 +259,20 @@ namespace Barotrauma.Networking
 
                     try
                     {
-                        stream.Position = 0;
-                        var doc = XDocument.Load(stream); //ToolBox.TryLoadXml(file);
-                        stream.Close();
-                        stream.Dispose();
+                        stream.Position = 0;                        
+                        var doc = XDocument.Load(stream);
                     }
                     catch
                     {
+                        stream.Close();
+                        stream.Dispose();
+
                         ErrorMessage = "Failed to parse submarine file ''"+file+"''!";
                         return false;
                     }
+
+                    stream.Close();
+                    stream.Dispose();
                 break;
             }
 
