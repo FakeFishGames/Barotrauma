@@ -38,6 +38,11 @@ namespace Barotrauma.Networking
             get { return otherClients; }
         }
 
+        public string ActiveFileTransferName
+        {
+            get { return (fileStreamReceiver == null || fileStreamReceiver.Status == FileTransferStatus.Finished) ? "" : fileStreamReceiver.FileName; }
+        }
+
         public GameClient(string newName)
         {
             endRoundButton = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, 20, 20, 20), "End round", Alignment.TopLeft, inGameHUD);
@@ -479,7 +484,20 @@ namespace Barotrauma.Networking
 
                         break;
                     case (byte)PacketTypes.RequestFile:
-                        new GUIMessageBox("Couldn't the file from the server", "Sharing files has been disabled by the server.");
+                        bool accepted = inc.ReadBoolean();
+
+                        if (!accepted)
+                        {
+                            new GUIMessageBox("File transfer canceled", inc.ReadString());
+
+                            if (fileStreamReceiver!=null)
+                            {
+                                fileStreamReceiver.DeleteFile();
+                                fileStreamReceiver.Dispose();
+                                fileStreamReceiver = null;
+                            }
+                        }
+
                         break;
                     case (byte)PacketTypes.FileStream:
                         if (fileStreamReceiver == null)
@@ -710,14 +728,7 @@ namespace Barotrauma.Networking
 
                 if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 310, (int)pos.Y + 20, 100, 15), "Cancel", new Color(0.88f, 0.25f, 0.15f, 0.8f)))
                 {
-                    fileStreamReceiver.DeleteFile();
-                    fileStreamReceiver.Dispose();
-                    fileStreamReceiver = null;
-
-                    NetOutgoingMessage msg = client.CreateMessage();
-                    msg.Write((byte)PacketTypes.RequestFile);
-                    msg.Write((byte)FileTransferType.Cancel);
-                    client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+                    CancelFileTransfer();
                 }
             }
 
@@ -737,28 +748,6 @@ namespace Barotrauma.Networking
 
         }
 
-        private void OnFileReceived(FileStreamReceiver receiver)
-        {
-            if (receiver.Status == FileTransferStatus.Error)
-            {
-                new GUIMessageBox("Error while receiving file from server", receiver.ErrorMessage, 400, 350);
-                receiver.DeleteFile();
-                
-            }
-            else if (receiver.Status == FileTransferStatus.Finished)
-            {
-                new GUIMessageBox("Download finished", "File ''"+receiver.FileName+"'' was downloaded succesfully.");
-
-                switch (receiver.FileType)
-                {
-                    case FileTransferType.Submarine:
-                        Submarine.Preload();
-                        break;
-                }
-            }
-
-            fileStreamReceiver = null;
-        }
 
         public override void Disconnect()
         {
@@ -770,8 +759,13 @@ namespace Barotrauma.Networking
             GameMain.NetworkMember = null;
         }
 
-        public void RequestFile(string file, FileTransferType fileType)
+        public void RequestFile(string file, FileTransferMessageType fileType)
         {
+            if (fileStreamReceiver!=null)
+            {
+                CancelFileTransfer();
+            }
+
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)PacketTypes.RequestFile);
             msg.Write((byte)fileType);
@@ -781,6 +775,41 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
             fileStreamReceiver = new FileStreamReceiver(client, Path.Combine(Submarine.SavePath, "Downloaded"), fileType, OnFileReceived);
+        }
+
+        private void OnFileReceived(FileStreamReceiver receiver)
+        {
+            if (receiver.Status == FileTransferStatus.Error)
+            {
+                new GUIMessageBox("Error while receiving file from server", receiver.ErrorMessage, 400, 350);
+                receiver.DeleteFile();
+
+            }
+            else if (receiver.Status == FileTransferStatus.Finished)
+            {
+                new GUIMessageBox("Download finished", "File ''" + receiver.FileName + "'' was downloaded succesfully.");
+
+                switch (receiver.FileType)
+                {
+                    case FileTransferMessageType.Submarine:
+                        Submarine.Preload();
+                        break;
+                }
+            }
+
+            fileStreamReceiver = null;
+        }
+
+        private void CancelFileTransfer()
+        {
+            fileStreamReceiver.DeleteFile();
+            fileStreamReceiver.Dispose();
+            fileStreamReceiver = null;
+
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)PacketTypes.RequestFile);
+            msg.Write((byte)FileTransferMessageType.Cancel);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         public void Vote(VoteType voteType, object userData)

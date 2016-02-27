@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
 {
     class ServerLog
     {
-        const int LinesPerFile = 800;
+        private int linesPerFile = 800;
 
         public const string SavePath = "ServerLogs";
 
@@ -20,6 +20,12 @@ namespace Barotrauma.Networking
         private GUIListBox listBox;
 
         private Queue<ColoredText> lines;
+
+        public int LinesPerFile
+        {
+            get { return linesPerFile; }
+            set { linesPerFile = Math.Max(10, linesPerFile); }
+        }
 
         public ServerLog(string serverName)
         {

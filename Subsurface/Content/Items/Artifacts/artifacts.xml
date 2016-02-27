@@ -16,7 +16,9 @@
     
     <Body width="36" height="60" density="5"/>
 
-    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
+      <StatusEffect type="Always" target="Hull" oxygen="-50000.0"/>
+    </Holdable>
   </Item>
 
   <Item
@@ -35,7 +37,7 @@
     <Body radius="20" height="20" density="5"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
-      <StatusEffect type="OnActive">
+      <StatusEffect type="Always">
         <Fire/>
       </StatusEffect>
     </Holdable>

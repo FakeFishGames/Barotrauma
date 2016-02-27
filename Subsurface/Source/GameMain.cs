@@ -157,8 +157,8 @@ namespace Barotrauma
 
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));
-
-            //Event.Init("Content/randomevents.xml");
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
         }
 
         /// <summary>
@@ -353,7 +353,7 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
-
+           
             base.OnExiting(sender, args);
         }
 

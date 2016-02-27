@@ -511,17 +511,17 @@ namespace Barotrauma
             return true;
         }
 
-        public static bool SaveCurrent(string fileName)
+        public static bool SaveCurrent(string filePath)
         {
             if (loaded==null)
             {
-                loaded = new Submarine(fileName);
+                loaded = new Submarine(filePath);
                // return;
             }
 
-            loaded.filePath = SavePath + System.IO.Path.DirectorySeparatorChar + fileName;
+            loaded.filePath = filePath;
 
-            return loaded.SaveAs(SavePath+System.IO.Path.DirectorySeparatorChar+fileName);
+            return loaded.SaveAs(filePath);
         }
 
         public void CheckForErrors()

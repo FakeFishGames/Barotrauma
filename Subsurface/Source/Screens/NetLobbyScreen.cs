@@ -512,9 +512,17 @@ namespace Barotrauma
 
             
             var hash = (obj as Submarine).MD5Hash;
-
+            
             //hash will be null if opening the sub file failed -> don't select the sub
-            return hash.Hash != null;
+            if (string.IsNullOrWhiteSpace(hash.Hash))
+            {
+                (component as GUITextBlock).TextColor = Color.DarkRed * 0.8f;
+                component.CanBeFocused = false;
+
+                return false;
+            }
+
+            return true;
         }
 
         public void UpdateSubList()
@@ -590,7 +598,7 @@ namespace Barotrauma
         public void AddPlayer(string name)
         {
             GUITextBlock textBlock = new GUITextBlock(
-                new Rectangle(0, 0, 0, 25), name, 
+                new Rectangle(0, 0, playerList.Rect.Width-20, 25), name, 
                  GUI.Style, Alignment.Left, Alignment.Left,
                 playerList);
 
@@ -629,7 +637,7 @@ namespace Barotrauma
             var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, playerFrameInner);
             closeButton.OnClicked = ClosePlayerFrame;
 
-            return true;
+            return false;
         }
 
         private bool ClosePlayerFrame(GUIButton button, object userData)
@@ -925,50 +933,47 @@ namespace Barotrauma
 
         public bool TrySelectSub(string subName, string md5Hash)
         {
+            //already downloading the selected sub file
+            if (GameMain.Client.ActiveFileTransferName == subName+".sub") return false;
+
             Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
-            if (sub == null)
+            if (sub == null || sub.MD5Hash.Hash != md5Hash)
             {
-                var requestFileBox = new GUIMessageBox("Submarine not found!", "The submarine ''" + subName + "'' has been selected by the server. "
-                +"Matching file not found in your map folder. Do you want to download the file from the server host?", new string[] { "Yes", "No" }, 400, 300);
+                string errorMsg = "";
+                if (sub == null)
+                {
+                    errorMsg = "Submarine ''" + subName + "'' was selected by the server. Matching file not found in your submarine folder. ";
+                }
+                else if (sub.MD5Hash.Hash == null)
+                {
+                    errorMsg = "Couldn't load submarine ''" + subName + "''. The file may be corrupted. "; 
+                }
+                else
+                {
+                    errorMsg = "Your version of the submarine file ''" + sub.Name + "'' doesn't match the server's version! "
+                    + "Your MD5 hash: " + sub.MD5Hash.Hash + " \n"
+                    + "Server's MD5 hash: " + md5Hash + ". ";
+                }
+                    
+                string downloadMsg = GameMain.Client.ActiveFileTransferName == "" ?
+                    "Do you want to download the file from the server host?" :
+                    "Do you want to download the file and cancel downloading ''" + GameMain.Client.ActiveFileTransferName + "''?";
+
+                var requestFileBox = new GUIMessageBox("Submarine not found!", errorMsg+downloadMsg, new string[] { "Yes", "No" }, 400, 300);
                 requestFileBox.Buttons[0].UserData = subName;
                 requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
                 requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
                     {
-                        GameMain.Client.RequestFile(userdata.ToString(), FileTransferType.Submarine);
+                        GameMain.Client.RequestFile(userdata.ToString(), FileTransferMessageType.Submarine);
                         return true;
                     };
                 requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
-
-
+                
                 return false;
             }
-            else
-            {
-                if (sub.MD5Hash.Hash != md5Hash)
-                {
-                    var requestFileBox = new GUIMessageBox("Submarine not found!", 
-                    "Your version of the map file ''" + sub.Name + "'' doesn't match the server's version! "
-                    +"Your file: " + sub.Name + "(MD5 hash: " + sub.MD5Hash.Hash + ") "
-                    +"Server's file: " + subName + "(MD5 hash: " + md5Hash + ")\n "
-                    +"Do you want to download the file from the server host?", new string[] { "Yes", "No" }, 400, 300);
-                    requestFileBox.Buttons[0].UserData = subName;
-                    requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
-                    requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
-                    {
-                        GameMain.Client.RequestFile(userdata.ToString(), FileTransferType.Submarine);
-                        return true;
-                    };
-                    requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
 
-                    return false;
-                }
-                else
-                {
-                    subList.Select(sub, true);
-                    //map.Load();
-                    return true;
-                }
-            }
+            subList.Select(sub, true);
+            return true;
         }
                 
         public void WriteData(NetOutgoingMessage msg)
@@ -1011,7 +1016,7 @@ namespace Barotrauma
 
         public void ReadData(NetIncomingMessage msg)
         {
-            string mapName="", md5Hash="";
+            string mapName = "", md5Hash = "";
             
             int modeIndex = 0;
             //float durationScroll = 0.0f;

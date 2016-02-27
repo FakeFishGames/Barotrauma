@@ -9,13 +9,15 @@ namespace Barotrauma.Networking
         NotStarted, Sending, Receiving, Finished, Error, Canceled
     }
 
-    enum FileTransferType
+    enum FileTransferMessageType
     {
-        Unknown, Submarine, Cancel
+        Unknown, Initiate, Submarine, Cancel
     }
 
     class FileStreamSender : IDisposable
     {
+        public static TimeSpan MaxTransferDuration = new TimeSpan(0, 2, 0);
+
         private FileStream inputStream;
         private int sentOffset;
         private int chunkLen;
@@ -24,8 +26,9 @@ namespace Barotrauma.Networking
 
         float waitTimer;
 
+        DateTime startingTime;
 
-        private FileTransferType fileType;
+        private FileTransferMessageType fileType;
 
         public FileTransferStatus Status
         {
@@ -34,6 +37,12 @@ namespace Barotrauma.Networking
         }
 
         public string FileName
+        {
+            get;
+            private set;
+        }
+
+        public string FilePath
         {
             get;
             private set;
@@ -54,30 +63,45 @@ namespace Barotrauma.Networking
             get { return inputStream == null ? 0 : inputStream.Length; }
         }
 
-        public static FileStreamSender Create(NetConnection conn, string fileName, FileTransferType fileType)
+        public static FileStreamSender Create(NetConnection conn, string filePath, FileTransferMessageType fileType)
         {
-            if (!File.Exists(fileName))
+            if (!File.Exists(filePath))
             {
-                DebugConsole.ThrowError("Sending a file failed. File ''"+fileName+"'' not found.");
+                DebugConsole.ThrowError("Sending a file failed. File ''"+filePath+"'' not found.");
                 return null;
             }
 
-            return new FileStreamSender(conn, fileName, fileType);
+            FileStreamSender sender = null;
+
+            try
+            {
+                sender = new FileStreamSender(conn, filePath, fileType);
+            }
+
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Couldn't open file ''"+filePath+"''",e);
+            }
+             
+            return sender;
         }
 
-        private FileStreamSender(NetConnection conn, string fileName, FileTransferType fileType)
+        private FileStreamSender(NetConnection conn, string filePath, FileTransferMessageType fileType)
         {
             connection = conn;
-            inputStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            inputStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             chunkLen = connection.Peer.Configuration.MaximumTransmissionUnit - 100;
             tempBuffer = new byte[chunkLen];
             sentOffset = 0;
-            
-            FileName = fileName;
+
+            FilePath = filePath;
+            FileName = Path.GetFileName(filePath);
 
             this.fileType = fileType;
 
             Status = FileTransferStatus.NotStarted;
+
+            startingTime = DateTime.Now;
         }
         
         public void Update(float deltaTime)
@@ -86,6 +110,12 @@ namespace Barotrauma.Networking
                 Status == FileTransferStatus.Canceled || 
                 Status == FileTransferStatus.Error ||
                 Status == FileTransferStatus.Finished) return;
+
+            if (DateTime.Now > startingTime + MaxTransferDuration)
+            {
+                CancelTransfer();
+                return;
+            }
 
             waitTimer -= deltaTime;
             if (waitTimer > 0.0f) return;
@@ -105,6 +135,7 @@ namespace Barotrauma.Networking
                 // first message; send length, chunk length and file name
                 message = connection.Peer.CreateMessage(sendBytes + 8 + 1);
                 message.Write((byte)PacketTypes.FileStream);
+                message.Write((byte)FileTransferMessageType.Initiate);
                 message.Write((byte)fileType);
                 message.Write((ulong)inputStream.Length);
                 message.Write(Path.GetFileName(inputStream.Name));
@@ -115,12 +146,13 @@ namespace Barotrauma.Networking
 
             message = connection.Peer.CreateMessage(sendBytes + 8 + 1);
             message.Write((byte)PacketTypes.FileStream);
+            message.Write((byte)fileType);
             message.Write(tempBuffer, 0, sendBytes);
 
             connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, 1);
             sentOffset += sendBytes;
 
-            waitTimer = connection.AverageRoundtripTime + 0.05f;
+            waitTimer = connection.AverageRoundtripTime;
 
             //Program.Output("Sent " + m_sentOffset + "/" + m_inputStream.Length + " bytes to " + m_connection);
 
