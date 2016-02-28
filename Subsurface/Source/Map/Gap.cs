@@ -20,15 +20,15 @@ namespace Barotrauma
         //private Sound waterSound;
 
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
-        float open;           
+        private float open;           
 
         //the force of the water flow which is exerted on physics bodies
-        Vector2 flowForce;
+        private Vector2 flowForce;
 
-        Hull flowTargetHull;
+        private Hull flowTargetHull;
 
-        float higherSurface;
-        float lowerSurface;
+        private float higherSurface;
+        private float lowerSurface;
 
 
         public float Open
@@ -38,11 +38,6 @@ namespace Barotrauma
         }
 
         public Door ConnectedDoor;
-
-        //public Vector2 FlowForce
-        //{
-        //    get { return flowForce*soundVolume; }
-        //}
 
         public Vector2 LerpedFlowForce
         {
@@ -64,6 +59,20 @@ namespace Barotrauma
             }
         }
 
+        public override Rectangle Rect
+        {
+            get
+            {
+                return base.Rect;
+            }
+            set
+            {
+                base.Rect = value;
+
+                FindHulls();
+            }
+        }
+
         public Gap(MapEntityPrefab prefab, Rectangle rectangle)
            : this (rectangle, Submarine.Loaded)
         { }
@@ -73,7 +82,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle newRect, bool isHorizontal, Submarine submarine)
-            : base (submarine)
+            : base (MapEntityPrefab.list.Find(m=> m.Name == "Gap"), submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();
@@ -169,34 +178,21 @@ namespace Barotrauma
 
             GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), clr * 0.5f, true);
 
-            if (isHorizontal)
+            for (int i = 0; i < linkedTo.Count; i++)
             {
-                for (int i = 0; i < linkedTo.Count; i++ )
-                {
-                    if (linkedTo[i].Rect.Center.X > rect.Center.X)
-                    {
-                        GUI.DrawRectangle(sb, new Rectangle(WorldRect.Right, -WorldRect.Y, 10, rect.Height), Color.Green * 0.3f, true);
-                    }
-                    else
-                    {
-                        GUI.DrawRectangle(sb, new Rectangle(WorldRect.X - 10, -WorldRect.Y, 10, rect.Height), Color.Green * 0.3f, true);
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < linkedTo.Count; i++)
-                {
-                    if (linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f > rect.Y-rect.Height/2.0f)
-                    {
-                        GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y - 10, rect.Width, 10), Color.Green * 0.3f, true);
-                    }
-                    else
-                    {
-                        GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y + rect.Height, rect.Width, 10), Color.Green * 0.3f, true);
-                    }
-                }
-            }
+                Vector2 dir = isHorizontal ?
+                    new Vector2(Math.Sign(linkedTo[i].Rect.Center.X - rect.Center.X), 0.0f)
+                    : new Vector2(0.0f, Math.Sign((linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f) - (rect.Y - rect.Height / 2.0f)));
+
+                Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
+                arrowPos += new Vector2(dir.X * (WorldRect.Width / 2 + 10), dir.Y * (WorldRect.Height / 2 + 10));
+
+                GUI.Arrow.Draw(sb,
+                    arrowPos,
+                    clr * 0.8f,
+                    GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
+                    isHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f));
+            }        
 
             if (isSelected)
             {

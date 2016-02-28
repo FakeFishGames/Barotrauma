@@ -74,6 +74,21 @@ namespace Barotrauma
             }
         }
 
+        public override Rectangle Rect
+        {
+            get
+            {
+                return base.Rect;
+            }
+            set
+            {
+                base.Rect = value;
+
+                Item.UpdateHulls();
+                Gap.UpdateHulls();
+            }
+        }
+
         public override bool IsLinkable
         {
             get { return true; }
@@ -151,13 +166,13 @@ namespace Barotrauma
         }
 
         public Hull(MapEntityPrefab prefab, Rectangle rectangle)
-            : this (rectangle, Submarine.Loaded)
+            : this (prefab, rectangle, Submarine.Loaded)
         {
 
         }
 
-        public Hull(Rectangle rectangle, Submarine submarine)
-            : base (submarine)
+        public Hull(MapEntityPrefab prefab, Rectangle rectangle, Submarine submarine)
+            : base (prefab, submarine)
         {
             rect = rectangle;
             
@@ -691,7 +706,7 @@ namespace Barotrauma
                     int.Parse(element.Attribute("height").Value));
             }
 
-            Hull h = new Hull(rect, submarine);
+            Hull h = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), rect, submarine);
 
             h.volume = ToolBox.GetAttributeFloat(element, "pressure", 0.0f);
 

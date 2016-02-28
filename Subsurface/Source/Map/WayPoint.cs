@@ -96,7 +96,7 @@ namespace Barotrauma
         }
 
         public WayPoint(Rectangle newRect, Submarine submarine)
-            : base (submarine)
+            : base (null, submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();

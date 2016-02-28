@@ -286,7 +286,7 @@ namespace Barotrauma
         }
 
         public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
-            : base(submarine)
+            : base(itemPrefab, submarine)
         {
             prefab = itemPrefab;
 
@@ -1219,7 +1219,7 @@ namespace Barotrauma
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID));
             
-            if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+            if (ResizeHorizontal || ResizeVertical)
             {
                 element.Add(new XAttribute("rect", 
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," + 
