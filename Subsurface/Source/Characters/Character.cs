@@ -965,7 +965,7 @@ namespace Barotrauma
                     key.DequeueHeld();
                 }
 
-                networkUpdateSent = true;
+                networkUpdateSent = false;
             }
 
             if (needsAir)

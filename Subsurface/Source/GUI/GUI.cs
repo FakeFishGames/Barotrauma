@@ -43,6 +43,18 @@ namespace Barotrauma
 
         public static Color ScreenOverlayColor;
 
+        private static Sprite submarineIcon, arrow;
+
+        public static Sprite SubmarineIcon
+        {
+            get { return submarineIcon; }
+        }
+
+        public static Sprite Arrow
+        {
+            get { return arrow; }
+        }
+
         public static void Init(ContentManager content)
         {
             GUI.Font = ToolBox.TryLoadFont("SpriteFont1", content);
@@ -71,6 +83,12 @@ namespace Barotrauma
             // create 1x1 texture for line drawing
             t = new Texture2D(graphicsDevice, 1, 1);
             t.SetData(new Color[] { Color.White });// fill the texture with white
+
+            submarineIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 192, 64, 64), null);
+            submarineIcon.Origin = submarineIcon.size / 2;
+
+            arrow = new Sprite("Content/UI/uiIcons.png", new Rectangle(80, 240, 16, 16), null);
+            arrow.Origin = arrow.size / 2;
 
             Style = new GUIStyle("Content/UI/style.xml");
         }

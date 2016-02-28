@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Barotrauma.Networking
@@ -259,15 +260,26 @@ namespace Barotrauma.Networking
 
                     try
                     {
-                        stream.Position = 0;                        
-                        var doc = XDocument.Load(stream);
+                        stream.Position = 0;
+
+                        XmlReaderSettings settings = new XmlReaderSettings();
+                        settings.DtdProcessing = DtdProcessing.Prohibit;
+                        settings.IgnoreProcessingInstructions = true;
+
+                        using (var reader = XmlReader.Create(stream, settings))
+                        {
+                            while (reader.Read())
+                            {
+
+                            }
+                        }
                     }
                     catch
                     {
                         stream.Close();
                         stream.Dispose();
 
-                        ErrorMessage = "Failed to parse submarine file ''"+file+"''!";
+                        ErrorMessage = "Parsing file ''"+file+"'' failed! The file may not be a valid submarine file.";
                         return false;
                     }
 
