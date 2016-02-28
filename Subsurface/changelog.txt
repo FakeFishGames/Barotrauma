@@ -1,4 +1,26 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.4.0
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+- missing submarine files can be downloaded from the server host
+- player syncing bugfixes (aiming is visible to other players, smoother movement in water)
+- creature syncing bugfixes (less teleporting around)
+- fixed the server lobby displaying wrong numbers of votes at the client's side
+- fixed the server list displaying 16/16 players as 0/16
+- saving server settings
+
+Other:
+- skyholder artifacts consume oxygen
+- thermal artifacts catch fire even if they're not being held
+- placed items/structures can be resized in the editor
+- items in the inventory can be swapped between slots by dragging them on top of each other
+- slower underwater scooters
+- fixed pressure building up in enclosed rooms full of water, even if there were no hull breaches
+- an indicator which shows the direction of the sub when spectating
+- fixed crashing when loading a submarine with no hulls
+
+---------------------------------------------------------------------------------------------------------
 v0.3.3.1
 ---------------------------------------------------------------------------------------------------------
 

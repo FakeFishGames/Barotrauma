@@ -141,7 +141,7 @@ namespace Barotrauma
         }
                 
         public Structure(Rectangle rectangle, StructurePrefab sp, Submarine submarine)
-            : base(submarine)
+            : base(sp, submarine)
         {
             if (rectangle.Width == 0 || rectangle.Height == 0) return;
 
