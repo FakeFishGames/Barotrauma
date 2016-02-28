@@ -440,8 +440,6 @@ namespace Barotrauma
 
                 UpdateJobPreferences(jobList);
 
-                //UpdatePreviewPlayer(Game1.Client.CharacterInfo);
-
                 UpdatePreviewPlayer(characterInfo);
             }
         }
@@ -510,7 +508,6 @@ namespace Barotrauma
         {
             valueChanged = true;
 
-            
             var hash = (obj as Submarine).MD5Hash;
             
             //hash will be null if opening the sub file failed -> don't select the sub

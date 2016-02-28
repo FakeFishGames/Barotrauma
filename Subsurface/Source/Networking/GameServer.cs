@@ -846,6 +846,14 @@ namespace Barotrauma.Networking
                 return false;
             }
 
+
+            if (ConnectedClients.Any(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath))
+            {
+                new GUIMessageBox("Couldn't start a round",
+                    "Can't start a round while sending the selected submarine to clients. Cancel the transfers or wait for them to finish before starting.", 400, 400);
+                return false;
+            }
+
             GameMain.ShowLoading(StartGame(selectedSub, selectedMode), false);
  
             return true;
@@ -854,13 +862,6 @@ namespace Barotrauma.Networking
         private IEnumerable<object> StartGame(Submarine selectedSub, GameModePreset selectedMode)
         {
             GUIMessageBox.CloseAll();
-
-            if (ConnectedClients.Any(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath))
-            {
-                new GUIMessageBox("Couldn't start a round", 
-                    "Can't start a round while sending the selected submarine to clients. Cancel the transfers or wait for them to finish before starting.", 400, 400);
-                yield return CoroutineStatus.Success;
-            }
 
             AssignJobs();
 
