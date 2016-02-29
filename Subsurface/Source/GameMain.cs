@@ -195,7 +195,7 @@ namespace Barotrauma
 
 
 
-            Hull.renderer = new WaterRenderer(GraphicsDevice);
+            Hull.renderer = new WaterRenderer(GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
