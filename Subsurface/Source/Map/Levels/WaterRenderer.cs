@@ -2,6 +2,7 @@
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
 
 namespace Barotrauma
 {
@@ -25,20 +26,20 @@ namespace Barotrauma
             get { return waterTexture; }
         }
 
-        public WaterRenderer(GraphicsDevice graphicsDevice)
+        public WaterRenderer(GraphicsDevice graphicsDevice, ContentManager content)
         {
 #if WINDOWS
-            byte[] bytecode = File.ReadAllBytes("Content/watershader.mgfx");
+            waterEffect = content.Load<Effect>("watershader");
 #endif
 #if LINUX
-			byte[] bytecode = File.ReadAllBytes("Content/watershader_opengl.mgfx");
-#endif
 
-            waterEffect = new Effect(graphicsDevice, bytecode);
+            waterEffect = content.Load<Effect>("watershader_opengl");
+#endif
 
             waterTexture = TextureLoader.FromFile("Content/waterbump.png");
             waterEffect.Parameters["xWaveWidth"].SetValue(0.05f);
             waterEffect.Parameters["xWaveHeight"].SetValue(0.05f);
+
 #if WINDOWS
             //waterEffect.Parameters["xTexture"].SetValue(waterTexture);
 #endif

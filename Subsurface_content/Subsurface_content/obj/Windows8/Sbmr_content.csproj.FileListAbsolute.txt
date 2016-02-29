@@ -1,5 +1,0 @@
-C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\bin\Windows8\Content\SpriteFont1.xnb
-C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\bin\Windows8\IgnoreMe.dll
-C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\obj\Windows8\Microsoft.Xna.Framework.RuntimeProfile.txt
-C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\obj\Windows8\IgnoreMe.dll
-C:\Users\Joonas\Desktop\SBMR_3011\Sbmr_content\Sbmr_content\obj\Windows8\Sbmr_content.csprojResolveAssemblyReference.cache
