@@ -15,6 +15,7 @@ Other:
 - thermal artifacts catch fire even if they're not being held
 - placed items/structures can be resized in the editor
 - items in the inventory can be swapped between slots by dragging them on top of each other
+- cyrillic character support
 - slower underwater scooters
 - fixed pressure building up in enclosed rooms full of water, even if there were no hull breaches
 - an indicator which shows the direction of the sub when spectating
