@@ -210,6 +210,8 @@ namespace Barotrauma.Items.Components
                 limb.pullJoint.Enabled = false;
             }
 
+            if (character.SelectedConstruction == this.item) character.SelectedConstruction = null;
+
             character.AnimController.Anim = AnimController.Animation.None;
         }
 
@@ -225,9 +227,6 @@ namespace Barotrauma.Items.Components
                     IsActive = false;
                     CancelUsing(character);
                     character = null;
-                }
-                else
-                {
                     return false;
                 }
             }

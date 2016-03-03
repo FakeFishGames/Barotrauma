@@ -48,6 +48,24 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
+
+            var button = new GUIButton(new Rectangle(160, 50, 30, 30), "-", GUI.Style, GuiFrame);
+            button.OnClicked = (GUIButton btn, object obj) =>
+            {
+                targetForce -= 1.0f;
+                item.NewComponentEvent(this, true, false);
+
+                return true;
+            };
+
+            button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", GUI.Style, GuiFrame);
+            button.OnClicked = (GUIButton btn, object obj) =>
+            {
+                targetForce += 1.0f;
+                item.NewComponentEvent(this, true, false);
+
+                return true;
+            };   
         }
 
         public float CurrentVolume
@@ -80,7 +98,7 @@ namespace Barotrauma.Items.Components
 
             voltage = 0.0f;
         }
-
+        
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             //isActive = true;
@@ -93,18 +111,7 @@ namespace Barotrauma.Items.Components
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
             spriteBatch.DrawString(GUI.Font, "Force: " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
-
-            if (GUI.DrawButton(spriteBatch, new Rectangle(GuiFrame.Rect.X + 280, GuiFrame.Rect.Y + 80, 40, 40), "-", true)) 
-            {
-                targetForce -= 1.0f;
-                item.NewComponentEvent(this, true, false);
-            }
-
-            if (GUI.DrawButton(spriteBatch, new Rectangle(GuiFrame.Rect.X + 280, GuiFrame.Rect.Y + 30, 40, 40), "+", true)) 
-            {
-                targetForce += 1.0f;
-                item.NewComponentEvent(this, true, false);
-            }      
+      
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

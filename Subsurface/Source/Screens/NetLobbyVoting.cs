@@ -128,7 +128,7 @@ namespace Barotrauma
                     voteText.UserData = "votes";
                 }
 
-                voteText.Text = votes.ToString();
+                voteText.Text = votes == 0 ? "" : votes.ToString();
             }
         }
         
@@ -233,6 +233,11 @@ namespace Barotrauma
             AllowSubVoting = msg.ReadBoolean();
             if (allowSubVoting)
             {
+                foreach (Submarine sub in Submarine.SavedSubmarines)
+                {
+                    SetVoteText(GameMain.NetLobbyScreen.SubList, sub, 0);
+                }
+
                 int votableCount = msg.ReadByte();
                 for (int i = 0; i < votableCount; i++)
                 {
@@ -252,7 +257,7 @@ namespace Barotrauma
                     int votes = msg.ReadByte();
                     string modeName = msg.ReadString();
                     GameModePreset mode = GameModePreset.list.Find(m => m.Name == modeName);
-                    SetVoteText(GameMain.NetLobbyScreen.SubList, mode, votes);
+                    SetVoteText(GameMain.NetLobbyScreen.ModeList, mode, votes);
                 }
             }
 

@@ -43,6 +43,18 @@ namespace Barotrauma
 
         public static Color ScreenOverlayColor;
 
+        private static Sprite submarineIcon, arrow;
+
+        public static Sprite SubmarineIcon
+        {
+            get { return submarineIcon; }
+        }
+
+        public static Sprite Arrow
+        {
+            get { return arrow; }
+        }
+
         public static void Init(ContentManager content)
         {
             GUI.Font = ToolBox.TryLoadFont("SpriteFont1", content);
@@ -71,6 +83,12 @@ namespace Barotrauma
             // create 1x1 texture for line drawing
             t = new Texture2D(graphicsDevice, 1, 1);
             t.SetData(new Color[] { Color.White });// fill the texture with white
+
+            submarineIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 192, 64, 64), null);
+            submarineIcon.Origin = submarineIcon.size / 2;
+
+            arrow = new Sprite("Content/UI/uiIcons.png", new Rectangle(80, 240, 16, 16), null);
+            arrow.Origin = arrow.size / 2;
 
             Style = new GUIStyle("Content/UI/style.xml");
         }
@@ -304,24 +322,34 @@ namespace Barotrauma
             return texture;
         }
 
-        public static bool DrawButton(SpriteBatch sb, Rectangle rect, string text, bool isHoldable = false)
+        public static bool DrawButton(SpriteBatch sb, Rectangle rect, string text, Color color, bool isHoldable = false)
         {
-            Color color = new Color(200, 200, 200);
-
             bool clicked = false;
 
             if (rect.Contains(PlayerInput.MousePosition))
             {
                 clicked = PlayerInput.LeftButtonHeld();
 
-                color = clicked ? new Color(100, 100, 100) : new Color(250, 250, 250);
+                color = clicked ? 
+                    new Color((int)(color.R * 0.8f), (int)(color.G * 0.8f), (int)(color.B * 0.8f), color.A) : 
+                    new Color((int)(color.R * 1.2f), (int)(color.G * 1.2f), (int)(color.B * 1.2f), color.A);
 
-                if (!isHoldable)
-                    clicked = PlayerInput.LeftButtonClicked();
+                if (!isHoldable) clicked = PlayerInput.LeftButtonClicked();
             }
 
             DrawRectangle(sb, rect, color, true);
-            sb.DrawString(Font, text, new Vector2(rect.X + 10, rect.Y + 10), Color.White);
+            
+            Vector2 origin;
+            try
+            {
+                origin = Font.MeasureString(text)/2;
+            }
+            catch
+            {
+                origin = Vector2.Zero;
+            }
+
+            sb.DrawString(Font, text, new Vector2(rect.Center.X, rect.Center.Y) , Color.White, 0.0f, origin, 1.0f, SpriteEffects.None, 0.0f);
 
             return clicked;
         }

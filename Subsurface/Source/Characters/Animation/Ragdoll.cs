@@ -815,25 +815,35 @@ namespace Barotrauma
             {
                 if (inWater)
                 {
-                    if (character is AICharacter)
+                    if (targetMovement.LengthSquared() > 0.01f)
                     {
                         correctionMovement =
-                            Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 8.0f, 0.1f, 8.0f), 0.5f);
+                            Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
                     }
                     else
                     {
-                        foreach (Limb limb in Limbs)
-                        {
-                            //if (limb.body.TargetPosition == Vector2.Zero) continue;
+                        refLimb.body.LinearVelocity = Vector2.Lerp(
+                                refLimb.LinearVelocity,
+                                Vector2.Normalize(diff) * MathHelper.Clamp(dist, 0.0f, 5.0f),
+                                0.2f);
 
-                            limb.body.SetTransform(limb.SimPosition + Vector2.Normalize(diff) * 0.1f, limb.Rotation);
-                        }
+                        //foreach (Limb limb in Limbs)
+                        //{
+                        //    //if (limb.body.TargetPosition == Vector2.Zero) continue;
+                        //   // Vector2.Lerp(limb.LinearVelocity, Vector2.Normalize(diff) * MathHelper.Clamp(dist, 0.0f, 1.0f))
+                        //    limb.body.LinearVelocity = Vector2.Lerp(
+                        //        limb.LinearVelocity,
+                        //        Vector2.Normalize(diff) * MathHelper.Clamp(dist, 0.0f, 5.0f), 
+                        //        0.2f);
+
+                        //   //limb.body.TargetVelocity .SetTransform(limb.SimPosition + Vector2.Normalize(diff) * 0.1f, limb.Rotation);
+                        //}
                     }
                 }
                 else
                 {
                     //clamp the magnitude of the correction movement between 0.5f - 5.0f
-                    Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.5f, 5.0f);
+                    Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist*2.0f, 0.5f, 5.0f);
 
                     //heading in the right direction -> use the ''normal'' movement if it's faster than correctionMovement
                     //i.e. the character is close to the targetposition but the character is still running

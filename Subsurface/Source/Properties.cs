@@ -193,7 +193,7 @@ namespace Barotrauma
             return editableProperties;
         }
 
-        public static Dictionary<string, ObjectProperty> GetProperties(object obj)        
+        public static Dictionary<string, ObjectProperty> GetProperties(IPropertyObject obj)        
         {
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
 
@@ -207,7 +207,12 @@ namespace Barotrauma
             return dictionary;
         }
 
-        public static Dictionary<string, ObjectProperty> InitProperties(object obj, XElement element)
+        public static Dictionary<string, ObjectProperty> InitProperties(IPropertyObject obj)
+        {
+            return InitProperties(obj, null);
+        }
+
+        public static Dictionary<string, ObjectProperty> InitProperties(IPropertyObject obj, XElement element)
         {
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
 
@@ -226,16 +231,19 @@ namespace Barotrauma
                 }
             }
             
-            //go through all the attributes in the xml element 
-            //and set the value of the matching property if it is initializable
-            foreach (XAttribute attribute in element.Attributes())
+            if (element!=null)
             {
-                ObjectProperty property = null;
-                if (!dictionary.TryGetValue(attribute.Name.ToString().ToLower(), out property)) continue;
-                if (!property.Attributes.OfType<HasDefaultValue>().Any()) continue;
-                property.TrySetValue(attribute.Value);
+                //go through all the attributes in the xml element 
+                //and set the value of the matching property if it is initializable
+                foreach (XAttribute attribute in element.Attributes())
+                {
+                    ObjectProperty property = null;
+                    if (!dictionary.TryGetValue(attribute.Name.ToString().ToLower(), out property)) continue;
+                    if (!property.Attributes.OfType<HasDefaultValue>().Any()) continue;
+                    property.TrySetValue(attribute.Value);
+                }            
             }
-            
+
             return dictionary;
         }
     

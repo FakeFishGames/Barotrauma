@@ -172,6 +172,29 @@ namespace Barotrauma
 
                     combined = true;
                 }
+                //if moving the item between slots in the same inventory
+                else if (item.ParentInventory == this)
+                {
+                    int currentIndex = Array.IndexOf(Items, item);
+
+                    Item existingItem = Items[index];
+
+                    Items[currentIndex] = null;
+                    Items[index] = null;
+                    //if the item in the slot can be moved to the slot of the moved item
+                    if (TryPutItem(existingItem, currentIndex, false) &&
+                        TryPutItem(item, index, false))
+                    {
+                        new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, Owner.ID, true, true);
+                    }
+                    else
+                    {
+                        //swapping the items failed -> move them back to where they were
+                        TryPutItem(item, currentIndex, false);
+                        TryPutItem(existingItem, index, false);
+                    }
+                    
+                }
 
                 return combined;
             }

@@ -157,8 +157,8 @@ namespace Barotrauma
 
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));
-
-            //Event.Init("Content/randomevents.xml");
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace Barotrauma
 
 
 
-            Hull.renderer = new WaterRenderer(GraphicsDevice);
+            Hull.renderer = new WaterRenderer(GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
@@ -353,7 +353,7 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
-
+           
             base.OnExiting(sender, args);
         }
 

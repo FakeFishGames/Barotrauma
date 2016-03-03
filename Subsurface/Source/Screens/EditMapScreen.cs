@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.IO;
 using System.Linq;
 
 namespace Barotrauma
@@ -291,7 +292,14 @@ namespace Barotrauma
                 return false;
             }
 
-            Submarine.SaveCurrent(nameBox.Text + ".sub");
+            string savePath = nameBox.Text + ".sub";
+
+            if (Submarine.Loaded != null)
+            {
+                savePath = Path.Combine(Path.GetDirectoryName(Submarine.Loaded.FilePath), savePath);
+            }
+
+            Submarine.SaveCurrent(savePath);
             Submarine.Loaded.CheckForErrors();
 
             GUI.AddMessage("Submarine saved to " + Submarine.Loaded.FilePath, Color.Green, 3.0f);

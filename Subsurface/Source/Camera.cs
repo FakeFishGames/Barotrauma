@@ -127,11 +127,11 @@ namespace Barotrauma
             //UpdateTransform();
         }
 
-        public void UpdateTransform()
+        public void UpdateTransform(bool interpolate = true)
         {
-            Vector2 interpolatedPosition = Physics.Interpolate(prevPosition, position);
+            Vector2 interpolatedPosition = interpolate ? Physics.Interpolate(prevPosition, position) : position;
 
-            float interpolatedZoom =  Physics.Interpolate(prevZoom, zoom);
+            float interpolatedZoom = interpolate ? Physics.Interpolate(prevZoom, zoom) : zoom;
 
             worldView.X = (int)(interpolatedPosition.X - worldView.Width / 2.0);
             worldView.Y = (int)(interpolatedPosition.Y + worldView.Height / 2.0);
@@ -149,6 +149,12 @@ namespace Barotrauma
                 viewMatrix;
             
             Sound.CameraPos = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
+
+            if (!interpolate)
+            {
+                prevPosition = position;
+                prevZoom = zoom;
+            }
         }
 
         public void MoveCamera(float deltaTime)
