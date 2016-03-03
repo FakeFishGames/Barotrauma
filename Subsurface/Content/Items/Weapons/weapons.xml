@@ -36,7 +36,7 @@
   
     <Sprite texture="weapons.png" sourcerect="0,25,98,25" depth="0.5"/>
 
-    <Body width="90" height="30" density="10"/>
+    <Body width="90" height="30" density="50"/>
 
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true"
               holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>

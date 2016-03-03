@@ -26,7 +26,8 @@ namespace Barotrauma
         public float lastSentDamage;
 
         public bool isHighLighted;
-        
+        public ConvexHull hull;
+
         public WallSection(Rectangle rect)
         {
             this.rect = rect;
@@ -45,7 +46,7 @@ namespace Barotrauma
         public static int wallSectionSize = 100;
         public static List<Structure> WallList = new List<Structure>();
 
-        ConvexHull convexHull;
+        List<ConvexHull> _convexHulls;
 
         StructurePrefab prefab;
 
@@ -125,9 +126,9 @@ namespace Barotrauma
                 }
             }
 
-            if (convexHull!=null)
+            if (_convexHulls!=null)
             {
-                convexHull.Move(amount);
+                _convexHulls.ForEach(x => x.Move(amount));
             }
             //if (gaps != null)
             //{
@@ -258,17 +259,71 @@ namespace Barotrauma
 
             if (prefab.CastShadow)
             {
-
-                Vector2[] corners = new Vector2[4];
-                corners[0] = new Vector2(rect.X, rect.Y - rect.Height);
-                corners[1] = new Vector2(rect.X, rect.Y);
-                corners[2] = new Vector2(rect.Right, rect.Y);
-                corners[3] = new Vector2(rect.Right, rect.Y - rect.Height);
-
-                convexHull = new ConvexHull(corners, Color.Black, this);
+                GeneateConvexHull();
             }
 
             InsertToList();
+        }
+
+        private void GeneateConvexHull()
+        {
+            // If not null and not empty , remove the hulls from the system
+            if(_convexHulls != null && _convexHulls.Any())
+                _convexHulls.ForEach(x => x.Remove());
+
+            // list all of hulls for this structure
+            _convexHulls = new List<ConvexHull>();
+
+            // merged sections
+            // TODO: merge damaged sections
+            var mergedSections = new List<WallSection>();
+            foreach (var section in sections)
+            {
+
+                // if there is a gap and we have sections to merge, do it.
+                if (section.gap != null)
+                    GenerateMergedHull(mergedSections);
+                else
+                    mergedSections.Add(section);
+            }
+
+            // take care of any leftover pieces
+            if (mergedSections.Count > 0)
+            {
+                GenerateMergedHull(mergedSections);
+            }
+        }
+
+        private void GenerateMergedHull(List<WallSection> mergedSections)
+        {
+            if (!mergedSections.Any()) return;
+            Rectangle mergedRect;
+
+
+            if (isHorizontal)
+                mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
+                    mergedSections.Sum(x => x.rect.Width), mergedSections.First().rect.Height);
+            else
+            {
+                mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
+                    mergedSections.First().rect.Width, mergedSections.Sum(x => x.rect.Height));
+            }
+
+
+            var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
+            mergedSections.ForEach(x => x.hull = h);
+            _convexHulls.Add(h);
+            mergedSections.Clear();
+        }
+
+        private static Vector2[] CalculateExtremes(Rectangle sectionRect)
+        {
+            Vector2[] corners = new Vector2[4];
+            corners[0] = new Vector2(sectionRect.X, sectionRect.Y - sectionRect.Height);
+            corners[1] = new Vector2(sectionRect.X, sectionRect.Y);
+            corners[2] = new Vector2(sectionRect.Right, sectionRect.Y);
+            corners[3] = new Vector2(sectionRect.Right, sectionRect.Y - sectionRect.Height);
+            return corners;
         }
 
         public override bool IsMouseOn(Vector2 position)
@@ -304,7 +359,7 @@ namespace Barotrauma
                     GameMain.World.RemoveBody(b);
             }
 
-            if (convexHull != null) convexHull.Remove();
+            if (_convexHulls != null) _convexHulls.ForEach(x => x.Remove());
         }
 
 
@@ -317,7 +372,7 @@ namespace Barotrauma
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
             prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
-            
+
             foreach (WallSection s in sections)
             {
 
@@ -329,14 +384,23 @@ namespace Barotrauma
                 }
 
                 s.isHighLighted = false;
-
+                
                 if (s.damage < 0.01f) continue;
                 
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
                     Color.Black * (s.damage / prefab.MaxHealth), true); 
             }
-            
+            /*
+            if(_convexHulls == null) return;
+            var rand = new Random(32434324);
+            foreach (var hull in _convexHulls)
+            {
+                if (sections.Count(x => x.hull == hull) <= 1)
+                    continue;
+                var col = new Color((int) (255 * rand.NextDouble()), (int)(255 * rand.NextDouble()), (int)(255 * rand.NextDouble()), 255);
+                GUI.DrawRectangle(spriteBatch,new Vector2 (hull.BoundingBox.X + drawOffset.X, -(hull.BoundingBox.Y + drawOffset.Y)), new Vector2(hull.BoundingBox.Width, hull.BoundingBox.Height),col,true );
+            }*/
         }
 
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
@@ -477,6 +541,7 @@ namespace Barotrauma
 
         private void SetDamage(int sectionIndex, float damage)
         {
+
             if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return;
             if (!prefab.HasBody) return;
 
@@ -495,6 +560,8 @@ namespace Barotrauma
                     //remove existing gap if damage is below 50%
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
+                    if(CastShadow)
+                        GeneateConvexHull();
                 }
             }
             else
@@ -507,6 +574,8 @@ namespace Barotrauma
                     gapRect.Width += 20;
                     gapRect.Height += 20;
                     sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
+                    if(CastShadow)
+                        GeneateConvexHull();
                 }
             }
 
@@ -518,12 +587,9 @@ namespace Barotrauma
 
             bool hasHole = SectionHasHole(sectionIndex);
 
-            if (hadHole != hasHole)
-            {
-                if (hasHole) Explosion.ApplyExplosionForces(sections[sectionIndex].gap.WorldPosition, 500.0f, 5.0f, 0.0f, 0.0f);
-                UpdateSections();
-            }
-
+            if (hadHole == hasHole) return;
+            if (hasHole) Explosion.ApplyExplosionForces(sections[sectionIndex].gap.WorldPosition, 500.0f, 5.0f, 0.0f, 0.0f);
+            UpdateSections();
         }
 
         private void UpdateSections()
@@ -533,53 +599,41 @@ namespace Barotrauma
                 GameMain.World.RemoveBody(b);
             }
             bodies.Clear();
-
-            int x = sections[0].rect.X;
-            int y = sections[0].rect.Y;
-            int width = sections[0].rect.Width;
-            int height = sections[0].rect.Height;
-
-            bool hasHoles = false;
-
-            for (int i = 1; i < sections.Length; i++)
+            var mergedSections = new List<WallSection>();
+            foreach (var section in sections)
             {
-                bool hasHole = SectionHasHole(i);
-                if (hasHole) hasHoles = true;
-                if (hasHole || i == sections.Length - 1)
-                {
-                    if (width > 0 && height > 0)
-                    {
-                        CreateRectBody(new Rectangle(x, y, width, height));
-                    }
-                    if (isHorizontal)
-                    {
-                        x = sections[i].rect.X+ sections[i].rect.Width;
-                        width = 0;
-                    }
-                    else
-                    {
-                        y = sections[i].rect.Y - sections[i].rect.Height;
-                        height = 0;
-                    }                    
-                }
+                if(section.gap == null)
+                    mergedSections.Add(section);
+                if (section.gap == null || mergedSections.Count <= 0) continue;
+                Rectangle mergedRect;
+                if (isHorizontal)
+                    mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
+                        mergedSections.Sum(x => x.rect.Width), mergedSections.First().rect.Height);
                 else
                 {
-                    if (isHorizontal) 
-                    {
-                        width += sections[i].rect.Width;
-                    }
-                    else
-                    {
-                       height += sections[i].rect.Height;
-                    }
+                    mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
+                        mergedSections.First().rect.Width, mergedSections.Sum(x => x.rect.Height));
                 }
+                CreateRectBody(mergedRect);
+            }
+            if (mergedSections.Count > 0)
+            {
+                Rectangle mergedRect;
+                if (isHorizontal)
+                    mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
+                        mergedSections.Sum(x => x.rect.Width), mergedSections.First().rect.Height);
+                else
+                {
+                    mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
+                        mergedSections.First().rect.Width, mergedSections.Sum(x => x.rect.Height));
+                }
+                CreateRectBody(mergedRect);
             }
 
-            if (hasHoles)
+            if (sections.Any(x => x.gap != null))
             {
                 CreateRectBody(rect).IsSensor = true;
             }
-
         }
 
         private Body CreateRectBody(Rectangle rect)
