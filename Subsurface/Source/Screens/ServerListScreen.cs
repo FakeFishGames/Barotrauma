@@ -293,17 +293,22 @@ namespace Barotrauma
                 return false;
             }
 
-            CoroutineManager.StartCoroutine(JoinServer(ip));
+            CoroutineManager.StartCoroutine(ConnectToServer(ip, serverList.Selected != null && (serverList.Selected.GetChild("password") as GUITickBox).Selected));
 
 
             return true;
         }
 
-        private IEnumerable<object> JoinServer(string ip)
+        public void JoinServer(string ip, bool hasPassword)
+        {
+            CoroutineManager.StartCoroutine(ConnectToServer(ip, hasPassword));
+        }
+
+        private IEnumerable<object> ConnectToServer(string ip, bool hasPassword)
         {
             string selectedPassword = "";
 
-            if (serverList.Selected!=null && (serverList.Selected.GetChild("password") as GUITickBox).Selected)
+            if (hasPassword)
             {
                 var msgBox = new GUIMessageBox("Password required:", "", new string[] { "OK", "Cancel" });
                 var passwordBox = new GUITextBox(new Rectangle(0,40,150,25), Alignment.TopLeft, GUI.Style, msgBox.children[0]);

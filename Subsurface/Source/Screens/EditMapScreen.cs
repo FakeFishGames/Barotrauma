@@ -298,6 +298,10 @@ namespace Barotrauma
             {
                 savePath = Path.Combine(Path.GetDirectoryName(Submarine.Loaded.FilePath), savePath);
             }
+            else
+            {
+                savePath = Path.Combine(Submarine.SavePath, savePath);
+            }
 
             Submarine.SaveCurrent(savePath);
             Submarine.Loaded.CheckForErrors();

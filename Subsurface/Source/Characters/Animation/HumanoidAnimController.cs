@@ -875,15 +875,17 @@ namespace Barotrauma
 
             Vector2 itemPos = aim ? aimPos : holdPos;
 
+            bool usingController = character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null;
+
+
             float itemAngle;
-            if (Anim != Animation.Climbing && stunTimer <= 0.0f && aim && itemPos != Vector2.Zero)
+            if (Anim != Animation.Climbing && !usingController && stunTimer <= 0.0f && aim && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
                 Vector2 diff = (mousePos - torso.SimPosition) * Dir;
 
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
-                //holdAngle = MathHelper.Clamp(MathUtils.WrapAnglePi(holdAngle), -1.3f, 1.0f);
 
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
 
@@ -909,7 +911,7 @@ namespace Barotrauma
             Vector2 shoulderPos = limbJoints[2].WorldAnchorA;
             Vector2 transformedHoldPos = shoulderPos;
 
-            if (itemPos == Vector2.Zero || Anim == Animation.Climbing || (leftHand.Disabled && rightHand.Disabled))
+            if (itemPos == Vector2.Zero || Anim == Animation.Climbing || usingController)
             {
                 if (character.SelectedItems[1] == item)
                 {

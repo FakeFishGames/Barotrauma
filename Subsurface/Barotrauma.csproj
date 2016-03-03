@@ -142,6 +142,7 @@
     <Compile Include="Source\Networking\GameServerSettings.cs" />
     <Compile Include="Source\Screens\NetLobbyVoting.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
+    <Compile Include="Source\Utils\MTRandom.cs" />
     <Compile Include="Source\Utils\Rand.cs" />
     <Compile Include="Source\Events\PropertyTask.cs" />
     <Compile Include="Source\Events\RepairTask.cs" />

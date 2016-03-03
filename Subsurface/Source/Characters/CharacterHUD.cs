@@ -96,6 +96,8 @@ namespace Barotrauma
                 }
             }
 
+            if (Screen.Selected == GameMain.EditMapScreen) return;
+
             if (character.Oxygen < 50.0f && !character.IsDead)
             {
                 Vector2 offset = Rand.Vector(noiseOverlay.size.X);

@@ -3,6 +3,12 @@ v0.3.4.0
 ---------------------------------------------------------------------------------------------------------
 
 Multiplayer:
+
+---------------------------------------------------------------------------------------------------------
+v0.3.4.0
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
 - missing submarine files can be downloaded from the server host
 - player syncing bugfixes (aiming is visible to other players, smoother movement in water)
 - creature syncing bugfixes (less teleporting around)

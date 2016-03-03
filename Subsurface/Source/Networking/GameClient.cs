@@ -289,7 +289,15 @@ namespace Barotrauma.Networking
                             {
                                 string denyMessage = inc.ReadString();
 
-                                new GUIMessageBox("Couldn't connect to server", denyMessage);
+                                if (denyMessage == "Password required!" || denyMessage == "Wrong password!")
+                                {
+                                    GameMain.ServerListScreen.JoinServer(serverIP, true);
+                                }
+                                else
+                                {
+                                    new GUIMessageBox("Couldn't connect to server", denyMessage);
+                                }
+
                                 connectCanceled = true;
                             }
 
