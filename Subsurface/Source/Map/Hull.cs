@@ -469,8 +469,7 @@ namespace Barotrauma
             var uplift = -GameMain.World.Gravity*(forceFactor - body.body.LinearVelocity.Y*5);
             body.body.FarseerBody.ApplyForce(uplift*deltaTime);
 
-            var gap =
-                ConnectedGaps.Where(i => i.Open > 0).OrderBy(i => Vector2.Distance(body.Position, i.Position)).FirstOrDefault();
+            var gap = ConnectedGaps.Where(i => i.Open > 0).OrderBy(i => i.LerpedFlowForce.Length()).FirstOrDefault();
             if (gap == null || gap.LerpedFlowForce.Length() < 0)
                 return;
             var pos = gap.Position - body.Position;
