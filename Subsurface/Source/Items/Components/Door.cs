@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
 
             if (convexHull == null) return;
 
-            if (rect.Height == 0)
+            if (rect.Height == 0 || rect.Width == 0)
             {
                 convexHull.Enabled = false;
             }
