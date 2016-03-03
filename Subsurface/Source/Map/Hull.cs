@@ -12,7 +12,7 @@ using Lidgren.Network;
 namespace Barotrauma
 {
 
-    class Hull : MapEntity
+    class Hull : MapEntity, IPropertyObject
     {
         public static List<Hull> hullList = new List<Hull>();
         private static EntityGrid entityGrid;
@@ -20,7 +20,7 @@ namespace Barotrauma
         public static bool ShowHulls = true;
 
         public static bool EditWater, EditFire;
-
+        
         public static WaterRenderer renderer;
 
         private List<FireSource> fireSources;
@@ -37,7 +37,11 @@ namespace Barotrauma
         //how much excess water the room can contain  (= more than the volume of the room)
         public const float MaxCompress = 10000f;
         
-        public readonly Dictionary<string, PropertyDescriptor> properties;
+        public readonly Dictionary<string, ObjectProperty> properties;
+        public Dictionary<string, ObjectProperty> ObjectProperties
+        {
+            get { return properties; }
+        }
 
         private float lethalPressure;
 
@@ -68,6 +72,21 @@ namespace Barotrauma
             get
             {
                 return "Hull";
+            }
+        }
+
+        public override Rectangle Rect
+        {
+            get
+            {
+                return base.Rect;
+            }
+            set
+            {
+                base.Rect = value;
+
+                Item.UpdateHulls();
+                Gap.UpdateHulls();
             }
         }
 
@@ -148,13 +167,13 @@ namespace Barotrauma
         }
 
         public Hull(MapEntityPrefab prefab, Rectangle rectangle)
-            : this (rectangle, Submarine.Loaded)
+            : this (prefab, rectangle, Submarine.Loaded)
         {
 
         }
 
-        public Hull(Rectangle rectangle, Submarine submarine)
-            : base (submarine)
+        public Hull(MapEntityPrefab prefab, Rectangle rectangle, Submarine submarine)
+            : base (prefab, submarine)
         {
             rect = rectangle;
             
@@ -162,9 +181,7 @@ namespace Barotrauma
 
             fireSources = new List<FireSource>();
 
-            properties = TypeDescriptor.GetProperties(GetType())
-                .Cast<PropertyDescriptor>()
-                .ToDictionary(pr => pr.Name);
+            properties = ObjectProperty.GetProperties(this);
 
             int arraySize = (rectangle.Width / WaveWidth + 1);
             waveY = new float[arraySize];
@@ -433,11 +450,6 @@ namespace Barotrauma
                     }
                     update = false;
                 }
-            }
-            else
-            {
-                
-                LethalPressure += ( Submarine.Loaded!=null && Submarine.Loaded.AtDamageDepth) ? 100.0f*deltaTime : 10.0f * deltaTime;
             }
         }
 
@@ -720,7 +732,7 @@ namespace Barotrauma
                     int.Parse(element.Attribute("height").Value));
             }
 
-            Hull h = new Hull(rect, submarine);
+            Hull h = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), rect, submarine);
 
             h.volume = ToolBox.GetAttributeFloat(element, "pressure", 0.0f);
 

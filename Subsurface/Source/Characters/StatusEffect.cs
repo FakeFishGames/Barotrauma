@@ -10,9 +10,9 @@ namespace Barotrauma
     class StatusEffect
     {
         [Flags]
-        public enum TargetType 
+        public enum TargetType
         {
-            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget=32
+            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget = 32, Hull = 64
         }
         
         private TargetType targetTypes;
@@ -273,26 +273,32 @@ namespace Barotrauma
             if (disableDeltaTime) deltaTime = 1.0f;
 
             Type type = value.GetType();
-            if (type == typeof(float))
+            if (type == typeof(float) ||
+                (type == typeof(int) && property.GetValue().GetType() == typeof(float)))
             {
-                float floatValue = (float)value * deltaTime;
+                float floatValue = Convert.ToSingle(value) * deltaTime;
                 
                 if (!setValue) floatValue += (float)property.GetValue();
                 property.TrySetValue(floatValue);
             }
-            else if (type == typeof(int))
+            else if (type == typeof(int) && value.GetType()==typeof(int))
             {
                 int intValue = (int)((int)value * deltaTime);
                 if (!setValue) intValue += (int)property.GetValue();
                 property.TrySetValue(intValue);
             }
-            else if (type == typeof(bool))
+            else if (type == typeof(bool) && value.GetType() == typeof(bool))
             {
                 property.TrySetValue((bool)value);
             }
             else if (type == typeof(string))
             {
                 property.TrySetValue((string)value);
+            }
+            else
+            {
+                DebugConsole.ThrowError("Couldn't apply value "+value.ToString()+" ("+type+") to property ''"+property.Name+"'' ("+property.GetValue().GetType()+")! "
+                    +"Make sure the type of the value set in the config files matches the type of the property.");
             }
         }
 

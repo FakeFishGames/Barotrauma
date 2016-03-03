@@ -1,6 +1,0 @@
-Content\SpriteFont1.xnb
-Content\SmallFont.xnb
-Content\LargeFont.xnb
-Content\SpriteFont1.spritefont
-Content\SmallFont.spritefont
-Content\LargeFont.spritefont

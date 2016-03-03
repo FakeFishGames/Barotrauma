@@ -226,25 +226,32 @@ namespace Barotrauma
                 if (dist > 1000.0f)
                 {
                     Vector2 moveAmount = ConvertUnits.ToSimUnits((Vector2)targetPosition) - body.Position;
-                    Vector2 displayerMoveAmount = ConvertUnits.ToDisplayUnits(moveAmount);
+                    Vector2 displayMoveAmount = ConvertUnits.ToDisplayUnits(moveAmount);
 
                     body.SetTransform(body.Position + moveAmount, 0.0f);
-                    if (Character.Controlled != null) Character.Controlled.CursorPosition += displayerMoveAmount;
+                    if (Character.Controlled != null) Character.Controlled.CursorPosition += displayMoveAmount;
 
-                    GameMain.GameScreen.Cam.Position += displayerMoveAmount;
-                    GameMain.GameScreen.Cam.UpdateTransform();
+                    GameMain.GameScreen.Cam.Position += displayMoveAmount;
+                    if (GameMain.GameScreen.Cam.TargetPos!=Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += displayMoveAmount;
+                    GameMain.GameScreen.Cam.UpdateTransform(false);
+
+                    submarine.SetPrevTransform(submarine.Position);
+                    submarine.UpdateTransform();
                     targetPosition = null;
                 }
                 else if (dist > 50.0f)
                 {
                     Vector2 moveAmount = Vector2.Normalize((Vector2)targetPosition - Position);
                     moveAmount *= ConvertUnits.ToSimUnits(Math.Min(dist, 100.0f));
-                    Vector2 displayerMoveAmount = ConvertUnits.ToDisplayUnits(moveAmount);
+                    Vector2 displayMoveAmount = ConvertUnits.ToDisplayUnits(moveAmount);
 
                     body.SetTransform(body.Position + moveAmount * deltaTime, 0.0f);
 
-                    GameMain.GameScreen.Cam.Position += displayerMoveAmount * deltaTime;
-                    if (Character.Controlled != null) Character.Controlled.CursorPosition += displayerMoveAmount;
+                    GameMain.GameScreen.Cam.Position += displayMoveAmount * deltaTime;
+                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += displayMoveAmount;
+                    if (Character.Controlled != null) Character.Controlled.CursorPosition += displayMoveAmount;
+
+                    //GameMain.GameScreen.Cam.UpdateTransform(false);
                 }
                 else
                 {

@@ -909,9 +909,8 @@ namespace Barotrauma
             Vector2 shoulderPos = limbJoints[2].WorldAnchorA;
             Vector2 transformedHoldPos = shoulderPos;
 
-            if (itemPos == Vector2.Zero || Anim == Animation.Climbing)
+            if (itemPos == Vector2.Zero || Anim == Animation.Climbing || (leftHand.Disabled && rightHand.Disabled))
             {
-
                 if (character.SelectedItems[1] == item)
                 {
                     transformedHoldPos = leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];

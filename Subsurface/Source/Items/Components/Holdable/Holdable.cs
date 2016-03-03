@@ -252,7 +252,7 @@ namespace Barotrauma.Items.Components
 
             item.Submarine = picker.Submarine;
 
-            if (picker.SelectedConstruction != null && picker.SelectedConstruction.GetComponent<Controller>() != null) return;
+            //if (picker.SelectedConstruction != null && picker.SelectedConstruction.GetComponent<Controller>() != null) return;
 
             //item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;            
 

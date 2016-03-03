@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         public static Queue<GUIComponent> MessageBoxes = new Queue<GUIComponent>();
 
-        const int DefaultWidth=400, DefaultHeight=200;
+        const int DefaultWidth=400, DefaultHeight=250;
 
         //public delegate bool OnClickedHandler(GUIButton button, object obj);
         //public OnClickedHandler OnClicked;

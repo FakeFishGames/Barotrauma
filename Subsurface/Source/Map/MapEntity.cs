@@ -23,7 +23,9 @@ namespace Barotrauma
         protected static Vector2 selectionSize = Vector2.Zero;
 
         protected static Vector2 startMovingPos = Vector2.Zero;
-        
+
+        private MapEntityPrefab prefab;
+
         protected List<ushort> linkedToID;
 
         //observable collection because some entities may need to be notified when the collection is modified
@@ -66,6 +68,9 @@ namespace Barotrauma
         
         //the position and dimensions of the entity
         protected Rectangle rect;
+
+        private static bool resizing;
+        private int resizeDirX, resizeDirY;
         
         public virtual Rectangle Rect { 
             get { return rect; }
@@ -139,12 +144,24 @@ namespace Barotrauma
             set { isSelected = value; }
         }
 
+        protected bool ResizeHorizontal
+        {
+            get { return prefab == null ? false : prefab.ResizeHorizontal; }
+        }
+        protected bool ResizeVertical
+        {
+            get { return prefab == null ? false : prefab.ResizeVertical; }
+        }
+
         public virtual string Name
         {
             get { return ""; }
         }
 
-        public MapEntity(Submarine submarine) : base(submarine) { }
+        public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine) 
+        {
+            this.prefab = prefab;
+        }
 
         public virtual void Move(Vector2 amount) 
         {
@@ -232,6 +249,12 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateSelecting(Camera cam)
         {
+            if (resizing)
+            {
+                if (selectedList.Count == 0) resizing = false;
+                return;
+            }
+
             foreach (MapEntity e in mapEntityList)
             {
                 e.isHighlighted = false;
@@ -245,7 +268,7 @@ namespace Barotrauma
             }
 
             if (GUIComponent.MouseOn != null || !PlayerInput.MouseInsideWindow) return;
-
+            
             if (MapEntityPrefab.Selected != null)
             {
                 selectionPos = Vector2.Zero;
@@ -412,6 +435,11 @@ namespace Barotrauma
             if (selectedList.Count == 1)
             {
                 selectedList[0].DrawEditing(spriteBatch, cam);
+
+                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
+                {
+                    selectedList[0].DrawResizing(spriteBatch, cam);
+                }
             }
             else
             {
@@ -442,6 +470,89 @@ namespace Barotrauma
         }
         
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) {}
+
+        private void DrawResizing(SpriteBatch spriteBatch, Camera cam)
+        {
+            isHighlighted = true;
+
+            int startX = ResizeHorizontal ? -1 : 0;
+            int StartY = ResizeVertical ? -1 : 0;
+
+            for (int x = startX; x < 2; x += 2)
+            {
+                for (int y = StartY; y < 2; y += 2)
+                {
+                    
+                    Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f + 5), y * (rect.Height * 0.5f + 5)));
+
+                    bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos)<5.0f;
+
+                    GUI.DrawRectangle(spriteBatch, handlePos - new Vector2(3.0f, 3.0f), new Vector2(6.0f, 6.0f), Color.White * (highlighted ? 1.0f : 0.6f), true);
+
+                    if (highlighted)
+                    {
+                        if (PlayerInput.LeftButtonDown())
+                        {
+                            selectionPos = Vector2.Zero;
+                            resizeDirX = x;
+                            resizeDirY = y;
+                            resizing = true;
+                        }
+                    }
+                }
+            }
+
+            if (resizing)
+            {
+
+                Vector2 placePosition = new Vector2(rect.X, rect.Y);
+                Vector2 placeSize = new Vector2(rect.Width, rect.Height);
+
+                Vector2 mousePos = Submarine.MouseToWorldGrid(cam);
+
+                if (resizeDirX >0)
+                {
+                    mousePos.X = Math.Max(mousePos.X, rect.X + Submarine.GridSize.X);
+                    placeSize.X = mousePos.X - placePosition.X;
+                }
+                else if (resizeDirX <0)
+                {
+                    mousePos.X = Math.Min(mousePos.X, rect.Right - Submarine.GridSize.X);
+
+                    placeSize.X = (placePosition.X + placeSize.X)-mousePos.X;
+                    placePosition.X = mousePos.X;
+                }
+                if (resizeDirY < 0)
+                {
+                    mousePos.Y = Math.Min(mousePos.Y, rect.Y - Submarine.GridSize.Y);
+                    placeSize.Y = placePosition.Y-mousePos.Y;
+                }
+                else if (resizeDirY > 0)
+                {
+                    mousePos.Y = Math.Max(mousePos.Y, rect.Y - rect.Height + Submarine.GridSize.X);
+
+                    placeSize.Y = mousePos.Y - (rect.Y - rect.Height);
+                    placePosition.Y = mousePos.Y;
+                }
+
+                if ((int)placePosition.X != rect.X || (int)placePosition.Y != rect.Y || (int)placeSize.X != rect.Width || (int)placeSize.Y != rect.Height)
+                {
+                    Rect = new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y);
+                }
+
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    resizing = false;
+                }
+
+                //if (resizeHorizontal) placeSize.X = position.X - placePosition.X;
+                //if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
+
+                //Rectangle newRect = Submarine.AbsRect(placePosition, placeSize);
+                //newRect.Width = (int)Math.Max(newRect.Width, Submarine.GridSize.X);
+                //newRect.Height = (int)Math.Max(newRect.Height, Submarine.GridSize.Y);
+            }
+        }
 
         public static List<MapEntity> FindMapEntities(Vector2 pos)
         {
@@ -518,13 +629,6 @@ namespace Barotrauma
             {
                 mapEntityList[i].OnMapLoaded();
             }
-
-
-
-            //mapEntityList.Sort((x, y) =>
-            //{
-            //    return x.Name.CompareTo(y.Name);
-            //});
         }
 
 

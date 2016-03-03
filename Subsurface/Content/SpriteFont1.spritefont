@@ -41,7 +41,7 @@ with.
     If you uncomment this line, the default character will be substituted if you draw
     or measure text that contains characters which were not included in the font.
     -->
-    <!-- <DefaultCharacter>*</DefaultCharacter> -->
+    <DefaultCharacter>_</DefaultCharacter>
 
     <!--
     CharacterRegions control what letters are available in the font. Every
@@ -53,8 +53,13 @@ with.
     <CharacterRegions>
       <CharacterRegion>
         <Start>&#32;</Start>
-        <End>&#159;</End>
+        <End>&#1200;</End>
       </CharacterRegion>
+
+      <CharacterRegion>
+        <Start>&#192;</Start>
+        <End>&#601;</End>
+      </CharacterRegion>   
     </CharacterRegions>
   </Asset>
 </XnaContent>

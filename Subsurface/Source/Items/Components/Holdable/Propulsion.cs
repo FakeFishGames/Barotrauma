@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
-                    if (limb.WearingItems.Find(w => w.WearableComponent.Item != this.item)==null) continue;
+                    if (limb.WearingItems.Find(w => w.WearableComponent.Item == this.item)==null) continue;
 
                     limb.body.ApplyForce(propulsion);
                 }

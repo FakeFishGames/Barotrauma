@@ -155,24 +155,28 @@ namespace Barotrauma
             if (held) heldQueue = true;
         }
 
-		public bool Dequeue
+		public bool DequeueHit()
 		{
-			get
-			{
-				bool value = hitQueue;
-				hitQueue = false;
-				return value;
-			}
+			bool value = hitQueue;
+			hitQueue = false;
+			return value;			
 		}
 
-        public bool DequeueHeld
+        public bool DequeueHeld()
         {
-            get
-            {
-                bool value = heldQueue;
-                heldQueue = false;
-                return value;
-            }
+            bool value = heldQueue;
+            heldQueue = false;
+            return value;            
+        }
+
+        public bool GetHeldQueue
+        {
+            get { return heldQueue; }
+        }
+
+        public bool GetHitQueue
+        {
+            get { return hitQueue; }
         }
 
 

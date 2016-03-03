@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -18,6 +20,8 @@ namespace Barotrauma.Networking
 
     partial class GameServer : NetworkMember 
     {
+        public const string SettingsFile = "serversettings.xml";
+
         public bool ShowNetStats;
 
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
@@ -44,6 +48,8 @@ namespace Barotrauma.Networking
         private bool endRoundAtLevelEnd = true;
 
         private bool saveServerLogs = true;
+
+        private bool allowFileTransfers = true;
 
         public bool AutoRestart
         {
@@ -89,15 +95,112 @@ namespace Barotrauma.Networking
 
         public float EndVoteRequiredRatio = 0.5f;
 
+        private void SaveSettings()
+        {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.NewLineOnAttributes = true;
+
+            using (var writer = XmlWriter.Create(SettingsFile, settings))
+            {
+                writer.WriteStartElement("serversettings");
+                writer.WriteAttributeString("AllowSpectating", allowSpectating.ToString());
+                writer.WriteAttributeString("RandomizeSeed", randomizeSeed.ToString());
+
+                writer.WriteAttributeString("EndRoundAtLevelEnd", endRoundAtLevelEnd.ToString());
+                writer.WriteAttributeString("AllowFileTransfers", allowFileTransfers.ToString());
+                writer.WriteAttributeString("MaxFileTransferDuration", ((int)FileStreamSender.MaxTransferDuration.TotalSeconds).ToString());
+                writer.WriteAttributeString("SaveServerLogs", saveServerLogs.ToString());
+                writer.WriteAttributeString("LinesPerLogFile", log.LinesPerFile.ToString());
+                writer.WriteAttributeString("SubSelection", subSelectionMode.ToString());
+                writer.WriteAttributeString("ModeSelection", modeSelectionMode.ToString());
+
+                writer.Flush();
+            }
+        }
+
+        private void LoadSettings()
+        {
+            XDocument doc = null;
+            if (System.IO.File.Exists(SettingsFile))
+            {
+                doc = ToolBox.TryLoadXml(SettingsFile);
+            }
+            else
+            {
+                return;
+            }
+
+            if (doc == null)
+            {
+                doc = new XDocument(new XElement("serversettings"));
+            }
+
+            allowSpectating = ToolBox.GetAttributeBool(doc.Root, "AllowSpectating", true);
+            randomizeSeed = ToolBox.GetAttributeBool(doc.Root, "RandomizeSeed", true);
+            endRoundAtLevelEnd = ToolBox.GetAttributeBool(doc.Root, "EndRoundAtLevelEnd", true);
+            allowFileTransfers = ToolBox.GetAttributeBool(doc.Root, "AllowFileTransfers", true);
+
+            saveServerLogs = ToolBox.GetAttributeBool(doc.Root, "SaveServerLogs", true);
+            log.LinesPerFile = ToolBox.GetAttributeInt(doc.Root, "LinesPerLogFile", 800);
+
+            subSelectionMode = SelectionMode.Manual;
+            Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "SubSelection", "Manual"), out subSelectionMode);
+
+            modeSelectionMode = SelectionMode.Manual;
+            Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
+
+            FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));            
+        }
+
         private void CreateSettingsFrame()
         {
             settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
+            
 
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 400), null, Alignment.Center, GUI.Style, settingsFrame);
+            innerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0, -15, 0, 20), "Server settings", GUI.Style, innerFrame, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, -5, 0, 20), "Server settings", GUI.Style, innerFrame, GUI.LargeFont);
 
-            var randomizeLevelBox = new GUITickBox(new Rectangle(0, 30, 20, 20), "Randomize level seed between rounds", Alignment.Left, innerFrame);
+            int y = 40;
+
+            var endBox = new GUITickBox(new Rectangle(0, y, 20, 20), "End round when destination reached", Alignment.Left, innerFrame);
+            endBox.Selected = endRoundAtLevelEnd;
+            endBox.OnSelected = (GUITickBox) => { endRoundAtLevelEnd = GUITickBox.Selected; return true; };
+
+
+            y += 30;
+            var endVoteBox = new GUITickBox(new Rectangle(0, y, 20, 20), "End round by voting", Alignment.Left, innerFrame);
+            endVoteBox.Selected = Voting.AllowEndVoting;
+            endVoteBox.OnSelected = (GUITickBox) =>
+            {
+                Voting.AllowEndVoting = !Voting.AllowEndVoting;
+                GameMain.Server.UpdateVoteStatus();
+                return true;
+            };
+
+            var votesRequiredText = new GUITextBlock(new Rectangle(20, y+20, 20, 20), "Votes required: 50 %", GUI.Style, innerFrame, GUI.SmallFont);
+
+            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y+22, 100, 10), GUI.Style, 0.1f, innerFrame);
+            votesRequiredSlider.UserData = votesRequiredText;
+            votesRequiredSlider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
+            votesRequiredSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
+
+                scrollBar.BarScroll = MathUtils.Round(barScroll, 0.2f);
+                EndVoteRequiredRatio = barScroll / 2.0f + 0.5f;
+                voteText.Text = "Votes required: " + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
+                return true;
+            };
+            votesRequiredSlider.OnMoved(votesRequiredSlider, votesRequiredSlider.BarScroll);
+
+            y += 40;
+
+
+
+            var randomizeLevelBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Randomize level seed between rounds", Alignment.Left, innerFrame);
             randomizeLevelBox.Selected = randomizeSeed;
             randomizeLevelBox.OnSelected = (GUITickBox) =>
             {
@@ -105,37 +208,23 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            var endBox = new GUITickBox(new Rectangle(0, 60, 20, 20), "End round when destination reached", Alignment.Left, innerFrame);
-            endBox.Selected = endRoundAtLevelEnd;
-            endBox.OnSelected = (GUITickBox) => { endRoundAtLevelEnd = GUITickBox.Selected; return true; };
 
-            var endVoteBox = new GUITickBox(new Rectangle(0, 90, 20, 20), "End round by voting", Alignment.Left, innerFrame);
-            endVoteBox.Selected = Voting.AllowEndVoting;
-            endVoteBox.OnSelected = (GUITickBox) => 
+            y += 40;
+
+            var shareSubsBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Share submarine files with players", Alignment.Left, innerFrame);
+            shareSubsBox.Selected = allowFileTransfers;
+            shareSubsBox.OnSelected = (GUITickBox) =>
             {
-                Voting.AllowEndVoting = !Voting.AllowEndVoting;
-                GameMain.Server.UpdateVoteStatus();
-                return true; 
-            };
-
-            var votesRequiredText = new GUITextBlock(new Rectangle(20, 110, 20, 20), "Votes required: 50 %", GUI.Style, innerFrame, GUI.SmallFont);
-
-            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150,115, 100, 10), GUI.Style, 0.1f, innerFrame);
-            votesRequiredSlider.UserData = votesRequiredText;
-            votesRequiredSlider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
-            votesRequiredSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
-            {
-                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
-                    
-                scrollBar.BarScroll = MathUtils.Round(barScroll, 0.2f);
-                EndVoteRequiredRatio = barScroll/2.0f + 0.5f;
-                voteText.Text = "Votes required: " + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
+                allowFileTransfers = GUITickBox.Selected;
                 return true;
             };
-            votesRequiredSlider.OnMoved(votesRequiredSlider, votesRequiredSlider.BarScroll);
 
-            new GUITextBlock(new Rectangle(0, 95+50, 100, 20), "Submarine selection:", GUI.Style, innerFrame);
-            var selectionFrame = new GUIFrame(new Rectangle(0, 120 + 50, 300, 20), null, innerFrame);
+
+            y += 40;
+
+
+            new GUITextBlock(new Rectangle(0, y, 100, 20), "Submarine selection:", GUI.Style, innerFrame);
+            var selectionFrame = new GUIFrame(new Rectangle(0, y+20, 300, 20), null, innerFrame);
             for (int i = 0; i<3; i++)
             {
                 var selectionTick = new GUITickBox(new Rectangle(i * 100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
@@ -144,8 +233,10 @@ namespace Barotrauma.Networking
                 selectionTick.UserData = (SelectionMode)i;
             }
 
-            new GUITextBlock(new Rectangle(0, 145 + 50, 100, 20), "Mode selection:", GUI.Style, innerFrame);
-            selectionFrame = new GUIFrame(new Rectangle(0, 170 + 50, 300, 20), null, innerFrame);
+            y += 45;
+
+            new GUITextBlock(new Rectangle(0, y, 100, 20), "Mode selection:", GUI.Style, innerFrame);
+            selectionFrame = new GUIFrame(new Rectangle(0, y+20, 300, 20), null, innerFrame);
             for (int i = 0; i<3; i++)
             {
                 var selectionTick = new GUITickBox(new Rectangle(i*100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
@@ -154,7 +245,9 @@ namespace Barotrauma.Networking
                 selectionTick.UserData = (SelectionMode)i;
             }
 
-            var allowSpecBox = new GUITickBox(new Rectangle(0, 210 + 50, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
+            y += 60;
+
+            var allowSpecBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow spectating", Alignment.Left, innerFrame);
             allowSpecBox.Selected = allowSpectating;
             allowSpecBox.OnSelected = (GUITickBox) =>
             {
@@ -162,7 +255,9 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            var saveLogsBox = new GUITickBox(new Rectangle(0, 240 + 50, 20, 20), "Save server logs", Alignment.Left, innerFrame);
+            y += 30;
+
+            var saveLogsBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Save server logs", Alignment.Left, innerFrame);
             saveLogsBox.Selected = saveServerLogs;
             saveLogsBox.OnSelected = (GUITickBox) =>
             {
@@ -225,6 +320,7 @@ namespace Barotrauma.Networking
             else
             {
                 settingsFrame = null;
+                SaveSettings();
             }
 
             return false;

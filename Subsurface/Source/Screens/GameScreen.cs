@@ -177,7 +177,7 @@ namespace Barotrauma
             //{
             //    cam.TargetPos = Character.Controlled.WorldPosition;
             //}
-
+            
             cam.UpdateTransform();
 
             DrawMap(graphics, spriteBatch);
@@ -200,6 +200,8 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
 
+            if (Character.Controlled == null && Submarine.Loaded != null) DrawSubmarineIndicator(spriteBatch, Submarine.Loaded);
+            
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         
             if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
@@ -347,6 +349,26 @@ namespace Barotrauma
             spriteBatch.End();
 
             GameMain.LightManager.DrawLOS(graphics, spriteBatch, cam);
+        }
+
+        private void DrawSubmarineIndicator(SpriteBatch spriteBatch, Submarine submarine)
+        {
+            Vector2 subDiff = submarine.WorldPosition - cam.Position;
+
+            if (Math.Abs(subDiff.X) > cam.WorldView.Width || Math.Abs(subDiff.Y) > cam.WorldView.Height)
+            {
+                Vector2 normalizedSubDiff = Vector2.Normalize(subDiff);
+
+                Vector2 iconPos =
+                    cam.WorldToScreen(cam.Position) +
+                    new Vector2(normalizedSubDiff.X * GameMain.GraphicsWidth * 0.4f, -normalizedSubDiff.Y * GameMain.GraphicsHeight * 0.4f);
+
+                GUI.SubmarineIcon.Draw(spriteBatch, iconPos, Color.LightBlue * 0.5f);
+
+                Vector2 arrowOffset = normalizedSubDiff * GUI.SubmarineIcon.size.X * 0.7f;
+                arrowOffset.Y = -arrowOffset.Y;
+                GUI.Arrow.Draw(spriteBatch, iconPos + arrowOffset, Color.LightBlue * 0.5f, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
+            }
         }
     }
 }

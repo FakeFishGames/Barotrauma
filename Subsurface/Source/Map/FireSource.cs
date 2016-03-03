@@ -116,11 +116,13 @@ namespace Barotrauma
 
                     if (!fireSources[i].CheckOverLap(fireSources[j])) continue;
 
-                    fireSources[j].position.X = Math.Min(fireSources[i].position.X, fireSources[j].position.X);
+                    float leftEdge = Math.Min(fireSources[i].position.X, fireSources[j].position.X);
 
                     fireSources[j].size.X =
                         Math.Max(fireSources[i].position.X + fireSources[i].size.X, fireSources[j].position.X + fireSources[j].size.X)
-                        - fireSources[j].position.X;
+                        - leftEdge;
+
+                    fireSources[j].position.X = leftEdge;
 
                     fireSources[i].Remove();
                 }
@@ -140,7 +142,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            float count = Rand.Range(0.0f, (float)Math.Sqrt(size.X)/3.0f);
+            float count = Rand.Range(0.0f, size.X/50.0f);
 
             if (fireSoundBasic != null)
             {
@@ -173,10 +175,10 @@ namespace Barotrauma
                     spawnPos, speed, 0.0f, hull);
 
                 if (particle == null) continue;
-
+                
                 if (Rand.Int(20) == 1) particle.OnChangeHull = OnChangeHull;
 
-                particle.Size *= MathHelper.Clamp(size.X/100.0f * Math.Max(hull.Oxygen/hull.FullVolume, 0.4f), 0.5f, 4.0f);
+                particle.Size *= MathHelper.Clamp(size.X/60.0f * Math.Max(hull.Oxygen/hull.FullVolume, 0.4f), 0.5f, 3.0f);
 
                 if (size.X < 100.0f) continue;
 
@@ -218,7 +220,7 @@ namespace Barotrauma
 
             if (particleHull.FireSources.Find(fs => pos.X > fs.position.X-100.0f && pos.X < fs.position.X+fs.size.X+100.0f)!=null) return;
 
-            new FireSource(new Vector2(pos.X, particleHull.Rect.Y-particleHull.Rect.Height + 5.0f));
+            new FireSource(new Vector2(pos.X, particleHull.WorldRect.Y-particleHull.Rect.Height + 5.0f));
         }
 
         private void DamageCharacters(float deltaTime)

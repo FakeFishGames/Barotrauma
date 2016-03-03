@@ -53,6 +53,8 @@ namespace Barotrauma
 
         public readonly bool IsNetworkPlayer;
 
+        private bool networkUpdateSent;
+
         private CharacterInventory inventory;
 
         public float LastNetworkUpdate;
@@ -955,6 +957,17 @@ namespace Barotrauma
 
             if (isDead) return;
 
+            if (networkUpdateSent)
+            {
+                foreach (Key key in keys)
+                {
+                    key.DequeueHit();
+                    key.DequeueHeld();
+                }
+
+                networkUpdateSent = false;
+            }
+
             if (needsAir)
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
@@ -1421,9 +1434,9 @@ namespace Barotrauma
 
                     return true;
                 case NetworkEventType.EntityUpdate:
-                    message.Write(keys[(int)InputType.Use].DequeueHeld);
+                    message.Write(keys[(int)InputType.Use].GetHeldQueue);
 
-                    bool secondaryHeld = keys[(int)InputType.Aim].DequeueHeld;
+                    bool secondaryHeld = keys[(int)InputType.Aim].GetHeldQueue;
                     message.Write(secondaryHeld);
                         
                     message.Write(keys[(int)InputType.Left].Held);
@@ -1468,6 +1481,8 @@ namespace Barotrauma
 
                     message.Write(SimPosition.X);
                     message.Write(SimPosition.Y);
+
+                    networkUpdateSent = true;
 
                     return true;
                 default:

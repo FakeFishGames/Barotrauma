@@ -8,41 +8,18 @@ with.
 <XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
   <Asset Type="Graphics:FontDescription">
 
-    <!--
-    Modify this string to change the font that will be imported.
-    -->
     <FontName>Verdana</FontName>
 
-    <!--
-    Size is a float value, measured in points. Modify this value to change
-    the size of the font.
-    -->
-    <Size>10</Size>
+    <Size>16</Size>
 
-    <!--
-    Spacing is a float value, measured in pixels. Modify this value to change
-    the amount of spacing in between characters.
-    -->
     <Spacing>0</Spacing>
 
-    <!--
-    UseKerning controls the layout of the font. If this value is true, kerning information
-    will be used when placing characters.
-    -->
     <UseKerning>true</UseKerning>
 
-    <!--
-    Style controls the style of the font. Valid entries are "Regular", "Bold", "Italic",
-    and "Bold, Italic", and are case sensitive.
-    -->
-    <Style>Regular</Style>
+    <Style>Bold</Style>
 
-    <!--
-    If you uncomment this line, the default character will be substituted if you draw
-    or measure text that contains characters which were not included in the font.
-    -->
     <DefaultCharacter>_</DefaultCharacter>
-
+    
     <!--
     CharacterRegions control what letters are available in the font. Every
     character from Start to End will be built and made available for drawing. The
@@ -53,7 +30,7 @@ with.
     <CharacterRegions>
       <CharacterRegion>
         <Start>&#32;</Start>
-        <End>&#126;</End>
+        <End>&#1200;</End>
       </CharacterRegion>
 
       <CharacterRegion>

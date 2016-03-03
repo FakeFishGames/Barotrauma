@@ -381,7 +381,8 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Illegal symbols in filename (../)");
                         return;
                     }
-                    if (Submarine.SaveCurrent(fileName +".sub")) NewMessage("map saved", Color.Green);
+
+                    if (Submarine.SaveCurrent(System.IO.Path.Combine(Submarine.SavePath, fileName +".sub"))) NewMessage("map saved", Color.Green);
                     Submarine.Loaded.CheckForErrors();
 
                     break;
@@ -417,6 +418,20 @@ namespace Barotrauma
                     //Hull.DebugDraw = !Hull.DebugDraw;
                     //Ragdoll.DebugDraw = !Ragdoll.DebugDraw;
                     GameMain.DebugDraw = !GameMain.DebugDraw;
+                    break;
+                case "sendrandomdata":
+                    int messageCount = 1;
+
+                    if (commands.Length>1) int.TryParse(commands[1], out messageCount);
+
+                    for (int i = 0; i < messageCount; i++ )
+                    {
+                        if (GameMain.Server!=null)
+                        {
+                            GameMain.Server.SendRandomData();
+                        }
+                    }
+
                     break;
                 case "netstats":
                     if (GameMain.Server == null) return;
@@ -477,6 +492,12 @@ namespace Barotrauma
                         System.IO.File.Delete("Submarines/TutorialSub.sub");
 
                         DebugConsole.NewMessage("Deleted TutorialSub from the submarine folder", Color.Green);
+                    }
+
+                    if (System.IO.File.Exists(GameServer.SettingsFile))
+                    {
+                        System.IO.File.Delete(GameServer.SettingsFile);
+                        DebugConsole.NewMessage("Deleted server settings", Color.Green);
                     }
 
                     if (System.IO.File.Exists("crashreport.txt"))
