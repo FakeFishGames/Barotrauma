@@ -160,6 +160,8 @@ namespace Barotrauma.Networking
         {
             float sendingTime = message.ReadFloat();
 
+            sendingTime = (float)message.SenderConnection.GetLocalTime(sendingTime);
+
             byte msgCount = message.ReadByte();
             long currPos = message.PositionInBytes;
 

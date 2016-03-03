@@ -149,7 +149,7 @@ namespace Barotrauma
             return placed;
         }
 
-        public override bool TryPutItem(Item item, int index, bool createNetworkEvent)
+        public override bool TryPutItem(Item item, int index, bool allowSwapping, bool createNetworkEvent)
         {
             //there's already an item in the slot
             if (Items[index] != null)
@@ -173,7 +173,7 @@ namespace Barotrauma
                     combined = true;
                 }
                 //if moving the item between slots in the same inventory
-                else if (item.ParentInventory == this)
+                else if (item.ParentInventory == this && allowSwapping)
                 {
                     int currentIndex = Array.IndexOf(Items, item);
 
@@ -182,16 +182,19 @@ namespace Barotrauma
                     Items[currentIndex] = null;
                     Items[index] = null;
                     //if the item in the slot can be moved to the slot of the moved item
-                    if (TryPutItem(existingItem, currentIndex, false) &&
-                        TryPutItem(item, index, false))
+                    if (TryPutItem(existingItem, currentIndex, false, false) &&
+                        TryPutItem(item, index, false, false))
                     {
                         new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, Owner.ID, true, true);
                     }
                     else
                     {
+                        Items[currentIndex] = null;
+                        Items[index] = null;
+
                         //swapping the items failed -> move them back to where they were
-                        TryPutItem(item, currentIndex, false);
-                        TryPutItem(existingItem, index, false);
+                        TryPutItem(item, currentIndex, false, false);
+                        TryPutItem(existingItem, index, false, false);
                     }
                     
                 }
@@ -416,7 +419,7 @@ namespace Barotrauma
 
                     if (Items[i] != item && Items[i] != null) Items[i].Drop(character, false);
 
-                    if (TryPutItem(item, i, false))
+                    if (TryPutItem(item, i, false, false))
                     {
                         if (droppedItems.Contains(item))
                         {

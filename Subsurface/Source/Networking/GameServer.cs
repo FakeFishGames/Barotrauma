@@ -167,7 +167,7 @@ namespace Barotrauma.Networking
             {
                 restClient = new RestClient(NetConfig.MasterServerUrl);            
             }
-            
+                        
             var request = new RestRequest("masterserver2.php", Method.GET);            
             request.AddParameter("action", "addserver");
             request.AddParameter("servername", name);
@@ -631,12 +631,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
-#if !DEBUG
-
-            if (userPassword != password)
+#if DEBUG
+            if (!string.IsNullOrWhiteSpace(password) && string.IsNullOrWhiteSpace(userPassword))
+            {
+                inc.SenderConnection.Deny("Password required!");
+                DebugConsole.NewMessage(name + " couldn't join the server (no password)", Color.Red);
+                return;
+            }
+            else if (userPassword != password)
             {
                 inc.SenderConnection.Deny("Wrong password!");
-                DebugConsole.NewMessage(name +" couldn't join the server (wrong password)", Color.Red);
+                DebugConsole.NewMessage(name + " couldn't join the server (wrong password)", Color.Red);
                 return;
             }
             else if (version != GameMain.Version.ToString())
@@ -657,7 +662,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(name + " couldn't join the server (wrong content package hash)", Color.Red);
                 return;
             }
-            else if (ConnectedClients.Find(c => c.name.ToLower() == name.ToLower() && c.ID!=userID) != null)
+            else if (ConnectedClients.Find(c => c.name.ToLower() == name.ToLower() && c.ID != userID) != null)
             {
                 inc.SenderConnection.Deny("The name ''" + name + "'' is already in use. Please choose another name.");
                 DebugConsole.NewMessage(name + " couldn't join the server (name already in use)", Color.Red);

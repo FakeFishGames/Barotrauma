@@ -487,7 +487,7 @@ namespace Barotrauma
                         if (item == null) continue;
 
                         item.Pick(this, true, true, true);
-                        inventory.TryPutItem(item, i, false);
+                        inventory.TryPutItem(item, i, false, false);
                     }
                 }
             }

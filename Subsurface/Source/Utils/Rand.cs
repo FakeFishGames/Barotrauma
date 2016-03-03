@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,11 @@ namespace Barotrauma
     static class Rand
     {
         private static Random localRandom = new Random();
-        private static Random syncedRandom = new Random();
+        private static Random syncedRandom = new MTRandom();
 
         public static void SetSyncedSeed(int seed)
         {
-            syncedRandom = new Random(seed);
+            syncedRandom = new MTRandom(seed);
         }
 
         public static float Range(float minimum, float maximum, bool local = true)

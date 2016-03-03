@@ -49,7 +49,7 @@
       <fabricableitem name="Incendium Fuel Rod" requireditems="Steel Bar, Incendium Bar"/>
     </Fabricator>
 		
-		<ConnectionPanel canbeselected = "true">
+		<ConnectionPanel selectkey="Action" canbeselected = "true">
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<output name="power_in"/>
 		</ConnectionPanel>
@@ -73,7 +73,7 @@
       <GuiFrame rect="0,0,300,200" alignment="Center" color="0.0,0.0,0.0,0.6"/>
     </Deconstructor>
 
-    <ConnectionPanel canbeselected = "true">
+    <ConnectionPanel selectkey="Action" canbeselected = "true">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_in"/>
     </ConnectionPanel>

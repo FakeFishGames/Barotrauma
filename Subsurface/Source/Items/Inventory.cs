@@ -104,7 +104,7 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool createNetworkEvent)
         {
             if (Owner == null) return false;
             if (CanBePut(item,i))
@@ -274,7 +274,7 @@ namespace Barotrauma
                     }
 
                     //selectedSlot = slotIndex;
-                    TryPutItem(draggingItem, slotIndex);
+                    TryPutItem(draggingItem, slotIndex, true, true);
                     draggingItem = null;
                 }
 
@@ -351,11 +351,9 @@ namespace Barotrauma
 
         public virtual bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
         {
-            var foundItems = Array.FindAll(Items, i => i != null);
-            message.Write((byte)foundItems.Count());
-            foreach (Item item in foundItems)
+            for (int i = 0; i < capacity; i++)
             {
-                message.Write((ushort)item.ID);
+                message.Write((ushort)(Items[i]==null ? 0 : Items[i].ID));
             }
 
             return true;
@@ -368,31 +366,21 @@ namespace Barotrauma
             List<ushort> newItemIDs = new List<ushort>();
             List<Item> droppedItems = new List<Item>();
             List<Item> prevItems = new List<Item>(Items);
-
-            byte count = message.ReadByte();
-            for (int i = 0; i<count; i++)
-            {            
-                newItemIDs.Add(message.ReadUInt16());
-            }
-           
+                       
             for (int i = 0; i < capacity; i++)
             {
-                if (Items[i] == null) continue;
-                if (!newItemIDs.Contains(Items[i].ID))
+                ushort itemId = message.ReadUInt16();
+                if (itemId==0)
                 {
-                    droppedItems.Add(Items[i]);
-                    Items[i].Drop(null, false);
-                    
-                    continue;
+                    if (Items[i] != null) Items[i].Drop();
                 }
-            }
-            foreach (ushort itemId in newItemIDs)
-            {
-                Item item = Entity.FindEntityByID(itemId) as Item;
-                if (item == null) continue;
+                else
+                {
+                    var item = Entity.FindEntityByID(itemId) as Item;
+                    if (item == null) continue;
 
-                TryPutItem(item, item.AllowedSlots, false);
-                if (droppedItems.Contains(item)) droppedItems.Remove(item);
+                    TryPutItem(item, i, true, false);
+                }
             }
             
             lastUpdate = sendingTime;
