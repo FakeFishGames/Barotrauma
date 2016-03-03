@@ -175,13 +175,14 @@ namespace Barotrauma.Lights
 
         public bool Intersects(Rectangle rect)
         {
+            if (!Enabled)
+                return false;
             Rectangle transformedBounds = boundingBox;
             if (parentEntity != null && parentEntity.Submarine != null)
             {
                 transformedBounds.X += (int)parentEntity.Submarine.Position.X;
                 transformedBounds.Y += (int)parentEntity.Submarine.Position.Y;
             }
-
             return transformedBounds.Intersects(rect);
         }
 
