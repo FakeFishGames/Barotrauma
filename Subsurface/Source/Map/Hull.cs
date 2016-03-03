@@ -469,12 +469,13 @@ namespace Barotrauma
             var uplift = -GameMain.World.Gravity*(forceFactor - body.body.LinearVelocity.Y*5);
             body.body.FarseerBody.ApplyForce(uplift*deltaTime);
 
-            var gap = ConnectedGaps.Where(i => i.Open > 0).OrderBy(i => i.LerpedFlowForce.Length()).FirstOrDefault();
-            if (gap == null || gap.LerpedFlowForce.Length() < 0)
-                return;
-            var pos = gap.Position - body.Position;
-            pos.Normalize();
-            body.body.ApplyForce((pos*gap.LerpedFlowForce)*deltaTime);
+            foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
+            {
+                var pos = gap.Position - body.Position;
+                pos.Normalize();
+                body.body.ApplyForce((pos * gap.LerpedFlowForce) * deltaTime);
+            }
+
         }
 
         public void Extinquish(float deltaTime, float amount, Vector2 position)
