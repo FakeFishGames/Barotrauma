@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Lidgren.Network;
@@ -375,7 +376,7 @@ namespace Barotrauma
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
                 if (maxDelta > Rand.Range(1.0f,10.0f))
                 {
-                    Vector2 particlePos = new Vector2(rect.X + WaveWidth * i, surface + waveY[i]);
+                    var particlePos = new Vector2(rect.X + WaveWidth * i, surface + waveY[i]);
                     if (Submarine != null) particlePos += Submarine.Position;
 
                     GameMain.ParticleManager.CreateParticle("mist",
@@ -438,6 +439,31 @@ namespace Barotrauma
                 
                 LethalPressure += ( Submarine.Loaded!=null && Submarine.Loaded.AtDamageDepth) ? 100.0f*deltaTime : 10.0f * deltaTime;
             }
+        }
+
+        public void HandleItems(float deltaTime, Item body)
+        {
+            if (!body.InWater || body.body == null || body.Container != null)
+                return;
+            float floor = rect.Y - rect.Height;
+            float waterLevel = (floor + Volume/rect.Width);
+
+
+            var actionPoint = new Vector2(body.Rect.X, body.Rect.Y);
+            var forceFactor = 1f - ((actionPoint.Y - waterLevel)/Math.Max(body.body.Density - 10, 1));
+
+            if (!(forceFactor > 0f)) return;
+
+            var uplift = -GameMain.World.Gravity*(forceFactor - body.body.LinearVelocity.Y*5);
+            body.body.FarseerBody.ApplyForce(uplift*deltaTime);
+
+            var gap =
+                ConnectedGaps.Where(i => i.Open > 0).OrderBy(i => Vector2.Distance(body.Position, i.Position)).FirstOrDefault();
+            if (gap == null || gap.LerpedFlowForce.Length() < 0)
+                return;
+            var pos = gap.Position - body.Position;
+            pos.Normalize();
+            body.body.ApplyForce((pos*gap.LerpedFlowForce)*deltaTime);
         }
 
         public void Extinquish(float deltaTime, float amount, Vector2 position)

@@ -633,7 +633,7 @@ namespace Barotrauma
                 body.ResetDynamics();
             }
             body.ApplyForce(buoyancy - body.LinearVelocity * volume);
-                
+            CurrentHull.HandleItems(deltaTime, this);
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
         }
