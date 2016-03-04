@@ -1,8 +1,12 @@
 ---------------------------------------------------------------------------------------------------------
-v0.3.4.0
+v0.3.4.1
 ---------------------------------------------------------------------------------------------------------
 
-Multiplayer:
+- fixed a major bug in the networking code, which caused the server to incorrectly determine the order 
+of messages received from different clients and discard valid messages
+- fixed levels with the same seed appearing different between the Linux and Windows versions
+- password prompt for password-protected private servers
+
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.4.0

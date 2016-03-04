@@ -141,6 +141,12 @@ namespace Barotrauma
             }
         }
 
+        public string ConfigPath
+        {
+            get;
+            private set;
+        }
+
         public float Mass
         {
             get { return AnimController.Mass; }
@@ -396,6 +402,8 @@ namespace Barotrauma
             {
                 keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));
             }
+
+            ConfigPath = file;
             
             selectedItems = new Item[2];
 

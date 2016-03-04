@@ -21,6 +21,8 @@ namespace Barotrauma.Networking
 
         NewItem, RemoveItem,
 
+        NewCharacter,
+
         CharacterInfo,
 
         Chatmessage, UpdateNetLobby,
