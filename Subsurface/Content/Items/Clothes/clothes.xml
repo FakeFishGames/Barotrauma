@@ -8,7 +8,7 @@
 
     <Sprite texture ="captainhat.png" depth="0.6"/>
 
-    <Body radius="8" density="5"/>
+    <Body radius="8" density="30"/>
 
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="captainhat.png" limb="Head" origin="0.5,0.9"/>
@@ -23,7 +23,7 @@
 
     <Sprite texture ="captainLegs.png" sourcerect="0,49,52,17" depth="0.6"/>
 
-    <Body width="52" height="17"/>
+    <Body width="52" height="17" density="30"/>
 
     <Wearable slots="Any,Torso">
       <sprite texture="captainTorso.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.01"/>
@@ -44,7 +44,7 @@
 
     <Sprite texture ="captainLegs.png" sourcerect="0,67,51,13" depth="0.6"/>
 
-    <Body width="51" height="13"/>
+    <Body width="51" height="13" density="30"/>
 
     <Wearable slots="Any,Legs">
       <sprite texture="captainLegs.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
@@ -65,7 +65,7 @@
 
     <Sprite texture ="securitygear.png" sourcerect="68,0,60,31" depth="0.6"/>
 
-    <Body width="52" height="17"/>
+    <Body width="52" height="17" density="40"/>
 
     <Wearable slots="Any,Torso" armorvalue="10.0">
       <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.52,0.48"/>
@@ -88,7 +88,7 @@
     
     <Sprite texture ="securitygear.png" sourcerect="40,32,34,25" depth="0.6"/>
 
-    <Body radius="12"/>
+    <Body radius="12" density="50"/>
 
     <Wearable slots="Any,Head" armorvalue="20.0">
       <sprite texture="securitygear.png" limb="Head" sourcerect="39,31,29,22" origin="0.51,0.9"/>
@@ -103,7 +103,7 @@
 
     <Sprite texture = "securitygear.png" sourcerect="0,63,32,14" depth="0.6"/>
 
-    <Body width="30" height="12"/>
+    <Body width="30" height="12" density="30"/>
 
     <Wearable slots="Any,RightHand+LeftHand">
       <sprite texture="securitygear.png" limb="RightHand" sourcerect="32,62,16,16" origin="0.5,-0.5" depth="0.01"/>
@@ -123,7 +123,7 @@
 
     <Sprite texture = "engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
 
-    <Body width="50" height="17"/>
+    <Body width="50" height="17" density="20"/>
 
     <Wearable slots="Any,Torso+Legs">
       <sprite texture="engigear.png" limb="Torso" sourcerect="0,0,32,51" origin="0.5,0.48" depth="0.01"/>
@@ -151,7 +151,7 @@
 
     <Sprite texture = "engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
 
-    <Body width="50" height="17"/>
+    <Body width="50" height="17" density="20"/>
 
     <Wearable slots="Any,Torso+Legs">
       <sprite texture="engigear.png" limb="Torso" sourcerect="0,77,32,51" origin="0.5,0.48" depth="0.01"/>
@@ -180,7 +180,7 @@
 
     <Sprite texture ="clownmask.png" depth="0.6"/>
 
-    <Body radius="8" density="5"/>
+    <Body radius="8" density="10"/>
 
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5"/>
@@ -196,7 +196,7 @@
 
     <Sprite texture ="clownpants.png" sourcerect="0,62,53,18" depth="0.6"/>
 
-    <Body width="53" height="18"/>
+    <Body width="53" height="18" density="30"/>
 
     <Wearable slots="Any,Torso+Legs">
       <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.02"/>

@@ -588,6 +588,9 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.NewItem:
                         Item.Spawner.ReadNetworkData(inc);
                         break;
+                    case (byte)PacketTypes.NewCharacter:
+                        ReadCharacterSpawnMessage(inc);
+                        break;
                     case (byte)PacketTypes.RemoveItem:
                         Item.Remover.ReadNetworkData(inc);
                         break;
@@ -765,6 +768,18 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
             client.Shutdown("");
             GameMain.NetworkMember = null;
+        }
+
+        public void ReadCharacterSpawnMessage(NetIncomingMessage message)
+        {
+            string configPath = message.ReadString();
+
+            ushort id = message.ReadUInt16();
+
+            Vector2 position = new Vector2(message.ReadFloat(), message.ReadFloat());
+            
+            var character = Character.Create(configPath, position);
+            if (character != null) character.ID = id;
         }
 
         public void RequestFile(string file, FileTransferMessageType fileType)

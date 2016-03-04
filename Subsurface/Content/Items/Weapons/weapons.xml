@@ -60,9 +60,9 @@
     price="200"
     tags="smallitem,weapon">
 
-    <Sprite texture="weapons.png" sourcerect="98,0,11,24"/>
+    <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.5"/>
 
-    <Body width="11" height="24" density="15" friction="0.8f"/>
+    <Body width="11" height="24" density="30"/>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
@@ -77,9 +77,9 @@
     pickdistance="200"
     tags="smallitem,weapon">
 
-    <Sprite texture="weapons.png" sourcerect="98,0,11,24"/>
+    <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.5"/>
 
-    <Body width="11" height="24" density="15" friction="0.8f"/>
+    <Body width="11" height="24" density="30"/>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
@@ -104,7 +104,7 @@
 
     <Sprite texture="weapons.png" sourcerect="21,0,77,22" depth="0.5"/>
     
-    <Body width="90" height="30" density="10"/>
+    <Body width="90" height="30" density="30"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
@@ -141,7 +141,7 @@
     
     <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
 
-    <Body width="20" height="9" density="15"/>
+    <Body width="20" height="9" density="30"/>
 
     <Pickable slots="Any,RightHand,LeftHand"/>
   </Item>
@@ -161,7 +161,7 @@
 
     <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
 
-    <Body width="20" height="9" density="15"/>
+    <Body width="20" height="9" density="30"/>
 
     <Pickable slots="Any,RightHand,LeftHand"/>
   </Item>

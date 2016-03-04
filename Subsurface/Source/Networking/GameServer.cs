@@ -1476,6 +1476,21 @@ namespace Barotrauma.Networking
             message.Write(character.Info.Job.Name);
         }
 
+        public void SendCharacterSpawnMessage(Character character)
+        {
+            NetOutgoingMessage message = server.CreateMessage();
+            message.Write((byte)PacketTypes.NewCharacter);
+
+            message.Write(character.ConfigPath);
+
+            message.Write(character.ID);
+
+            message.Write(character.Position.X);
+            message.Write(character.Position.Y);
+            
+            SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+        }
+
         public void SendItemSpawnMessage(List<Item> items, List<Inventory> inventories = null)
         {
             if (items == null || !items.Any()) return;

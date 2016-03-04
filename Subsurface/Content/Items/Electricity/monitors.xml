@@ -6,7 +6,7 @@
   
   <Sprite texture ="monitor.png" depth="0.85"/>
 
-  <Body width="16" height="16"/>
+  <Body width="16" height="16" density="30"/>
 
   <Holdable slots="Any,RightHand,LeftHand" msg="Detach [Wrench]"
             aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">

@@ -10,7 +10,7 @@
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
-    <Body width="24" height="12"/>
+    <Body width="24" height="12" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -26,7 +26,7 @@
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
-    <Body width="24" height="12"/>
+    <Body width="24" height="12" density="60"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -42,7 +42,7 @@
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
-    <Body width="24" height="12"/>
+    <Body width="24" height="12" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -58,7 +58,7 @@
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
-    <Body width="24" height="12"/>
+    <Body width="24" height="12" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
@@ -73,7 +73,7 @@
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
-    <Body width="24" height="12"/>
+    <Body width="24" height="12" density="60"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0">
       <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
@@ -93,7 +93,7 @@
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
-    <Body width="24" height="12"/>
+    <Body width="24" height="12" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>

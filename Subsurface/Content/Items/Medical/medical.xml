@@ -10,7 +10,7 @@
 
     <Sprite texture ="med.png" sourcerect="0,0,24,5" depth="0.6"/>
 
-    <Body width="24" height="5"/>
+    <Body width="24" height="5" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
       <StatusEffect type="OnUse" target="This, Character" health="30.0" Condition="-100.0" disabledeltatime="true" sound="Content/Items/Medical/syringe.ogg"/>
@@ -27,7 +27,7 @@
 
     <Sprite texture ="med.png" sourcerect="0,14,14,18" depth="0.6"/>
 
-    <Body width="9" height="15"/>
+    <Body width="9" height="15" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
       <StatusEffect type="OnUse" target="This, Character" bleeding="-10.0" Condition="-100.0" disabledeltatime="true" sound="Content/Items/Medical/bandage.ogg"/>      

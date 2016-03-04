@@ -17,7 +17,7 @@
 
     <Sprite texture ="wire.png" depth="0.55"/>
 
-    <Body radius="15"/>
+    <Body radius="15" density="30"/>
   
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
@@ -39,7 +39,7 @@
     </Deconstruct>
 
     <Sprite texture ="wire.png" depth="0.55"/>
-    <Body radius="15"/>
+    <Body radius="15" density="30"/>
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
     <Wire/>
@@ -60,7 +60,7 @@
     </Deconstruct>
 
     <Sprite texture ="wire.png" depth="0.55"/>
-    <Body radius="15"/>
+    <Body radius="15" density="30"/>
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
     <Wire/>
@@ -81,7 +81,7 @@
     </Deconstruct>
 
     <Sprite texture ="wire.png" depth="0.55"/>
-    <Body radius="15"/>
+    <Body radius="15" density="30"/>
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
     <Wire/>
@@ -98,7 +98,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16"/>
 
-    <Body width="16" height="16"/>
+    <Body width="16" height="16" density="30"/>
 
     <Holdable slots="Any,RightHand,LeftHand"/>
   </Item>
@@ -121,7 +121,7 @@
 
     <AndComponent canbeselected = "true"/>
 
-    <Body width="16" height="16"/>
+    <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
@@ -156,7 +156,7 @@
 
     <OrComponent canbeselected = "true"/>
 
-    <Body width="16" height="16"/>
+    <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
@@ -190,7 +190,7 @@
 
     <NotComponent canbeselected = "true"/>
 
-    <Body width="16" height="16"/>
+    <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
@@ -224,7 +224,7 @@
       <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="0,96,31,32"/>
     </LightComponent>
 
-    <Body width="16" height="16"/>
+    <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
@@ -257,7 +257,7 @@
 
     <OxygenDetector canbeselected = "true"/>
 
-    <Body width="31" height="24"/>
+    <Body width="31" height="24" density="30"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
@@ -288,7 +288,7 @@
 
     <WaterDetector canbeselected = "true"/>
 
-    <Body width="31" height="24"/>
+    <Body width="31" height="24" density="30"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
@@ -319,7 +319,7 @@
 
     <SignalCheckComponent canbeselected = "true"/>
 
-    <Body width="16" height="16"/>
+    <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
@@ -353,7 +353,7 @@
 
     <RegExFindComponent canbeselected = "true"/>
 
-    <Body width="16" height="16"/>
+    <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Action" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0"
               slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
@@ -385,7 +385,7 @@
 
     <WifiComponent canbeselected = "true"/>
 
-    <Body width="16" height="16"/>
+    <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Action" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0"
         slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">

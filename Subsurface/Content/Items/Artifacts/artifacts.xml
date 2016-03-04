@@ -14,7 +14,7 @@
     </Deconstruct>
     
     
-    <Body width="36" height="60" density="5"/>
+    <Body width="36" height="60" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
       <StatusEffect type="Always" target="Hull" oxygen="-50000.0"/>
@@ -34,7 +34,7 @@
       <Item name="Incendium Bar"/>
     </Deconstruct>
     
-    <Body radius="20" height="20" density="5"/>
+    <Body radius="20" height="20" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
       <StatusEffect type="Always">
@@ -56,7 +56,7 @@
       <Item name="Fulgurium Bar"/>
     </Deconstruct>
 
-    <Body radius="20" height="20" density="5"/>
+    <Body radius="20" height="20" density="50"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
   </Item> 
