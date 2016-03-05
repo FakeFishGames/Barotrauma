@@ -259,13 +259,13 @@ namespace Barotrauma
 
             if (prefab.CastShadow)
             {
-                GeneateConvexHull();
+                GenerateConvexHull();
             }
 
             InsertToList();
         }
 
-        private void GeneateConvexHull()
+        private void GenerateConvexHull()
         {
             // If not null and not empty , remove the hulls from the system
             if(_convexHulls != null && _convexHulls.Any())
@@ -452,13 +452,16 @@ namespace Barotrauma
             sections[sectionIndex].isHighLighted = true;
         }
         
-        public bool SectionHasHole(int sectionIndex)
+        public bool SectionBodyDisabled(int sectionIndex)
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
 
             return (sections[sectionIndex].damage>=prefab.MaxHealth);
         }
 
+        /// <summary>
+        /// Sections that are leaking have a gap placed on them
+        /// </summary>
         public bool SectionIsLeaking(int sectionIndex)
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
@@ -528,7 +531,7 @@ namespace Barotrauma
 
             float damageAmount = attack.GetStructureDamage(deltaTime);
 
-            if (playSound && !SectionHasHole(i))
+            if (playSound && !SectionBodyDisabled(i))
             {
                 DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
                 SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, position);
@@ -561,7 +564,7 @@ namespace Barotrauma
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
                     if(CastShadow)
-                        GeneateConvexHull();
+                        GenerateConvexHull();
                 }
             }
             else
@@ -575,20 +578,20 @@ namespace Barotrauma
                     gapRect.Height += 20;
                     sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
                     if(CastShadow)
-                        GeneateConvexHull();
+                        GenerateConvexHull();
                 }
             }
 
             if (sections[sectionIndex].gap != null)                    
                 sections[sectionIndex].gap.Open = (float)Math.Pow(((damage / prefab.MaxHealth)-0.5)*2.0, 2.0);
 
-            bool hadHole = SectionHasHole(sectionIndex);
+            bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.MaxHealth);
 
-            bool hasHole = SectionHasHole(sectionIndex);
+            bool hasHole = SectionBodyDisabled(sectionIndex);
 
             if (hadHole == hasHole) return;
-            if (hasHole) Explosion.ApplyExplosionForces(sections[sectionIndex].gap.WorldPosition, 500.0f, 5.0f, 0.0f, 0.0f);
+            //if (hasHole) Explosion.ApplyExplosionForces(sections[sectionIndex].gap.WorldPosition, 500.0f, 5.0f, 0.0f, 0.0f);
             UpdateSections();
         }
 
@@ -600,11 +603,18 @@ namespace Barotrauma
             }
             bodies.Clear();
             var mergedSections = new List<WallSection>();
-            foreach (var section in sections)
+            for (int i = 0; i < sections.Count(); i++ )
             {
-                if(section.gap == null)
+                var section = sections[i];
+
+                if (!SectionBodyDisabled(i))
+                {
                     mergedSections.Add(section);
-                if (section.gap == null || mergedSections.Count <= 0) continue;
+                    continue;
+                }
+
+                if (mergedSections.Count <= 0) continue;
+
                 Rectangle mergedRect;
                 if (isHorizontal)
                     mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
