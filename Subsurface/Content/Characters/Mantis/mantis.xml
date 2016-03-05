@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="mantis" humanoid="false" health="200">
+<Character name ="mantis" humanoid="false" health="200" doesbleed="false">
 
   <sound file="Content/Characters/Crawler/attack1.ogg" state="Attack" range="500"/>
   <sound file="Content/Characters/Crawler/attack2.ogg" state="Attack" range="500"/>
@@ -9,7 +9,7 @@
 
   <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 
-           swimspeed="2.0" walkspeed="1.5"
+           swimspeed="2.0" walkspeed="1.0"
            stepsize ="20.0,20.0"
            legtorque="10"
            footrotation ="180.0"

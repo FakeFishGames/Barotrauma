@@ -11,6 +11,7 @@
     characterfile="Content/Characters/TigerThresher/tigerthresher.xml"
     commonness="10"
     difficulty="30"
+    minamount="1" maxamount="3"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""

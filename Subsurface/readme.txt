@@ -43,8 +43,9 @@ Protocol: UDP
 Credits:
 ------------------------------------------------------------------------
 
-Programming, graphics, sounds, game design - Joonas Rikkonen ("Regalis")
-Graphics - James Bear ("Moonsaber99")
+Programming, graphics, sounds, game design	- Joonas Rikkonen ("Regalis")
+Graphics									- James Bear ("Moonsaber99")
+Programming									- Sebastian Broberg
 
 ------------------------------------------------------------------------
 

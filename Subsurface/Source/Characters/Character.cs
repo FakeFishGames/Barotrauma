@@ -288,6 +288,12 @@ namespace Barotrauma
             private set;
         }
 
+        public float BleedingDecreaseSpeed
+        {
+            get;
+            private set;
+        }
+
 
         public float PressureTimer
         {
@@ -451,6 +457,7 @@ namespace Barotrauma
             health = maxHealth;
 
             DoesBleed = ToolBox.GetAttributeBool(doc.Root, "doesbleed", true);
+            BleedingDecreaseSpeed = ToolBox.GetAttributeFloat(doc.Root, "bleedingdecreasespeed", 0.05f);
 
             needsAir = ToolBox.GetAttributeBool(doc.Root, "needsair", false);
             drowningTime = ToolBox.GetAttributeFloat(doc.Root, "drowningtime", 10.0f);
@@ -1036,7 +1043,9 @@ namespace Barotrauma
                 PressureProtection -= deltaTime*100.0f;
             }
 
-            Health -= bleeding*deltaTime;
+            Health -= bleeding * deltaTime;
+            Bleeding -= BleedingDecreaseSpeed * deltaTime;
+
             if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss, false);
 
             if (!IsDead) LockHands = false;

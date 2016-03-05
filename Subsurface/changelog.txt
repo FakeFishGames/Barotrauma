@@ -5,8 +5,14 @@ v0.3.4.1
 - fixed a major bug in the networking code, which caused the server to incorrectly determine the order 
 of messages received from different clients and discard valid messages
 - fixed levels with the same seed appearing different between the Linux and Windows versions
+- creatures spawned using the console are synced with clients
 - password prompt for password-protected private servers
-
+- holes in the walls can be seen through
+- bleeding gradually slows down - making an enemy bleed isn't a guaranteed kill anymore
+- mantises don't bleed
+- fixed crashing when swapping some specific equipped items with another item in the inventory
+- fixed deconstructor, fabricator and railgun connection panels closing immediately after opening
+- fixed newly created subs being saved to the root folder instead of the Submarines folder
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.4.0
