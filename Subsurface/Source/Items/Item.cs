@@ -642,8 +642,11 @@ namespace Barotrauma
                 body.ResetDynamics();
             }
             body.ApplyForce(buoyancy - body.LinearVelocity * volume);
-            if(CurrentHull != null)
-                CurrentHull.HandleItems(deltaTime, this);
+
+            //TODO: make sure items stay in sync between clients before letting flowing water move items
+            //if(CurrentHull != null)
+            //    CurrentHull.HandleItems(deltaTime, this);
+
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
         }
