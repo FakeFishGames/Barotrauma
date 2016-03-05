@@ -284,7 +284,7 @@ namespace Barotrauma
                 float sectionDamage = wall.SectionDamage(sectionIndex);
                 for (int i = sectionIndex - 2; i <= sectionIndex + 2; i++)
                 {
-                    if (wall.SectionHasHole(i))
+                    if (wall.SectionBodyDisabled(i))
                     {
                         sectionIndex = i;
                         break;

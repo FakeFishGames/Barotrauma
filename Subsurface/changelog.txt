@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.4.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed characters passing through walls/windows that have already been repaired
+- fixed the spawn command in Linux version
+- fixed clients being able to join servers with the wrong password
+
+---------------------------------------------------------------------------------------------------------
 v0.3.4.1
 ---------------------------------------------------------------------------------------------------------
 
@@ -12,7 +20,6 @@ of messages received from different clients and discard valid messages
 - mantises don't bleed
 - fixed crashing when swapping some specific equipped items with another item in the inventory
 - fixed deconstructor, fabricator and railgun connection panels closing immediately after opening
-- fixed newly created subs being saved to the root folder instead of the Submarines folder
 
 ---------------------------------------------------------------------------------------------------------
 v0.3.4.0

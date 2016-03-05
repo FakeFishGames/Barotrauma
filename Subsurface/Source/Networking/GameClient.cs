@@ -291,7 +291,7 @@ namespace Barotrauma.Networking
 
                                 if (denyMessage == "Password required!" || denyMessage == "Wrong password!")
                                 {
-                                    GameMain.ServerListScreen.JoinServer(serverIP, true);
+                                    GameMain.ServerListScreen.JoinServer(serverIP, true, denyMessage);
                                 }
                                 else
                                 {

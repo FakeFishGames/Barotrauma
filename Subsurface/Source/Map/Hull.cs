@@ -472,8 +472,10 @@ namespace Barotrauma
             foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
             {
                 var pos = gap.Position - body.Position;
+                var distance = MathHelper.Max(Vector2.DistanceSquared(body.Position, gap.Position)/1000,1f);
+               
                 pos.Normalize();
-                body.body.ApplyForce((pos * gap.LerpedFlowForce) * deltaTime);
+                body.body.ApplyForce((pos * (gap.LerpedFlowForce/distance)) * deltaTime);
             }
 
         }

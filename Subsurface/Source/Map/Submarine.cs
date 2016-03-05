@@ -374,7 +374,7 @@ namespace Barotrauma
                 {
                     if (structure.IsPlatform || structure.StairDirection != Direction.None) return -1;
                     int sectionIndex = structure.FindSectionIndex(ConvertUnits.ToDisplayUnits(point));
-                    if (sectionIndex > -1 && structure.SectionHasHole(sectionIndex)) return -1;
+                    if (sectionIndex > -1 && structure.SectionBodyDisabled(sectionIndex)) return -1;
                 }
 
                 if (fraction < closestFraction)

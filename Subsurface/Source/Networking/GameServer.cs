@@ -631,7 +631,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-#if DEBUG
+#if !DEBUG
             if (!string.IsNullOrWhiteSpace(password) && string.IsNullOrWhiteSpace(userPassword))
             {
                 inc.SenderConnection.Deny("Password required!");
