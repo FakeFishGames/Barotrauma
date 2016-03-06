@@ -35,6 +35,13 @@ namespace Barotrauma
         private float drawRotation;
 
 
+        private float lastNetworkUpdateTime;
+        public Vector2 LastSentPosition
+        {
+            get;
+            private set;
+        }
+
         public readonly Shape bodyShape;
         public readonly float height, width, radius;
         
@@ -191,6 +198,8 @@ namespace Barotrauma
 
             dir = 1.0f;
 
+            LastSentPosition = body.Position;
+
             list.Add(this);
         }
 
@@ -241,8 +250,8 @@ namespace Barotrauma
 
             SetTransform(position, 0.0f);
 
-            //prevPosition = ConvertUnits.ToDisplayUnits(position);
-
+            LastSentPosition = position;
+            
             list.Add(this);
         }
 
@@ -288,23 +297,42 @@ namespace Barotrauma
             prevRotation = rotation;
         }
 
-        public void SetToTargetPosition()
+        public void MoveToTargetPosition(bool lerp = true)
         {
-            if (targetPosition != Vector2.Zero)
+            if (targetPosition == Vector2.Zero)
             {
-                body.SetTransform(targetPosition, targetRotation);
-                body.LinearVelocity = targetVelocity;
-                body.AngularVelocity = targetAngularVelocity;
-                targetPosition = Vector2.Zero;
+                diffToTargetPos = Vector2.Zero;
+                return;
             }
+
+            if (lerp) diffToTargetPos = targetPosition - body.Position;
+
+            body.SetTransform(targetPosition, targetRotation);
+            body.LinearVelocity = targetVelocity;
+            body.AngularVelocity = targetAngularVelocity;
+            targetPosition = Vector2.Zero;            
         }
+        
+        Vector2 diffToTargetPos;
 
         public void UpdateDrawPosition()
         {
-            drawPosition = Physics.Interpolate(prevPosition, body.Position);
+            drawPosition = Physics.Interpolate(prevPosition, body.Position) - diffToTargetPos;
             drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
 
             drawRotation = Physics.Interpolate(prevRotation, body.Rotation);
+
+            if (diffToTargetPos == Vector2.Zero) return;
+
+            float diff = diffToTargetPos.Length();
+            if (diff < 0.05f)
+            {
+                diffToTargetPos = Vector2.Zero;
+            }
+            else
+            {
+                diffToTargetPos -= (diffToTargetPos / diff) * 0.05f;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f)
@@ -337,7 +365,59 @@ namespace Barotrauma
 
             body.ApplyTorque(torque);
         }
-        
+
+
+        public void FillNetworkData(NetBuffer message)
+        {
+            message.Write(body.Position.X);
+            message.Write(body.Position.Y);
+            message.Write(body.LinearVelocity.X);
+            message.Write(body.LinearVelocity.Y);
+
+            message.Write(body.Rotation);
+            message.Write(body.AngularVelocity);
+
+            LastSentPosition = body.Position;
+        }
+
+        public void ReadNetworkData(NetIncomingMessage message, float sendingTime)
+        {
+            if (sendingTime < lastNetworkUpdateTime) return;
+
+            Vector2 newTargetPos = Vector2.Zero;
+            Vector2 newTargetVel = Vector2.Zero;
+
+            float newTargetRotation = 0.0f, newTargetAngularVel = 0.0f;
+            try
+            {
+                newTargetPos = new Vector2(message.ReadFloat(), message.ReadFloat());
+                newTargetVel = new Vector2(message.ReadFloat(), message.ReadFloat());
+
+                newTargetRotation = message.ReadFloat();
+                newTargetAngularVel = message.ReadFloat();
+            }
+
+            catch (Exception e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("invalid network message", e);
+#endif
+                return;
+            }
+
+            if (!MathUtils.IsValid(newTargetPos) || !MathUtils.IsValid(newTargetVel) ||
+                !MathUtils.IsValid(newTargetRotation) || !MathUtils.IsValid(newTargetAngularVel))
+                return;
+
+            targetPosition = newTargetPos;
+            targetVelocity = newTargetVel;
+
+            targetRotation = newTargetRotation;
+            targetAngularVelocity = newTargetAngularVel;
+
+            lastNetworkUpdateTime = sendingTime;
+        }
+
 
         public void Remove()
         {

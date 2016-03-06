@@ -453,29 +453,15 @@ namespace Barotrauma
             }
         }
 
-        public void HandleItems(float deltaTime, Item body)
+        public void ApplyFlowForces(float deltaTime, Item item)
         {
-            if (!body.InWater || body.body == null || body.Container != null)
-                return;
-            float floor = rect.Y - rect.Height;
-            float waterLevel = (floor + Volume/rect.Width);
-
-
-            var actionPoint = new Vector2(body.Rect.X, body.Rect.Y);
-            var forceFactor = 1f - ((actionPoint.Y - waterLevel)/Math.Max(body.body.Density - 10, 1));
-
-            if (!(forceFactor > 0f)) return;
-
-            var uplift = -GameMain.World.Gravity*(forceFactor - body.body.LinearVelocity.Y*5);
-            body.body.FarseerBody.ApplyForce(uplift*deltaTime);
-
             foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
             {
-                var pos = gap.Position - body.Position;
-                var distance = MathHelper.Max(Vector2.DistanceSquared(body.Position, gap.Position)/1000,1f);
+                //var pos = gap.Position - body.Position;
+                var distance = MathHelper.Max(Vector2.DistanceSquared(item.Position, gap.Position)/1000, 1f);
                
-                pos.Normalize();
-                body.body.ApplyForce((pos * (gap.LerpedFlowForce/distance)) * deltaTime);
+                //pos.Normalize();
+                item.body.ApplyForce((gap.LerpedFlowForce/distance) * deltaTime);
             }
 
         }

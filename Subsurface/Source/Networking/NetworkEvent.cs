@@ -28,7 +28,9 @@ namespace Barotrauma.Networking
         ItemFixed = 9,
         
         UpdateProperty = 10,
-        WallDamage = 11
+        WallDamage = 11,
+
+        PhysicsBodyPosition = 12
     }
 
     class NetworkEvent

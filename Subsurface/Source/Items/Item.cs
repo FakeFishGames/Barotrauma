@@ -38,6 +38,14 @@ namespace Barotrauma
         //components that determine the functionality of the item
         public List<ItemComponent> components;
 
+        public PhysicsBody body;
+
+        private float condition;
+
+        private bool inWater;
+                
+        private Inventory parentInventory;
+
         public readonly Dictionary<string, ObjectProperty> properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
         {
@@ -56,14 +64,6 @@ namespace Barotrauma
                 return (bool)hasInGameEditableProperties;
             }
         }
-
-        public PhysicsBody body;
-        
-        private float condition;
-
-        private bool inWater;
-
-        private Inventory parentInventory;
 
         //the inventory in which the item is contained in
         public Inventory ParentInventory
@@ -617,38 +617,65 @@ namespace Barotrauma
             if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
             {
                 FindHull();
+                
+                Vector2 moveAmount = body.SimPosition - body.LastSentPosition;
+                if (moveAmount != Vector2.Zero && moveAmount.Length() > NetConfig.ItemPosUpdateDistance)
+                {
+                    new NetworkEvent(NetworkEventType.PhysicsBodyPosition, ID, false);
+                }
 
                 Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-
                 rect.X = (int)(displayPos.X - rect.Width / 2.0f);
                 rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
             }
 
-            body.SetToTargetPosition();
+            body.MoveToTargetPosition();
 
             inWater = IsInWater();
 
-            if (!inWater) return;
+            if (!inWater || Container != null || body == null) return;
 
-            //calculate (a rough approximation of) buoyancy
-            float volume = body.Mass / body.Density;
-            Vector2 buoyancy = new Vector2(0, volume * 10.0f);
-
-            //apply buoyancy and drag
-
-            //if ((buoyancy - body.LinearVelocity * volume) == Vector2.Zero) DebugConsole.ThrowError("v.zero ");
             if (body.LinearVelocity != Vector2.Zero && body.LinearVelocity.Length() > 1000.0f)
             {
                 body.ResetDynamics();
             }
-            body.ApplyForce(buoyancy - body.LinearVelocity * volume);
+
+            ApplyWaterForces();
 
             //TODO: make sure items stay in sync between clients before letting flowing water move items
-            //if(CurrentHull != null)
-            //    CurrentHull.HandleItems(deltaTime, this);
+            if(CurrentHull != null) CurrentHull.ApplyFlowForces(deltaTime, this);
+
+        }
+
+        /// <summary>
+        /// Applies buoyancy, drag and angular drag caused by water
+        /// </summary>
+        private void ApplyWaterForces()
+        {
+            if (!InWater || body == null || Container != null) return;
+
+            float forceFactor = 1.0f;
+            if (CurrentHull != null)
+            {
+                float floor = CurrentHull.Rect.Y - CurrentHull.Rect.Height;
+                float waterLevel = (floor + CurrentHull.Volume / CurrentHull.Rect.Width);
+
+                //forceFactor is 1.0f if the item is completely submerged, 
+                //and goes to 0.0f as the item goes through the surface
+                forceFactor = Math.Min((waterLevel - Position.Y) / rect.Height, 1.0f);
+                if (forceFactor <= 0.0f) return;
+            }
+
+            float volume = body.Mass / body.Density;
+
+            var uplift = -GameMain.World.Gravity * forceFactor * volume;
+
+            Vector2 drag = body.LinearVelocity * volume;
+
+            body.ApplyForce((uplift - drag) * 10.0f);
 
             //apply simple angular drag
-            body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
+            body.ApplyTorque(body.AngularVelocity * volume * -0.05f);                    
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
@@ -1374,11 +1401,11 @@ namespace Barotrauma
             switch (type)
             {
                 case NetworkEventType.DropItem:
-                    if (body != null)
-                    {
-                        message.Write(body.SimPosition.X);
-                        message.Write(body.SimPosition.Y);
-                    }
+                    if (body != null) body.FillNetworkData(message);
+                    break;
+                case NetworkEventType.PhysicsBodyPosition:
+                    System.Diagnostics.Debug.Assert(body != null, "Tried to send a PhysicsBodyPosition message for an item that has no physics body");
+                    body.FillNetworkData(message);
                     break;
                 case NetworkEventType.ItemFixed:
                     byte requirementIndex = (byte)data;
@@ -1456,10 +1483,15 @@ namespace Barotrauma
             switch (type)
             {
                 case NetworkEventType.DropItem:
-                    Vector2 newSimPos = Vector2.Zero;
-                    newSimPos = new Vector2(message.ReadFloat(), message.ReadFloat());
-                    SetTransform(newSimPos, body.Rotation);
                     Drop(null, false);
+                    if (body != null) 
+                    {
+                        body.ReadNetworkData(message, sendingTime);
+                        body.MoveToTargetPosition(false);
+                    }
+                    break;
+                case NetworkEventType.PhysicsBodyPosition:
+                    if (body != null) body.ReadNetworkData(message, sendingTime);
                     break;
                 case NetworkEventType.ItemFixed:
 
