@@ -39,7 +39,7 @@ namespace Barotrauma.Lights
         {
             lights = new List<LightSource>();
 
-            AmbientLight = new Color(80, 80, 80, 255);
+            AmbientLight = new Color(60, 60, 60, 255);
 
             visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
 

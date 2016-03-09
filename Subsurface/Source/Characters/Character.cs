@@ -81,7 +81,7 @@ namespace Barotrauma
         private Vector2 cursorPosition;
 
         protected bool needsAir;
-        protected float oxygen;
+        protected float oxygen, oxygenAvailable;
         protected float drowningTime;
 
         protected float health;
@@ -251,6 +251,12 @@ namespace Barotrauma
             }
         }
 
+        public float OxygenAvailable
+        {
+            get { return oxygenAvailable; }
+            set { oxygenAvailable = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
         public float Stun
         {
             get { return AnimController.StunTimer; }
@@ -416,6 +422,7 @@ namespace Barotrauma
             IsNetworkPlayer = isNetworkPlayer;
 
             oxygen = 100.0f;
+            oxygenAvailable = 100.0f;
             aiTarget = new AITarget(this);
 
             lowPassMultiplier = 1.0f;
@@ -1027,20 +1034,20 @@ namespace Barotrauma
 
             if (needsAir)
             {
-                if (AnimController.HeadInWater)
-                {
-                    Oxygen -= deltaTime*100.0f / drowningTime;
-                }
-                else if (AnimController.CurrentHull != null)
-                {
-                    float hullOxygen = AnimController.CurrentHull.OxygenPercentage;
-                    hullOxygen -= 30.0f;
+                Oxygen += deltaTime * (oxygenAvailable < 30.0f ? -5.0f : 10.0f);
 
-                    Oxygen += deltaTime * 100.0f * (hullOxygen / 500.0f);
+                PressureProtection -= deltaTime*100.0f;
+
+                float hullAvailableOxygen = 0.0f;
+
+                if (!AnimController.HeadInWater && AnimController.CurrentHull != null)
+                {
+                    hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
 
                     AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
                 }
-                PressureProtection -= deltaTime*100.0f;
+
+                OxygenAvailable += Math.Sign(hullAvailableOxygen - oxygenAvailable) * deltaTime * 50.0f;
             }
 
             Health -= bleeding * deltaTime;

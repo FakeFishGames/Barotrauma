@@ -98,7 +98,7 @@ namespace Barotrauma
 
             if (Screen.Selected == GameMain.EditMapScreen) return;
 
-            if (character.Oxygen < 50.0f && !character.IsDead)
+            if (character.Oxygen < 80.0f && !character.IsDead)
             {
                 Vector2 offset = Rand.Vector(noiseOverlay.size.X);
                 offset.X = Math.Abs(offset.X);
@@ -106,7 +106,7 @@ namespace Barotrauma
 
                 noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
                     Vector2.Zero,
-                    Color.White * ((50.0f - character.Oxygen) / 50.0f));
+                    Color.White * Math.Min((80.0f - character.Oxygen) / 50.0f, 0.8f));
             }
 
             if (damageOverlayTimer>0.0f)
