@@ -778,7 +778,7 @@ namespace Barotrauma.Networking
 
             Vector2 position = new Vector2(message.ReadFloat(), message.ReadFloat());
             
-            var character = Character.Create(configPath, position);
+            var character = Character.Create(configPath, position, null, true);
             if (character != null) character.ID = id;
         }
 

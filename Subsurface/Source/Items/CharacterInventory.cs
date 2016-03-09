@@ -415,16 +415,15 @@ namespace Barotrauma
                     Item item = Entity.FindEntityByID(itemId) as Item;
                     if (item == null) continue;
 
-                    Inventory existingInventory = item.ParentInventory;
+                    //item already in the right slot, no need to do anything
+                    if (Items[i] == item) continue;
 
-                    if (Items[i] != item && Items[i] != null) Items[i].Drop(character, false);
+                    //some other item already in the slot -> drop it
+                    if (Items[i] != null) Items[i].Drop(character, false);
 
                     if (TryPutItem(item, i, false, false))
                     {
-                        if (droppedItems.Contains(item))
-                        {
-                            droppedItems.Remove(item);
-                        }
+                        if (droppedItems.Contains(item)) droppedItems.Remove(item);
                     }
                 }
             }

@@ -51,6 +51,8 @@ namespace Barotrauma
         //flipped horizontally if the Character holding it turns around)
         float dir;
 
+        Vector2 offsetFromTargetPos;
+
         public Vector2 TargetPosition
         {
             get { return targetPosition; }
@@ -301,37 +303,40 @@ namespace Barotrauma
         {
             if (targetPosition == Vector2.Zero)
             {
-                diffToTargetPos = Vector2.Zero;
+                offsetFromTargetPos = Vector2.Zero;
                 return;
             }
 
-            if (lerp) diffToTargetPos = targetPosition - body.Position;
+            if (lerp)
+            {
+                offsetFromTargetPos = targetPosition - (body.Position - offsetFromTargetPos);
+                prevPosition = targetPosition;
+            }
 
             body.SetTransform(targetPosition, targetRotation);
             body.LinearVelocity = targetVelocity;
             body.AngularVelocity = targetAngularVelocity;
-            targetPosition = Vector2.Zero;            
+            targetPosition = Vector2.Zero;
         }
         
-        Vector2 diffToTargetPos;
 
         public void UpdateDrawPosition()
         {
-            drawPosition = Physics.Interpolate(prevPosition, body.Position) - diffToTargetPos;
+            drawPosition = Physics.Interpolate(prevPosition, body.Position) - offsetFromTargetPos;
             drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
 
             drawRotation = Physics.Interpolate(prevRotation, body.Rotation);
 
-            if (diffToTargetPos == Vector2.Zero) return;
+            if (offsetFromTargetPos == Vector2.Zero) return;
 
-            float diff = diffToTargetPos.Length();
+            float diff = offsetFromTargetPos.Length();
             if (diff < 0.05f)
             {
-                diffToTargetPos = Vector2.Zero;
+                offsetFromTargetPos = Vector2.Zero;
             }
             else
             {
-                diffToTargetPos -= (diffToTargetPos / diff) * 0.05f;
+                offsetFromTargetPos = Vector2.Lerp(offsetFromTargetPos, Vector2.Zero, 0.1f);
             }
         }
 
@@ -410,7 +415,7 @@ namespace Barotrauma
                 return;
 
             targetPosition = newTargetPos;
-            targetVelocity = newTargetVel;
+            TargetVelocity = newTargetVel;
 
             targetRotation = newTargetRotation;
             targetAngularVelocity = newTargetAngularVel;

@@ -1098,7 +1098,7 @@ namespace Barotrauma
             
             if (this == controlled) return;
 
-            if (IsNetworkPlayer)
+            if (IsNetworkPlayer && info!=null)
             {
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 120.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
                 spriteBatch.DrawString(GUI.Font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
@@ -1318,7 +1318,7 @@ namespace Barotrauma
                 //if it's an ai Character, only let the server kill it
                 else if (GameMain.Server != null && this is AICharacter)
                 {
-                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);
+                    new NetworkEvent(NetworkEventType.KillCharacter, ID, false, causeOfDeath);
                 }
                 //don't kill the Character unless received a message about the Character dying
                 else if (!isNetworkMessage)

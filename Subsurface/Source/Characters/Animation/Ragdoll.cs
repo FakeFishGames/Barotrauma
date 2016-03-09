@@ -713,7 +713,7 @@ namespace Barotrauma
             }            
         }
 
-        public void SetPosition(Vector2 simPosition)
+        public void SetPosition(Vector2 simPosition, bool lerp = false)
         {
             Vector2 moveAmount = simPosition - refLimb.SimPosition;
 
@@ -721,18 +721,28 @@ namespace Barotrauma
             {
                 if (limb==refLimb)
                 {
-                    limb.body.SetTransform(simPosition, limb.Rotation);
+                    if (lerp)
+                    {
+                        limb.body.TargetPosition = simPosition;
+                    }
+                    else
+                    {
+                        limb.body.SetTransform(simPosition, limb.Rotation);
+                    }
                     continue;
                 }
+
 
                 //check visibility from the new position of RefLimb to the new position of this limb
                 Vector2 movePos = limb.SimPosition + moveAmount;
 
                 TrySetLimbPosition(limb, simPosition, movePos);
+                
+
             }
         }
 
-        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition)
+        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false)
         {
             if (original == simPosition) return;
 
@@ -746,7 +756,14 @@ namespace Barotrauma
                 movePos = original + ((simPosition - original) * Submarine.LastPickedFraction * 0.9f);
             }
 
-            limb.body.SetTransform(movePos, limb.Rotation);
+            if (lerp)
+            {
+                limb.body.TargetPosition = movePos;
+            }
+            else
+            {
+                limb.body.SetTransform(movePos, limb.Rotation);               
+            }
         }
 
         public void SetRotation(float rotation)
@@ -813,12 +830,15 @@ namespace Barotrauma
             }
             else
             {
+
+
                 if (inWater)
                 {
                     if (targetMovement.LengthSquared() > 0.01f)
                     {
                         correctionMovement =
                             Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
+
                     }
                     else
                     {
@@ -843,11 +863,11 @@ namespace Barotrauma
                 else
                 {
                     //clamp the magnitude of the correction movement between 0.5f - 5.0f
-                    Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist*2.0f, 0.5f, 5.0f);
+                    Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist * 2.0f, 0.5f, 5.0f);
 
                     //heading in the right direction -> use the ''normal'' movement if it's faster than correctionMovement
                     //i.e. the character is close to the targetposition but the character is still running
-                    if (Math.Sign(targetMovement.X)==Math.Sign(newCorrectionMovement.X))
+                    if (Math.Sign(targetMovement.X) == Math.Sign(newCorrectionMovement.X))
                     {
                         newCorrectionMovement.X = Math.Max(Math.Abs(targetMovement.X), Math.Abs(newCorrectionMovement.X)) * Math.Sign(targetMovement.X);
                     }
@@ -855,35 +875,42 @@ namespace Barotrauma
                     //newCorrectionMovement.X = Math.Max(newCorrectionMovement.X, 0.5f) * Math.Sign(newCorrectionMovement.X);
 
                     correctionMovement = Vector2.Lerp(correctionMovement, newCorrectionMovement, 0.5f);
-                    
+
                     if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
                 }
             }
 
             if (resetAll)
             {
-               System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
+                System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
 
-                SetPosition(refLimb.body.TargetPosition);
+                if (this is HumanoidAnimController)
+                {
+
+                    foreach (Limb limb in Limbs)
+                    {
+                        if (limb != refLimb) limb.body.TargetPosition = limb.body.SimPosition + diff;
+                        limb.body.MoveToTargetPosition(Vector2.Distance(limb.SimPosition, limb.body.TargetPosition) < 10.0f);
+
+                        limb.body.LinearVelocity = Vector2.Zero;
+                        limb.body.AngularVelocity = 0.0f;
+                    }
+                }
+                else
+                {
+
+                    SetPosition(refLimb.body.TargetPosition);
+
+                }
 
                 //if (character is AICharacter) SetRotation(refLimb.body.TargetRotation);
 
-                foreach (Limb limb in Limbs)
-                {
-                    limb.body.LinearVelocity = Vector2.Zero;
-                    limb.body.AngularVelocity = 0.0f;
-                //    if (limb.body.TargetPosition == Vector2.Zero)
-                //    {
-                //        limb.body.SetTransform(limb.body.SimPosition + diff, limb.body.Rotation);
-                //        continue;
-                //    }
 
-                //    limb.body.LinearVelocity = limb.body.TargetVelocity;
-                //    limb.body.AngularVelocity = limb.body.TargetAngularVelocity;
-
-                //    limb.body.SetTransform(limb.body.TargetPosition, limb.body.TargetRotation);
-                //    limb.body.TargetPosition = Vector2.Zero;
-                }
+                //foreach (Limb limb in Limbs)
+                //{
+                //    limb.body.LinearVelocity = Vector2.Zero;
+                //    limb.body.AngularVelocity = 0.0f;
+                //}
             } 
         }
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
 using System;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -101,31 +102,24 @@ namespace Barotrauma.Networking
             get { return eventType; } 
         }
 
-        public NetworkEvent(ushort id, bool isClient)
-            : this(NetworkEventType.EntityUpdate, id, isClient)
+        public NetworkEvent(ushort id, bool allowClientSend)
+            : this(NetworkEventType.EntityUpdate, id, allowClientSend)
         {
         }
 
-        public NetworkEvent(NetworkEventType type, ushort id, bool isClient, object data = null)
+        public NetworkEvent(NetworkEventType type, ushort id, bool allowClientSend, object data = null)
         {
-            if (isClient)
-            {
-                if (GameMain.Server != null && GameMain.Server.Character == null) return;
-            }
-            else
-            {
-                if (GameMain.Server == null) return;
-            }
-
+            if (!allowClientSend && GameMain.Server != null) return;
+            
             eventType = type;
 
             if (overridePrevious[(int)type])
             {
-                if (Events.Find(e => e.id == id && e.eventType == type) != null) return;
+                if (Events.Any(e => e.id == id && e.eventType == type)) return;
             }
 
             this.id = id;
-            isClientEvent = isClient;
+            isClientEvent = allowClientSend;
 
             this.data = data;
 

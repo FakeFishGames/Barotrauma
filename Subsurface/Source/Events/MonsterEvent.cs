@@ -49,7 +49,7 @@ namespace Barotrauma
 
                 position.X += Rand.Range(-0.5f, 0.5f, false);
                 position.Y += Rand.Range(-0.5f, 0.5f, false);
-                monsters[i] = Character.Create(characterFile, position);
+                monsters[i] = Character.Create(characterFile, position, null, GameMain.Client != null);
             }
         }
 

@@ -84,15 +84,19 @@ namespace Barotrauma
 
             if (flip)
             {
-                //targetDir = (movement.X > 0.0f) ? Direction.Right : Direction.Left;
-                if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.5f)
+                if (!character.IsNetworkPlayer)
                 {
-                    TargetDir = Direction.Right;
+                    //targetDir = (movement.X > 0.0f) ? Direction.Right : Direction.Left;
+                    if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.5f)
+                    {
+                        TargetDir = Direction.Right;
+                    }
+                    else if (targetMovement.X < -0.1f && targetMovement.X < -Math.Abs(targetMovement.Y) * 0.5f)
+                    {
+                        TargetDir = Direction.Left;
+                    }
                 }
-                else if (targetMovement.X < -0.1f && targetMovement.X < -Math.Abs(targetMovement.Y) * 0.5f)
-                {
-                    TargetDir = Direction.Left;
-                }
+
             }
             else
             {
@@ -117,7 +121,7 @@ namespace Barotrauma
             
             if (TargetDir != dir) 
             {   
-                if (flipTimer>1.0f)
+                if (flipTimer>1.0f || character.IsNetworkPlayer)
                 {
                     Flip();
                     if (flip) Mirror();
