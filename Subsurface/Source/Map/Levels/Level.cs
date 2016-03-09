@@ -200,22 +200,19 @@ namespace Barotrauma
 
                 float tunnelLength = Rand.Range(5000.0f, 10000.0f, false);
 
-                var tunnelNodes = MathUtils.GenerateJaggedLine(tunnelStartPos, tunnelStartPos + Rand.Vector(tunnelLength,false) + Vector2.UnitY*5000.0f, 3, 1000.0f);
+                var tunnelNodes = MathUtils.GenerateJaggedLine(
+                    tunnelStartPos, 
+                    new Vector2(tunnelStartPos.X, pathBorders.Bottom)+Rand.Vector(tunnelLength,false), 
+                    4, 1000.0f);
 
                 List<Vector2> tunnel = new List<Vector2>();
                 foreach (Vector2[] tunnelNode in tunnelNodes)
                 {
-                    if (!pathBorders.Contains(tunnelNode[0])) break;
+                    if (!pathBorders.Contains(tunnelNode[0])) continue;
                     tunnel.Add(tunnelNode[0]);
                 }
 
-                if (tunnel.Any())
-                {
-                    smallTunnels.Add(tunnel);
-                    positionsOfInterest.Add(new InterestingPosition(tunnel.Last(), false));
-
-                    if (tunnel.Count() > 4) positionsOfInterest.Add(new InterestingPosition(tunnel[tunnel.Count()/2], false));
-                }
+                if (tunnel.Any()) smallTunnels.Add(tunnel);
             }
 
 
@@ -229,9 +226,9 @@ namespace Barotrauma
 
                     if (smallTunnels.Any(t => t.Any(node => Vector2.Distance(node, site) < siteInterval)))
                     {
-                        if (x < borders.Width - siteInterval) sites.Add(new Vector2(x, y) + Vector2.UnitX * siteInterval * 0.2f);
-                        if (y < borders.Height - siteInterval) sites.Add(new Vector2(x, y) + Vector2.UnitY * siteInterval * 0.2f);
-                        if (x < borders.Width - siteInterval && y < borders.Height - siteInterval) sites.Add(new Vector2(x, y) + Vector2.One * siteInterval * 0.2f);
+                        if (x < borders.Width - siteInterval) sites.Add(new Vector2(x, y) + Vector2.UnitX * siteInterval * 0.5f);
+                        if (y < borders.Height - siteInterval) sites.Add(new Vector2(x, y) + Vector2.UnitY * siteInterval * 0.5f);
+                        if (x < borders.Width - siteInterval && y < borders.Height - siteInterval) sites.Add(new Vector2(x, y) + Vector2.One * siteInterval * 0.5f);
                     }
 
                     if (mirror) site.X = borders.Width - site.X;
@@ -314,41 +311,21 @@ namespace Barotrauma
             {
                 if (tunnel.Count<2) continue;
 
+                //find the cell which the path starts from
+                int startCellIndex = FindCellIndex(tunnel[0]);
+                if (startCellIndex < 0) continue;
+
+                //if it wasn't one of the cells in the main path, don't create a tunnel
+                if (!pathCells.Contains(cells[startCellIndex])) continue;
+
                 var newPathCells = GeneratePath(tunnel, cells, pathBorders, 0.0f, 0.0f);
 
-                //for (int n = 0; n < newPathCells.Count; n += 5)
-                //{
-                //    positionsOfInterest.Add(newPathCells[n].Center);
-                //}
+                positionsOfInterest.Add(new InterestingPosition(tunnel.Last(), false));
 
+                if (tunnel.Count() > 4) positionsOfInterest.Add(new InterestingPosition(tunnel[tunnel.Count() / 2], false));
+                
                 pathCells.AddRange(newPathCells);
             }
-
-            ////generate a couple of random paths
-            //for (int i = 0; i <= Rand.Range(1,4,false); i++)
-            //{
-            //    //pathBorders = new Rectangle(
-            //    //borders.X + siteInterval * 2, borders.Y - siteInterval * 2,
-            //    //borders.Right - siteInterval * 2, borders.Y + borders.Height - siteInterval * 2);
-
-            //    Vector2 start = pathCells[Rand.Range(1, pathCells.Count - 2,false)].Center;
-
-            //    float x = pathBorders.X + Rand.Range(0, pathBorders.Right - pathBorders.X, false);
-            //    float y = pathBorders.Y + Rand.Range(0,pathBorders.Bottom - pathBorders.Y, false);
-
-            //    if (mirror) x = borders.Width - x;
-
-            //    Vector2 end = new Vector2(x, y);
-
-            //    var newPathCells = GeneratePath(new List<Vector2> { start, end }, cells, pathBorders, 0.0f, 0.8f, mirror);
-
-            //    for (int n = 0; n < newPathCells.Count; n += 5)
-            //    {
-            //        positionsOfInterest.Add(newPathCells[n].Center);
-            //    }                
-
-            //    pathCells.AddRange(newPathCells);
-            //}
 
             Debug.WriteLine("path: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();

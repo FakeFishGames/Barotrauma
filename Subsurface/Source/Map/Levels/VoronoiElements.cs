@@ -152,6 +152,8 @@ namespace Voronoi2
                 ge.point1 = vertices[i-1];
                 ge.point2 = vertices[i];
 
+                System.Diagnostics.Debug.Assert(ge.point1 != ge.point2);
+
                 edges.Add(ge);
             }
 
