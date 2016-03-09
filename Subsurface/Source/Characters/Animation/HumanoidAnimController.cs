@@ -683,11 +683,17 @@ namespace Barotrauma
                 character.SelectedConstruction.Rect.X + character.SelectedConstruction.Rect.Width / 2.0f,
                 character.SelectedConstruction.Rect.Y);
 
+            float stepHeight = ConvertUnits.ToSimUnits(30.0f);
+
+            if (currentHull==null && character.SelectedConstruction.Submarine!=null)
+            {
+                ladderSimPos += character.SelectedConstruction.Submarine.SimPosition;
+            }
+
             MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, head.SimPosition.Y + 0.05f), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, torso.SimPosition.Y), 10.5f);
             MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, waist.SimPosition.Y), 10.5f);
             
-            float stepHeight = ConvertUnits.ToSimUnits(30.0f);
 
             handPos = new Vector2(
                 ladderSimPos.X,
@@ -733,9 +739,12 @@ namespace Barotrauma
             float movementFactor = (handPos.Y / stepHeight) * (float)Math.PI;
             movementFactor = 0.8f + (float)Math.Abs(Math.Sin(movementFactor));
 
-            Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.6f) * movementFactor;
+            Vector2 subSpeed = currentHull != null || character.SelectedConstruction.Submarine == null 
+                ? Vector2.Zero : character.SelectedConstruction.Submarine.Velocity;
+
+            Vector2 climbForce = new Vector2(0.0f, movement.Y + (inWater ? -0.05f : 0.6f)) * movementFactor;
             if (climbForce.Y > 0.5f) climbForce.Y = Math.Max(climbForce.Y, 1.3f);
-            torso.body.ApplyForce(climbForce * 40.0f * torso.Mass);
+            torso.body.ApplyForce((climbForce * 40.0f + subSpeed*50.0f) * torso.Mass);
             head.body.SmoothRotate(0.0f);
 
             Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.FirstOrDefault();
