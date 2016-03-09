@@ -616,7 +616,7 @@ namespace Barotrauma
             steeringManager.WanderAngle = wanderAngle;
 
             if (targetID > 0) targetEntity = Entity.FindEntityByID(targetID) as IDamageable;
-            updateTargetsTimer = UpdateTargetsInterval;
+            //updateTargetsTimer = UpdateTargetsInterval;
             
         }
     }

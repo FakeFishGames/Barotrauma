@@ -355,10 +355,10 @@ namespace Barotrauma.Networking.ReliableMessages
                 return;
             }
 
-            if (lastMessageID > messageId && Math.Abs((int)lastMessageID - (int)messageId) < ushort.MaxValue / 2)
+            if (messageId < lastMessageID && Math.Abs((int)lastMessageID - (int)messageId) < ushort.MaxValue / 2)
             {
                 //shouldn't happen: we have somehow received messages that the other end hasn't sent
-                Debug.WriteLine("Reliable message error - recipient last sent: " + messageId + " (current count " + lastMessageID + ")");
+                Debug.WriteLine("Received id update message: " + messageId + ": ignoring, already received (" + lastMessageID + ")");
                 return;
             }
 

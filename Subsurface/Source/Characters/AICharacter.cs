@@ -108,7 +108,7 @@ namespace Barotrauma
                     return true;
                 case NetworkEventType.EntityUpdate:
 
-                    message.Write(AnimController.TargetDir == Direction.Right);
+                    message.Write(AnimController.Dir > 0.0f);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -1.0f, 1.0f), -1.0f, 1.0f, 8);
                     
@@ -216,8 +216,8 @@ namespace Barotrauma
                     AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
                     AnimController.TargetMovement = targetMovement;
 
-                    AnimController.RefLimb.body.TargetPosition = 
-                        AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);                            
+                    AnimController.RefLimb.body.TargetPosition = pos;
+                        //AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);                            
 
                     if (inSub)
                     {

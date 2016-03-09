@@ -29,7 +29,7 @@ namespace Barotrauma
         {
             Vector2 position = level.GetRandomInterestingPosition(true, true);
 
-            monster = Character.Create(monsterFile, position);
+            monster = Character.Create(monsterFile, position, null, GameMain.Client != null);
             monster.Enabled = false;
             radarPosition = monster.Position;
         }

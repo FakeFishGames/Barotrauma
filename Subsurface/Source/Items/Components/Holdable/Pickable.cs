@@ -195,33 +195,35 @@ namespace Barotrauma.Items.Components
             if (picker == null)
             {
                 picker = dropper;
-
-                //foreach (Character c in Character.characterList)
-                //{
-                //    if (c.Inventory == null) continue;
-                //    if (c.Inventory.FindIndex(item) == -1) continue;
-                    
-                //    picker = c;
-                //    break;                    
-                //}
             }
 
-            if (picker == null || picker.Inventory == null) return;
+            Vector2 bodyDropPos = Vector2.Zero;
 
-            DropConnectedWires(picker);
-
-            item.Submarine = picker.Submarine;
-            
-            if (item.body!= null && !item.body.Enabled)
+            if (picker == null || picker.Inventory == null)
             {
-                Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
-
-                item.SetTransform(rightHand.SimPosition, 0.0f);
-                item.body.Enabled = true;
-                
+                if (item.ParentInventory!=null && item.ParentInventory.Owner!=null)
+                {
+                    bodyDropPos = item.ParentInventory.Owner.SimPosition;
+                }
             }
-            picker.Inventory.RemoveItem(item);
-            picker = null;
+            else
+            {
+                DropConnectedWires(picker);
+
+                item.Submarine = picker.Submarine;
+
+                Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
+                bodyDropPos = rightHand.SimPosition;
+
+                picker.Inventory.RemoveItem(item);
+                picker = null;
+            }
+
+            if (item.body != null && !item.body.Enabled)
+            {
+                item.SetTransform(bodyDropPos, 0.0f);
+                item.body.Enabled = true;
+            }
         }
 
     }
