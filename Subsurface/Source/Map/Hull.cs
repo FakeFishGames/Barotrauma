@@ -90,6 +90,14 @@ namespace Barotrauma
             }
         }
 
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ShowHulls;
+            }
+        }
+
         public override bool IsLinkable
         {
             get { return true; }

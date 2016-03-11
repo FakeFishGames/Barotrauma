@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -27,6 +28,9 @@ namespace Barotrauma
         private Character dummyCharacter;
         
         private bool characterMode;
+
+        private bool wiringMode;
+        private GUIFrame wiringToolPanel;
 
         private Tutorials.EditorTutorial tutorial;
 
@@ -63,6 +67,11 @@ namespace Barotrauma
         public bool CharacterMode
         {
             get { return characterMode; }
+        }
+
+        public bool WiringMode
+        {
+            get { return wiringMode; }
         }
 
 
@@ -176,6 +185,11 @@ namespace Barotrauma
             button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, GUI.Style, leftPanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
+
+            y += 35;
+            button = new GUIButton(new Rectangle(0, y, 0, 20), "Wiring mode", Alignment.Left, GUI.Style, leftPanel);
+            //button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
+            button.OnClicked = ToggleWiringMode;
             
             y+=50;
             button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, leftPanel);
@@ -251,6 +265,10 @@ namespace Barotrauma
             GUIComponent.MouseOn = null;
 
             MapEntityPrefab.Selected = null;
+
+            if (characterMode) ToggleCharacterMode();            
+
+            if (wiringMode) ToggleWiringMode();
 
             if (dummyCharacter != null)
             {
@@ -444,6 +462,84 @@ namespace Barotrauma
             return true;
         }
 
+        private void ToggleWiringMode()
+        {
+            ToggleWiringMode(null, null);
+        }
+        
+        private bool ToggleWiringMode(GUIButton button, object obj)
+        {
+            wiringMode = !wiringMode;
+
+            if (characterMode != wiringMode) ToggleCharacterMode();
+
+            if (wiringMode)
+            {
+                var screwdriverPrefab = ItemPrefab.list.Find(ip => ip.Name == "Screwdriver") as ItemPrefab;
+
+                var item = new Item(screwdriverPrefab, Vector2.Zero, null);
+
+                dummyCharacter.Inventory.TryPutItem(item, new List<LimbSlot>() { LimbSlot.RightHand }, false);
+
+                wiringToolPanel = CreateWiringPanel();
+            }
+            
+            return true;
+        }
+
+        private GUIFrame CreateWiringPanel()
+        {
+            GUIFrame frame = new GUIFrame(new Rectangle(0,0,50,300), null, Alignment.Right | Alignment.CenterY, GUI.Style);
+            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+
+            GUIListBox listBox = new GUIListBox(Rectangle.Empty, GUI.Style, frame);
+            listBox.OnSelected = SelectWire;
+
+            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+            {
+                var itemPrefab = ep as ItemPrefab;
+                if (itemPrefab == null || itemPrefab.Name == null || !itemPrefab.Name.Contains("Wire")) continue;
+
+                GUIFrame imgFrame = new GUIFrame(new Rectangle(0, 0, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), null, listBox);
+                imgFrame.UserData = itemPrefab;
+                imgFrame.HoverColor = Color.White * 0.5f;
+                imgFrame.SelectedColor = Color.Gold * 0.7f;
+
+                var img = new GUIImage(new Rectangle(0, 0, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab.sprite, Alignment.TopLeft, imgFrame);
+                img.Color = ep.SpriteColor;
+            }
+
+            return frame;
+        }
+
+        private bool SelectWire(GUIComponent component, object userData)
+        {
+            if (dummyCharacter == null) return false;
+
+            Item existingWire = dummyCharacter.SelectedItems.FirstOrDefault(i => i != null && i.Prefab == userData as ItemPrefab);
+            if (existingWire!=null)
+            {
+                existingWire.Drop();
+                existingWire.Remove();
+                return false;
+            }
+
+            var wire = new Item(userData as ItemPrefab, Vector2.Zero, null);
+
+
+            int slotIndex = dummyCharacter.Inventory.FindLimbSlot(LimbSlot.LeftHand);
+            if (dummyCharacter.Inventory.Items[slotIndex] != null && dummyCharacter.Inventory.Items[slotIndex].Prefab != userData as ItemPrefab)
+            {
+                dummyCharacter.Inventory.Items[slotIndex].Drop();
+                dummyCharacter.Inventory.Items[slotIndex].Remove();
+            }
+
+            dummyCharacter.Inventory.TryPutItem(wire, slotIndex, false, false);
+
+            return true;
+           
+        }
+
         private bool ChangeSubName(GUITextBox textBox, string text)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -528,7 +624,7 @@ namespace Barotrauma
 
             if (characterMode)
             {
-                if (dummyCharacter == null || Entity.FindEntityByID(dummyCharacter.ID)!=dummyCharacter)
+                if (dummyCharacter == null || Entity.FindEntityByID(dummyCharacter.ID) != dummyCharacter)
                 {
                     ToggleCharacterMode(null, null);
                 }
@@ -551,6 +647,7 @@ namespace Barotrauma
                     dummyCharacter.ControlLocalPlayer((float)deltaTime, cam, false);
                     dummyCharacter.Control((float)deltaTime, cam);
                     cam.TargetPos = Vector2.Zero;
+
                 }
             }
             else
@@ -563,6 +660,15 @@ namespace Barotrauma
 
             leftPanel.Update((float)deltaTime);
             topPanel.Update((float)deltaTime);
+
+            if (wiringMode)
+            {
+                if (!dummyCharacter.SelectedItems.Any(it => it.HasTag("Wire")))
+                {
+                    wiringToolPanel.GetChild<GUIListBox>().Deselect();
+                }
+                wiringToolPanel.Update((float)deltaTime);
+            }
 
             if (loadFrame!=null)
             {
@@ -617,38 +723,33 @@ namespace Barotrauma
 
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
-            if (characterMode)
-            {
-                if (dummyCharacter != null)                     
+            if (characterMode && dummyCharacter != null)                     
+            { 
+                dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false); 
+
+                foreach (Item item in dummyCharacter.SelectedItems)
                 {
-                    dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false); 
+                    if (item == null) continue;
+                    item.SetTransform(dummyCharacter.SimPosition, 0.0f);
 
-                    foreach (Item item in dummyCharacter.SelectedItems)
-                    {
-                        if (item == null) continue;
-                        item.SetTransform(dummyCharacter.SimPosition, 0.0f);
-
-                        item.Update(cam, (float)deltaTime);
-                    }
-
-                    if (dummyCharacter.SelectedConstruction != null)
-                    {
-                        //if (dummyCharacter.SelectedConstruction == dummyCharacter.ClosestItem)
-                        //{
-                            dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, dummyCharacter);
-
-                        //}
-                        //else
-                        //{
-                        //    dummyCharacter.SelectedConstruction = null;
-                        //}
-
-                            if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.ClosestItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;
-                    }
+                    item.Update(cam, (float)deltaTime);
                 }
 
-                dummyCharacter.DrawHUD(spriteBatch, cam);
+                if (dummyCharacter.SelectedConstruction != null)
+                {
+                    dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, dummyCharacter);
 
+                    if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.ClosestItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;
+                }
+
+                if (!wiringMode)
+                {
+                    dummyCharacter.DrawHUD(spriteBatch, cam);
+                }
+                else
+                {
+                    wiringToolPanel.Draw(spriteBatch);
+                }
             }
             else
             {

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
-            //Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
+            Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
 
             //spawn some fish next to the player
             GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2,
@@ -275,7 +276,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.Loaded.WorldPosition.Y > 39000.0f)
+            while (Submarine.Loaded.WorldPosition.Y > 25000.0f)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -448,6 +449,8 @@ namespace Barotrauma.Tutorials
                 capacitor2.Charge += 5.0f;
                 yield return CoroutineStatus.Running;
             }
+
+            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Character.Controlled.WorldPosition + Vector2.UnitY*1000.0f));
 
             infoBox = CreateInfoFrame("Now we're ready to shoot! Select the railgun controller.");
 

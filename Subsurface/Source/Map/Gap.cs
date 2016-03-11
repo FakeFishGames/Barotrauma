@@ -30,7 +30,6 @@ namespace Barotrauma
         private float higherSurface;
         private float lowerSurface;
 
-
         public float Open
         {
             get { return open; }
@@ -70,6 +69,14 @@ namespace Barotrauma
                 base.Rect = value;
 
                 FindHulls();
+            }
+        }
+
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ShowGaps;
             }
         }
 

@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
         
-        [InGameEditable, HasDefaultValue(0.1f, true)]
+        [InGameEditable, HasDefaultValue(0.0f, true)]
         public float TimeFrame
         {
             get { return timeFrame; }
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
         public AndComponent(Item item, XElement element)
             : base (item, element)
         {
-            timeSinceReceived = new float[] { timeFrame*2.0f, timeFrame*2.0f};
+            timeSinceReceived = new float[] { Math.Max(timeFrame*2.0f,0.1f), Math.Max(timeFrame*2.0f, 0.1f) };
 
             //output = "1";
         }

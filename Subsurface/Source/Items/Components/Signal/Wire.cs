@@ -328,7 +328,7 @@ namespace Barotrauma.Items.Components
                 //nodes.Add(newNodePos);
             }
 
-            if (!editing || !PlayerInput.MouseInsideWindow || GameMain.EditMapScreen.CharacterMode) return;
+            if (!editing || !PlayerInput.MouseInsideWindow || !GameMain.EditMapScreen.WiringMode ) return;
             
             for (int i = 0; i < Nodes.Count; i++)
             {
@@ -371,7 +371,6 @@ namespace Barotrauma.Items.Components
             {
                 if (selectedNodeIndex != null && draggingWire == this)
                 {
-
                     MapEntity.DisableSelect = true;
                     //Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)-Submarine.HiddenSubPosition+Submarine.Loaded.Position;
 

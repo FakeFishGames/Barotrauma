@@ -92,6 +92,11 @@ namespace Barotrauma
             get { return false; }
         }
 
+        public virtual bool SelectableInEditor
+        {
+            get { return true; }
+        }
+
         public override Vector2 Position
         {
             get
@@ -288,9 +293,12 @@ namespace Barotrauma
 
             foreach (MapEntity e in mapEntityList)
             {
+                if (!e.SelectableInEditor) continue;
+
                 if (highLightedEntity == null || e.Sprite == null ||
                     (highLightedEntity.Sprite!=null && e.Sprite.Depth < highLightedEntity.Sprite.Depth))
                 {
+
                     if (e.IsMouseOn(position)) highLightedEntity = e;
                 }
                 e.isSelected = false;
@@ -315,8 +323,7 @@ namespace Barotrauma
 
                     if (moveAmount != Vector2.Zero)
                     {
-                        foreach (MapEntity e in selectedList)
-                            e.Move(moveAmount);
+                        foreach (MapEntity e in selectedList) e.Move(moveAmount);
                     }
 
                     startMovingPos = Vector2.Zero;
@@ -584,8 +591,9 @@ namespace Barotrauma
             
             foreach (MapEntity e in mapEntityList)
             {
-                if (Submarine.RectsOverlap(selectionRect, e.rect))
-                    foundEntities.Add(e);
+                if (!e.SelectableInEditor) continue;
+
+                if (Submarine.RectsOverlap(selectionRect, e.rect)) foundEntities.Add(e);
             }
 
             return foundEntities;
