@@ -116,6 +116,8 @@
     <Compile Include="Source\Items\Components\Holdable\MeleeWeapon.cs" />
     <Compile Include="Source\Items\Components\Holdable\Propulsion.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
+    <Compile Include="Source\Items\Components\Signal\DelayComponent.cs" />
+    <Compile Include="Source\Items\Components\Signal\RelayComponent.cs" />
     <Compile Include="Source\Items\Components\Signal\WaterDetector.cs" />
     <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="Source\Items\Components\Signal\SignalCheckComponent.cs" />
