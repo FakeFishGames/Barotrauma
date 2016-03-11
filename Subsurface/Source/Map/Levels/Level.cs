@@ -162,7 +162,7 @@ namespace Barotrauma
             backgroundColor = new Color(backgroundColor, 1.0f);
 
             float minWidth = Submarine.Loaded == null ? 0.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
-            minWidth = Math.Max(minWidth, 3500.0f);
+            minWidth = Math.Max(minWidth, 6500.0f);
 
             startPosition = new Vector2((int)minWidth * 2, Rand.Range((int)minWidth * 2, borders.Height - (int)minWidth * 2, false));
             endPosition = new Vector2(borders.Width - (int)minWidth * 2, Rand.Range((int)minWidth * 2, borders.Height - (int)minWidth * 2, false));
@@ -628,12 +628,11 @@ namespace Barotrauma
                     if (tooClose && !tooCloseCells.Contains(cell)) tooCloseCells.Add(cell);
                 }
 
-                for (int x = -1; x <= 1; x++)
+                for (float x = -minDistance; x <= minDistance; x+=siteInterval)
                 {
-                    for (int y = -1; y <= 1; y++)
+                    for (float y = -minDistance; y <= minDistance; y += siteInterval)
                     {
-                        if (x == 0 && y == 0) continue;
-                        Vector2 cornerPos = position + new Vector2(x * minDistance, y * minDistance);
+                        Vector2 cornerPos = position + new Vector2(x,y);
 
                         int cellIndex = FindCellIndex(cornerPos);
                         if (cellIndex == -1) continue;

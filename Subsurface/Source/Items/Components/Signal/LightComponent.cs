@@ -164,6 +164,9 @@ namespace Barotrauma.Items.Components
                 case "set_state":           
                     IsActive = (signal != "0");                   
                     break;
+                case "set_color":
+                    LightColor = signal;
+                    break;
             }
         }
     }

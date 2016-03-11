@@ -377,6 +377,8 @@ namespace Barotrauma
 
         public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, bool hasAi=true)
         {
+            if (!System.IO.File.Exists(file)) return null;
+
             if (file != humanConfigFile)
             {
                 var enemyCharacter = new AICharacter(file, position, characterInfo, isNetworkPlayer);
