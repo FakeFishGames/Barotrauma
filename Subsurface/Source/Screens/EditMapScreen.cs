@@ -516,8 +516,9 @@ namespace Barotrauma
         {
             if (dummyCharacter == null) return false;
 
+            //if the same type of wire has already been selected, deselect it and return
             Item existingWire = dummyCharacter.SelectedItems.FirstOrDefault(i => i != null && i.Prefab == userData as ItemPrefab);
-            if (existingWire!=null)
+            if (existingWire != null)
             {
                 existingWire.Drop();
                 existingWire.Remove();
@@ -526,12 +527,14 @@ namespace Barotrauma
 
             var wire = new Item(userData as ItemPrefab, Vector2.Zero, null);
 
-
             int slotIndex = dummyCharacter.Inventory.FindLimbSlot(LimbSlot.LeftHand);
-            if (dummyCharacter.Inventory.Items[slotIndex] != null && dummyCharacter.Inventory.Items[slotIndex].Prefab != userData as ItemPrefab)
+
+            //if there's some other type of wire in the inventory, remove it
+            existingWire = dummyCharacter.Inventory.Items[slotIndex];
+            if (existingWire != null && existingWire.Prefab != userData as ItemPrefab)
             {
-                dummyCharacter.Inventory.Items[slotIndex].Drop();
-                dummyCharacter.Inventory.Items[slotIndex].Remove();
+                existingWire.Drop();
+                existingWire.Remove();
             }
 
             dummyCharacter.Inventory.TryPutItem(wire, slotIndex, false, false);
@@ -663,7 +666,7 @@ namespace Barotrauma
 
             if (wiringMode)
             {
-                if (!dummyCharacter.SelectedItems.Any(it => it.HasTag("Wire")))
+                if (!dummyCharacter.SelectedItems.Any(it => it != null && it.HasTag("Wire")))
                 {
                     wiringToolPanel.GetChild<GUIListBox>().Deselect();
                 }

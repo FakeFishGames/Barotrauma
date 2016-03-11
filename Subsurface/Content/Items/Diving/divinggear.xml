@@ -10,10 +10,10 @@
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
     </Deconstruct>
-    
-    <Sprite texture ="oxygentank.png" depth="0.5"/>
 
-    <Body radius="6" height="22" density="5"/>
+    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="39,31,12,33" depth="0.5"/>
+
+    <Body width="12" height="33" density="5"/>
 
     <Pickable holdpos="30,-15" handle1="0,1" slots="RightHand,LeftHand,Any">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg" disabledeltatime="true">

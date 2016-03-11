@@ -9,7 +9,6 @@ namespace Barotrauma
 {
     class CharacterHUD
     {
-
         private static Sprite statusIcons;
 
         private static Sprite noiseOverlay, damageOverlay;
@@ -22,7 +21,7 @@ namespace Barotrauma
         {
             healthBar.Flash();
 
-            damageOverlayTimer = MathHelper.Clamp(amount*0.1f, 0.2f, 5.0f);
+            damageOverlayTimer = MathHelper.Clamp(amount * 0.1f, 0.2f, 5.0f);
         }
 
         public static void Update(float deltaTime, Character character)
@@ -39,17 +38,17 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
-            if (statusIcons==null)
+            if (statusIcons == null)
             {
                 statusIcons = new Sprite("Content/UI/statusIcons.png", Vector2.Zero);
             }
 
-            if (noiseOverlay==null)
+            if (noiseOverlay == null)
             {
-                noiseOverlay  = new Sprite("Content/UI/noise.png", Vector2.Zero);
+                noiseOverlay = new Sprite("Content/UI/noise.png", Vector2.Zero);
             }
 
-            if (damageOverlay==null)
+            if (damageOverlay == null)
             {
                 damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
             }
@@ -71,26 +70,26 @@ namespace Barotrauma
                 Vector2 textPos = startPos;
                 textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestCharacter.Info.Name).X / 2, 20);
 
-                GUI.DrawString(spriteBatch, textPos, character.ClosestCharacter.Info.Name, Color.Orange, Color.Black, 2);
+                GUI.DrawString(spriteBatch, textPos, character.ClosestCharacter.Info.Name, Color.White, Color.Black, 2);
             }
             else if (character.SelectedCharacter == null && character.ClosestItem != null && character.SelectedConstruction == null)
             {
+                var hudTexts = character.ClosestItem.GetHUDTexts(character);
 
-                Vector2 startPos = character.DrawPosition + (character.ClosestItem.DrawPosition - character.DrawPosition) * 0.7f;
-                startPos = cam.WorldToScreen(startPos);
+                Vector2 startPos = new Vector2((int)(GameMain.GraphicsWidth / 2.0f), (int)(GameMain.GraphicsHeight));
+                startPos.Y -= 50 + hudTexts.Count * 25;
 
                 Vector2 textPos = startPos;
-                textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestItem.Name).X / 2, 20);
+                textPos -= new Vector2((int)GUI.Font.MeasureString(character.ClosestItem.Name).X / 2, 20);
 
-                GUI.DrawString(spriteBatch, textPos, character.ClosestItem.Name, Color.Orange, Color.Black * 0.7f, 2);
-
-
-                textPos.Y += 50.0f;
-                foreach (ColoredText coloredText in character.ClosestItem.GetHUDTexts(character))
+                GUI.DrawString(spriteBatch, textPos, character.ClosestItem.Name, Color.White, Color.Black * 0.7f, 2);
+                
+                textPos.Y += 30.0f;
+                foreach (ColoredText coloredText in hudTexts)
                 {
-                    textPos.X = startPos.X - GUI.Font.MeasureString(coloredText.Text).X / 2;
+                    textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X / 2);
 
-                    GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color, Color.Black*0.7f, 2);
+                    GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color, Color.Black*0.7f, 2, GUI.SmallFont);
                     
                     textPos.Y += 25;
                 }

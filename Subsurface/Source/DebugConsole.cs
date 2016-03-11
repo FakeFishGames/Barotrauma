@@ -219,10 +219,6 @@ namespace Barotrauma
                     if (spawnedCharacter != null && GameMain.Server != null) GameMain.Server.SendCharacterSpawnMessage(spawnedCharacter);
 
                     break;
-                //case "startserver":
-                //    if (Game1.Server==null)
-                //        Game1.NetworkMember = new GameServer();
-                //    break;
                 case "kick":
                     if (GameMain.Server == null) break;
                     GameMain.Server.KickPlayer(commands[1]);
