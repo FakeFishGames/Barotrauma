@@ -86,6 +86,14 @@ namespace Barotrauma
             private set;
         }
 
+        public override bool SelectableInEditor
+        {
+            get
+            {
+                return ParentInventory == null && (body == null || !body.Enabled);
+            }
+        }
+
         public List<FixRequirement> FixRequirements;
 
         public override string Name
