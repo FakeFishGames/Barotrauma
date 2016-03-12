@@ -1,20 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
     class GUIMessage
     {
-        ColoredText coloredText;
-        Vector2 pos;
+        private ColoredText coloredText;
+        private Vector2 pos;
 
-        float lifeTime;
+        private float lifeTime;
 
-        Vector2 size;
-
+        private Vector2 size;
 
         public string Text
         {

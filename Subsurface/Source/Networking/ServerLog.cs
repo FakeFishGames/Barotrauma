@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma.Networking
 {
@@ -19,12 +18,12 @@ namespace Barotrauma.Networking
 
         private GUIListBox listBox;
 
-        private Queue<ColoredText> lines;
+        private readonly Queue<ColoredText> lines;
 
         public int LinesPerFile
         {
             get { return linesPerFile; }
-            set { linesPerFile = Math.Max(10, linesPerFile); }
+            set { linesPerFile = Math.Max(value, 10); }
         }
 
         public ServerLog(string serverName)

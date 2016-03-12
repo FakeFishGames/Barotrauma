@@ -10,13 +10,13 @@ namespace Barotrauma.Items.Components
 {
     class RepairTool : ItemComponent
     {
-        List<string> fixableEntities;
+        private List<string> fixableEntities;
 
-        float range;
+        private float range;
 
-        Vector2 pickedPosition;
+        private Vector2 pickedPosition;
 
-        Vector2 barrelPos;
+        private Vector2 barrelPos;
 
         private string particles;
 

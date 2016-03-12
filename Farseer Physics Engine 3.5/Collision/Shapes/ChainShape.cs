@@ -63,12 +63,7 @@ namespace FarseerPhysics.Collision.Shapes
         {
             ShapeType = ShapeType.Chain;
             _radius = Settings.PolygonRadius;
-
-            if (!(vertices != null && vertices.Count >= 2))
-            {
-                int lkmsdgkldf = 1;
-            }
-
+            
             Debug.Assert(vertices != null && vertices.Count >= 2);
             Debug.Assert(vertices[0] != vertices[vertices.Count - 1]); // FPE. See http://www.box2d.org/forum/viewtopic.php?f=4&t=7973&p=35363
 

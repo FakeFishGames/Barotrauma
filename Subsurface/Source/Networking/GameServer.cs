@@ -128,7 +128,7 @@ namespace Barotrauma.Networking
                 GUIMessageBox upnpBox = new GUIMessageBox("Please wait...", "Attempting UPnP port forwarding", new string[] {"Cancel"} );
                 upnpBox.Buttons[0].OnClicked = upnpBox.Close;
 
-                DateTime upnpTimeout = DateTime.Now + new TimeSpan(0,0,5);
+                //DateTime upnpTimeout = DateTime.Now + new TimeSpan(0,0,5);
                 while (server.UPnP.Status == UPnPStatus.Discovering 
                     && GUIMessageBox.VisibleBox == upnpBox)// && upnpTimeout>DateTime.Now)
                 {

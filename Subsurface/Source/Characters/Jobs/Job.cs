@@ -1,8 +1,5 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -10,7 +7,7 @@ namespace Barotrauma
     class Job
     {
 
-        private JobPrefab prefab;
+        private readonly JobPrefab prefab;
 
         private Dictionary<string, Skill> skills;
 

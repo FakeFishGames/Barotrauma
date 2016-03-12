@@ -35,7 +35,7 @@ namespace Barotrauma
             PrefabList = new List<Order>();
 
             XDocument doc = ToolBox.TryLoadXml(ConfigFile);
-            if (doc == null) return;
+            if (doc == null || doc.Root == null) return;
 
             foreach (XElement orderElement in doc.Root.Elements())
             {

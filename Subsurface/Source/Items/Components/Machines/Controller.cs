@@ -215,7 +215,7 @@ namespace Barotrauma.Items.Components
             character.AnimController.Anim = AnimController.Animation.None;
         }
 
-        public override bool Select(Character activator = null)
+        public override bool Select(Character activator)
         {
             if (activator == null) return false;
 

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -22,11 +21,7 @@ namespace Barotrauma
         {
             get
             {
-                foreach (Task task in tasks)
-                {
-                    if (task.Priority >= CriticalPriority) return true;
-                }
-                return false;
+                return tasks.Any(task => task.Priority >= CriticalPriority);
             }
         }
 

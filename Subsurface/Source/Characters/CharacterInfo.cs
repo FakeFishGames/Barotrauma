@@ -187,7 +187,7 @@ namespace Barotrauma
 
         public GUIFrame CreateInfoFrame(GUIFrame frame)
         {
-            GUIImage image = new GUIImage(new Rectangle(0,0,30,30), HeadSprite, Alignment.TopLeft, frame);
+            new GUIImage(new Rectangle(0,0,30,30), HeadSprite, Alignment.TopLeft, frame);
 
             SpriteFont font = frame.Rect.Width<280 ? GUI.SmallFont : GUI.Font;
 

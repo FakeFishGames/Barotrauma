@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -14,7 +12,7 @@ namespace Barotrauma
     // Keeps track of all running coroutines, and runs them till the end.
     static class CoroutineManager
     {
-        static List<IEnumerator<object>> Coroutines = new List<IEnumerator<object>>();
+        static readonly List<IEnumerator<object>> Coroutines = new List<IEnumerator<object>>();
 
         public static float DeltaTime;
 

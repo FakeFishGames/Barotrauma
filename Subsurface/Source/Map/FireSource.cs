@@ -165,8 +165,6 @@ namespace Barotrauma
 
             for (int i = 0; i < count; i++ )
             {
-                float normalizedPos = 0.5f-(i / count);
-
                 Vector2 spawnPos = new Vector2(WorldPosition.X + Rand.Range(0.0f, size.X), Rand.Range(WorldPosition.Y - size.Y, WorldPosition.Y) + 10.0f);
 
                 Vector2 speed = new Vector2((spawnPos.X - (WorldPosition.X + size.X / 2.0f)), (float)Math.Sqrt(size.X) * Rand.Range(10.0f, 15.0f) * growModifier);

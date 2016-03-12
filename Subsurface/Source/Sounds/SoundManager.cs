@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio;
@@ -12,22 +11,14 @@ namespace Barotrauma.Sounds
     {
         public const int DefaultSourceCount = 16;
 
-        private static List<int> alSources = new List<int>();
-        private static int[] alBuffers = new int[DefaultSourceCount];
+        private static readonly List<int> alSources = new List<int>();
+        private static readonly int[] alBuffers = new int[DefaultSourceCount];
         private static int lowpassFilterId;
+        
+        private static AudioContext AC;
 
-        //private static float overrideLowPassGain;
-
-        //public static float OverrideLowPassGain
-        //{
-        //    get { return overrideLowPassGain; }
-        //    set { overrideLowPassGain = MathHelper.Clamp(overrideLowPassGain, 0.0f, 1.0f); }
-        //}
-
-        static AudioContext AC;
-
-        public static OggStreamer oggStreamer;
-        public static OggStream oggStream;
+        private static OggStreamer oggStreamer;
+        private static OggStream oggStream;
 
         public static float MasterVolume = 1.0f;
 

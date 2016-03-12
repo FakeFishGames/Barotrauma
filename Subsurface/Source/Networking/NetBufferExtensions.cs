@@ -1,7 +1,4 @@
-﻿using Lidgren.Network;
-using System;
-
-namespace Barotrauma.Networking
+﻿namespace Barotrauma.Networking
 {
     static class NetBufferExtensions
     {

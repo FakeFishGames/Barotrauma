@@ -117,7 +117,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (!container.Inventory.Items.Any(i => i != null)) return;
+                if (container.Inventory.Items.All(i => i == null)) return;
 
                 activateButton.Text = "Cancel";
             }

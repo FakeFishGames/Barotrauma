@@ -1,30 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class ShiftSummary
     {
-        //class Casualty
-        //{
-        //    public readonly CharacterInfo character;
-        //    public readonly CauseOfDeath causeOfDeath;
-
-        //    public readonly string description;
-
-        //    public Casualty(CharacterInfo characterInfo, CauseOfDeath causeOfDeath, string description)
-        //    {
-        //        this.character = characterInfo;
-        //        this.causeOfDeath = causeOfDeath;
-        //        this.description = description;
-        //    }
-        //}
-
         private Location startLocation, endLocation;
 
         private GameSession gameSession;
@@ -51,7 +31,7 @@ namespace Barotrauma
         {
             bool singleplayer = GameMain.NetworkMember == null;
 
-            bool gameOver = !gameSession.CrewManager.characters.Any(c => !c.IsDead);
+            bool gameOver = gameSession.CrewManager.characters.All(c => c.IsDead);
             bool progress = Submarine.Loaded.AtEndPosition;
             
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.8f);

@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
                 ToolBox.GetAttributeVector2(element, "origin", Vector2.Zero));
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             Vector2 drawPos = new Vector2(item.Rect.X, item.Rect.Y);
             if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;
@@ -270,7 +270,7 @@ namespace Barotrauma.Items.Components
             if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.01f) return false;
 
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
-            if (pickedBody != null && pickedBody.UserData as Limb == null) return false;
+            if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;
 
             if (objective.Option.ToLower()=="fire at will") Use(deltaTime, character);
 

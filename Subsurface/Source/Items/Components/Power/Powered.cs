@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Globalization;
-using System.IO;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -85,7 +83,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
+        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0)
         {
             if (currPowerConsumption == 0.0f) voltage = 0.0f;
             if (connection.IsPower) voltage = power;                

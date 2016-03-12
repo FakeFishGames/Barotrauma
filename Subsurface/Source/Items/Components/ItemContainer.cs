@@ -152,9 +152,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, editing);
 
             if (hideItems || (item.body != null && !item.body.Enabled)) return;
 

@@ -208,16 +208,13 @@ namespace Barotrauma
                 otherButton.Selected = false;
             }
 
-            if (Screen.Selected != this) Select();
+            if (Selected != this) Select();
 
             return true;
         }
 
         public void SelectTab(Tab tab)
         {
-            int oldTab = selectedTab;
-
-
             if (GameMain.Config.UnsavedSettings)
             {
                 var applyBox = new GUIMessageBox("Apply changes?", "Do you want to apply the settings or discard the changes?", 

@@ -1,5 +1,4 @@
-﻿using FarseerPhysics;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -80,7 +79,7 @@ namespace Barotrauma
         public delegate float? GetNodePenaltyHandler(PathNode node, PathNode prevNode);
         public GetNodePenaltyHandler GetNodePenalty;
 
-        List<PathNode> nodes;
+        private List<PathNode> nodes;
 
         private bool insideSubmarine;
 
@@ -181,12 +180,13 @@ namespace Barotrauma
                     endNode = node;
                     if (startNode != null) break;
                 }
+            }
 
-                if (startNode==null || endNode==null)
-                {
-                    DebugConsole.ThrowError("Pathfinding error, couldn't find matching pathnodes to waypoints");
-                    return new SteeringPath();
-                }
+
+            if (startNode == null || endNode == null)
+            {
+                DebugConsole.ThrowError("Pathfinding error, couldn't find matching pathnodes to waypoints");
+                return new SteeringPath();
             }
 
             return FindPath(startNode, endNode);

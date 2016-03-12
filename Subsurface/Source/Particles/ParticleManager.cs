@@ -32,7 +32,7 @@ namespace Barotrauma.Particles
             particles = new Particle[MaxParticles];
 
             XDocument doc = ToolBox.TryLoadXml(configFile);
-            if (doc == null) return;
+            if (doc == null || doc.Root == null) return;
 
             prefabs = new Dictionary<string, ParticlePrefab>();
 

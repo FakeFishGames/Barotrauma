@@ -747,12 +747,13 @@ namespace Barotrauma
             torso.body.ApplyForce((climbForce * 40.0f + subSpeed*50.0f) * torso.Mass);
             head.body.SmoothRotate(0.0f);
 
-            Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.FirstOrDefault();
-            if (trigger == null)
+            if (!character.SelectedConstruction.Prefab.Triggers.Any())
             {
                 character.SelectedConstruction = null;
                 return;
             }
+
+            Rectangle trigger = character.SelectedConstruction.Prefab.Triggers.FirstOrDefault();
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
             bool notClimbing = false;

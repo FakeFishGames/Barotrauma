@@ -1,9 +1,6 @@
-﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -59,10 +56,6 @@ namespace Barotrauma
             }
             else
             {
-
-                
-                var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
-
                 Hull bestHull = null;
                 float bestValue = currenthullSafety;
 
@@ -75,7 +68,7 @@ namespace Barotrauma
                     hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X- hull.Position.X));
                     hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y)*2.0f);
 
-                    if (bestHull==null || hullValue > bestValue)
+                    if (bestHull == null || hullValue > bestValue)
                     {
                         bestHull = hull;
                         bestValue = hullValue;

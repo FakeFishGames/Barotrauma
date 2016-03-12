@@ -153,7 +153,6 @@ namespace Barotrauma.Items.Components
         
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 

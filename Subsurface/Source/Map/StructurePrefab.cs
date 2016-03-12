@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -13,17 +11,17 @@ namespace Barotrauma
         //public static List<StructurePrefab> list = new List<StructurePrefab>();
 
         //does the structure have a physics body
-        bool hasBody;
+        private bool hasBody;
 
-        bool castShadow;
+        private bool castShadow;
 
-        bool isPlatform;
-        Direction stairDirection;
+        private bool isPlatform;
+        private Direction stairDirection;
 
-        float maxHealth;
+        private float maxHealth;
         
         //default size
-        Vector2 size;
+        private Vector2 size;
         
         public bool HasBody
         {
@@ -55,7 +53,7 @@ namespace Barotrauma
             foreach (string filePath in filePaths)
             {
                 XDocument doc = ToolBox.TryLoadXml(filePath);
-                if (doc == null) return;
+                if (doc == null || doc.Root == null) return;
 
                 foreach (XElement el in doc.Root.Elements())
                 {        

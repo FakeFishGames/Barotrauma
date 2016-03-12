@@ -105,7 +105,7 @@ namespace Barotrauma.Items.Components
                     item.body.ApplyLinearImpulse(
                         new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);
                 
-                    projectileComponent.ignoredBodies = limbBodies;
+                    projectileComponent.IgnoredBodies = limbBodies;
 
                     item.RemoveContained(projectile);
                 

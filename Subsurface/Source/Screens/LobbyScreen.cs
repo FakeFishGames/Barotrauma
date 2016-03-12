@@ -206,12 +206,7 @@ namespace Barotrauma
                 {
                     var frame = c.CreateCharacterFrame(hireList, c.Name + " (" + c.Job.Name + ")", c);
 
-                    //GUITextBlock textBlock = new GUITextBlock(
-                    //    new Rectangle(0, 0, 0, 25),
-                    //    c.Name + " (" + c.Job.Name + ")", GUI.Style, hireList);
-                    //textBlock.UserData = c;
-
-                    var textBlock = new GUITextBlock(
+                    new GUITextBlock(
                         new Rectangle(0, 0, 0, 25),
                         c.Salary.ToString(),
                         null, null,
@@ -475,7 +470,7 @@ namespace Barotrauma
             GUIComponent prevInfoFrame = null;
             foreach (GUIComponent child in bottomPanel[selectedRightPanel].children)
             {
-                if (child.UserData as CharacterInfo == null) continue;
+                if (!(child.UserData is CharacterInfo)) continue;
 
                 prevInfoFrame = child;
             }

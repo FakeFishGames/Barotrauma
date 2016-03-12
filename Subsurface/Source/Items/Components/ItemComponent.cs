@@ -301,7 +301,7 @@ namespace Barotrauma.Items.Components
                         soundList.Add(itemSound);
                         break;
                     default:
-                        ItemComponent ic = ItemComponent.Load(subElement, item, item.ConfigFile, false);                        
+                        ItemComponent ic = Load(subElement, item, item.ConfigFile, false);                        
                         if (ic == null) break;
 
                         ic.Parent = this;

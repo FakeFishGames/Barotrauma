@@ -57,9 +57,9 @@ namespace Barotrauma
 
         public static void Init(ContentManager content)
         {
-            GUI.Font = ToolBox.TryLoadFont("SpriteFont1", content);
-            GUI.SmallFont = ToolBox.TryLoadFont("SmallFont", content);
-            GUI.LargeFont = ToolBox.TryLoadFont("LargeFont", content);
+            Font = ToolBox.TryLoadFont("SpriteFont1", content);
+            SmallFont = ToolBox.TryLoadFont("SmallFont", content);
+            LargeFont = ToolBox.TryLoadFont("LargeFont", content);
 
             cursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
         }
@@ -104,7 +104,7 @@ namespace Barotrauma
                 pauseMenu = new GUIFrame(new Rectangle(0, 0, 200, 300), null, Alignment.Center, Style);
 
                 int y = 0;
-                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, GUI.Style, pauseMenu);
+                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, Style, pauseMenu);
                 button.OnClicked = TogglePauseMenu;
 
                 y += 60;
@@ -114,7 +114,7 @@ namespace Barotrauma
                     SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
                     if (spMode != null)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, GUI.Style, pauseMenu);
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, Style, pauseMenu);
                         button.OnClicked += TogglePauseMenu;
                         button.OnClicked += GameMain.GameSession.LoadPrevious;
 
@@ -127,7 +127,7 @@ namespace Barotrauma
                     SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
                     if (spMode != null)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, GUI.Style, pauseMenu);
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, Style, pauseMenu);
                         button.OnClicked += QuitClicked;
                         button.OnClicked += TogglePauseMenu;
                         button.UserData = "save";
@@ -137,7 +137,7 @@ namespace Barotrauma
                 }
 
 
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, GUI.Style, pauseMenu);
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, Style, pauseMenu);
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }
@@ -193,7 +193,7 @@ namespace Barotrauma
         public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor=null, int backgroundPadding=0, SpriteFont font = null)
         {
 
-            if (font == null) font = GUI.Font;
+            if (font == null) font = Font;
             if (backgroundColor != null)
             {
                 Vector2 textSize = font.MeasureString(text);

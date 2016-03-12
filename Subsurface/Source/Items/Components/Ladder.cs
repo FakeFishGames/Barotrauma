@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
         {
         }
 
-        public override bool Select(Character character = null)
+        public override bool Select(Character character)
         {
             if (character == null) return false;
 

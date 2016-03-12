@@ -1,12 +1,7 @@
 ﻿using System;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
-using FarseerPhysics;
-using FarseerPhysics.Factories;
-using FarseerPhysics.Dynamics;
-using System.IO;
 using System.Collections.Generic;
 using RestSharp;
 

@@ -98,8 +98,10 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public override bool TryPutItem(Item item, List<LimbSlot> allowedSlots, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, List<LimbSlot> allowedSlots = null, bool createNetworkEvent = true)
         {
+            if (allowedSlots == null) return false;
+
             //try to place the item in LimBlot.Any slot if that's allowed
             if (allowedSlots.Contains(LimbSlot.Any))
             {
@@ -159,11 +161,8 @@ namespace Barotrauma
                 bool combined = false;
                 if (Items[index].Combine(item))
                 {
-                    if (Items[index]==null)
-                    {
-                        System.Diagnostics.Debug.Assert(false);
-                        return false;
-                    }
+                    System.Diagnostics.Debug.Assert(Items[index] != null);
+                 
                     Inventory otherInventory = Items[index].ParentInventory;
                     if (otherInventory != null && otherInventory.Owner!=null && createNetworkEvent)
                     {

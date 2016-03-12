@@ -151,11 +151,11 @@ namespace Barotrauma
 
         protected bool ResizeHorizontal
         {
-            get { return prefab == null ? false : prefab.ResizeHorizontal; }
+            get { return prefab != null && prefab.ResizeHorizontal; }
         }
         protected bool ResizeVertical
         {
-            get { return prefab == null ? false : prefab.ResizeVertical; }
+            get { return prefab != null && prefab.ResizeVertical; }
         }
 
         public virtual string Name

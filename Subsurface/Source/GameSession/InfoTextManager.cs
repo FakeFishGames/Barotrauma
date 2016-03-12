@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -23,7 +21,7 @@ namespace Barotrauma
             infoTexts = new Dictionary<string, List<string>>();
 
             XDocument doc = ToolBox.TryLoadXml(file);
-            if (doc == null) return;            
+            if (doc == null || doc.Root == null) return;            
 
             foreach (XElement subElement in doc.Root.Elements())
             {
