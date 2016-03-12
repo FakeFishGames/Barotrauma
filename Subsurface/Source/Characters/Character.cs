@@ -362,6 +362,11 @@ namespace Barotrauma
             get { return AnimController.RefLimb.Position; }
         }
 
+        public override Vector2 DrawPosition
+        {
+            get { return AnimController.RefLimb.body.DrawPosition; }
+        }
+
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
         
@@ -1058,18 +1063,7 @@ namespace Barotrauma
 
             aiTarget.SightRange = 0.0f;
 
-            //distance is approximated based on the mass of the Character 
-            //(which corresponds to size because all the characters have the same limb density)
-            foreach (Limb limb in AnimController.Limbs)
-            {
-                aiTarget.SightRange += limb.Mass * 1000.0f;
-            }
-            //the faster the Character is moving, the easier it is to see it
-            Limb torso = AnimController.GetLimb(LimbType.Torso);
-            if (torso !=null)
-            {
-                aiTarget.SightRange += torso.LinearVelocity.Length() * 500.0f;
-            }
+            aiTarget.SightRange = Mass*10.0f + AnimController.RefLimb.LinearVelocity.Length()*500.0f;
         }
         
         public void Draw(SpriteBatch spriteBatch)
@@ -1112,6 +1106,8 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 AnimController.DebugDraw(spriteBatch);
+
+                if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
 
             if (isDead) return;

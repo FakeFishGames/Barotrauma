@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
             shutDownTemp = 500.0f;
 
             powerPerTemp = 1.0f;
-
+            
             IsActive = true;
 
             var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", GUI.Style, GuiFrame);
@@ -307,7 +307,7 @@ namespace Barotrauma.Items.Components
             if (item.CurrentHull != null)
             {
                 //the sound can be heard from 20 000 display units away when everything running at 100%
-                item.CurrentHull.SoundRange = (coolingRate + fissionRate) * 100;
+                item.CurrentHull.SoundRange = Math.Max((coolingRate + fissionRate) * 100, item.CurrentHull.AiTarget.SoundRange);
             }
 
             UpdateGraph(deltaTime);

@@ -736,7 +736,7 @@ namespace Barotrauma
                 //check visibility from the new position of RefLimb to the new position of this limb
                 Vector2 movePos = limb.SimPosition + moveAmount;
 
-                TrySetLimbPosition(limb, simPosition, movePos);
+                TrySetLimbPosition(limb, simPosition, movePos, lerp);
                 
 
             }
@@ -825,60 +825,44 @@ namespace Barotrauma
                     limb.body.TargetPosition = Vector2.Zero;
                 }
 
-                correctionMovement = targetMovement;
+                correctionMovement = Vector2.Zero;
                 return;
             }
-            else
+
+
+            if (inWater)
             {
-
-
-                if (inWater)
+                if (targetMovement.LengthSquared() > 0.01f)
                 {
-                    if (targetMovement.LengthSquared() > 0.01f)
-                    {
-                        correctionMovement =
-                            Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
+                    correctionMovement =
+                        Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
 
-                    }
-                    else
-                    {
-                        refLimb.body.LinearVelocity = Vector2.Lerp(
-                                refLimb.LinearVelocity,
-                                Vector2.Normalize(diff) * MathHelper.Clamp(dist, 0.0f, 5.0f),
-                                0.2f);
-
-                        //foreach (Limb limb in Limbs)
-                        //{
-                        //    //if (limb.body.TargetPosition == Vector2.Zero) continue;
-                        //   // Vector2.Lerp(limb.LinearVelocity, Vector2.Normalize(diff) * MathHelper.Clamp(dist, 0.0f, 1.0f))
-                        //    limb.body.LinearVelocity = Vector2.Lerp(
-                        //        limb.LinearVelocity,
-                        //        Vector2.Normalize(diff) * MathHelper.Clamp(dist, 0.0f, 5.0f), 
-                        //        0.2f);
-
-                        //   //limb.body.TargetVelocity .SetTransform(limb.SimPosition + Vector2.Normalize(diff) * 0.1f, limb.Rotation);
-                        //}
-                    }
                 }
                 else
                 {
-                    //clamp the magnitude of the correction movement between 0.5f - 5.0f
-                    Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist * 2.0f, 0.5f, 5.0f);
-
-                    //heading in the right direction -> use the ''normal'' movement if it's faster than correctionMovement
-                    //i.e. the character is close to the targetposition but the character is still running
-                    if (Math.Sign(targetMovement.X) == Math.Sign(newCorrectionMovement.X))
-                    {
-                        newCorrectionMovement.X = Math.Max(Math.Abs(targetMovement.X), Math.Abs(newCorrectionMovement.X)) * Math.Sign(targetMovement.X);
-                    }
-
-                    //newCorrectionMovement.X = Math.Max(newCorrectionMovement.X, 0.5f) * Math.Sign(newCorrectionMovement.X);
-
-                    correctionMovement = Vector2.Lerp(correctionMovement, newCorrectionMovement, 0.5f);
-
-                    if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
+                    refLimb.body.LinearVelocity = Vector2.Lerp(
+                        refLimb.LinearVelocity,
+                        Vector2.Normalize(diff) * MathHelper.Clamp(dist, 0.0f, 5.0f),
+                        0.2f);
                 }
             }
+            else
+            {
+                //clamp the magnitude of the correction movement between 0.5f - 5.0f
+                Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist * 2.0f, 0.5f, 5.0f);
+
+                //heading in the right direction -> use the ''normal'' movement if it's faster than correctionMovement
+                //i.e. the character is close to the targetposition but the character is still running
+                if (Math.Sign(targetMovement.X) == Math.Sign(newCorrectionMovement.X))
+                {
+                    newCorrectionMovement.X = Math.Max(Math.Abs(targetMovement.X), Math.Abs(newCorrectionMovement.X)) * Math.Sign(targetMovement.X);
+                }
+
+                correctionMovement = Vector2.Lerp(correctionMovement, newCorrectionMovement, 0.5f);
+
+                if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
+            }
+            
 
             if (resetAll)
             {
@@ -886,7 +870,6 @@ namespace Barotrauma
 
                 if (this is HumanoidAnimController)
                 {
-
                     foreach (Limb limb in Limbs)
                     {
                         if (limb != refLimb) limb.body.TargetPosition = limb.body.SimPosition + diff;
@@ -898,19 +881,8 @@ namespace Barotrauma
                 }
                 else
                 {
-
                     SetPosition(refLimb.body.TargetPosition);
-
                 }
-
-                //if (character is AICharacter) SetRotation(refLimb.body.TargetRotation);
-
-
-                //foreach (Limb limb in Limbs)
-                //{
-                //    limb.body.LinearVelocity = Vector2.Zero;
-                //    limb.body.AngularVelocity = 0.0f;
-                //}
             } 
         }
 

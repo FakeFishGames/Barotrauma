@@ -201,7 +201,6 @@ namespace Barotrauma
             surface = rect.Y - rect.Height;
 
             aiTarget = new AITarget(this);
-            aiTarget.SightRange = (rect.Width + rect.Height)*5.0f;
 
             hullList.Add(this);
 
@@ -353,6 +352,9 @@ namespace Barotrauma
 
             FireSource.UpdateAll(fireSources, deltaTime);
 
+            aiTarget.SightRange = Submarine == null ? 0.0f : Submarine.Velocity.Length() * 500.0f;
+            aiTarget.SoundRange -= deltaTime*1000.0f;
+
             float strongestFlow = 0.0f;
             foreach (Gap gap in ConnectedGaps)
             {
@@ -495,6 +497,8 @@ namespace Barotrauma
             if (!ShowHulls && !GameMain.DebugDraw) return;
 
             if (!editing && !GameMain.DebugDraw) return;
+            
+            if (aiTarget != null) aiTarget.Draw(spriteBatch);
 
             Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);

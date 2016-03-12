@@ -12,8 +12,6 @@ namespace Barotrauma.Items.Components
 {
     class Radar : Powered
     {
-        const float displayScale = 0.015f;
-
         private float range;
 
         private float pingState;
@@ -22,11 +20,14 @@ namespace Barotrauma.Items.Components
 
         private GUITickBox isActiveTickBox;
 
-        [HasDefaultValue(0.0f, false)]
+        private List<RadarBlip> radarBlips;
+        private float prevPingRadius;
+
+        [HasDefaultValue(10000.0f, false)]
         public float Range
         {
-            get { return ConvertUnits.ToDisplayUnits(range); }
-            set { range = ConvertUnits.ToSimUnits(value); }
+            get { return range; }
+            set { range = MathHelper.Clamp(value, 0.0f, 100000.0f); }
         }
 
         public Radar(Item item, XElement element)
@@ -72,12 +73,14 @@ namespace Barotrauma.Items.Components
 
             if (voltage >= minVoltage)
             {
-                pingState = (pingState + deltaTime * 0.5f);
+                pingState = pingState + deltaTime * 0.5f;
                 if (pingState>1.0f)
                 {
-                    item.Use(deltaTime, null);
+                    item.Use(deltaTime);
                     pingState = 0.0f;
                 }
+                
+                if (item.CurrentHull != null) item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState, item.CurrentHull.AiTarget.SoundRange);
             }
             else
             {
@@ -89,7 +92,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            return (pingState > 1.0f);
+            return pingState > 1.0f;
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -104,9 +107,6 @@ namespace Barotrauma.Items.Components
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
         }
 
-        private List<RadarBlip> radarBlips;
-        private float prevPingRadius;
-
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
             Vector2 center = new Vector2(rect.Center.X, rect.Center.Y);
@@ -116,8 +116,10 @@ namespace Barotrauma.Items.Components
             float pingRadius = (rect.Width / 2) * pingState;
             pingCircle.Draw(spriteBatch, center, Color.White * (1.0f-pingState), 0.0f, (rect.Width/pingCircle.size.X)*pingState);
                 
-
             float radius = rect.Width / 2.0f;
+
+            float displayScale = radius/range;
+
             
             float simScale = 1.5f;
             
@@ -276,8 +278,9 @@ namespace Barotrauma.Items.Components
 
         private void DrawBlip(SpriteBatch spriteBatch, RadarBlip blip, Vector2 center, Color color, float radius)
         {
-            
-            Vector2 pos = (blip.Position-item.WorldPosition) * displayScale;
+            float displayScale = radius / range;
+
+            Vector2 pos = (blip.Position - item.WorldPosition) * displayScale;
             pos.Y = -pos.Y;
 
             if (pos.Length() > radius)

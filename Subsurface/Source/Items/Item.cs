@@ -24,7 +24,7 @@ namespace Barotrauma
     class Item : MapEntity, IDamageable, IPropertyObject
     {
         public static List<Item> ItemList = new List<Item>();
-        protected ItemPrefab prefab;
+        private ItemPrefab prefab;
 
         public static ItemSpawner Spawner = new ItemSpawner();
         public static ItemRemover Remover = new ItemRemover();
@@ -439,14 +439,14 @@ namespace Barotrauma
             new Rectangle(
                 WorldRect.X + trigger.X,
                 WorldRect.Y + trigger.Y,
-                (trigger.Width == 0) ? (int)Rect.Width : trigger.Width,
-                (trigger.Height == 0) ? (int)Rect.Height : trigger.Height)
+                (trigger.Width == 0) ? Rect.Width : trigger.Width,
+                (trigger.Height == 0) ? Rect.Height : trigger.Height)
                 :
             new Rectangle(
                 Rect.X + trigger.X,
                 Rect.Y + trigger.Y,
-                (trigger.Width == 0) ? (int)Rect.Width : trigger.Width,
-                (trigger.Height == 0) ? (int)Rect.Height : trigger.Height);
+                (trigger.Width == 0) ? Rect.Width : trigger.Width,
+                (trigger.Height == 0) ? Rect.Height : trigger.Height);
         }
 
         /// <summary>
@@ -731,6 +731,8 @@ namespace Barotrauma
             }
             
             foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
+
+            if (GameMain.DebugDraw && aiTarget!=null) aiTarget.Draw(spriteBatch);
             
             if (!editing || (body != null && !body.Enabled))
             {
@@ -1500,6 +1502,8 @@ namespace Barotrauma
                     break;
                 case NetworkEventType.PhysicsBodyPosition:
                     if (body != null) body.ReadNetworkData(message, sendingTime);
+
+                    FindHull();
                     break;
                 case NetworkEventType.ItemFixed:
 
