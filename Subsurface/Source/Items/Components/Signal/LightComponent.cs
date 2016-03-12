@@ -92,10 +92,8 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
-            if (item.CurrentHull != null)
-            {
-                light.Submarine = item.CurrentHull.Submarine;
-            }            
+           
+            light.Submarine = (item.CurrentHull == null) ? null : item.CurrentHull.Submarine;
             
             if (item.Container != null)
             {
@@ -105,7 +103,13 @@ namespace Barotrauma.Items.Components
 
             if (item.body != null)
             {
-                light.Position = item.WorldPosition;
+                light.Position = item.Position;
+
+                if (!item.body.Enabled)
+                {
+                    light.Color = Color.Transparent;
+                    return;
+                }
             }
             
             if (powerConsumption == 0.0f)

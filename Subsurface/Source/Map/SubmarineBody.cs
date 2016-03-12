@@ -150,7 +150,7 @@ namespace Barotrauma
 
             body.BodyType = BodyType.Dynamic;
             body.CollisionCategories = Physics.CollisionMisc | Physics.CollisionWall;
-            body.CollidesWith = Physics.CollisionLevel | Physics.CollisionCharacter;
+            body.CollidesWith = Physics.CollisionLevel | Physics.CollisionCharacter | Physics.CollisionProjectile;
             body.Restitution = Restitution;
             body.Friction = Friction;
             body.FixedRotation = true;

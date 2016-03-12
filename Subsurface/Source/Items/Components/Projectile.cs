@@ -149,6 +149,16 @@ namespace Barotrauma.Items.Components
             AttackResult attackResult = new AttackResult(0.0f, 0.0f);
             if (attack != null)
             {
+                var submarine = f2.Body.UserData as Submarine;
+                if (submarine != null)
+                {
+                    item.Move(-submarine.Position);
+                    item.Submarine = submarine;
+                    item.body.Submarine = submarine;
+                    item.FindHull();
+                    return false;
+                }
+
                 Limb limb;
                 Structure structure;
                 if ((limb = (f2.Body.UserData as Limb)) != null)
