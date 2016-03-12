@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Xml.Linq;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -18,9 +17,9 @@ namespace Barotrauma.Items.Components
         private PrismaticJoint stickJoint;
         private Body stickTarget;
 
-        Attack attack;
+        private Attack attack;
 
-        public List<Body> ignoredBodies;
+        public List<Body> IgnoredBodies;
 
         public Character User;
 
@@ -48,7 +47,7 @@ namespace Barotrauma.Items.Components
         public Projectile(Item item, XElement element) 
             : base (item, element)
         {
-            ignoredBodies = new List<Body>();
+            IgnoredBodies = new List<Body>();
 
             //launchImpulse = ToolBox.GetAttributeFloat(element, "launchimpulse", 10.0f);
             //characterUsable = ToolBox.GetAttributeBool(element, "characterusable", false);
@@ -65,23 +64,9 @@ namespace Barotrauma.Items.Components
             //doesStick = ToolBox.GetAttributeBool(element, "doesstick", false);
         }
 
-        //public override void ConstructionActivate(Construction c, Vector2 modifier)
-        //{
-        //    for (int i = 0; i < item.linkedTo.Count; i++)
-        //        item.linkedTo[i].RemoveLinked((MapEntity)item);
-        //    item.linkedTo.Clear();
-
-        //    ApplyStatusEffects(StatusEffect.Type.OnUse, 1.0f, null);
-            
-        //    Launch(modifier+Vector2.Normalize(modifier)*launchImpulse);
-
-        //}
-
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character != null && !characterUsable) return false;
-
-            //ApplyStatusEffects(ActionType.OnUse, 1.0f, Character);
 
             Launch(new Vector2(
                 (float)Math.Cos(item.body.Rotation),
@@ -103,26 +88,25 @@ namespace Barotrauma.Items.Components
 
             item.Drop();
 
-            if (stickJoint != null && doesStick)
-            {
-                if (stickTarget != null)
-                {
-                    try
-                    {
-                        item.body.FarseerBody.RestoreCollisionWith(stickTarget);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);
-#endif
-                    }
+            if (stickJoint == null || !doesStick) return;
 
-                    stickTarget = null;
+            if (stickTarget != null)
+            {
+                try
+                {
+                    item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                 }
-                GameMain.World.RemoveJoint(stickJoint);
-                stickJoint = null;
+                catch (Exception e)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);
+#endif
+                }
+
+                stickTarget = null;
             }
+            GameMain.World.RemoveJoint(stickJoint);
+            stickJoint = null;
         }
         
         public override void Update(float deltaTime, Camera cam)
@@ -160,7 +144,7 @@ namespace Barotrauma.Items.Components
 
         private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            if (ignoredBodies.Contains(f2.Body)) return false;
+            if (IgnoredBodies.Contains(f2.Body)) return false;
 
             AttackResult attackResult = new AttackResult(0.0f, 0.0f);
             if (attack != null)
@@ -185,7 +169,7 @@ namespace Barotrauma.Items.Components
             item.body.CollisionCategories = Physics.CollisionMisc;
             item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
 
-            ignoredBodies.Clear();
+            IgnoredBodies.Clear();
 
             f2.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
 
@@ -220,9 +204,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            return (f2.CollisionCategories != Physics.CollisionCharacter);
-
-            //return false;
+            return f2.CollisionCategories != Physics.CollisionCharacter;
         }
 
         private bool StickToTarget(Body targetBody, Vector2 axis)

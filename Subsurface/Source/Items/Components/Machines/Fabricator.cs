@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
                 }
                 text += "Required time: " + targetItem.RequiredTime + " s";
 
-                GUITextBlock textBlock = new GUITextBlock(
+                new GUITextBlock(
                     new Rectangle(0, 50, 0, 25),
                     text,
                     Color.Transparent, Color.White,

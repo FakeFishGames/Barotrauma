@@ -115,7 +115,7 @@ namespace Barotrauma
 
         public static void UpdateHulls()
         {
-            foreach (Gap g in Gap.GapList)
+            foreach (Gap g in GapList)
             {
                 g.FindHulls();
             }

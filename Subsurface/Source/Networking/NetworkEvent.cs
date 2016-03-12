@@ -109,7 +109,7 @@ namespace Barotrauma.Networking
 
         public NetworkEvent(NetworkEventType type, ushort id, bool allowClientSend, object data = null)
         {
-            if (!allowClientSend && GameMain.Server != null) return;
+            if (!allowClientSend && GameMain.Server == null) return;
             
             eventType = type;
 
@@ -168,7 +168,7 @@ namespace Barotrauma.Networking
 
                 try
                 {
-                    NetworkEvent.ReadData(message, sendingTime, resend);
+                    ReadData(message, sendingTime, resend);
                 }
                 catch
                 {

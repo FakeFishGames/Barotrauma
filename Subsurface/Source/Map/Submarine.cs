@@ -165,7 +165,7 @@ namespace Barotrauma
 
         public bool AtDamageDepth
         {
-            get { return subBody == null ? false : subBody.AtDamageDepth; }
+            get { return subBody != null && subBody.AtDamageDepth; }
         }
 
         public override string ToString()

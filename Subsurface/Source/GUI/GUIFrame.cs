@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Linq;
 
 namespace Barotrauma
@@ -23,8 +22,8 @@ namespace Barotrauma
             this.rect = rect;
 
             this.alignment = alignment;
-            
-            if (color!=null) this.color = (Color)color;
+
+            if (color != null) this.color = (Color)color;
 
             if (parent != null)
             {

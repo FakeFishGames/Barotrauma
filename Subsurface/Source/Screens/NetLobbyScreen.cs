@@ -246,7 +246,7 @@ namespace Barotrauma
 
             //traitor probability ------------------------------------------------------------------
 
-            var traitorText = new GUITextBlock(new Rectangle(columnX, 180, 20, 20), "Traitors:", GUI.Style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 180, 20, 20), "Traitors:", GUI.Style, infoFrame);
 
             traitorProbabilityButtons = new GUIButton[2];
 
@@ -1000,7 +1000,7 @@ namespace Barotrauma
             //msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
-            msg.Write(GameMain.Server == null ? false : GameMain.Server.AutoRestart);
+            msg.Write(GameMain.Server != null && GameMain.Server.AutoRestart);
             msg.Write(GameMain.Server == null ? 0.0f : GameMain.Server.AutoRestartTimer);
 
             msg.Write((byte)(playerList.CountChildren));

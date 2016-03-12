@@ -1,17 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class SkillPrefab
     {
-        string name;
+        private string name;
 
-        string description;
+        private string description;
 
         private Vector2 levelRange;
 

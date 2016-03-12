@@ -310,7 +310,7 @@ namespace Barotrauma
 
                 if (hull.Rect.Width<minDist*3.0f)
                 {
-                    var wayPoint = new WayPoint(
+                    new WayPoint(
                         new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + heightFromFloor), SpawnType.Path, Submarine.Loaded);
                     continue;
                 }
@@ -396,7 +396,7 @@ namespace Barotrauma
             }
 
             List<Structure> stairList = new List<Structure>();
-            foreach (MapEntity me in MapEntity.mapEntityList)
+            foreach (MapEntity me in mapEntityList)
             {
                 Structure stairs = me as Structure;
                 if (stairs == null) continue;
@@ -439,8 +439,7 @@ namespace Barotrauma
                 ladderPoints[0] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height + heightFromFloor), SpawnType.Path, Submarine.Loaded);
 
                 ladderPoints[1] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y-1.0f), SpawnType.Path, Submarine.Loaded);
-
-
+                
 
                 WayPoint prevPoint = ladderPoints[0];
                 Vector2 prevPos = prevPoint.SimPosition;
@@ -457,7 +456,7 @@ namespace Barotrauma
 
                     if (pickedBody.UserData is Item)
                     {
-                        var door = (pickedBody.UserData as Item).GetComponent<Door>();
+                        var door = ((Item)pickedBody.UserData).GetComponent<Door>();
                         if (door != null)
                         {
                             WayPoint newPoint = new WayPoint(door.Item.Position, SpawnType.Path, Submarine.Loaded);

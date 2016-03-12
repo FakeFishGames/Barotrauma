@@ -36,7 +36,7 @@ namespace Barotrauma
 
             int amount = Rand.Range(minAmount, maxAmount, false);
 
-            monsters = new AICharacter[amount];
+            monsters = new Character[amount];
 
             for (int i = 0; i < amount; i++)
             {
@@ -64,14 +64,14 @@ namespace Barotrauma
             if (isFinished) return;
 
             bool monstersDead = true;
-            for (int i = 0; i < monsters.Length; i++)
+            foreach (Character monster in monsters)
             {
-                if (monsters[i].IsDead) continue;
+                if (monster.IsDead) continue;
 
-                if (!isStarted && Vector2.Distance(monsters[i].WorldPosition, Submarine.Loaded.WorldPosition) < 5000.0f) isStarted = true;
+                if (!isStarted && Vector2.Distance(monster.WorldPosition, Submarine.Loaded.WorldPosition) < 5000.0f) isStarted = true;
                     
                 monstersDead = false;
-                break;                    
+                break;
             }
 
             if (monstersDead) Finished();

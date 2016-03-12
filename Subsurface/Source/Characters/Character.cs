@@ -365,11 +365,6 @@ namespace Barotrauma
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
         
-        public static Character Create(string file, Vector2 position)
-        {
-            return Create(file, position, null);
-        }
-        
         public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false, bool hasAi=true)
         {
             return Create(characterInfo.File, position, characterInfo, isNetworkPlayer, hasAi);
@@ -387,23 +382,18 @@ namespace Barotrauma
 
                 return enemyCharacter;
             }
-            else
+
+            if (hasAi && !isNetworkPlayer)
             {
-                if (hasAi && !isNetworkPlayer)
-                {
-                    var character = new AICharacter(file, position, characterInfo, isNetworkPlayer);
-                    var ai = new HumanAIController(character);
-                    character.SetAI(ai);
+                var character = new AICharacter(file, position, characterInfo, isNetworkPlayer);
+                var ai = new HumanAIController(character);
+                character.SetAI(ai);
 
-                    return character;
+                return character;
 
-                }
-                else
-                {
-
-                    return new Character(file, position, characterInfo, isNetworkPlayer);
-                }
             }
+
+            return new Character(file, position, characterInfo, isNetworkPlayer);
         }
 
         protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)

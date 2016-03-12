@@ -1,14 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
     class ItemSpawner
     {
-        private Queue<Pair<ItemPrefab, object>> spawnQueue;
+        private readonly Queue<Pair<ItemPrefab, object>> spawnQueue;
 
         public ItemSpawner()
         {
@@ -68,7 +66,7 @@ namespace Barotrauma
                 {
                     var item = new Item(itemInfo.First, Vector2.Zero, null);
 
-                    var inventory = itemInfo.Second as Inventory;
+                    var inventory = (Inventory)itemInfo.Second;
                     inventory.TryPutItem(item, null, false);
 
                     items.Add(item);
@@ -138,7 +136,7 @@ namespace Barotrauma
 
     class ItemRemover
     {
-        private Queue<Item> removeQueue;
+        private readonly Queue<Item> removeQueue;
 
         public ItemRemover()
         {
@@ -191,7 +189,7 @@ namespace Barotrauma
                 ushort itemId = message.ReadUInt16();
 
                 var item = MapEntity.FindEntityByID(itemId);
-                if (item == null || item as Item != null) continue;
+                if (item == null || item is Item) continue;
 
                 item.Remove();
             }

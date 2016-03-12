@@ -224,9 +224,9 @@ namespace Barotrauma.Items.Components
             //if (connection.IsPower) voltage = power;    
         }
         
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, editing);
 
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(item.DrawPosition.X- 4, -item.DrawPosition.Y),

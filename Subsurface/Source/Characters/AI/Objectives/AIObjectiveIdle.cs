@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -119,7 +117,7 @@ namespace Barotrauma
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            return (otherObjective as AIObjectiveIdle != null);
+            return (otherObjective is AIObjectiveIdle);
         }
     }
 }

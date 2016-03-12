@@ -94,19 +94,14 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            int x = GuiFrame.Rect.X;
-            int y = GuiFrame.Rect.Y;
 
             GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
             if (voltage < minVoltage) return;
 
-
             int radius = GuiFrame.Rect.Height / 2 - 30;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
-
-            //voltage = 0.0f;
         }
 
         private List<RadarBlip> radarBlips;
@@ -202,20 +197,15 @@ namespace Barotrauma.Items.Components
                     float pointDist = (limb.WorldPosition - item.WorldPosition).Length() * displayScale;
 
                     if (limb.SimPosition == Vector2.Zero || pointDist > radius) continue;
-
-
+                    
                     if (pointDist > radius) continue;
                     if (pointDist > prevPingRadius && pointDist < pingRadius)
                     {
-                        float limbSize = limb.Mass;
-
                         for (int i = 0; i<=limb.Mass/100.0f; i++)
                         {
                             var blip = new RadarBlip(limb.WorldPosition+Rand.Vector(limb.Mass/10.0f), 1.0f);
                             radarBlips.Add(blip);
                         }
-
-
                     }
                 }
             }

@@ -1,5 +1,4 @@
-﻿using FarseerPhysics;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -274,20 +273,20 @@ namespace Barotrauma
 
             Type type = value.GetType();
             if (type == typeof(float) ||
-                (type == typeof(int) && property.GetValue().GetType() == typeof(float)))
+                (type == typeof(int) && property.GetValue() is float))
             {
                 float floatValue = Convert.ToSingle(value) * deltaTime;
                 
                 if (!setValue) floatValue += (float)property.GetValue();
                 property.TrySetValue(floatValue);
             }
-            else if (type == typeof(int) && value.GetType()==typeof(int))
+            else if (type == typeof(int) && value is int)
             {
                 int intValue = (int)((int)value * deltaTime);
                 if (!setValue) intValue += (int)property.GetValue();
                 property.TrySetValue(intValue);
             }
-            else if (type == typeof(bool) && value.GetType() == typeof(bool))
+            else if (type == typeof(bool) && value is bool)
             {
                 property.TrySetValue((bool)value);
             }

@@ -1,9 +1,6 @@
-﻿using FarseerPhysics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
 using Barotrauma.Lights;
 using System;
-using System.IO;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -135,16 +132,7 @@ namespace Barotrauma.Items.Components
 
             voltage = 0.0f;
         }
-
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
-        {
-            if (!editing) return;
-
-            //Vector2 center = new Vector2(item.Rect.Center.X, -item.Rect.Y + item.Rect.Height/2.0f);
-
-            //GUI.DrawLine(spriteBatch, center - Vector2.One * range, center + Vector2.One * range, lightColor);
-        }
-
+        
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();

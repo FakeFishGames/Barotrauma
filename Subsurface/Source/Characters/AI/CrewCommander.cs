@@ -1,10 +1,7 @@
-﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -137,7 +134,7 @@ namespace Barotrauma
             List<GUIComponent> prevCharacterFrames = new List<GUIComponent>();
             foreach (GUIComponent child in frame.children)
             {
-                if (child.UserData as Character == null) continue;
+                if (!(child.UserData is Character)) continue;
 
                 prevCharacterFrames.Add(child);
             }
@@ -155,8 +152,6 @@ namespace Barotrauma
 
             int spacing = 5;
 
-            int rows = (int)Math.Ceiling((double)aliveCharacters.Count / charactersPerRow);
-
             int i = 0;
             foreach (Character character in aliveCharacters)
             {
@@ -164,7 +159,7 @@ namespace Barotrauma
                 //if (i >= aliveCharacters.Count - charactersPerRow && aliveCharacters.Count % charactersPerRow > 0) rowCharacterCount = aliveCharacters.Count % charactersPerRow;
 
                // rowCharacterCount = Math.Min(rowCharacterCount, aliveCharacters.Count - i);
-                int startX = (int)-(150 * rowCharacterCount + spacing * (rowCharacterCount - 1)) / 2;
+                int startX = -(150 * rowCharacterCount + spacing * (rowCharacterCount - 1)) / 2;
 
 
                 int x = startX + (150 + spacing) * (i % Math.Min(charactersPerRow, aliveCharacters.Count));
@@ -229,7 +224,6 @@ namespace Barotrauma
         {
             Order order = userData as Order;
 
-            List<Character> selectedCharacters = new List<Character>();
             foreach (GUIComponent child in frame.children)
             {
                 var characterButton = child as GUIButton;
@@ -258,7 +252,7 @@ namespace Barotrauma
             var humanAi = character.AIController as HumanAIController;
             if (humanAi == null) return;
 
-            var existingOrder = characterFrame.children.Find(c => c.UserData as Order != null);
+            var existingOrder = characterFrame.children.Find(c => c.UserData is Order);
             if (existingOrder != null) characterFrame.RemoveChild(existingOrder);
 
             var orderFrame = new GUIFrame(new Rectangle(-5, characterFrame.Rect.Height, characterFrame.Rect.Width, 30 + order.Options.Length * 15), null, characterFrame);

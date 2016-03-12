@@ -71,7 +71,7 @@ namespace Barotrauma
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
 
             XDocument doc = ToolBox.TryLoadXml(file);
-            if (doc == null) return;
+            if (doc == null || doc.Root == null) return;
 
             XElement aiElement = doc.Root.Element("ai");
             if (aiElement == null) return;
@@ -474,7 +474,7 @@ namespace Barotrauma
                     }
                     else if (closestStructure!=null)
                     {
-                        valueModifier = valueModifier / (closestStructure as IDamageable).Health;
+                        valueModifier = valueModifier / ((IDamageable)closestStructure).Health;
                     }
                     else
                     {

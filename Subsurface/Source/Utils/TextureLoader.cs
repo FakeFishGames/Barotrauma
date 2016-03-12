@@ -1,10 +1,7 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
+﻿using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 using System;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {

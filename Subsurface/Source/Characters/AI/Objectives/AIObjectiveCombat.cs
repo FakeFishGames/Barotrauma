@@ -66,7 +66,7 @@ namespace Barotrauma
                 }
 
                 var pickedBody = Submarine.PickBody(character.SimPosition, enemy.SimPosition, ignoredBodies);
-                if (pickedBody != null && pickedBody.UserData as Limb == null) return;
+                if (pickedBody != null && !(pickedBody.UserData is Limb)) return;
 
                weapon.Use(deltaTime, character);
             }

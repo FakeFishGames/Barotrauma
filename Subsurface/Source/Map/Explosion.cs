@@ -1,6 +1,4 @@
-﻿
-using FarseerPhysics;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Barotrauma.Lights;
 using System;
 using System.Collections.Generic;

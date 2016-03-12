@@ -301,7 +301,7 @@ namespace Barotrauma
         {
             Structure structure = f2.Body.UserData as Structure;
 
-            if (f2.Body.UserData as Submarine != null && character.Submarine == f2.Body.UserData as Submarine) return false;
+            if (f2.Body.UserData is Submarine && character.Submarine == (Submarine)f2.Body.UserData) return false;
             
             //always collides with bodies other than structures
             if (structure == null)
@@ -385,7 +385,7 @@ namespace Barotrauma
 
             avgVelocity = avgVelocity / Limbs.Count();
 
-            if (character.Submarine == null && f2.Body.UserData is Submarine) avgVelocity -= (f2.Body.UserData as Submarine).Velocity;
+            if (character.Submarine == null && f2.Body.UserData is Submarine) avgVelocity -= ((Submarine)f2.Body.UserData).Velocity;
                                     
             float impact = Vector2.Dot(avgVelocity, -normal);
             

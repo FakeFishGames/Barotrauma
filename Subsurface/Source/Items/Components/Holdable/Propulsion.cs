@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics;
+﻿using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Particles;
@@ -95,23 +91,8 @@ namespace Barotrauma.Items.Components
             return true;
         }
         
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            if (!IsActive) return;
-
-            //Vector2 particleSpeed =  new Vector2(
-            //    (float)Math.Cos(item.body.Rotation),
-            //    (float)Math.Sin(item.body.Rotation)) *item.body.Dir * 0.1f;
-
-
-
-            
-            //Vector2 startPos = ConvertUnits.ToDisplayUnits(item.body.Position);
-            //Vector2 endPos = ConvertUnits.ToDisplayUnits(pickedPosition);
-            //endPos = new Vector2(endPos.X + Game1.localRandom.Next(-2, 2), endPos.Y + Game1.localRandom.Next(-2, 2));
-
-            //GUI.DrawLine(spriteBatch, startPos, endPos, Color.Orange, 0.0f);
-
             IsActive = false;
         }
 

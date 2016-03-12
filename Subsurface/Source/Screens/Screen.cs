@@ -45,11 +45,10 @@ namespace Barotrauma
 
         private IEnumerable<object> UpdateColorFade(Color from, Color to, float duration)
         {
-            while (Screen.Selected != this)
+            while (Selected != this)
             {
                 yield return CoroutineStatus.Running;
             }
-            
 
             float timer = 0.0f;
 

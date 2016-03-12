@@ -93,7 +93,7 @@ namespace Barotrauma
         {
         }
 
-        protected override void UpdateDimensions(GUIComponent parent)
+        protected override void UpdateDimensions(GUIComponent parent = null)
         {
             base.UpdateDimensions(parent);
 

@@ -363,8 +363,8 @@ namespace Barotrauma
         {
             if (sendingTime < lastUpdate) return;
 
-            List<ushort> newItemIDs = new List<ushort>();
-            List<Item> droppedItems = new List<Item>();
+            //List<ushort> newItemIDs = new List<ushort>();
+            //List<Item> droppedItems = new List<Item>();
             List<Item> prevItems = new List<Item>(Items);
                        
             for (int i = 0; i < capacity; i++)
@@ -389,15 +389,22 @@ namespace Barotrauma
             var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
             if (sender != null && sender.Character != null)
             {
-                foreach (Item item in droppedItems)
-                {
-                    GameServer.Log(sender.Character + " removed " + item.Name + " from " + Owner.ToString(), Color.Orange);
-                }
-
                 foreach (Item item in Items)
                 {
-                    if (item == null || prevItems.Contains(item)) continue;
-                    GameServer.Log(sender.Character + " placed " + item.Name + " in " + Owner.ToString(), Color.Orange);
+                    if (item == null) continue;
+                    if (!prevItems.Contains(item))
+                    {
+                        GameServer.Log(sender.Character + " placed " + item.Name + " in " + Owner, Color.Orange);
+                    }
+                }
+
+                foreach (Item item in prevItems)
+                {
+                    if (item == null) continue;
+                    if (!Items.Contains(item))
+                    {
+                        GameServer.Log(sender.Character + " removed " + item.Name + " from " + Owner.ToString(), Color.Orange);
+                    }
                 }
             }
         }

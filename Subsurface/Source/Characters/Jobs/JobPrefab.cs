@@ -160,7 +160,7 @@ namespace Barotrauma
             foreach (string filePath in filePaths)
             {
                 XDocument doc = ToolBox.TryLoadXml(filePath);
-                if (doc == null) return;
+                if (doc == null || doc.Root == null) return;
 
                 foreach (XElement element in doc.Root.Elements())
                 {

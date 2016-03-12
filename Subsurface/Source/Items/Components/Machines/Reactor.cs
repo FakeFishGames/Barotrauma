@@ -379,12 +379,12 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            return (picker != null);
+            return picker != null;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, editing);
 
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(item.Rect.X + item.Rect.Width / 2 - 6, -item.Rect.Y + 29),

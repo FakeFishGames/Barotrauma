@@ -1,5 +1,4 @@
-﻿using FarseerPhysics;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components

@@ -128,19 +128,6 @@ namespace Barotrauma
 
         public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
-            float damageAmount = 0.0f;
-            //DamageSoundType damageSoundType = DamageSoundType.None;
-
-            if (target as Character == null)
-            {
-                damageAmount = structureDamage;
-
-            }
-            else
-            {
-                damageAmount = damage;
-            }
-
             if (particleEmitterPrefab != null)
             {
                 particleEmitterPrefab.Emit(worldPosition);

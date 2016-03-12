@@ -151,7 +151,7 @@ namespace Barotrauma
                     }
                     else if (closestBody.UserData is Item)
                     {
-                        Item item = closestBody.UserData as Item;
+                        Item item = (Item)closestBody.UserData;
                         avoidSteering = Vector2.Normalize(Submarine.LastPickedPosition - item.SimPosition);
                     }
                     else
