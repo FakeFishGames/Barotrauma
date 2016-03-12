@@ -59,7 +59,7 @@ namespace Barotrauma
             get { return Submarine == null ? Position : Submarine.Position + Position; }
         }
 
-        public Vector2 DrawPosition
+        public virtual Vector2 DrawPosition
         {
             get { return Submarine == null ? Position : Submarine.DrawPosition + Position; }
         }

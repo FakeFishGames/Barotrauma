@@ -88,6 +88,11 @@ namespace Barotrauma.Items.Components
 
                 Submarine.Loaded.ApplyForce(currForce);
 
+                if (item.CurrentHull != null)
+                {
+                    item.CurrentHull.AiTarget.SoundRange = Math.Max(currForce.Length(), item.CurrentHull.AiTarget.SoundRange);
+                }
+
                 for (int i = 0; i < 5; i++)
                 {
                     GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition - (Vector2.UnitX * item.Rect.Width/2),

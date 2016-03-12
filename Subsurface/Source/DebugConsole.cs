@@ -421,6 +421,11 @@ namespace Barotrauma
                     //Ragdoll.DebugDraw = !Ragdoll.DebugDraw;
                     GameMain.DebugDraw = !GameMain.DebugDraw;
                     break;
+
+                case "drawaitargets":
+                case "showaitargets":
+                    AITarget.ShowAITargets = !AITarget.ShowAITargets;
+                    break;
                 case "sendrandomdata":
                     int messageCount = 1;
 
