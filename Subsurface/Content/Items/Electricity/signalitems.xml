@@ -305,6 +305,7 @@
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
+      <input name="set_color"/>
     </ConnectionPanel>
 
   </Item>
