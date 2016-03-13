@@ -11,7 +11,7 @@ namespace Barotrauma
 
         public static List<AITarget> List = new List<AITarget>();
 
-        public Entity Entity;
+        public readonly Entity Entity;
 
         private float soundRange;
         private float sightRange;

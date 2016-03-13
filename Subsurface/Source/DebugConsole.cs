@@ -417,11 +417,8 @@ namespace Barotrauma
                     new GUIMessageBox(commands[1], commands[2]);
                     break;
                 case "debugdraw":
-                    //Hull.DebugDraw = !Hull.DebugDraw;
-                    //Ragdoll.DebugDraw = !Ragdoll.DebugDraw;
                     GameMain.DebugDraw = !GameMain.DebugDraw;
                     break;
-
                 case "drawaitargets":
                 case "showaitargets":
                     AITarget.ShowAITargets = !AITarget.ShowAITargets;
@@ -429,11 +426,11 @@ namespace Barotrauma
                 case "sendrandomdata":
                     int messageCount = 1;
 
-                    if (commands.Length>1) int.TryParse(commands[1], out messageCount);
+                    if (commands.Length > 1) int.TryParse(commands[1], out messageCount);
 
-                    for (int i = 0; i < messageCount; i++ )
+                    for (int i = 0; i < messageCount; i++)
                     {
-                        if (GameMain.Server!=null)
+                        if (GameMain.Server != null)
                         {
                             GameMain.Server.SendRandomData();
                         }
