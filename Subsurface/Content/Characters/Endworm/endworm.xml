@@ -73,6 +73,6 @@
     <joint limb1="0" limb1anchor="160,50" limb2="9" limb2anchor="0,-200" lowerlimit="-50" upperlimit="20"/>
   </ragdoll>
 
-  <ai attackrooms="100.0" attackweaker="50" attackstronger="-30" sight="0.5" hearing="1.0"/>
+  <ai attackrooms="100.0" attackweaker="50" attackstronger="-30" sight="0.1" hearing="2.0"/>
 </Character>
 

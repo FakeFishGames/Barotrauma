@@ -200,7 +200,6 @@ namespace Barotrauma.Items.Components
 
                     if (limb.SimPosition == Vector2.Zero || pointDist > radius) continue;
                     
-                    if (pointDist > radius) continue;
                     if (pointDist > prevPingRadius && pointDist < pingRadius)
                     {
                         for (int i = 0; i<=limb.Mass/100.0f; i++)

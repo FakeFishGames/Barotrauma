@@ -36,7 +36,7 @@
     
     <Sprite texture ="DivingMask.png" depth="0.5"/>
   
-    <Body radius="18" density="20"/>
+    <Body radius="18" density="15"/>
 
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
@@ -66,7 +66,7 @@
 
     <Sprite texture ="DivingSuit.png" sourcerect="82,0,46,128" depth="0.55"/>
 
-    <Body width="37" height="113" density="50"/>
+    <Body width="37" height="113" density="15"/>
 
     <Wearable slots="Head+Torso+Legs" armorvalue="10.0">
       <sprite texture="DivingSuit.png" limb="Head" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
@@ -118,7 +118,7 @@
     
     <Sprite texture ="DivingSuit.png" depth="0.5" sourcerect="22,98,59,32" origin="0.6,0.66"/>
 
-    <Body width="55" height="30" density="20"/>
+    <Body width="55" height="30" density="15"/>
 
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11"/>
 

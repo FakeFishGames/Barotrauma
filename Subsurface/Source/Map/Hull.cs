@@ -352,8 +352,8 @@ namespace Barotrauma
 
             FireSource.UpdateAll(fireSources, deltaTime);
 
-            aiTarget.SightRange = Submarine == null ? 0.0f : Submarine.Velocity.Length() * 500.0f;
-            aiTarget.SoundRange -= deltaTime*1000.0f;
+            aiTarget.SightRange = Submarine == null ? 0.0f : Math.Max(Submarine.Velocity.Length() * 500.0f, 500.0f);
+            aiTarget.SoundRange -= deltaTime * 1000.0f;
 
             float strongestFlow = 0.0f;
             foreach (Gap gap in ConnectedGaps)

@@ -307,7 +307,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (lerp)
+            if (lerp && Vector2.Distance(targetPosition, body.Position)<10.0f)
             {
                 offsetFromTargetPos = targetPosition - (body.Position - offsetFromTargetPos);
                 prevPosition = targetPosition;

@@ -438,7 +438,7 @@ namespace Barotrauma
                     
                     valueModifier = attackHumans;                  
                 }
-                else if (target.Entity!=null && attackRooms!=0.0f)
+                else if (target.Entity!=null && attackRooms != 0.0f)
                 {
                     //skip the target if it's the room the Character is inside of
                     if (character.AnimController.CurrentHull != null && character.AnimController.CurrentHull == target.Entity as Hull) continue;
@@ -450,12 +450,17 @@ namespace Barotrauma
                     character.WorldPosition,
                     target.WorldPosition);
 
+                //if the target has been within range earlier, the character will notice it more easily
+                //(i.e. remember where the target was)
+                if (targetMemories.ContainsKey(target)) dist *= 0.5f;
+
+                //ignore target if it's too far to see or hear
+                if (dist > target.SightRange * sight && dist > target.SoundRange * hearing) continue;
+
                 AITargetMemory targetMemory = FindTargetMemory(target);
-
                 valueModifier = valueModifier * targetMemory.Priority / dist;
-                //dist -= targetMemory.Priority;
 
-                if (Math.Abs(valueModifier) > Math.Abs(targetValue) && (dist < target.SightRange * sight || dist < target.SoundRange * hearing))
+                if (Math.Abs(valueModifier) > Math.Abs(targetValue))
                 {                  
                     Vector2 rayStart = character.AnimController.Limbs[0].SimPosition;
                     Vector2 rayEnd = target.SimPosition;
@@ -517,7 +522,7 @@ namespace Barotrauma
             foreach(KeyValuePair<AITarget, AITargetMemory> memory in targetMemories)
             {
                 memory.Value.Priority += 0.5f;
-                if (memory.Value.Priority == 0.0f || !AITarget.List.Contains(memory.Key)) toBeRemoved.Add(memory.Key);
+                if (Math.Abs(memory.Value.Priority) < 1.0f || !AITarget.List.Contains(memory.Key)) toBeRemoved.Add(memory.Key);
             }
 
             foreach (AITarget target in toBeRemoved)

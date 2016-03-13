@@ -33,6 +33,8 @@ namespace Barotrauma
 
         public override void Update(Camera cam, float deltaTime)
         {
+            if (!Enabled) return;
+
             base.Update(cam, deltaTime);
             
             float dist = Vector2.Distance(cam.WorldViewCenter, WorldPosition);
