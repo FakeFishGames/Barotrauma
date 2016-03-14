@@ -360,33 +360,18 @@ namespace Launcher2
             }
 
             string xml = response.Content;
-
-            string _byteOrderMarkUtf8 = System.Text.Encoding.UTF8.GetString(System.Text.Encoding.UTF8.GetPreamble());
-            if (xml.StartsWith(_byteOrderMarkUtf8))
-            {
-                xml = xml.Remove(0, _byteOrderMarkUtf8.Length);
-            }
-
+            
             try
             {
                 return XDocument.Parse(xml);
             }
 
             catch
-            {
-            }
-
-            try
             {
                 int index = xml.IndexOf('<');
-                xml = xml.Substring(index, xml.Length-index);
+                xml = xml.Substring(index, xml.Length - index);
 
                 return XDocument.Parse(xml);
-            }
-
-            catch
-            {
-                return null;
             }
         }
 
