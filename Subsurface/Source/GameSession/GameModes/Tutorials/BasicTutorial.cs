@@ -276,7 +276,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.Loaded.WorldPosition.Y > 25000.0f)
+            while (Submarine.Loaded.WorldPosition.Y > 29000.0f)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -381,7 +381,7 @@ namespace Barotrauma.Tutorials
                 if (!divingMaskSelected &&
                     Character.Controlled.ClosestItem != null && Character.Controlled.ClosestItem.Name == "Diving Suit")
                 {
-                    infoBox = CreateInfoFrame("The can only be one item in each inventory slot, so you need to take off "
+                    infoBox = CreateInfoFrame("There can only be one item in each inventory slot, so you need to take off "
                         +"the jumpsuit if you wish to wear a diving suit.");
 
                     divingMaskSelected = true;

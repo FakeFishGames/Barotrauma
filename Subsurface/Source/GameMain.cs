@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public static bool WindowActive
         {
-            get { return Instance != null && Instance.IsActive; }
+            get { return Instance == null || Instance.IsActive; }
         }
 
         public static bool DebugDraw;

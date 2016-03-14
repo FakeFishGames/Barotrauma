@@ -460,7 +460,7 @@ namespace Barotrauma
 
             //Game1.GameScreen.DrawMap(graphics, spriteBatch);
             
-            spriteBatch.Begin();
+            spriteBatch.Begin(0, BlendState.AlphaBlend);
 
             buttonsTab.Draw(spriteBatch);
             if (selectedTab>0) menuTabs[selectedTab].Draw(spriteBatch);

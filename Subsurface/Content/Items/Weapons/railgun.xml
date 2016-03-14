@@ -77,7 +77,7 @@
 
     <Sprite texture="weapons.png" sourcerect="0,58,88,20" depth ="0.5"/>
 
-    <Body width="87" height="18"/>
+    <Body width="87" height="18" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
     
@@ -105,7 +105,7 @@
 
     <Sprite texture="weapons.png" sourcerect="0,77,88,20" depth ="0.5"/>
 
-    <Body width="87" height="18"/>
+    <Body width="87" height="18" density="35"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
 

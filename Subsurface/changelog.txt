@@ -1,4 +1,31 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.5.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed unclickable buttons/checkboxes in the launcher
+- fixed battery cells not reloading when placed inside a battery
+
+---------------------------------------------------------------------------------------------------------
+v0.3.5.0
+---------------------------------------------------------------------------------------------------------
+
+- items float and can be moved around by flowing water
+- wiring mode which makes wiring more convenient in the editor
+- networking bugfixes and improvements
+- changes to the logic that determines how far the monsters can see/hear the submarine from - now it's 
+possible to evade some monsters by turning off noisy devices and/or stopping the submarine
+- invisible entities (items inside cabinets, hulls/gaps when they've been hidden) can't be highlighted 
+or selected in the editor
+- fixed monster/item spawnpoints being placed in unreachable locations
+- relay and delay components
+- fixed lights not being positioned correctly on moving items
+- added a ''set_color'' connection to light components
+- ladders outside the sub can be climbed
+- changes to drowning/suffocation logic: amount of oxygen drops at a fixed rate instead of effects 
+"stacking" (e.g. when wearing a diving suit with no oxygen tank in a room with low oxygen)
+- fixed projectiles not colliding with the submarine when shot from the outside
+
+---------------------------------------------------------------------------------------------------------
 v0.3.4.2
 ---------------------------------------------------------------------------------------------------------
 
