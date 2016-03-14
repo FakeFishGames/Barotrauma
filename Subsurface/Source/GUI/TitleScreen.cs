@@ -80,7 +80,7 @@ namespace Barotrauma
                 TitlePosition.X = Math.Min(TitlePosition.X, (float)GameMain.GraphicsWidth / 2.0f);
             }
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
             graphics.Clear(Color.Black);
 
             spriteBatch.Draw(backgroundTexture, CenterPosition, null, Color.White * Math.Min(state / 5.0f, 1.0f), 0.0f,
@@ -104,7 +104,7 @@ namespace Barotrauma
                 Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
             }
             
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
             
             spriteBatch.Draw(titleTexture,
                 TitlePosition, null,

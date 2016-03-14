@@ -133,10 +133,10 @@ namespace Barotrauma.Items.Components
 
             //float gridRate = voltage;
 
-            //if (gridRate>minVoltage)
-            //{
-            //    ApplyStatusEffects(ActionType.OnActive, deltaTime, null);            
-            //}
+            if (chargeRate > 0.0f)
+            {
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            }
 
             //recharge
             //if (gridRate >= chargeRate)

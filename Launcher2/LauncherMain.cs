@@ -476,7 +476,7 @@ namespace Launcher2
             latestVersionFiles = UpdaterUtil.GetFileList(doc);
             filesToDownload = UpdaterUtil.GetRequiredFiles(doc);
 
-            string updaterVersion = ToolBox.GetAttributeString(doc.Root, "updaterversion", "1.0");
+            string updaterVersion = ToolBox.GetAttributeString(doc.Root, "updaterversion", "1.1");
             if (updaterVersion!=UpdaterUtil.Version)
             {
                 ShowError("Warning", "The update may contain changes which can't be installed by the autoupdater. If you receive any error messages during the install, please download and install the update manually.");
