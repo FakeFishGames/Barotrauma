@@ -335,8 +335,13 @@ namespace Launcher2
                 return false;
             }
 
-            if (doc == null) return false;
-
+            if (doc == null)
+            {
+                updateInfoText.Text = "Checking updates failed";
+                updateInfoBox.Visible = true;
+                return false;
+            }
+        
             CheckUpdateXML(doc);
 
             return true;

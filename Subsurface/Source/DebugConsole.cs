@@ -219,6 +219,12 @@ namespace Barotrauma
                     if (spawnedCharacter != null && GameMain.Server != null) GameMain.Server.SendCharacterSpawnMessage(spawnedCharacter);
 
                     break;
+                case "disablecrewai":
+                    HumanAIController.DisableCrewAI = !HumanAIController.DisableCrewAI;
+                    break;
+                case "enablecrewai":
+                    HumanAIController.DisableCrewAI = false;
+                    break;
                 case "kick":
                     if (GameMain.Server == null) break;
                     GameMain.Server.KickPlayer(commands[1]);
