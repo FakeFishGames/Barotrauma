@@ -5,6 +5,8 @@ namespace Barotrauma
 {
     class HumanAIController : AIController
     {
+        public static bool DisableCrewAI;
+
         const float UpdateObjectiveInterval = 0.5f;
 
         private AIObjectiveManager objectiveManager;
@@ -46,6 +48,8 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (DisableCrewAI) return;
+
             Character.ClearInputs();
 
             //steeringManager = Character.AnimController.CurrentHull == null ? outdoorsSteeringManager : indoorsSteeringManager;
@@ -85,12 +89,28 @@ namespace Barotrauma
                 {
                     Character.AnimController.TargetMovement = new Vector2( 0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
                 }
+            }
 
+            //unequip diving suit if running out of oxygen
+            if (Character.Oxygen < 50.0f && Character.AnimController.CurrentHull!=null &&
+                Character.AnimController.CurrentHull.Volume < Character.AnimController.CurrentHull.FullVolume*0.3f)
+            {
+                var divingSuit = Character.Inventory.FindItem("Diving Suit");
+                if (divingSuit != null) divingSuit.Drop(Character);
             }
 
             if (Character.IsKeyDown(InputType.Aim))
             {
-                Character.AnimController.TargetDir = Character.CursorPosition.X > Character.Position.X ? Direction.Right : Direction.Left;
+                var cursorDiffX = Character.CursorPosition.X - Character.Position.X;
+                if (cursorDiffX > 10.0f)
+                {
+                    Character.AnimController.TargetDir = Direction.Right;
+                }
+                else if (cursorDiffX < -10.0f)
+                {
+                    Character.AnimController.TargetDir = Direction.Left;
+                }
+
                 if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
 
             }
@@ -106,7 +126,7 @@ namespace Barotrauma
         public override void OnAttacked(IDamageable attacker, float amount)
         {
             var enemy = attacker as Character;
-            if (enemy == null) return;
+            if (enemy == null || enemy == Character) return;
 
             objectiveManager.AddObjective(new AIObjectiveCombat(Character, enemy));
         }

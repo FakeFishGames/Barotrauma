@@ -435,9 +435,11 @@ namespace Barotrauma
 
             characterMode = !characterMode;         
             //button.Color = (characterMode) ? Color.Gold : Color.White;
-
+            
             if (characterMode)
             {
+                if (wiringMode) ToggleWiringMode();
+
                 CreateDummyCharacter();
             }
             else if (dummyCharacter != null)
