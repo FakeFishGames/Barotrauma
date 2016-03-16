@@ -577,8 +577,9 @@ namespace Barotrauma
                     gapRect.Width += 20;
                     gapRect.Height += 20;
                     sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
-                    if(CastShadow)
-                        GenerateConvexHull();
+                    sections[sectionIndex].gap.ConnectedWall = this;
+
+                    if(CastShadow) GenerateConvexHull();
                 }
             }
 
@@ -758,6 +759,7 @@ namespace Barotrauma
                 if (s.GapIndex == -1) continue;
 
                 s.gap = FindEntityByID((ushort)s.GapIndex) as Gap;
+                if (s.gap != null) s.gap.ConnectedWall = this;
             }
         }
 

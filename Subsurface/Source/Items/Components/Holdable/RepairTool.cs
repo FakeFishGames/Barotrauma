@@ -220,7 +220,29 @@ namespace Barotrauma.Items.Components
             Gap leak = objective.OperateTarget as Gap;
             if (leak == null) return true;
 
-            if (Vector2.Distance(leak.WorldPosition, item.WorldPosition) > range) return true;
+            float dist = Vector2.Distance(leak.WorldPosition, item.WorldPosition);
+
+            //too far away -> consider this done and hope the AI is smart enough to move closer
+            if (dist > range*5.0f) return true;
+            
+            //steer closer if almost in range
+            if (dist > range)
+            {
+                Vector2 standPos = leak.isHorizontal ?
+                    new Vector2(Math.Sign(item.WorldPosition.X - leak.WorldPosition.X), 0.0f)
+                    : new Vector2(0.0f, Math.Sign(item.WorldPosition.Y - leak.WorldPosition.Y));
+
+                standPos = leak.WorldPosition + standPos * range;
+
+                character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);   
+            }
+            else
+            {
+                //close enough -> stop moving
+                character.AIController.SteeringManager.Reset();
+            }
+             
+            
 
             character.CursorPosition = leak.Position;
             character.SetInput(InputType.Aim, false, true);

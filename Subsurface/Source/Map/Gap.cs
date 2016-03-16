@@ -38,6 +38,8 @@ namespace Barotrauma
 
         public Door ConnectedDoor;
 
+        public Structure ConnectedWall;
+
         public Vector2 LerpedFlowForce
         {
             get { return lerpedFlowForce; }

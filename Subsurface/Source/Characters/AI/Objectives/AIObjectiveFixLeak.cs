@@ -63,14 +63,15 @@ namespace Barotrauma
                 }
             }
 
-            if (Vector2.Distance(character.Position, leak.Position) > 300.0f)
+            var repairTool = weldingTool.GetComponent<RepairTool>();
+            if (repairTool == null) return;
+
+            if (Vector2.Distance(character.WorldPosition, leak.WorldPosition) > 300.0f)
             {
                 AddSubObjective(new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character));
             }
             else
             {
-                var repairTool = weldingTool.GetComponent<RepairTool>();
-                if (repairTool == null) return;
                 AddSubObjective(new AIObjectiveOperateItem(repairTool, character, "", leak));
             }            
         }

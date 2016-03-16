@@ -466,6 +466,20 @@ namespace Barotrauma
             }
             return CurrentHull;
         }
+
+        public Item GetRootContainer()
+        {
+            if (Container == null) return null;
+
+            Item rootContainer = Container;
+
+            while (rootContainer.Container != null)
+            {
+                rootContainer = rootContainer.Container;
+            }
+
+            return rootContainer;
+        }
         
         public void AddTag(string tag)
         {

@@ -114,7 +114,7 @@ namespace Barotrauma
                 if (dist<closestDist || startNode==null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
-                    if (insideSubmarine && node.Waypoint.CurrentHull != null && Submarine.CheckVisibility(start, node.Waypoint.SimPosition) != null) continue;
+                    if (insideSubmarine && Submarine.CheckVisibility(start, node.Waypoint.SimPosition) != null) continue;
 
                     closestDist = dist;
                     startNode = node;
@@ -160,7 +160,7 @@ namespace Barotrauma
             var path =  FindPath(startNode,endNode);
 
             sw.Stop();
-            System.Diagnostics.Debug.WriteLine("findpath: " + sw.ElapsedTicks);
+            System.Diagnostics.Debug.WriteLine("findpath: " + sw.ElapsedMilliseconds+" ms");
 
             return path;
         }

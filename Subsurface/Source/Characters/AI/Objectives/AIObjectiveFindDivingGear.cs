@@ -45,16 +45,22 @@ namespace Barotrauma
                 if (containedItems == null) return;
 
                 //check if there's an oxygen tank in the mask
-                var oxygenTank = Array.Find(containedItems, i => i.Name == "Oxygen Tank" && i.Condition > 0.0f);
+                var oxygenTank = Array.Find(containedItems, i => i.Name == "Oxygen Tank");
 
                 if (oxygenTank != null)
                 {
-                    //isCompleted = true;
-                    return;
+                    if (oxygenTank.Condition > 0.0f)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        oxygenTank.Drop();
+                    }
                 }
 
 
-                if (!(subObjective is AIObjectiveContainItem))
+                if (!(subObjective is AIObjectiveContainItem) || subObjective.IsCompleted())
                 {
                     subObjective = new AIObjectiveContainItem(character, "Oxygen Tank", item.GetComponent<ItemContainer>());
                 }
@@ -66,6 +72,13 @@ namespace Barotrauma
 
                 //isCompleted = subObjective.IsCompleted();
             }
+        }
+
+        public override float GetPriority(Character character)
+        {
+            if (character.AnimController.CurrentHull == null) return 100.0f;
+
+            return 100.0f - character.Oxygen;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
