@@ -299,7 +299,7 @@ namespace Barotrauma
                 wayPoint.Remove();
             }
 
-            float minDist = 200.0f;
+            float minDist = 150.0f;
             float heightFromFloor = 100.0f;
 
             foreach (Hull hull in Hull.hullList)
@@ -324,7 +324,7 @@ namespace Barotrauma
                     prevWaypoint = wayPoint;
                 }
             }
-
+            
             float outSideWaypointInterval = 200.0f;
             int outsideWaypointDist = 100;
 
@@ -521,7 +521,7 @@ namespace Barotrauma
 
                 for (int dir = -1; dir <= 1; dir += 2)
                 {
-                    float tolerance = gap.IsRoomToRoom ? 30.0f : outSideWaypointInterval / 2.0f;
+                    float tolerance = gap.IsRoomToRoom ? 50.0f : outSideWaypointInterval / 2.0f;
                     WayPoint closest = wayPoint.FindClosest(dir, true, new Vector2(-tolerance, tolerance));
                     if (closest == null) continue;
                     wayPoint.ConnectTo(closest);

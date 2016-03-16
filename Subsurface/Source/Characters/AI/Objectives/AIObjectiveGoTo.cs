@@ -104,10 +104,13 @@ namespace Barotrauma
 
                 var indoorsSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
-                if (indoorsSteering.CurrentPath != null && indoorsSteering.HasOutdoorsNodes)
+                if (indoorsSteering.CurrentPath.Unreachable)
                 {
-
-                    AddSubObjective(new AIObjectiveGetItem(character, "Diving Suit", true));
+                    indoorsSteering.SteeringWander();
+                }
+                else if (indoorsSteering.CurrentPath != null && indoorsSteering.HasOutdoorsNodes)
+                {
+                    AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                 }
             }
         }

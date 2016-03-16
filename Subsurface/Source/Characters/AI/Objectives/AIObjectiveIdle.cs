@@ -40,8 +40,11 @@ namespace Barotrauma
 
                 if (currentTarget != null)
                 {
-                    var path = pathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition);
-                    if (path.Cost > 200.0f) return;
+                    Vector2 pos = character.SimPosition;
+                    if (character != null && character.Submarine == null) pos -= Submarine.Loaded.SimPosition;
+                    
+                    var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition);
+                    if (path.Cost > 200.0f && character.AnimController.CurrentHull!=null) return;
 
                     pathSteering.SetPath(path);
                 }

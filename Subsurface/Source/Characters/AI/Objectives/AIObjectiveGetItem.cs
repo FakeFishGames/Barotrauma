@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         private string itemName;
 
-        private Item targetItem;
+        private Item targetItem, moveToTarget;
 
         private int currSearchIndex;
 
@@ -52,83 +52,96 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (targetItem != null)
+            if (targetItem == null)
             {
-                if (Vector2.Distance(character.Position, targetItem.Position) < targetItem.PickDistance)
+                FindTargetItem();
+                if (targetItem == null) return;
+            }
+
+            if (Vector2.Distance(character.Position, moveToTarget.Position) < targetItem.PickDistance*2.0f)
+            {
+                int targetSlot = -1;
+                if (equip)
                 {
-                    int targetSlot = -1;
-                    if (equip)
+                    var pickable = targetItem.GetComponent<Pickable>();
+                    //check if all the slots required by the item are free
+                    foreach (LimbSlot slots in pickable.AllowedSlots)
                     {
-                        var pickable = targetItem.GetComponent<Pickable>();
-                        //check if all the slots required by the item are free
-                        foreach (LimbSlot slots in pickable.AllowedSlots)
-                        {
-                            if (slots.HasFlag(LimbSlot.Any)) continue;
+                        if (slots.HasFlag(LimbSlot.Any)) continue;
                             
-                            for (int i = 0; i<character.Inventory.Items.Length; i++)
-                            {
-                                //slot not needed by the item, continue
-                                if (!slots.HasFlag(CharacterInventory.limbSlots[i])) continue;
+                        for (int i = 0; i<character.Inventory.Items.Length; i++)
+                        {
+                            //slot not needed by the item, continue
+                            if (!slots.HasFlag(CharacterInventory.limbSlots[i])) continue;
 
-                                targetSlot = i;
+                            targetSlot = i;
 
-                                //slot free, continue
-                                if (character.Inventory.Items[i] == null) continue;
+                            //slot free, continue
+                            if (character.Inventory.Items[i] == null) continue;
 
-                                //try to move the existing item to LimbSlot.Any and continue if successful
-                                if (character.Inventory.TryPutItem(character.Inventory.Items[i], new List<LimbSlot>() { LimbSlot.Any }, false)) continue;
+                            //try to move the existing item to LimbSlot.Any and continue if successful
+                            if (character.Inventory.TryPutItem(character.Inventory.Items[i], new List<LimbSlot>() { LimbSlot.Any }, false)) continue;
 
-                                //if everything else fails, simply drop the existing item
-                                character.Inventory.Items[i].Drop();
-                            }
+                            //if everything else fails, simply drop the existing item
+                            character.Inventory.Items[i].Drop();
                         }
                     }
-
-                    targetItem.Pick(character, false, true);
-
-                    if (targetSlot>-1 && character.Inventory.IsInLimbSlot(targetItem, LimbSlot.Any))
-                    {
-                        character.Inventory.TryPutItem(targetItem, targetSlot, true, false);
-                    }
-
                 }
 
-                return;
+                targetItem.Pick(character, false, true);
+
+                if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, LimbSlot.Any))
+                {
+                    character.Inventory.TryPutItem(targetItem, targetSlot, true, false);
+                }
+            }
+            else if (!subObjectives.Any())
+            {
+                AddGoToObjective(targetItem);
             }
             
+        }
 
-            for (int i = 0; i<10 && currSearchIndex<Item.ItemList.Count-2; i++)
+        /// <summary>
+        /// searches for an item that matches the desired item and adds a goto subobjective if one is found
+        /// </summary>
+        private void FindTargetItem()
+        {
+            float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
+
+            for (int i = 0; i < 5 && currSearchIndex < Item.ItemList.Count - 2; i++)
             {
+
                 currSearchIndex++;
 
-                //don't try to get items from outside the sub
-                if (Item.ItemList[currSearchIndex].CurrentHull == null) continue;
+                var item = Item.ItemList[currSearchIndex];
 
-                if (!Item.ItemList[currSearchIndex].HasTag(itemName) && Item.ItemList[currSearchIndex].Name != itemName) continue;
-                if (IgnoreContainedItems && Item.ItemList[currSearchIndex].Container != null) continue;
-                if (Item.ItemList[currSearchIndex].ParentInventory is CharacterInventory) continue;
+                if (item.CurrentHull == null || item.Condition <= 0.0f) continue;
+                if (IgnoreContainedItems && item.Container != null) continue;
+                if (item.Name != itemName && !item.HasTag(itemName)) continue;
+                if (item.ParentInventory is CharacterInventory) continue;
+
+                //ignore if item is further away than the currently targeted item
+                Item rootContainer = item.GetRootContainer();
+                if (moveToTarget != null && Vector2.DistanceSquared((rootContainer ?? item).Position, character.Position) > currDist) continue;
                 
-                targetItem = Item.ItemList[currSearchIndex];
+                targetItem = item;
+                moveToTarget = rootContainer ?? item;
 
-                AddGoToObjective(targetItem);
+                AddGoToObjective(moveToTarget);
 
-
-                return;
             }
 
-            if (currSearchIndex >= Item.ItemList.Count) canBeCompleted = false;
+            //if searched through all the items and a target wasn't found, can't be completed
+            if (currSearchIndex >= Item.ItemList.Count && targetItem == null) canBeCompleted = false;
         }
 
-        private void AddGoToObjective(Item item)
+        private void AddGoToObjective(Item gotoToTarget)
         {
-            Item moveToTarget = item;
-            while (moveToTarget.Container != null)
-            {
-                moveToTarget = moveToTarget.Container;
-            }
-
-            AddSubObjective(new AIObjectiveGoTo(moveToTarget, character));
+            subObjectives.Clear();
+            AddSubObjective(new AIObjectiveGoTo(gotoToTarget, character));
         }
+
         
         public override bool IsDuplicate(AIObjective otherObjective)
         {

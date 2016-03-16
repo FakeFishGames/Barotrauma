@@ -173,7 +173,7 @@ namespace Barotrauma
             keyboardDispatcher = new KeyboardDispatcher(window);
         }
 
-        public T GetChild<T>()
+        public T GetChild<T>() where T : GUIComponent
         {
             foreach (GUIComponent child in children)
             {
@@ -182,7 +182,7 @@ namespace Barotrauma
 
             return default(T);
         }
-
+        
         public GUIComponent GetChild(object obj)
         {
             foreach (GUIComponent child in children)
