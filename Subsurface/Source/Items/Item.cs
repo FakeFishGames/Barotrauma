@@ -90,7 +90,7 @@ namespace Barotrauma
         {
             get
             {
-                return ParentInventory == null && (body == null || !body.Enabled);
+                return ParentInventory == null && (body == null || body.Enabled);
             }
         }
 
@@ -326,6 +326,8 @@ namespace Barotrauma
             }
 
             properties = ObjectProperty.InitProperties(this, element);
+
+
 
             foreach (XElement subElement in element.Elements())
             {
@@ -861,36 +863,51 @@ namespace Barotrauma
                 }
 
             }
-            
+
             foreach (var objectProperty in editableProperties)
             {
-                new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, GUI.Style, editingHUD);
-
                 int height = 20;
-                var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault<Editable>();
+                var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
                 if (editable != null) height = (int)(Math.Ceiling(editable.MaxLength / 20.0f) * 20.0f);
 
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(180, y, 250, height), GUI.Style, editingHUD);
-                if (height>20) propertyBox.Wrap = true;
-
                 object value = objectProperty.GetValue();
-                if (value != null)
+
+                if (value is bool)
                 {
-                    if (value is float)
-                    {
-                        propertyBox.Text = ((float)value).ToString("G", System.Globalization.CultureInfo.InvariantCulture);
-                    }
-                    else
-                    {
+                    GUITickBox propertyTickBox = new GUITickBox(new Rectangle(10, y, 20, 20), objectProperty.Name,
+                        Alignment.Left, editingHUD);
 
-                        propertyBox.Text = value.ToString();
-                    }
+                    propertyTickBox.UserData = objectProperty;
+                    propertyTickBox.OnSelected = EnterProperty;
                 }
+                else
+                {
 
-                propertyBox.UserData = objectProperty;
-                propertyBox.OnEnterPressed = EnterProperty;
-                propertyBox.OnTextChanged = PropertyChanged;
-                y = y + height+10;
+                    new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, GUI.Style, editingHUD);
+
+                    GUITextBox propertyBox = new GUITextBox(new Rectangle(180, y, 250, height), GUI.Style, editingHUD);
+                    if (height > 20) propertyBox.Wrap = true;
+
+                    if (value != null)
+                    {
+                        if (value is float)
+                        {
+                            propertyBox.Text = ((float)value).ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+
+                            propertyBox.Text = value.ToString();
+                        }
+                    }
+
+                    propertyBox.UserData = objectProperty;
+                    propertyBox.OnEnterPressed = EnterProperty;
+                    propertyBox.OnTextChanged = PropertyChanged;
+
+                }
+                y = y + height + 10;   
+
             }
             return editingHUD;
         }
@@ -998,6 +1015,7 @@ namespace Barotrauma
                 }
                 
                 if (item.prefab.PickDistance == 0.0f) continue;
+
                 if (Vector2.Distance(displayPos, item.WorldPosition) > item.prefab.PickDistance) continue;
 
                 if (!item.prefab.PickThroughWalls)
@@ -1225,6 +1243,16 @@ namespace Barotrauma
             return editableProperties;
         }
 
+        private bool EnterProperty(GUITickBox tickBox)
+        {
+            var objectProperty = tickBox.UserData as ObjectProperty;
+            if (objectProperty == null) return false;
+
+            objectProperty.TrySetValue(tickBox.Selected);
+
+            return true;
+        }
+
         private bool EnterProperty(GUITextBox textBox, string text)
         {
             textBox.Color = Color.DarkGreen;
@@ -1260,13 +1288,7 @@ namespace Barotrauma
 
             return true;
         }
-
-
-        //private void Init()
-        //{
-
-        //}
-                    
+       
         public override XElement Save(XDocument doc)
         {
             XElement element = new XElement("Item");

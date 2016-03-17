@@ -27,6 +27,16 @@ namespace Barotrauma.Items.Components
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
             }
         }
+
+        [Editable, HasDefaultValue(false, true)]
+        public bool IsOn
+        {
+            get { return IsActive; }
+            set
+            {
+                IsActive = value;
+            }
+        }
         
         [HasDefaultValue(0.0f, false)]
         public float Flicker
@@ -41,10 +51,10 @@ namespace Barotrauma.Items.Components
         [InGameEditable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
         public string LightColor
         {
-            get { return ToolBox.Vector4ToString(lightColor.ToVector4()); }
+            get { return ToolBox.Vector4ToString(lightColor.ToVector4(), "0.00"); }
             set
             {
-                Vector4 newColor = ToolBox.ParseToVector4(value);
+                Vector4 newColor = ToolBox.ParseToVector4(value, false);
                 newColor.X = MathHelper.Clamp(newColor.X, 0.0f, 1.0f);
                 newColor.Y = MathHelper.Clamp(newColor.Y, 0.0f, 1.0f);
                 newColor.Z = MathHelper.Clamp(newColor.Z, 0.0f, 1.0f);
@@ -69,7 +79,8 @@ namespace Barotrauma.Items.Components
             {
                 if (base.IsActive == value) return;
                 base.IsActive = value;
-                light.Color = value ? lightColor : Color.Transparent;                
+                light.Color = value ? lightColor : Color.Transparent;
+                if (!value) lightBrightness = 0.0f;
             }
         }
 
@@ -135,6 +146,14 @@ namespace Barotrauma.Items.Components
             light.Range = range * (float)Math.Sqrt(lightBrightness);
 
             voltage = 0.0f;
+        }
+
+        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing = false)
+        {
+            if (light.LightSprite != null)
+            {
+                light.LightSprite.Draw(spriteBatch, new Vector2(item.WorldPosition.X, -item.WorldPosition.Y), lightColor * lightBrightness);
+            } 
         }
         
         protected override void RemoveComponentSpecific()

@@ -86,12 +86,14 @@ namespace Barotrauma.Items.Components
             if (connection == connections[1]) connections[1] = null;
         }
 
-        public void Connect(Connection newConnection, bool addNode = true, bool loading = false)
+        public bool Connect(Connection newConnection, bool addNode = true, bool loading = false)
         {
             for (int i = 0; i < 2; i++)
             {
-                if (connections[i] == newConnection) return;
+                if (connections[i] == newConnection) return false;
             }
+
+            if (!connections.Any(c => c == null)) return false;
 
             for (int i = 0; i < 2; i++)
             {
@@ -144,6 +146,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (!loading) Item.NewComponentEvent(this, true, true);
+
+            return true;
         }
 
         public override void Equip(Character character)
@@ -163,8 +167,9 @@ namespace Barotrauma.Items.Components
         public override void Drop(Character dropper)
         {
             ClearConnections();
+            
+            IsActive = false;
 
-            IsActive = false;   
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -329,6 +334,7 @@ namespace Barotrauma.Items.Components
             }
 
             if (!editing || !PlayerInput.MouseInsideWindow || !GameMain.EditMapScreen.WiringMode ) return;
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null) return;
             
             for (int i = 0; i < Nodes.Count; i++)
             {

@@ -333,30 +333,16 @@ namespace Barotrauma.Items.Components
                     int index = FindWireIndex(null);
 
                     Wire wireComponent = draggingConnected.GetComponent<Wire>();
-                    
-                    if (index>-1 && wireComponent!=null && !Wires.Contains(wireComponent))
+
+                    if (index > -1 && wireComponent != null && !Wires.Contains(wireComponent))
                     {
                         bool alreadyConnected = wireComponent.IsConnectedTo(item);
 
                         wireComponent.RemoveConnection(item);
 
-                        Wires[index] = wireComponent;
-                        wireComponent.Connect(this, !alreadyConnected);
+                        if (wireComponent.Connect(this, !alreadyConnected)) Wires[index] = wireComponent;
                     }                    
-                }
-                //far away -> disconnect if the wire is linked to this connector
-                else
-                {
-                    //int index = FindWireIndex(draggingConnected);
-                    //if (index>-1)
-                    //{
-                    //    Wires[index].RemoveConnection(this);
-                    //    //Wires[index].Item.SetTransform(item.SimPosition, 0.0f);
-                    //    //Wires[index].Item.Drop();
-                    //    //Wires[index].Item.body.Enabled = true;
-                    //    Wires[index] = null;
-                    //}
-                }                    
+                }               
             }
 
             int screwIndex = (position.Y % 60 < 30) ? 0 : 1;
