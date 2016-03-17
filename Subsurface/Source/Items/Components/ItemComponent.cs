@@ -211,7 +211,7 @@ namespace Barotrauma.Items.Components
             {
                 DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
             }
-
+            
             properties = ObjectProperty.InitProperties(this, element);
             
             foreach (XElement subElement in element.Elements())
@@ -265,7 +265,15 @@ namespace Barotrauma.Items.Components
                         break;
                     case "sound":
                         string filePath = ToolBox.GetAttributeString(subElement, "file", "");
-                        if (filePath=="") continue;
+
+                        if (filePath == "") filePath = ToolBox.GetAttributeString(subElement, "sound", ""); 
+
+                        if (filePath == "")
+                        {
+                            DebugConsole.ThrowError("Error when instantiating item ''"+item.Name+"'' - sound with no file path set");
+                            continue;
+                        }
+                
                         if (!filePath.Contains("/") && !filePath.Contains("\\") && !filePath.Contains(Path.DirectorySeparatorChar))
                         {
                             filePath = Path.Combine(Path.GetDirectoryName(item.Prefab.ConfigFile), filePath);
@@ -447,12 +455,7 @@ namespace Barotrauma.Items.Components
 
         //called then the item is dropped or dragged out of a "limbslot"
         public virtual void Unequip(Character character) { }
-
-        public virtual bool UseOtherItem(Item item)
-        {
-            return false;
-        }
-
+        
         public virtual void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0.0f) 
         {
         
@@ -461,6 +464,13 @@ namespace Barotrauma.Items.Components
                 case "activate":
                 case "use":
                     item.Use(1.0f);
+                    break;
+                case "toggle":
+                    IsActive = !isActive;
+                    break;
+                case "set_active":
+                case "set_state":
+                    IsActive = signal != "0";
                     break;
             }
         }

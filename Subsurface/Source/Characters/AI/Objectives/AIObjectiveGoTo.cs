@@ -104,7 +104,7 @@ namespace Barotrauma
 
                 var indoorsSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
-                if (indoorsSteering.CurrentPath.Unreachable)
+                if (indoorsSteering.CurrentPath==null || indoorsSteering.CurrentPath.Unreachable)
                 {
                     indoorsSteering.SteeringWander();
                 }
