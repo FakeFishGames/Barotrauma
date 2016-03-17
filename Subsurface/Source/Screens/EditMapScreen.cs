@@ -286,7 +286,7 @@ namespace Barotrauma
 
             for (int i = 0; i<dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
-                dummyCharacter.Inventory.SlotPositions[i].X += leftPanel.Rect.Width+10;
+                dummyCharacter.Inventory.SlotPositions[i].X += false ? -1000 : leftPanel.Rect.Width+10;
             }
 
             Character.Controlled = dummyCharacter;
@@ -436,23 +436,16 @@ namespace Barotrauma
             characterMode = !characterMode;         
             //button.Color = (characterMode) ? Color.Gold : Color.White;
             
+                wiringMode = false;
+
             if (characterMode)
             {
-                if (wiringMode) ToggleWiringMode();
 
                 CreateDummyCharacter();
             }
             else if (dummyCharacter != null)
-            {     
-                foreach (Item item in dummyCharacter.Inventory.Items)
-                {
-                    if (item == null) continue;
-
-                    item.Remove();
-                }
-
-                dummyCharacter.Remove();
-                dummyCharacter = null;
+            {
+                RemoveDummyCharacter();
             }
 
             foreach (MapEntity me in MapEntity.mapEntityList)
@@ -473,20 +466,43 @@ namespace Barotrauma
         {
             wiringMode = !wiringMode;
 
-            if (characterMode != wiringMode) ToggleCharacterMode();
+            characterMode = false;
+
 
             if (wiringMode)
             {
+                CreateDummyCharacter();
+
                 var screwdriverPrefab = ItemPrefab.list.Find(ip => ip.Name == "Screwdriver") as ItemPrefab;
 
                 var item = new Item(screwdriverPrefab, Vector2.Zero, null);
 
-                dummyCharacter.Inventory.TryPutItem(item, new List<LimbSlot>() { LimbSlot.RightHand }, false);
+                dummyCharacter.Inventory.TryPutItem(item, new List<LimbSlot>() {LimbSlot.RightHand}, false);
 
                 wiringToolPanel = CreateWiringPanel();
             }
+            else
+            {
+                RemoveDummyCharacter();
+            }
             
             return true;
+        }
+
+        private void RemoveDummyCharacter()
+        {
+            if (dummyCharacter == null) return;
+            
+            foreach (Item item in dummyCharacter.Inventory.Items)
+            {
+                if (item == null) continue;
+
+                item.Remove();
+            }
+
+            dummyCharacter.Remove();
+            dummyCharacter = null;
+            
         }
 
         private GUIFrame CreateWiringPanel()
@@ -627,7 +643,7 @@ namespace Barotrauma
                 //cam.Zoom = MathHelper.Clamp(cam.Zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f)*cam.Zoom, 0.1f, 2.0f);
             }
 
-            if (characterMode)
+            if (characterMode || wiringMode)
             {
                 if (dummyCharacter == null || Entity.FindEntityByID(dummyCharacter.ID) != dummyCharacter)
                 {
@@ -709,7 +725,7 @@ namespace Barotrauma
            
             Submarine.Draw(spriteBatch, true);
 
-            if (!characterMode)
+            if (!characterMode && !wiringMode)
             {
                 if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(spriteBatch, cam);
 
@@ -728,7 +744,7 @@ namespace Barotrauma
 
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
-            if (characterMode && dummyCharacter != null)                     
+            if ((characterMode || wiringMode) && dummyCharacter != null)                     
             { 
                 dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false); 
 
@@ -747,14 +763,9 @@ namespace Barotrauma
                     if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.ClosestItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;
                 }
 
-                if (!wiringMode)
-                {
-                    dummyCharacter.DrawHUD(spriteBatch, cam);
-                }
-                else
-                {
-                    wiringToolPanel.Draw(spriteBatch);
-                }
+                dummyCharacter.DrawHUD(spriteBatch, cam);
+                
+                if (wiringMode) wiringToolPanel.Draw(spriteBatch);
             }
             else
             {

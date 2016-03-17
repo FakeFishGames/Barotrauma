@@ -222,6 +222,11 @@
 
     <RelayComponent canbeselected = "true"/>
 
+    <fixrequirement name="Reset fuse">
+      <skill name="Electrical Engineering" level="30"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
+
     <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
@@ -467,6 +472,72 @@
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Emergency Siren"
+    category="Electrical"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true"
+    price="10">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,32,32,32"/>
+
+    <Body width="32" height="30" density="30"/>
+
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ItemComponent>
+      <sound file="Content/Items/warningSiren.ogg" type="OnActive" range="2000.0" loop="true"/>
+    </ItemComponent>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
+    </ConnectionPanel>
+  </Item>
+  
+  <Item
+    name="Alarm Buzzer"
+    category="Electrical"
+    Tags="smallitem"
+    pickdistance="150"
+    linkable="true"
+    price="10">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="64,32,23,16"/>
+
+    <Body width="20" height="16" density="20"/>
+
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ItemComponent>
+      <sound file="Content/Items/warningBeep.ogg" type="OnActive" range="1000.0" loop="true"/>
+    </ItemComponent>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
     </ConnectionPanel>
   </Item>
 

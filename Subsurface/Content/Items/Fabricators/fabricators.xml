@@ -23,6 +23,8 @@
 
       <fabricableitem name="Railgun Shell" requireditems="Steel Bar, Steel Bar, Polycarbonate Bar" requiredtime="20"/>
       <fabricableitem name="Nuclear Shell" requireditems="Steel Bar, Steel Bar, Uranium Bar, Polycarbonate Bar" requiredtime="30"/>
+
+      <fabricableitem name="Wire" requireditems="Copper" requiredtime="5"/>
       
       <fabricableitem name="Button" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="And Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
@@ -34,6 +36,8 @@
       <fabricableitem name="Signal Check Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>      
       <fabricableitem name="RegEx Find Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
       <fabricableitem name="Wifi Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+
+      <fabricableitem name="Alarm Buzzer" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
 
       <fabricableitem name="Underwater Scooter" requireditems="Steel Bar, Polycarbonate Bar, Polycarbonate Bar, FPGA Circuit" requiredtime="30"/>
       

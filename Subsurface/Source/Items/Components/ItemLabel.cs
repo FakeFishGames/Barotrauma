@@ -26,17 +26,18 @@ namespace Barotrauma.Items.Components
             set
             {
                 textColor = new Color(ToolBox.ParseToVector4(value));
+                if (textBlock != null) textBlock.TextColor = textColor;
             }
         }
-
+        
         private GUITextBlock TextBlock
         {
             get 
             { 
-                if (textBlock==null)
+                if (textBlock == null)
                 {
                     textBlock = new GUITextBlock(new Rectangle(item.Rect.X,-item.Rect.Y,item.Rect.Width, item.Rect.Height), "", 
-                        Color.Transparent, Color.Black, 
+                        Color.Transparent, textColor, 
                         Alignment.TopLeft, Alignment.Center, 
                         null, null, true);
                     textBlock.Font = GUI.SmallFont;
@@ -46,7 +47,7 @@ namespace Barotrauma.Items.Components
                 return textBlock; 
             }
         }
-
+        
         public override void Move(Vector2 amount)
         {
             textBlock.Rect = new Rectangle(item.Rect.X, -item.Rect.Y, item.Rect.Width, item.Rect.Height);
