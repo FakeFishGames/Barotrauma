@@ -1,9 +1,32 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     class RelayComponent : ItemComponent
     {
+        private float maxPower;
+
+        [Editable, HasDefaultValue(1000.0f, true)]
+        public float MaxPower
+        {
+            get { return maxPower; }
+            set
+            {
+                maxPower = Math.Max(0.0f, value);
+            }
+        }
+
+        [Editable, HasDefaultValue(false, true)]
+        public bool IsOn
+        {
+            get { return IsActive; }
+            set
+            {
+                IsActive = value;
+            }
+        }
+
         public RelayComponent(Item item, XElement element)
             : base (item, element)
         {
@@ -12,6 +35,10 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
         {
+            if (item.Condition <= 0.0f) return;
+
+            if (power > maxPower) item.Condition = 0.0f;
+            
             if (connection.Name.Contains("_in"))
             {
                 if (!IsActive) return;

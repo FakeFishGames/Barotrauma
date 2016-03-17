@@ -259,7 +259,7 @@ namespace Barotrauma
             return vector.X.ToString("G", CultureInfo.InvariantCulture) + "," + vector.Y.ToString("G", CultureInfo.InvariantCulture);
         }
 
-        public static Vector4 ParseToVector4(string stringVector4)
+        public static Vector4 ParseToVector4(string stringVector4, bool errorMessages = true)
         {
             string[] components = stringVector4.Split(',');
 
@@ -267,7 +267,7 @@ namespace Barotrauma
 
             if (components.Length < 3)
             {
-                DebugConsole.ThrowError("Failed to parse the string ''" + stringVector4 + "'' to Vector4");
+                if (errorMessages) DebugConsole.ThrowError("Failed to parse the string ''" + stringVector4 + "'' to Vector4");
                 return vector;
             }
 
@@ -280,12 +280,12 @@ namespace Barotrauma
             return vector;
         }
 
-        public static string Vector4ToString(Vector4 vector)
+        public static string Vector4ToString(Vector4 vector, string format = "G")
         {
-            return vector.X.ToString("G", CultureInfo.InvariantCulture) + "," +
-                    vector.Y.ToString("G", CultureInfo.InvariantCulture) + "," +
-                    vector.Z.ToString("G", CultureInfo.InvariantCulture) + "," +
-                    vector.W.ToString("G", CultureInfo.InvariantCulture);
+            return vector.X.ToString(format, CultureInfo.InvariantCulture) + "," +
+                    vector.Y.ToString(format, CultureInfo.InvariantCulture) + "," +
+                    vector.Z.ToString(format, CultureInfo.InvariantCulture) + "," +
+                    vector.W.ToString(format, CultureInfo.InvariantCulture);
         }
 
         public static float[] ParseArrayToFloat(string[] stringArray)
