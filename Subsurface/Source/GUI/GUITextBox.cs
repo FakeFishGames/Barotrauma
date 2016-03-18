@@ -20,11 +20,13 @@ namespace Barotrauma
 
         public delegate bool OnEnterHandler(GUITextBox textBox, string text);
         public OnEnterHandler OnEnterPressed;
-
+        
         public event TextBoxEvent OnKeyHit;
 
         public delegate bool OnTextChangedHandler(GUITextBox textBox, string text);
         public OnTextChangedHandler OnTextChanged;
+
+        public bool CaretEnabled;
         
         public GUITextBlock.TextGetterHandler TextGetter
         {
@@ -83,8 +85,20 @@ namespace Barotrauma
             }
         }
 
-        public bool CaretEnabled;
+        public override Rectangle Rect
+        {
+            get
+            {
+                return base.Rect;
+            }
+            set
+            {
+                base.Rect = value;
 
+                textBlock.Rect = value;
+            }
+        }
+        
         public String Text
         {
             get

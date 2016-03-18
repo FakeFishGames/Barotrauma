@@ -99,7 +99,9 @@ namespace Barotrauma
                     GUI.Style,
                     Alignment.Left, Alignment.Left, mapList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
+                textBlock.ToolTip = sub.Description;
                 textBlock.UserData = sub;
+
             }
             if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
 

@@ -55,6 +55,12 @@ namespace Barotrauma
             set { name = value; }
         }
 
+        public string Description
+        {
+            get; 
+            set; 
+        }
+
         public static Vector2 LastPickedPosition
         {
             get { return lastPickedPosition; }
@@ -191,17 +197,12 @@ namespace Barotrauma
             {
                 this.hash = new Md5Hash(hash);
             }
-            else
+
+            XDocument doc = OpenDoc(filePath);
+
+            if (doc != null && doc.Root != null)
             {
-                //XDocument doc = OpenDoc(filePath);
-
-                //string md5Hash = ToolBox.GetAttributeString(doc.Root, "md5hash", "");
-                //if (md5Hash == "" || md5Hash.Length < 16)
-                //{
-                //    DebugConsole.ThrowError("Couldn't find a valid MD5 hash in the map file");
-                //}
-
-                //this.mapHash = new MapHash(md5Hash);
+                Description = ToolBox.GetAttributeString(doc.Root, "description", "");
             }
 
             ID = ushort.MaxValue;
@@ -225,21 +226,6 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth < 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
             }
-
-        
-
-            if (loaded == null) return;
-
-            //foreach (HullBody hb in loaded.hullBodies)
-            //{
-            //    spriteBatch.Draw(
-            //        hb.shapeTexture,
-            //        ConvertUnits.ToDisplayUnits(new Vector2(hb.body.Position.X, -hb.body.Position.Y)),
-            //        null,
-            //        Color.White,
-            //        -hb.body.Rotation,
-            //        new Vector2(hb.shapeTexture.Width / 2, hb.shapeTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
-            //}
         }
 
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false)
@@ -488,6 +474,7 @@ namespace Barotrauma
 
             XDocument doc = new XDocument(new XElement("Submarine"));
             doc.Root.Add(new XAttribute("name", name));
+            doc.Root.Add(new XAttribute("description", Description == null ? "" : Description));
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
@@ -684,9 +671,9 @@ namespace Barotrauma
             //string file = filePath;
 
             XDocument doc = OpenDoc(filePath);
-            if (doc == null) return;
+            if (doc == null || doc.Root == null) return;
 
-            //name = ToolBox.GetAttributeString(doc.Root, "name", name);
+            Description = ToolBox.GetAttributeString(doc.Root, "description", "");
 
             foreach (XElement element in doc.Root.Elements())
             {

@@ -302,6 +302,16 @@ namespace Barotrauma
             return floatArray;
         }
 
+        public static string LimitString(string str, int maxCharacters)
+        {
+            if (str == null || maxCharacters < 0) return null;
+
+            if (maxCharacters < 4 || str.Length <= maxCharacters) return str;
+            
+            return str.Substring(0, maxCharacters-3) + "...";
+            
+        }
+
         public static string RandomSeed(int length)
         {
             var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

@@ -19,7 +19,7 @@ namespace Barotrauma
 
         private GUIFrame loadFrame;
 
-        private GUITextBox nameBox;
+        private GUITextBox nameBox, descriptionBox;
 
         const int PreviouslyUsedCount = 10;
         private GUIListBox previouslyUsedList;
@@ -88,40 +88,29 @@ namespace Barotrauma
             var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", GUI.Style, topPanel);
             button.OnClicked = CreateLoadScreen;
 
-           // var nameBlock =new GUITextBlock(new Rectangle(0, 20, 0, 20), "Submarine:", GUI.Style, leftPanel);
             nameBox = new GUITextBox(new Rectangle(150, 0, 150, 20), GUI.Style, topPanel);
             nameBox.OnEnterPressed = ChangeSubName;
 
             button = new GUIButton(new Rectangle(310,0,70,20), "Save", GUI.Style, topPanel);
             button.OnClicked = SaveSub;
+
+            new GUITextBlock(new Rectangle(400, 0, 100, 20), "Description: ", GUI.Style, topPanel);
+
+            descriptionBox = new GUITextBox(new Rectangle(500, 0, 200, 20), null, null, Alignment.TopLeft,
+                Alignment.TopLeft, GUI.Style, topPanel);
+            descriptionBox.Wrap = true;
+            descriptionBox.OnSelected += ExpandDescriptionBox;
+            descriptionBox.OnTextChanged = ChangeSubDescription;
             
             leftPanel = new GUIFrame(new Rectangle(0, 30, 150, GameMain.GraphicsHeight-30), GUI.Style);
             leftPanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            //GUIListBox constructionList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUIpanel);
-            //constructionList.OnSelected = MapEntityPrefab.SelectPrefab;
-            //constructionList.CheckSelected = MapEntityPrefab.GetSelected;
-
-
-
-
-            //GUIButton button = new GUIButton(new Rectangle(0,70,0,20), "Save", GUI.Style, GUIpanel);
-            //button.OnClicked = SaveSub;
-
+            
             GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, leftPanel);
             itemCount.TextGetter = GetItemCount;
 
             GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 50, 0, 20), "", GUI.Style, leftPanel);
             structureCount.TextGetter = GetStructureCount;
 
-            //GUITextBlock physicsBodyCount = new GUITextBlock(new Rectangle(0, 120, 0, 20), "", GUI.Style, GUIpanel);
-            //physicsBodyCount.TextGetter = GetPhysicsBodyCount;
-            
-
-            //button = new GUIButton(new Rectangle(0, 180, 0, 20), "Structures", Alignment.Left, GUI.Style, GUIpanel);
-            //button.UserData = 1;
-            //button.OnClicked = SelectTab;
-
-            
             GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];
                        
 
@@ -246,11 +235,13 @@ namespace Barotrauma
             {
                 cam.Position = Submarine.Loaded.Position + Submarine.HiddenSubPosition;
                 nameBox.Text = Submarine.Loaded.Name;
+                descriptionBox.Text = ToolBox.LimitString(Submarine.Loaded.Description,15);
             }
             else
             {
                 cam.Position = Submarine.HiddenSubPosition;
                 nameBox.Text = "";
+                descriptionBox.Text = "";
             }
 
             nameBox.Deselect();
@@ -411,6 +402,7 @@ namespace Barotrauma
             selectedSub.Load();
 
             nameBox.Text = selectedSub.Name;
+            descriptionBox.Text = ToolBox.LimitString(selectedSub.Description,15);
 
             loadFrame = null;
 
@@ -579,6 +571,41 @@ namespace Barotrauma
             return true;
         }
 
+        private bool ChangeSubDescription(GUITextBox textBox, string text)
+        {
+            if (Submarine.Loaded != null)
+            {
+                Submarine.Loaded.Description = text;
+            }
+            else
+            {
+                textBox.UserData = text;
+            }
+
+            textBox.Rect = new Rectangle(textBox.Rect.Location, new Point(textBox.Rect.Width, 20));
+            
+            textBox.Text = ToolBox.LimitString(text, 15);
+
+            textBox.Flash(Color.Green);
+            textBox.Deselect();
+
+            return true;
+        }
+
+        private void ExpandDescriptionBox(GUITextBox textBox, Keys key)
+        {
+            if (Submarine.Loaded != null)
+            {
+                textBox.Text = Submarine.Loaded.Description;
+            }
+            else if (textBox.UserData is string)
+            {
+                textBox.Text = (string)textBox.UserData;
+            }
+            
+            textBox.Rect = new Rectangle(textBox.Rect.Location, new Point(textBox.Rect.Width, 150));
+        }
+
         private bool SelectPrefab(GUIComponent component, object obj)
         {
             AddPreviouslyUsed(obj as MapEntityPrefab);
@@ -609,11 +636,7 @@ namespace Barotrauma
             var existing = previouslyUsedList.FindChild(mapEntityPrefab);
             if (existing != null) previouslyUsedList.RemoveChild(existing);
 
-            string name = mapEntityPrefab.Name;
-            if (name.Length>15)
-            {
-                name = name.Substring(0,12)+"...";
-            }
+            string name = ToolBox.LimitString(mapEntityPrefab.Name,15);
 
             var textBlock = new GUITextBlock(new Rectangle(0,0,0,15), name, GUI.Style, previouslyUsedList);
             textBlock.UserData = mapEntityPrefab;

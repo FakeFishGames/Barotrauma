@@ -44,6 +44,19 @@ namespace Barotrauma
             }
         }
 
+        public override Rectangle Rect
+        {
+            get
+            {
+                return base.Rect;
+            }
+            set
+            {
+                base.Rect = value;
+                SetTextPos();
+            }
+        }
+
         public float TextDepth
         {
             get { return textDepth; }

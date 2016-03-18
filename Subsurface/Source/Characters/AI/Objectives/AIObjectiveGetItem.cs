@@ -111,7 +111,6 @@ namespace Barotrauma
 
             for (int i = 0; i < 5 && currSearchIndex < Item.ItemList.Count - 2; i++)
             {
-
                 currSearchIndex++;
 
                 var item = Item.ItemList[currSearchIndex];
@@ -119,7 +118,15 @@ namespace Barotrauma
                 if (item.CurrentHull == null || item.Condition <= 0.0f) continue;
                 if (IgnoreContainedItems && item.Container != null) continue;
                 if (item.Name != itemName && !item.HasTag(itemName)) continue;
+
+                //if the item is inside a character's inventory, don't steal it
                 if (item.ParentInventory is CharacterInventory) continue;
+
+                //if the item is inside an item, which is inside a character's inventory, don't steal it
+                if (item.ParentInventory != null && item.ParentInventory.Owner is Item)
+                {
+                    if (((Item)item.ParentInventory.Owner).ParentInventory is CharacterInventory) continue;
+                }
 
                 //ignore if item is further away than the currently targeted item
                 Item rootContainer = item.GetRootContainer();

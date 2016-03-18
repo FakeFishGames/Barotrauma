@@ -152,7 +152,7 @@ namespace Barotrauma.Items.Components
         {
             if (light.LightSprite != null)
             {
-                light.LightSprite.Draw(spriteBatch, new Vector2(item.WorldPosition.X, -item.WorldPosition.Y), lightColor * lightBrightness);
+                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness);
             } 
         }
         

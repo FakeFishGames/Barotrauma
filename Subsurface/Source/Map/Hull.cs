@@ -537,14 +537,16 @@ namespace Barotrauma
         {
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
 
+            Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
+
             //calculate where the surface should be based on the water volume
-            float top = rect.Y+Submarine.DrawPosition.Y;
+            float top = rect.Y + submarinePos.Y;
             float bottom = top - rect.Height;
             float surfaceY = bottom + Volume / rect.Width;
 
             //interpolate the position of the rendered surface towards the "target surface"
-            surface = surface + ((surfaceY - Submarine.DrawPosition.Y) - surface) / 10.0f;
-            float drawSurface = surface + Submarine.DrawPosition.Y;
+            surface = surface + ((surfaceY - submarinePos.Y) - surface) / 10.0f;
+            float drawSurface = surface + submarinePos.Y;
 
             Matrix transform =  cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
@@ -565,7 +567,7 @@ namespace Barotrauma
                 Vector2[] uvCoords = new Vector2[4];
                 for (int i = 0; i < 4; i++ )
                 {
-                    corners[i] += new Vector3(Submarine.DrawPosition, 0.0f);
+                    corners[i] += new Vector3(submarinePos, 0.0f);
                     uvCoords[i] = Vector2.Transform(new Vector2(corners[i].X, -corners[i].Y), transform);                    
                 }
 

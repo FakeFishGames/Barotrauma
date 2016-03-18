@@ -75,7 +75,7 @@ namespace Barotrauma
             get { return new Vector2(rect.Center.X, rect.Center.Y); }
         }
                 
-        public Rectangle Rect
+        public virtual Rectangle Rect
         {
             get { return rect; }
             set 
