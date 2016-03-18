@@ -1,4 +1,23 @@
 ---------------------------------------------------------------------------------------------------------
+v0.3.6.0
+---------------------------------------------------------------------------------------------------------
+
+- bunch of crew AI improvements and bugfixes: they are now much better at keeping themselves alive and
+fixing leaks
+- crew AI can be toggled on and off using "DisableCrewAi" and "EnableCrewAi" commands
+- fixed crashing when switching from wiring mode to character mode
+- inventory is visible in wiring mode
+- several wiring bugfixes
+- emergency sirens and alarm buzzers
+- fixed light components throwing errors when receiving an invalid color value to the "set_color" input
+- fixed bright lights making it impossible to see whether a light component is on or off
+- relay components break if too much power is directed through them
+- relay components are active by default and they can be toggled on/off in the editor
+- wires can be created in fabricators
+- label text color can be changed
+- boolean (true/false) properties are displayed as checkboxes in the editor
+
+---------------------------------------------------------------------------------------------------------
 v0.3.5.1
 ---------------------------------------------------------------------------------------------------------
 

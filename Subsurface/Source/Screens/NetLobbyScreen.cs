@@ -528,25 +528,22 @@ namespace Barotrauma
 
             subList.ClearChildren();
 
-            if (Submarine.SavedSubmarines.Count > 0)
-            {
-                foreach (Submarine sub in Submarine.SavedSubmarines)
-                {
-                    GUITextBlock textBlock = new GUITextBlock(
-                        new Rectangle(0, 0, 0, 25),
-                        sub.Name, GUI.Style,
-                        Alignment.Left, Alignment.Left,
-                        subList);
-                    textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                    textBlock.UserData = sub;
-                }
-            }
-            else
+            if (Submarine.SavedSubmarines.Count == 0)
             {
                 DebugConsole.ThrowError("No saved submarines found!");
-                return;
             }
-
+            
+            foreach (Submarine sub in Submarine.SavedSubmarines)
+            {
+                new GUITextBlock(
+                    new Rectangle(0, 0, 0, 25), sub.Name, GUI.Style,
+                    Alignment.Left, Alignment.Left, subList)
+                {
+                    Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
+                    ToolTip = sub.Description,
+                    UserData = sub
+                };
+            }
         }
 
         public bool VotableClicked(GUIComponent component, object userData)
