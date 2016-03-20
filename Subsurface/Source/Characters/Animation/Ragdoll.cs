@@ -117,22 +117,22 @@ namespace Barotrauma
             }
         }
 
-        public float HeadPosition
+        protected virtual float HeadPosition
         { 
             get { return headPosition; } 
         }
 
-        public float HeadAngle
+        protected virtual float HeadAngle
         { 
             get { return headAngle; } 
         }
-        
-        public float TorsoPosition
+
+        protected virtual float TorsoPosition
         { 
             get { return torsoPosition; } 
         }
 
-        public float TorsoAngle
+        protected virtual float TorsoAngle
         { 
             get { return torsoAngle; } 
         }

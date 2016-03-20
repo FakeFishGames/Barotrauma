@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
+        public bool Crouching;
+
         private bool aiming;
 
         private float walkAnimSpeed;
@@ -16,6 +18,30 @@ namespace Barotrauma
         private float movementLerp;
 
         private float thighTorque;
+
+        protected override float HeadPosition
+        {
+            get
+            {
+                return Crouching ? base.HeadPosition : base.HeadPosition;
+            }
+        }
+
+        protected override float TorsoPosition
+        {
+            get
+            {
+                return Crouching ? base.TorsoPosition - base.HeadPosition * 0.3f : base.TorsoPosition;
+            }
+        }
+
+        protected override float TorsoAngle
+        {
+            get
+            {
+                return Crouching ? base.TorsoAngle+0.5f : base.TorsoAngle;
+            }
+        }
 
         public HumanoidAnimController(Character character, XElement element)
             : base(character, element)
@@ -183,6 +209,16 @@ namespace Barotrauma
                 case Animation.UsingConstruction:
                     UpdateStanding();
                     break;
+                case Animation.CPR:
+                    if (character.SelectedCharacter == null)
+                    {
+                        Anim = Animation.None;
+                        return;
+                    }
+                        
+                    DragCharacter(character.SelectedCharacter);
+
+                    break;
                 default:
                     if (inWater)
                         UpdateSwimming();
@@ -268,6 +304,8 @@ namespace Barotrauma
             Vector2 stepSize = new Vector2(
                 this.stepSize.X * walkPosX * runningModifier,
                 this.stepSize.Y * walkPosY * runningModifier * runningModifier);
+
+            if (Crouching) stepSize *= 0.5f;
             
             float footMid = waist.SimPosition.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
             
@@ -300,43 +338,46 @@ namespace Barotrauma
 
             if (!onGround || (LowestLimb.SimPosition.Y - floorY > 0.5f && stairs == null)) return;
 
+            float? ceilingY = null;
+            if (Submarine.PickBody(head.SimPosition, head.SimPosition + Vector2.UnitY, null, Physics.CollisionWall)!=null)
+            {
+                ceilingY = Submarine.LastPickedPosition.Y;
+
+                if (ceilingY - floorY < HeadPosition) Crouching = true;
+            }
+
             getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.5f);
+
+            torso.pullJoint.Enabled = true;
+            head.pullJoint.Enabled = true;
+            waist.pullJoint.Enabled = true;
 
             if (stairs != null)
             {
                 if (LowestLimb.SimPosition.Y < stairs.SimPosition.Y) IgnorePlatforms = true;
 
-                torso.pullJoint.Enabled = true;
                 torso.pullJoint.WorldAnchorB = new Vector2(
                     MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.35f, getUpSpeed * 0.8f),
                     MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
 
-                head.pullJoint.Enabled = true;
                 head.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * 0.4f, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * (Crouching ? 1.0f : 0.4f), getUpSpeed * 0.8f),
                     MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
-                waist.pullJoint.Enabled = true;
                 waist.pullJoint.WorldAnchorB = waist.SimPosition;// +movement * 0.3f;
             }
             else
             {
-                torso.pullJoint.Enabled = true;
                 torso.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
                     new Vector2(footMid + movement.X * 0.3f, colliderPos.Y + TorsoPosition), getUpSpeed);
 
-
-                head.pullJoint.Enabled = true;
                 head.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * 0.3f, colliderPos.Y + HeadPosition), getUpSpeed*1.2f);
+                    new Vector2(footMid + movement.X * (Crouching && Math.Sign(movement.X)==Math.Sign(Dir) ? 1.0f : 0.3f), colliderPos.Y + HeadPosition), getUpSpeed*1.2f);
 
-                waist.pullJoint.Enabled = true;
                 waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.1f;
-                //MathUtils.SmoothStep(waist.SimPosition,
-                //new Vector2(footMid + movement.X * 0.4f, colliderPos.Y + HeadPosition), getUpSpeed);
             }
 
 
@@ -416,12 +457,20 @@ namespace Barotrauma
             {
                 float movementFactor = (movement.X / 4.0f) * movement.X * Math.Sign(movement.X);
                 
+
+
+                //MoveLimb(leftFoot, footPos, 2.5f);
+
+                for (int i = -1; i < 2; i+=2 )
+                {
                 Vector2 footPos = new Vector2(
-                    colliderPos.X,
+                    Crouching ?  waist.SimPosition.X + Math.Sign(stepSize.X*i)*Dir*0.3f : waist.SimPosition.X,
                     colliderPos.Y - 0.2f);
 
-                MoveLimb(leftFoot, footPos, 2.5f);
-                MoveLimb(rightFoot, footPos, 2.5f);
+                    var foot = i == -1 ? rightFoot : leftFoot;
+
+                    MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X)*50.0f);
+                }
 
                 leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
                 rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
@@ -850,7 +899,6 @@ namespace Barotrauma
 
                 targetLimb.pullJoint.Enabled = true;
                 targetLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition;
-                
             }
 
 
@@ -1039,30 +1087,49 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
+                bool mirror = false;
+                bool flipAngle = false;
+                bool wrapAngle = false;
+
                 switch (limb.type)
                 {
                     case LimbType.LeftHand:
                     case LimbType.LeftArm:
                     case LimbType.RightHand:
                     case LimbType.RightArm:
-                        if (!limb.pullJoint.Enabled)
-                        {
-                            difference = limb.body.SimPosition - torso.SimPosition;
-                            difference = Vector2.Transform(difference, torsoTransform);
-                            difference.Y = -difference.Y;
-
-                            TrySetLimbPosition(limb, limb.SimPosition, torso.SimPosition + Vector2.Transform(difference, -torsoTransform));
-                        }
-                        limb.body.SetTransform(limb.body.SimPosition, -limb.body.Rotation);
+                        mirror = true;
+                        flipAngle = true;
+                        break;
+                    case LimbType.LeftThigh:
+                    case LimbType.LeftLeg:
+                    case LimbType.LeftFoot:
+                    case LimbType.RightThigh:
+                    case LimbType.RightLeg:
+                    case LimbType.RightFoot:
+                        mirror = true;
+                        flipAngle = true;
+                        wrapAngle = true;
                         break;
                     default:
-                        if (!inWater) limb.body.SetTransform(limb.body.SimPosition,
-                            MathUtils.WrapAnglePi(limb.body.Rotation * (limb.DoesFlip ? -1.0f : 1.0f)));
+                        flipAngle = limb.DoesFlip;
                         break;
                 }
+
+                if (!limb.pullJoint.Enabled && mirror)
+                {
+                    difference = limb.body.SimPosition - torso.SimPosition;
+                    difference = Vector2.Transform(difference, torsoTransform);
+                    difference.Y = -difference.Y;
+
+                    TrySetLimbPosition(limb, limb.SimPosition, torso.SimPosition + Vector2.Transform(difference, -torsoTransform));
+                }
+
+                float angle = flipAngle ? -limb.body.Rotation : limb.body.Rotation;
+                if (wrapAngle) angle = MathUtils.WrapAnglePi(angle);
+
+                limb.body.SetTransform(limb.body.SimPosition, angle);
             }
-
         }
-
+        
     }
 }

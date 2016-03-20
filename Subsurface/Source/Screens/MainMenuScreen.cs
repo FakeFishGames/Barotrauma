@@ -93,14 +93,15 @@ namespace Barotrauma
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
-                GUITextBlock textBlock = new GUITextBlock(
+                new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    sub.Name, 
-                    GUI.Style,
-                    Alignment.Left, Alignment.Left, mapList);
-                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                textBlock.ToolTip = sub.Description;
-                textBlock.UserData = sub;
+                    sub.Name, GUI.Style,
+                    Alignment.Left, Alignment.Left, mapList)
+                {
+                    Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
+                    ToolTip = sub.Description,
+                    UserData = sub
+                };
 
             }
             if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);

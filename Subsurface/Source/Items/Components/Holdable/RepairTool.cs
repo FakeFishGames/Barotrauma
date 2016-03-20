@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
 {
     class RepairTool : ItemComponent
     {
-        private List<string> fixableEntities;
+        private readonly List<string> fixableEntities;
 
         private float range;
 
@@ -79,13 +79,6 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             this.item = item;
-
-            //range = ToolBox.GetAttributeFloat(element, "range", 100.0f);
-            //range = ConvertUnits.ToSimUnits(range);
-
-            //structureFixAmount = ToolBox.GetAttributeFloat(element, "structurefixamount", 1.0f);
-            //limbFixAmount = ToolBox.GetAttributeFloat(element, "limbfixamount", -0.5f);
-
 
             fixableEntities = new List<string>();
             foreach (XElement subElement in element.Elements())
@@ -194,23 +187,13 @@ namespace Barotrauma.Items.Components
             }
             else if ((targetItem = (targetBody.UserData as Item)) != null)
             {
-                //targetItem.Condition -= structureFixAmount;
                 targetItem.IsHighlighted = true;
 
                 foreach (StatusEffect effect in statusEffects)
                 {
-                    //if (Array.IndexOf(effect.TargetNames, targetItem.Name) == -1) continue;
                     effect.Apply(ActionType.OnUse, deltaTime, item, targetItem.AllPropertyObjects);
-                    //targetItem.ApplyStatusEffect(effect, ActionType.OnUse, deltaTime);
                 }
-                //ApplyStatusEffects(ActionType.OnUse, 1.0f, null, targ);
             }
-            //if (Character.SecondaryKeyDown.State)
-            //{
-            //    IPropertyObject propertyObject = targetBody.UserData as IPropertyObject;
-            //    if (propertyObject!=null) ApplyStatusEffects(ActionType.OnUse, 1.0f, item.SimPosition, propertyObject);
-            //    //isActive = true;
-            //}
 
             return true;
         }
