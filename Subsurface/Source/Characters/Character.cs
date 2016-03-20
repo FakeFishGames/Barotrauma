@@ -235,6 +235,11 @@ namespace Barotrauma
             }
         }
 
+        public bool IsUnconscious
+        {
+            get { return (needsAir && oxygen < 0.0f) || health < 0.0f; }
+        }
+
         public bool NeedsAir
         {
             get { return needsAir; }
@@ -246,8 +251,8 @@ namespace Barotrauma
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                oxygen = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (oxygen == 0.0f) Kill(AnimController.InWater ? CauseOfDeath.Drowning : CauseOfDeath.Suffocation);
+                oxygen = MathHelper.Clamp(value, -100.0f, 100.0f);
+                if (oxygen == -100.0f) Kill(AnimController.InWater ? CauseOfDeath.Drowning : CauseOfDeath.Suffocation);
             }
         }
 
@@ -269,7 +274,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                health = MathHelper.Clamp(value, 0.0f, maxHealth);
+                health = MathHelper.Clamp(value, -100.0f, maxHealth);
             }
         }
     
@@ -656,8 +661,12 @@ namespace Barotrauma
             Vector2 targetMovement = GetTargetMovement();
 
             AnimController.TargetMovement = targetMovement;
-
             AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < 0.0f;
+
+            if (AnimController is HumanoidAnimController)
+            {
+                ((HumanoidAnimController) AnimController).Crouching = IsKeyDown(InputType.Crouch);
+            }
 
             if (AnimController.onGround &&
                 !AnimController.InWater &&
@@ -988,7 +997,7 @@ namespace Barotrauma
 
                 networkUpdateSent = false;
             }
-
+            
             if (needsAir)
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
@@ -1016,12 +1025,18 @@ namespace Barotrauma
                     PressureTimer = 0.0f;
                 }
             }
-
+            
             if (controlled == this)
             {
                 Lights.LightManager.ViewTarget = this;
                 CharacterHUD.Update(deltaTime,this);
                 ControlLocalPlayer(deltaTime, cam);
+            }
+
+            if (IsUnconscious)
+            {
+                UpdateUnconscious(deltaTime);
+                return;
             }
 
             if (controlled==this || !(this is AICharacter)) Control(deltaTime, cam);
@@ -1052,12 +1067,19 @@ namespace Barotrauma
             Health -= bleeding * deltaTime;
             Bleeding -= BleedingDecreaseSpeed * deltaTime;
 
-            if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss, false);
+            if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss);
 
             if (!IsDead) LockHands = false;
         }
 
+        private void UpdateUnconscious(float deltaTime)
+        {
+            Stun = Math.Max(5.0f, Stun);
 
+            if (oxygen < 0.0f) Oxygen -= deltaTime;
+
+            if (health < 0.0f) Health -= Math.Max(bleeding, 1.0f) * deltaTime;
+        }
 
         private void UpdateSightRange()
         {

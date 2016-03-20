@@ -72,6 +72,8 @@ namespace Barotrauma
             steeringManager.Update(moveSpeed);
 
             Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X*0.5f));
+            (Character.AnimController as HumanoidAnimController).Crouching = false;
+
 
             if (!Character.AnimController.InWater)
             {
@@ -125,6 +127,8 @@ namespace Barotrauma
 
         public override void OnAttacked(IDamageable attacker, float amount)
         {
+            if (amount <= 0.0f) return;
+
             var enemy = attacker as Character;
             if (enemy == null || enemy == Character) return;
 

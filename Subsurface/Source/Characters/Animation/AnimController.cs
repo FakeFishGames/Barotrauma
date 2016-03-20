@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class AnimController : Ragdoll
     {
-        public enum Animation { None, Climbing, UsingConstruction, Struggle };
+        public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
         public Animation Anim;
 
         public Direction TargetDir;
