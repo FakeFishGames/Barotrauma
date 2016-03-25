@@ -77,9 +77,13 @@ namespace Barotrauma
             {
                 case RelationType.Contained:
                     if (parentItem == null) return false;
-                    foreach (Item contained in parentItem.ContainedItems)
+
+                    var containedItems = parentItem.ContainedItems;
+                    if (containedItems == null) return false;
+
+                    foreach (Item contained in containedItems)
                     {
-                        if (contained.Condition>0.0f && MatchesItem(contained)) return true;
+                        if (contained.Condition > 0.0f && MatchesItem(contained)) return true;
                     }
                     break;
                 case RelationType.Equipped:

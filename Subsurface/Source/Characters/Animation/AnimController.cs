@@ -58,6 +58,6 @@ namespace Barotrauma
 
         public virtual void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle) { }
 
-        public virtual void DragCharacter(Character target) { }
+        public virtual void DragCharacter(Character target, LimbType rightHandTarget = LimbType.RightHand, LimbType leftHandTarget = LimbType.LeftHand) { }
    }
 }

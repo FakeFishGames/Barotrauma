@@ -244,7 +244,7 @@ namespace Barotrauma
         {
             get { return needsAir; }
         }
-
+        
         public float Oxygen
         {
             get { return oxygen; }
@@ -670,7 +670,8 @@ namespace Barotrauma
 
             if (AnimController.onGround &&
                 !AnimController.InWater &&
-                AnimController.Anim != AnimController.Animation.UsingConstruction)
+                AnimController.Anim != AnimController.Animation.UsingConstruction &&
+                AnimController.Anim != AnimController.Animation.CPR)
             {
                 Limb head = AnimController.GetLimb(LimbType.Head);
 
@@ -831,10 +832,6 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            Limb head = AnimController.GetLimb(LimbType.Head);
-
-            //Lights.LightManager.ViewPos = WorldPosition;
-
             if (!DisableControls)
             {
                 for (int i = 0; i < keys.Length; i++ )
@@ -1039,7 +1036,12 @@ namespace Barotrauma
                 return;
             }
 
-            if (controlled==this || !(this is AICharacter)) Control(deltaTime, cam);
+            if (controlled == this || !(this is AICharacter)) Control(deltaTime, cam);
+
+            if (selectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
+            {
+                if (GameMain.Client == null) selectedCharacter.Oxygen += (GetSkillLevel("Medical") / 10.0f) * deltaTime;
+            }
 
             UpdateSightRange();
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
@@ -1422,6 +1424,7 @@ namespace Barotrauma
 
                     return true;
                 case NetworkEventType.SelectCharacter:
+                    message.Write(AnimController.Anim == AnimController.Animation.CPR);
                     message.Write((ushort)data);
                     return true;
                 case NetworkEventType.KillCharacter:
@@ -1482,6 +1485,9 @@ namespace Barotrauma
                     message.Write(keys[(int)InputType.Down].Held);
 
                     message.Write(keys[(int)InputType.Run].Held);
+
+                    message.Write(keys[(int)InputType.Crouch].Held);
+
                     
                     if (secondaryHeld)
                     {
@@ -1564,18 +1570,35 @@ namespace Barotrauma
 
                     return;
                 case NetworkEventType.SelectCharacter:
+                    bool performingCPR = message.ReadBoolean();
+
                     ushort characterId = message.ReadUInt16();
                     data = characterId;
 
                     if (characterId==0)
                     {
                         DeselectCharacter(false);
+                        return;
                     }
-                    else
+                 
+                    Character character = FindEntityByID(characterId) as Character;
+                    if (character == null || !character.IsHumanoid) return;
+                    
+                    SelectCharacter(character, false);
+                    if (performingCPR)
                     {
-                        Character character = FindEntityByID(characterId) as Character;
-                        if (character != null && character.IsHumanoid) SelectCharacter(character, false);
+                        AnimController.Anim = AnimController.Animation.CPR;
+
+                        foreach (Limb limb in selectedCharacter.AnimController.Limbs)
+                        {
+                            limb.pullJoint.Enabled = false;
+                        }
                     }
+                    else if (AnimController.Anim == AnimController.Animation.CPR)
+                    {
+                        AnimController.Anim = AnimController.Animation.None;
+                    }
+                    
                     return;
                 case NetworkEventType.KillCharacter:
                     if (GameMain.Server != null)
@@ -1641,7 +1664,7 @@ namespace Barotrauma
 
                     bool actionKeyState, secondaryKeyState;
                     bool leftKeyState, rightKeyState, upKeyState, downKeyState;
-                    bool runState;
+                    bool runState, crouchState;
 
                     try
                     {
@@ -1656,6 +1679,7 @@ namespace Barotrauma
                         downKeyState        = message.ReadBoolean();
 
                         runState            = message.ReadBoolean();
+                        crouchState         = message.ReadBoolean();
                     }
 
                     catch (Exception e)
@@ -1680,7 +1704,10 @@ namespace Barotrauma
                     keys[(int)InputType.Up].Held        = upKeyState;
                     keys[(int)InputType.Down].Held      = downKeyState;
 
-                    keys[(int)InputType.Run].Held = runState;
+                    keys[(int)InputType.Run].Held       = runState;
+
+                    keys[(int)InputType.Crouch].Held    = crouchState;
+
 
                     float dir = 1.0f;
                     Vector2 pos = Vector2.Zero;

@@ -27,10 +27,14 @@ namespace Barotrauma
 
         public Vector2[] SlotPositions;
 
+        private GUIButton[] useOnSelfButton;
+
         public CharacterInventory(int capacity, Character character)
             : base(character, capacity)
         {
             this.character = character;
+
+            useOnSelfButton = new GUIButton[2];
 
             if (icons == null) icons = TextureLoader.FromFile("Content/UI/inventoryIcons.png");
 
@@ -56,6 +60,16 @@ namespace Barotrauma
                         SlotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 3),
                             GameMain.GraphicsHeight - (spacing + rectHeight)*3);
+
+                        useOnSelfButton[i - 3] = new GUIButton(
+                            new Rectangle((int) SlotPositions[i].X, (int) (SlotPositions[i].Y - spacing - rectHeight),
+                                rectWidth, rectHeight), "Use", GUI.Style)
+                        {
+                            UserData = i,
+                            OnClicked = UseItemOnSelf
+                        };
+
+
                         break;
                     default:
                         SlotPositions[i] = new Vector2(
@@ -64,6 +78,19 @@ namespace Barotrauma
                         break;
                 }
             }
+        }
+
+        private bool UseItemOnSelf(GUIButton button, object obj)
+        {
+            if (!(obj is int)) return false;
+
+            int slotIndex = (int)obj;
+
+            if (Items[slotIndex] == null) return false;
+
+            Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 0.016f, character);
+
+            return true;
         }
 
         protected override void DropItem(Item item)
@@ -240,13 +267,14 @@ namespace Barotrauma
             string toolTip = "";
             Rectangle highlightedSlot = Rectangle.Empty;
 
+
             if (doubleClickedItem!=null &&  doubleClickedItem.ParentInventory!=this)
             {
                 TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
             }
             doubleClickedItem = null;
 
-            int rectWidth = 40, rectHeight = 40;
+            const int rectWidth = 40, rectHeight = 40;
             Rectangle slotRect = new Rectangle(0, 0, rectWidth, rectHeight);
             Rectangle draggingItemSlot = slotRect;
 
@@ -340,15 +368,28 @@ namespace Barotrauma
                     }
                 }
 
-                if (!multiSlot) continue;
 
-                if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition))
+
+                if (multiSlot)
                 {
-                    toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;
-                    highlightedSlot = slotRect;
+                    if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition))
+                    {
+                        toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;
+                        highlightedSlot = slotRect;
+                    }    
+ 
+                    UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);               
                 }
 
-                UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);
+
+                if (character==Character.Controlled && selectedSlot != i &&
+                    Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
+                {
+                    useOnSelfButton[i - 3].Update(0.016f);
+                    useOnSelfButton[i - 3].Draw(spriteBatch);
+                }
+
+
             }
 
             slotRect.Width = rectWidth;
@@ -359,7 +400,9 @@ namespace Barotrauma
                 DrawToolTip(spriteBatch, toolTip, highlightedSlot);
             }
 
-            if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition))
+            if (draggingItem == null) return;
+
+            if (!draggingItemSlot.Contains(PlayerInput.MousePosition))
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
@@ -372,10 +415,10 @@ namespace Barotrauma
                 {                    
                     DropItem(draggingItem);
 
-                    new Networking.NetworkEvent(Barotrauma.Networking.NetworkEventType.DropItem, draggingItem.ID, true);
+                    new NetworkEvent(NetworkEventType.DropItem, draggingItem.ID, true);
                     //draggingItem = null;
-                }
-            }                       
+                }                    
+            }
         }
 
         public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
