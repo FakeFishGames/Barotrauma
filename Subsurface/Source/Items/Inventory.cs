@@ -241,7 +241,7 @@ namespace Barotrauma
             Vector2 textSize = GUI.Font.MeasureString(toolTip);
             Vector2 rectSize = textSize * 1.2f;
 
-            Vector2 pos = new Vector2(highlightedSlot.Center.X, highlightedSlot.Y-rectSize.Y);
+            Vector2 pos = new Vector2(highlightedSlot.Right, highlightedSlot.Y-rectSize.Y);
             pos.X = (int)pos.X;
             pos.Y = (int)pos.Y;
             

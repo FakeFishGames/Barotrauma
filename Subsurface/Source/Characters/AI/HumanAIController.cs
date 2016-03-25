@@ -48,7 +48,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (DisableCrewAI) return;
+            if (DisableCrewAI || Character.IsUnconscious) return;
 
             Character.ClearInputs();
 

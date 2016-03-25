@@ -189,6 +189,11 @@ namespace Barotrauma
             get { return prefab.FireProof; }
         }
 
+        public bool CanUseOnSelf
+        {
+            get { return prefab.CanUseOnSelf; }
+        }
+
         public bool InWater
         {
             get 
@@ -1056,7 +1061,6 @@ namespace Barotrauma
 
         public bool Pick(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)
         {
-
             bool hasRequiredSkills = true;
 
             bool picked = false, selected = false;

@@ -1,9 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -12,6 +10,8 @@ namespace Barotrauma
         private static Sprite statusIcons;
 
         private static Sprite noiseOverlay, damageOverlay;
+
+        private static GUIButton cprButton;
 
         private static GUIProgressBar drowningBar, healthBar;
 
@@ -32,6 +32,8 @@ namespace Barotrauma
                 if (character.Oxygen < 10.0f) drowningBar.Flash();
             }
             if (healthBar != null) healthBar.Update(deltaTime);
+
+            if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
         }
@@ -55,11 +57,39 @@ namespace Barotrauma
 
             DrawStatusIcons(spriteBatch, character);
 
-            if (character.Inventory != null && !character.LockHands) character.Inventory.DrawOwn(spriteBatch, Vector2.Zero);
+            if (character.Inventory != null && !character.LockHands &&
+                !character.IsUnconscious && character.Stun >= -0.1f) character.Inventory.DrawOwn(spriteBatch, Vector2.Zero);
 
             if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory!=null)
             {
                 character.SelectedCharacter.Inventory.DrawOwn(spriteBatch, new Vector2(320.0f, 0.0f));
+
+                if (cprButton == null)
+                {
+                    cprButton = new GUIButton(
+                        new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(150+320, 0), new Point(130, 20)), "Perform CPR", GUI.Style);
+
+                    cprButton.OnClicked = (button, userData) =>
+                    {
+                        if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
+
+                        Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
+                            AnimController.Animation.None : AnimController.Animation.CPR;
+
+                        foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
+                        {
+                            limb.pullJoint.Enabled = false;
+                        }
+
+                        new NetworkEvent(NetworkEventType.SelectCharacter, Character.Controlled.ID, true, Character.Controlled.SelectedCharacter);
+
+                        return true;
+                    };
+                }
+
+                //cprButton.Visible = character.GetSkillLevel("Medical") > 20.0f;
+
+                if (cprButton.Visible) cprButton.Draw(spriteBatch);
             }
 
             if (character.ClosestCharacter != null && character.ClosestCharacter.CanBeSelected)
@@ -76,7 +106,7 @@ namespace Barotrauma
             {
                 var hudTexts = character.ClosestItem.GetHUDTexts(character);
 
-                Vector2 startPos = new Vector2((int)(GameMain.GraphicsWidth / 2.0f), (int)(GameMain.GraphicsHeight));
+                Vector2 startPos = new Vector2((int)(GameMain.GraphicsWidth / 2.0f), GameMain.GraphicsHeight);
                 startPos.Y -= 50 + hudTexts.Count * 25;
 
                 Vector2 textPos = startPos;

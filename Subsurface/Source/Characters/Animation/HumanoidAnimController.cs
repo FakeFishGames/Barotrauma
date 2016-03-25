@@ -19,6 +19,8 @@ namespace Barotrauma
 
         private float thighTorque;
 
+        private float cprAnimState;
+
         protected override float HeadPosition
         {
             get
@@ -210,16 +212,12 @@ namespace Barotrauma
                     UpdateStanding();
                     break;
                 case Animation.CPR:
-                    if (character.SelectedCharacter == null)
-                    {
-                        Anim = Animation.None;
-                        return;
-                    }
-                        
-                    DragCharacter(character.SelectedCharacter);
-
+                    UpdateCPR(deltaTime);
                     break;
                 default:
+
+                    if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
+
                     if (inWater)
                         UpdateSwimming();
                     else
@@ -257,8 +255,6 @@ namespace Barotrauma
 
             Limb leftLeg    = GetLimb(LimbType.LeftLeg);
             Limb rightLeg   = GetLimb(LimbType.RightLeg);
-
-            if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
             
             float getUpSpeed = 0.3f;
             float walkCycleSpeed = head.LinearVelocity.X * walkAnimSpeed;
@@ -541,8 +537,6 @@ namespace Barotrauma
 
             Limb leftFoot = GetLimb(LimbType.LeftFoot);
             Limb rightFoot = GetLimb(LimbType.RightFoot);
-            Limb leftLeg = GetLimb(LimbType.LeftLeg);
-            Limb rightLeg = GetLimb(LimbType.RightLeg);
 
             float rotation = MathHelper.WrapAngle(torso.Rotation);
             rotation = MathHelper.ToDegrees(rotation);
@@ -716,8 +710,6 @@ namespace Barotrauma
             //}
             movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
-            Vector2 footPos, handPos;
-
             Limb leftFoot = GetLimb(LimbType.LeftFoot);
             Limb rightFoot = GetLimb(LimbType.RightFoot);
             Limb head = GetLimb(LimbType.Head);
@@ -744,7 +736,7 @@ namespace Barotrauma
             MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, waist.SimPosition.Y), 10.5f);
             
 
-            handPos = new Vector2(
+            Vector2 handPos = new Vector2(
                 ladderSimPos.X,
                 head.SimPosition.Y + 0.0f + movement.Y * 0.1f - ladderSimPos.Y);
 
@@ -761,7 +753,7 @@ namespace Barotrauma
             leftHand.body.ApplyTorque(Dir * 2.0f);
             rightHand.body.ApplyTorque(Dir * 2.0f);
 
-            footPos = new Vector2(
+            Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
                 head.SimPosition.Y - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
 
@@ -829,6 +821,46 @@ namespace Barotrauma
 
         }
 
+        private void UpdateCPR(float deltaTime)
+        {
+            if (character.SelectedCharacter == null)
+            {
+                Anim = Animation.None;
+                return;
+            }
+
+            Crouching = true;
+
+            Vector2 diff = character.SelectedCharacter.SimPosition - character.SimPosition;
+            var targetHead = character.SelectedCharacter.AnimController.GetLimb(LimbType.Head);
+
+            Vector2 headDiff = targetHead == null ? diff : targetHead.SimPosition - character.SimPosition;
+
+            targetMovement = new Vector2(diff.X, 0.0f);
+            TargetDir = headDiff.X > 0.0f ? Direction.Right : Direction.Left;
+            
+            UpdateStanding();
+
+            Vector2 handPos = character.SelectedCharacter.AnimController.GetLimb(LimbType.Torso).SimPosition + Vector2.UnitY*0.2f;
+
+            Grab(handPos, handPos);
+
+            float yPos = (float)Math.Sin(cprAnimState) * 0.1f;
+            cprAnimState += deltaTime*8.0f;
+
+            var head = GetLimb(LimbType.Head);
+            head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.6f + yPos);
+            head.pullJoint.Enabled = true;
+
+
+            //RefLimb.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X - Math.Sign(headDiff.X) * 0.5f, targetHead.SimPosition.Y + 0.4f + yPos);
+            //head.pullJoint.Enabled = true;
+
+            
+
+            //DragCharacter(character.SelectedCharacter, LimbType.Torso, LimbType.Head);
+        }
+
         //float punchTimer;
         //bool punching;
 
@@ -876,7 +908,7 @@ namespace Barotrauma
         //    }            
         //}
 
-        public override void DragCharacter(Character target)
+        public override void DragCharacter(Character target, LimbType rightHandTarget = LimbType.RightHand, LimbType leftHandTarget = LimbType.LeftHand)
         {
             if (target == null) return;
 
@@ -888,10 +920,10 @@ namespace Barotrauma
             
             for (int i = 0; i < 2; i++ )
             {
-                LimbType type = i == 0 ? LimbType.RightHand : LimbType.LeftHand;
+                LimbType type = i == 0 ? rightHandTarget : leftHandTarget;
                 Limb targetLimb = target.AnimController.GetLimb(type);
-
-                Limb pullLimb = GetLimb(type);
+                
+                Limb pullLimb = GetLimb(i == 0 ? LimbType.RightHand : LimbType.LeftHand);
 
                 pullLimb.pullJoint.Enabled = true;
                 pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
@@ -912,7 +944,20 @@ namespace Barotrauma
             {
                 target.AnimController.TargetMovement = Vector2.Lerp(target.AnimController.TargetMovement, (character.SimPosition + Vector2.UnitX*Dir) - target.SimPosition, 0.5f);
             }
+        }
 
+        public void Grab(Vector2 rightHandPos, Vector2 leftHandPos)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                Limb pullLimb = (i == 0) ? GetLimb(LimbType.LeftHand) : GetLimb(LimbType.RightHand);
+
+                pullLimb.Disabled = true;
+
+                pullLimb.pullJoint.Enabled = true;
+                pullLimb.pullJoint.WorldAnchorB = (i==0) ? rightHandPos : leftHandPos;
+                pullLimb.pullJoint.MaxForce = 500.0f;
+            }
 
         }
 

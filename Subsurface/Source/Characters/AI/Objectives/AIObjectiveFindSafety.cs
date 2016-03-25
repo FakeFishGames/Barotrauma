@@ -44,7 +44,16 @@ namespace Barotrauma
 
                 if (currenthullSafety > MinSafety)
                 {
-                    character.AIController.SteeringManager.SteeringSeek(currentHull.SimPosition, 0.5f);
+                    if (Math.Abs(currentHull.WorldPosition.X - character.WorldPosition.X) > 100.0f)
+                    {
+                        character.AIController.SteeringManager.SteeringSeek(currentHull.SimPosition, 0.5f);
+                    }
+                    else
+                    {
+
+                        character.AIController.SteeringManager.Reset();
+                    }
+
                     character.AIController.SelectTarget(null);
 
                     goToObjective = null;

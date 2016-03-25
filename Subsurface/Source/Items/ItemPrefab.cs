@@ -87,6 +87,12 @@ namespace Barotrauma
             get { return offsetOnSelected; }
         }
 
+        public bool CanUseOnSelf
+        {
+            get;
+            private set;
+        }
+
         public Vector2 Size
         {
             get { return size; }
@@ -204,6 +210,8 @@ namespace Barotrauma
             focusOnSelected     = ToolBox.GetAttributeBool(element, "focusonselected", false);
 
             offsetOnSelected    = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
+
+            CanUseOnSelf        = ToolBox.GetAttributeBool(element, "canuseonself", false);
             
             FireProof = ToolBox.GetAttributeBool(element, "fireproof", false);
 
