@@ -6,15 +6,81 @@
     Tags="smallitem"
     pickdistance="150"
     price="50"
+    canuseonself="true"
+    description="A syringe filled with a potent general-purpose medical compound.">
+
+    <Sprite texture ="med.png" sourcerect="0,0,25,5" depth="0.6"/>
+
+    <Body width="25" height="5" density="20"/>
+
+    <MeleeWeapon slots="Any,RightHand,LeftHand"
+              aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+
+      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Medical/syringe.ogg">
+        <RequiredItem name="chem" type="Contained"/>
+      </StatusEffect>
+
+      <StatusEffect type="OnUse" target="Character" Health="-3.0" Oxygen="20.0" disabledeltatime="true">
+        <RequiredItem name="Erythrozine" type="Contained"/>
+      </StatusEffect>
+
+      <StatusEffect type="OnUse" target="Character" Health="3.0" Oxygen="3" disabledeltatime="true">
+        <RequiredItem name="Stabilozine" type="Contained"/>
+      </StatusEffect>
+      
+      <StatusEffect type="OnUse" target="Character" Bleeding="-10.0" disabledeltatime="true">
+        <RequiredItem name="Fibrinozine" type="Contained"/>
+      </StatusEffect>
+      
+      <StatusEffect type="OnUse" target="Character" Health="10.0" disabledeltatime="true">
+        <RequiredItem name="Corrigodone" type="Contained"/>
+      </StatusEffect>
+
+      <StatusEffect type="OnUse" target="Character" Health="20.0" Oxygen="100.0" disabledeltatime="true">
+        <RequiredItem name="Auxiliorizine" type="Contained"/>
+      </StatusEffect>
+
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
+        <RequiredItem name="Chlorine" type="Contained"/>
+      </StatusEffect>
+
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" Stun="10.0" disabledeltatime="true">
+        <RequiredItem name="Chloral Hydrate" type="Contained"/>
+      </StatusEffect>
+      
+    </MeleeWeapon>
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="chem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Defibrillator"
+    category="Equipment"
+    Tags="smallitem"
+    pickdistance="150"
+    price="50"
+    canuseonself="true"
     description="A syringe filled with a potent general-purpose medical compound.">
 
     <Sprite texture ="med.png" sourcerect="0,0,24,5" depth="0.6"/>
 
     <Body width="24" height="5" density="20"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
-      <StatusEffect type="OnUse" target="This, Character" health="30.0" Condition="-100.0" disabledeltatime="true" sound="Content/Items/Medical/syringe.ogg"/>
-    </Holdable>
+    <MeleeWeapon slots="Any,RightHand,LeftHand"
+              aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true">
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="Character" oxygen="1" setvalue="true" sound="Content/Items/Weapons/stunbaton.ogg">
+        <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>
+        <Explosion range="10.0" force="1.0" shockwave="false" flames="false" camerashake="1.0"/>
+      </StatusEffect>
+    </MeleeWeapon>
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Battery Cell"/>
+    </ItemContainer>
   </Item>
 
   <Item
@@ -25,15 +91,195 @@
     price="20"
     description="Treated with a hemostatic agent that quickly seals most minor wounds.">
 
-    <Sprite texture ="med.png" sourcerect="0,14,14,18" depth="0.6"/>
+    <Sprite texture ="med.png" sourcerect="0,16,11,16" depth="0.6"/>
 
-    <Body width="9" height="15" density="20"/>
+    <Body width="11" height="16" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
       <StatusEffect type="OnUse" target="This, Character" bleeding="-10.0" Condition="-100.0" disabledeltatime="true" sound="Content/Items/Medical/bandage.ogg"/>      
     </Holdable>
   </Item>
 
+  <Item
+    name="Iron Powder"
+    category="Material"
+    Tags="smallitem,chem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
+
+    <Body width="25" height="5" density="40"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+     name="Stabilozine"
+     category="Material"
+     spritecolor="1.0,1.0,0.8,1.0"
+     Tags="smallitem,chem"
+     pickdistance="150"
+     description="A mild stimulant which is used as an incredient in the manufacture of various medicines.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
+
+    <Body width="25" height="5" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+     name="Erythrozine"
+     category="Material"
+     spritecolor="0.9,0.9,1.0,1.0"
+     Tags="smallitem,chem"
+     pickdistance="150"
+     description="Most commonly used for treating oxygen deprivation.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
+
+    <Body width="25" height="5" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+   name="Fibrinozine"
+   category="Material"
+   spritecolor="0.6,0.4,0.2,1.0"
+   Tags="smallitem,chem"
+   pickdistance="150"
+   description="A hemostatic agent that slows down bleeding.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
+
+    <Body width="25" height="5" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="Corrigodone"
+    category="Material"
+    spritecolor="0.8,0.0,0.0,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150"
+    description="Highly effective at treating various types of physical trauma.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="Auxiliorizine"
+    category="Material"
+    spritecolor="1.0,1.0,1.0,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150"
+    description="A highly potent corrigodone-based stimulant.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+  <Item
+    name="Chlorine"
+    category="Material"
+    spritecolor="1.0,1.0,1.0,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="Ethanol"
+    category="Material"
+    spritecolor="1.0,1.0,1.0,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="Aluminium"
+    category="Material"
+    spritecolor="0.7,0.7,0.7,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="Potassium"
+    category="Material"
+    spritecolor="0.8,0.8,0.8,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="Flash Powder"
+    category="Material"
+    spritecolor="0.8,0.8,0.8,1.0"
+    Tags="smallitem,chem,explosive"
+    pickdistance="150"
+    description="An analgesic which is highly effective at treating various types of physical trauma.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
+        <Explosion range="500" damage="5" stun="3" force="0.1"/>
+      </StatusEffect>
+    </Holdable>
+
+    <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
+      <Explosion range="500" damage="5" stun="25" force="0.1"/>
+    </StatusEffect>
+  </Item>
+  
+  
+  <Item
+    name="Chloral Hydrate"
+    category="Material"
+    spritecolor="1.0,1.0,1.0,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"/>
+  </Item>
 </Items>
 
   

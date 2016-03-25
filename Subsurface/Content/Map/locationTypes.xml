@@ -18,9 +18,10 @@
     <Hireable name="Assistant" commonness="10"/>
     <Hireable name="Engineer" commonness="3"/>
     <Hireable name="Mechanic" commonness="3"/>
+    <Hireable name="Doctor" commonness="1"/>
     <Hireable name="Security Officer" commonness="1"/>
     <Hireable name="Captain" commonness="1"/>
-
+    
     <nameformats
       f0="The City of [name]"
       f1="[name] City"
@@ -38,6 +39,7 @@
     <Hireable name="Assistant" commonness="2"/>
     <Hireable name="Engineer" commonness="2"/>
     <Hireable name="Mechanic" commonness="2"/>
+    <Hireable name="Doctor" commonness="2"/>
 
     <nameformats
       f0="[name] Outpost"
@@ -56,6 +58,7 @@
     <Hireable name="Assistant" commonness="3"/>
     <Hireable name="Security Officer" commonness="1"/>
     <Hireable name="Captain" commonness="1"/>
+    <Hireable name="Doctor" commonness="1"/>
 
     <nameformats
       f0="[name] Research Facility"

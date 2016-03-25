@@ -188,6 +188,47 @@
   </Item>
 
   <Item
+  name="Doctor's Coat"
+  category="Equipment"
+  pickdistance="150"
+  tags="smallitem">
+
+    <Sprite texture ="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
+
+    <Body width="52" height="17" density="30"/>
+
+    <Wearable slots="Any,Torso">
+      <sprite texture="doctorgear.png" limb="Torso" sourcerect="0,0,31,58" origin="0.5,0.48" depth="0.01"/>
+
+      <sprite texture="doctorgear.png" limb="RightHand" sourcerect="51,0,15,47" origin="0.45,0.55" depth="0.005" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="LeftHand" sourcerect="51,0,15,47" origin="0.45,0.55" depth="0.13" hidelimb="true"/>
+
+      <sprite texture="doctorgear.png" limb="RightArm" sourcerect="33,0,17,40" origin="0.5,0.5" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="LeftArm" sourcerect="33,0,17,40" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+    </Wearable>
+  </Item>
+
+  <Item
+    name="Doctor's Trousers"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem">
+
+    <Sprite texture ="doctorgear.png" sourcerect="76,19,51,13" depth="0.6"/>
+
+    <Body width="51" height="13" density="30"/>
+
+    <Wearable slots="Any,Legs">
+      <sprite texture="doctorgear.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="RightThigh" sourcerect="0,61,24,46" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="LeftThigh" sourcerect="0,61,24,46" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+
+      <sprite texture="doctorgear.png" limb="RightLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="LeftLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
+    </Wearable>
+  </Item>
+
+  <Item
     name="Clown Costume"
     category="Equipment"
     pickdistance="150"

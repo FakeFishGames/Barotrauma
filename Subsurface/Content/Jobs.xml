@@ -51,6 +51,18 @@
     <Item name="Ballistic Helmet" equip="true"/>    
   </Job>
 
+  <Job name="Doctor" description="." maxnumber="2">
+    <Skills>
+      <Skill name="Weapons" level="10,20"/>
+      <Skill name="Construction" level="10,20"/>
+      <Skill name="Electrical Engineering" level="10,20"/>
+      <Skill name="Medical" level="50,70"/>
+    </Skills>
+    <Item name="ID Card"/>
+    <Item name="Doctor's Coat" equip="true"/>
+    <Item name="Doctor's Trousers" equip="true"/>
+  </Job>
+
   <Job name="Assistant" description="Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for." allowalways="true">
     <Skills>
       <Skill name="Weapons" level="20,30"/>
