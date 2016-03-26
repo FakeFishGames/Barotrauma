@@ -56,7 +56,7 @@ namespace Barotrauma
             {
                 GUI.ScreenOverlayColor = Color.Lerp(from, to, Math.Min(timer / duration, 1.0f));
 
-                timer += CoroutineManager.DeltaTime;
+                timer += CoroutineManager.UnscaledDeltaTime;
 
                 yield return CoroutineStatus.Running;
             }
