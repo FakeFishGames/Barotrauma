@@ -284,6 +284,8 @@ namespace Barotrauma
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
             PlayerInput.Update(deltaTime);
 
+            bool paused = false;
+
             if (hasLoaded && !titleScreenOpen)
             {
                 SoundPlayer.Update();
@@ -292,7 +294,10 @@ namespace Barotrauma
 
                 DebugConsole.Update(this, (float)deltaTime);
 
-                if ((!DebugConsole.IsOpen && !GUI.PauseMenuOpen) || (NetworkMember != null && NetworkMember.GameStarted)) Screen.Selected.Update(deltaTime);
+                paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen) &&
+                         (NetworkMember == null || !NetworkMember.GameStarted);
+
+                if (!paused) Screen.Selected.Update(deltaTime);
 
                 GUI.Update((float)deltaTime);
 
@@ -306,7 +311,7 @@ namespace Barotrauma
                 }
             }
 
-            CoroutineManager.Update((float)deltaTime);
+            CoroutineManager.Update((float)deltaTime, paused ? 0.0f : (float)deltaTime);
         }
 
 

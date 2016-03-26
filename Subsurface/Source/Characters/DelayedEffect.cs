@@ -9,15 +9,15 @@ namespace Barotrauma
 
         private float delay;
 
-        private float timer;
+        private float startTimer;
 
         private Entity entity;
 
         private List<IPropertyObject> targets;
         
-        public float Timer
+        public float StartTimer
         {
-            get { return timer; }
+            get { return startTimer; }
         }
 
         public DelayedEffect(XElement element)
@@ -30,7 +30,7 @@ namespace Barotrauma
         {
             if (this.type != type) return;
             
-            timer = delay;
+            startTimer = delay;
             this.entity = entity;
 
             this.targets = targets;
@@ -40,9 +40,9 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            timer -= deltaTime;
+            startTimer -= deltaTime;
 
-            if (timer > 0.0f) return;
+            if (startTimer > 0.0f) return;
 
             base.Apply(1.0f, entity, targets);
             List.Remove(this);

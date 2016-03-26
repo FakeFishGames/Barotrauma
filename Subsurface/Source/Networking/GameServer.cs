@@ -1042,7 +1042,7 @@ namespace Barotrauma.Networking
 
             do
             {
-                secondsLeft -= CoroutineManager.DeltaTime;
+                secondsLeft -= CoroutineManager.UnscaledDeltaTime;
 
                 yield return CoroutineStatus.Running;
             } while (secondsLeft > 0.0f);

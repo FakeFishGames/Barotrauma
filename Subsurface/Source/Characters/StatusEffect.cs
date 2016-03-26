@@ -23,10 +23,12 @@ namespace Barotrauma
         private object[] propertyEffects;
 
         private bool setValue;
-
+        
         private bool disableDeltaTime;
         
         private string[] onContainingNames;
+        
+        private readonly float duration;
 
         private readonly bool useItem;
 
@@ -59,10 +61,8 @@ namespace Barotrauma
             {
                 return new DelayedEffect(element);
             }
-            else
-            {
-                return new StatusEffect(element);
-            }
+                
+            return new StatusEffect(element);
         }
                 
         protected StatusEffect(XElement element)
@@ -120,6 +120,9 @@ namespace Barotrauma
                         break;
                     case "sound":
                         sound = Sound.Load(attribute.Value.ToString());
+                        break;
+                    case "duration":
+                        duration = ToolBox.GetAttributeFloat(attribute, 0.0f);
                         break;
                     default:
                         propertyAttributes.Add(attribute);
@@ -215,11 +218,11 @@ namespace Barotrauma
             Apply(deltaTime, entity, targets);
         }
 
-        protected virtual void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
+        protected void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
         {
+
             if (explosion != null) explosion.Explode(entity.WorldPosition);
-
-
+            
             if (FireSize > 0.0f)
             {
                 var fire = new FireSource(entity.WorldPosition);
@@ -246,47 +249,38 @@ namespace Barotrauma
                     //if (targetNames!=null && !targetNames.Contains(target.Name)) continue;
 
                     if (!target.ObjectProperties.TryGetValue(propertyNames[i], out property)) continue;
-                    
-                    ApplyToProperty(property, propertyEffects[i], deltaTime);                    
-                }
 
+                    if (duration > 0.0f)
+                    {
+                        CoroutineManager.StartCoroutine(ApplyToPropertyOverDuration(duration, property, propertyEffects[i]));
+                    }
+                    else
+                    {
+                        ApplyToProperty(property, propertyEffects[i], deltaTime);                          
+                    }
+                }
 
             }
         }
 
-        //protected virtual void Apply(float deltaTime, Character Character, Item item)
-        //{
-        //    if (explosion != null) explosion.Explode(item.SimPosition);
+        private IEnumerable<object> ApplyToPropertyOverDuration(float duration, ObjectProperty property, object value)
+        {
+            float timer = duration;
+            while (timer > 0.0f)
+            {
+                ApplyToProperty(property, value, CoroutineManager.UnscaledDeltaTime);
 
-        //    if (sound != null) sound.Play(1.0f, 1000.0f, item.body.FarseerBody);
-            
-        //    for (int i = 0; i < propertyNames.Count(); i++)
-        //    {
-        //        ObjectProperty property;
+                timer -= CoroutineManager.DeltaTime;
 
-        //        if (Character!=null && Character.properties.TryGetValue(propertyNames[i], out property))
-        //        {
-        //            ApplyToProperty(property, propertyEffects[i], deltaTime);                 
-        //        }
+                yield return CoroutineStatus.Running;
+            }
 
-        //        if (item == null) continue;
-
-        //        if (item.properties.TryGetValue(propertyNames[i], out property))
-        //        {
-        //            ApplyToProperty(property, propertyEffects[i], deltaTime); 
-        //        }
-
-        //        foreach (ItemComponent ic in item.components)
-        //        {
-        //            if (!ic.properties.TryGetValue(propertyNames[i], out property)) continue;
-        //            ApplyToProperty(property, propertyEffects[i], deltaTime); 
-        //        }
-        //    }
-        //}
+            yield return CoroutineStatus.Success;
+        }
 
         protected void ApplyToProperty(ObjectProperty property, object value, float deltaTime)
         {
-            if (disableDeltaTime) deltaTime = 1.0f;
+            if (disableDeltaTime || setValue) deltaTime = 1.0f;
 
             Type type = value.GetType();
             if (type == typeof(float) ||

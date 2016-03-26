@@ -146,7 +146,7 @@ namespace Barotrauma.Networking
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
             // Set timer to tick every 50ms
-            //update = new System.Timers.Timer(50);
+            //update = new System.Timers.startTimer(50);
 
             // When time has elapsed ( 50ms in this case ), call "update_Elapsed" funtion
             //update.Elapsed += new System.Timers.ElapsedEventHandler(Update);
@@ -690,7 +690,7 @@ namespace Barotrauma.Networking
 
                 do
                 {
-                    secondsLeft -= CoroutineManager.DeltaTime;
+                    secondsLeft -= CoroutineManager.UnscaledDeltaTime;
 
                     //float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
                     //Vector2 offset = (new Vector2(

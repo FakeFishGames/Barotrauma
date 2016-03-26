@@ -64,21 +64,21 @@ namespace Barotrauma
                     yield return CoroutineStatus.Success;
                 }
 
-                cam.Zoom = Math.Max(0.2f, cam.Zoom - CoroutineManager.DeltaTime * 0.1f);
+                cam.Zoom = Math.Max(0.2f, cam.Zoom - CoroutineManager.UnscaledDeltaTime * 0.1f);
 
                 Vector2 cameraPos = sub.Position + Submarine.HiddenSubPosition;
                 cameraPos.Y = Math.Min(cameraPos.Y, ConvertUnits.ToDisplayUnits(Level.Loaded.ShaftBodies[0].Position.Y) - cam.WorldView.Height/2.0f);
 
                 GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, timer/duration);
 
-                cam.Translate((cameraPos - cam.Position) * CoroutineManager.DeltaTime*10.0f);
+                cam.Translate((cameraPos - cam.Position) * CoroutineManager.UnscaledDeltaTime*10.0f);
 
                 if (diff != Vector2.Zero)
                 {
                     sub.ApplyForce((Vector2.Normalize(diff) * targetSpeed - sub.Velocity) * 500.0f);
                 }
 
-                timer += CoroutineManager.DeltaTime;
+                timer += CoroutineManager.UnscaledDeltaTime;
 
                 yield return CoroutineStatus.Running;
             }

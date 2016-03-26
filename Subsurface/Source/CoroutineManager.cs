@@ -14,7 +14,7 @@ namespace Barotrauma
     {
         static readonly List<IEnumerator<object>> Coroutines = new List<IEnumerator<object>>();
 
-        public static float DeltaTime;
+        public static float UnscaledDeltaTime, DeltaTime;
 
         // Starting a coroutine just means adding an enumerator to the list.
         // You might also want to be able to stop coroutines or delete them,
@@ -40,19 +40,19 @@ namespace Barotrauma
         }
 
         // Updating just means stepping through all the coroutines
-        public static void Update(float deltaTime)
+        public static void Update(float unscaledDeltaTime, float deltaTime)
         {
+            UnscaledDeltaTime = unscaledDeltaTime;
             DeltaTime = deltaTime;
 
             for (int i = Coroutines.Count-1; i>=0; i--)
             {
                 if (Coroutines[i].Current != null)
                 {
-                    if (Coroutines[i].Current is WaitForSeconds)
+                    WaitForSeconds wfs = Coroutines[i].Current as WaitForSeconds;
+                    if (wfs != null)
                     {
-                        WaitForSeconds wfs = (WaitForSeconds)Coroutines[i].Current;
-                        if (!wfs.CheckFinished(deltaTime)) continue;
-                                               
+                        if (!wfs.CheckFinished(unscaledDeltaTime)) continue;
                     }
                     else
                     {
