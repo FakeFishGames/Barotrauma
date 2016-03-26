@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -55,87 +56,107 @@ namespace Barotrauma
                 damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
             }
 
+            if (character.Inventory != null)
+            {
+                for (int i = 0; i< character.Inventory.Items.Length-1; i++)
+                {
+                    var item = character.Inventory.Items[i];
+                    if (item == null || CharacterInventory.limbSlots[i]==LimbSlot.Any) continue;
+                    var statusHUD = item.GetComponent<StatusHUD>();
+                    if (statusHUD == null) continue;
+
+                    statusHUD.DrawHUD(spriteBatch, character);
+                }
+            }
+
             DrawStatusIcons(spriteBatch, character);
 
-            if (character.Inventory != null && !character.LockHands &&
-                !character.IsUnconscious && character.Stun >= -0.1f) character.Inventory.DrawOwn(spriteBatch, Vector2.Zero);
-
-            if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory!=null)
+            if (!character.IsUnconscious)
             {
-                character.SelectedCharacter.Inventory.DrawOwn(spriteBatch, new Vector2(320.0f, 0.0f));
+                if (character.Inventory != null && !character.LockHands &&
+                    character.Stun >= -0.1f) character.Inventory.DrawOwn(spriteBatch, Vector2.Zero);
 
-                if (cprButton == null)
+                if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    cprButton = new GUIButton(
-                        new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(150+320, 0), new Point(130, 20)), "Perform CPR", GUI.Style);
+                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch, new Vector2(320.0f, 0.0f));
 
-                    cprButton.OnClicked = (button, userData) =>
+                    if (cprButton == null)
                     {
-                        if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
+                        cprButton = new GUIButton(
+                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(150 + 320, 0), new Point(130, 20)), "Perform CPR", GUI.Style);
 
-                        Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
-                            AnimController.Animation.None : AnimController.Animation.CPR;
-
-                        foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
+                        cprButton.OnClicked = (button, userData) =>
                         {
-                            limb.pullJoint.Enabled = false;
-                        }
+                            if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
 
-                        new NetworkEvent(NetworkEventType.SelectCharacter, Character.Controlled.ID, true, Character.Controlled.SelectedCharacter);
+                            Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
+                                AnimController.Animation.None : AnimController.Animation.CPR;
 
-                        return true;
-                    };
+                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
+                            {
+                                limb.pullJoint.Enabled = false;
+                            }
+
+                            new NetworkEvent(NetworkEventType.SelectCharacter, Character.Controlled.ID, true, Character.Controlled.SelectedCharacter);
+
+                            return true;
+                        };
+                    }
+
+                    //cprButton.Visible = character.GetSkillLevel("Medical") > 20.0f;
+
+                    if (cprButton.Visible) cprButton.Draw(spriteBatch);
                 }
 
-                //cprButton.Visible = character.GetSkillLevel("Medical") > 20.0f;
-
-                if (cprButton.Visible) cprButton.Draw(spriteBatch);
-            }
-
-            if (character.ClosestCharacter != null && character.ClosestCharacter.CanBeSelected)
-            {
-                Vector2 startPos = character.DrawPosition + (character.ClosestCharacter.DrawPosition - character.DrawPosition) * 0.7f;
-                startPos = cam.WorldToScreen(startPos);
-
-                Vector2 textPos = startPos;
-                textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestCharacter.Info.Name).X / 2, 20);
-
-                GUI.DrawString(spriteBatch, textPos, character.ClosestCharacter.Info.Name, Color.White, Color.Black, 2);
-            }
-            else if (character.SelectedCharacter == null && character.ClosestItem != null && character.SelectedConstruction == null)
-            {
-                var hudTexts = character.ClosestItem.GetHUDTexts(character);
-
-                Vector2 startPos = new Vector2((int)(GameMain.GraphicsWidth / 2.0f), GameMain.GraphicsHeight);
-                startPos.Y -= 50 + hudTexts.Count * 25;
-
-                Vector2 textPos = startPos;
-                textPos -= new Vector2((int)GUI.Font.MeasureString(character.ClosestItem.Name).X / 2, 20);
-
-                GUI.DrawString(spriteBatch, textPos, character.ClosestItem.Name, Color.White, Color.Black * 0.7f, 2);
-                
-                textPos.Y += 30.0f;
-                foreach (ColoredText coloredText in hudTexts)
+                if (character.ClosestCharacter != null && character.ClosestCharacter.CanBeSelected)
                 {
-                    textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X / 2);
+                    Vector2 startPos = character.DrawPosition + (character.ClosestCharacter.DrawPosition - character.DrawPosition) * 0.7f;
+                    startPos = cam.WorldToScreen(startPos);
 
-                    GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color, Color.Black*0.7f, 2, GUI.SmallFont);
-                    
-                    textPos.Y += 25;
+                    Vector2 textPos = startPos;
+                    textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestCharacter.Info.Name).X / 2, 20);
+
+                    GUI.DrawString(spriteBatch, textPos, character.ClosestCharacter.Info.Name, Color.White, Color.Black, 2);
                 }
+                else if (character.SelectedCharacter == null && character.ClosestItem != null && character.SelectedConstruction == null)
+                {
+                    var hudTexts = character.ClosestItem.GetHUDTexts(character);
+
+                    Vector2 startPos = new Vector2((int)(GameMain.GraphicsWidth / 2.0f), GameMain.GraphicsHeight);
+                    startPos.Y -= 50 + hudTexts.Count * 25;
+
+                    Vector2 textPos = startPos;
+                    textPos -= new Vector2((int)GUI.Font.MeasureString(character.ClosestItem.Name).X / 2, 20);
+
+                    GUI.DrawString(spriteBatch, textPos, character.ClosestItem.Name, Color.White, Color.Black * 0.7f, 2);
+
+                    textPos.Y += 30.0f;
+                    foreach (ColoredText coloredText in hudTexts)
+                    {
+                        textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X / 2);
+
+                        GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color, Color.Black * 0.7f, 2, GUI.SmallFont);
+
+                        textPos.Y += 25;
+                    }
+                }  
             }
+
+
 
             if (Screen.Selected == GameMain.EditMapScreen) return;
 
-            if (character.Oxygen < 80.0f && !character.IsDead)
+            if (character.IsUnconscious || (character.Oxygen < 80.0f && !character.IsDead))
             {
                 Vector2 offset = Rand.Vector(noiseOverlay.size.X);
                 offset.X = Math.Abs(offset.X);
                 offset.Y = Math.Abs(offset.Y);
 
+                float alpha = character.IsUnconscious ? 1.0f : Math.Min((80.0f - character.Oxygen)/50.0f, 0.8f);
+
                 noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
                     Vector2.Zero,
-                    Color.White * Math.Min((80.0f - character.Oxygen) / 50.0f, 0.8f));
+                    Color.White * alpha);
             }
 
             if (damageOverlayTimer>0.0f)

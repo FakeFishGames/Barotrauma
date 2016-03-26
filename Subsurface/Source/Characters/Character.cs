@@ -85,7 +85,7 @@ namespace Barotrauma
         protected float drowningTime;
 
         protected float health;
-        protected float maxHealth;
+        protected float minHealth, maxHealth;
 
         protected Item closestItem;
         private Character closestCharacter, selectedCharacter;
@@ -237,7 +237,7 @@ namespace Barotrauma
 
         public bool IsUnconscious
         {
-            get { return (needsAir && oxygen < 0.0f) || health < 0.0f; }
+            get { return (needsAir && oxygen <= 0.0f) || health <= 0.0f; }
         }
 
         public bool NeedsAir
@@ -274,7 +274,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                health = MathHelper.Clamp(value, -100.0f, maxHealth);
+                health = MathHelper.Clamp(value, minHealth, maxHealth);
             }
         }
     
@@ -390,20 +390,27 @@ namespace Barotrauma
                 var ai = new EnemyAIController(enemyCharacter, file);
                 enemyCharacter.SetAI(ai);
 
+                enemyCharacter.minHealth = 0.0f;
+
                 return enemyCharacter;
             }
 
             if (hasAi && !isNetworkPlayer)
             {
-                var character = new AICharacter(file, position, characterInfo, isNetworkPlayer);
-                var ai = new HumanAIController(character);
-                character.SetAI(ai);
+                var aiCharacter = new AICharacter(file, position, characterInfo, isNetworkPlayer);
+                var ai = new HumanAIController(aiCharacter);
+                aiCharacter.SetAI(ai);
 
-                return character;
+                aiCharacter.minHealth = -100.0f;
+
+                return aiCharacter;
 
             }
 
-            return new Character(file, position, characterInfo, isNetworkPlayer);
+            var character = new Character(file, position, characterInfo, isNetworkPlayer);
+            character.minHealth = -100.0f;
+
+            return character;
         }
 
         protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
@@ -1023,17 +1030,17 @@ namespace Barotrauma
                 }
             }
             
+            if (IsUnconscious)
+            {
+                UpdateUnconscious(deltaTime);
+                return;
+            }
+
             if (controlled == this)
             {
                 Lights.LightManager.ViewTarget = this;
                 CharacterHUD.Update(deltaTime,this);
                 ControlLocalPlayer(deltaTime, cam);
-            }
-
-            if (IsUnconscious)
-            {
-                UpdateUnconscious(deltaTime);
-                return;
             }
 
             if (controlled == this || !(this is AICharacter)) Control(deltaTime, cam);
@@ -1069,7 +1076,7 @@ namespace Barotrauma
             Health -= bleeding * deltaTime;
             Bleeding -= BleedingDecreaseSpeed * deltaTime;
 
-            if (health <= 0.0f) Kill(CauseOfDeath.Bloodloss);
+            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
 
             if (!IsDead) LockHands = false;
         }
@@ -1078,9 +1085,15 @@ namespace Barotrauma
         {
             Stun = Math.Max(5.0f, Stun);
 
-            if (oxygen < 0.0f) Oxygen -= deltaTime;
+            AnimController.ResetPullJoints();
+            selectedConstruction = null;
 
-            if (health < 0.0f) Health -= Math.Max(bleeding, 1.0f) * deltaTime;
+            if (oxygen <= 0.0f) Oxygen -= deltaTime;
+
+            if (health <= 0.0f)
+            {
+                AddDamage(bleeding > 0.5f ? CauseOfDeath.Bloodloss : CauseOfDeath.Damage, Math.Max(bleeding, 1.0f) * deltaTime, null);
+            }
         }
 
         private void UpdateSightRange()
@@ -1168,13 +1181,13 @@ namespace Barotrauma
 
         public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
         {
-            health = MathHelper.Clamp(health-amount, 0.0f, maxHealth);
+            Health = health-amount;
             if (amount > 0.0f)
             {
                 lastAttackCauseOfDeath = causeOfDeath;
                 if (controlled == this) CharacterHUD.TakeDamage(amount);
             }
-            if (health <= 0.0f) Kill(causeOfDeath);
+            if (health <= minHealth) Kill(causeOfDeath);
         }
 
         public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
@@ -1246,7 +1259,7 @@ namespace Barotrauma
 
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
 
-            health = 0.0f;
+            health = minHealth;
 
             foreach (Limb limb in AnimController.Limbs)
             {
@@ -1444,16 +1457,19 @@ namespace Barotrauma
                 case NetworkEventType.InventoryUpdate:
                     if (inventory == null) return false;
                     return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
-                case NetworkEventType.ImportantEntityUpdate:   
-                    if (health > 0.0f)
-                    {
-                        message.Write(Math.Max((byte)((health / maxHealth) * 255.0f), (byte)1));
-                    }
-                    else
-                    {
-                        message.Write((byte)0);
-                        message.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length-1, (int)lastAttackCauseOfDeath);
-                    }
+                case NetworkEventType.ImportantEntityUpdate:
+
+                    message.WriteRangedSingle(health, minHealth, maxHealth, 8);
+
+                    //if (health > 0.0f)
+                    //{
+                    //    message.Write(Math.Max((byte)((health / maxHealth) * 255.0f), (byte)1));
+                    //}
+                    //else
+                    //{
+                    //    message.Write((byte)0);
+                    //    message.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length-1, (int)lastAttackCauseOfDeath);
+                    //}
 
                     if (AnimController.StunTimer <= 0.0f && bleeding <= 0.0f && oxygen > 99.0f)
                     {
@@ -1465,7 +1481,7 @@ namespace Barotrauma
 
                         message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
 
-                        message.Write((byte)(MathHelper.Clamp(oxygen * 2.55f, 0.0f, 255.0f)));
+                        message.WriteRangedSingle(oxygen, -100.0f, 100.0f, 8);
 
                         bleeding = MathHelper.Clamp(bleeding, 0.0f, 5.0f);
                         message.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
@@ -1635,14 +1651,16 @@ namespace Barotrauma
                     inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message, sendingTime);
                     return;
                 case NetworkEventType.ImportantEntityUpdate:
-                   
-                    health = MathHelper.Clamp((message.ReadByte() / 255.0f) * maxHealth, 0.0f, maxHealth);
 
-                    if (health == 0.0f)
-                    {
-                        causeOfDeath = (CauseOfDeath)message.ReadRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length-1);
-                        Kill(causeOfDeath, true);
-                    }
+                    health = message.ReadRangedSingle(minHealth, 100.0f, 8);
+                        
+                    //    MathHelper.Clamp((message.ReadByte() / 255.0f) * maxHealth, 0.0f, maxHealth);
+
+                    //if (health == 0.0f)
+                    //{
+                    //    causeOfDeath = (CauseOfDeath)message.ReadRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length-1);
+                    //    Kill(causeOfDeath, true);
+                    //}
 
                     bool allOk = message.ReadBoolean();
                     if (allOk)
@@ -1654,8 +1672,8 @@ namespace Barotrauma
 
                     float newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
                     StartStun(newStunTimer);
-                    
-                    Oxygen = (message.ReadByte() / 2.55f);
+
+                    Oxygen = message.ReadRangedSingle(-100.0f,100.0f, 8);
                     Bleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);     
 
                     return;

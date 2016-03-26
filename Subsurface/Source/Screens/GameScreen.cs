@@ -66,39 +66,6 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Update(double deltaTime)
         {
-            //if (PlayerInput.KeyHit(Keys.T))
-            //{
-            //    Stopwatch sw = new Stopwatch();
-            //    sw.Start();
-
-            //    Rand.SetSyncedSeed(123);
-
-            //    for (int i = 0; i<10000; i++)
-            //    {
-            //        Hull.FindHull(new Vector2(
-            //            Rand.Range(Submarine.Borders.X, Submarine.Borders.Right, false),
-            //            Rand.Range(Submarine.Borders.Y - Submarine.Borders.Height, Submarine.Borders.Y, false)), 
-            //            Hull.hullList[Rand.Int(Hull.hullList.Count-1)], false);
-            //    }
-
-            //    sw.Stop();
-            //    Debug.WriteLine("FindHull1: "+sw.ElapsedMilliseconds);
-            //    sw.Restart();
-            //    Rand.SetSyncedSeed(123);
-            //    for (int i = 0; i < 10000; i++)
-            //    {
-            //        Hull.FindHull2(new Vector2(
-            //            Rand.Range(Submarine.Borders.X, Submarine.Borders.Right, false),
-            //            Rand.Range(Submarine.Borders.Y - Submarine.Borders.Height, Submarine.Borders.Y, false)),
-            //            Hull.hullList[Rand.Int(Hull.hullList.Count - 1)], false);
-            //    }
-
-            //    sw.Stop();
-            //    Debug.WriteLine("FindHull2: " + sw.ElapsedMilliseconds);
-            //    var askdnkjd = 1;
-            //}
-
-
             //the accumulator code is based on this article:
             //http://gafferongames.com/game-physics/fix-your-timestep/
             Physics.accumulator += deltaTime;
@@ -173,11 +140,6 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            //if (Character.Controlled != null)
-            //{
-            //    cam.TargetPos = Character.Controlled.WorldPosition;
-            //}
-            
             cam.UpdateTransform();
 
             DrawMap(graphics, spriteBatch);
