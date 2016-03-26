@@ -188,10 +188,28 @@
   </Item>
 
   <Item
-  name="Doctor's Coat"
-  category="Equipment"
-  pickdistance="150"
-  tags="smallitem">
+    name="Health Scanner HUD"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem"
+    description="A heads-up display that displays information of the vital signs and status of nearby humans.">
+
+    <Sprite texture ="doctorgear.png" sourcerect="0,120,20,8" depth="0.6"/>
+
+    <Body width="18" height="6" density="30"/>
+
+    <Wearable limbtype="Head" slots="Any,Head">
+      <sprite texture ="doctorgear.png" sourcerect="0,120,20,8" limb="Head" origin="0.45,0.9"/>
+    </Wearable>
+
+    <StatusHUD/>
+  </Item>
+
+  <Item
+    name="Doctor's Coat"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem">
 
     <Sprite texture ="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
 

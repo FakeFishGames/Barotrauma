@@ -10,14 +10,16 @@
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Construction" level="20,30"/>
       <Skill name="Electrical Engineering" level="20,30"/>
+      <Skill name="Medical" level="10,30"/>
     </Skills>
   </Job>
   
   <Job name="Engineer" description="Engineers have above-average construction and mechanic skills, but fixing complex mechanical devices is still usually out of their skill set. They are competent at fixing electrical devices however, and are the ones to turn to when the power grid starts failing." minnumber="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
-      <Skill name="Construction" level="30,30"/>
+      <Skill name="Construction" level="20,30"/>
       <Skill name="Electrical Engineering" level="50,60"/>
+      <Skill name="Medical" level="10,20"/>
     </Skills>
     <Item name="ID Card"/>
     <Item name="Wrench"/>
@@ -30,6 +32,7 @@
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="50,60"/>
       <Skill name="Electrical Engineering" level="30,35"/>
+      <Skill name="Medical" level="10,20"/>
     </Skills>
     <Item name="ID Card"/>
     <Item name="Wrench"/>
@@ -40,6 +43,7 @@
   <Job name="Security Officer" description="Security officers are are responsible for keeping the submarine safe from potential attackers. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2">
     <Skills>
       <Skill name="Weapons" level="50,60"/>
+      <Skill name="Medical" level="30,40"/>
       <Skill name="Construction" level="10,20"/>
       <Skill name="Electrical Engineering" level="10,20"/>
     </Skills>
@@ -61,6 +65,8 @@
     <Item name="ID Card"/>
     <Item name="Doctor's Coat" equip="true"/>
     <Item name="Doctor's Trousers" equip="true"/>
+    <Item name="Health Scanner HUD" equip="true"/>
+    <Item name="Medical Syringe"/>   
   </Job>
 
   <Job name="Assistant" description="Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for." allowalways="true">
@@ -68,6 +74,7 @@
       <Skill name="Weapons" level="20,30"/>
       <Skill name="Construction" level="20,30"/>
       <Skill name="Electrical Engineering" level="20,30"/>
+      <Skill name="Medical" level="10,20"/>
     </Skills>
     <Item name="ID Card"/>
     <Item name="Wrench"/>

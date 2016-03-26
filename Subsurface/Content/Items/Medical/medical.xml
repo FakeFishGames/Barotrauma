@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Items>
+<Items> 
   <Item
     name="Medical Syringe"
     category="Equipment"
@@ -16,38 +16,10 @@
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
 
-      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Medical/syringe.ogg">
+      <StatusEffect type="OnUse" target="Contained, Character" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Medical/syringe.ogg">
         <RequiredItem name="chem" type="Contained"/>
+        <Use/>
       </StatusEffect>
-
-      <StatusEffect type="OnUse" target="Character" Health="-3.0" Oxygen="20.0" disabledeltatime="true">
-        <RequiredItem name="Erythrozine" type="Contained"/>
-      </StatusEffect>
-
-      <StatusEffect type="OnUse" target="Character" Health="3.0" Oxygen="3" disabledeltatime="true">
-        <RequiredItem name="Stabilozine" type="Contained"/>
-      </StatusEffect>
-      
-      <StatusEffect type="OnUse" target="Character" Bleeding="-10.0" disabledeltatime="true">
-        <RequiredItem name="Fibrinozine" type="Contained"/>
-      </StatusEffect>
-      
-      <StatusEffect type="OnUse" target="Character" Health="10.0" disabledeltatime="true">
-        <RequiredItem name="Corrigodone" type="Contained"/>
-      </StatusEffect>
-
-      <StatusEffect type="OnUse" target="Character" Health="20.0" Oxygen="100.0" disabledeltatime="true">
-        <RequiredItem name="Auxiliorizine" type="Contained"/>
-      </StatusEffect>
-
-      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
-        <RequiredItem name="Chlorine" type="Contained"/>
-      </StatusEffect>
-
-      <StatusEffect type="OnUse" target="Character" Health="-5.0" Stun="10.0" disabledeltatime="true">
-        <RequiredItem name="Chloral Hydrate" type="Contained"/>
-      </StatusEffect>
-      
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
@@ -88,6 +60,7 @@
     category="Equipment"
     Tags="smallitem"
     pickdistance="150"
+    canuseonself="true"
     price="20"
     description="Treated with a hemostatic agent that quickly seals most minor wounds.">
 
@@ -95,9 +68,10 @@
 
     <Body width="11" height="16" density="20"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" RemoveOnUse="true">
-      <StatusEffect type="OnUse" target="This, Character" bleeding="-10.0" Condition="-100.0" disabledeltatime="true" sound="Content/Items/Medical/bandage.ogg"/>      
-    </Holdable>
+    <MeleeWeapon slots="Any,RightHand,LeftHand"
+              aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
+      <StatusEffect type="OnUse" target="This, Character" bleeding="-10.0" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Medical/bandage.ogg"/>      
+    </MeleeWeapon>
   </Item>
 
   <Item
@@ -116,7 +90,7 @@
   <Item
      name="Stabilozine"
      category="Material"
-     spritecolor="1.0,1.0,0.8,1.0"
+     spritecolor="1.0,1.0,0.7,1.0"
      Tags="smallitem,chem"
      pickdistance="150"
      description="A mild stimulant which is used as an incredient in the manufacture of various medicines.">
@@ -125,13 +99,17 @@
 
     <Body width="25" height="5" density="20"/>
 
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="3.0" Oxygen="3" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
      name="Erythrozine"
      category="Material"
-     spritecolor="0.9,0.9,1.0,1.0"
+     spritecolor="0.5,0.5,1.0,1.0"
      Tags="smallitem,chem"
      pickdistance="150"
      description="Most commonly used for treating oxygen deprivation.">
@@ -140,7 +118,11 @@
 
     <Body width="25" height="5" density="20"/>
 
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-3.0" Oxygen="20.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
@@ -154,8 +136,12 @@
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="25" height="5" density="20"/>
-
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Bleeding="-10.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
@@ -170,13 +156,17 @@
 
     <Body width="25" height="5" density="20"/>
 
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="10.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
     name="Auxiliorizine"
     category="Material"
-    spritecolor="1.0,1.0,1.0,1.0"
+    spritecolor="1.0,1.0,0.0,1.0"
     Tags="smallitem,chem"
     pickdistance="150"
     description="A highly potent corrigodone-based stimulant.">
@@ -185,12 +175,17 @@
 
     <Body width="25" height="5" density="20"/>
 
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="20.0" Oxygen="100.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
+  
   <Item
     name="Chlorine"
     category="Material"
-    spritecolor="1.0,1.0,1.0,1.0"
+    spritecolor="1.0,1.0,1.0,0.6"
     Tags="smallitem,chem"
     pickdistance="150">
 
@@ -198,21 +193,34 @@
 
     <Body width="25" height="5" density="10"/>
 
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
     name="Ethanol"
     category="Material"
-    spritecolor="1.0,1.0,1.0,1.0"
+    spritecolor="0.0,0.9,0.1,1.0"
     Tags="smallitem,chem"
+    canuseonself="true"
     pickdistance="150">
+
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="Character" Health="-2.0" disabledeltatime="true"/>
+    </ItemComponent>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="25" height="5" density="10"/>
-
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
@@ -225,8 +233,12 @@
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="25" height="5" density="10"/>
-
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
@@ -239,17 +251,20 @@
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="25" height="5" density="10"/>
-
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 
   <Item
     name="Flash Powder"
     category="Material"
-    spritecolor="0.8,0.8,0.8,1.0"
+    spritecolor="0.1,0.1,0.1,1.0"
     Tags="smallitem,chem,explosive"
-    pickdistance="150"
-    description="An analgesic which is highly effective at treating various types of physical trauma.">
+    pickdistance="150">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -260,17 +275,13 @@
         <Explosion range="500" damage="5" stun="3" force="0.1"/>
       </StatusEffect>
     </Holdable>
-
-    <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
-      <Explosion range="500" damage="5" stun="25" force="0.1"/>
-    </StatusEffect>
   </Item>
   
   
   <Item
     name="Chloral Hydrate"
     category="Material"
-    spritecolor="1.0,1.0,1.0,1.0"
+    spritecolor="1.0,1.0,1.0,0.8"
     Tags="smallitem,chem"
     pickdistance="150">
 
@@ -278,7 +289,29 @@
 
     <Body width="25" height="5" density="10"/>
 
-    <Holdable slots="Any,RightHand,LeftHand"/>
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" Stun="10" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+
+  <Item
+    name="Phosphorus"
+    category="Material"
+    spritecolor="0.5,0.0,0.0,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 </Items>
 

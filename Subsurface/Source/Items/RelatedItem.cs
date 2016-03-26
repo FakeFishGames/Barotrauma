@@ -13,7 +13,8 @@ namespace Barotrauma
             None = 0,
             Contained = 1,
             Equipped = 2,
-            Picked = 4
+            Picked = 4,
+            Container = 8
         }
 
         string[] names;
@@ -86,6 +87,10 @@ namespace Barotrauma
                         if (contained.Condition > 0.0f && MatchesItem(contained)) return true;
                     }
                     break;
+                case RelationType.Container:
+                    if (parentItem == null || parentItem.Container == null) return false;
+
+                    return parentItem.Container.Condition > 0.0f && MatchesItem(parentItem.Container);
                 case RelationType.Equipped:
                     if (character == null) return false;
                     foreach (Item equippedItem in character.SelectedItems)
