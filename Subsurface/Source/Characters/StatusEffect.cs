@@ -28,6 +28,8 @@ namespace Barotrauma
         
         private string[] onContainingNames;
 
+        private readonly bool useItem;
+
         public readonly ActionType type;
 
         private Explosion explosion;
@@ -147,6 +149,10 @@ namespace Barotrauma
                     case "fire":
                         FireSize = ToolBox.GetAttributeFloat(subElement,"size",10.0f);
                         break;
+                    case "use":
+                    case "useitem":
+                        useItem = true;
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
@@ -223,17 +229,28 @@ namespace Barotrauma
 
             if (sound != null) sound.Play(1.0f, 1000.0f, entity.WorldPosition);
 
-            for (int i = 0; i < propertyNames.Count(); i++)
+            if (useItem)
             {
-                ObjectProperty property;
-                foreach (IPropertyObject target in targets)
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
                 {
+                    item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
+                }
+            }
+
+            foreach (IPropertyObject target in targets)
+            {
+                for (int i = 0; i < propertyNames.Count(); i++)
+                {
+                    ObjectProperty property;
+
                     //if (targetNames!=null && !targetNames.Contains(target.Name)) continue;
 
                     if (!target.ObjectProperties.TryGetValue(propertyNames[i], out property)) continue;
                     
                     ApplyToProperty(property, propertyEffects[i], deltaTime);                    
                 }
+
+
             }
         }
 

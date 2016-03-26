@@ -122,6 +122,7 @@
     <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="Source\Items\Components\Signal\SignalCheckComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
+    <Compile Include="Source\Items\Components\StatusHUD.cs" />
     <Compile Include="Source\Items\FixRequirement.cs" />
     <Compile Include="Source\Items\ItemSpawner.cs" />
     <Compile Include="Source\Map\EntityGrid.cs" />

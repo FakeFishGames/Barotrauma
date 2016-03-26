@@ -97,6 +97,8 @@ namespace Barotrauma
                 divingGearObjective = new AIObjectiveFindDivingGear(character, false);
             }
 
+            if (divingGearObjective.IsCompleted()) return true;
+
             divingGearObjective.TryComplete(deltaTime);
             return divingGearObjective.IsCompleted();
         }

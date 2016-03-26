@@ -416,15 +416,7 @@ namespace Barotrauma.Items.Components
         public virtual void Draw(SpriteBatch spriteBatch, bool editing = false) { }
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
-
-        /// <summary>
-        /// a construction has activated the item (such as a turret shooting a projectile)
-        /// call the Activate-methods of the components</summary>
-        /// <param name="c"> The construction which activated the item</param>
-        /// <param name="modifier"> A vector that can be used to pass additional information to the components</param>
-        public virtual void ItemActivate(Item item, Vector2 modifier) { }
-
-
+        
         /// <returns>true if the operation was completed</returns>
         public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective) 
         {

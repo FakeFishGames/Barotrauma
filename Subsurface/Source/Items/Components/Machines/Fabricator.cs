@@ -16,7 +16,7 @@ namespace Barotrauma.Items.Components
 
         public readonly float RequiredTime;
 
-        //ListOrSomething requiredLevels
+        public readonly List<Skill> RequiredSkills;
 
         public FabricableItem(XElement element)
         {
@@ -28,6 +28,8 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Error in fabricable item "+name+"! Item ''" + element.Name + "'' not found.");
                 return;
             }
+
+            RequiredSkills = new List<Skill>();
 
             RequiredTime = ToolBox.GetAttributeFloat(element, "requiredtime", 1.0f);
 
@@ -58,7 +60,18 @@ namespace Barotrauma.Items.Components
                     RequiredItems.Remove(existing);
                     RequiredItems.Add(new Tuple<ItemPrefab, int>(requiredItem, existing.Item2+1));
                 }
+            }
 
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLower())
+                {
+                    case "requiredskill":
+                        RequiredSkills.Add(new Skill(
+                            ToolBox.GetAttributeString(subElement, "name", ""), 
+                            ToolBox.GetAttributeInt(subElement, "level", 0)));
+                        break;
+                }
             }
 
         }
@@ -143,17 +156,41 @@ namespace Barotrauma.Items.Components
                     Alignment.TopLeft, null,
                     selectedItemFrame, true);
 
-                string text = "Required items:\n";
-                foreach (Tuple<ItemPrefab,int> ip in targetItem.RequiredItems)
+
+                List<Skill> inadequateSkills = new List<Skill>();
+
+                if (Character.Controlled != null)
                 {
-                    text += "   - " + ip.Item1.Name + " x"+ip.Item2+"\n";
+
+                    inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Name) < skill.Level);
                 }
-                text += "Required time: " + targetItem.RequiredTime + " s";
+
+                Color textColor = Color.White;
+                string text;
+                if (!inadequateSkills.Any())
+                {
+                    text = "Required items:\n";
+                    foreach (Tuple<ItemPrefab,int> ip in targetItem.RequiredItems)
+                    {
+                        text += "   - " + ip.Item1.Name + " x"+ip.Item2+"\n";
+                    }
+                    text += "Required time: " + targetItem.RequiredTime + " s";
+                }
+                else
+                {
+                    text = "Skills required to calibrate:\n";
+                    foreach (Skill skill in inadequateSkills)
+                    {
+                        text += "   - " + skill.Name + " lvl " + skill.Level + "\n";
+                    }
+
+                    textColor = Color.Red;
+                }
 
                 new GUITextBlock(
                     new Rectangle(0, 50, 0, 25),
                     text,
-                    Color.Transparent, Color.White,
+                    Color.Transparent, textColor,
                     Alignment.TopLeft,
                     Alignment.TopLeft, null,
                     selectedItemFrame);
@@ -284,19 +321,30 @@ namespace Barotrauma.Items.Components
             FabricableItem targetItem = itemList.SelectedData as FabricableItem;
             if (targetItem != null)
             {
-                activateButton.Enabled = true;
-
-                ItemContainer container = item.GetComponent<ItemContainer>();
-                foreach (Tuple<ItemPrefab,int> ip in targetItem.RequiredItems)
-                {
-                    if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1).Count() >= ip.Item2) continue;
-                    activateButton.Enabled = false;
-                    break;
-                }
+                activateButton.Enabled = CanBeFabricated(targetItem, character);
             }
 
             GuiFrame.Update((float)Physics.step);
             GuiFrame.Draw(spriteBatch);
+        }
+
+        private bool CanBeFabricated(FabricableItem fabricableItem, Character user)
+        {
+            if (fabricableItem == null) return false;
+
+            if (user != null && 
+                fabricableItem.RequiredSkills.Any(skill => user.GetSkillLevel(skill.Name) < skill.Level))
+            {
+                return false;
+            }
+
+            ItemContainer container = item.GetComponent<ItemContainer>();
+            foreach (Tuple<ItemPrefab, int> ip in fabricableItem.RequiredItems)
+            {
+                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1).Count() < ip.Item2) return false;
+            }
+
+            return true;
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
