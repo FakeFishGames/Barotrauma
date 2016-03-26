@@ -8,6 +8,11 @@
     canbepicked="true"
     price="50">
 
+    <Deconstruct time="5">
+      <Item name="Iron Powder"/>
+      <Item name="Iron Powder"/>     
+    </Deconstruct>
+
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>

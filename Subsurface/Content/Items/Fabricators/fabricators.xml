@@ -15,15 +15,15 @@
 
       <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
 
-      <fabricableitem name="Harpoon Gun" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="20">
+      <fabricableitem name="Harpoon Gun" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
         <RequiredSkill name="Construction" level="30"/>
       </fabricableitem>
       <fabricableitem name="Spear" requireditems="Steel Bar" requiredtime="10"/>
 
-      <fabricableitem name="Plasma Cutter" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="20">
+      <fabricableitem name="Plasma Cutter" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
         <RequiredSkill name="Construction" level="30"/>
       </fabricableitem>
-      <fabricableitem name="Welding Tool" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="20">
+      <fabricableitem name="Welding Tool" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
         <RequiredSkill name="Construction" level="30"/>
       </fabricableitem>
 

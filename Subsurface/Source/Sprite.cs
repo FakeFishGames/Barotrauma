@@ -213,6 +213,8 @@ namespace Barotrauma
             //    }
             //}
 
+            if (texture == null) return;
+
             spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
         }
         

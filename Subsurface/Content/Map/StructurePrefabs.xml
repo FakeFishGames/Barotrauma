@@ -33,6 +33,9 @@
   <cabinsLabel sprite="Content/Map/testroom.png" sourcerect="464,384,83,16" depth ="0.99"
     width = "83" height ="16"/>
 
+  <medicalLabel sprite="Content/Map/testroom.png" sourcerect="464,400,110,16" depth ="0.99"
+    width = "110" height ="16"/>
+
   <arrowUp sprite="Content/Map/testroom.png" sourcerect="592,367,16,16" depth ="0.99"
     width = "16" height ="16"/>
 
@@ -45,15 +48,15 @@
   <arrowRight sprite="Content/Map/testroom.png" sourcerect="608,383,16,16" depth ="0.99"
     width = "16" height ="16"/>
 
-  <leftwall sprite="Content/Map/testroom.png" sourcerect="688,368,32,496" depth ="0.05" castshadow="true"
+  <leftwall sprite="Content/Map/testroom.png" sourcerect="990,274,32,512" depth ="0.05" castshadow="true"
     description="A vertical wall with collision detection"
     width = "32" height ="64" resizevertical="true" fliphorizontal="true" body="true" health="500"/>
 
-  <rightwall sprite="Content/Map/testroom.png" sourcerect="688,368,32,496" depth ="0.05" castshadow="true"
+  <rightwall sprite="Content/Map/testroom.png" sourcerect="990,274,32,512" depth ="0.05" castshadow="true"
     description="A vertical wall with collision detection"
     width = "32" height ="64" resizevertical="true" body="true" health="500"/>
 
-  <topwall sprite="Content/Map/testroom.png" sourcerect="144,464,496,32" depth ="0.06" castshadow="true"
+  <topwall sprite="Content/Map/testroom.png" sourcerect="208,439,496,32" depth ="0.06" castshadow="true"
     description="A horizontal wall with collision detection"
     width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
 
@@ -88,7 +91,13 @@
   <bgpanels sprite="Content/Map/testroom.png" sourcerect="768,320,224,224" depth = "1.0"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
-  <bgpanelswindow sprite="Content/Map/testroom.png" sourcerect="768,544,224,224" depth = "1.0"
+  <bgpanelswindow sprite="Content/Map/testroom.png" sourcerect="752,560,224,224" depth = "1.0"
+    width="64" height="64" resizehorizontal="true" resizevertical="true"/>
+
+  <bgorangepanels sprite="Content/Map/testroom.png" sourcerect="528,784,224,224" depth = "1.0"
+    width="64" height="64" resizehorizontal="true" resizevertical="true"/>
+
+  <bgorangepanelwindow sprite="Content/Map/testroom.png" sourcerect="528,563,224,224" depth = "1.0"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
   <stairsright sprite="Content/Map/testroom.png" sourcerect="0,704,256,320" 

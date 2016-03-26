@@ -31,6 +31,7 @@
 
     <Deconstruct time="10">      
       <Item name="Steel Bar"/>
+      <Item name="Aluminium"/>      
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
   

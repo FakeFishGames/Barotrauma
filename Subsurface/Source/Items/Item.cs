@@ -284,14 +284,6 @@ namespace Barotrauma
             }
         }
 
-        //List<string> highlightText;
-
-        //public List<string> HighlightText
-        //{
-        //    get { return highlightText;}
-            
-        //}
-
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
             : this(new Rectangle((int)position.X, (int)position.Y, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab, submarine)
         {

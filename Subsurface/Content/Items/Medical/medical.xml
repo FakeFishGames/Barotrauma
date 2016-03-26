@@ -42,8 +42,7 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true">
-      </StatusEffect>
+      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true"/>
       <StatusEffect type="OnUse" target="Character" oxygen="1" setvalue="true" sound="Content/Items/Weapons/stunbaton.ogg">
         <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>
         <Explosion range="10.0" force="1.0" shockwave="false" flames="false" camerashake="1.0"/>
@@ -70,7 +69,7 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="This, Character" bleeding="-10.0" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Medical/bandage.ogg"/>      
+      <StatusEffect type="OnUse" target="This, Character" bleeding="-0.5" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Medical/bandage.ogg"/>      
     </MeleeWeapon>
   </Item>
 
@@ -98,9 +97,14 @@
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="25" height="5" density="20"/>
+    
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="Character" Health="0.1" duration="20"/>
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+    </ItemComponent>
 
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="3.0" Oxygen="3" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="Character" Health="0.3" Oxygen="0.3" duration="10">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
@@ -112,6 +116,7 @@
      spritecolor="0.5,0.5,1.0,1.0"
      Tags="smallitem,chem"
      pickdistance="150"
+     canuseonself="true"
      description="Most commonly used for treating oxygen deprivation.">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
@@ -119,26 +124,32 @@
     <Body width="25" height="5" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="-3.0" Oxygen="20.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="Character" Health="-0.3" Oxygen="2.0" duration="10">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
   </Item>
 
   <Item
-   name="Fibrinozine"
-   category="Material"
-   spritecolor="0.6,0.4,0.2,1.0"
-   Tags="smallitem,chem"
-   pickdistance="150"
-   description="A hemostatic agent that slows down bleeding.">
+    name="Fibrinozine"
+    category="Material"
+    spritecolor="0.6,0.4,0.2,1.0"
+    Tags="smallitem,chem"
+    pickdistance="150"
+    canuseonself="true"
+    description="A hemostatic agent that slows down bleeding.">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="25" height="5" density="20"/>
+
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="Character" Bleeding="-0.2" duration="10.0"/>
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+    </ItemComponent>
     
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Bleeding="-10.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="Character" Bleeding="-0.5" duration="5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
@@ -150,14 +161,20 @@
     spritecolor="0.8,0.0,0.0,1.0"
     Tags="smallitem,chem"
     pickdistance="150"
+    canuseonself="true"
     description="Highly effective at treating various types of physical trauma.">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="25" height="5" density="20"/>
+    
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character, This" Health="-0.5" duration="10"/>      
+    </ItemComponent>
 
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="10.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="Character" Health="2.0" duration="5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
@@ -176,7 +193,7 @@
     <Body width="25" height="5" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="20.0" Oxygen="100.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="Character" Health="5.0" Oxygen="20.0" Bleeding="-0.1" duration="5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
@@ -194,7 +211,7 @@
     <Body width="25" height="5" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="Character" Health="-0.1" duration="20.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
@@ -209,7 +226,8 @@
     pickdistance="150">
 
     <ItemComponent>
-      <StatusEffect type="OnUse" target="Character" Health="-2.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0"/>      
     </ItemComponent>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -217,7 +235,7 @@
     <Body width="25" height="5" density="10"/>
     
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>

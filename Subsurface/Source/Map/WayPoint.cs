@@ -216,6 +216,8 @@ namespace Barotrauma
             textBox.Text = text;
             textBox.Color = Color.Green;
 
+            textBox.Deselect();
+
             return true;
         }
 
@@ -229,6 +231,8 @@ namespace Barotrauma
                 textBox.Color = Color.Green;
                 textBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
             }
+
+            textBox.Deselect();
 
             return true;
         }
@@ -267,14 +271,14 @@ namespace Barotrauma
 
             y = 40+20;                    
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.Black, Alignment.TopLeft, null, editingHUD);
+            new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
             GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
             propertyBox.Text = string.Join(", ", idCardTags);
             propertyBox.OnEnterPressed = EnterIDCardTags;
             propertyBox.OnTextChanged = TextBoxChanged;
             y = y + 30;
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.Black, Alignment.TopLeft, null, editingHUD);
+            new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
             propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
             propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
 
