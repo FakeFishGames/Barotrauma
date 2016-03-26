@@ -95,6 +95,7 @@ namespace Barotrauma
 
             //unequip diving suit if running out of oxygen
             if (Character.Oxygen < 50.0f && Character.AnimController.CurrentHull!=null &&
+                Character.AnimController.CurrentHull.OxygenPercentage > 20.0f &&
                 Character.AnimController.CurrentHull.Volume < Character.AnimController.CurrentHull.FullVolume*0.3f)
             {
                 var divingSuit = Character.Inventory.FindItem("Diving Suit");
