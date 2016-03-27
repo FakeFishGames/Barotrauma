@@ -689,6 +689,7 @@ namespace Barotrauma.Networking
                 if (existingClient != null)
                 {
                     existingClient.Connection = inc.SenderConnection;
+                    existingClient.ReliableChannel = new ReliableChannel(server);
                     inc.SenderConnection.Approve();
                     return;
                 }
@@ -1671,7 +1672,7 @@ namespace Barotrauma.Networking
                 if (client.FileStreamSender != null) client.FileStreamSender.Dispose();
             }
 
-            server.Shutdown("The server has shut down");
+            server.Shutdown("The server has been shut down");
         }
     }
 

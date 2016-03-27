@@ -1306,7 +1306,7 @@ namespace Barotrauma
 
         //    while (timer < dimDuration && Character.controlled == null)
         //    {
-        //        timer += CoroutineManager.DeltaTime;
+        //        timer += CoroutineManager.UnscaledDeltaTime;
 
         //        if (cam != null) cam.OffsetAmount = 0.0f;
 
@@ -1320,7 +1320,7 @@ namespace Barotrauma
         //    float lerpLightBack = 0.0f;
         //    while (lerpLightBack < 1.0f)
         //    {
-        //        lerpLightBack = Math.Min(lerpLightBack + CoroutineManager.DeltaTime*5.0f, 1.0f);
+        //        lerpLightBack = Math.Min(lerpLightBack + CoroutineManager.UnscaledDeltaTime*5.0f, 1.0f);
 
         //        GameMain.LightManager.AmbientLight = Color.Lerp(darkLight, prevAmbientLight, lerpLightBack);
         //        yield return CoroutineStatus.Running;
@@ -1457,6 +1457,9 @@ namespace Barotrauma
                 case NetworkEventType.InventoryUpdate:
                     if (inventory == null) return false;
                     return inventory.FillNetworkData(NetworkEventType.InventoryUpdate, message, data);
+                case NetworkEventType.ApplyStatusEffect:
+                    message.Write((ushort)data);
+                    return true;
                 case NetworkEventType.ImportantEntityUpdate:
 
                     message.WriteRangedSingle(health, minHealth, maxHealth, 8);
@@ -1559,8 +1562,6 @@ namespace Barotrauma
             switch (type)
             {
                 case NetworkEventType.PickItem:
-                    
-
                     ushort itemId = message.ReadUInt16();
 
                     bool pickHit = message.ReadBoolean();
@@ -1570,18 +1571,18 @@ namespace Barotrauma
 
                     System.Diagnostics.Debug.WriteLine("item id: "+itemId);
 
-                    Item item = FindEntityByID(itemId) as Item;
-                    if (item != null)
+                    Item pickedItem = FindEntityByID(itemId) as Item;
+                    if (pickedItem != null)
                     {
-                        if (item == selectedConstruction)
+                        if (pickedItem == selectedConstruction)
                         {
-                            GameServer.Log(Name + " deselected " + item.Name, Color.Orange);
+                            GameServer.Log(Name + " deselected " + pickedItem.Name, Color.Orange);
                         }
                         else
                         {
-                            GameServer.Log(Name + " selected " + item.Name, Color.Orange);
+                            GameServer.Log(Name + " selected " + pickedItem.Name, Color.Orange);
                         }
-                        item.Pick(this, false, pickHit, actionHit);
+                        pickedItem.Pick(this, false, pickHit, actionHit);
                     }
 
                     return;
@@ -1650,18 +1651,21 @@ namespace Barotrauma
                     if (inventory == null) return;
                     inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message, sendingTime);
                     return;
+                case NetworkEventType.ApplyStatusEffect:
+                    ushort id = message.ReadUInt16();
+
+                    data = id;
+
+                    var item = FindEntityByID(id) as Item;
+                    if (item == null) return;
+
+                    item.ApplyStatusEffects(ActionType.OnUse, 1.0f, this);
+
+                    break;
                 case NetworkEventType.ImportantEntityUpdate:
 
                     health = message.ReadRangedSingle(minHealth, 100.0f, 8);
                         
-                    //    MathHelper.Clamp((message.ReadByte() / 255.0f) * maxHealth, 0.0f, maxHealth);
-
-                    //if (health == 0.0f)
-                    //{
-                    //    causeOfDeath = (CauseOfDeath)message.ReadRangedInteger(0, Enum.GetValues(typeof(CauseOfDeath)).Length-1);
-                    //    Kill(causeOfDeath, true);
-                    //}
-
                     bool allOk = message.ReadBoolean();
                     if (allOk)
                     {

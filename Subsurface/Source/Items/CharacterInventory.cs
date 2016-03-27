@@ -88,7 +88,8 @@ namespace Barotrauma
 
             if (Items[slotIndex] == null) return false;
 
-            Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 0.016f, character);
+            Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
+            new NetworkEvent(NetworkEventType.ApplyStatusEffect, character.ID, true, Items[slotIndex].ID);
 
             return true;
         }
