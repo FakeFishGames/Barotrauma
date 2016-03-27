@@ -10,5 +10,31 @@
       <Containable name="smallitem"/>
     </ItemContainer>
   </Item>
+
+  <Item
+    name="Medicine Cabinet"
+    linkable="true"
+    pickdistance ="150">
+
+    <Sprite texture ="cabinets.png" depth="0.85" sourcerect="0,0,48,64"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <Containable name="chem"/>
+      <Containable name="medical"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+   name="Toxic Cabinet"
+   linkable="true"
+   pickdistance ="150">
+
+    <Sprite texture ="cabinets.png" depth="0.85" sourcerect="0,64,48,64"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <Containable name="chem"/>
+      <Containable name="medical"/>
+    </ItemContainer>
+  </Item>
 </Items>
 

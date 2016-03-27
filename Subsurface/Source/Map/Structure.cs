@@ -368,10 +368,16 @@ namespace Barotrauma
             if (prefab.sprite == null) return;
 
             Color color = (isHighlighted) ? Color.Orange : Color.White;
-            if (isSelected && editing) color = Color.Red;
+            if (isSelected && editing)
+            {
+                color = Color.Red;
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), color);
+            }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
-            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);  
+            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);
+
 
             foreach (WallSection s in sections)
             {

@@ -19,6 +19,23 @@
   </Item>
 
   <Item
+    name="Compound N"
+    category="Equipment"
+    Tags="smallitem,explosive"
+    pickdistance="150">
+
+    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
+
+    <Body width="16" height="7"/>
+
+    <Pickable slots="Any">
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
+        <Explosion range="600.0" structuredamage="150" damage="300" stun="5" force="20.0"/>
+      </StatusEffect>
+    </Pickable>
+  </Item>
+
+  <Item
     name="IC-4 Block"
     description="A compound made of C-4 and incendium."
     category="Equipment"

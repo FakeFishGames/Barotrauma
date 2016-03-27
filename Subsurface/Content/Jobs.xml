@@ -55,7 +55,7 @@
     <Item name="Ballistic Helmet" equip="true"/>    
   </Job>
 
-  <Job name="Doctor" description="." maxnumber="2">
+  <Job name="Medical Doctor" description="The primary duty of the doctors is too help injured crew members, but their knowledge of chemistry and pharmaceutics can also be useful for creating various non-medicinal chemicals." maxnumber="2">
     <Skills>
       <Skill name="Weapons" level="10,20"/>
       <Skill name="Construction" level="10,20"/>
@@ -65,7 +65,7 @@
     <Item name="ID Card"/>
     <Item name="Doctor's Coat" equip="true"/>
     <Item name="Doctor's Trousers" equip="true"/>
-    <Item name="Health Scanner HUD" equip="true"/>
+    <Item name="Health Scanner HUD"/>
     <Item name="Medical Syringe"/>   
   </Job>
 
