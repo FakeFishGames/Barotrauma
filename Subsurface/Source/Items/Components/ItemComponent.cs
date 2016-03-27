@@ -67,6 +67,8 @@ namespace Barotrauma.Items.Components
 
         public ItemComponent Parent;
 
+        private string msg;
+
         [HasDefaultValue(0.0f, false)]
         public float PickingTime
         {
@@ -164,9 +166,7 @@ namespace Barotrauma.Items.Components
             get { return msg; }
             set { msg = value; }
         }
-
-        private string msg;
-
+        
         public ItemComponent(Item item, XElement element) 
         {
             this.item = item;

@@ -132,12 +132,20 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (item.body != null && item.body.FarseerBody.Awake)
+            {
+                foreach (Item contained in Inventory.Items)
+                {
+                    if (contained == null) continue;
+                    contained.SetTransform(item.SimPosition, 0.0f);
+                }
+            }
+
             if (!hasStatusEffects) return;
 
             foreach (Item contained in Inventory.Items)
             {
                 if (contained == null || contained.Condition <= 0.0f) continue;
-                //if (contained.body != null) contained.body.Enabled = false;
 
                 RelatedItem ri = containableItems.Find(x => x.MatchesItem(contained));
                 if (ri == null) continue;
@@ -161,7 +169,7 @@ namespace Barotrauma.Items.Components
             Vector2 transformedItemPos = itemPos;
             Vector2 transformedItemInterval = itemInterval;
             float currentRotation = itemRotation;
-            //float transformedItemRotation = itemRotation;
+            
             if (item.body == null)
             {
                 transformedItemPos = new Vector2(item.Rect.X, item.Rect.Y);
