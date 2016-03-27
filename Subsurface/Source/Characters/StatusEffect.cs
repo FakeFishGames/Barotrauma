@@ -278,7 +278,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        protected void ApplyToProperty(ObjectProperty property, object value, float deltaTime)
+        private void ApplyToProperty(ObjectProperty property, object value, float deltaTime)
         {
             if (disableDeltaTime || setValue) deltaTime = 1.0f;
 

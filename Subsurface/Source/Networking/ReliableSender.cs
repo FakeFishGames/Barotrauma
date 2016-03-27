@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma.Networking.ReliableMessages
 {
@@ -61,6 +60,16 @@ namespace Barotrauma.Networking.ReliableMessages
             receiver.Update(deltaTime);
         }
 
+        public static int IdDiff(ushort id1, ushort id2)
+        {
+            if (Math.Abs((int)id1 - (int)id2) > ushort.MaxValue / 2)
+            {
+                return (ushort.MaxValue - Math.Max(id1, id2)) + Math.Min(id1, id2);
+            }
+
+            return Math.Abs(id1 - id2);
+        }
+
     }
 
     internal class ReliableSender
@@ -81,14 +90,14 @@ namespace Barotrauma.Networking.ReliableMessages
         {
             this.sender = sender;
 
-            messageCount = ushort.MaxValue - 5;
+            messageCount = 1;
 
             messageBuffer = new Dictionary<ushort, ReliableMessage>();
         }
 
         public ReliableMessage CreateMessage()
         {
-            ushort messageID = (messageCount==ushort.MaxValue) ? (ushort)0 : (ushort)(messageCount + 1);
+            ushort messageID = (messageCount == ushort.MaxValue) ? (ushort)1 : (ushort)(messageCount + 1);
 
             NetOutgoingMessage message = sender.CreateMessage();
 
@@ -100,16 +109,15 @@ namespace Barotrauma.Networking.ReliableMessages
             
             if (messageBuffer.Count > NetConfig.ReliableMessageBufferSize)
             {
-
                 int end = messageCount - NetConfig.ReliableMessageBufferSize;
                 int start = end - (messageBuffer.Count - NetConfig.ReliableMessageBufferSize);
 
-                if (start<0)
+                if (start < 0)
                 {
                     int wrappedStart = start + ushort.MaxValue;
-                    if (wrappedStart==0) wrappedStart = ushort.MaxValue;
+                    if (wrappedStart == 0) wrappedStart = ushort.MaxValue;
                     int wrappedEnd = end + ushort.MaxValue;
-                    if (wrappedEnd==0) wrappedEnd = ushort.MaxValue;
+                    if (wrappedEnd == 0) wrappedEnd = ushort.MaxValue;
 
                     for (ushort i = (ushort)wrappedStart; i <= (ushort)wrappedEnd; i++)
                     {
@@ -128,8 +136,6 @@ namespace Barotrauma.Networking.ReliableMessages
             }
 
             return reliableMessage;
-
-            //server.SendMessage(msg, server.Connections, NetDeliveryMethod.Unreliable, 0);
         }
 
         public void SendMessage(ReliableMessage message, NetConnection connection)
@@ -138,6 +144,8 @@ namespace Barotrauma.Networking.ReliableMessages
             idSendTimer = connection.AverageRoundtripTime;
 
             messageBuffer.Add(message.ID, message);
+
+            Debug.WriteLine("sending reliable massage (id " + message.ID + ")");
 
             if (messageCount == ushort.MaxValue) messageCount = 0;
             messageCount++;
@@ -190,9 +198,9 @@ namespace Barotrauma.Networking.ReliableMessages
 
             sender.SendMessage(message, recipient, NetDeliveryMethod.Unreliable);
 
-            float roundTripTime = Math.Min(recipient.AverageRoundtripTime, 0.5f);
+            float roundTripTime = Math.Min(recipient.AverageRoundtripTime, 1.0f);
 
-            idSendTimer = Math.Max(roundTripTime, NetConfig.IdSendInterval+idSendInterval);
+            idSendTimer = Math.Max(roundTripTime, NetConfig.IdSendInterval + idSendInterval);
             idSendInterval += 0.1f;
         }
     }
@@ -212,7 +220,7 @@ namespace Barotrauma.Networking.ReliableMessages
         {
             this.receiver = receiver;
 
-            lastMessageID  = ushort.MaxValue - 5;
+            lastMessageID  = 1;
             
             missingMessages = new Dictionary<ushort,MissingMessage>();
             missingMessageIds = new Queue<ushort>();
@@ -251,7 +259,7 @@ namespace Barotrauma.Networking.ReliableMessages
                 receiver.SendMessage(resendRequest, recipient, 
                     missingMessage.ResendRequestsSent==0 ? NetDeliveryMethod.ReliableUnordered : NetDeliveryMethod.Unreliable);
 
-                float roundTripTime = Math.Min(recipient.AverageRoundtripTime, 0.5f);
+                float roundTripTime = Math.Min(recipient.AverageRoundtripTime, 1.0f);
 
                 missingMessage.ResendTimer = Math.Max(roundTripTime, NetConfig.RerequestInterval);
                 missingMessage.ResendRequestsSent++;
@@ -265,6 +273,13 @@ namespace Barotrauma.Networking.ReliableMessages
             recipient = message.SenderConnection;
 
             ushort id = message.ReadUInt16();
+
+            if (ReliableChannel.IdDiff(lastMessageID, id) > NetConfig.ReliableMessageBufferSize)
+            {
+                Debug.WriteLine("id diff > NetConfig.ReliableMessageBufferSize, resetting reliable channel");
+                lastMessageID = id;
+                return false;
+            }
 
             Debug.WriteLine("received message ID " + id + " - last id: " + lastMessageID);
 
@@ -329,7 +344,10 @@ namespace Barotrauma.Networking.ReliableMessages
             if (missingMessages.ContainsKey(id)) return;
 
             Debug.WriteLine("added " + id + " to missed");
-            missingMessages.Add(id, new MissingMessage(id));
+
+            float waitTime = Math.Abs(lastMessageID - id)>1 ? 0.0f : recipient.AverageRoundtripTime*0.5f;
+
+            missingMessages.Add(id, new MissingMessage(id, waitTime));
 
             missingMessageIds.Enqueue(id);                    
         }
@@ -355,9 +373,15 @@ namespace Barotrauma.Networking.ReliableMessages
                 return;
             }
 
+            if (ReliableChannel.IdDiff(lastMessageID, messageId) > NetConfig.ReliableMessageBufferSize)
+            {
+                Debug.WriteLine("id diff > NetConfig.ReliableMessageBufferSize, resetting reliable channel");
+                lastMessageID = messageId;
+                return;
+            }
+
             if (messageId < lastMessageID && Math.Abs((int)lastMessageID - (int)messageId) < ushort.MaxValue / 2)
             {
-                //shouldn't happen: we have somehow received messages that the other end hasn't sent
                 Debug.WriteLine("Received id update message: " + messageId + ": ignoring, already received (" + lastMessageID + ")");
                 return;
             }
@@ -373,7 +397,7 @@ namespace Barotrauma.Networking.ReliableMessages
                     if (i == ushort.MaxValue) break;
                 }
 
-                for (ushort i = 1; i < messageId; i++)
+                for (ushort i = 1; i <= messageId; i++)
                 {
                     QueueMissingMessage(i);
                 }
@@ -396,6 +420,8 @@ namespace Barotrauma.Networking.ReliableMessages
             
             lastMessageID = messageId;
         }
+
+
     }
 
     internal class MissingMessage
@@ -414,6 +440,12 @@ namespace Barotrauma.Networking.ReliableMessages
         public MissingMessage(ushort id)
         {
             this.id = id;
+        }
+
+        public MissingMessage(ushort id, float resendTimer)
+        {
+            this.id = id;
+            this.ResendTimer = resendTimer;
         }
     }
     

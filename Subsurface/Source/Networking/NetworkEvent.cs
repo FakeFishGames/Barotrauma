@@ -31,7 +31,9 @@ namespace Barotrauma.Networking
         UpdateProperty = 10,
         WallDamage = 11,
 
-        PhysicsBodyPosition = 12
+        PhysicsBodyPosition = 12,
+
+        ApplyStatusEffect = 13
     }
 
     class NetworkEvent
@@ -44,39 +46,42 @@ namespace Barotrauma.Networking
         static NetworkEvent()
         {
             deliveryMethod = new NetworkEventDeliveryMethod[Enum.GetNames(typeof(NetworkEventType)).Length];
-            deliveryMethod[(int)NetworkEventType.ImportantEntityUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.ImportantComponentUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.KillCharacter] = NetworkEventDeliveryMethod.ReliableLidgren;
-            deliveryMethod[(int)NetworkEventType.SelectCharacter] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.ImportantEntityUpdate]     = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.ImportantComponentUpdate]  = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.KillCharacter]             = NetworkEventDeliveryMethod.ReliableLidgren;
+            deliveryMethod[(int)NetworkEventType.SelectCharacter]           = NetworkEventDeliveryMethod.ReliableChannel;
 
-            deliveryMethod[(int)NetworkEventType.ImportantComponentUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.PickItem] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.DropItem] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.InventoryUpdate] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.ItemFixed] = NetworkEventDeliveryMethod.ReliableLidgren;
+            deliveryMethod[(int)NetworkEventType.ImportantComponentUpdate]  = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.PickItem]                  = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.DropItem]                  = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.InventoryUpdate]           = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.ItemFixed]                 = NetworkEventDeliveryMethod.ReliableLidgren;
 
-            deliveryMethod[(int)NetworkEventType.UpdateProperty] = NetworkEventDeliveryMethod.ReliableChannel;
-            deliveryMethod[(int)NetworkEventType.WallDamage] = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.UpdateProperty]            = NetworkEventDeliveryMethod.ReliableChannel;
+            deliveryMethod[(int)NetworkEventType.WallDamage]                = NetworkEventDeliveryMethod.ReliableChannel;
+
+            deliveryMethod[(int)NetworkEventType.ApplyStatusEffect]         = NetworkEventDeliveryMethod.ReliableLidgren;
 
             overridePrevious = new bool[deliveryMethod.Length];
             for (int i = 0; i < overridePrevious.Length; i++ )
             {
                 overridePrevious[i] = true;
             }
-            overridePrevious[(int)NetworkEventType.KillCharacter] = false;
+            overridePrevious[(int)NetworkEventType.KillCharacter]       = false;
 
-            overridePrevious[(int)NetworkEventType.PickItem] = false;
-            overridePrevious[(int)NetworkEventType.DropItem] = false;
-            overridePrevious[(int)NetworkEventType.ItemFixed] = false;
+            overridePrevious[(int)NetworkEventType.PickItem]            = false;
+            overridePrevious[(int)NetworkEventType.DropItem]            = false;
+            overridePrevious[(int)NetworkEventType.ItemFixed]           = false;
+            overridePrevious[(int)NetworkEventType.ApplyStatusEffect]   = false;
         }
 
-        private ushort id;
+        private readonly ushort id;
 
-        private NetworkEventType eventType;
+        private readonly NetworkEventType eventType;
 
-        private bool isClientEvent;
+        private readonly bool isClientEvent;
 
-        private object data;
+        private readonly object data;
 
         public NetConnection SenderConnection;
 
