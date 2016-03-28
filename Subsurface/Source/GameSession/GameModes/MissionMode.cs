@@ -1,14 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
     class MissionMode : GameMode
     {
-        Mission mission;
+        private Mission mission;
 
         public override Mission Mission
         {
@@ -23,7 +19,7 @@ namespace Barotrauma
         {
             Location[] locations = new Location[2];
 
-            Random rand = new Random(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
+            MTRandom rand = new MTRandom(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
 
             for (int i = 0; i < 2; i++)
             {
@@ -41,14 +37,6 @@ namespace Barotrauma
             Networking.GameServer.Log("Mission: " + mission.Name, Color.Cyan);
             Networking.GameServer.Log(mission.Description, Color.Cyan);
 
-            //quest.Start(Level.Loaded);
-        }
-
-        public override void End(string endMessage = "")
-        {
-            //quest.End();
-
-            base.End(endMessage);
         }
     }
 }

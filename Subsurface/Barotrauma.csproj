@@ -103,7 +103,7 @@
     <Compile Include="Source\Events\ArtifactEvent.cs" />
     <Compile Include="Source\GameSession\CargoManager.cs" />
     <Compile Include="Source\GameSession\GameModes\GameModePreset.cs" />
-    <Compile Include="Source\GameSession\GameModes\QuestMode.cs" />
+    <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
