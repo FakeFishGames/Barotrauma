@@ -57,7 +57,7 @@ namespace Barotrauma
 
         private void CreateScriptedEvents(Level level)
         {
-            Random rand = new Random(ToolBox.StringToInt(level.Seed));
+            MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
 
             float totalDifficulty = level.Difficulty;
 

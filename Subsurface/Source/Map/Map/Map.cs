@@ -383,7 +383,7 @@ namespace Barotrauma
                     int seed = (int)locations[0].MapPosition.X + (int)locations[0].MapPosition.Y * 100;
                     seed += (int)locations[1].MapPosition.X*10000 + (int)locations[1].MapPosition.Y * 1000000;
 
-                    Random rand = new Random(seed + missionsCompleted);
+                    MTRandom rand = new MTRandom(seed + missionsCompleted);
 
                     if (rand.NextDouble() < 0.3f) return null;
 
