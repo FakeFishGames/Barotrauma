@@ -8,6 +8,7 @@ using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Voronoi2;
 
@@ -16,13 +17,12 @@ namespace Barotrauma
     class SubmarineBody
     {
         public const float DamageDepth = -30000.0f;
-        const float PressureDamageMultiplier = 0.001f;
+        private const float PressureDamageMultiplier = 0.001f;
 
-        //structure damage = impact * damageMultiplier
-        const float DamageMultiplier = 50.0f;
+        private const float DamageMultiplier = 50.0f;
 
-        const float Friction = 0.2f, Restitution = 0.0f;
-        
+        private const float Friction = 0.2f, Restitution = 0.0f;
+
         public List<Vector2> HullVertices
         {
             get;
@@ -31,16 +31,13 @@ namespace Barotrauma
 
         private float depthDamageTimer;
 
-        private Submarine submarine;
+        private readonly Submarine submarine;
         
-        private Body body;
+        private readonly Body body;
 
         private Vector2? targetPosition;
-                
-        float mass = 10000.0f;
 
-        //private Vector2? lastContactPoint;
-        //private VoronoiCell lastContactCell;
+        private float mass = 10000.0f;
 
         public Rectangle Borders
         {
@@ -72,12 +69,7 @@ namespace Barotrauma
         {
             get { return ConvertUnits.ToDisplayUnits(body.Position); }
         }
-
-        public Vector2 Center
-        {
-            get { return new Vector2(Borders.X + Borders.Width / 2, Borders.Y - Borders.Height / 2); }
-        }
-
+        
         public bool AtDamageDepth
         {
             get { return Position.Y < DamageDepth; }
@@ -167,7 +159,7 @@ namespace Barotrauma
         {
             if (!Structure.WallList.Any())
             {
-                return new List<Vector2>() { new Vector2(-1.0f, 1.0f), new Vector2(1.0f, 1.0f), new Vector2(0.0f, -1.0f) };
+                return new List<Vector2> { new Vector2(-1.0f, 1.0f), new Vector2(1.0f, 1.0f), new Vector2(0.0f, -1.0f) };
             }
 
             List<Vector2> points = new List<Vector2>();
@@ -223,35 +215,27 @@ namespace Barotrauma
             if (targetPosition != null && targetPosition != Position)
             {
                 float dist = Vector2.Distance((Vector2)targetPosition, Position);
-                if (dist > 1000.0f)
+                
+                if (dist > 1000.0f) //immediately snap the sub to the target position if more than 1000.0f units away
                 {
-                    Vector2 moveAmount = ConvertUnits.ToSimUnits((Vector2)targetPosition) - body.Position;
-                    Vector2 displayMoveAmount = ConvertUnits.ToDisplayUnits(moveAmount);
+                    Vector2 moveAmount = (Vector2)targetPosition - ConvertUnits.ToDisplayUnits(body.Position);
 
-                    body.SetTransform(body.Position + moveAmount, 0.0f);
-                    if (Character.Controlled != null) Character.Controlled.CursorPosition += displayMoveAmount;
+                    ForceTranslate(moveAmount);
 
-                    GameMain.GameScreen.Cam.Position += displayMoveAmount;
-                    if (GameMain.GameScreen.Cam.TargetPos!=Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += displayMoveAmount;
                     GameMain.GameScreen.Cam.UpdateTransform(false);
 
                     submarine.SetPrevTransform(submarine.Position);
                     submarine.UpdateTransform();
                     targetPosition = null;
+
+                    DisplaceCharacters(moveAmount);
                 }
-                else if (dist > 50.0f)
+                else if (dist > 50.0f) //lerp the position if (50 < dist < 1000)
                 {
                     Vector2 moveAmount = Vector2.Normalize((Vector2)targetPosition - Position);
-                    moveAmount *= ConvertUnits.ToSimUnits(Math.Min(dist, 100.0f));
-                    Vector2 displayMoveAmount = ConvertUnits.ToDisplayUnits(moveAmount);
+                    moveAmount *= Math.Min(dist, 100.0f);
 
-                    body.SetTransform(body.Position + moveAmount * deltaTime, 0.0f);
-
-                    GameMain.GameScreen.Cam.Position += displayMoveAmount * deltaTime;
-                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += displayMoveAmount;
-                    if (Character.Controlled != null) Character.Controlled.CursorPosition += displayMoveAmount;
-
-                    //GameMain.GameScreen.Cam.UpdateTransform(false);
+                    ForceTranslate(moveAmount * deltaTime);
                 }
                 else
                 {
@@ -280,7 +264,53 @@ namespace Barotrauma
             ApplyForce(totalForce);
 
             UpdateDepthDamage(deltaTime);
+        }
 
+
+        /// <summary>
+        /// Immediately translates the position of the physics body, gamescreen camera and Character.Controlled.CursorPosition
+        /// </summary>
+        /// <param name="amount">Amount to move in display units</param>
+        private void ForceTranslate(Vector2 amount)
+        {
+            body.SetTransform(body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
+            if (Character.Controlled != null) Character.Controlled.CursorPosition += amount;
+
+            GameMain.GameScreen.Cam.Position += amount;
+            if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
+        }
+
+
+        /// <summary>
+        /// Moves away any character that is inside the bounding box of the sub (but not inside it)
+        /// </summary>
+        /// <param name="subTranslation">The translation that was applied to the sub before doing the displacement 
+        /// (used for determining where to push the characters)</param>
+        private void DisplaceCharacters(Vector2 subTranslation)
+        {
+            Rectangle worldBorders = Borders;
+            worldBorders.Location += ConvertUnits.ToDisplayUnits(body.Position).ToPoint();
+
+            Vector2 translateDir = Vector2.Normalize(subTranslation);
+
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.AnimController.CurrentHull != null) continue;
+                
+                //if the character isn't inside the bounding box, continue
+                if (!Submarine.RectContains(worldBorders, c.WorldPosition)) continue;
+
+                //cast a line from the position of the character to the same direction as the translation of the sub
+                //and see where it intersects with the bounding box
+                Vector2? intersection = MathUtils.GetLineRectangleIntersection(c.WorldPosition,
+                    c.WorldPosition + translateDir*100000.0f, worldBorders);
+
+                //should never be null when casting a line out from inside the bounding box
+                Debug.Assert(intersection != null);
+                
+                c.AnimController.SetPosition(ConvertUnits.ToSimUnits((Vector2)intersection) + translateDir);
+                //''+ translatedir'' in order to move the character slightly away from the wall
+            }
         }
 
         private Vector2 CalculateBuoyancy()
@@ -363,49 +393,28 @@ namespace Barotrauma
             if (cell == null)
             {
                 Limb limb = f2.Body.UserData as Limb;
-                if (limb != null)
+                if (limb == null) return true;
+
+                bool collision = HandleLimbCollision(contact, limb);
+
+                if (collision && limb.Mass > 100.0f)
                 {
-                    bool collision = HandleLimbCollision(contact, limb);
+                    Vector2 normal = Vector2.Normalize(body.Position - limb.SimPosition);
 
-                    if (collision && limb.Mass>100.0f)
-                    {
-                        Vector2 normal = Vector2.Normalize(body.Position - limb.SimPosition);
+                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 5.0f);
 
-                        //normal *= Math.Min(limb.Mass,100)/100.0f;
-
-                        float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 5.0f);
-
-                        ApplyImpact(impact * Math.Min(limb.Mass/200.0f, 1), -normal, contact);
-
-                        //ApplyImpact((-limb.LinearVelocity * Math.Min(limb.Mass, 100)) / 50.0f, contact);
-                    }
-
-                    return collision;
+                    ApplyImpact(impact * Math.Min(limb.Mass / 200.0f, 1), -normal, contact);
                 }
 
-                return true;
+                return collision;
             }
 
             var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(body.Position) - cell.Center);
-
-
-            Vector2 tempNormal;
-
-            FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
-            contact.GetWorldManifold(out tempNormal, out worldPoints);
-
-            Vector2 lastContactPoint = worldPoints[0];
 
             float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
 
             ApplyImpact(wallImpact, -collisionNormal, contact);
             
-
-            //Vector2 u = Vector2.Dot(Velocity, -normal) * normal;
-            //Vector2 w = (Velocity + u);
-
-            //speed = ConvertUnits.ToDisplayUnits(w * (1.0f - Friction) + u * Restitution);
-
             return true;
         }
 

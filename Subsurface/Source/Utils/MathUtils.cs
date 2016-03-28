@@ -188,6 +188,51 @@ namespace Barotrauma
             return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
         }
 
+        // a1 is line1 start, a2 is line1 end, b1 is line2 start, b2 is line2 end
+        public static Vector2? GetLineIntersection(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2)
+        {
+            Vector2 b = a2 - a1;
+            Vector2 d = b2 - b1;
+            float bDotDPerp = b.X * d.Y - b.Y * d.X;
+
+            // if b dot d == 0, it means the lines are parallel so have infinite intersection points
+            if (bDotDPerp == 0) return null;
+
+            Vector2 c = b1 - a1;
+            float t = (c.X * d.Y - c.Y * d.X) / bDotDPerp;
+            if (t < 0 || t > 1) return null;
+
+            float u = (c.X * b.Y - c.Y * b.X) / bDotDPerp;
+            if (u < 0 || u > 1) return null;
+
+            return a1 + t * b;
+        }
+
+        public static Vector2? GetLineRectangleIntersection(Vector2 a1, Vector2 a2, Rectangle rect)
+        {
+            Vector2? intersection = GetLineIntersection(a1, a2, 
+                new Vector2(rect.X, rect.Y),
+                new Vector2(rect.Right, rect.Y));
+
+            if (intersection != null) return intersection;
+
+            intersection = GetLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y-rect.Height),
+                new Vector2(rect.Right, rect.Y-rect.Height));
+
+            if (intersection != null) return intersection;
+
+            intersection = GetLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y),
+                new Vector2(rect.X, rect.Y - rect.Height));
+
+            if (intersection != null) return intersection;
+
+            return GetLineIntersection(a1, a2,
+                new Vector2(rect.Right, rect.Y),
+                new Vector2(rect.Right, rect.Y - rect.Height));
+        }
+
         public static float LineToPointDistance(Vector2 lineA, Vector2 lineB, Vector2 point)
         {
             return (float)(Math.Abs((lineB.X-lineA.X)*(lineA.Y - point.Y) - (lineA.X - point.X)*(lineB.Y-lineA.Y)) /

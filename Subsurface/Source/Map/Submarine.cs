@@ -24,7 +24,7 @@ namespace Barotrauma
 
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place
-        public static readonly Vector2 HiddenSubPosition = new Vector2(0.0f, 50032.0f);
+        public static readonly Vector2 HiddenSubPosition = new Vector2(-50000.0f, 80000.0f);
 
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
@@ -249,7 +249,15 @@ namespace Barotrauma
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 
-            return VectorToWorldGrid(position);
+            Vector2 worldGridPos = VectorToWorldGrid(position);
+
+            if (loaded != null)
+            {
+                worldGridPos.X += loaded.Position.X % GridSize.X;
+                worldGridPos.Y += loaded.Position.Y % GridSize.Y;
+            }
+
+            return worldGridPos;
         }
 
         public static Vector2 VectorToWorldGrid(Vector2 position)
