@@ -100,12 +100,7 @@ namespace Barotrauma.Items.Components
                 DropConnectedWires(picker);
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
-
-                //foreach (StatusEffect effect in item.Prefab.statusEffects)
-                //{
-                //    effect.OnPicked(picker, null);
-                //}
-
+                
                 return true;
             }
 

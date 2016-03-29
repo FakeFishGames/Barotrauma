@@ -189,10 +189,7 @@ namespace Barotrauma.Items.Components
             {
                 targetItem.IsHighlighted = true;
 
-                foreach (StatusEffect effect in statusEffects)
-                {
-                    effect.Apply(ActionType.OnUse, deltaTime, item, targetItem.AllPropertyObjects);
-                }
+                ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
             }
 
             return true;

@@ -53,7 +53,7 @@ namespace Barotrauma.Items.Components
 
         public bool WasUsed;
 
-        public List<StatusEffect> statusEffects;
+        public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
         
         protected bool updated;
         
@@ -184,8 +184,6 @@ namespace Barotrauma.Items.Components
 
             sounds = new Dictionary<ActionType, List<ItemSound>>();
 
-            statusEffects = new List<StatusEffect>();
-
             SelectKey = InputType.Select;
 
             try
@@ -230,7 +228,19 @@ namespace Barotrauma.Items.Components
                         requiredSkills.Add(new Skill(skillName, ToolBox.GetAttributeInt(subElement, "level", 0)));
                         break;
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement));
+                        var statusEffect = StatusEffect.Load(subElement);
+
+                        if (statusEffectLists == null) statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
+
+                        List<StatusEffect> effectList;
+                        if (!statusEffectLists.TryGetValue(statusEffect.type, out effectList))
+                        {
+                            effectList = new List<StatusEffect>();
+                            statusEffectLists.Add(statusEffect.type, effectList);
+                        }
+
+                        effectList.Add(statusEffect);
+
                         break;
                     case "guiframe":
                         string rectStr = ToolBox.GetAttributeString(subElement, "rect", "0.0,0.0,0.5,0.5");
@@ -597,19 +607,27 @@ namespace Barotrauma.Items.Components
         
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
         {
+            if (statusEffectLists == null) return;
+
+            List<StatusEffect> statusEffects;
+            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
+
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.type != type) continue;
                 item.ApplyStatusEffect(effect, type, deltaTime, character);
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, IPropertyObject target)
+        public void ApplyStatusEffects(ActionType type, List<IPropertyObject> targets, float deltaTime)
         {
+            if (statusEffectLists == null) return;
+
+            List<StatusEffect> statusEffects;
+            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
+
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.type != type) continue;
-                effect.Apply(type, deltaTime, item, target);
+                effect.Apply(type, deltaTime, item, targets);
             }
         }
 

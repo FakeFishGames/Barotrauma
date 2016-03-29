@@ -46,6 +46,9 @@ namespace Barotrauma
                 
         private Inventory parentInventory;
 
+        //a dictionary containing lists of the status effects in all the components of the item
+        private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
+
         public readonly Dictionary<string, ObjectProperty> properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
         {
@@ -350,7 +353,31 @@ namespace Barotrauma
                         if (ic == null) break;
 
                         components.Add(ic);
-                        //if (!string.IsNullOrWhiteSpace(ic.Msg)) highlightText.Add(ic.Msg);
+
+                        if (ic.statusEffectLists == null) continue;
+
+                        if (statusEffectLists == null) 
+                            statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
+
+                        //go through all the status effects of the component 
+                        //and add them to the corresponding statuseffect list
+                        foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
+                        {
+
+                            ActionType actionType = componentEffectList.First().type;
+
+                            List<StatusEffect> statusEffectList;
+                            if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
+                            {
+                                statusEffectList = new List<StatusEffect>();
+                                statusEffectLists.Add(actionType, statusEffectList);
+                            }
+
+                            foreach (StatusEffect effect in componentEffectList)
+                            {
+                                statusEffectList.Add(effect);
+                            }
+                        }
 
                         break;
                 }
@@ -496,12 +523,14 @@ namespace Barotrauma
 
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
         {
-            foreach (ItemComponent ic in components)
+            if (statusEffectLists == null) return;
+
+            List<StatusEffect> statusEffects;
+            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
+
+            foreach (StatusEffect effect in statusEffects)
             {
-                foreach (StatusEffect effect in ic.statusEffects)
-                {
-                    ApplyStatusEffect(effect, type, deltaTime, character);
-                }
+                ApplyStatusEffect(effect, type, deltaTime, character);
             }
         }
 

@@ -429,6 +429,13 @@ namespace Barotrauma
                 case "showaitargets":
                     AITarget.ShowAITargets = !AITarget.ShowAITargets;
                     break;
+                case "killmonsters":
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        if (!(c.AIController is EnemyAIController)) continue;
+                        c.AddDamage(CauseOfDeath.Damage, 10000.0f, null);
+                    }
+                    break;
                 case "sendrandomdata":
                     int messageCount = 1;
 

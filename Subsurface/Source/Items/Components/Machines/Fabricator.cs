@@ -115,15 +115,19 @@ namespace Barotrauma.Items.Components
             foreach (FabricableItem fi in fabricableItems)
             {
                 Color color = ((itemList.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.3f;
-                
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),  fi.TargetItem.Name,
+
+                new GUITextBlock(
+                    new Rectangle(0, 0, 0, 25), fi.TargetItem.Name,
                     color, Color.White,
-                    Alignment.Left,  Alignment.Left, null, itemList);
-                textBlock.UserData = fi;
-                textBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                textBlock.HoverColor = Color.Gold * 0.2f;
-                textBlock.SelectedColor = Color.Gold * 0.5f;
+                    Alignment.Left, Alignment.Left, null, itemList)
+                {
+                    UserData = fi,
+                    Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f),
+                    HoverColor = Color.Gold * 0.2f,
+                    SelectedColor = Color.Gold * 0.5f,
+                    ToolTip = fi.TargetItem.Description
+                };
+
             }
         }
 
@@ -135,7 +139,7 @@ namespace Barotrauma.Items.Components
             if (selectedItemFrame != null) GuiFrame.RemoveChild(selectedItemFrame);
 
             //int width = 200, height = 150;
-            selectedItemFrame = new GUIFrame(new Rectangle(0,0,(int)(GuiFrame.Rect.Width*0.4f),250), Color.Black*0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
+            selectedItemFrame = new GUIFrame(new Rectangle(0, 0, (int)(GuiFrame.Rect.Width * 0.4f), 250), Color.Black * 0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
 
             selectedItemFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
@@ -170,7 +174,7 @@ namespace Barotrauma.Items.Components
                 if (!inadequateSkills.Any())
                 {
                     text = "Required items:\n";
-                    foreach (Tuple<ItemPrefab,int> ip in targetItem.RequiredItems)
+                    foreach (Tuple<ItemPrefab, int> ip in targetItem.RequiredItems)
                     {
                         text += "   - " + ip.Item1.Name + " x"+ip.Item2+"\n";
                     }
@@ -204,6 +208,16 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public override bool Select(Character character)
+        {
+            if (itemList.Selected != null)
+            {
+                SelectItem(itemList.Selected, itemList.Selected.UserData);
+            }
+
+            return base.Select(character);
+        }
+
         public override bool Pick(Character picker)
         {
             return (picker != null);
@@ -224,16 +238,6 @@ namespace Barotrauma.Items.Components
                 item.NewComponentEvent(this, true, true);
             }
             
-            //listElement.Color = Color.Green;
-            //itemList.Enabled = false;
-
-            //activateButton.Text = "Cancel";
-
-            //fabricatedItem = obj as FabricableItem;
-            //IsActive = true;
-
-            //timeUntilReady = fabricatedItem.RequiredTime;
-
             return true;
         }
 
