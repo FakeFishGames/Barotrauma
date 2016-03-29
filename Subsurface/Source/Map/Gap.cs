@@ -245,28 +245,33 @@ namespace Barotrauma
                 if (isHorizontal)
                 {
                     pos.X += Math.Sign(flowForce.X);
-                    pos.Y = MathHelper.Clamp((higherSurface+lowerSurface)/2.0f, rect.Y - rect.Height, rect.Y);
-                    
+                    pos.Y = MathHelper.Clamp((higherSurface + lowerSurface) / 2.0f, rect.Y - rect.Height, rect.Y);
+
                     Vector2 velocity = new Vector2(
                         MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
                         flowForce.Y * Rand.Range(0.5f, 0.7f));
 
                     var particle = GameMain.ParticleManager.CreateParticle(
                         "watersplash",
-                        (Submarine.Loaded==null ? pos : pos + Submarine.Loaded.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f), 
+                        (Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
                         velocity);
 
                     if (particle != null)
                     {
-                        particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f),5.0f);
+                        particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f), 5.0f);
                     }
 
-                    pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
 
-                    GameMain.ParticleManager.CreateParticle(
-                        "bubbles", 
-                        Submarine.Loaded==null ? pos : pos + Submarine.Loaded.Position, 
-                        flowForce / 200.0f);
+                    if (Math.Abs(flowForce.X) > 300.0f)
+                    {
+                        pos.X += Math.Sign(flowForce.X) * 10.0f;
+                        pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
+
+                        GameMain.ParticleManager.CreateParticle(
+                          "bubbles",
+                          Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position,
+                          flowForce / 10.0f);  
+                    }
                 }
                 else
                 {

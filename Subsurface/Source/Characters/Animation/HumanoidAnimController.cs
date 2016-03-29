@@ -1151,12 +1151,13 @@ namespace Barotrauma
                     case LimbType.RightThigh:
                     case LimbType.RightLeg:
                     case LimbType.RightFoot:
-                        mirror = true;
-                        flipAngle = true;
-                        wrapAngle = true;
+                        mirror = Crouching && !inWater;
+                        flipAngle = (limb.DoesFlip || Crouching) && !inWater;
+                        wrapAngle = !inWater;
                         break;
                     default:
-                        flipAngle = limb.DoesFlip;
+                        flipAngle = limb.DoesFlip && !inWater;
+                        wrapAngle = !inWater;
                         break;
                 }
 
