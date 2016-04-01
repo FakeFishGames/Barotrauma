@@ -135,13 +135,13 @@ namespace Barotrauma.Items.Components
                 UpdateAutoPilot(deltaTime);
             }
 
-            item.SendSignal(targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out");
+            item.SendSignal(0, targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out");
 
             float targetLevel = -targetVelocity.Y;
 
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
 
-            item.SendSignal(targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out");
+            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out");
 
 
             voltage -= deltaTime;
@@ -299,7 +299,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
         {
             if (connection.Name == "velocity_in")
             {
@@ -307,7 +307,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                base.ReceiveSignal(signal, connection, sender, power);
+                base.ReceiveSignal(stepsTaken, signal, connection, sender, power);
             }
         }
 

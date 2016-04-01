@@ -9,8 +9,10 @@ namespace Barotrauma.Items.Components
 {
     class DelayComponent : ItemComponent
     {
+        const int SignalQueueSize = 500;
+
         //the output is sent if both inputs have received a signal within the timeframe
-        protected TimeSpan delay;
+        private TimeSpan delay;
 
         private Queue<Tuple<string, DateTime>> signalQueue;
         
@@ -40,15 +42,17 @@ namespace Barotrauma.Items.Components
             {
                 var signalOut = signalQueue.Dequeue();
 
-                item.SendSignal(signalOut.Item1, "signal_out");
+                item.SendSignal(0, signalOut.Item1, "signal_out");
             }
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
         {
             switch (connection.Name)
             {
                 case "signal_in":
+                    if (signalQueue.Count >= SignalQueueSize) return;
+
                     signalQueue.Enqueue(new Tuple<string, DateTime>(signal, DateTime.Now));
                     break;
             }

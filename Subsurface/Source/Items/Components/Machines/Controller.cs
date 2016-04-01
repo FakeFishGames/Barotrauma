@@ -137,7 +137,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            item.SendSignal("1", "trigger_out");
+            item.SendSignal(0, "1", "trigger_out");
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             
@@ -173,7 +173,7 @@ namespace Barotrauma.Items.Components
 
             if (focusTarget == null)
             {
-                item.SendSignal(ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
+                item.SendSignal(0, ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
                 return;
             }
 
@@ -185,13 +185,13 @@ namespace Barotrauma.Items.Components
             
             if (!character.IsNetworkPlayer || character.ViewTarget == focusTarget)
             {
-                item.SendSignal(ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
+                item.SendSignal(0, ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
             }
         }
 
         public override bool Pick(Character picker)
         {
-            item.SendSignal("1", "signal_out");
+            item.SendSignal(0, "1", "signal_out");
 
             PlaySound(ActionType.OnUse, item.WorldPosition);
 
@@ -237,7 +237,7 @@ namespace Barotrauma.Items.Components
                 IsActive = true;
             }
 
-            item.SendSignal("1", "signal_out");
+            item.SendSignal(0, "1", "signal_out");
             return true;
         }
 

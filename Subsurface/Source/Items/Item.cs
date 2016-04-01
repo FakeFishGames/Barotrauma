@@ -986,16 +986,40 @@ namespace Barotrauma
             return connectedComponents;
         }
 
-        public void SendSignal(string signal, string connectionName, float power = 0.0f)
+        public void SendSignal(int stepsTaken, string signal, string connectionName, float power = 0.0f)
         {
+            stepsTaken++;
+
             ConnectionPanel panel = GetComponent<ConnectionPanel>();
             if (panel == null) return;
             foreach (Connection c in panel.Connections)
             {
                 if (c.Name != connectionName) continue;
-
-                c.SendSignal(signal, this, power);
+                
+                if (stepsTaken > 10)
+                {
+                    //use a coroutine to prevent infinite loops by creating a one 
+                    //frame delay if the "signal chain" gets too long
+                    CoroutineManager.StartCoroutine(SendSignal(signal, c, power));
+                }
+                else
+                {
+                    c.SendSignal(stepsTaken, signal, this, power);
+                }
             }
+        }
+
+        private IEnumerable<object> SendSignal(string signal, Connection connection, float power = 0.0f)
+        {
+            //wait one frame
+            yield return CoroutineStatus.Running;
+
+            ConnectionPanel panel = GetComponent<ConnectionPanel>();
+            if (panel == null) yield return CoroutineStatus.Success;
+
+            connection.SendSignal(0, signal, this, power);
+
+            yield return CoroutineStatus.Success;
         }
 
         /// <param name="position">Position of the Character doing the pick, only items that are close enough to this are checked</param>

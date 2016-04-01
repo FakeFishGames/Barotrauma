@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
 
                 catch
                 {
-                    item.SendSignal("ERROR", "signal_out");
+                    item.SendSignal(0, "ERROR", "signal_out");
                     return;
                 }
             }
@@ -67,17 +67,17 @@ namespace Barotrauma.Items.Components
                 }
                 catch
                 {
-                    item.SendSignal("ERROR", "signal_out");
+                    item.SendSignal(0, "ERROR", "signal_out");
                     previousResult = false;
                     return;
                 }
             }
 
 
-            item.SendSignal(previousResult ? output : "0", "signal_out");
+            item.SendSignal(0, previousResult ? output : "0", "signal_out");
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power = 0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)
         {
             switch (connection.Name)
             {

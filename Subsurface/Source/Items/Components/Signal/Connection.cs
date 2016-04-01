@@ -152,7 +152,7 @@ namespace Barotrauma.Items.Components
 
         }
 
-        public void SendSignal(string signal, Item sender, float power)
+        public void SendSignal(int stepsTaken, string signal, Item sender, float power)
         {
             for (int i = 0; i<MaxLinked; i++)
             {
@@ -164,7 +164,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {
-                    ic.ReceiveSignal(signal, recipient, this.item, power);
+                    ic.ReceiveSignal(stepsTaken, signal, recipient, this.item, power);
                 }
 
                 foreach (StatusEffect effect in recipient.effects)

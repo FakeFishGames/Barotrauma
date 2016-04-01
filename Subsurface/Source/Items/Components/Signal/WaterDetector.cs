@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            item.SendSignal(item.InWater ? "1" : "0", "signal_out");            
+            item.SendSignal(0, item.InWater ? "1" : "0", "signal_out");            
         }
     }
 }

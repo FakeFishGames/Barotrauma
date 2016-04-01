@@ -282,7 +282,7 @@ namespace Barotrauma.Items.Components
             }
 
             
-            item.SendSignal((isOpen) ? "1" : "0", "state_out");
+            item.SendSignal(0, (isOpen) ? "1" : "0", "state_out");
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -436,7 +436,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
         {
             if (isStuck || GameMain.Client != null) return;
 

@@ -208,7 +208,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power)
         {
             if (!connection.IsPower) return;
 
