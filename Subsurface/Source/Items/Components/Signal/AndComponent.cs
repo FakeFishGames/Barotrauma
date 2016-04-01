@@ -5,7 +5,7 @@ namespace Barotrauma.Items.Components
 {
     class AndComponent : ItemComponent
     {
-        protected string output;
+        protected string output, falseOutput;
 
         //an array to keep track of how long ago a non-zero signal was received on both inputs
         protected float[] timeSinceReceived;
@@ -30,6 +30,13 @@ namespace Barotrauma.Items.Components
             set { output = value; }
         }
 
+        [InGameEditable, HasDefaultValue("", true)]
+        public string FalseOutput
+        {
+            get { return falseOutput; }
+            set { falseOutput = value; }
+        }
+        
         public AndComponent(Item item, XElement element)
             : base (item, element)
         {
@@ -47,13 +54,13 @@ namespace Barotrauma.Items.Components
                 timeSinceReceived[i] += deltaTime;
             }
 
-            if (sendOutput)
-            {
-                item.SendSignal(output, "signal_out");
-            }
+            string signalOut = sendOutput ? output : falseOutput;
+            if (string.IsNullOrEmpty(signalOut)) return;
+
+            item.SendSignal(0, signalOut, "signal_out");
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
         {
             switch (connection.Name)
             {

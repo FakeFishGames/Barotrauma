@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
             list.Add(this);
         }
         
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
         {
             //prevent an ininite loop of wificomponents sending messages between each other
             if (sender.GetComponent<WifiComponent>()!=null) return;
@@ -39,7 +39,7 @@ namespace Barotrauma.Items.Components
                     foreach (WifiComponent wifiComp in list)
                     {
                         if (wifiComp == this || wifiComp.channel != channel) continue;
-                        wifiComp.item.SendSignal(signal, "signal_out");
+                        wifiComp.item.SendSignal(stepsTaken, signal, "signal_out");
                     }
                     break;
             }

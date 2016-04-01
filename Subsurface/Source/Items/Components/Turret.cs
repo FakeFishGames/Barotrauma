@@ -327,7 +327,7 @@ namespace Barotrauma.Items.Components
             return projectiles;
         }
         
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power)
         {
             switch (connection.Name)
             {

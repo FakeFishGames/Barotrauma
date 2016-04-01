@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
                 
                 pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
-                pt.Item.SendSignal("", "power", fullPower / Math.Max(fullLoad, 1.0f));
+                pt.Item.SendSignal(0, "", "power", fullPower / Math.Max(fullLoad, 1.0f));
 
                 //damage the item if voltage is too high
                 if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.95f,2.05f), 200.0f)) continue;
@@ -182,13 +182,13 @@ namespace Barotrauma.Items.Components
             spriteBatch.DrawString(GUI.Font, "Load: " + (int)powerLoad + " kW", new Vector2(x + 30, y + 100), Color.White);
         }
 
-        public override void ReceiveSignal(string signal, Connection connection, Item sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power)
         {
-            base.ReceiveSignal(signal, connection, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, sender, power);
 
             if (connection.Name.Length > 5 && connection.Name.Substring(0, 6).ToLower() == "signal")
             {
-                connection.SendSignal(signal, sender, 0.0f);
+                connection.SendSignal(stepsTaken, signal, sender, 0.0f);
             }
         }
 

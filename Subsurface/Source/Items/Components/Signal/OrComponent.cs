@@ -11,17 +11,17 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            bool sendOutput = true;
+            bool sendOutput = false;
             for (int i = 0; i<timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] > timeFrame) sendOutput = false;
+                if (timeSinceReceived[i] <= timeFrame) sendOutput = true;
                 timeSinceReceived[i] += deltaTime;
             }
 
-            if (sendOutput)
-            {
-                item.SendSignal(output, "signal_out");
-            }
+            string signalOut = sendOutput ? output : falseOutput;
+            if (string.IsNullOrEmpty(signalOut)) return;
+
+            item.SendSignal(0, signalOut, "signal_out");
         }
     }
 }
