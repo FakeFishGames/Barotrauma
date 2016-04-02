@@ -117,6 +117,11 @@ namespace Voronoi2
 		}
 	}
 
+    public enum CellType
+    {
+        Solid, Empty, Edge, Path, Removed
+    }
+
     public class VoronoiCell
     {
         public List<GraphEdge> edges;
@@ -125,6 +130,8 @@ namespace Voronoi2
         public List<Vector2> bodyVertices;
 
         public Body body;
+
+        public CellType CellType;
 
         public Vector2 Translation;
 
@@ -173,6 +180,16 @@ namespace Voronoi2
             bodyVertices = new List<Vector2>();
             //bodies = new List<Body>();
             this.site = site;
+        }
+
+        public bool IsPointInside(Vector2 point)
+        {
+            foreach (GraphEdge edge in edges)
+            {
+                if (MathUtils.LinesIntersect(point, Center, edge.point1, edge.point2)) return false;
+            }
+
+            return true;
         }
     }
 	
