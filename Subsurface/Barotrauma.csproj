@@ -127,6 +127,7 @@
     <Compile Include="Source\Items\ItemSpawner.cs" />
     <Compile Include="Source\Map\EntityGrid.cs" />
     <Compile Include="Source\Map\FireSource.cs" />
+    <Compile Include="Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
     <Compile Include="Source\Map\Levels\WrappingWall.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />

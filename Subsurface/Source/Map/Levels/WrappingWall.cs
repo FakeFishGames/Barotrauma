@@ -198,8 +198,16 @@ namespace Barotrauma
 
         protected virtual void Dispose(bool disposing)
         {
-            if (wallVertices!=null) wallVertices.Dispose();
-            if (bodyVertices!=null) bodyVertices.Dispose();
+            if (wallVertices != null)
+            {
+                wallVertices.Dispose();
+                wallVertices = null;
+            }
+            if (bodyVertices != null)
+            {
+                bodyVertices.Dispose();
+                bodyVertices = null;
+            }
         }
     }
 }
