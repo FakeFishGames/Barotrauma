@@ -76,14 +76,14 @@ namespace Barotrauma.Tutorials
             {
                 if (Character.Controlled==null)
                 {
-                    CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
+                    CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
                     infoBox = null;
                 }
                 else if (Character.Controlled.IsDead)
                 {
                     Character.Controlled = null;
 
-                    CoroutineManager.StopCoroutine("TutorialMode.UpdateState");
+                    CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
                     infoBox = null;
                     CoroutineManager.StartCoroutine(Dead());
                 }
