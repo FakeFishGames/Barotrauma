@@ -934,9 +934,14 @@ namespace Barotrauma.Networking
             
             UpdateCrewFrame();
 
-            if (TraitorsEnabled == YesNoMaybe.Yes || (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
+            if (TraitorsEnabled == YesNoMaybe.Yes ||
+                (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
             {
                 TraitorManager = new TraitorManager(this);
+            }
+            else
+            {
+                TraitorManager = null;
             }
 
             //give some time for the clients to load the map

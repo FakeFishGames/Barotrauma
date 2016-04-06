@@ -13,7 +13,7 @@ namespace Barotrauma
         {
             This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget = 32, Hull = 64
         }
-        
+
         private TargetType targetTypes;
         private string[] targetNames;
 
@@ -246,13 +246,13 @@ namespace Barotrauma
                 {
                     ObjectProperty property;
 
-                    //if (targetNames!=null && !targetNames.Contains(target.Name)) continue;
-
                     if (!target.ObjectProperties.TryGetValue(propertyNames[i], out property)) continue;
 
                     if (duration > 0.0f)
                     {
-                        CoroutineManager.StartCoroutine(ApplyToPropertyOverDuration(duration, property, propertyEffects[i]));
+                        CoroutineManager.StartCoroutine(
+                            ApplyToPropertyOverDuration(duration, property, propertyEffects[i]), "statuseffect");
+
                     }
                     else
                     {
@@ -318,6 +318,11 @@ namespace Barotrauma
             {
                 DelayedEffect.List[i].Update(deltaTime);
             }
-        }        
+        }
+
+        public static void StopAll()
+        {
+            CoroutineManager.StopCoroutines("statuseffect");
+        }
     }
 }

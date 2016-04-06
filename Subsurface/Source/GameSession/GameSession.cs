@@ -163,9 +163,8 @@ namespace Barotrauma
             TaskManager.EndShift();
 
             currentMission = null;
-            //gameMode.End();
 
-            //return true;
+            StatusEffect.StopAll();
         }
         
         

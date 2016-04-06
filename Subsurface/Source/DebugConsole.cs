@@ -156,8 +156,7 @@ namespace Barotrauma
 
                     NewMessage(" ", Color.Cyan);                    
 
-                    NewMessage("spawn: spawn a creature at a random spawnpoint", Color.Cyan);
-                    NewMessage("spawn: spawn a creature at a random spawnpoint", Color.Cyan);
+                    NewMessage("spawn [creaturename] [near/inside/outside]: spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine)", Color.Cyan);
 
                     NewMessage(" ", Color.Cyan);
 
@@ -174,6 +173,7 @@ namespace Barotrauma
                     NewMessage(" ", Color.Cyan);
 
                     NewMessage("heal: restore the controlled character to full health", Color.Cyan);
+                    NewMessage("revive: bring the controlled character back from the dead", Color.Cyan);
 
                     NewMessage(" ", Color.Cyan);
 
@@ -196,10 +196,56 @@ namespace Barotrauma
 
                     Character spawnedCharacter = null;
 
+                    Vector2 spawnPosition = Vector2.Zero;
+                    WayPoint spawnPoint = null;
+
+                    if (commands.Length > 2)
+                    {
+                        switch (commands[2].ToLower())
+                        {
+                            case "inside":
+                                spawnPoint = WayPoint.GetRandom(SpawnType.Human);
+                                break;
+                            case "outside":
+                                spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
+                                break;
+                            case "near":
+                            case "close":
+                                if (Submarine.Loaded == null) break;
+
+                                float closestDist = 0.0f;
+                                foreach (WayPoint wp in WayPoint.WayPointList)
+                                {
+                                    if (wp.Submarine != null) continue;
+
+                                    //don't spawn inside hulls
+                                    if (Hull.FindHull(wp.WorldPosition, null) != null) continue;
+
+                                    float dist = Vector2.Distance(wp.WorldPosition, Submarine.Loaded.WorldPosition);
+
+                                    if (spawnPoint == null || dist < closestDist)
+                                    {
+                                        spawnPoint = wp;
+                                        closestDist = dist;
+                                    }
+                                }
+                                break;
+                            default:
+                                spawnPoint = WayPoint.GetRandom(commands[1].ToLower()=="human" ? SpawnType.Human : SpawnType.Enemy);
+                                break;
+                        }
+
+                    }
+                    else
+                    {
+                        spawnPoint = WayPoint.GetRandom(commands[1].ToLower() == "human" ? SpawnType.Human : SpawnType.Enemy);
+                    }
+
+                    spawnPosition = spawnPoint == null ? Vector2.Zero : spawnPoint.WorldPosition;
+
                     if (commands[1].ToLower()=="human")
                     {
-                        WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
-                        spawnedCharacter = Character.Create(Character.HumanConfigFile, (spawnPoint == null) ? Vector2.Zero : spawnPoint.WorldPosition);
+                        spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
                         Character.Controlled = spawnedCharacter;
 
                         if (GameMain.GameSession != null)
@@ -212,8 +258,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
-                        spawnedCharacter = Character.Create("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", (spawnPoint == null) ? Vector2.Zero : spawnPoint.WorldPosition);
+                        spawnedCharacter = Character.Create("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", spawnPosition);
                     }
 
                     if (spawnedCharacter != null && GameMain.Server != null) GameMain.Server.SendCharacterSpawnMessage(spawnedCharacter);

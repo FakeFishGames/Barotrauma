@@ -9,34 +9,52 @@ namespace Barotrauma
         Running, Success, Failure
     }
 
+    class CoroutineHandle
+    {
+        public readonly IEnumerator<object> Coroutine;
+        public readonly string Name;
+
+        public CoroutineHandle(IEnumerator<object> coroutine, string name = "")
+        {
+            Coroutine = coroutine;
+            Name = string.IsNullOrWhiteSpace(name) ? coroutine.ToString() : name;
+        }
+
+    }
+
     // Keeps track of all running coroutines, and runs them till the end.
     static class CoroutineManager
     {
-        static readonly List<IEnumerator<object>> Coroutines = new List<IEnumerator<object>>();
+        static readonly List<CoroutineHandle> Coroutines = new List<CoroutineHandle>();
 
         public static float UnscaledDeltaTime, DeltaTime;
 
-        // Starting a coroutine just means adding an enumerator to the list.
-        // You might also want to be able to stop coroutines or delete them,
-        // which might mean putting them into a dictionary
-        public static void StartCoroutine(IEnumerable<object> func)
+        public static CoroutineHandle StartCoroutine(IEnumerable<object> func, string name = "")
         {
-            Coroutines.Add(func.GetEnumerator());
+            var handle = new CoroutineHandle(func.GetEnumerator(), name);
+            Coroutines.Add(handle);
+
+            return handle;
         }
 
         public static bool IsCoroutineRunning(string name)
         {
-            IEnumerator<object> coroutine = Coroutines.FirstOrDefault(
-                c => c.ToString().Contains(name));
+            return Coroutines.Any(c => c.Name == name);
+        }
 
-            return coroutine!=null;
+        public static bool IsCoroutineRunning(CoroutineHandle handle)
+        {
+            return Coroutines.Contains(handle);
         }
         
-        public static void StopCoroutine(string name)
+        public static void StopCoroutines(string name)
         {
-            IEnumerator<object> coroutine = Coroutines.FirstOrDefault(c => c.ToString().Contains(name));
+            Coroutines.RemoveAll(c => c.Name == name);
+        }
 
-            if (coroutine != null) Coroutines.Remove(coroutine);
+        public static void StopCoroutines(CoroutineHandle handle)
+        {
+            Coroutines.RemoveAll(c => c == handle);
         }
 
         // Updating just means stepping through all the coroutines
@@ -47,16 +65,16 @@ namespace Barotrauma
 
             for (int i = Coroutines.Count-1; i>=0; i--)
             {
-                if (Coroutines[i].Current != null)
+                if (Coroutines[i].Coroutine.Current != null)
                 {
-                    WaitForSeconds wfs = Coroutines[i].Current as WaitForSeconds;
+                    WaitForSeconds wfs = Coroutines[i].Coroutine.Current as WaitForSeconds;
                     if (wfs != null)
                     {
                         if (!wfs.CheckFinished(unscaledDeltaTime)) continue;
                     }
                     else
                     {
-                        switch ((CoroutineStatus)Coroutines[i].Current)
+                        switch ((CoroutineStatus)Coroutines[i].Coroutine.Current)
                         {
                             case CoroutineStatus.Success:
                                 Coroutines.RemoveAt(i);
@@ -68,18 +86,18 @@ namespace Barotrauma
                     }
                 }
 
-                try
-                {
-                    Coroutines[i].MoveNext();
-                }
+                //try
+                //{
+                    Coroutines[i].Coroutine.MoveNext();
+//                }
 
-                catch (Exception e)
-                {                    
-#if DEBUG
-                    DebugConsole.ThrowError("Coroutine " + Coroutines[i] + " threw an exception: " + e.Message);
-#endif
-                    Coroutines.RemoveAt(i);
-                }
+//                catch (Exception e)
+//                {                    
+//#if DEBUG
+//                    DebugConsole.ThrowError("Coroutine " + Coroutines[i] + " threw an exception: " + e.Message);
+//#endif
+//                    Coroutines.RemoveAt(i);
+//                }
 
             }
         }
@@ -88,7 +106,6 @@ namespace Barotrauma
     class WaitForSeconds
     {
         float timer;
-
 
         public WaitForSeconds(float time)
         {
