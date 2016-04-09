@@ -225,7 +225,7 @@ namespace Barotrauma.Items.Components
             
             fissionRate = Math.Min(fissionRate, AvailableFuel);
             
-            float heat = 100 * fissionRate * (AvailableFuel/2000.0f);
+            float heat = 80 * fissionRate * (AvailableFuel/2000.0f);
             float heatDissipation = 50 * coolingRate + Math.Max(ExtraCooling, 5.0f);
 
             float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 10000.0f;
@@ -288,9 +288,12 @@ namespace Barotrauma.Items.Components
             }
             else if (autoTemp)
             {
-                fissionRate = Math.Min(load / 200.0f, shutDownTemp);
-                //float target = Math.Min(targetTemp, load);
-                CoolingRate = coolingRate + (temperature - Math.Min(load, shutDownTemp) + deltaTemp)*0.1f;
+                //take deltaTemp into account to slow down the change in temperature when getting closer to the desired value
+                float target = temperature + deltaTemp * 100.0f;
+
+                //-1.0f in order to gradually turn down both rates when the target temperature is reached
+                FissionRate += (MathHelper.Clamp(load - target, -10.0f, 10.0f) - 1.0f) * deltaTime;
+                CoolingRate += (MathHelper.Clamp(target - load, -5.0f, 5.0f) - 1.0f) * deltaTime;
             }
 
             //fission rate can't be lowered below a certain amount if the core is too hot

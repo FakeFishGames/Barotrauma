@@ -1,0 +1,94 @@
+﻿<Items>
+  <Item
+    name="Health Scanner HUD"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem"
+    description="A heads-up display that displays information of the vital signs and status of nearby humans.">
+
+    <Sprite texture ="doctorgear.png" sourcerect="0,120,20,8" depth="0.6"/>
+
+    <Body width="18" height="6" density="30"/>
+
+    <Wearable limbtype="Head" slots="Any,Head">
+      <sprite texture ="doctorgear.png" sourcerect="0,120,20,8" limb="Head" origin="0.45,0.9"/>
+    </Wearable>
+
+    <StatusHUD drawhudwhenequipped="true"/>
+  </Item>
+
+  <Item
+    name="Doctor's Coat"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem">
+
+    <Sprite texture ="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
+
+    <Body width="52" height="17" density="30"/>
+
+    <Wearable slots="Any,Torso">
+      <sprite texture="doctorgear.png" limb="Torso" sourcerect="0,0,31,58" origin="0.5,0.48" depth="0.01"/>
+
+      <sprite texture="doctorgear.png" limb="RightHand" sourcerect="51,0,15,47" origin="0.45,0.55" depth="0.005" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="LeftHand" sourcerect="51,0,15,47" origin="0.45,0.55" depth="0.13" hidelimb="true"/>
+
+      <sprite texture="doctorgear.png" limb="RightArm" sourcerect="33,0,17,40" origin="0.5,0.5" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="LeftArm" sourcerect="33,0,17,40" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+    </Wearable>
+  </Item>
+
+  <Item
+    name="Doctor's Trousers"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem">
+
+    <Sprite texture ="doctorgear.png" sourcerect="76,19,51,13" depth="0.6"/>
+
+    <Body width="51" height="13" density="30"/>
+
+    <Wearable slots="Any,Legs">
+      <sprite texture="doctorgear.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="RightThigh" sourcerect="0,61,24,46" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="LeftThigh" sourcerect="0,61,24,46" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+
+      <sprite texture="doctorgear.png" limb="RightLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
+      <sprite texture="doctorgear.png" limb="LeftLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
+    </Wearable>
+  </Item>
+
+  <Item
+    name="Clown Costume"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem"
+    description="Praise the honkmother.">
+
+    <Sprite texture ="clownpants.png" sourcerect="0,62,53,18" depth="0.6"/>
+
+    <Body width="53" height="18" density="30"/>
+
+    <Wearable slots="Any,Torso+Legs">
+      <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.02"/>
+
+      <sprite texture="clownshirt.png" limb="RightHand" sourcerect="47,0,15,49" origin="0.45,0.6" hidelimb="true"/>
+      <sprite texture="clownshirt.png" limb="LeftHand" sourcerect="47,0,15,49" origin="0.45,0.6" depth="0.14" hidelimb="true"/>
+
+      <sprite texture="clownshirt.png" limb="RightArm" sourcerect="30,0,17,42" origin="0.5,0.5" depth="0.005" hidelimb="true"/>
+      <sprite texture="clownshirt.png" limb="LeftArm" sourcerect="30,0,17,42" origin="0.5,0.5" depth="0.13" hidelimb="true"/>
+
+      <sprite texture="clownpants.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
+      <sprite texture="clownpants.png" limb="RightThigh" sourcerect="0,0,38,50" origin="0.5,0.5" depth="0.01" hidelimb="true"/>
+      <sprite texture="clownpants.png" limb="LeftThigh" sourcerect="0,0,38,50" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+
+      <sprite texture="clownpants.png" limb="RightLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.11" hidelimb="true"/>
+      <sprite texture="clownpants.png" limb="LeftLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.15" hidelimb="true"/>
+
+      <sprite texture="clownpants.png" limb="RightFoot" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.11" hidelimb="true"/>
+      <sprite texture="clownpants.png" limb="LeftFoot" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.15" hidelimb="true"/>
+      
+    </Wearable>
+  </Item>
+</Items>
+

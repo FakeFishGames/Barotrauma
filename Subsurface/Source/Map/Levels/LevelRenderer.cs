@@ -156,34 +156,33 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            Vector2 pos = new Vector2(0.0f, -level.Size.Y);// level.EndPosition;
-
-            var cells = level.GetCells(GameMain.GameScreen.Cam.WorldViewCenter, 2);
-            foreach (VoronoiCell cell in cells)
+            if (GameMain.DebugDraw)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y-10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
+                var cells = level.GetCells(GameMain.GameScreen.Cam.WorldViewCenter, 2);
+                foreach (VoronoiCell cell in cells)
+                {
+                    GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y-10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
 
-                GUI.DrawLine(spriteBatch, 
-                    new Vector2(cell.edges[0].point1.X, -cell.edges[0].point1.Y),
-                    new Vector2(cell.Center.X, -cell.Center.Y), 
-                    Color.White);
+                    GUI.DrawLine(spriteBatch, 
+                        new Vector2(cell.edges[0].point1.X, -cell.edges[0].point1.Y),
+                        new Vector2(cell.Center.X, -cell.Center.Y), 
+                        Color.White);
                 
-                foreach (GraphEdge edge in cell.edges)
-                {
-                    //GUI.DrawLine(spriteBatch,
-                    //    new Vector2(edge.point1.X, -edge.point1.Y),
-                    //    new Vector2(cell.Center.X, -cell.Center.Y),
-                    //    Color.White);
+                    foreach (GraphEdge edge in cell.edges)
+                    {
+                        GUI.DrawLine(spriteBatch, new Vector2(edge.point1.X, -edge.point1.Y),
+                            new Vector2(edge.point2.X, -edge.point2.Y), Color.White);
+                    }
 
-                    GUI.DrawLine(spriteBatch, new Vector2(edge.point1.X, -edge.point1.Y),
-                        new Vector2(edge.point2.X, -edge.point2.Y), Color.White);
-                }
-
-                foreach (Vector2 point in cell.bodyVertices)
-                {
-                    GUI.DrawRectangle(spriteBatch, new Vector2(point.X, -point.Y), new Vector2(10.0f, 10.0f), Color.White, true);
-                }
+                    foreach (Vector2 point in cell.bodyVertices)
+                    {
+                        GUI.DrawRectangle(spriteBatch, new Vector2(point.X, -point.Y), new Vector2(10.0f, 10.0f), Color.White, true);
+                    }
+                }                
             }
+
+
+            Vector2 pos = new Vector2(0.0f, -level.Size.Y);// level.EndPosition;
 
             if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y - 512) return;
 
@@ -197,8 +196,6 @@ namespace Barotrauma
                 Color.White, 0.0f,
                 Vector2.Zero,
                 SpriteEffects.None, 0.0f);
-
-
         }
 
 

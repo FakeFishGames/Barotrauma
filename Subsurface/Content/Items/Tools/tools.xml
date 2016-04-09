@@ -165,7 +165,6 @@
 
     <Holdable slots="Any,RightHand,LeftHand" 
               holdangle="30" handle1="-10,0"/>
-
   </Item>
 
   <Item
@@ -183,6 +182,34 @@
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
       <Attack damage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
+  </Item>
+
+  <Item
+    name="Handheld Sonar"
+    category="Equipment"
+    Tags="smallitem"
+    pickdistance="200"
+    price="10">
+
+    <Sprite texture ="tools.png" sourcerect="0,37,22,9" depth="0.5"/>
+
+    <Body width="31" height="6" density="40"/>
+
+    <Holdable slots="Any,RightHand,LeftHand"
+              holdangle="30" handle1="-10,0"/>
+
+    <Radar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true">
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
+      <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
+    </Radar>
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Battery Cell">
+        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
+        <StatusEffect type="OnContaining" target="Contained" Condition="-0.5"/>
+      </Containable>
+    </ItemContainer>
   </Item>
 
 </Items>

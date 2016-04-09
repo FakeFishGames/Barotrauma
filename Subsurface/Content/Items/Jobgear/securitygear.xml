@@ -1,0 +1,59 @@
+﻿<Items>
+  <Item
+    name="Body Armor"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem"
+    description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
+
+    <Sprite texture ="securitygear.png" sourcerect="68,0,60,31" depth="0.6"/>
+
+    <Body width="52" height="17" density="40"/>
+
+    <Wearable slots="Any,Torso" armorvalue="10.0">
+      <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.52,0.48"/>
+
+      <sprite texture="securitygear.png" limb="RightArm" sourcerect="41,0,21,21" origin="0.5,1.1"/>
+    </Wearable>
+  </Item>
+
+  <Item
+    name="Ballistic Helmet"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem"
+    description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
+
+    <Deconstruct time="10">
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+    
+    <Sprite texture ="securitygear.png" sourcerect="40,32,34,25" depth="0.6"/>
+
+    <Body radius="12" density="50"/>
+
+    <Wearable slots="Any,Head" armorvalue="20.0">
+      <sprite texture="securitygear.png" limb="Head" sourcerect="39,31,29,22" origin="0.51,0.9"/>
+    </Wearable>
+  </Item>
+
+  <Item
+    name="Handcuffs"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem" >
+
+    <Sprite texture = "securitygear.png" sourcerect="0,63,32,14" depth="0.6"/>
+
+    <Body width="30" height="12" density="30"/>
+
+    <Wearable slots="Any,RightHand+LeftHand">
+      <sprite texture="securitygear.png" limb="RightHand" sourcerect="32,62,16,16" origin="0.5,-0.5" depth="0.01"/>
+      <sprite texture="securitygear.png" limb="LeftHand" sourcerect="32,62,16,16" origin="0.5,-0.5" depth="0.01"/>
+      
+      <StatusEffect type="OnWearing" target="Character" lockhands="true" setvalue="true"/>
+    </Wearable>
+  </Item>
+</Items>
+

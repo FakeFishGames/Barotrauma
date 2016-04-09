@@ -18,7 +18,7 @@ namespace Barotrauma
 
     public enum ActionType
     {
-        Always, OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure, OnBroken, OnFire
+        Always, OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure, OnBroken, OnFire, InWater
     }
 
     class Item : MapEntity, IDamageable, IPropertyObject
@@ -646,7 +646,7 @@ namespace Barotrauma
                 ic.WasUsed = false;
 
                 if (Container != null) ic.ApplyStatusEffects(ActionType.OnContained, deltaTime);
-
+                
                 if (!ic.IsActive) continue;
 
                 if (condition > 0.0f)
@@ -660,7 +660,11 @@ namespace Barotrauma
                 {
                     ic.UpdateBroken(deltaTime, cam);
                 }
-            }            
+            }
+
+
+            inWater = IsInWater();
+            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
             
             if (body == null || !body.Enabled) return;
 
@@ -681,8 +685,6 @@ namespace Barotrauma
 
             body.MoveToTargetPosition();
 
-            inWater = IsInWater();
-
             if (!inWater || Container != null || body == null) return;
 
             if (body.LinearVelocity != Vector2.Zero && body.LinearVelocity.Length() > 1000.0f)
@@ -692,7 +694,6 @@ namespace Barotrauma
 
             ApplyWaterForces();
 
-            //TODO: make sure items stay in sync between clients before letting flowing water move items
             if(CurrentHull != null) CurrentHull.ApplyFlowForces(deltaTime, this);
 
         }

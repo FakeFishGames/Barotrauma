@@ -3,8 +3,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -16,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private float pingState;
 
-        private Sprite pingCircle, screenOverlay;
+        private readonly Sprite pingCircle, screenOverlay;
 
         private GUITickBox isActiveTickBox;
 
@@ -28,6 +26,13 @@ namespace Barotrauma.Items.Components
         {
             get { return range; }
             set { range = MathHelper.Clamp(value, 0.0f, 100000.0f); }
+        }
+
+        [HasDefaultValue(false, false)]
+        public bool DetectSubmarineWalls
+        {
+            get;
+            set;
         }
 
         public Radar(Item item, XElement element)
@@ -71,7 +76,7 @@ namespace Barotrauma.Items.Components
                 if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
             }
 
-            if (voltage >= minVoltage)
+            if (voltage >= minVoltage || powerConsumption <= 0.0f)
             {
                 pingState = pingState + deltaTime * 0.5f;
                 if (pingState>1.0f)
@@ -87,7 +92,7 @@ namespace Barotrauma.Items.Components
                 pingState = 0.0f;
             }
 
-            voltage -= deltaTime;
+            Voltage -= deltaTime;
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -101,7 +106,7 @@ namespace Barotrauma.Items.Components
             GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
-            if (voltage < minVoltage) return;
+            if (voltage < minVoltage && powerConsumption > 0.0f) return;
 
             int radius = GuiFrame.Rect.Height / 2 - 30;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
@@ -113,23 +118,59 @@ namespace Barotrauma.Items.Components
 
             if (!IsActive) return;
 
-            float pingRadius = (rect.Width / 2) * pingState;
-            pingCircle.Draw(spriteBatch, center, Color.White * (1.0f-pingState), 0.0f, (rect.Width/pingCircle.size.X)*pingState);
-                
+            float pingRadius = (rect.Width / 2.0f) * pingState;
+            pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState), 0.0f, (rect.Width / pingCircle.size.X) * pingState);
+
             float radius = rect.Width / 2.0f;
 
-            float displayScale = radius/range;
+            float displayScale = radius / range;
 
+            if (DetectSubmarineWalls)
+            {
+                for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
+                {
+                    Vector2 start = ConvertUnits.ToDisplayUnits(Submarine.Loaded.HullVertices[i]);
+                    Vector2 end = ConvertUnits.ToDisplayUnits(Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count]);
+
+                    if (item.CurrentHull!=null)
+                    {
+                        start += Rand.Vector(500.0f);
+                        end += Rand.Vector(500.0f);
+                    }
+
+                    CreateBlipsForLine(
+                        start + Submarine.Loaded.WorldPosition, 
+                        end + Submarine.Loaded.WorldPosition, 
+                        radius, displayScale, 2.0f);
+                }
+
+            }
+            else
+            {
+                float simScale = ConvertUnits.ToSimUnits(displayScale);
+
+                Vector2 offset = ConvertUnits.ToSimUnits(Submarine.Loaded.WorldPosition - item.WorldPosition);
+
+                for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
+                {
+                    Vector2 start = (Submarine.Loaded.HullVertices[i] + offset) * simScale;
+                    start.Y = -start.Y;
+                    Vector2 end = (Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] + offset) * simScale;
+                    end.Y = -end.Y;
+
+                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
+                    
+                }
+            }
             
-            float simScale = 1.5f;
+ 
             
-            if (Level.Loaded != null)
+            if (Level.Loaded != null && (item.CurrentHull==null || !DetectSubmarineWalls))
             {
                 List<VoronoiCell> cells = Level.Loaded.GetCells(item.WorldPosition, 7);
 
                 foreach (VoronoiCell cell in cells)
                 {
-
                     foreach (GraphEdge edge in cell.edges)
                     {
                         if (!edge.isSolid) continue;
@@ -140,59 +181,15 @@ namespace Barotrauma.Items.Components
                             Vector2.Normalize(edge.point1 - edge.point2), 
                             Vector2.Normalize(cell.Center-item.WorldPosition));
 
-                        //if (Math.Abs(facingDot) > 0.5f) continue;
-
-                        //facingDot = 1.0f;// MathHelper.Clamp(facingDot, -1.0f, 1.0f);
-                        
-                        float length = (edge.point1 - edge.point2).Length();
-                        for (float x = 0; x < length; x += Rand.Range(300.0f, 400.0f))
-                        {
-                            Vector2 point = edge.point1 + Vector2.Normalize(edge.point2 - edge.point1) * x;
-                            point += cell.Translation;
-
-                            float pointDist = Vector2.Distance(item.WorldPosition, point) * displayScale;
-
-                            if (pointDist > radius) continue;
-                            if (pointDist < prevPingRadius || pointDist > pingRadius) continue;
-
-
-                            float step = 3.0f * (Math.Abs(facingDot) + 1.0f);
-                            float alpha = Rand.Range(1.5f, 2.0f);
-                            for (float z = 0; z < radius - pointDist; z += step)
-                            {
-
-                                var blip = new RadarBlip(
-                                    point + Rand.Vector(150.0f) + Vector2.Normalize(point-item.WorldPosition) * z / displayScale,
-                                    alpha);
-
-                                radarBlips.Add(blip);
-                                step += 0.5f;
-                                alpha -= (z == 0) ? 0.5f : 0.1f;
-                            }
-
-                        }
+                        CreateBlipsForLine(edge.point1 + cell.Translation, edge.point2+cell.Translation, radius, displayScale, 3.0f * (Math.Abs(facingDot) + 1.0f));
                     }
                 }
-
-                for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
-                {
-                    Vector2 start = (Submarine.Loaded.HullVertices[i] - ConvertUnits.ToSimUnits(item.Position - Submarine.HiddenSubPosition)) * simScale;
-                    start.Y = -start.Y;
-                    Vector2 end = (Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] - ConvertUnits.ToSimUnits(item.Position - Submarine.HiddenSubPosition)) * simScale;
-                    end.Y = -end.Y;
-
-                    Vector2 diff = end - start;
-                    for (float x = 0; x < diff.Length(); x += 4.0f)
-                    {
-                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
-                    }
-                }
-
             }
 
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null) continue;
+                if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) continue;
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
@@ -272,7 +269,42 @@ namespace Barotrauma.Items.Components
 
                 prevPos = pos;
             }
+        }
 
+        private void CreateBlipsForLine(Vector2 point1, Vector2 point2, float radius, float displayScale, float step)
+        {
+            float pingRadius = radius * pingState;
+
+            float length = (point1 - point2).Length();
+
+            Vector2 lineDir = (point2 - point1) / length;
+
+            for (float x = 0; x < length; x += Rand.Range(300.0f, 400.0f))
+            {
+                Vector2 point = point1 + lineDir * x;
+                //point += cell.Translation;
+
+                float pointDist = Vector2.Distance(item.WorldPosition, point) * displayScale;
+
+                if (pointDist > radius) continue;
+                if (pointDist < prevPingRadius || pointDist > pingRadius) continue;
+
+
+                //float step = 3.0f * (Math.Abs(facingDot) + 1.0f);
+                float alpha = Rand.Range(1.5f, 2.0f);
+                for (float z = 0; z < radius - pointDist; z += step)
+                {
+
+                    var blip = new RadarBlip(
+                        point + Rand.Vector(150.0f) + Vector2.Normalize(point - item.WorldPosition) * z / displayScale,
+                        alpha);
+
+                    radarBlips.Add(blip);
+                    step += 0.5f;
+                    alpha -= (z == 0) ? 0.5f : 0.1f;
+                }
+
+            }
         }
 
         private void DrawBlip(SpriteBatch spriteBatch, RadarBlip blip, Vector2 center, Color color, float radius)

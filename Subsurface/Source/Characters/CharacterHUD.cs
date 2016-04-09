@@ -62,10 +62,12 @@ namespace Barotrauma
                 {
                     var item = character.Inventory.Items[i];
                     if (item == null || CharacterInventory.limbSlots[i]==LimbSlot.Any) continue;
-                    var statusHUD = item.GetComponent<StatusHUD>();
-                    if (statusHUD == null) continue;
-
-                    statusHUD.DrawHUD(spriteBatch, character);
+                    //var statusHUD = item.GetComponent<StatusHUD>();
+                    //if (statusHUD == null) continue;
+                    foreach (ItemComponent ic in item.components)
+                    {
+                        if (ic.DrawHudWhenEquipped) ic.DrawHUD(spriteBatch, character);
+                    }
                 }
             }
 

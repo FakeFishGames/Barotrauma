@@ -1,0 +1,58 @@
+﻿<Items>
+  <Item
+    name="Orange Jumpsuit"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem"
+    fireproof="true"
+    description="The fire-resistant fabric offers some protection against fires. Plenty of pockets for carrying any extra gear an engineer might need.">
+
+    <Sprite texture = "engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
+
+    <Body width="50" height="17" density="20"/>
+
+    <Wearable slots="Any,Torso+Legs">
+      <sprite texture="engigear.png" limb="Torso" sourcerect="0,0,32,51" origin="0.5,0.48" depth="0.01"/>
+
+      <sprite texture="engigear.png" limb="Waist" sourcerect="81,0,30,26" origin="0.5,0.45" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="RightThigh" sourcerect="53,0,27,49" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="LeftThigh" sourcerect="53,0,27,49" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+
+      <sprite texture="engigear.png" limb="RightLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>      
+    </Wearable>
+
+    <ItemContainer capacity="5">
+      <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Blue Jumpsuit"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem"
+    fireproof="true"
+    description="The fire-resistant fabric offers some protection against fires. Plenty of pockets for carrying any extra gear a mechanic might need.">
+
+    <Sprite texture = "engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
+
+    <Body width="50" height="17" density="20"/>
+
+    <Wearable slots="Any,Torso+Legs">
+      <sprite texture="engigear.png" limb="Torso" sourcerect="0,77,32,51" origin="0.5,0.48" depth="0.01"/>
+
+      <sprite texture="engigear.png" limb="Waist" sourcerect="81,77,30,26" origin="0.5,0.45" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="RightThigh" sourcerect="53,77,27,49" origin="0.5,0.5" depth="0.10" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="LeftThigh" sourcerect="53,77,27,49" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
+
+      <sprite texture="engigear.png" limb="RightLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
+      <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
+    </Wearable>
+
+    <ItemContainer capacity="5">
+      <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item>
+</Items>
+
