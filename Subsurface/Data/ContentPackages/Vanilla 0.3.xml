@@ -4,7 +4,11 @@
   <Item file="Content/Items/itemlabel.xml" />
   <Item file="Content/Items/Artifacts/artifacts.xml" />
   <Item file="Content/Items/Button/button.xml" />
-  <Item file="Content/Items/Clothes/clothes.xml" />
+  <Item file="Content/Items/Jobgear/captaingear.xml" />
+  <Item file="Content/Items/Jobgear/doctorgear.xml" />
+  <Item file="Content/Items/Jobgear/engigear.xml" />
+  <Item file="Content/Items/Jobgear/misc.xml" />
+  <Item file="Content/Items/Jobgear/securitygear.xml" />
   <Item file="Content/Items/Diving/divinggear.xml" />
   <Item file="Content/Items/Door/doors.xml" />
   <Item file="Content/Items/Electricity/lights.xml" />

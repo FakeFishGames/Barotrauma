@@ -112,6 +112,13 @@ namespace Barotrauma.Items.Components
         }
 
         [HasDefaultValue(false, false)]
+        public bool DrawHudWhenEquipped
+        {
+            get;
+            private set;
+        }
+
+        [HasDefaultValue(false, false)]
         public bool CanBeSelected
         {
             get { return canBeSelected; }

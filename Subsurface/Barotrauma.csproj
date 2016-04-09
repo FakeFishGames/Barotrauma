@@ -442,28 +442,40 @@
     <Content Include="Content\Items\blank.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\captainLegs.png">
+    <Content Include="Content\Items\Jobgear\captainLegs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\captainTorso.png">
+    <Content Include="Content\Items\Jobgear\captainTorso.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\clownmask.png">
+    <Content Include="Content\Items\Jobgear\captaingear.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\clownpants.png">
+    <Content Include="Content\Items\Jobgear\engigear.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\clownshirt.png">
+    <Content Include="Content\Items\Jobgear\securitygear.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\doctorgear.png">
+    <Content Include="Content\Items\Jobgear\doctorgear.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\engigear.png">
+    <Content Include="Content\Items\Jobgear\clownmask.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\securitygear.png">
+    <Content Include="Content\Items\Jobgear\clownpants.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Jobgear\clownshirt.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Jobgear\doctorgear.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Jobgear\engigear.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Jobgear\securitygear.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\connectionpanel.png">
@@ -562,10 +574,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Content\Items\Clothes\captainhat.png">
+    <Content Include="Content\Items\Jobgear\captainhat.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Clothes\clothes.xml">
+    <Content Include="Content\Items\Jobgear\misc.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\connector.png">
