@@ -1,20 +1,34 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <backgroundsprites>
-  <hanging1 alignment="Top">
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,0,242,575" origin="0.5,0.0"/>
+  <hanging1 alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
+    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.0"/>
   </hanging1>
 
-  <hanging2 alignment="Top">
+  <hanging2 alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.0"/>
   </hanging2>
 
-  <kelp1 alignment="Bottom">
+  <kelp1 alignment="Top" minsize="0.5" maxsize="1.5" commonness="10">
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,667,275,357" origin="0.5,1.0"/>
   </kelp1>
 
-  <stalk alignment="Bottom">
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="775,0,249,849" origin="0.5,1.0"/>
+  <stalk alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" randomrotation="-10,10">
+    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="775,0,249,849" origin="0.5,0.95"/>
   </stalk>
-  
 
+  <spike alignment="Top" minsize="0.5" maxsize="1.5" alignwithsurface="true" randomrotation="-20,20" commonness="2">
+    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="544,0,228,561" origin="0.5,0.95"/>
+  </spike>
+
+  <branches1 minsize="0.5" maxsize="2.0" alignwithsurface="true" randomrotation="-20,20" commonness="4">
+    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,0,525,484" origin="0.5,0.9"/>
+  </branches1>
+
+  <branches2 minsize="0.5" maxsize="2.0" alignwithsurface="true" randomrotation="-20,20" commonness="4">
+    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="255,0,246,479" origin="0.5,0.9"/>
+  </branches2>
+
+  <fungus minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
+    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,681,442,343" origin="0.5,0.9"/>
+  </fungus>
 </backgroundsprites>
