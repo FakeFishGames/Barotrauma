@@ -288,22 +288,8 @@ namespace Barotrauma
             Debug.WriteLine("path: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
             
-            //for (int i = 0; i < 2; i++ )
-            //{
-            //    Vector2 tunnelStart = (i == 0) ? startPosition : endPosition;
-
-            //    pathCells.AddRange
-            //    (
-            //        GeneratePath(rand, tunnelStart, new Vector2(tunnelStart.X, borders.Height), cells, pathBorders, minWidth, 0.1f, mirror)
-            //    );
-            //}
-
-
-            
             cells = CleanCells(pathCells);
-
-
-
+            
             pathCells.AddRange(CreateBottomHoles(Rand.Range(0.2f,0.8f, false), new Rectangle(
                 (int)(borders.Width * 0.2f), 0,
                 (int)(borders.Width * 0.6f), (int)(borders.Height * 0.3f))));
@@ -313,46 +299,55 @@ namespace Barotrauma
                 cell.CellType = CellType.Path;
                 cells.Remove(cell);
             }
-
-
+            
+            //generate some narrow caves
+            int caveAmount = Rand.Int(3, false);
             List<VoronoiCell> usedCaveCells = new List<VoronoiCell>();
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < caveAmount; i++)
             {
                 Vector2 startPoint = Vector2.Zero;
                 VoronoiCell startCell = null;
 
                 var caveCells = new List<VoronoiCell>();
 
-                while (true)
+                int maxTries = 5, tries = 0;              
+                while (tries<maxTries)
                 {
                     startCell = cells[Rand.Int(cells.Count, false)];
 
+                    //find an edge between the cell and the already carved path
                     GraphEdge startEdge =
                         startCell.edges.Find(e => pathCells.Contains(e.AdjacentCell(startCell)));
-
+                                        
                     if (startEdge != null)
                     {
                         startPoint = (startEdge.point1 + startEdge.point2) / 2.0f;
                         startPoint += startPoint - startCell.Center;
 
+                        //get the cells in which the cave will be carved
                         caveCells = GetCells(startCell.Center, 2);
+                        //remove cells that have already been "carved" out
                         caveCells.RemoveAll(c => c.CellType == CellType.Path);
 
+                        //if any of the cells have already been used as a cave, continue and find some other cells
                         if (usedCaveCells.Any(c => caveCells.Contains(c))) continue;
                         break;
                     }
+
+                    tries++;
                 }
+
+                //couldn't find a place for a cave -> abort
+                if (tries >= maxTries) break;
 
                 usedCaveCells.AddRange(caveCells);
 
                 List<VoronoiCell> caveSolidCells;
-
                 var cavePathCells = CaveGenerator.CarveCave(caveCells, startPoint, out caveSolidCells);
 
+                //remove the large cells used as a "base" for the cave (they've now been replaced with smaller ones)
                 caveCells.ForEach(c => cells.Remove(c));
-
-                //caveSolidCells = CleanCells(cavePathCells);
-
+                
                 cells.AddRange(caveSolidCells);
 
                 foreach (VoronoiCell cell in cavePathCells)
@@ -361,13 +356,18 @@ namespace Barotrauma
                 }
 
                 pathCells.AddRange(cavePathCells);
+
+                for (int j = cavePathCells.Count / 2; j < cavePathCells.Count; j+=10)
+                {
+                    positionsOfInterest.Add(new InterestingPosition(cavePathCells[i].Center, false));
+                }
             }
 
             for (int x = 0; x < cellGrid.GetLength(0); x++)
             {
                 for (int y = 0; y < cellGrid.GetLength(1); y++)
                 {
-                    cellGrid[x, y].Clear();
+                    cellGrid[x, y] .Clear();
                 }
             }
 
@@ -375,8 +375,6 @@ namespace Barotrauma
             {
                 cellGrid[(int)Math.Floor(cell.Center.X / GridCellSize), (int)Math.Floor(cell.Center.Y / GridCellSize)].Add(cell);
             }
-
-
 
             startPosition.Y = borders.Height;
             endPosition.Y = borders.Height;
@@ -396,7 +394,7 @@ namespace Barotrauma
                 for (int i = 0; i < 2; i++)
                 {
                     wrappingWalls[side, i] = new WrappingWall(pathCells, cells, borders.Height * 0.5f,
-                        (side == 0 ? -1 : 1) * (i == 0 ? 1 : 2));
+                        (side == 0 ? -1 : 1) * (i + 1));
 
                     List<VertexPositionColor> wrappingWallVertices;
                     CaveGenerator.GeneratePolygons(wrappingWalls[side, i].Cells, out wrappingWallVertices, false);

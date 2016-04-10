@@ -80,39 +80,21 @@ namespace Barotrauma
                 {
                     Vector2 leftPoint = selectedEdge.point2;
                     Vector2 rightPoint = selectedEdge.point1;
-
-                    //if (leftPoint.X > rightPoint.X)
-                    //{
-                    //    leftPoint = selectedEdge.point2;
-                    //    rightPoint = selectedEdge.point1;
-                    //}
-
+                    
                     rotation = -MathUtils.VectorToAngle(rightPoint - leftPoint);
                 }
 
                 rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, false);
 
-                var newSprite = new BackgroundSprite(prefab, (Vector2)pos, Rand.Range(prefab.Scale.X, prefab.Scale.Y), rotation);
-
-                int n = 0;
-
+                var newSprite = new BackgroundSprite(prefab, 
+                    (Vector2)pos, Rand.Range(prefab.Scale.X, prefab.Scale.Y, false), rotation);
+                
                 int x = (int)Math.Floor(((Vector2)pos).X / GridSize);
                 if (x<0 || x >= sprites.GetLength(0)) continue;
                 int y = (int)Math.Floor(((Vector2)pos).Y / GridSize);
                 if (y<0 || 1 >= sprites.GetLength(1)) continue;
 
                 sprites[x,y].Add(newSprite);
-                
-                //while (n < sprites.Count)
-                //{
-                //    n++;
-
-                //    Sprite existingSprite = sprites[n - 1].Prefab.Sprite;
-                //    if (existingSprite == null) continue;
-                //    if (existingSprite.Texture == newSprite.Prefab.Sprite.Texture) break;
-                //}
-
-                //sprites.Insert(n, newSprite);
             }
         }
 
@@ -120,7 +102,10 @@ namespace Barotrauma
         {
             closestEdge = null;
 
-            Vector2 randomPos = new Vector2(Rand.Range(0.0f, level.Size.X, false), Rand.Range(0.0f, level.Size.Y, false));
+            Vector2 randomPos = new Vector2(
+                Rand.Range(0.0f, level.Size.X, false), 
+                Rand.Range(0.0f, level.Size.Y, false));
+
             var cells = level.GetCells(randomPos);
 
             if (!cells.Any()) return null;
