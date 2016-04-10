@@ -120,7 +120,7 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);
 
-            backgroundSpriteManager.DrawSprites(spriteBatch);
+            backgroundSpriteManager.DrawSprites(spriteBatch, cam);
 
             if (backgroundCreatureManager!=null) backgroundCreatureManager.Draw(spriteBatch);
 

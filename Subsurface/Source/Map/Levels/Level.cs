@@ -310,47 +310,58 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in pathCells)
             {
+                cell.CellType = CellType.Path;
                 cells.Remove(cell);
             }
 
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    Vector2 startPoint = Vector2.Zero;
-            //    VoronoiCell startCell = null;
 
-            //    while (true)
-            //    {
-            //        startCell = cells[Rand.Int(cells.Count, false)];
+            List<VoronoiCell> usedCaveCells = new List<VoronoiCell>();
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 startPoint = Vector2.Zero;
+                VoronoiCell startCell = null;
 
-            //        GraphEdge startEdge =
-            //            startCell.edges.Find(e => pathCells.Contains(e.AdjacentCell(startCell)));
+                var caveCells = new List<VoronoiCell>();
 
-            //        if (startEdge != null)
-            //        {
-            //            startPoint = (startEdge.point1 + startEdge.point2) / 2.0f;
-            //            break;
-            //        }
-            //    }
-                
-            //    var caveCells = GetCells(startCell.Center, 1);
+                while (true)
+                {
+                    startCell = cells[Rand.Int(cells.Count, false)];
 
-            //    List<VoronoiCell> caveSolidCells;
+                    GraphEdge startEdge =
+                        startCell.edges.Find(e => pathCells.Contains(e.AdjacentCell(startCell)));
 
-            //    var cavePathCells = CaveGenerator.CarveCave(caveCells, startPoint, out caveSolidCells);
+                    if (startEdge != null)
+                    {
+                        startPoint = (startEdge.point1 + startEdge.point2) / 2.0f;
+                        startPoint += startPoint - startCell.Center;
 
-            //    caveCells.ForEach(c => cells.Remove(c));
+                        caveCells = GetCells(startCell.Center, 2);
+                        caveCells.RemoveAll(c => c.CellType == CellType.Path);
 
-            //    //caveSolidCells = CleanCells(cavePathCells);
+                        if (usedCaveCells.Any(c => caveCells.Contains(c))) continue;
+                        break;
+                    }
+                }
 
-            //    cells.AddRange(caveSolidCells);
+                usedCaveCells.AddRange(caveCells);
 
-            //    foreach (VoronoiCell cell in cavePathCells)
-            //    {
-            //        cells.Remove(cell);
-            //    }
+                List<VoronoiCell> caveSolidCells;
 
-            //    pathCells.AddRange(cavePathCells);
-            //}
+                var cavePathCells = CaveGenerator.CarveCave(caveCells, startPoint, out caveSolidCells);
+
+                caveCells.ForEach(c => cells.Remove(c));
+
+                //caveSolidCells = CleanCells(cavePathCells);
+
+                cells.AddRange(caveSolidCells);
+
+                foreach (VoronoiCell cell in cavePathCells)
+                {
+                    cells.Remove(cell);
+                }
+
+                pathCells.AddRange(cavePathCells);
+            }
 
             for (int x = 0; x < cellGrid.GetLength(0); x++)
             {
@@ -376,6 +387,7 @@ namespace Barotrauma
             renderer.SetBodyVertices(bodyVertices.ToArray());
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells));
 
+            renderer.PlaceSprites(1000);
             
             wrappingWalls = new WrappingWall[2, 2];
 
@@ -442,7 +454,6 @@ namespace Barotrauma
                 endPosition = temp;
             }
 
-            renderer.PlaceSprites(100);
 
             Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");

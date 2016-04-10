@@ -40,7 +40,9 @@ namespace Barotrauma
             {
                 for (float y = edges.Y + sideInterval; y < edges.W - sideInterval; y += sideInterval)
                 {
-                    sites.Add(new Vector2(x, y) + Rand.Vector(sideInterval*0.45f, false));
+                    if (Rand.Int(10, false) == 0) continue;
+
+                    sites.Add(new Vector2(x, y) + Rand.Vector(sideInterval*0.4f, false));
                 }
             }
 
@@ -76,6 +78,8 @@ namespace Barotrauma
             float closestDist = 0.0f;
             foreach (VoronoiCell cell in newCells)
             {
+                if (cell.CellType != CellType.Edge) continue;
+
                 float dist = Vector2.Distance(startPoint, cell.Center);
                 if (dist < closestDist || startCell == null)
                 {
@@ -87,27 +91,62 @@ namespace Barotrauma
             startCell.CellType = CellType.Path;
 
             List<VoronoiCell> path = new List<VoronoiCell>() {startCell};
-            //VoronoiCell pathCell = startCell;
-            //for (int i = 0; i < newCells.Count / 2; i++)
-            //{
+            VoronoiCell pathCell = startCell;
+            for (int i = 0; i < newCells.Count / 2; i++)
+            {
 
-            //    var allowdNextCells = new List<VoronoiCell>();
-            //    foreach (GraphEdge edge in pathCell.edges)
-            //    {
-            //        var adjacent = edge.AdjacentCell(pathCell);
-            //        if (adjacent == null || 
-            //            adjacent.CellType == CellType.Path ||
-            //            adjacent.CellType == CellType.Removed || 
-            //            adjacent.CellType == CellType.Edge) continue;
+                var allowedNextCells = new List<VoronoiCell>();
+                foreach (GraphEdge edge in pathCell.edges)
+                {
+                    var adjacent = edge.AdjacentCell(pathCell);
+                    if (adjacent == null ||
+                        //adjacent.CellType == CellType.Path ||
+                        adjacent.CellType == CellType.Removed ||
+                        adjacent.CellType == CellType.Edge) continue;
 
-            //        allowdNextCells.Add(adjacent);
-            //    }
+                    allowedNextCells.Add(adjacent);
+                }
+                
+                if (allowedNextCells.Count == 0) break;
 
-            //    if (allowdNextCells.Count == 0) break;
+                pathCell = allowedNextCells[Rand.Int(allowedNextCells.Count, false)];
+                if (Rand.Int(4,false)==0)
+                {
+                    float furthestDist = 0.0f;
+                    foreach (VoronoiCell nextCell in allowedNextCells)
+                    {
+                        float dist = Vector2.Distance(startCell.Center, nextCell.Center);
+                        if (dist > furthestDist || furthestDist == 0.0f)
+                        {
+                            furthestDist = dist;
+                            pathCell = nextCell;
+                        }
+                    }
+                }
 
-            //    pathCell = allowdNextCells[Rand.Int(allowdNextCells.Count, false)];
-            //    path.Add(pathCell);
-            //}
+                pathCell.CellType = CellType.Path;
+                path.Add(pathCell);
+            }
+
+            float minPathWidth = 100.0f;
+            for (int i = 0; i < path.Count; i++)
+            {
+                var cell = path[i];
+                foreach (GraphEdge edge in cell.edges)
+                {
+                    if (edge.point1 == edge.point2) continue;
+                    if (Vector2.Distance(edge.point1, edge.point2) > minPathWidth) continue;
+                    
+
+                    GraphEdge adjacentEdge = cell.edges.Find(e => e != edge && (e.point1 == edge.point1 || e.point2 == edge.point1));
+
+                    var adjacentCell = adjacentEdge.AdjacentCell(cell);
+                    if (i>0 && (adjacentCell.CellType == CellType.Path || adjacentCell.CellType == CellType.Edge)) continue;
+
+                    adjacentCell.CellType = CellType.Path;
+                    path.Add(adjacentCell);
+                }
+            }
 
             return path;
         }
