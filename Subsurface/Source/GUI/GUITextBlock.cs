@@ -17,6 +17,8 @@ namespace Barotrauma
 
         protected Color textColor;
 
+        private string wrappedText;
+
         public delegate string TextGetterHandler();
         public TextGetterHandler TextGetter;
 
@@ -40,6 +42,7 @@ namespace Barotrauma
             set
             {
                 text = value;
+                wrappedText = value;
                 SetTextPos();
             }
         }
@@ -159,21 +162,16 @@ namespace Barotrauma
         {
             if (text==null) return;
 
+            wrappedText = text;
+
            Vector2 size = MeasureText(text);
             
             if (Wrap && rect.Width>0)
             {
-                //text = text.Replace("\n"," ");
-                text = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font);
+                wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font);
 
-                Vector2 newSize = MeasureText(text);
+                Vector2 newSize = MeasureText(wrappedText);
 
-                //Rectangle newRect = rect;
-
-                //newRect.Width += (int)(newSize.X-size.X);
-                //newRect.Height += (int)(newSize.Y - size.Y);
-
-                //Rect = newRect;
                 size = newSize;
             }
 
@@ -204,9 +202,9 @@ namespace Barotrauma
             textPos.X = (int)textPos.X;
             textPos.Y = (int)textPos.Y;
 
-            if (text.Contains("\n"))
+            if (wrappedText.Contains("\n"))
             {
-                string[] lines = text.Split('\n');
+                string[] lines = wrappedText.Split('\n');
                 Vector2 lastLineSize = MeasureText(lines[lines.Length-1]);
                 caretPos = new Vector2(rect.X + lastLineSize.X, rect.Y + size.Y - lastLineSize.Y) + textPos - origin;
             }
@@ -256,7 +254,7 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(text))
             {
                 spriteBatch.DrawString(Font,
-                    text,
+                    Wrap ? wrappedText : text,
                     new Vector2(rect.X, rect.Y) + textPos + offset,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, 1.0f,
