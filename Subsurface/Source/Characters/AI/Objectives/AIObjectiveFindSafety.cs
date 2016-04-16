@@ -33,7 +33,7 @@ namespace Barotrauma
             var currentHull = character.AnimController.CurrentHull;
 
             currenthullSafety = OverrideCurrentHullSafety == null ?
-                GetHullSafety(currentHull) : (float)OverrideCurrentHullSafety;
+                GetHullSafety(currentHull, character) : (float)OverrideCurrentHullSafety;
 
             if (currentHull != null)
             {
@@ -112,7 +112,7 @@ namespace Barotrauma
             {
                 if (hull == character.AnimController.CurrentHull || unreachable.Contains(hull)) continue;
 
-                float hullValue = GetHullSafety(hull);
+                float hullValue = GetHullSafety(hull, character);
                 hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.X - hull.Position.X));
                 hullValue -= (float)Math.Sqrt(Math.Abs(character.Position.Y - hull.Position.Y) * 2.0f);
 
@@ -139,7 +139,7 @@ namespace Barotrauma
             }
 
             if (character.AnimController.CurrentHull == null) return 5.0f;
-            currenthullSafety = GetHullSafety(character.AnimController.CurrentHull);
+            currenthullSafety = GetHullSafety(character.AnimController.CurrentHull, character);
             priority = 100.0f - currenthullSafety;
 
             if (divingGearObjective != null && !divingGearObjective.IsCompleted()) priority += 20.0f;
@@ -147,22 +147,22 @@ namespace Barotrauma
             return priority;
         }
 
-        private float GetHullSafety(Hull hull)
+        public static float GetHullSafety(Hull hull, Character character)
         {
             if (hull == null) return 0.0f;
 
-            float waterPercentage = (hull.Volume / hull.FullVolume)*100.0f;
+            float waterPercentage = (hull.Volume / hull.FullVolume) * 100.0f;
             float fireAmount = 0.0f;
 
             foreach (FireSource fireSource in hull.FireSources)
             {
-                fireAmount += Math.Max(fireSource.Size.X,50.0f);
+                fireAmount += Math.Max(fireSource.Size.X, 50.0f);
             }
-            
+
             float safety = 100.0f - fireAmount;
-            
-            if (waterPercentage > 30.0f && character.OxygenAvailable<=0.0f) safety -= waterPercentage; 
-            if (hull.OxygenPercentage < 30.0f) safety -= (30.0f-hull.OxygenPercentage)*5.0f;
+
+            if (waterPercentage > 30.0f && character.OxygenAvailable <= 0.0f) safety -= waterPercentage;
+            if (hull.OxygenPercentage < 30.0f) safety -= (30.0f - hull.OxygenPercentage) * 5.0f;
 
             return safety;
         }

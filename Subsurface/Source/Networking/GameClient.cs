@@ -541,7 +541,7 @@ namespace Barotrauma.Networking
                             crew.Add(c);
                         }
 
-                        GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
+                        //GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
 
                         break;
 
@@ -660,7 +660,7 @@ namespace Barotrauma.Networking
 
             AddChatMessage("Press TAB to chat", ChatMessageType.Server);
 
-            GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
+            //GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
 
             yield return CoroutineStatus.Success;
         }
