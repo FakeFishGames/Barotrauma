@@ -609,48 +609,52 @@ namespace Barotrauma
                 GameMain.World.RemoveBody(b);
             }
             bodies.Clear();
-            var mergedSections = new List<WallSection>();
-            for (int i = 0; i < sections.Count(); i++ )
+
+            int x = sections[0].rect.X;
+            int y = sections[0].rect.Y;
+            int width = sections[0].rect.Width;
+            int height = sections[0].rect.Height;
+
+            bool hasHoles = false;
+
+            for (int i = 1; i < sections.Length; i++)
             {
-                var section = sections[i];
+                bool hasHole = SectionBodyDisabled(i);
+                if (hasHole) hasHoles = true;
 
-                if (!SectionBodyDisabled(i))
+                //if found a section with a hole or all sections have been gone through, create a body
+                if (hasHole || i == sections.Length - 1)
                 {
-                    mergedSections.Add(section);
-                    continue;
+                    if (width > 0 && height > 0)
+                    {
+                        CreateRectBody(new Rectangle(x, y, width, height));
+                    }
+                    if (isHorizontal)
+                    {
+                        x = sections[i].rect.X + sections[i].rect.Width;
+                        width = 0;
+                    }
+                    else
+                    {
+                        y = sections[i].rect.Y - sections[i].rect.Height;
+                        height = 0;
+                    }
                 }
-
-                if (mergedSections.Count <= 0) continue;
-
-                Rectangle mergedRect;
-                if (isHorizontal)
-                    mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
-                        mergedSections.Sum(x => x.rect.Width), mergedSections.First().rect.Height);
                 else
                 {
-                    mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
-                        mergedSections.First().rect.Width, mergedSections.Sum(x => x.rect.Height));
+                    //if no hole, add this section to the merged body
+                    if (isHorizontal)
+                    {
+                        width += sections[i].rect.Width;
+                    }
+                    else
+                    {
+                        height += sections[i].rect.Height;
+                    }
                 }
-                CreateRectBody(mergedRect);
-            }
-            if (mergedSections.Count > 0)
-            {
-                Rectangle mergedRect;
-                if (isHorizontal)
-                    mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
-                        mergedSections.Sum(x => x.rect.Width), mergedSections.First().rect.Height);
-                else
-                {
-                    mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
-                        mergedSections.First().rect.Width, mergedSections.Sum(x => x.rect.Height));
-                }
-                CreateRectBody(mergedRect);
             }
 
-            if (sections.Any(x => x.gap != null))
-            {
-                CreateRectBody(rect).IsSensor = true;
-            }
+            if (hasHoles) CreateRectBody(rect).IsSensor = true;            
         }
 
         private Body CreateRectBody(Rectangle rect)
