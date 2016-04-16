@@ -492,10 +492,10 @@ namespace Barotrauma
             SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(lastContactPoint));
             GameMain.GameScreen.Cam.Shake = impact * 2.0f;
 
-            Vector2 limbForce = direction * impact * 0.5f;
+            Vector2 impulse = direction * impact * 0.5f;
 
-            float length = limbForce.Length();
-            if (length > 5.0f) limbForce = (limbForce / length) * 5.0f;
+            float length = impulse.Length();
+            if (length > 5.0f) impulse = (impulse / length) * 5.0f;
 
             foreach (Character c in Character.CharacterList)
             {
@@ -506,8 +506,15 @@ namespace Barotrauma
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     if (c.AnimController.LowestLimb == limb) continue;
-                    limb.body.ApplyLinearImpulse(limb.Mass * limbForce);
+                    limb.body.ApplyLinearImpulse(limb.Mass * impulse);
                 }
+            }
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != submarine || item.CurrentHull == null || item.body == null) continue;
+
+                item.body.ApplyLinearImpulse(item.body.Mass * impulse);                
             }
 
             Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * DamageMultiplier);
