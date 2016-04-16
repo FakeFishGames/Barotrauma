@@ -747,11 +747,17 @@ namespace Barotrauma
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
+            if (GameMain.Client != null) return true;
+
             Vector2 normal = contact.Manifold.LocalNormal;
             
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
 
-            if (ImpactTolerance > 0.0f && impact > ImpactTolerance) ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+            if (ImpactTolerance > 0.0f && impact > ImpactTolerance)
+            {
+                ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+                new NetworkEvent(NetworkEventType.ApplyStatusEffect, this.ID, false, ActionType.OnImpact);
+            }
 
             var containedItems = ContainedItems;
             if (containedItems != null)
@@ -1566,6 +1572,12 @@ namespace Barotrauma
                     bool sent = components[componentIndex].FillNetworkData(type, message);
                     if (sent) components[componentIndex].NetworkUpdateSent = true;
                     return sent;
+                case NetworkEventType.ApplyStatusEffect:
+
+                    ActionType actionType = (ActionType)data;
+                    message.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length, (int)actionType);
+
+                    return true;
                 case NetworkEventType.UpdateProperty:                                       
                     var allProperties = GetProperties<InGameEditable>();
 
@@ -1658,6 +1670,15 @@ namespace Barotrauma
 
                     components[componentIndex].NetworkUpdateSent = true;
                     components[componentIndex].ReadNetworkData(type, message, sendingTime);
+                    break;
+                case NetworkEventType.ApplyStatusEffect:
+
+                    ActionType actionType = (ActionType)message.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length);
+
+                    data = actionType;
+
+                    ApplyStatusEffects(actionType, 1.0f);
+
                     break;
                 case NetworkEventType.UpdateProperty:
                     string propertyName = "";
