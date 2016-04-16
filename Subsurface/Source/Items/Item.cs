@@ -12,13 +12,18 @@ using Barotrauma.Items.Components;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 
 namespace Barotrauma
 {
 
     public enum ActionType
     {
-        Always, OnPicked, OnWearing, OnContaining, OnContained, OnActive, OnUse, OnFailure, OnBroken, OnFire, InWater
+        Always, OnPicked, OnUse, 
+        OnWearing, OnContaining, OnContained, 
+        OnActive, OnFailure, OnBroken, 
+        OnFire, InWater,
+        OnImpact
     }
 
     class Item : MapEntity, IDamageable, IPropertyObject
@@ -107,6 +112,11 @@ namespace Barotrauma
         public string Description
         {
             get { return prefab.Description; }
+        }
+
+        public float ImpactTolerance
+        {
+            get { return prefab.ImpactTolerance; }
         }
 
         public override Sprite Sprite
@@ -381,6 +391,12 @@ namespace Barotrauma
 
                         break;
                 }
+            }
+
+            //containers need to handle collision events to notify items inside them about the impact
+            if (ImpactTolerance > 0.0f || GetComponent<ItemContainer>() != null)
+            {
+                if (body != null) body.FarseerBody.OnCollision += OnCollision;
             }
 
             InsertToList();
@@ -727,6 +743,27 @@ namespace Barotrauma
 
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);                    
+        }
+
+        private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
+        {
+            Vector2 normal = contact.Manifold.LocalNormal;
+            
+            float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
+
+            if (ImpactTolerance > 0.0f && impact > ImpactTolerance) ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+
+            var containedItems = ContainedItems;
+            if (containedItems != null)
+            {
+                foreach (Item contained in containedItems)
+                {
+                    if (contained.body == null) continue;
+                    contained.OnCollision(f1, f2, contact);
+                }
+            }
+
+            return true;
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)

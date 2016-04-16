@@ -1,0 +1,89 @@
+﻿<Items>
+  <Item
+    name="Steel Cabinet"
+    linkable="true"
+    pickdistance ="150">
+    
+    <Sprite texture ="locker.png" depth="0.85"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Medicine Cabinet"
+    linkable="true"
+    pickdistance ="150">
+
+    <Sprite texture ="cabinets.png" depth="0.85" sourcerect="0,0,48,64"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <Containable name="chem"/>
+      <Containable name="medical"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+   name="Toxic Cabinet"
+   linkable="true"
+   pickdistance ="150">
+
+    <Sprite texture ="cabinets.png" depth="0.85" sourcerect="0,64,48,64"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <Containable name="chem"/>
+      <Containable name="medical"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Metal Crate"
+    linkable="true"
+    pickdistance ="150">
+
+    <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+
+    <Body width="77" height="34" density="50"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+   name="Explosive Crate"
+   linkable="true"
+   pickdistance ="150">
+
+    <Sprite texture ="crates.png" depth="0.54" sourcerect="81,0,47,42"/>
+
+    <Body width="45" height="41" density="50"/>
+    
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
+
+    <ItemContainer capacity="10" canbeselected="true" hideitems="true">
+      <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+   name="Chemical Crate"
+   linkable="true"
+   pickdistance ="150">
+
+    <Sprite texture ="crates.png" depth="0.54" sourcerect="1,36,47,42"/>
+
+    <Body width="45" height="41" density="50"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
+
+    <ItemContainer capacity="10" canbeselected="true" hideitems="true">
+      <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item> 
+  
+</Items>
+

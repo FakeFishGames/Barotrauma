@@ -39,8 +39,6 @@ namespace Barotrauma
             {
                 GameMain.ParticleManager.CreateParticle("shockwave", worldPosition,
                     Vector2.Zero, 0.0f, hull);
-
-
             }
 
             for (int i = 0; i < attack.Range * 0.1f; i++)
@@ -78,6 +76,21 @@ namespace Barotrauma
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
 
             ApplyExplosionForces(worldPosition, attack.Range, force, attack.GetDamage(1.0f), attack.Stun);
+
+            if (flames)
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
+                    //if (item.ParentInventory != null) return;
+
+                    if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
+
+                    //item.Condition -= (float)Math.Sqrt(size.X) * deltaTime;
+
+                    item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
+                }
+            }
 
         }
 

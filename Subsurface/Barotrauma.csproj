@@ -515,7 +515,10 @@
     <Content Include="Content\Items\itemlabel.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Lockers\cabinets.png">
+    <Content Include="Content\Items\Containers\cabinets.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Containers\crates.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\machines.png">
@@ -585,6 +588,7 @@
     </Content>
     <Content Include="Content\Items\Jobgear\misc.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\connector.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -600,6 +604,7 @@
     </Content>
     <Content Include="Content\Items\Engine\engine.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\Engine\pingCircle.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -611,10 +616,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Content\Items\Lockers\locker.png">
+    <Content Include="Content\Items\Containers\locker.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Items\Lockers\lockers.xml">
+    <Content Include="Content\Items\Containers\containers.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Electricity\lightsprite.png">
@@ -885,6 +890,7 @@
     </Content>
     <Content Include="Content\Missions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\UI\uiIcons.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

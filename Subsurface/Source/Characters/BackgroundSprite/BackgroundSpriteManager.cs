@@ -179,16 +179,12 @@ namespace Barotrauma
 
         public void DrawSprites(SpriteBatch spriteBatch, Camera cam)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
             Rectangle indices = Rectangle.Empty;
             indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize) - 1;            
             if (indices.X >= sprites.GetLength(0)) return;
 
             indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height) / (float)GridSize) - 1;
             if (indices.Y >= sprites.GetLength(1)) return;
-
 
             indices.Width = (int)Math.Ceiling(cam.WorldView.Right / (float)GridSize) + 1;
             if (indices.Width < 0) return;
@@ -212,9 +208,6 @@ namespace Barotrauma
                     }
                 }
             }
-
-            sw.Stop();
-            Debug.WriteLine(sw.ElapsedMilliseconds + "   -     "+sw.ElapsedTicks);
         }
 
         private BackgroundSpritePrefab GetRandomPrefab()

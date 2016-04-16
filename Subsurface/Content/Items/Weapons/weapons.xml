@@ -172,7 +172,7 @@
     category="Equipment"
     pickdistance="200"
     price="500"
-    tags="weapon"
+    tags="weapon,smallitem"
     description="HONK">
 
     <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.5"/>

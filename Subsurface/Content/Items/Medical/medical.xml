@@ -290,6 +290,7 @@
     <Body width="25" height="5" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnFire" target="this" condition="-50"/> 
       <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
         <Explosion range="500" damage="5" stun="3" force="0.1"/>
       </StatusEffect>
@@ -349,7 +350,25 @@
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
-  </Item>  
+  </Item>
+
+  <Item
+   name="Morbusine"
+   category="Material"
+   spritecolor="0.0,0.0,0.0,1.0"
+   Tags="smallitem,chem,medical"
+   pickdistance="150">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-20.0" duration="60.0">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
 </Items>
 
   

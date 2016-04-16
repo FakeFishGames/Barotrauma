@@ -29,6 +29,26 @@
     <Body width="16" height="7"/>
 
     <Pickable slots="Any">
+      <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
+        <Explosion range="600.0" structuredamage="150" damage="300" stun="5" force="20.0"/>
+      </StatusEffect>
+    </Pickable>
+  </Item>
+
+  <Item
+    name="Volatile Compound N"
+    category="Equipment"
+    Tags="smallitem,explosive"
+    pickdistance="150">
+
+    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
+
+    <Body width="16" height="7"/>
+
+    <Pickable slots="Any">
+      <StatusEffect type="Always" target="This" Condition="-0.35"/>
+      <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
       <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
         <Explosion range="600.0" structuredamage="150" damage="300" stun="5" force="20.0"/>
       </StatusEffect>
@@ -47,6 +67,7 @@
     <Body width="16" height="7"/>
 
     <Pickable slots="Any">
+      <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
       <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
         <Explosion range="500.0" structuredamage="50" damage="300" stun="5" force="20.0"/>
         <Fire size="500"/>
@@ -80,5 +101,32 @@
         <StatusEffect type="OnUse" target="Contained" Condition="-100.0"/>        
       </input>
     </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Nitroglyserine"
+    category="Material"
+    description="A highly unstable liquid that may explode when subjected to heat or physical shock."
+    spritecolor="1.0,1.0,1.0,1.0"
+    Tags="smallitem,chem,medical"
+    pickdistance="150"
+    impacttolerance="10">
+
+    <Sprite texture ="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="25" height="5" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
+      
+      <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
+        <Explosion range="600.0" structuredamage="400" damage="300" stun="5" force="20.0"/>
+      </StatusEffect>
+      
+      <StatusEffect type="OnUse" target="Character" Health="-0.5" Oxygen="5.0" duration="10.0">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
   </Item>
 </Items>

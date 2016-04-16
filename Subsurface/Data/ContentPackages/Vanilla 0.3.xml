@@ -4,6 +4,7 @@
   <Item file="Content/Items/itemlabel.xml" />
   <Item file="Content/Items/Artifacts/artifacts.xml" />
   <Item file="Content/Items/Button/button.xml" />
+  <Item file="Content/Items/Containers/containers.xml" />
   <Item file="Content/Items/Jobgear/captaingear.xml" />
   <Item file="Content/Items/Jobgear/doctorgear.xml" />
   <Item file="Content/Items/Jobgear/engigear.xml" />
@@ -19,7 +20,6 @@
   <Item file="Content/Items/Fabricators/fabricators.xml" />
   <Item file="Content/Items/Fabricators/materials.xml" />
   <Item file="Content/Items/Ladder/ladder.xml" />
-  <Item file="Content/Items/Lockers/lockers.xml" />
   <Item file="Content/Items/Medical/medical.xml" />
   <Item file="Content/Items/MiniMap/item.xml" />
   <Item file="Content/Items/OxygenGenerator/oxygengenerator.xml" />

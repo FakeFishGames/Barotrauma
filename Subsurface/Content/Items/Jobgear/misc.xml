@@ -1,5 +1,21 @@
 ﻿<Items>
   <Item
+    name="Clown Mask"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem"
+    description="Praise the honkmother.">
+
+    <Sprite texture ="clownmask.png" depth="0.6"/>
+
+    <Body radius="8" density="10"/>
+
+    <Wearable limbtype="Head" slots="Any,Head">
+      <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5"/>
+    </Wearable>
+  </Item>
+
+  <Item
     name="Clown Costume"
     category="Equipment"
     pickdistance="150"

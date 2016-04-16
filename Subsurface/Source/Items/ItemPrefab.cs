@@ -45,6 +45,8 @@ namespace Barotrauma
 
         public readonly bool FireProof;
 
+        private float impactTolerance;
+
         public string ConfigFile
         {
             get { return configFile; }
@@ -85,6 +87,13 @@ namespace Barotrauma
         public float OffsetOnSelected
         {
             get { return offsetOnSelected; }
+        }
+
+
+        public float ImpactTolerance
+        {
+            get { return impactTolerance; }
+            set { impactTolerance = Math.Max(value, 0.0f); }
         }
 
         public bool CanUseOnSelf
@@ -213,7 +222,9 @@ namespace Barotrauma
 
             CanUseOnSelf        = ToolBox.GetAttributeBool(element, "canuseonself", false);
             
-            FireProof = ToolBox.GetAttributeBool(element, "fireproof", false);
+            FireProof           = ToolBox.GetAttributeBool(element, "fireproof", false);
+
+            ImpactTolerance     = ToolBox.GetAttributeFloat(element, "impacttolerance", 0.0f);
 
 
             string categoriesStr = ToolBox.GetAttributeString(element, "category", "Misc");

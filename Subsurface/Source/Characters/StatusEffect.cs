@@ -219,17 +219,7 @@ namespace Barotrauma
         }
 
         protected void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
-        {
-
-            if (explosion != null) explosion.Explode(entity.WorldPosition);
-            
-            if (FireSize > 0.0f)
-            {
-                var fire = new FireSource(entity.WorldPosition);
-                
-                fire.Size = new Vector2(FireSize, fire.Size.Y);
-            }            
-
+        {      
             if (sound != null) sound.Play(1.0f, 1000.0f, entity.WorldPosition);
 
             if (useItem)
@@ -259,8 +249,16 @@ namespace Barotrauma
                         ApplyToProperty(property, propertyEffects[i], deltaTime);                          
                     }
                 }
-
             }
+
+            if (explosion != null) explosion.Explode(entity.WorldPosition);
+
+            if (FireSize > 0.0f)
+            {
+                var fire = new FireSource(entity.WorldPosition);
+
+                fire.Size = new Vector2(FireSize, fire.Size.Y);
+            }   
         }
 
         private IEnumerable<object> ApplyToPropertyOverDuration(float duration, ObjectProperty property, object value)
