@@ -66,4 +66,95 @@
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/moloch.xml">
   </MonsterMission>
+  
+  <CargoMission
+    name="Explosive cargo"
+    description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
+    commonness="5"
+    reward="500"
+    successmessage="The explosives have been successfully delivered.">
+    <Items>
+      <Item name="Explosive Crate">
+        <Item name="Compound N" amount="10"/>
+      </Item>
+      <Item name="Explosive Crate">
+        <Item name="Detonator" amount="10">
+          <Item name="Compound N"/>
+        </Item>
+      </Item>
+    </Items>
+  </CargoMission>
+
+  <CargoMission
+    name="Explosive cargo"
+    description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
+    commonness="2"
+    reward="200"
+    successmessage="The explosives have been successfully delivered.">
+    <Items>
+      <Item name="Explosive Crate">
+        <Item name="Compound N" amount="10"/>
+      </Item>
+      <Item name="Explosive Crate">
+        <Item name="Detonator" amount="9">
+          <Item name="Compound N"/>
+        </Item>
+        <Item name="Detonator">
+          <Item name="Volatile Compound N"/>
+        </Item>
+      </Item>
+    </Items>
+  </CargoMission>
+
+  <CargoMission
+    name="Chemical shipment"
+    description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 200 credits."
+    commonness="5"
+    reward="200"
+    successmessage="The chemicals have been successfully delivered.">
+    <Items>
+      <Item name="Chemical Crate"  requireddeliveryamount="20">
+        <Item name="Auxiliorizine" amount="5"/>
+        <Item name="Sulphuric Acid" amount="5"/>
+      </Item>
+      <Item name="Chemical Crate">
+        <Item name="Morbusine" amount="5"/>
+        <Item name="Flash Powder" amount="3"/>
+        <Item name="Chloral Hydrate" amount="2"/>
+      </Item>
+    </Items>
+  </CargoMission>
+
+  <CargoMission
+  name="Handle with care"
+  description="Local reseachers are offering 2000 credits for delivering a large amount of nitroglycerine to [location2]."
+  commonness="5"
+  reward="2000"
+  successmessage="The chemicals have been successfully delivered.">
+    <Items>
+      <Item name="Explosive Crate">
+        <Item name="Nitroglyserine" amount="10"/>
+      </Item>
+      <Item name="Explosive Crate">
+        <Item name="Nitroglyserine" amount="10"/>
+      </Item>
+    </Items>
+  </CargoMission>
+
+  <CargoMission
+   name="Praise the Honkmother"
+   description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
+   commonness="1"
+   reward="100"
+   successmessage="The clown gear has been successfully delivered.">
+    <Items requireddeliveryamount="35">
+      <Item name="Metal Crate">
+        <Item name="Clown Mask" amount="10"/>
+        <Item name="Clown Costume" amount="10"/>        
+      </Item>
+      <Item name="Metal Crate">
+        <Item name="Bike Horn" amount="20"/>
+      </Item>
+    </Items>
+  </CargoMission> 
 </Missions>

@@ -7,11 +7,15 @@ namespace Barotrauma
 {
     class GameSession
     {
+        public enum InfoFrameTab { Crew, Mission };
+
         public readonly TaskManager TaskManager;
         
         public readonly GameMode gameMode;
-                
-        private GUIFrame guiRoot;
+
+        private InfoFrameTab selectedTab;
+        private GUIButton infoButton;
+        private GUIFrame infoFrame;
         
         private string saveFile;
 
@@ -72,7 +76,10 @@ namespace Barotrauma
 
             this.saveFile = saveFile;
 
-            guiRoot = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsWidth), Color.Transparent);
+            //guiRoot = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsWidth), Color.Transparent);
+
+            infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", GUI.Style, null);
+            infoButton.OnClicked = ToggleInfoFrame;
 
             if (gameModePreset!=null) gameMode = gameModePreset.Instantiate();
             this.submarine = submarine;
@@ -125,16 +132,17 @@ namespace Barotrauma
                 GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(80);
             }
 
-            if (gameMode.Mission!=null)
+            if (gameMode.Mission != null)
             {
                 currentMission = gameMode.Mission;
-                Mission.Start(Level.Loaded);
             }
 
             shiftSummary = new ShiftSummary(this);
 
             if (gameMode!=null) gameMode.Start();
-            
+
+            if (gameMode.Mission != null) Mission.Start(Level.Loaded);
+                        
             TaskManager.StartShift(level);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
@@ -187,22 +195,98 @@ namespace Barotrauma
             return true;
         }
 
+        private bool ToggleInfoFrame(GUIButton button, object obj)
+        {
+            if (infoFrame == null)
+            {
+                CreateInfoFrame();
+                SelectInfoFrameTab(null, selectedTab);
+            }
+            else
+            {
+                infoFrame = null;
+            }
+            
+            return true;
+        }
+
+        public void CreateInfoFrame()
+        {
+            int width = 600, height = 400;
+
+            infoFrame = new GUIFrame(
+                new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+
+            infoFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+
+            var crewButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Crew", GUI.Style, infoFrame);
+            crewButton.UserData = InfoFrameTab.Crew;
+            crewButton.OnClicked = SelectInfoFrameTab;
+
+            var missionButton = new GUIButton(new Rectangle(100, -30, 100, 20), "Mission", GUI.Style, infoFrame);
+            missionButton.UserData = InfoFrameTab.Mission;
+            missionButton.OnClicked = SelectInfoFrameTab;
+
+            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, infoFrame);
+            closeButton.OnClicked = ToggleInfoFrame;
+
+        }
+
+        private bool SelectInfoFrameTab(GUIButton button, object userData)
+        {
+            selectedTab = (InfoFrameTab)userData;
+
+            CreateInfoFrame();
+
+            switch (selectedTab)
+            {
+                case InfoFrameTab.Crew:
+                    CrewManager.CreateCrewFrame(CrewManager.characters, infoFrame);
+                    break;
+                case InfoFrameTab.Mission:
+                    CreateMissionInfo(infoFrame);
+                    break;
+            }
+
+            return true;
+        }
+
+        private void CreateMissionInfo(GUIFrame infoFrame)
+        {
+            if (Mission == null)
+            {
+                new GUITextBlock(new Rectangle(0,0,0,400), "No mission", GUI.Style, infoFrame, true);
+                return;
+            }
+
+            new GUITextBlock(new Rectangle(0, 0, 0, 40), Mission.Name, GUI.Style, infoFrame, GUI.LargeFont);
+
+            new GUITextBlock(new Rectangle(0, 50, 0, 20), "Reward: "+Mission.Reward, GUI.Style, infoFrame, true);
+            new GUITextBlock(new Rectangle(0, 70, 0, 50), Mission.Description, GUI.Style, infoFrame, true);
+
+            
+        }
+
         public void Update(float deltaTime)
         {
             TaskManager.Update(deltaTime);
             
             //guiRoot.Update(deltaTime);
 
-            if (gameMode != null) gameMode.Update(deltaTime);
-            if (Mission != null) Mission.Update(deltaTime);
+            infoButton.Update(deltaTime);
+
+            if (gameMode != null)   gameMode.Update(deltaTime);
+            if (Mission != null)    Mission.Update(deltaTime);
+            if (infoFrame != null)  infoFrame.Update(deltaTime);
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
             //guiRoot.Draw(spriteBatch);
-
+            infoButton.Draw(spriteBatch);
             
-            if (gameMode != null) gameMode.Draw(spriteBatch);
+            if (gameMode != null)   gameMode.Draw(spriteBatch);
+            if (infoFrame != null)  infoFrame.Draw(spriteBatch);
         }
 
         public void Save(string filePath)

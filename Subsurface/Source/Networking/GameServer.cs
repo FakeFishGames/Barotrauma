@@ -1128,7 +1128,7 @@ namespace Barotrauma.Networking
 
             if (myCharacter != null) crew.Add(myCharacter);
 
-            if (GameMain.GameSession!=null) GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
+            //if (GameMain.GameSession!=null) GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
         }
 
         public void KickPlayer(string playerName, bool ban = false)

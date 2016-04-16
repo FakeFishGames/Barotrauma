@@ -373,7 +373,12 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in cells)
             {
-                cellGrid[(int)Math.Floor(cell.Center.X / GridCellSize), (int)Math.Floor(cell.Center.Y / GridCellSize)].Add(cell);
+                int x = (int)Math.Floor(cell.Center.X / GridCellSize);
+                int y = (int)Math.Floor(cell.Center.Y / GridCellSize);
+
+                if (x < 0 || y < 0 || x >= cellGrid.GetLength(0) || y >= cellGrid.GetLength(1)) continue;
+
+                cellGrid[x,y].Add(cell);
             }
 
 

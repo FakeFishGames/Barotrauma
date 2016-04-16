@@ -19,7 +19,7 @@ namespace Barotrauma
         private GUIListBox listBox, orderListBox;
 
         private bool crewFrameOpen;
-        private GUIButton crewButton;
+        //private GUIButton crewButton;
         protected GUIFrame crewFrame;
 
         private CrewCommander commander;
@@ -44,9 +44,6 @@ namespace Barotrauma
             orderListBox = new GUIListBox(new Rectangle(5, 30, 30, 0), Color.Transparent, null, guiFrame);
             orderListBox.ScrollBarEnabled = false;
             orderListBox.OnSelected = SelectCharacterOrder;
-
-            crewButton = new GUIButton(new Rectangle(5, 0, 100, 20), "Crew", GUI.Style, guiFrame);
-            crewButton.OnClicked = ToggleCrewFrame;
 
             commander = new CrewCommander(this);
 
@@ -207,12 +204,12 @@ namespace Barotrauma
             //}            
         }
 
-        public void CreateCrewFrame(List<Character> crew)
+        public void CreateCrewFrame(List<Character> crew, GUIFrame crewFrame)
         {
             int width = 600, height = 400;
 
-            crewFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
-            crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            //crewFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+            //crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
             GUIListBox crewList = new GUIListBox(new Rectangle(0, 0, 280, 300), Color.White * 0.7f, GUI.Style, crewFrame);
             crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
@@ -238,14 +235,20 @@ namespace Barotrauma
                 new GUIImage(new Rectangle(-10, 0, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
             }
 
-            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, crewFrame);
-            closeButton.OnClicked = ToggleCrewFrame;
+            //var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, crewFrame);
+            //closeButton.OnClicked = ToggleCrewFrame;
         }
 
         protected virtual bool SelectCrewCharacter(GUIComponent component, object obj)
         {
             Character character = obj as Character;
             if (character == null) return false;
+
+            var crewFrame = component.Parent;
+            while (crewFrame.Parent!=null)
+            {
+                crewFrame = crewFrame.Parent;
+            }
 
             GUIComponent existingFrame = crewFrame.FindChild("selectedcharacter");
             if (existingFrame != null) crewFrame.RemoveChild(existingFrame);
@@ -263,13 +266,13 @@ namespace Barotrauma
             return true;
         }
 
-        private bool ToggleCrewFrame(GUIButton button, object obj)
-        {
-            if (crewFrame == null) CreateCrewFrame(characters);
+        //private bool ToggleCrewFrame(GUIButton button, object obj)
+        //{
+        //    if (crewFrame == null) CreateCrewFrame(characters);
 
-            crewFrameOpen = !crewFrameOpen;
-            return true;
-        }
+        //    crewFrameOpen = !crewFrameOpen;
+        //    return true;
+        //}
 
         public void StartShift()
         {

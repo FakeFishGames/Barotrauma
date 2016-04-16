@@ -52,6 +52,7 @@ namespace Barotrauma
             }
             set
             {
+                if (base.Rect == value) return;
                 base.Rect = value;
                 SetTextPos();
             }
