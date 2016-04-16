@@ -340,6 +340,8 @@ namespace Barotrauma
                 //couldn't find a place for a cave -> abort
                 if (tries >= maxTries) break;
 
+                if (!caveCells.Any()) continue;
+
                 usedCaveCells.AddRange(caveCells);
 
                 List<VoronoiCell> caveSolidCells;

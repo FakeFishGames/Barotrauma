@@ -915,22 +915,31 @@ namespace Barotrauma
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
+            //only grab with one hand when swimming
             leftHand.Disabled = true;
-            rightHand.Disabled = true;
+            if (!inWater) rightHand.Disabled = true;
             
             for (int i = 0; i < 2; i++ )
             {
-                LimbType type = i == 0 ? rightHandTarget : leftHandTarget;
+                LimbType type = i == 0 ? leftHandTarget: rightHandTarget;
                 Limb targetLimb = target.AnimController.GetLimb(type);
                 
-                Limb pullLimb = GetLimb(i == 0 ? LimbType.RightHand : LimbType.LeftHand);
+                Limb pullLimb = GetLimb(i == 0 ?LimbType.LeftHand: LimbType.RightHand);
 
-                pullLimb.pullJoint.Enabled = true;
-                pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
-                pullLimb.pullJoint.MaxForce = 500.0f;
+                if (i==1 && inWater)
+                {
+                    targetLimb.pullJoint.Enabled = false;
+                }
+                else
+                {
+                    pullLimb.pullJoint.Enabled = true;
+                    pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
+                    pullLimb.pullJoint.MaxForce = 100.0f;
 
-                targetLimb.pullJoint.Enabled = true;
-                targetLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition;
+                    targetLimb.pullJoint.Enabled = true;
+                    targetLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition;
+                }
+
             }
 
 
@@ -1142,8 +1151,8 @@ namespace Barotrauma
                     case LimbType.LeftArm:
                     case LimbType.RightHand:
                     case LimbType.RightArm:
-                        mirror = true;
-                        flipAngle = true;
+                        mirror = !inWater;
+                        flipAngle = !inWater;
                         break;
                     case LimbType.LeftThigh:
                     case LimbType.LeftLeg:

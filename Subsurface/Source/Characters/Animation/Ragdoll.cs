@@ -706,7 +706,7 @@ namespace Barotrauma
                             limbHull.WaveVel[n] = Math.Min(impulse.Y * 1.0f, 5.0f);
                             StrongestImpact = ((impulse.Length() * 0.5f) - limb.impactTolerance);
                         }
-                    }                    
+                    }
                 }
 
                 limb.Update(deltaTime);
@@ -719,46 +719,35 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb==refLimb)
-                {
-                    if (lerp)
-                    {
-                        limb.body.TargetPosition = simPosition;
-                    }
-                    else
-                    {
-                        limb.body.SetTransform(simPosition, limb.Rotation);
-                    }
-                    continue;
-                }
-
-
                 //check visibility from the new position of RefLimb to the new position of this limb
                 Vector2 movePos = limb.SimPosition + moveAmount;
 
                 TrySetLimbPosition(limb, simPosition, movePos, lerp);
-                
-
             }
         }
 
         protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false)
         {
-            if (original == simPosition) return;
-
-            Body body = Submarine.CheckVisibility(original, simPosition);
             Vector2 movePos = simPosition;
 
-            //if there's something in between the limbs
-            if (body != null)
+            if (original != simPosition)
             {
-                //move the limb close to the position where the raycast hit something
-                movePos = original + ((simPosition - original) * Submarine.LastPickedFraction * 0.9f);
+                Body body = Submarine.CheckVisibility(original, simPosition);
+            
+
+                //if there's something in between the limbs
+                if (body != null)
+                {
+                    //move the limb close to the position where the raycast hit something
+                    movePos = original + ((simPosition - original) * Submarine.LastPickedFraction * 0.9f);
+                }
             }
 
-            if (lerp)
+           if (lerp)
             {
                 limb.body.TargetPosition = movePos;
+                limb.body.MoveToTargetPosition(Vector2.Distance(limb.SimPosition, movePos) < 10.0f);
+                
             }
             else
             {
@@ -868,21 +857,7 @@ namespace Barotrauma
             {
                 System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
 
-                if (this is HumanoidAnimController)
-                {
-                    foreach (Limb limb in Limbs)
-                    {
-                        if (limb != refLimb) limb.body.TargetPosition = limb.body.SimPosition + diff;
-                        limb.body.MoveToTargetPosition(Vector2.Distance(limb.SimPosition, limb.body.TargetPosition) < 10.0f);
-
-                        limb.body.LinearVelocity = Vector2.Zero;
-                        limb.body.AngularVelocity = 0.0f;
-                    }
-                }
-                else
-                {
-                    SetPosition(refLimb.body.TargetPosition);
-                }
+                SetPosition(refLimb.body.TargetPosition, true);
             } 
         }
 
