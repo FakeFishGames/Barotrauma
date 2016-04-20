@@ -208,52 +208,49 @@ namespace Barotrauma.Items.Components
 
         private void UpdateAutoPilot(float deltaTime)
         {
-            if (posToMaintain==null)
-            {
-
-                autopilotRayCastTimer -= deltaTime;
-
-                steeringPath.CheckProgress(ConvertUnits.ToSimUnits(item.WorldPosition), 10.0f);
-
-                if (autopilotRayCastTimer<=0.0f && steeringPath.NextNode != null)
-                {
-                    Vector2 diff = Vector2.Normalize(ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - Submarine.Loaded.WorldPosition));
-
-                    bool nextVisible = true;
-                    for (int x = -1; x < 2; x += 2)
-                    {
-                        for (int y = -1; y < 2; y += 2)
-                        {
-                            Vector2 cornerPos =
-                                new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
-
-                            cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + Submarine.Loaded.WorldPosition);
-
-                            float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
-
-                            if (Submarine.PickBody(cornerPos, cornerPos + diff*dist, null, Physics.CollisionLevel) == null) continue;
-
-                            nextVisible = false;
-                            x = 2;
-                            y = 2;
-                        }
-                    }
-
-                    if (nextVisible) steeringPath.SkipToNextNode();
-
-                    autopilotRayCastTimer = AutopilotRayCastInterval;                
-                }
-
-                if (steeringPath.CurrentNode != null)
-                {
-                    SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
-                }
-            }
-            else
+            if (posToMaintain != null)
             {
                 SteerTowardsPosition((Vector2)posToMaintain);
+                return;
             }
 
+            autopilotRayCastTimer -= deltaTime;
+
+            steeringPath.CheckProgress(ConvertUnits.ToSimUnits(item.Submarine.WorldPosition), 10.0f);
+
+            if (autopilotRayCastTimer <= 0.0f && steeringPath.NextNode != null)
+            {
+                Vector2 diff = Vector2.Normalize(ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - Submarine.Loaded.WorldPosition));
+
+                bool nextVisible = true;
+                for (int x = -1; x < 2; x += 2)
+                {
+                    for (int y = -1; y < 2; y += 2)
+                    {
+                        Vector2 cornerPos =
+                            new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
+
+                        cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + Submarine.Loaded.WorldPosition);
+
+                        float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
+
+                        if (Submarine.PickBody(cornerPos, cornerPos + diff*dist, null, Physics.CollisionLevel) == null) continue;
+
+                        nextVisible = false;
+                        x = 2;
+                        y = 2;
+                    }
+                }
+
+                if (nextVisible) steeringPath.SkipToNextNode();
+
+                autopilotRayCastTimer = AutopilotRayCastInterval;                
+            }
+
+            if (steeringPath.CurrentNode != null)
+            {
+                SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
+            }
         }
 
         private void SteerTowardsPosition(Vector2 worldPosition)
@@ -261,7 +258,7 @@ namespace Barotrauma.Items.Components
             float prediction = 10.0f;
 
             Vector2 futurePosition = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity) * prediction;
-            Vector2 targetSpeed = ((worldPosition - item.WorldPosition) - futurePosition);
+            Vector2 targetSpeed = ((worldPosition - item.Submarine.WorldPosition) - futurePosition);
 
             if (targetSpeed.Length()>500.0f)
             {
@@ -282,13 +279,13 @@ namespace Barotrauma.Items.Components
 
             if (tickBox.Selected)
             {
-                if (Submarine.Loaded == null)
+                if (item.Submarine == null)
                 {
                     posToMaintain = null;
                 }
                 else
                 {
-                    posToMaintain = item.WorldPosition;
+                    posToMaintain = item.Submarine.WorldPosition;
                 }
             }
             else
