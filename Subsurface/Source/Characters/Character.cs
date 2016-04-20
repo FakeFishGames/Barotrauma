@@ -113,8 +113,7 @@ namespace Barotrauma
         {
             get;
             private set;
-        }
-        
+        }        
 
         private CharacterInfo info;
 
@@ -156,6 +155,8 @@ namespace Barotrauma
         {
             get { return inventory; }
         }
+
+        public float SpeechBubbleTimer;
 
         private float lockHandsTimer;
         public bool LockHands
@@ -955,6 +956,8 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
+            SpeechBubbleTimer = Math.Max(0.0f, SpeechBubbleTimer - deltaTime);
+
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
             
             if (inventory!=null)
@@ -1133,8 +1136,10 @@ namespace Barotrauma
             
             GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
 
-            //GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X - 2, (int)healthBarPos.Y - 2, 100 + 4, 15 + 4), Color.Black, false);
-            //GUI.DrawRectangle(spriteBatch, new Rectangle((int)healthBarPos.X, (int)healthBarPos.Y, (int)(100.0f * (health / maxHealth)), 15), Color.Red, true);
+            if (SpeechBubbleTimer > 0.0f)
+            {
+                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f, Color.White * Math.Min(SpeechBubbleTimer, 1.0f));
+            }
         }
 
         public void PlaySound(AIController.AiState state)

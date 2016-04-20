@@ -52,6 +52,12 @@ namespace Barotrauma
             get { return submarineIcon; }
         }
 
+        public static Sprite SpeechBubbleIcon
+        {
+            get;
+            private set;
+        }
+
         public static Sprite Arrow
         {
             get { return arrow; }
@@ -93,6 +99,9 @@ namespace Barotrauma
 
             arrow = new Sprite("Content/UI/uiIcons.png", new Rectangle(80, 240, 16, 16), null);
             arrow.Origin = arrow.size / 2;
+
+            SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61), null);
+            SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
 
             Style = new GUIStyle("Content/UI/style.xml");
         }

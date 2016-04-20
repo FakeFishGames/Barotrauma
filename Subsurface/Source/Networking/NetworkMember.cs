@@ -243,10 +243,15 @@ namespace Barotrauma.Networking
 
             string displayedText = message.Text;
 
-            if (message.Type == ChatMessageType.Default && myCharacter != null && message.Sender != null)
+            if (message.Sender != null)
             {
-                displayedText = message.ApplyDistanceEffect(myCharacter);
-                if (string.IsNullOrWhiteSpace(displayedText)) return;
+                if (message.Type == ChatMessageType.Default && myCharacter != null)
+                {
+                    displayedText = message.ApplyDistanceEffect(myCharacter);
+                    if (string.IsNullOrWhiteSpace(displayedText)) return;
+                }
+
+                message.Sender.SpeechBubbleTimer = Math.Max(message.Sender.SpeechBubbleTimer, 2.0f);
             }
 
             GameMain.NetLobbyScreen.NewChatMessage(message);
