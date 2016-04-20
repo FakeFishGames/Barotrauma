@@ -560,6 +560,15 @@ namespace Barotrauma
             {
                 if (newHull == null && currentHull.Submarine != null)
                 {
+                    //if there's a hull right above and below the position, don't teleport outside the sub
+                    //(the character is most likely inside some small gap between hulls)
+                    if (Hull.FindHull(findPos + Vector2.UnitY * Submarine.GridSize.Y * 2.0f, currentHull) != null &&
+                        Hull.FindHull(findPos - Vector2.UnitY * Submarine.GridSize.Y * 2.0f, currentHull) != null) return;
+
+                    if (Hull.FindHull(findPos + Vector2.UnitX * Submarine.GridSize.X * 2.0f, currentHull) != null &&
+                        Hull.FindHull(findPos - Vector2.UnitX * Submarine.GridSize.X * 2.0f, currentHull) != null) return;
+
+
                     Vector2 ragdollSpeed = refLimb.LinearVelocity == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(refLimb.LinearVelocity);
                     SetPosition(refLimb.SimPosition + ragdollSpeed + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
                     character.CursorPosition += currentHull.Submarine.Position;

@@ -147,7 +147,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                float simScale = ConvertUnits.ToSimUnits(displayScale);
+                float simScale = displayScale * Physics.DisplayToSimRation;
 
                 Vector2 offset = ConvertUnits.ToSimUnits(Submarine.Loaded.WorldPosition - item.WorldPosition);
 
@@ -158,8 +158,7 @@ namespace Barotrauma.Items.Components
                     Vector2 end = (Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] + offset) * simScale;
                     end.Y = -end.Y;
 
-                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
-                    
+                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);                    
                 }
             }
             
