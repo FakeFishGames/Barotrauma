@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,9 +61,22 @@ namespace Barotrauma
                 return;
             }
 
-            var item = new Item(itemPrefab, cargoSpawnPos.Position, Submarine.Loaded);
-            items.Add(item);
+            var cargoRoom = cargoSpawnPos.CurrentHull;
 
+            if (cargoRoom == null)
+            {
+                DebugConsole.ThrowError("A waypoint marked as Cargo must be placed inside a room!");
+                return;
+            }
+
+            Vector2 position = new Vector2(
+                Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20, true),
+                cargoRoom.Rect.Y - cargoRoom.Rect.Height + 10.0f);
+
+            var item = new Item(itemPrefab, position, cargoRoom.Submarine);
+            item.FindHull();
+            items.Add(item);
+            
             if (parent != null) parent.Combine(item);
             
             foreach (XElement subElement in element.Elements())

@@ -171,7 +171,6 @@
     name="Bike Horn"
     category="Equipment"
     pickdistance="200"
-    price="500"
     tags="weapon,smallitem"
     description="HONK">
 
