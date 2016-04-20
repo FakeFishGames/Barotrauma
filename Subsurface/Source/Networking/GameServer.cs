@@ -7,6 +7,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
 using Barotrauma.Networking.ReliableMessages;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
 {
@@ -503,9 +504,10 @@ namespace Barotrauma.Networking
 
                             break;
                         case (byte)PacketTypes.Chatmessage:
-                            ChatMessageType messageType = (ChatMessageType)inc.ReadByte();
+                            //SendChatMessage(ChatMessage.ReadNetworkMessage(inc));
+                            //!!!!!!!!!!!
 
-                            SendChatMessage(inc.ReadString(), messageType);
+                            ReadChatMessage(inc);
 
                             break;
                         case (byte)PacketTypes.PlayerLeft:
@@ -953,7 +955,8 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Select();
 
-            AddChatMessage("Press TAB to chat. Use ''d;'' to talk to dead players and spectators, and ''player name;'' to only send the message to a specific player.", ChatMessageType.Server);
+            AddChatMessage("Press TAB to chat. Use ''d;'' to talk to dead players and spectators, "
+                +"and ''player name;'' to only send the message to a specific player.", ChatMessageType.Server);
             
             yield return CoroutineStatus.Success;
         }
@@ -1081,7 +1084,7 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
 
-            Log(msg, messageColor[(int)ChatMessageType.Server]);
+            Log(msg, ChatMessage.MessageColor[(int)ChatMessageType.Server]);
             
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.KickedOut);
@@ -1370,33 +1373,79 @@ namespace Barotrauma.Networking
             }
 
             return true;
-
         }
 
-        public override void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server)
+        private void ReadChatMessage(NetIncomingMessage inc)
+        {
+            ChatMessage message = ChatMessage.ReadNetworkMessage(inc);
+
+            List<Client> recipients = new List<Client>();
+
+            foreach (Client c in ConnectedClients)
+            {
+                switch (message.Type)
+                {
+                    case ChatMessageType.Dead:
+                        if (c.Character != null && !c.Character.IsDead) continue;
+                        break;
+                    case ChatMessageType.Default:
+                        if (message.Sender != null && c.Character != null && message.Sender != c.Character)
+                        {
+                            if (Vector2.Distance(message.Sender.WorldPosition, c.Character.WorldPosition) > ChatMessage.SpeakRange) continue;
+                        }
+                        break;
+                    case ChatMessageType.Radio:
+                        if (message.Sender == null) return;
+                        var radio = message.Sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+                        if (radio == null) message.Type = ChatMessageType.Default;
+                        break;
+                }
+
+                recipients.Add(c);
+            }
+
+            AddChatMessage(message);
+
+            foreach (Client c in recipients)
+            {
+                ReliableMessage msg = c.ReliableChannel.CreateMessage();
+                msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
+                //msg.InnerMessage.Write((byte)type);
+                //msg.InnerMessage.Write(message);  
+
+                message.WriteNetworkMessage(msg.InnerMessage);
+
+                c.ReliableChannel.SendMessage(msg, c.Connection);
+            }   
+        }
+
+        public override void SendChatMessage(string message)
         {
             List<Client> recipients = new List<Client>();
             Client targetClient = null;
 
-            if (type == ChatMessageType.Server)
+            ChatMessageType type = gameStarted && myCharacter != null ? ChatMessageType.Default : ChatMessageType.Server;
+
+            string command = ChatMessage.GetChatMessageCommand(message, out message).ToLower();
+                
+            if (command=="dead" || command=="d")
             {
-                string command = GetChatMessageCommand(message).ToLower();
+                type = ChatMessageType.Dead;
+            }
+            else if (command=="radio" || command=="r")
+            {
+                if (CanUseRadio(Character.Controlled)) type = ChatMessageType.Radio;
+            }
+            else if (command != "")
+            {
+                targetClient = ConnectedClients.Find(c =>
+                    command == c.name.ToLower() ||
+                    c.Character != null && command == c.Character.Name.ToLower());
 
-                if (command=="dead" || command=="d")
+                if (targetClient == null)
                 {
-                    type = ChatMessageType.Dead;
-                }
-                else if (command != "")
-                {
-                    targetClient = ConnectedClients.Find(c =>
-                        command == c.name.ToLower() ||
-                        c.Character != null && command == c.Character.Name.ToLower());
-
-                    if (targetClient == null)
-                    {
-                        AddChatMessage("Player ''" + command + "'' not found!", ChatMessageType.Admin);
-                        return;
-                    }
+                    AddChatMessage("Player ''" + command + "'' not found!", ChatMessageType.Error);
+                    return;
                 }
             }
 
@@ -1411,8 +1460,12 @@ namespace Barotrauma.Networking
                     if (type != ChatMessageType.Dead || (c.Character == null || c.Character.IsDead)) recipients.Add(c);
                 }
             }
-            
-            AddChatMessage(message, type);
+
+            var chatMessage = ChatMessage.Create(
+                gameStarted && myCharacter != null ? myCharacter.Name : name,
+                message, type, gameStarted ? myCharacter : null);
+
+            AddChatMessage(chatMessage);
 
             if (!server.Connections.Any()) return;
 
@@ -1420,8 +1473,10 @@ namespace Barotrauma.Networking
             {
                 ReliableMessage msg = c.ReliableChannel.CreateMessage();
                 msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-                msg.InnerMessage.Write((byte)type);
-                msg.InnerMessage.Write(message);            
+                //msg.InnerMessage.Write((byte)type);
+                //msg.InnerMessage.Write(message);  
+
+                chatMessage.WriteNetworkMessage(msg.InnerMessage);
 
                 c.ReliableChannel.SendMessage(msg, c.Connection);
             }      

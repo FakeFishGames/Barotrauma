@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using Lidgren.Network;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
 {
@@ -40,11 +42,6 @@ namespace Barotrauma.Networking
         SpectateRequest
     }
 
-    enum ChatMessageType
-    {
-        Default, Admin, Dead, Server
-    }
-
     enum VoteType
     {
         Unknown,
@@ -55,9 +52,6 @@ namespace Barotrauma.Networking
 
     class NetworkMember
     {
-
-        protected static Color[] messageColor = { Color.White, Color.Red, new Color(63,72,204), Color.LightGreen };
-
         protected NetPeer netPeer;
 
         protected string name;
@@ -139,6 +133,7 @@ namespace Barotrauma.Networking
             chatMsgBox.Font = GUI.SmallFont;
             chatMsgBox.Padding = Vector4.Zero;
             chatMsgBox.OnEnterPressed = EnterChatMessage;
+            chatMsgBox.OnTextChanged = TypingChatMessage;
 
             Voting = new Voting();
         }
@@ -183,38 +178,97 @@ namespace Barotrauma.Networking
             return message;
         }
 
+        public bool TypingChatMessage(GUITextBox textBox, string text)
+        {
+            string tempStr;
+            string command = ChatMessage.GetChatMessageCommand(text, out tempStr);
+            switch (command)
+            {
+                case "r":
+                case "radio":
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
+                    break;
+                case "d":
+                case "dead":
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    break;
+                default:
+                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+                    break;
+            }
+
+            return true;
+        }
+
+        public bool CanUseRadio(Character sender)
+        {
+            if (sender == null) return false;
+
+            var radio = sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+            if (radio == null) return false;
+
+            var radioComponent = radio.GetComponent<WifiComponent>();
+            return radioComponent.HasRequiredContainedItems(false);
+        }
+
         public bool EnterChatMessage(GUITextBox textBox, string message)
         {
+            textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+
             if (string.IsNullOrWhiteSpace(message)) return false;
 
-            string senderName = gameStarted && characterInfo != null ? characterInfo.Name : name;
-
-            SendChatMessage(senderName + ": " + message);            
+            SendChatMessage(message);
 
             textBox.Deselect();
 
             return true;
         }
-        
-        public void AddChatMessage(string message, ChatMessageType messageType)
-        {
-            GameMain.NetLobbyScreen.NewChatMessage(message, messageColor[(int)messageType]);
 
-            GameServer.Log(message, messageColor[(int)messageType]);
+        public void AddChatMessage(string message, ChatMessageType type, string senderName="", Character senderCharacter = null)
+        {
+            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter));
+        }
+        
+        public void AddChatMessage(ChatMessage message)
+        {
+            if (message.Type == ChatMessageType.Radio && message.Sender != null && message.Sender != myCharacter)
+            {
+                var radio = message.Sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+                if (radio == null) return;
+
+                var radioComponent = radio.GetComponent<WifiComponent>();
+                radioComponent.Transmit(message.TextWithSender);
+                return;
+            }
+
+            string displayedText = message.Text;
+
+            if (message.Type == ChatMessageType.Default && myCharacter != null && message.Sender != null)
+            {
+                displayedText = message.ApplyDistanceEffect(myCharacter);
+                if (string.IsNullOrWhiteSpace(displayedText)) return;
+            }
+
+            GameMain.NetLobbyScreen.NewChatMessage(message);
+
+            GameServer.Log(message.Text, message.Color);
 
             while (chatBox.CountChildren > 20)
             {
                 chatBox.RemoveChild(chatBox.children[1]);
             }
 
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), message,
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, messageColor[(int)messageType],
+            if (!string.IsNullOrWhiteSpace(message.SenderName))
+            {
+                displayedText = message.SenderName + ": " + displayedText;
+            }
+
+            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), displayedText,
+                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
                 Alignment.Left, null, null, true);
             msg.Font = GUI.SmallFont;
 
             msg.Padding = new Vector4(20.0f, 0, 0, 0);
-
-            //float prevScroll = chatBox.BarScroll;
 
             float prevSize = chatBox.BarSize;
 
@@ -223,28 +277,20 @@ namespace Barotrauma.Networking
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
 
-            GUI.PlayUISound(GUISoundType.Message);
-        }
-
-        public virtual void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Server) { }
-
-        protected string GetChatMessageCommand(string message)
-        {
-            int separatorIndex = message.IndexOf(";");
-            if (separatorIndex == -1) return "";
-
-            int colonIndex = message.IndexOf(":");
-
-            string command = "";
-            try
+            GUISoundType soundType = GUISoundType.Message;
+            if (message.Type == ChatMessageType.Radio)
             {
-                command = message.Substring(colonIndex + 2, separatorIndex - colonIndex - 2);
+                soundType = GUISoundType.RadioMessage;
+            }
+            else if (message.Type == ChatMessageType.Dead)
+            {
+                soundType = GUISoundType.DeadMessage;
             }
 
-            catch { }
-            
-            return command;
+            GUI.PlayUISound(soundType);
         }
+
+        public virtual void SendChatMessage(string message) { }
 
         public virtual void Update(float deltaTime) 
         {

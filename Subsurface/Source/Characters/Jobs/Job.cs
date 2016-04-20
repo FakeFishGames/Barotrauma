@@ -26,15 +26,15 @@ namespace Barotrauma
             get { return prefab; }
         }
 
-        public List<string> SpawnItemNames
+        public XElement SpawnItems
         {
-            get { return prefab.ItemNames; }
+            get { return prefab.Items; }
         }
 
-        public List<bool> EquipSpawnItem
-        {
-            get { return prefab.EquipItem; }
-        }
+        //public List<bool> EquipSpawnItem
+        //{
+        //    get { return prefab.EquipItem; }
+        //}
 
         public List<Skill> Skills
         {
@@ -82,6 +82,57 @@ namespace Barotrauma
             skills.TryGetValue(skillName, out skill);
 
             return (skill==null) ? 0 : skill.Level;
+        }
+
+        public void GiveJobItems(Character character, WayPoint spawnPoint)
+        {
+            foreach (XElement itemElement in SpawnItems.Elements())
+            {
+                InitializeJobItem(character, spawnPoint, itemElement);
+
+            }            
+        }
+
+        private void InitializeJobItem(Character character, WayPoint spawnPoint, XElement itemElement, Item parentItem = null)
+        {
+            string itemName = ToolBox.GetAttributeString(itemElement, "name", "");
+              
+            ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
+            if (itemPrefab == null)
+            {
+                DebugConsole.ThrowError("Tried to spawn ''" + Name + "'' with the item ''" + itemName + "''. Matching item prefab not found.");
+                return;
+            }
+
+            Item item = new Item(itemPrefab, character.Position, null);
+
+            if (ToolBox.GetAttributeBool(itemElement, "equip", false))
+            {
+                List<LimbSlot> allowedSlots = new List<LimbSlot>(item.AllowedSlots);
+                allowedSlots.Remove(LimbSlot.Any);
+
+                character.Inventory.TryPutItem(item, allowedSlots, false);
+            }
+            else
+            {
+                character.Inventory.TryPutItem(item, item.AllowedSlots, false);
+            }
+
+            if (item.Prefab.Name == "ID Card" && spawnPoint != null)
+            {
+                foreach (string s in spawnPoint.IdCardTags)
+                {
+                    item.AddTag(s);
+                }
+            }
+
+
+            if (parentItem != null) parentItem.Combine(item);
+
+            foreach (XElement childItemElement in itemElement.Elements())
+            {
+                InitializeJobItem(character, spawnPoint, childItemElement, item);
+            } 
         }
 
         public virtual XElement Save(XElement parentElement)

@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using Barotrauma.Networking.ReliableMessages;
 using FarseerPhysics;
 using System.IO;
+using System.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
 {
@@ -555,9 +557,9 @@ namespace Barotrauma.Networking
 
                         break;
                     case (byte)PacketTypes.Chatmessage:
-                        ChatMessageType messageType = (ChatMessageType)inc.ReadByte();
+                        //ChatMessageType messageType = (ChatMessageType)inc.ReadByte();
 
-                        AddChatMessage(inc.ReadString(), messageType);                        
+                        AddChatMessage(ChatMessage.ReadNetworkMessage(inc));                        
                         break;
                     case (byte)PacketTypes.NetworkEvent:
                         //read the data from the message and update client state accordingly
@@ -958,19 +960,33 @@ namespace Barotrauma.Networking
             return character;
         }
 
-        public override void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Default)
+        public override void SendChatMessage(string message)
         {
             //AddChatMessage(message);
 
             if (client.ServerConnection == null) return;
 
-            type = (Screen.Selected == GameMain.GameScreen && 
-                (myCharacter == null || myCharacter.IsDead)) ? ChatMessageType.Dead : ChatMessageType.Default;
+            var type = ChatMessageType.Default;
             
+            
+            if (Screen.Selected == GameMain.GameScreen && (myCharacter == null || myCharacter.IsDead)) 
+            {
+                type = ChatMessageType.Dead;
+            }
+            else
+            {
+                string command = ChatMessage.GetChatMessageCommand(message, out message).ToLower();
+                
+                if (CanUseRadio(Character.Controlled)) type = ChatMessageType.Radio;              
+            }
+            
+            var chatMessage = ChatMessage.Create(
+                gameStarted && myCharacter != null ? myCharacter.Name : name,
+                message, type, gameStarted ? myCharacter : null);
+
             ReliableMessage msg = reliableChannel.CreateMessage();
             msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-            msg.InnerMessage.Write((byte)type);
-            msg.InnerMessage.Write(message);
+            chatMessage.WriteNetworkMessage(msg.InnerMessage);
 
             reliableChannel.SendMessage(msg, client.ServerConnection);
         }

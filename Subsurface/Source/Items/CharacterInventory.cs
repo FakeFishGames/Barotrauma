@@ -11,7 +11,7 @@ namespace Barotrauma
     [Flags]
     public enum LimbSlot
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, Torso = 16, Legs = 32
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, Torso = 16, Legs = 32, Face=64
     };
 
     class CharacterInventory : Inventory
@@ -21,7 +21,7 @@ namespace Barotrauma
         private Character character;
 
         public static LimbSlot[] limbSlots = new LimbSlot[] { 
-            LimbSlot.Head, LimbSlot.Torso, LimbSlot.Legs, LimbSlot.LeftHand, LimbSlot.RightHand,
+            LimbSlot.Head, LimbSlot.Torso, LimbSlot.Legs, LimbSlot.LeftHand, LimbSlot.RightHand, LimbSlot.Face,
             LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any,
             LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any};
 
@@ -58,7 +58,7 @@ namespace Barotrauma
                     case 3:
                     case 4:
                         SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 3),
+                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 2),
                             GameMain.GraphicsHeight - (spacing + rectHeight)*3);
 
                         useOnSelfButton[i - 3] = new GUIButton(
@@ -71,10 +71,16 @@ namespace Barotrauma
 
 
                         break;
+                    case 5:
+                        SlotPositions[i] = new Vector2(
+                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 5),
+                            GameMain.GraphicsHeight - (spacing + rectHeight) * 3);
+
+                        break;
                     default:
                         SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 3)%5),
-                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>9) ? 2 : 1));
+                            spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 6)%5),
+                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>10) ? 2 : 1));
                         break;
                 }
             }
@@ -298,6 +304,13 @@ namespace Barotrauma
                         new Vector2(18.0f, 20.0f), Vector2.One,
                         SpriteEffects.None, 0.1f);
                 }
+                else if (i==5)
+                {
+                    spriteBatch.Draw(icons, new Vector2(slotRect.Center.X, slotRect.Center.Y),
+                        new Rectangle(57,0,31,32), Color.White * 0.7f, 0.0f,
+                        new Vector2(15.0f, 16.0f), Vector2.One,
+                        SpriteEffects.None, 0.1f);
+                }
             }
             
             for (int i = 0; i < capacity; i++)
@@ -334,7 +347,7 @@ namespace Barotrauma
                     highlightedSlot = slotRect;
                 }
 
-                UpdateSlot(spriteBatch, slotRect, i, Items[i], false, i>4 ? 0.2f : 0.4f);
+                UpdateSlot(spriteBatch, slotRect, i, Items[i], false, i>5 ? 0.2f : 0.4f);
                 
                 if (draggingItem!=null && draggingItem == Items[i]) draggingItemSlot = slotRect;
             }

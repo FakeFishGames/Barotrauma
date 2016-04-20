@@ -18,8 +18,10 @@ namespace Barotrauma
 
     public enum GUISoundType
     {
-        Message = 0,
-        Click = 1
+        Message,
+        RadioMessage,
+        DeadMessage,
+        Click
     }
     
     public class GUI
@@ -75,8 +77,10 @@ namespace Barotrauma
 
             if (loadSounds)
             {
-                sounds = new Sound[2];
+                sounds = new Sound[4];
                 sounds[(int)GUISoundType.Message] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.RadioMessage] = Sound.Load("Content/Sounds/UI/radiomsg.ogg", false);
+                sounds[(int)GUISoundType.DeadMessage] = Sound.Load("Content/Sounds/UI/deadmsg.ogg", false);
                 sounds[(int)GUISoundType.Click] = Sound.Load("Content/Sounds/UI/beep-shinymetal.ogg", false);
             }
 
