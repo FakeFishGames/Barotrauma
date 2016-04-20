@@ -14,6 +14,8 @@ namespace Barotrauma
 
         private static GUIButton cprButton;
 
+        private static GUIButton suicideButton;
+
         private static GUIProgressBar drowningBar, healthBar;
 
         private static float damageOverlayTimer;
@@ -35,6 +37,8 @@ namespace Barotrauma
             if (healthBar != null) healthBar.Update(deltaTime);
 
             if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
+
+            if (GameMain.NetworkMember != null && suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
         }
@@ -144,8 +148,6 @@ namespace Barotrauma
                 }  
             }
 
-
-
             if (Screen.Selected == GameMain.EditMapScreen) return;
 
             if (character.IsUnconscious || (character.Oxygen < 80.0f && !character.IsDead))
@@ -159,12 +161,37 @@ namespace Barotrauma
                 noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
                     Vector2.Zero,
                     Color.White * alpha);
+
+            }
+            else
+            {
+                if (suicideButton != null) suicideButton.Visible = false;
             }
 
             if (damageOverlayTimer>0.0f)
             {
                 damageOverlay.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayTimer, Vector2.Zero, 0.0f,
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
+            }
+
+            if (character.IsUnconscious && GameMain.NetworkMember!=null)
+            {
+                if (suicideButton == null)
+                {
+                    suicideButton = new GUIButton(
+                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), "Give in", GUI.Style);
+
+                    suicideButton.ToolTip = "Let go of your character and enter spectator mode (other players will now longer be able to revive you)";
+
+                    suicideButton.OnClicked = (button, userData) =>
+                    {
+                        character.Kill(character.CauseOfDeath);
+                        return true;
+                    };
+                }
+
+                suicideButton.Visible = true;
+                suicideButton.Draw(spriteBatch);                
             }
         }
 

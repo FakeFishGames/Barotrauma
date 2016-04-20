@@ -188,6 +188,8 @@ namespace Barotrauma
 
         public bool LoadPrevious(GUIButton button, object obj)
         {
+            Submarine.Unload();
+
             SaveUtil.LoadGame(saveFile);
 
             GameMain.LobbyScreen.Select();
