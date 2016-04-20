@@ -75,8 +75,8 @@ namespace Barotrauma
                     character.Info.Job != null ? (character.Info.Name + '\n' + "(" + character.Info.Job.Name + ")") : character.Info.Name, null);
                 
 
-                string statusText;
-                Color statusColor;
+                string statusText = "OK";
+                Color statusColor = Color.DarkGreen;
                 
                 if (character.IsDead)
                 {
@@ -85,8 +85,18 @@ namespace Barotrauma
                 }
                 else
                 {
-                    statusText = (character.Health / character.MaxHealth > 0.8f) ? "OK" : "Injured";
-                    statusColor = (character.Health / character.MaxHealth > 0.8f) ? Color.DarkGreen : Color.DarkOrange;
+                    
+                    if (character.IsUnconscious)
+                    {
+                        statusText = "Unconscious";
+                        statusColor = Color.DarkOrange;
+                    }
+                    else if (character.Health / character.MaxHealth < 0.8f)
+                    {
+                        statusText = "Injured";
+                        statusColor = Color.DarkOrange;
+                    }
+                    
                 }
 
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), statusText,

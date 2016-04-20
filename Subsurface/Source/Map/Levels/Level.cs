@@ -359,9 +359,9 @@ namespace Barotrauma
 
                 pathCells.AddRange(cavePathCells);
 
-                for (int j = cavePathCells.Count / 2; j < cavePathCells.Count; j+=10)
+                for (int j = cavePathCells.Count / 2; j < cavePathCells.Count; j += 10)
                 {
-                    positionsOfInterest.Add(new InterestingPosition(cavePathCells[i].Center, false));
+                    positionsOfInterest.Add(new InterestingPosition(cavePathCells[j].Center, false));
                 }
             }
 
@@ -423,12 +423,12 @@ namespace Barotrauma
             ShaftBodies = new Body[2];
             for (int i = 0; i < 2; i++)
             {
-                ShaftBodies[i] = BodyFactory.CreateRectangle(GameMain.World, 100.0f, 10.0f, 5.0f);
+                ShaftBodies[i] = BodyFactory.CreateRectangle(GameMain.World, 200.0f, 10.0f, 5.0f);
                 ShaftBodies[i].BodyType = BodyType.Static;
                 ShaftBodies[i].CollisionCategories = Physics.CollisionLevel;
 
                 Vector2 shaftPos = (i == 0) ? startPosition : endPosition;
-                shaftPos.Y = borders.Height;
+                shaftPos.Y = borders.Height + 150.0f;
 
                 ShaftBodies[i].SetTransform(ConvertUnits.ToSimUnits(shaftPos), 0.0f);
                 bodies.Add(ShaftBodies[i]);
@@ -489,39 +489,54 @@ namespace Barotrauma
 
         private void EnlargeMainPath(List<VoronoiCell> pathCells, float minWidth)
         {
+            List<WayPoint> wayPoints = new List<WayPoint>();
 
-            WayPoint newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
+            var newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
             newWaypoint.MoveWithLevel = true;
+            wayPoints.Add(newWaypoint);
 
-            WayPoint prevWaypoint = newWaypoint;
+            //WayPoint prevWaypoint = newWaypoint;
 
             for (int i = 0; i < pathCells.Count; i++)
             {
-                //clean "loops" from the path
-                for (int n = 0; n < i; n++)
-                {
-                    if (pathCells[n] != pathCells[i]) continue;
+                ////clean "loops" from the path
+                //for (int n = 0; n < i; n++)
+                //{
+                //    if (pathCells[n] != pathCells[i]) continue;
 
-                    pathCells.RemoveRange(n + 1, i - n);
-                    break;
-                }
-                if (i >= pathCells.Count) break;
+                //    pathCells.RemoveRange(n + 1, i - n);
+                //    break;
+                //}
+                //if (i >= pathCells.Count) break;
+
+                pathCells[i].CellType = CellType.Path;
 
                 newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10), null);
                 newWaypoint.MoveWithLevel = true;
-                if (prevWaypoint != null)
+                wayPoints.Add(newWaypoint);
+               
+                wayPoints[wayPoints.Count-2].linkedTo.Add(newWaypoint);
+                newWaypoint.linkedTo.Add(wayPoints[wayPoints.Count - 2]);
+
+                for (int n = 0; n < wayPoints.Count; n++)
                 {
-                    prevWaypoint.linkedTo.Add(newWaypoint);
-                    newWaypoint.linkedTo.Add(prevWaypoint);
+                    if (wayPoints[n].Position != newWaypoint.Position) continue;
+
+                    wayPoints[n].linkedTo.Add(newWaypoint);
+                    newWaypoint.linkedTo.Add(wayPoints[n]);
+
+                    break;
                 }
-                prevWaypoint = newWaypoint;
+                
+                //prevWaypoint = newWaypoint;
             }
 
             newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
             newWaypoint.MoveWithLevel = true;
+            wayPoints.Add(newWaypoint);
 
-            prevWaypoint.linkedTo.Add(newWaypoint);
-            newWaypoint.linkedTo.Add(prevWaypoint);
+            wayPoints[wayPoints.Count - 2].linkedTo.Add(newWaypoint);
+            newWaypoint.linkedTo.Add(wayPoints[wayPoints.Count - 2]);
 
             if (minWidth > 0.0f)
             {
