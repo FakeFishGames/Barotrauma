@@ -195,6 +195,8 @@ namespace Barotrauma
 
             bool success = CrewManager.characters.Any(c => !c.IsDead);
             
+            GameMain.GameSession.EndShift("");
+
             if (success)
             {
                 if (Submarine.Loaded.AtEndPosition)
@@ -204,21 +206,7 @@ namespace Barotrauma
 
                 SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
             }
-            else
-            {
 
-
-            //                    var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
-            //okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
-
-            //    var msgBox = new GUIMessageBox("Game over", "Your entire crew has died!", new string[] { "Load game", "Quit" });
-            //    msgBox.Buttons[0].OnClicked += GameMain.GameSession.LoadPrevious;
-            //    msgBox.Buttons[0].OnClicked += msgBox.Close;
-            //    msgBox.Buttons[1].OnClicked = GameMain.LobbyScreen.QuitToMainMenu;
-            //    msgBox.Buttons[1].OnClicked += msgBox.Close;
-            }
-
-            GameMain.GameSession.EndShift("");
 
             if (!success)
             {
