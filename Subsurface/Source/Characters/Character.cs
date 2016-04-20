@@ -454,7 +454,7 @@ namespace Barotrauma
             {
                 AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
                 AnimController.TargetDir = Direction.Right;
-                inventory = new CharacterInventory(15, this);
+                inventory = new CharacterInventory(16, this);
             }
             else
             {
@@ -594,39 +594,7 @@ namespace Barotrauma
         {
             if (info == null || info.Job == null) return;
 
-            for (int i = 0; i < info.Job.SpawnItemNames.Count; i++ )
-            {
-                string itemName = info.Job.SpawnItemNames[i];
-
-                ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
-                if (itemPrefab == null)
-                {
-                    DebugConsole.ThrowError("Tried to spawn ''" + Name + "'' with the item ''" + itemName + "''. Matching item prefab not found.");
-                    continue;
-                }
-
-                Item item = new Item(itemPrefab, Position, null);
-
-                if (info.Job.EquipSpawnItem[i])
-                {
-                    List<LimbSlot> allowedSlots = new List<LimbSlot>(item.AllowedSlots);
-                    allowedSlots.Remove(LimbSlot.Any);
-
-                    inventory.TryPutItem(item, allowedSlots, false);
-                }
-                else
-                {
-                    inventory.TryPutItem(item, item.AllowedSlots, false);
-                }
-
-                if (item.Prefab.Name == "ID Card" && spawnPoint != null)
-                {
-                    foreach (string s in spawnPoint.IdCardTags)
-                    {
-                        item.AddTag(s);
-                    }
-                }
-            }            
+            info.Job.GiveJobItems(this, spawnPoint);
         }
 
         public int GetSkillLevel(string skillName)
@@ -988,6 +956,16 @@ namespace Barotrauma
             if (!Enabled) return;
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
+            
+            if (inventory!=null)
+            {
+                foreach (Item item in inventory.Items)
+                {
+                    if (item == null || item.body == null || item.body.Enabled) continue;
+                    item.Submarine = Submarine;
+                    item.SetTransform(SimPosition, 0.0f);
+                }
+            }
 
             if (isDead) return;
 

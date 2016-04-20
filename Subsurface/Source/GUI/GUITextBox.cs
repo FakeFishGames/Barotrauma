@@ -72,6 +72,12 @@ namespace Barotrauma
             }
         }
 
+        public Color TextColor
+        {
+            get { return textBlock.TextColor; }
+            set { textBlock.TextColor = value; }
+        }
+
         public override Color HoverColor
         {
             get

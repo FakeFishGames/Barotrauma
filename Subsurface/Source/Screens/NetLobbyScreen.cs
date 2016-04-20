@@ -157,7 +157,6 @@ namespace Barotrauma
             chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, GUI.Style, chatFrame);            
             textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, GUI.Style, chatFrame);
             textBox.Font = GUI.SmallFont;
-            textBox.OnEnterPressed = EnterChatMessage;
 
             //player info panel ------------------------------------------------------------
 
@@ -291,6 +290,10 @@ namespace Barotrauma
             GameMain.LightManager.LosEnabled = false;
             
             textBox.Select();
+
+
+            textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
+            textBox.OnTextChanged = GameMain.NetworkMember.TypingChatMessage;
 
             Character.Controlled = null;
             //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
@@ -753,7 +756,7 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        public void NewChatMessage(string message, Color color)
+        public void NewChatMessage(ChatMessage message)
         {
             float prevSize = chatBox.BarSize;
 
@@ -763,8 +766,8 @@ namespace Barotrauma
             }
 
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20),
-                message, 
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, color, 
+                message.TextWithSender, 
+                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, message.Color, 
                 Alignment.Left, GUI.Style, null, true);
             msg.Font = GUI.SmallFont;
             msg.CanBeFocused = false;
@@ -775,14 +778,14 @@ namespace Barotrauma
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
         
-        public bool EnterChatMessage(GUITextBox textBox, string message)
-        {
-            if (String.IsNullOrEmpty(message)) return false;
+        //public bool EnterChatMessage(GUITextBox textBox, string message)
+        //{
+        //    if (String.IsNullOrEmpty(message)) return false;
 
-            GameMain.NetworkMember.SendChatMessage(GameMain.NetworkMember.Name + ": " + message);
+        //    GameMain.NetworkMember.SendChatMessage(ChatMessage.Create(message, ChatMessageType.Default, null));
             
-            return true;
-        }
+        //    return true;
+        //}
 
         private void UpdatePreviewPlayer(CharacterInfo characterInfo)
         {

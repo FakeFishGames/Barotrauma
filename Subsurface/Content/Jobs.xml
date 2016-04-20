@@ -1,17 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Jobs>
   <Job name="Captain" description="The Commanding Officer with authority over the entire crew. The captain is responsible for commanding the rest of the crew and trying to keep everything running smoothly." minnumber="1" maxnumber="1">
-    <Item name="ID Card"/>
-    <Item name="Captain's Cap" equip="true"/>
-    <Item name="Captain's Jacket" equip="true"/>
-    <Item name="Captain's Trousers" equip="true"/>
-
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Construction" level="20,30"/>
       <Skill name="Electrical Engineering" level="20,30"/>
       <Skill name="Medical" level="10,30"/>
     </Skills>
+    <Items>
+      <Item name="ID Card"/>
+      <Item name="Captain's Cap" equip="true"/>
+      <Item name="Captain's Jacket" equip="true"/>
+      <Item name="Captain's Trousers" equip="true"/>
+      <Item name="Headset" equip="true">
+        <Item name="Battery Cell"/>
+      </Item>        
+    </Items>
   </Job>
   
   <Job name="Engineer" description="Engineers have above-average construction and mechanic skills, but fixing complex mechanical devices is still usually out of their skill set. They are competent at fixing electrical devices however, and are the ones to turn to when the power grid starts failing." minnumber="1">
@@ -21,10 +25,15 @@
       <Skill name="Electrical Engineering" level="50,60"/>
       <Skill name="Medical" level="10,20"/>
     </Skills>
-    <Item name="ID Card"/>
-    <Item name="Wrench"/>
-    <Item name="Screwdriver"/>
-    <Item name="Orange Jumpsuit" equip="true"/>
+    <Items>
+      <Item name="ID Card"/>
+      <Item name="Wrench"/>
+      <Item name="Screwdriver"/>
+      <Item name="Orange Jumpsuit" equip="true"/>
+      <Item name="Headset" equip="true">
+        <Item name="Battery Cell"/>
+      </Item>      
+    </Items>
   </Job>
 
   <Job name="Mechanic" description="Mechanics have high construction and mechanic skills. They are skilled at using tools such as plasma cutters and welders, and are usually the only ones who can fix broken mechanical devices." minnumber="1">
@@ -34,10 +43,15 @@
       <Skill name="Electrical Engineering" level="30,35"/>
       <Skill name="Medical" level="10,20"/>
     </Skills>
-    <Item name="ID Card"/>
-    <Item name="Wrench"/>
-    <Item name="Screwdriver"/>
-    <Item name="Blue Jumpsuit" equip="true"/>
+    <Items>
+      <Item name="ID Card"/>
+      <Item name="Wrench"/>
+      <Item name="Screwdriver"/>
+      <Item name="Blue Jumpsuit" equip="true"/>
+      <Item name="Headset" equip="true">
+        <Item name="Battery Cell"/>
+      </Item>      
+    </Items>
   </Job>
 
   <Job name="Security Officer" description="Security officers are are responsible for keeping the submarine safe from potential attackers. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2">
@@ -47,12 +61,17 @@
       <Skill name="Construction" level="10,20"/>
       <Skill name="Electrical Engineering" level="10,20"/>
     </Skills>
-    <Item name="ID Card"/>
-    <Item name="Stun Baton"/>
-    <Item name="Battery Cell"/>
-    <Item name="Handcuffs"/>
-    <Item name="Body Armor" equip="true"/>
-    <Item name="Ballistic Helmet" equip="true"/>    
+    <Items>
+      <Item name="ID Card"/>
+      <Item name="Stun Baton"/>
+      <Item name="Battery Cell"/>
+      <Item name="Handcuffs"/>
+      <Item name="Body Armor" equip="true"/>
+      <Item name="Ballistic Helmet" equip="true"/>
+      <Item name="Headset" equip="true">
+        <Item name="Battery Cell"/>
+      </Item>      
+    </Items>
   </Job>
 
   <Job name="Medical Doctor" description="The primary duty of the doctors is too help injured crew members, but their knowledge of chemistry and pharmaceutics can also be useful for creating various non-medicinal chemicals." maxnumber="2">
@@ -62,11 +81,16 @@
       <Skill name="Electrical Engineering" level="10,20"/>
       <Skill name="Medical" level="50,70"/>
     </Skills>
-    <Item name="ID Card"/>
-    <Item name="Doctor's Coat" equip="true"/>
-    <Item name="Doctor's Trousers" equip="true"/>
-    <Item name="Health Scanner HUD"/>
-    <Item name="Medical Syringe"/>   
+    <Items>
+      <Item name="ID Card"/>
+      <Item name="Doctor's Coat" equip="true"/>
+      <Item name="Doctor's Trousers" equip="true"/>
+      <Item name="Health Scanner HUD"/>
+      <Item name="Medical Syringe"/>
+      <Item name="Headset" equip="true">
+        <Item name="Battery Cell"/>
+      </Item>      
+    </Items>
   </Job>
 
   <Job name="Assistant" description="Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for." allowalways="true">
@@ -76,8 +100,13 @@
       <Skill name="Electrical Engineering" level="20,30"/>
       <Skill name="Medical" level="10,20"/>
     </Skills>
-    <Item name="ID Card"/>
-    <Item name="Wrench"/>
-    <Item name="Screwdriver"/>
+    <Items>
+      <Item name="ID Card"/>
+      <Item name="Wrench"/>
+      <Item name="Screwdriver"/>
+      <Item name="Headset" equip="true">
+        <Item name="Battery Cell"/>
+      </Item>      
+    </Items>
   </Job>
 </Jobs>

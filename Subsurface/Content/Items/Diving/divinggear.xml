@@ -38,7 +38,7 @@
   
     <Body radius="18" density="15"/>
 
-    <Wearable limbtype="Head" slots="Any,Head">
+    <Wearable limbtype="Head" slots="Any,Face">
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
       <StatusEffect type="OnWearing" target="Character" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5">

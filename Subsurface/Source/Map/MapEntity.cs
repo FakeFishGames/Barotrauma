@@ -213,9 +213,9 @@ namespace Barotrauma
 
             if (linkedTo != null)
             {
-                foreach (MapEntity e in linkedTo)
+                for (int i = linkedTo.Count - 1; i >= 0; i-- )
                 {
-                    e.RemoveLinked(this);
+                    linkedTo[i].RemoveLinked(this);
                 }
                 linkedTo.Clear();
             }

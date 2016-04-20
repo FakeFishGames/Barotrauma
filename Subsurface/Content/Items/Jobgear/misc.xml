@@ -1,5 +1,30 @@
 ﻿<Items>
   <Item
+    name="Headset"
+    category="Equipment"
+    pickdistance="150"
+    tags="smallitem">
+
+    <Sprite texture ="headset.png" depth="0.6"/>
+
+    <Body radius="8" density="10"/>
+
+    <WifiComponent range="20000.0" LinkToChat="true">
+      <RequiredItems name="Battery Cell" type="Contained"/>      
+    </WifiComponent>
+
+      <ItemContainer capacity="1" hideitems="true">
+        <Containable name="Battery Cell"/>
+        <Containable name="Fulgurium Battery Cell"/>
+      </ItemContainer>
+    
+    <Wearable limbtype="Head" slots="Any,Face">
+      <StatusEffect type="OnWearing" target="Contained" Condition="-0.1"/>
+      <sprite texture="headset.png" limb="Head" origin="0.5,0.5"/>
+    </Wearable>
+  </Item>
+
+  <Item
     name="Clown Mask"
     category="Equipment"
     pickdistance="150"
@@ -10,7 +35,7 @@
 
     <Body radius="8" density="10"/>
 
-    <Wearable limbtype="Head" slots="Any,Head">
+    <Wearable limbtype="Head" slots="Any,Face">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5"/>
     </Wearable>
   </Item>
