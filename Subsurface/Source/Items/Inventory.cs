@@ -29,7 +29,7 @@ namespace Barotrauma
 
         private Vector2 centerPos;
 
-        protected int selectedSlot;
+        protected int selectedSlot = -1;
 
         public Item[] Items;
 
@@ -186,6 +186,8 @@ namespace Barotrauma
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
             Rectangle draggingItemSlot = slotRect;
 
+            selectedSlot = -1;
+
             for (int i = 0; i < capacity; i++)
             {
                 slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow);
@@ -257,9 +259,15 @@ namespace Barotrauma
 
             if (mouseOn)
             {
+
+                if (!isSubSlot && selectedSlot == -1)
+                {
+                    selectedSlot = slotIndex;
+                }
+
                 if (draggingItem == null)
                 {
-                    if (PlayerInput.LeftButtonHeld())
+                    if (PlayerInput.LeftButtonHeld() && selectedSlot == slotIndex)
                     {
                         draggingItem = item;
                     }  
@@ -276,56 +284,52 @@ namespace Barotrauma
                     draggingItem = null;
                 }
 
-                if (!isSubSlot && selectedSlot == -1)
-                {
-                    selectedSlot = slotIndex;
-                }
             }
 
-            if (selectedSlot == slotIndex && !isSubSlot)
-            {
-                selectedSlot = -1;
+            DrawSlot(spriteBatch, rect, (draggingItem == item && !mouseOn) ? null : item, mouseOn && selectedSlot == slotIndex, isSubSlot, alpha, drawItem);
 
-                int itemCapacity = item==null ? 0 : item.Capacity;
-                if (itemCapacity > 0)
-                {
+        }
+
+        public void DrawSubInventory(SpriteBatch spriteBatch, Rectangle rect, int slotIndex)
+        {
+            var item = Items[slotIndex];
+
+            selectedSlot = -1;
+
+            int itemCapacity = item == null ? 0 : item.Capacity;
+            if (itemCapacity == 0) return;            
 
 #if DEBUG
-                    System.Diagnostics.Debug.Assert(slotIndex >= 0 && slotIndex < Items.Length);
+            System.Diagnostics.Debug.Assert(slotIndex >= 0 && slotIndex < Items.Length);
 #else
-                    if (slotIndex < 0 || slotIndex >= Items.Length) return;
+            if (slotIndex < 0 || slotIndex >= Items.Length) return;
 #endif
 
-                    Rectangle containerRect = new Rectangle(rect.X - 5, rect.Y - (40 + 10) * itemCapacity - 5,
-                            rect.Width + 10, rect.Height + (40 + 10) * itemCapacity + 10);
+            Rectangle containerRect = new Rectangle(rect.X - 5, rect.Y - (40 + 10) * itemCapacity - 5,
+                    rect.Width + 10, rect.Height + (40 + 10) * itemCapacity + 10);
 
-                    Rectangle subRect = rect;
-                    subRect.Height = 40;
+            Rectangle subRect = rect;
+            subRect.Height = 40;
 
-                    selectedSlot = containerRect.Contains(PlayerInput.MousePosition) && !Locked ? slotIndex : -1;
+            selectedSlot = containerRect.Contains(PlayerInput.MousePosition) && !Locked ? slotIndex : -1;
 
-                    GUI.DrawRectangle(spriteBatch, containerRect, Color.Black * 0.8f, true);
-                    GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
+            GUI.DrawRectangle(spriteBatch, containerRect, Color.Black * 0.8f, true);
+            GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
-                    Item[] containedItems = null;
-                    if (Items[slotIndex] != null) containedItems = Items[slotIndex].ContainedItems;
+            Item[] containedItems = null;
+            if (Items[slotIndex] != null) containedItems = Items[slotIndex].ContainedItems;
 
-                    if (containedItems != null)
-                    {
-                        for (int i = 0; i < itemCapacity; i++)
-                        {
-                            subRect.Y = subRect.Y - subRect.Height - 10;
-                            UpdateSlot(spriteBatch, subRect, selectedSlot, i < containedItems.Count() ? containedItems[i] : null, true);
-                        }
-                    }
+            if (containedItems != null)
+            {
+                for (int i = 0; i < itemCapacity; i++)
+                {
+                    subRect.Y = subRect.Y - subRect.Height - 10;
+                    UpdateSlot(spriteBatch, subRect, selectedSlot, i < containedItems.Count() ? containedItems[i] : null, true);
                 }
-
-
-
             }
+            
 
-            DrawSlot(spriteBatch, rect, (draggingItem == item && !mouseOn) ? null : item, mouseOn, isSubSlot, alpha, drawItem);
-
+            
         }
 
         protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot, float alpha=0.4f, bool drawItem=true)

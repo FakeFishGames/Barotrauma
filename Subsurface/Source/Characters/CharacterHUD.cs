@@ -89,7 +89,7 @@ namespace Barotrauma
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
-                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(150 + 320, 0), new Point(130, 20)), "Perform CPR", GUI.Style);
+                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -30), new Point(130, 20)), "Perform CPR", GUI.Style);
 
                         cprButton.OnClicked = (button, userData) =>
                         {
