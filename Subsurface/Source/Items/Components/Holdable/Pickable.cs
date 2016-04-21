@@ -11,12 +11,12 @@ namespace Barotrauma.Items.Components
     {
         protected Character picker;
 
-        protected List<LimbSlot> allowedSlots;
+        protected List<InvSlotType> allowedSlots;
 
         private float pickTimer;
 
 
-        public List<LimbSlot> AllowedSlots
+        public List<InvSlotType> AllowedSlots
         {
             get { return allowedSlots; }
         }
@@ -29,23 +29,23 @@ namespace Barotrauma.Items.Components
         public Pickable(Item item, XElement element)
             : base(item, element)
         {
-            allowedSlots = new List<LimbSlot>();
+            allowedSlots = new List<InvSlotType>();
 
             string slotString = ToolBox.GetAttributeString(element, "slots", "Any");
             string[] slotCombinations = slotString.Split(',');
             foreach (string slotCombination in slotCombinations)
             {
                 string[] slots = slotCombination.Split('+');
-                LimbSlot allowedSlot = LimbSlot.None;
+                InvSlotType allowedSlot = InvSlotType.None;
                 foreach (string slot in slots)                
                 {
                     if (slot.ToLower()=="bothhands")
                     {
-                        allowedSlot = LimbSlot.LeftHand | LimbSlot.RightHand;
+                        allowedSlot = InvSlotType.LeftHand | InvSlotType.RightHand;
                     }
                     else
                     {
-                        allowedSlot = allowedSlot | (LimbSlot)Enum.Parse(typeof(LimbSlot), slot.Trim());
+                        allowedSlot = allowedSlot | (InvSlotType)Enum.Parse(typeof(InvSlotType), slot.Trim());
                     }
                 }
                 allowedSlots.Add(allowedSlot);

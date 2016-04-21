@@ -175,10 +175,12 @@ namespace Barotrauma
 
         public static void LoadAll(List<string> filePaths)
         {
-            //string[] files = Directory.GetFiles(contentFolder, "*.xml", SearchOption.AllDirectories);
+            DebugConsole.Log("Loading item prefabs: ");
 
             foreach (string filePath in filePaths)
             {
+                DebugConsole.Log("*** "+filePath+" ***");
+
                 XDocument doc = ToolBox.TryLoadXml(filePath);
                 if (doc == null) return;
 
@@ -200,11 +202,12 @@ namespace Barotrauma
 
         public ItemPrefab (XElement element, string filePath)
         {
-
             configFile = filePath;
 
             name = ToolBox.GetAttributeString(element, "name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
+
+            DebugConsole.Log("    "+name);
 
             Description = ToolBox.GetAttributeString(element, "description", "");
 
@@ -226,13 +229,11 @@ namespace Barotrauma
 
             ImpactTolerance     = ToolBox.GetAttributeFloat(element, "impacttolerance", 0.0f);
 
-
             string categoriesStr = ToolBox.GetAttributeString(element, "category", "Misc");
             string[] categories = categoriesStr.Split(',');
 
-            for (int i = 0; i<categories.Length; i++)
+            for (int i = 0; i < categories.Length; i++)
             {
-
                 MapEntityCategory category;
                 if (Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), out category))
                 {

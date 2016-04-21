@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Barotrauma
 {
     [Flags]
-    public enum LimbSlot
+    public enum InvSlotType
     {
         None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, Torso = 16, Legs = 32, Face=64
     };
@@ -20,10 +20,10 @@ namespace Barotrauma
 
         private Character character;
 
-        public static LimbSlot[] limbSlots = new LimbSlot[] { 
-            LimbSlot.Head, LimbSlot.Torso, LimbSlot.Legs, LimbSlot.LeftHand, LimbSlot.RightHand, LimbSlot.Face,
-            LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any,
-            LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any, LimbSlot.Any};
+        public static InvSlotType[] limbSlots = new InvSlotType[] { 
+            InvSlotType.Head, InvSlotType.Torso, InvSlotType.Legs, InvSlotType.LeftHand, InvSlotType.RightHand, InvSlotType.Face,
+            InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any,
+            InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any};
 
         public Vector2[] SlotPositions;
 
@@ -111,7 +111,7 @@ namespace Barotrauma
             }
         }
 
-        public int FindLimbSlot(LimbSlot limbSlot)
+        public int FindLimbSlot(InvSlotType limbSlot)
         {
             for (int i = 0; i < Items.Length; i++)
             {
@@ -120,7 +120,7 @@ namespace Barotrauma
             return -1;
         }
 
-        public bool IsInLimbSlot(Item item, LimbSlot limbSlot)
+        public bool IsInLimbSlot(Item item, InvSlotType limbSlot)
         {
             for (int i = 0; i<Items.Length; i++)
             {
@@ -132,16 +132,16 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public override bool TryPutItem(Item item, List<LimbSlot> allowedSlots = null, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
             if (allowedSlots == null) return false;
 
             //try to place the item in LimBlot.Any slot if that's allowed
-            if (allowedSlots.Contains(LimbSlot.Any))
+            if (allowedSlots.Contains(InvSlotType.Any))
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (Items[i] != null || limbSlots[i] != LimbSlot.Any) continue;
+                    if (Items[i] != null || limbSlots[i] != InvSlotType.Any) continue;
 
                     PutItem(item, i, createNetworkEvent);
                     item.Unequip(character);
@@ -150,7 +150,7 @@ namespace Barotrauma
             }
 
             bool placed = false;
-            foreach (LimbSlot allowedSlot in allowedSlots)
+            foreach (InvSlotType allowedSlot in allowedSlots)
             {
                 //check if all the required slots are free
                 bool free = true;
@@ -235,20 +235,20 @@ namespace Barotrauma
                 return combined;
             }
 
-            if (limbSlots[index] == LimbSlot.Any)
+            if (limbSlots[index] == InvSlotType.Any)
             {
-                if (!item.AllowedSlots.Contains(LimbSlot.Any)) return false;
+                if (!item.AllowedSlots.Contains(InvSlotType.Any)) return false;
                 if (Items[index] != null) return Items[index] == item;
 
                 PutItem(item, index, createNetworkEvent, true);
                 return true;
             }
 
-            LimbSlot placeToSlots = LimbSlot.None;
+            InvSlotType placeToSlots = InvSlotType.None;
 
             bool slotsFree = true;
-            List<LimbSlot> allowedSlots = item.AllowedSlots;
-            foreach (LimbSlot allowedSlot in allowedSlots)
+            List<InvSlotType> allowedSlots = item.AllowedSlots;
+            foreach (InvSlotType allowedSlot in allowedSlots)
             {
                 if (!allowedSlot.HasFlag(limbSlots[index])) continue;
 
@@ -266,7 +266,7 @@ namespace Barotrauma
 
             if (!slotsFree) return false;
             
-            return TryPutItem(item, new List<LimbSlot>() {placeToSlots}, createNetworkEvent);
+            return TryPutItem(item, new List<InvSlotType>() {placeToSlots}, createNetworkEvent);
         }
          
         public void DrawOwn(SpriteBatch spriteBatch, Vector2 offset)

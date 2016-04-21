@@ -27,8 +27,6 @@ namespace Barotrauma
 
         protected int capacity;
 
-
-
         private Vector2 centerPos;
 
         protected int selectedSlot;
@@ -95,7 +93,7 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, List<LimbSlot> allowedSlots = null, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
             int slot = FindAllowedSlot(item);
             if (slot < 0) return false;
@@ -334,13 +332,29 @@ namespace Barotrauma
         {
             GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * alpha*0.75f, true);
             
-            if (item != null && item.Condition < 100.0f)
+            if (item != null)
             {
-                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 4, rect.Width, 4), Color.Black, true);
-                GUI.DrawRectangle(spriteBatch,
-                    new Rectangle(rect.X, rect.Bottom - 4, (int)(rect.Width * item.Condition / 100.0f), 4),
-                    Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f), true);
+                if (item.Condition < 100.0f)
+                {
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black*0.8f, true);
+                    GUI.DrawRectangle(spriteBatch,
+                        new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / 100.0f), 8),
+                        Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f)*0.8f, true);
+                }
+
+                if (!isHighLighted)
+                {
+                    var containedItems = item.ContainedItems;
+                    if (containedItems != null && containedItems.Length == 1 && containedItems[0].Condition < 100.0f)
+                    {
+                        GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Y, rect.Width, 8), Color.Black*0.8f, true);
+                        GUI.DrawRectangle(spriteBatch,
+                            new Rectangle(rect.X, rect.Y, (int)(rect.Width * containedItems[0].Condition / 100.0f), 8),
+                            Color.Lerp(Color.Red, Color.Green, containedItems[0].Condition / 100.0f)*0.8f, true);
+                    }
+                }
             }
+
 
             GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * alpha, false);
 
