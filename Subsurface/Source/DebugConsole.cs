@@ -27,6 +27,8 @@ namespace Barotrauma
 
     static class DebugConsole
     {
+        const int MaxMessages = 100;
+
         public static List<ColoredText> Messages = new List<ColoredText>();
 
         static bool isOpen;
@@ -600,9 +602,19 @@ namespace Barotrauma
                 return;
             }
 
+            if (Messages.Count > MaxMessages)
+            {
+                Messages.RemoveRange(0, Messages.Count - MaxMessages);
+            }
+
             //messages.Add(new ColoredText(msg, color));
 
             selectedIndex = listBox.children.Count;
+        }
+
+        public static void Log(string message)
+        {
+            if (GameSettings.VerboseLogging) NewMessage(message, Color.Gray);
         }
 
         public static void ThrowError(string error, Exception e = null)

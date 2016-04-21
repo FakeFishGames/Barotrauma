@@ -65,9 +65,9 @@ namespace Barotrauma
                 {
                     var pickable = targetItem.GetComponent<Pickable>();
                     //check if all the slots required by the item are free
-                    foreach (LimbSlot slots in pickable.AllowedSlots)
+                    foreach (InvSlotType slots in pickable.AllowedSlots)
                     {
-                        if (slots.HasFlag(LimbSlot.Any)) continue;
+                        if (slots.HasFlag(InvSlotType.Any)) continue;
                             
                         for (int i = 0; i<character.Inventory.Items.Length; i++)
                         {
@@ -80,7 +80,7 @@ namespace Barotrauma
                             if (character.Inventory.Items[i] == null) continue;
 
                             //try to move the existing item to LimbSlot.Any and continue if successful
-                            if (character.Inventory.TryPutItem(character.Inventory.Items[i], new List<LimbSlot>() { LimbSlot.Any }, false)) continue;
+                            if (character.Inventory.TryPutItem(character.Inventory.Items[i], new List<InvSlotType>() { InvSlotType.Any }, false)) continue;
 
                             //if everything else fails, simply drop the existing item
                             character.Inventory.Items[i].Drop();
@@ -90,7 +90,7 @@ namespace Barotrauma
 
                 targetItem.Pick(character, false, true);
 
-                if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, LimbSlot.Any))
+                if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, InvSlotType.Any))
                 {
                     character.Inventory.TryPutItem(targetItem, targetSlot, true, false);
                 }

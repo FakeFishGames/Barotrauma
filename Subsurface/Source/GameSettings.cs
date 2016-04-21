@@ -47,6 +47,8 @@ namespace Barotrauma
         public bool     AutoCheckUpdates { get; set; }
         public bool     WasGameUpdated { get; set; }
 
+        public static bool VerboseLogging { get; set; }
+
         public bool UnsavedSettings
         {
             get
@@ -130,6 +132,8 @@ namespace Barotrauma
             SoundVolume = ToolBox.GetAttributeFloat(doc.Root, "soundvolume", 1.0f);
             MusicVolume = ToolBox.GetAttributeFloat(doc.Root, "musicvolume", 0.3f);
 
+            VerboseLogging = ToolBox.GetAttributeBool(doc.Root, "verboselogging", false);
+
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up]       = new KeyOrMouse(Keys.W);
             keyMapping[(int)InputType.Down]     = new KeyOrMouse(Keys.S);
@@ -145,13 +149,15 @@ namespace Barotrauma
 
             keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
-
+            
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLower())
                 {
                     case "contentpackage":
                         string path = ToolBox.GetAttributeString(subElement, "path", "");
+
+
                         SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
 
                         if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);

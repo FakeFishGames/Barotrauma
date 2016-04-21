@@ -63,6 +63,11 @@ namespace Barotrauma.Tutorials
             character.GiveJobItems(null);
 
             var idCard = character.Inventory.FindItem("ID Card");
+            if (idCard == null)
+            {
+                DebugConsole.ThrowError("Item prefab ''ID Card'' not found!");
+                return;
+            }
             idCard.AddTag("com");
             idCard.AddTag("eng");
 

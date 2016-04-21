@@ -189,11 +189,10 @@ namespace Barotrauma
 
             GUIComponent.Init(Window);
             DebugConsole.Init(Window);
-            yield return CoroutineStatus.Running;
+            DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package ''" + SelectedPackage.Name + "'' selected");
+        yield return CoroutineStatus.Running;
 
             LightManager = new Lights.LightManager(GraphicsDevice);
-
-
 
             Hull.renderer = new WaterRenderer(GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
@@ -223,7 +222,7 @@ namespace Barotrauma
             while (!SoundPlayer.Initialized)
             {
                 i++;
-                TitleScreen.LoadState = Math.Min((float)TitleScreen.LoadState + 40.0f/41, 70.0f);
+                TitleScreen.LoadState = Math.Min((float)TitleScreen.LoadState + 40.0f / 41, 70.0f);
                 yield return CoroutineStatus.Running;
             }
 

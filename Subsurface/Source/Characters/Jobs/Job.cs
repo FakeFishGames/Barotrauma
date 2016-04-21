@@ -89,7 +89,6 @@ namespace Barotrauma
             foreach (XElement itemElement in SpawnItems.Elements())
             {
                 InitializeJobItem(character, spawnPoint, itemElement);
-
             }            
         }
 
@@ -108,8 +107,8 @@ namespace Barotrauma
 
             if (ToolBox.GetAttributeBool(itemElement, "equip", false))
             {
-                List<LimbSlot> allowedSlots = new List<LimbSlot>(item.AllowedSlots);
-                allowedSlots.Remove(LimbSlot.Any);
+                List<InvSlotType> allowedSlots = new List<InvSlotType>(item.AllowedSlots);
+                allowedSlots.Remove(InvSlotType.Any);
 
                 character.Inventory.TryPutItem(item, allowedSlots, false);
             }

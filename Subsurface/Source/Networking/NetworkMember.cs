@@ -205,8 +205,8 @@ namespace Barotrauma.Networking
             if (sender == null) return false;
 
             var radio = sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
-            if (radio == null) return false;
-
+            if (radio == null || !sender.HasEquippedItem(radio)) return false;
+                       
             var radioComponent = radio.GetComponent<WifiComponent>();
             return radioComponent.HasRequiredContainedItems(false);
         }
@@ -236,6 +236,8 @@ namespace Barotrauma.Networking
                 var radio = message.Sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
                 if (radio == null) return;
 
+                message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)ChatMessageType.Radio]);
+
                 var radioComponent = radio.GetComponent<WifiComponent>();
                 radioComponent.Transmit(message.TextWithSender);
                 return;
@@ -251,7 +253,7 @@ namespace Barotrauma.Networking
                     if (string.IsNullOrWhiteSpace(displayedText)) return;
                 }
 
-                message.Sender.SpeechBubbleTimer = Math.Max(message.Sender.SpeechBubbleTimer, 2.0f);
+                message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)ChatMessageType.Default]);
             }
 
             GameMain.NetLobbyScreen.NewChatMessage(message);

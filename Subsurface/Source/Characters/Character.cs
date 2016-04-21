@@ -156,7 +156,8 @@ namespace Barotrauma
             get { return inventory; }
         }
 
-        public float SpeechBubbleTimer;
+        private Color speechBubbleColor;
+        private float speechBubbleTimer;
 
         private float lockHandsTimer;
         public bool LockHands
@@ -694,6 +695,11 @@ namespace Barotrauma
             }
         }
         
+        public bool HasEquippedItem(Item item)
+        {
+            return !inventory.IsInLimbSlot(item, InvSlotType.Any);
+        }
+
         public bool HasSelectedItem(Item item)
         {
             return selectedItems.Contains(item);
@@ -701,8 +707,8 @@ namespace Barotrauma
 
         public bool TrySelectItem(Item item)
         {
-            bool rightHand = ((CharacterInventory)inventory).IsInLimbSlot(item, LimbSlot.RightHand);
-            bool leftHand = ((CharacterInventory)inventory).IsInLimbSlot(item, LimbSlot.LeftHand);
+            bool rightHand = inventory.IsInLimbSlot(item, InvSlotType.RightHand);
+            bool leftHand = inventory.IsInLimbSlot(item, InvSlotType.LeftHand);
 
             bool selected = false;
             if (rightHand && SelectedItems[0] == null)
@@ -956,7 +962,7 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
-            SpeechBubbleTimer = Math.Max(0.0f, SpeechBubbleTimer - deltaTime);
+            speechBubbleTimer = Math.Max(0.0f, speechBubbleTimer - deltaTime);
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
             
@@ -1086,6 +1092,12 @@ namespace Barotrauma
             aiTarget.SightRange = Mass*10.0f + AnimController.RefLimb.LinearVelocity.Length()*500.0f;
         }
         
+        public void ShowSpeechBubble(float duration, Color color)
+        {
+            speechBubbleTimer = Math.Max(speechBubbleTimer, duration);
+            speechBubbleColor = color;
+        }
+
         public void Draw(SpriteBatch spriteBatch)
         {
             if (!Enabled) return;
@@ -1136,9 +1148,11 @@ namespace Barotrauma
             
             GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
 
-            if (SpeechBubbleTimer > 0.0f)
+            if (speechBubbleTimer > 0.0f)
             {
-                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f, Color.White * Math.Min(SpeechBubbleTimer, 1.0f));
+                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f, 
+                    speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f, 
+                    Math.Min((float)speechBubbleTimer, 1.0f));
             }
         }
 

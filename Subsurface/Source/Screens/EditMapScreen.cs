@@ -469,7 +469,7 @@ namespace Barotrauma
 
                 var item = new Item(screwdriverPrefab, Vector2.Zero, null);
 
-                dummyCharacter.Inventory.TryPutItem(item, new List<LimbSlot>() {LimbSlot.RightHand}, false);
+                dummyCharacter.Inventory.TryPutItem(item, new List<InvSlotType>() {InvSlotType.RightHand}, false);
 
                 wiringToolPanel = CreateWiringPanel();
             }
@@ -537,7 +537,7 @@ namespace Barotrauma
 
             var wire = new Item(userData as ItemPrefab, Vector2.Zero, null);
 
-            int slotIndex = dummyCharacter.Inventory.FindLimbSlot(LimbSlot.LeftHand);
+            int slotIndex = dummyCharacter.Inventory.FindLimbSlot(InvSlotType.LeftHand);
 
             //if there's some other type of wire in the inventory, remove it
             existingWire = dummyCharacter.Inventory.Items[slotIndex];
