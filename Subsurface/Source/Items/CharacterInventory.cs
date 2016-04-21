@@ -273,8 +273,7 @@ namespace Barotrauma
         {
             string toolTip = "";
             Rectangle highlightedSlot = Rectangle.Empty;
-
-
+            
             if (doubleClickedItem!=null &&  doubleClickedItem.ParentInventory!=this)
             {
                 TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
@@ -333,7 +332,7 @@ namespace Barotrauma
 
                 if (multiSlot) continue;
 
-                if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition))
+                if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition) && (selectedSlot == -1 || selectedSlot == i))
                 {
                     if (GameMain.DebugDraw)
                     {
@@ -347,6 +346,8 @@ namespace Barotrauma
                     highlightedSlot = slotRect;
                 }
 
+                if (selectedSlot == i) highlightedSlot = slotRect;
+
                 UpdateSlot(spriteBatch, slotRect, i, Items[i], false, i>5 ? 0.2f : 0.4f);
                 
                 if (draggingItem!=null && draggingItem == Items[i]) draggingItemSlot = slotRect;
@@ -355,8 +356,6 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-
-                //Rectangle multiSlotRect = Rectangle.Empty;
                 bool multiSlot = false;
 
                 //check if the item is in multiple slots
@@ -386,11 +385,13 @@ namespace Barotrauma
 
                 if (multiSlot)
                 {
-                    if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition))
+                    if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition) && (selectedSlot==-1 || selectedSlot==i))
                     {
                         toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;
                         highlightedSlot = slotRect;
-                    }    
+                    }
+
+                    if (selectedSlot == i) highlightedSlot = slotRect;
  
                     UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);               
                 }
@@ -402,9 +403,21 @@ namespace Barotrauma
                     useOnSelfButton[i - 3].Update(0.016f);
                     useOnSelfButton[i - 3].Draw(spriteBatch);
                 }
-
-
             }
+
+            //for (int i = 0; i < capacity; i++)
+            //{
+            //    slotRect.X = (int)(SlotPositions[i].X + offset.X);
+            //    slotRect.Y = (int)(SlotPositions[i].Y + offset.Y);
+            //    slotRect.Width = 40;
+            //    slotRect.Height = 40;
+
+            if (selectedSlot > -1)
+            {
+                DrawSubInventory(spriteBatch, highlightedSlot, selectedSlot);
+            }
+
+            //}
 
             slotRect.Width = rectWidth;
             slotRect.Height = rectHeight;
