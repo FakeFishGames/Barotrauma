@@ -721,7 +721,7 @@ namespace Barotrauma
         /// </summary>
         private void ApplyWaterForces()
         {
-            if (!InWater || body == null || Container != null) return;
+            if (!InWater || Container != null || body == null || !body.Enabled) return;
 
             float forceFactor = 1.0f;
             if (CurrentHull != null)

@@ -44,7 +44,8 @@ namespace Barotrauma
             {
                 try
                 {
-                    oggSound = OggSound.Load(file);
+                    DebugConsole.Log("Loading sound " + file);
+                    oggSound = OggSound.Load(file);                    
                 }
                 catch (Exception e)
                 {
