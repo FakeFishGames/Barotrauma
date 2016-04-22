@@ -257,7 +257,7 @@ namespace Barotrauma
         {
             if (Mission == null)
             {
-                new GUITextBlock(new Rectangle(0,0,0,400), "No mission", GUI.Style, infoFrame, true);
+                new GUITextBlock(new Rectangle(0,0,0,50), "No mission", GUI.Style, infoFrame, true);
                 return;
             }
 
@@ -274,12 +274,10 @@ namespace Barotrauma
             TaskManager.Update(deltaTime);
             
             //guiRoot.Update(deltaTime);
-
             infoButton.Update(deltaTime);
 
             if (gameMode != null)   gameMode.Update(deltaTime);
             if (Mission != null)    Mission.Update(deltaTime);
-            if (infoFrame != null)  infoFrame.Update(deltaTime);
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -288,7 +286,11 @@ namespace Barotrauma
             infoButton.Draw(spriteBatch);
             
             if (gameMode != null)   gameMode.Draw(spriteBatch);
-            if (infoFrame != null)  infoFrame.Draw(spriteBatch);
+            if (infoFrame != null)
+            {
+                infoFrame.Update(0.016f);
+                infoFrame.Draw(spriteBatch);
+            }
         }
 
         public void Save(string filePath)

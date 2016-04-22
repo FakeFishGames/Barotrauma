@@ -509,7 +509,7 @@ namespace Barotrauma
 
                     GameMain.Config.GraphicsWidth = 0;
                     GameMain.Config.GraphicsHeight = 0;
-                    GameMain.Config.FullScreenEnabled = true;
+                    GameMain.Config.WindowMode = WindowMode.Fullscreen;
                     DebugConsole.NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                     DebugConsole.NewMessage("Fullscreen enabled", Color.Green);
 

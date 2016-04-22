@@ -162,7 +162,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < children.Count; i++)
             {
-                if (children[i].UserData != selection) continue;
+                if (!children[i].UserData.Equals(selection)) continue;
 
                 Select(i, force);
 

@@ -121,7 +121,9 @@ namespace Barotrauma
             graphicsWidth = Config.GraphicsWidth;
             graphicsHeight = Config.GraphicsHeight;
 
-            Graphics.IsFullScreen = Config.FullScreenEnabled;
+            Graphics.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+
+            Graphics.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             Graphics.PreferredBackBufferWidth = graphicsWidth;
             Graphics.PreferredBackBufferHeight = graphicsHeight;
             Content.RootDirectory = "Content";
@@ -293,7 +295,7 @@ namespace Barotrauma
 
                 DebugConsole.Update(this, (float)deltaTime);
 
-                paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen) &&
+                paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                          (NetworkMember == null || !NetworkMember.GameStarted);
 
                 if (!paused) Screen.Selected.Update(deltaTime);

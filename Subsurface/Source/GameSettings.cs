@@ -9,12 +9,19 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    public enum WindowMode
+    {
+        Windowed, Fullscreen, BorderlessWindowed
+    }
+
     public class GameSettings
     {
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
 
         private float soundVolume, musicVolume;
+
+        private WindowMode windowMode;
 
         private KeyOrMouse[] keyMapping;
 
@@ -39,7 +46,13 @@ namespace Barotrauma
         public int GraphicsWidth    { get; set; }
         public int GraphicsHeight   { get; set; }
 
-        public bool FullScreenEnabled { get; set; }
+        //public bool FullScreenEnabled { get; set; }
+
+        public WindowMode WindowMode
+        {
+            get { return windowMode; }
+            set { windowMode = value; }
+        }
 
         public ContentPackage SelectedContentPackage { get; set; }
 
@@ -122,7 +135,10 @@ namespace Barotrauma
                 GraphicsHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             }
 
-            FullScreenEnabled = ToolBox.GetAttributeBool(graphicsMode, "fullscreen", true);
+            //FullScreenEnabled = ToolBox.GetAttributeBool(graphicsMode, "fullscreen", true);
+
+            var windowModeStr = ToolBox.GetAttributeString(graphicsMode, "displaymode", "Fullscreen");
+            if (Enum.TryParse<WindowMode>(windowModeStr, out windowMode));
 
             MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 
@@ -218,14 +234,14 @@ namespace Barotrauma
 
             if (GraphicsWidth==0 || GraphicsHeight==0)
             {
-                gMode.ReplaceAttributes(new XAttribute("fullscreen", FullScreenEnabled ? "true" : "false"));
+                gMode.ReplaceAttributes(new XAttribute("displaymode", windowMode));
             }
             else
             {
                 gMode.ReplaceAttributes(
                     new XAttribute("width", GraphicsWidth),
                     new XAttribute("height", GraphicsHeight),
-                    new XAttribute("fullscreen", FullScreenEnabled ? "true" : "false"));
+                    new XAttribute("displaymode", windowMode));
             }
 
 
@@ -270,16 +286,16 @@ namespace Barotrauma
             return true;
         }
 
-        private bool ToggleFullScreen(object userData)
-        {
-            UnsavedSettings = true;
-            FullScreenEnabled = !FullScreenEnabled;
+        //private bool ToggleFullScreen(object userData)
+        //{
+        //    UnsavedSettings = true;
+        //    FullScreenEnabled = !FullScreenEnabled;
 
-            GameMain.Graphics.IsFullScreen = FullScreenEnabled;
-            GameMain.Graphics.ApplyChanges();
+        //    GameMain.Graphics.IsFullScreen = FullScreenEnabled;
+        //    GameMain.Graphics.ApplyChanges();
 
-            return true;
-        }
+        //    return true;
+        //}
 
         public void ResetSettingsFrame()
         {
@@ -316,11 +332,21 @@ namespace Barotrauma
 
             y += 50;
 
-            var fullScreenTick = new GUITickBox(new Rectangle(x, y, 20, 20), "Fullscreen", Alignment.TopLeft, settingsFrame);
-            fullScreenTick.OnSelected = ToggleFullScreen;
-            fullScreenTick.Selected = FullScreenEnabled;
+            //var fullScreenTick = new GUITickBox(new Rectangle(x, y, 20, 20), "Fullscreen", Alignment.TopLeft, settingsFrame);
+            //fullScreenTick.OnSelected = ToggleFullScreen;
+            //fullScreenTick.Selected = FullScreenEnabled;
 
-            y += 50;
+            new GUITextBlock(new Rectangle(x, y, 20, 20), "Display mode", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            var displayModeDD = new GUIDropDown(new Rectangle(x, y + 20, 180, 20), "", GUI.Style, settingsFrame);
+            displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
+            displayModeDD.AddItem("Windowed", WindowMode.Windowed);
+            displayModeDD.AddItem("Borderless windowed", WindowMode.BorderlessWindowed);
+
+            displayModeDD.SelectItem(GameMain.Config.WindowMode);
+
+            displayModeDD.OnSelected = (guiComponent) => { GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData; return true; };
+
+            y += 70;
 
             new GUITextBlock(new Rectangle(0, y, 100, 20), "Sound volume:", GUI.Style, settingsFrame);
             GUIScrollBar soundScrollBar = new GUIScrollBar(new Rectangle(0, y+20, 150, 20), GUI.Style,0.1f, settingsFrame);
@@ -409,7 +435,7 @@ namespace Barotrauma
             while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length==0 
                 && !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked())
             {
-                if (Screen.Selected != GameMain.MainMenuScreen) yield return CoroutineStatus.Success;
+                if (Screen.Selected != GameMain.MainMenuScreen && !GUI.SettingsMenuOpen) yield return CoroutineStatus.Success;
 
                 yield return CoroutineStatus.Running;
             }

@@ -40,7 +40,7 @@ namespace Barotrauma
 
         private static Sound[] sounds;
 
-        private static bool pauseMenuOpen;
+        private static bool pauseMenuOpen, settingsMenuOpen;
         private static GUIFrame pauseMenu;
 
         public static Color ScreenOverlayColor;
@@ -77,6 +77,11 @@ namespace Barotrauma
             get { return pauseMenuOpen; }
         }
 
+        public static bool SettingsMenuOpen
+        {
+            get { return settingsMenuOpen; }
+        }
+
         public static void LoadContent(GraphicsDevice graphics, bool loadSounds = true)
         {
             graphicsDevice = graphics;
@@ -110,6 +115,8 @@ namespace Barotrauma
         {
             if (Screen.Selected == GameMain.MainMenuScreen) return;
 
+            settingsMenuOpen = false;
+
             TogglePauseMenu(null, null);
 
             if (pauseMenuOpen)
@@ -119,6 +126,18 @@ namespace Barotrauma
                 int y = 0;
                 var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, Style, pauseMenu);
                 button.OnClicked = TogglePauseMenu;
+
+                y += 60;
+
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Settings", Alignment.CenterX, Style, pauseMenu);
+                button.OnClicked = (btn, userData) => 
+                {
+                    TogglePauseMenu();
+                    settingsMenuOpen = !settingsMenuOpen;
+                    
+                    return true; 
+                };
+
 
                 y += 60;
 
@@ -415,8 +434,14 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu.Update(1.0f);
+                pauseMenu.Update(0.016f);
                 pauseMenu.Draw(spriteBatch);
+            }
+
+            if (settingsMenuOpen)
+            {
+                GameMain.Config.SettingsFrame.Update(0.016f);
+                GameMain.Config.SettingsFrame.Draw(spriteBatch);
             }
             
             DebugConsole.Draw(spriteBatch);
