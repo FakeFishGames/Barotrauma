@@ -31,7 +31,7 @@ namespace Launcher2
         
         private List<DisplayMode> supportedModes;
 
-        private GUIDropDown resolutionDD, contentPackageDD;
+        private GUIDropDown resolutionDD, contentPackageDD, displayModeDD;
 
         private GUITextBlock updateInfoText;
         private GUIListBox updateInfoBox;
@@ -40,11 +40,11 @@ namespace Launcher2
 
         GUIButton launchButton;
 
-        public bool FullScreenEnabled
-        {
-            get { return settings.FullScreenEnabled; }
-            set { settings.FullScreenEnabled = value; }
-        }
+        //public bool FullScreenEnabled
+        //{
+        //    get { return settings.FullScreenEnabled; }
+        //    set { settings.FullScreenEnabled = value; }
+        //}
 
         public bool AutoCheckUpdates
         {
@@ -160,9 +160,19 @@ namespace Launcher2
 
             //new GUIButton(new Rectangle(x,y+120,150,20), "Package Manager", GUI.Style, guiRoot);
 
-            var fullScreenTick = new GUITickBox(new Rectangle(x,y+150,20,20), "Fullscreen", Alignment.TopLeft, guiRoot);
-            fullScreenTick.OnSelected = ToggleFullScreen;
-            fullScreenTick.Selected = settings.FullScreenEnabled;
+            new GUITextBlock(new Rectangle(x, y + 130, 20, 20), "Display mode", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, guiRoot);
+            displayModeDD = new GUIDropDown(new Rectangle(x, y + 150, 200, 20), "", GUI.Style, guiRoot);
+            displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
+            displayModeDD.AddItem("Windowed", WindowMode.Windowed);
+            displayModeDD.AddItem("Borderless windowed", WindowMode.BorderlessWindowed);
+
+            displayModeDD.SelectItem(settings.WindowMode);
+
+            displayModeDD.OnSelected = (guiComponent) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };
+
+            //var fullScreenTick = new GUITickBox(new Rectangle(x,y+150,20,20), "Fullscreen", Alignment.TopLeft, guiRoot);
+            //fullScreenTick.OnSelected = ToggleFullScreen;
+            //fullScreenTick.Selected = settings.FullScreenEnabled;
 
             if (settings.AutoCheckUpdates)
             {
@@ -243,11 +253,11 @@ namespace Launcher2
             return true;
         }
 
-        private bool ToggleFullScreen(GUITickBox tickBox)
-        {
-            settings.FullScreenEnabled = !settings.FullScreenEnabled;
-            return true;
-        }
+        //private bool ToggleFullScreen(GUITickBox tickBox)
+        //{
+        //    settings.FullScreenEnabled = !settings.FullScreenEnabled;
+        //    return true;
+        //}
 
         private bool LaunchClick(GUIButton button, object obj)
         {
