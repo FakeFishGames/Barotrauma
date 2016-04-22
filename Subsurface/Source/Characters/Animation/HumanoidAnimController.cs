@@ -1151,8 +1151,8 @@ namespace Barotrauma
                     case LimbType.LeftArm:
                     case LimbType.RightHand:
                     case LimbType.RightArm:
-                        mirror = !inWater;
-                        flipAngle = !inWater;
+                        mirror = true;
+                        flipAngle = true;
                         break;
                     case LimbType.LeftThigh:
                     case LimbType.LeftLeg:

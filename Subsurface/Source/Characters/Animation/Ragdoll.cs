@@ -560,17 +560,15 @@ namespace Barotrauma
             {
                 if (newHull == null && currentHull.Submarine != null)
                 {
-                    //if there's a hull right above and below the position, don't teleport outside the sub
-                    //(the character is most likely inside some small gap between hulls)
-                    if (Hull.FindHull(findPos + Vector2.UnitY * Submarine.GridSize.Y * 2.0f, currentHull) != null &&
-                        Hull.FindHull(findPos - Vector2.UnitY * Submarine.GridSize.Y * 2.0f, currentHull) != null) return;
-
-                    if (Hull.FindHull(findPos + Vector2.UnitX * Submarine.GridSize.X * 2.0f, currentHull) != null &&
-                        Hull.FindHull(findPos - Vector2.UnitX * Submarine.GridSize.X * 2.0f, currentHull) != null) return;
-
+                    for (int i = -1; i < 2; i += 2)
+                    {
+                        //don't teleport outside the sub if right next to a hull
+                        if (Hull.FindHull(findPos + new Vector2(Submarine.GridSize.X * 2.0f * i, 0.0f), currentHull) != null) return;
+                        if (Hull.FindHull(findPos + new Vector2(0.0f, Submarine.GridSize.Y * 2.0f * i), currentHull) != null) return;
+                    }
 
                     Vector2 ragdollSpeed = refLimb.LinearVelocity == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(refLimb.LinearVelocity);
-                    SetPosition(refLimb.SimPosition + ragdollSpeed + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
+                    SetPosition(refLimb.SimPosition + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
                     character.CursorPosition += currentHull.Submarine.Position;
                 }
                 else if (currentHull == null && newHull != null && newHull.Submarine != null)
@@ -702,9 +700,6 @@ namespace Barotrauma
                                 SoundPlayer.PlaySplashSound(limb.WorldPosition, Math.Abs(limb.LinearVelocity.Y) + Rand.Range(-5.0f, 0.0f));
                                 splashSoundTimer = 0.5f;
                             }
-
-
-                            
 
                             //1.0 when the limb is parallel to the surface of the water
                             // = big splash and a large impact
