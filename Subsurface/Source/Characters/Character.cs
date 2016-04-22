@@ -971,8 +971,9 @@ namespace Barotrauma
                 foreach (Item item in inventory.Items)
                 {
                     if (item == null || item.body == null || item.body.Enabled) continue;
-                    item.Submarine = Submarine;
+
                     item.SetTransform(SimPosition, 0.0f);
+                    item.Submarine = Submarine;
                 }
             }
 

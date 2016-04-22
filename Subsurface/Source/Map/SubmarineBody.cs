@@ -450,6 +450,13 @@ namespace Barotrauma
             foreach (Gap gap in Gap.GapList)
             {
                 if (gap.Open == 0.0f || gap.IsRoomToRoom) continue;
+
+                if (gap.ConnectedWall != null)
+                {
+                    int sectionIndex = gap.ConnectedWall.FindSectionIndex(gap.Position);
+                    if (sectionIndex > -1 && !gap.ConnectedWall.SectionBodyDisabled(sectionIndex)) continue;
+                }
+
                 if (gap.isHorizontal)
                 {
                     if (targetPos.Y < gap.WorldRect.Y && targetPos.Y > gap.WorldRect.Y - gap.WorldRect.Height && 
