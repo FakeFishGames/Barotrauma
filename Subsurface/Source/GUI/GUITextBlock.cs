@@ -47,6 +47,11 @@ namespace Barotrauma
             }
         }
 
+        public string WrappedText
+        {
+            get { return wrappedText; }
+        }
+
         public override Rectangle Rect
         {
             get

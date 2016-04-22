@@ -280,13 +280,11 @@ namespace Barotrauma
             int width = 400;
             if (toolTipBlock==null || (string)toolTipBlock.userData != ToolTip)
             {
-                //string wrappedText = ToolBox.WrapText(ToolTip, width, GUI.SmallFont);
                 toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, 18), ToolTip, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
                 toolTipBlock.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                toolTipBlock.rect.Width = (int)(GUI.SmallFont.MeasureString(toolTipBlock.Text).X + 20);
-                toolTipBlock.rect.Height = toolTipBlock.Text.Split('\n').Length * 18;
+                toolTipBlock.rect.Width = (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20);
+                toolTipBlock.rect.Height = toolTipBlock.WrappedText.Split('\n').Length * 18;
                 toolTipBlock.Color = Color.Black * 0.7f;
-                //toolTipBlock.OutlineColor = Color.White;
                 toolTipBlock.userData = ToolTip;
             }
 
