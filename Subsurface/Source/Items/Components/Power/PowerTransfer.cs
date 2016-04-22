@@ -63,8 +63,10 @@ namespace Barotrauma.Items.Components
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
                 pt.Item.SendSignal(0, "", "power", fullPower / Math.Max(fullLoad, 1.0f));
 
-                //damage the item if voltage is too high
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.95f,2.05f), 200.0f)) continue;
+                //damage the item if voltage is too high 
+                //(except if running as a client)
+                if (GameMain.Client != null) continue;
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f,2.1f), 200.0f)) continue;
 
                 
                 float prevCondition = pt.item.Condition;
