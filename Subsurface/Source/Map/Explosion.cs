@@ -62,7 +62,7 @@ namespace Barotrauma
             float displayRange = attack.Range;
             if (displayRange < 0.1f) return;
 
-            light = new LightSource(worldPosition, displayRange, Color.LightYellow, hull != null ? hull.Submarine : null);
+            light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
             CoroutineManager.StartCoroutine(DimLight());
 
             float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, worldPosition)/2.0f;
@@ -85,8 +85,6 @@ namespace Barotrauma
                     //if (item.ParentInventory != null) return;
 
                     if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
-
-                    //item.Condition -= (float)Math.Sqrt(size.X) * deltaTime;
 
                     item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
                 }

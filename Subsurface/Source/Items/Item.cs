@@ -164,6 +164,8 @@ namespace Barotrauma
                 condition = MathHelper.Clamp(value, 0.0f, 100.0f); 
                 if (condition == 0.0f && prev>0.0f)
                 {
+                    new NetworkEvent(this.ID, false);
+
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                     foreach (FixRequirement req in FixRequirements)
                     {
