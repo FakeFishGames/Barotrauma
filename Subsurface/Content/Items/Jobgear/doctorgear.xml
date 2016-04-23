@@ -57,38 +57,5 @@
       <sprite texture="doctorgear.png" limb="LeftLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
     </Wearable>
   </Item>
-
-  <Item
-    name="Clown Costume"
-    category="Equipment"
-    pickdistance="150"
-    tags="smallitem"
-    description="Praise the honkmother.">
-
-    <Sprite texture ="clownpants.png" sourcerect="0,62,53,18" depth="0.6"/>
-
-    <Body width="53" height="18" density="30"/>
-
-    <Wearable slots="Any,Torso+Legs">
-      <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.02"/>
-
-      <sprite texture="clownshirt.png" limb="RightHand" sourcerect="47,0,15,49" origin="0.45,0.6" hidelimb="true"/>
-      <sprite texture="clownshirt.png" limb="LeftHand" sourcerect="47,0,15,49" origin="0.45,0.6" depth="0.14" hidelimb="true"/>
-
-      <sprite texture="clownshirt.png" limb="RightArm" sourcerect="30,0,17,42" origin="0.5,0.5" depth="0.005" hidelimb="true"/>
-      <sprite texture="clownshirt.png" limb="LeftArm" sourcerect="30,0,17,42" origin="0.5,0.5" depth="0.13" hidelimb="true"/>
-
-      <sprite texture="clownpants.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
-      <sprite texture="clownpants.png" limb="RightThigh" sourcerect="0,0,38,50" origin="0.5,0.5" depth="0.01" hidelimb="true"/>
-      <sprite texture="clownpants.png" limb="LeftThigh" sourcerect="0,0,38,50" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
-
-      <sprite texture="clownpants.png" limb="RightLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.11" hidelimb="true"/>
-      <sprite texture="clownpants.png" limb="LeftLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.15" hidelimb="true"/>
-
-      <sprite texture="clownpants.png" limb="RightFoot" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.11" hidelimb="true"/>
-      <sprite texture="clownpants.png" limb="LeftFoot" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.15" hidelimb="true"/>
-      
-    </Wearable>
-  </Item>
 </Items>
 

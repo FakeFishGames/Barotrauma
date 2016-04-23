@@ -3,7 +3,8 @@
     name="Headset"
     category="Equipment"
     pickdistance="150"
-    tags="smallitem">
+    tags="smallitem"
+    description="Allows remote communication between the crew.">
 
     <Sprite texture ="headset.png" depth="0.6"/>
 

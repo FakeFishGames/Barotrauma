@@ -3,27 +3,27 @@
   <MonsterEvent name="Under attack" description=""  
     characterfile="Content/Characters/Crawler/crawler.xml" 
     commonness="10" 
-    difficulty="15"
+    difficulty="10"
     minamount="2" maxamount="3"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/TigerThresher/tigerthresher.xml"
     commonness="10"
-    difficulty="30"
+    difficulty="20"
     minamount="1" maxamount="3"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Moloch/moloch.xml"
     commonness="10"
-    difficulty="50"
+    difficulty="30"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Mantis/mantis.xml"
     commonness="10"
-    difficulty="25"
+    difficulty="15"
     minamount="1" maxamount="2"
     musictype="monster"/>
 
@@ -52,23 +52,23 @@
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Husk/husk.xml"
     commonness="5"
-    difficulty="15"
+    difficulty="10"
     minamount="2" maxamount="3"
     musictype="monster"/>
 
   <ArtifactEvent name="Artifact" description=""
     itemname="Skyholder Artifact"
-    commonness="1"
+    commonness="5"
     difficulty="0"/>
 
   <ArtifactEvent name="Artifact" description=""
     itemname="Thermal Artifact"
-    commonness="1"
+    commonness="5"
     difficulty="0"/>
 
   <ArtifactEvent name="Artifact" description=""
     itemname="Faraday Artifact"
-    commonness="1"
+    commonness="5"
     difficulty="0"/>
   
 </Randomevents>

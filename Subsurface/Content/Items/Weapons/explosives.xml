@@ -110,7 +110,7 @@
     spritecolor="1.0,1.0,1.0,1.0"
     Tags="smallitem,chem,medical"
     pickdistance="150"
-    impacttolerance="5">
+    impacttolerance="4">
 
     <Sprite texture ="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
