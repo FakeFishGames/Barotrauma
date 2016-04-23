@@ -38,7 +38,7 @@ namespace Barotrauma
 
             if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
 
-            if (GameMain.NetworkMember != null && suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
+            if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
         }
@@ -174,7 +174,7 @@ namespace Barotrauma
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
 
-            if (character.IsUnconscious && GameMain.NetworkMember!=null)
+            if (character.IsUnconscious)
             {
                 if (suicideButton == null)
                 {

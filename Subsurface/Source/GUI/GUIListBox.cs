@@ -230,8 +230,8 @@ namespace Barotrauma
             }
 
             scrollBar.BarSize = scrollBar.IsHorizontal ?
-                Math.Min((float)rect.Width / (float)totalSize, 1.0f) :
-                Math.Min((float)rect.Height / (float)totalSize, 1.0f);
+                Math.Max(Math.Min((float)rect.Width / (float)totalSize, 1.0f), 5.0f / rect.Width) :
+                Math.Max(Math.Min((float)rect.Height / (float)totalSize, 1.0f), 5.0f / rect.Height);
 
             if (scrollBar.BarSize < 1.0f && scrollBarHidden) ShowScrollBar();
             if (scrollBar.BarSize >= 1.0f && !scrollBarHidden) HideScrollBar();

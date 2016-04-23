@@ -67,7 +67,7 @@ namespace Barotrauma
             {
                 if (hasInGameEditableProperties==null)
                 {
-                    hasInGameEditableProperties = GetProperties<InGameEditable>().Count>0;
+                    hasInGameEditableProperties = GetProperties<InGameEditable>().Any();
                 }
                 return (bool)hasInGameEditableProperties;
             }
@@ -882,6 +882,20 @@ namespace Barotrauma
             }
         }
 
+        public void DrawInGameEditing(SpriteBatch spriteBatch)
+        {
+            if (editingHUD == null || editingHUD.UserData as Item != this)
+            {
+                editingHUD = CreateEditingHUD(true);
+            }
+
+            if (editingHUD.Rect.Height > 60)
+            {
+                editingHUD.Update((float)Physics.step);
+                editingHUD.Draw(spriteBatch);
+            }
+        }
+
         private GUIComponent CreateEditingHUD(bool inGame=false)
         {
             int width = 450;
@@ -949,6 +963,8 @@ namespace Barotrauma
                     GUITickBox propertyTickBox = new GUITickBox(new Rectangle(10, y, 20, 20), objectProperty.Name,
                         Alignment.Left, editingHUD);
 
+                    propertyTickBox.Selected = (bool)value;
+
                     propertyTickBox.UserData = objectProperty;
                     propertyTickBox.OnSelected = EnterProperty;
                 }
@@ -994,16 +1010,7 @@ namespace Barotrauma
 
             if (HasInGameEditableProperties)
             {
-                if (editingHUD == null || editingHUD.UserData as Item != this)
-                {
-                    editingHUD = CreateEditingHUD(true);
-                }
-
-                if (editingHUD.Rect.Height > 60)
-                {
-                    editingHUD.Update((float)Physics.step);
-                    editingHUD.Draw(spriteBatch);
-                }
+                DrawInGameEditing(spriteBatch);
             }
 
             foreach (ItemComponent ic in components)

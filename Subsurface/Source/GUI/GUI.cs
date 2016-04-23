@@ -70,6 +70,8 @@ namespace Barotrauma
             LargeFont = ToolBox.TryLoadFont("LargeFont", content);
 
             cursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
+
+            Style = new GUIStyle("Content/UI/style.xml");
         }
 
         public static bool PauseMenuOpen
@@ -107,8 +109,6 @@ namespace Barotrauma
 
             SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61), null);
             SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
-
-            Style = new GUIStyle("Content/UI/style.xml");
         }
 
         public static void TogglePauseMenu()

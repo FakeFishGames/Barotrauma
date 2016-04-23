@@ -58,9 +58,9 @@ namespace Barotrauma
             frame.Color = Color.White * 0.4f;
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            listBox = new GUIListBox(new Rectangle(0,0,0, frame.Rect.Height-40), Color.Black*0.9f, null, frame);
+            listBox = new GUIListBox(new Rectangle(0,0,0, frame.Rect.Height-40), Color.Black*0.9f, GUI.Style, frame);
 
-            textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black*0.6f, Color.White, Alignment.BottomLeft, Alignment.Left, null, frame);
+            textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black*0.6f, Color.White, Alignment.BottomLeft, Alignment.Left, GUI.Style, frame);
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
             NewMessage("Enter ''help'' for a list of available console commands", Color.Cyan);
 
@@ -513,6 +513,8 @@ namespace Barotrauma
                     DebugConsole.NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                     DebugConsole.NewMessage("Fullscreen enabled", Color.Green);
 
+                    GameSettings.VerboseLogging = false;
+
                     if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
                     {
                         DebugConsole.ThrowError("MasterServerUrl ''"+GameMain.Config.MasterServerUrl+"''!");
@@ -590,7 +592,7 @@ namespace Barotrauma
 
             try
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 15), msg, GUI.Style, Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
+                var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), msg, GUI.Style, Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
                 textBlock.CanBeFocused = false;
                 textBlock.TextColor = color;
 
