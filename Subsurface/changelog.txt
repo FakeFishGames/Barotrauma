@@ -1,4 +1,60 @@
 ---------------------------------------------------------------------------------------------------------
+v0.4.0.0
+---------------------------------------------------------------------------------------------------------
+
+DOCTORS:
+	- medical doctors (can fabricate various drugs/chemicals and give CPR to unconscious characters)
+	- changes to the dying logic: characters will be unconscious when their health or oxygen goes below 0, 
+	and die when it drops to -100
+	- medical syringes can be used on other characters
+	- any chemicals can be inserted in medical syringes
+
+Items:
+	- handheld sonars
+	- crates, small medical/chemical cabinets
+	- junction boxes, sonar monitors, navigation terminals and engines break if they're underwater long enough
+	- reactor cools down if it's underwater (multiple fuel rods are required to bring the temperature back up)
+	- forces are applied to items (not just characters) when the submarine hits something
+	- changes to the logic for distributing oxygen through vents: the oxygen generator pushes more oxygen 
+	to larger rooms instead of dividing the oxygen output equally between vents
+
+	- autopilot bugfixes
+	- the amount of oxygen/battery left is visible in the inventory slot of the ''parent item''
+	- new inventory slot for masks, headsets, etc
+
+	- fixed ''signal loops'' crashing the game
+	- OR gates work properly now
+	- AND/OR gates can be set to send out a signal when the input conditions aren't met
+
+	- fabricating items may require some specific skill levels
+
+	- a bunch of new sprites
+
+Multiplayer:
+	- fixed a bug that caused the server to resend a ton of messages to a client who's been temporarily 
+	disconnected, causing syncing issues to every player
+	- fixed syncing issues related to items breaking (eg junction boxes being broken only for some players)
+	- fixed dead monsters occasionally ''teleporting'' inside the sub in multiplayer
+	- fixed missions not matching between Linux and Windows builds
+	- fixed traitor messages reappearing at the start of a new round after disabling traitors
+	- mid-round chat messages have a limited range
+	- players are equipped with a headset which can be used for remote communication (and making
+	voice-controlled devices/systems)
+	- speech bubble icon is displayed next to the character when speaking in multiplayer
+
+Misc:
+	- level generation improvements: small cave systems, more vegetation, more varied layouts
+	- option to spawn characters/monsters near, inside or outside the sub
+	- crouching
+	- cargo missions
+	- borderless windowed mode (aka fake fullscreen)
+	- option to enable some additional debug logging (by setting ''verboselogging'' to true in the config file)
+	- a menu that shows the mission description mid-round
+	- game settings can be changed mid-round
+	- submarine descriptions
+	- fixed characters getting stuck inside a wall when trying to get inside the sub through a hole
+
+---------------------------------------------------------------------------------------------------------
 v0.3.6.0
 ---------------------------------------------------------------------------------------------------------
 
