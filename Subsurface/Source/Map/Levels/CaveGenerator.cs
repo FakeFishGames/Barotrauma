@@ -585,11 +585,6 @@ namespace Barotrauma
                 }
             }
 
-            if (cells.IndexOf(closestCell) == -1)
-            {
-                int asdf = 1;
-            }
-
             return cells.IndexOf(closestCell);
         }
 

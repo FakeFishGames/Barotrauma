@@ -955,8 +955,16 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Select();
 
-            AddChatMessage("Press TAB to chat. Use ''d;'' to talk to dead players and spectators, "
-                +"and ''player name;'' to only send the message to a specific player.", ChatMessageType.Server);
+            if (myCharacter == null)
+            {
+                AddChatMessage("Press TAB to chat. Use ''d;'' to talk to dead players and spectators, "
+                    + "and ''player name;'' to only send the message to a specific player.", ChatMessageType.Server);
+            }
+            else
+            {
+                AddChatMessage("Press TAB to chat. Use ''r;'' to talk through the radio.", ChatMessageType.Server);
+            }
+
             
             yield return CoroutineStatus.Success;
         }

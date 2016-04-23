@@ -660,7 +660,7 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Select();
 
-            AddChatMessage("Press TAB to chat", ChatMessageType.Server);
+            AddChatMessage("Press TAB to chat. Use ''r;'' to talk through the radio.", ChatMessageType.Server);
 
             //GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
 
