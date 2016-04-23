@@ -68,7 +68,7 @@ namespace Barotrauma
             //listBox.Select(selection);
             Character character = selection as Character;
 
-            if (character == null || character.IsDead) return false;
+            if (character == null || character.IsDead || character.IsUnconscious) return false;
 
             if (characters.Contains(character))
             {
@@ -242,7 +242,7 @@ namespace Barotrauma
         protected virtual bool SelectCrewCharacter(GUIComponent component, object obj)
         {
             Character character = obj as Character;
-            if (character == null) return false;
+            if (character == null || character.IsDead || character.IsUnconscious) return false;
 
             var crewFrame = component.Parent;
             while (crewFrame.Parent!=null)

@@ -159,7 +159,7 @@ namespace Barotrauma
 
             if (rect.Height == 0 && !string.IsNullOrWhiteSpace(Text))
             {
-                this.rect.Height = (int)Font.MeasureString(Text).Y;
+                this.rect.Height = (int)Font.MeasureString(wrappedText).Y;
             }
         }
 
