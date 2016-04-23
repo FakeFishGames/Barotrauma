@@ -14,6 +14,11 @@ namespace Barotrauma
 
         private bool spawnDeep;
 
+        public override string ToString()
+        {
+            return "ScriptedEvent (" + characterFile + ")";
+        }
+
         public MonsterEvent(XElement element)
             : base (element)
         {
@@ -33,7 +38,7 @@ namespace Barotrauma
         private void SpawnMonsters()
         {
             WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Enemy);
-
+            
             int amount = Rand.Range(minAmount, maxAmount, false);
 
             monsters = new Character[amount];

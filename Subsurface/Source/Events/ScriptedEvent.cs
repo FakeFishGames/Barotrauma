@@ -64,6 +64,11 @@ namespace Barotrauma
             get { return difficulty; }
         }
 
+        public override string ToString()
+        {
+            return "ScriptedEvent ("+name+")";
+        }
+
         public ScriptedEvent(XElement element)
         {
             name = ToolBox.GetAttributeString(element, "name", "");
