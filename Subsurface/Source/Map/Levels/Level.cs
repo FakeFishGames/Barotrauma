@@ -124,7 +124,10 @@ namespace Barotrauma
         public static Level CreateRandom(LocationConnection locationConnection)
         {
             string seed = locationConnection.Locations[0].Name + locationConnection.Locations[1].Name;
-            return new Level(seed, locationConnection.Difficulty, 100000, 50000, 2000);
+
+            Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
+
+            return new Level(seed, locationConnection.Difficulty, Rand.Range(80000, 120000, false), Rand.Range(40000, 60000, false), 2000);
         }
 
         public static Level CreateRandom(string seed = "")
@@ -133,7 +136,10 @@ namespace Barotrauma
             {
                 seed = Rand.Range(0, int.MaxValue, false).ToString();
             }
-            return new Level(seed, Rand.Range(30.0f,80.0f,false), 100000, 50000, 2000);
+
+            Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
+
+            return new Level(seed, Rand.Range(30.0f, 80.0f, false), Rand.Range(80000, 120000, false), Rand.Range(40000, 60000, false), 2000);
         }
 
         public void Generate(bool mirror=false)
@@ -290,7 +296,7 @@ namespace Barotrauma
             
             cells = CleanCells(pathCells);
             
-            pathCells.AddRange(CreateBottomHoles(Rand.Range(0.2f,0.8f, false), new Rectangle(
+            pathCells.AddRange(CreateBottomHoles(Rand.Range(0.1f,0.8f, false), new Rectangle(
                 (int)(borders.Width * 0.2f), 0,
                 (int)(borders.Width * 0.6f), (int)(borders.Height * 0.3f))));
 
