@@ -119,8 +119,8 @@ namespace Barotrauma
                 GraphicsHeight = 678;
 
                 MasterServerUrl = "";
-
-                SelectedContentPackage = new ContentPackage("");
+                
+                SelectedContentPackage = ContentPackage.list.Any() ? ContentPackage.list[0] : new ContentPackage("");
 
                 return;
             }
@@ -138,7 +138,10 @@ namespace Barotrauma
             //FullScreenEnabled = ToolBox.GetAttributeBool(graphicsMode, "fullscreen", true);
 
             var windowModeStr = ToolBox.GetAttributeString(graphicsMode, "displaymode", "Fullscreen");
-            if (Enum.TryParse<WindowMode>(windowModeStr, out windowMode));
+            if (!Enum.TryParse<WindowMode>(windowModeStr, out windowMode))
+            {
+                windowMode = WindowMode.Fullscreen;
+            }
 
             MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
 
@@ -218,7 +221,8 @@ namespace Barotrauma
                 new XAttribute("masterserverurl", MasterServerUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
-                new XAttribute("soundvolume", soundVolume));
+                new XAttribute("soundvolume", soundVolume),
+                new XAttribute("verboselogging", VerboseLogging));
 
             if (WasGameUpdated)
             {

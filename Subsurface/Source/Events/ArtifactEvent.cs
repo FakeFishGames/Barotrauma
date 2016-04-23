@@ -10,6 +10,11 @@ namespace Barotrauma
         private Item item;
 
         private int state;
+
+        public override string ToString()
+        {
+            return "ScriptedEvent (" + (itemPrefab==null ? "null" : itemPrefab.Name) + ")";
+        }
         
         public ArtifactEvent(XElement element)
             : base(element)
