@@ -313,7 +313,7 @@ namespace Barotrauma
 
             selectedSlot = containerRect.Contains(PlayerInput.MousePosition) && !Locked ? slotIndex : -1;
 
-            GUI.DrawRectangle(spriteBatch, containerRect, Color.Black * 0.8f, true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(containerRect.X, containerRect.Y, containerRect.Width, containerRect.Height - 50), Color.Black * 0.8f, true);
             GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
             Item[] containedItems = null;
