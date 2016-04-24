@@ -118,7 +118,15 @@
         <RequiredSkill name="Medical" level="40"/>
       </fabricableitem>
 
-      <fabricableitem name="Auxiliorizine" requireditems="Corrigodone, Flash Powder" requiredtime="25">
+      <fabricableitem name="Auxiliorizine" requireditems="Corrigodone, Erythrozine, Flash Powder" requiredtime="25">
+        <RequiredSkill name="Medical" level="60"/>
+      </fabricableitem>
+
+      <fabricableitem name="Hyperzine" requireditems="Phosphorus, Uranium Powder" requiredtime="25">
+        <RequiredSkill name="Medical" level="60"/>
+      </fabricableitem>
+
+      <fabricableitem name="Morbusine" requireditems="Sulphuric Acid, Auxiliorizine" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
       

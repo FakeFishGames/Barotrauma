@@ -98,7 +98,7 @@ namespace Barotrauma
                     message.Write(AnimController.RefLimb.SimPosition.X);
                     message.Write(AnimController.RefLimb.SimPosition.Y);
 
-                    message.Write(AnimController.RefLimb.Rotation);
+                    //message.Write(AnimController.RefLimb.Rotation);
 
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
                     message.Write((byte)((health / maxHealth) * 255.0f));
@@ -148,7 +148,7 @@ namespace Barotrauma
                         limbPos.X = message.ReadFloat();
                         limbPos.Y = message.ReadFloat();
                             
-                        rotation = message.ReadFloat();
+                        //rotation = message.ReadFloat();
                     }
                     catch (Exception e)
                     {
@@ -161,7 +161,7 @@ namespace Barotrauma
                     if (AnimController.RefLimb.body != null)
                     {
                         AnimController.RefLimb.body.TargetPosition = limbPos;
-                        AnimController.RefLimb.body.TargetRotation = rotation;
+                        //AnimController.RefLimb.body.TargetRotation = rotation;
                     }
 
                     float newStunTimer = 0.0f, newHealth = 0.0f, newBleeding = 0.0f;

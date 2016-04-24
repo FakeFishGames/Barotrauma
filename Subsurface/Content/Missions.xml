@@ -70,7 +70,7 @@
   <CargoMission
     name="Explosive cargo"
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
-    commonness="5"
+    commonness="10"
     reward="500"
     successmessage="The explosives have been successfully delivered.">
     <Items>
@@ -88,7 +88,7 @@
   <CargoMission
     name="Explosive cargo"
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
-    commonness="2"
+    commonness="5"
     reward="200"
     successmessage="The explosives have been successfully delivered.">
     <Items>
@@ -109,7 +109,7 @@
   <CargoMission
     name="Chemical shipment"
     description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 200 credits."
-    commonness="5"
+    commonness="10"
     reward="200"
     successmessage="The chemicals have been successfully delivered.">
     <Items>
@@ -128,7 +128,7 @@
   <CargoMission
     name="Handle with care"
     description="Local reseachers are offering 2000 credits for delivering a large amount of nitroglycerine to [location2]."
-    commonness="5"
+    commonness="15"
     reward="2000"
     successmessage="The chemicals have been successfully delivered.">
     <Items>
@@ -144,7 +144,7 @@
   <CargoMission
    name="Praise the Honkmother"
    description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
-   commonness="1"
+   commonness="2"
    reward="100"
    successmessage="The clown gear has been successfully delivered.">
     <Items requireddeliveryamount="35">

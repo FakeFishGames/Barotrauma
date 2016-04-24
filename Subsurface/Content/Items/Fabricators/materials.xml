@@ -29,6 +29,11 @@
      canbepicked="true"
      price="100">
 
+    <Deconstruct time="5">
+      <Item name="Uranium Powder"/>
+      <Item name="Uranium Powder"/>
+    </Deconstruct>
+
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="60"/>
