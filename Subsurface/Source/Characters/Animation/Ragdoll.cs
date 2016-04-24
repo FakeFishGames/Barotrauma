@@ -112,8 +112,8 @@ namespace Barotrauma
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                targetMovement.X = MathHelper.Clamp(value.X, -3.0f, 3.0f);
-                targetMovement.Y = MathHelper.Clamp(value.Y, -3.0f, 3.0f);
+                targetMovement.X = MathHelper.Clamp(value.X, -5.0f, 5.0f);
+                targetMovement.Y = MathHelper.Clamp(value.Y, -5.0f, 5.0f);
             }
         }
 
@@ -151,6 +151,8 @@ namespace Barotrauma
         {
             get { return headInWater; }
         }
+
+        public readonly bool CanEnterSubmarine;
 
         public Hull CurrentHull
         {
@@ -213,6 +215,8 @@ namespace Barotrauma
             torsoPosition = ToolBox.GetAttributeFloat(element, "torsoposition", 50.0f);
             torsoPosition = ConvertUnits.ToSimUnits(torsoPosition);
             torsoAngle = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "torsoangle", 0.0f));
+
+            CanEnterSubmarine = ToolBox.GetAttributeBool(element, "canentersubmarine", true);
                        
             foreach (XElement subElement in element.Elements())
             {
@@ -271,6 +275,8 @@ namespace Barotrauma
             refLimb = GetLimb(LimbType.Torso);
             if (refLimb == null) refLimb = GetLimb(LimbType.Head);
             if (refLimb == null) DebugConsole.ThrowError("Character ''" + character + "'' doesn't have a head or torso!");
+
+            UpdateCollisionCategories();
 
             foreach (var joint in limbJoints)
             {
@@ -550,6 +556,11 @@ namespace Barotrauma
 
         public void FindHull(Vector2? worldPosition = null, bool setSubmarine = true)
         {
+            if (!CanEnterSubmarine)
+            {
+                return;
+            }
+
             Vector2 findPos = worldPosition==null ? refLimb.WorldPosition : (Vector2)worldPosition;
 
             Hull newHull = Hull.FindHull(findPos, currentHull);
@@ -747,7 +758,7 @@ namespace Barotrauma
                 }
             }
 
-           if (lerp)
+            if (lerp)
             {
                 limb.body.TargetPosition = movePos;
                 limb.body.MoveToTargetPosition(Vector2.Distance(limb.SimPosition, movePos) < 10.0f);

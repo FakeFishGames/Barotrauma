@@ -5,40 +5,40 @@
   <sound file="Content/Characters/Endworm/endwormattack1.ogg" state="Attack" range="8000" />
   <sound file="Content/Characters/Endworm/endwormattack2.ogg" state="Attack" range="8000" />
 
-  <ragdoll waveamplitude="100.0" wavelength="1000" speed="1.5" scale ="2.0">
+  <ragdoll waveamplitude="100.0" wavelength="1000" speed="1.5" scale ="2.0" flip="false" canentersubmarine="false">
 
     <!-- head -->
-    <limb id = "0" width="600" height="450" type="Head" steerforce="3.0">
+    <limb id = "0" radius="300" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,478,720,546" depth="0.05"/>
     </limb>
 
     <!-- body -->
-    <limb id = "1" width="600" height="400" type="Torso">
+    <limb id = "1" radius="300" type="Torso">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.01" origin="0.5,0.5"/>
     </limb>
 
     <!-- body -->
-    <limb id = "2" width="600" height="400" type="Torso">
+    <limb id = "2" radius="300" type="Torso">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.02" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "3" width="600" height="400" type="Torso">
+    <limb id = "3" radius="300" type="Torso">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.03" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "4" width="600" height="400" type="Tail">
+    <limb id = "4" radius="300" type="Tail">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.04" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "5" width="600" height="400" type="Tail">
+    <limb id = "5" radius="300" type="Tail">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.05" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "6" width="600" height="400" type="Tail">
+    <limb id = "6" radius="300" type="Tail">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.06" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "7" width="300" height="400" type="Tail">
+    <limb id = "7" radius="150" type="Tail">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="704,0,320,400" depth="0.07" origin="0.5,0.5"/>
     </limb>
 

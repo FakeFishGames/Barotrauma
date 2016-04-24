@@ -199,6 +199,7 @@
               holdangle="30" handle1="-10,0"/>
 
     <Radar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true">
+      <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true"/>
       <sound file="Content/Items/Engine/radarPing.ogg" type="OnUse" range="1000.0"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.6"/>
       <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
@@ -208,7 +209,6 @@
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Battery Cell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
-        <StatusEffect type="OnContaining" target="Contained" Condition="-0.5"/>
       </Containable>
     </ItemContainer>
   </Item>

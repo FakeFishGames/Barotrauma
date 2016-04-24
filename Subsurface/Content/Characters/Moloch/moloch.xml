@@ -6,7 +6,7 @@
   <sound file="Content/Characters/Moloch/idle1.ogg" state="None" range="3000"/>
   <sound file="Content/Characters/Moloch/idle2.ogg" state="None" range="3000"/>
 
-  <ragdoll waveamplitude="0.0" swimspeed="1.0" walkspeed="0.3" flip="true" rotatetowardsmovement="false" headangle="-90">
+  <ragdoll waveamplitude="0.0" swimspeed="1.0" walkspeed="0.3" mirror="true" rotatetowardsmovement="false" headangle="-90">
 
     <!-- head -->
     <limb id = "0" radius="230" height="500" type="Head" steerforce="1.0" flip="true" armorsector="0.0,180.0" armorvalue="100.0" impacttolerance="100">

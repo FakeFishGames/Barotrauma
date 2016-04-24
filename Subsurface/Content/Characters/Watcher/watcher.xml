@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="watcher" humanoid="false" health ="1000">
 
-  <ragdoll waveamplitude="0.0" swimspeed="0.5" walkspeed="0.3" flip="true" rotatetowardsmovement="false" headangle="-90">
+  <ragdoll waveamplitude="0.0" swimspeed="0.5" walkspeed="0.3" mirror="true" rotatetowardsmovement="false" headangle="-90">
 
     <!-- head -->
     <limb id = "0" width="350" height="320" type="Head" steerforce="1.0" flip="true" armorsector="0.0,360.0" armorvalue="100.0">

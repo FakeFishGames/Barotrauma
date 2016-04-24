@@ -296,20 +296,26 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null) continue;
-                
-                //if the character isn't inside the bounding box, continue
-                if (!Submarine.RectContains(worldBorders, c.WorldPosition)) continue;
 
-                //cast a line from the position of the character to the same direction as the translation of the sub
-                //and see where it intersects with the bounding box
-                Vector2? intersection = MathUtils.GetLineRectangleIntersection(c.WorldPosition,
-                    c.WorldPosition + translateDir*100000.0f, worldBorders);
-
-                //should never be null when casting a line out from inside the bounding box
-                Debug.Assert(intersection != null);
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    //if the character isn't inside the bounding box, continue
+                    if (!Submarine.RectContains(worldBorders, limb.WorldPosition)) continue;
                 
-                c.AnimController.SetPosition(ConvertUnits.ToSimUnits((Vector2)intersection) + translateDir);
-                //''+ translatedir'' in order to move the character slightly away from the wall
+                    //cast a line from the position of the character to the same direction as the translation of the sub
+                    //and see where it intersects with the bounding box
+                    Vector2? intersection = MathUtils.GetLineRectangleIntersection(limb.WorldPosition,
+                        limb.WorldPosition + translateDir*100000.0f, worldBorders);
+
+                    //should never be null when casting a line out from inside the bounding box
+                    Debug.Assert(intersection != null);
+
+                    //''+ translatedir'' in order to move the character slightly away from the wall
+                    c.AnimController.SetPosition(c.WorldPosition + ConvertUnits.ToSimUnits((Vector2)intersection - limb.WorldPosition) + translateDir);
+
+                    return;
+                }                
+
             }
         }
 
