@@ -107,12 +107,7 @@ namespace Barotrauma.Networking
         {
             get { return inGameHUD; }
         }
-
-        public GUIListBox ChatBox
-        {
-            get { return chatBox; }
-        }
-
+        
         public NetworkMember()
         {
             inGameHUD = new GUIFrame(new Rectangle(0,0,0,0), null, null);
@@ -204,7 +199,7 @@ namespace Barotrauma.Networking
         {
             if (sender == null) return false;
 
-            var radio = sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+            var radio = sender.Inventory.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
             if (radio == null || !sender.HasEquippedItem(radio)) return false;
                        
             var radioComponent = radio.GetComponent<WifiComponent>();
@@ -231,7 +226,9 @@ namespace Barotrauma.Networking
         
         public void AddChatMessage(ChatMessage message)
         {
-            if (message.Type == ChatMessageType.Radio && message.Sender != null && message.Sender != myCharacter)
+            if (message.Type == ChatMessageType.Radio && 
+                Character.Controlled != null &&
+                message.Sender != null && message.Sender != myCharacter)
             {
                 var radio = message.Sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
                 if (radio == null) return;
@@ -247,9 +244,9 @@ namespace Barotrauma.Networking
 
             if (message.Sender != null)
             {
-                if (message.Type == ChatMessageType.Default && myCharacter != null)
+                if (message.Type == ChatMessageType.Default && Character.Controlled != null)
                 {
-                    displayedText = message.ApplyDistanceEffect(myCharacter);
+                    displayedText = message.ApplyDistanceEffect(Character.Controlled);
                     if (string.IsNullOrWhiteSpace(displayedText)) return;
                 }
 
@@ -303,8 +300,8 @@ namespace Barotrauma.Networking
         {
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                chatBox.Visible = Character.Controlled == null || !Character.Controlled.IsUnconscious;
-                chatMsgBox.Visible = chatBox.Visible;
+                //chatBox.Visible = Character.Controlled == null || !Character.Controlled.IsUnconscious;
+                chatMsgBox.Visible = Character.Controlled == null || !Character.Controlled.IsUnconscious;
 
                 inGameHUD.Update(deltaTime);
 
@@ -319,7 +316,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (PlayerInput.KeyHit(InputType.Chat))
+            if (PlayerInput.KeyHit(InputType.Chat) && chatMsgBox.Visible)
             {
                 if (chatMsgBox.Selected)
                 {

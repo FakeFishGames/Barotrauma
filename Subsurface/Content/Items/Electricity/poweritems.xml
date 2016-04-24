@@ -16,7 +16,7 @@
     </fixrequirement>
 
     <PowerTransfer canbeselected = "true">
-      <StatusEffect type="InWater" target="This" condition="-1.0"/>
+      <StatusEffect type="InWater" target="This" condition="-0.5"/>
       <GuiFrame rect="0,0,350,160" alignment="Center" color="0.0,0.0,0.0,0.6"/>
     </PowerTransfer>
 
