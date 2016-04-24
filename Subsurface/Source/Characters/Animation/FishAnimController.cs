@@ -17,7 +17,7 @@ namespace Barotrauma
 
         private bool rotateTowardsMovement;
 
-        private bool flip;
+        private bool mirror, flip;
 
         private float flipTimer;
 
@@ -29,7 +29,8 @@ namespace Barotrauma
             waveAmplitude = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "waveamplitude", 0.0f));
             waveLength = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "wavelength", 0.0f));
             
-            flip = ToolBox.GetAttributeBool(element, "flip", false);
+            flip = ToolBox.GetAttributeBool(element, "flip", true);
+            mirror = ToolBox.GetAttributeBool(element, "mirror", false);
             
             float footRot = ToolBox.GetAttributeFloat(element,"footrotation", float.NaN);
             if (float.IsNaN(footRot))
@@ -82,7 +83,7 @@ namespace Barotrauma
                 }
             }
 
-            if (flip)
+            if (mirror)
             {
                 if (!character.IsNetworkPlayer)
                 {
@@ -117,6 +118,8 @@ namespace Barotrauma
             }
             
             //if (stunTimer > gameTime.TotalGameTime.TotalMilliseconds) return;
+            if (!flip) return;
+
             flipTimer += deltaTime;
             
             if (TargetDir != dir) 
@@ -124,7 +127,7 @@ namespace Barotrauma
                 if (flipTimer>1.0f || character.IsNetworkPlayer)
                 {
                     Flip();
-                    if (flip) Mirror();
+                    if (mirror) Mirror();
                     flipTimer = 0.0f;
                 }              
             }

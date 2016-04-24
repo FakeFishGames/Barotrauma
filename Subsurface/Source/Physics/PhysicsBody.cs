@@ -313,7 +313,7 @@ namespace Barotrauma
                 prevPosition = targetPosition;
             }
 
-            body.SetTransform(targetPosition, targetRotation);
+            body.SetTransform(targetPosition, targetRotation == 0.0f ? body.Rotation : targetRotation);
             body.LinearVelocity = targetVelocity;
             body.AngularVelocity = targetAngularVelocity;
             targetPosition = Vector2.Zero;
