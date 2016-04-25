@@ -94,8 +94,11 @@ namespace Barotrauma
 
             if (Items[slotIndex] == null) return false;
 
+            //save the ID in a variable in case the statuseffect causes the item to be dropped/destroyed
+            int itemID = Items[slotIndex].ID;
+            
             Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-            new NetworkEvent(NetworkEventType.ApplyStatusEffect, character.ID, true, Items[slotIndex].ID);
+            new NetworkEvent(NetworkEventType.ApplyStatusEffect, character.ID, true, itemID);
 
             return true;
         }

@@ -319,15 +319,36 @@ namespace Barotrauma
             Item[] containedItems = null;
             if (Items[slotIndex] != null) containedItems = Items[slotIndex].ContainedItems;
 
+            string toolTip = "";
+            Rectangle highlightedRect = Rectangle.Empty;
+
             if (containedItems != null)
             {
                 for (int i = 0; i < itemCapacity; i++)
                 {
                     subRect.Y = subRect.Y - subRect.Height - 10;
-                    UpdateSlot(spriteBatch, subRect, selectedSlot, i < containedItems.Count() ? containedItems[i] : null, true);
+                    highlightedRect = subRect;
+                    UpdateSlot(spriteBatch, subRect, selectedSlot, i < containedItems.Length ? containedItems[i] : null, true);
+
+                    if (i >= containedItems.Length || containedItems[i] == null) continue;
+
+                    if (highlightedRect.Contains(PlayerInput.MousePosition))
+                    {
+                        if (GameMain.DebugDraw)
+                        {
+                            toolTip = containedItems[i].ToString();
+                        }
+                        else
+                        {
+                            toolTip = string.IsNullOrEmpty(containedItems[i].Description) ? 
+                                containedItems[i].Name : 
+                                containedItems[i].Name + '\n' + containedItems[i].Description;
+                        }
+                    }
                 }
             }
-            
+
+            if (!string.IsNullOrWhiteSpace(toolTip)) DrawToolTip(spriteBatch, toolTip, highlightedRect);
 
             
         }
