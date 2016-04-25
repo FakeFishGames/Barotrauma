@@ -1668,7 +1668,7 @@ namespace Barotrauma
                     if (allOk)
                     {
                         bleeding = 0.0f;
-                        Stun = 0.0f;
+                        AnimController.StunTimer = 0.0f;
                         return;
                     }
 

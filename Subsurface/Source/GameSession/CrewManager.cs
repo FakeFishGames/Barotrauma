@@ -206,8 +206,6 @@ namespace Barotrauma
 
         public void CreateCrewFrame(List<Character> crew, GUIFrame crewFrame)
         {
-            int width = 600, height = 400;
-
             //crewFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
             //crewFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
@@ -242,7 +240,7 @@ namespace Barotrauma
         protected virtual bool SelectCrewCharacter(GUIComponent component, object obj)
         {
             Character character = obj as Character;
-            if (character == null || character.IsDead || character.IsUnconscious) return false;
+            if (character == null) return false;
 
             var crewFrame = component.Parent;
             while (crewFrame.Parent!=null)
