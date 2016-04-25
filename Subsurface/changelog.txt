@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v0.4.0.2
+---------------------------------------------------------------------------------------------------------
+
+- fire doesn't affect items in characters' inventories (e.g. holding a thermal artifact won't blow up
+oxygen tanks in your inventory)
+- handheld sonars only consume power when they're on
+- cargo missions are more common
+- fix for endworms (and possibly other large monsters) teleporting partially inside the sub
+- some more chemicals/drugs
+- doctor's clothes have some extra slots for chemicals
+
+---------------------------------------------------------------------------------------------------------
 v0.4.0.1
 ---------------------------------------------------------------------------------------------------------
 

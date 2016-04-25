@@ -18,7 +18,7 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
-            Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
+            //Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
 
             //spawn some fish next to the player
             GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2,
@@ -276,7 +276,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.Loaded.WorldPosition.Y > 29000.0f)
+            while (Submarine.Loaded.WorldPosition.Y > 40000.0f)
             {
                 yield return CoroutineStatus.Running;
             }

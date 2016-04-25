@@ -92,7 +92,7 @@ namespace Barotrauma
             }
         }
 
-        public static Mission LoadRandom(Location[] locations, Random rand)
+        public static Mission LoadRandom(Location[] locations, MTRandom rand)
         {
             var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.Missions);
             string configFile = files[rand.Next(files.Count)];

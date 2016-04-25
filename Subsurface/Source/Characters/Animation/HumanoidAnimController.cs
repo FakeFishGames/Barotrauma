@@ -192,8 +192,6 @@ namespace Barotrauma
                 return;
             }
             
-            if (TargetDir != dir) Flip();
-
             if (Anim != Animation.UsingConstruction) ResetPullJoints(); 
 
             if (SimplePhysicsEnabled)
@@ -226,6 +224,7 @@ namespace Barotrauma
                     break;
             }
 
+            if (TargetDir != dir) Flip();
 
             foreach (Limb limb in Limbs)
             {

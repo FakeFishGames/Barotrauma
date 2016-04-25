@@ -36,6 +36,10 @@
       <sprite texture="doctorgear.png" limb="RightArm" sourcerect="33,0,17,40" origin="0.5,0.5" hidelimb="true"/>
       <sprite texture="doctorgear.png" limb="LeftArm" sourcerect="33,0,17,40" origin="0.5,0.5" depth="0.14" hidelimb="true"/>
     </Wearable>
+
+    <ItemContainer capacity="3">
+      <Containable name="chem"/>
+    </ItemContainer>
   </Item>
 
   <Item
@@ -56,6 +60,10 @@
       <sprite texture="doctorgear.png" limb="RightLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
       <sprite texture="doctorgear.png" limb="LeftLeg" sourcerect="26,61,17,48" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
     </Wearable>
+
+    <ItemContainer capacity="6">
+      <Containable name="chem"/>
+    </ItemContainer>
   </Item>
 </Items>
 
