@@ -1043,23 +1043,7 @@ namespace Barotrauma
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
-            if (needsAir)
-            {
-                Oxygen += deltaTime * (oxygenAvailable < 30.0f ? -5.0f : 10.0f);
-
-                PressureProtection -= deltaTime*100.0f;
-
-                float hullAvailableOxygen = 0.0f;
-
-                if (!AnimController.HeadInWater && AnimController.CurrentHull != null)
-                {
-                    hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
-
-                    AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
-                }
-
-                OxygenAvailable += Math.Sign(hullAvailableOxygen - oxygenAvailable) * deltaTime * 50.0f;
-            }
+            if (needsAir) UpdateOxygen(deltaTime);
 
             Health -= bleeding * deltaTime;
             Bleeding -= BleedingDecreaseSpeed * deltaTime;
@@ -1069,6 +1053,24 @@ namespace Barotrauma
             if (!IsDead) LockHands = false;
         }
 
+        private void UpdateOxygen(float deltaTime)
+        {
+            Oxygen += deltaTime * (oxygenAvailable < 30.0f ? -5.0f : 10.0f);
+
+            PressureProtection -= deltaTime * 100.0f;
+
+            float hullAvailableOxygen = 0.0f;
+
+            if (!AnimController.HeadInWater && AnimController.CurrentHull != null)
+            {
+                hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
+
+                AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
+            }
+
+            OxygenAvailable += Math.Sign(hullAvailableOxygen - oxygenAvailable) * deltaTime * 50.0f;
+        }
+
         private void UpdateUnconscious(float deltaTime)
         {
             Stun = Math.Max(5.0f, Stun);
@@ -1076,7 +1078,7 @@ namespace Barotrauma
             AnimController.ResetPullJoints();
             selectedConstruction = null;
 
-            if (oxygen <= 0.0f) Oxygen -= deltaTime;
+            if (oxygen <= 0.0f) Oxygen -= deltaTime * 0.5f;
 
             if (health <= 0.0f)
             {
