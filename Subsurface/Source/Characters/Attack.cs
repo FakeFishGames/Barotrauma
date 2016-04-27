@@ -121,7 +121,8 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() == "particleemitter") particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
+                if (subElement.Name.ToString().ToLowerInvariant() != "particleemitter") continue;
+                particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
             }
         }
 

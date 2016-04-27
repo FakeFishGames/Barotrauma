@@ -87,7 +87,7 @@ namespace Barotrauma
             }
             else
             {
-                string lowerTrimmedVal = value.ToLower().Trim();
+                string lowerTrimmedVal = value.ToLowerInvariant().Trim();
                 if (lowerTrimmedVal == "true")
                 {
                     return true;
@@ -186,7 +186,7 @@ namespace Barotrauma
         {
             if (attribute == null) return defaultValue;
 
-            string val = attribute.Value.ToLower().Trim();
+            string val = attribute.Value.ToLowerInvariant().Trim();
             if (val == "true")
             {
                 return true;

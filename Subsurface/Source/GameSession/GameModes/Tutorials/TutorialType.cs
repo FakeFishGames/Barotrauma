@@ -36,7 +36,7 @@ namespace Barotrauma.Tutorials
         public virtual void Initialize()
         {
 
-            GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLower() == "tutorial"));
+            GameMain.GameSession = new GameSession(Submarine.Loaded, "", GameModePreset.list.Find(gm => gm.Name.ToLowerInvariant() == "tutorial"));
             (GameMain.GameSession.gameMode as TutorialMode).tutorialType = this;
 
             GameMain.GameSession.StartShift("tuto1");
@@ -58,7 +58,7 @@ namespace Barotrauma.Tutorials
 
             CharacterInfo charInfo = new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Name == "Engineer"));
 
-            character = Character.Create(charInfo, wayPoint.WorldPosition);
+            character = Character.Create(charInfo, wayPoint.WorldPosition, false, false);
             Character.Controlled = character;
             character.GiveJobItems(null);
 

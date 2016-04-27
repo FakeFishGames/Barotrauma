@@ -96,7 +96,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "gamemode") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "gamemode") continue;
 
                 gameMode = new SinglePlayerMode(subElement);
             }

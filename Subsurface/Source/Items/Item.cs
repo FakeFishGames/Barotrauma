@@ -343,7 +343,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "body":
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position));
@@ -535,7 +535,7 @@ namespace Barotrauma
         {
             if (tag == null) return true;
 
-            return (tags.Contains(tag) || tags.Contains(tag.ToLower()));
+            return (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()));
         }
 
 

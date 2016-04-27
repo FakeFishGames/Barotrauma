@@ -142,7 +142,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (masterServerData.Substring(0,5).ToLower()=="error")
+            if (masterServerData.Substring(0, 5).ToLowerInvariant() == "error")
             {
                 DebugConsole.ThrowError("Error while connecting to master server ("+masterServerData+")!");
 

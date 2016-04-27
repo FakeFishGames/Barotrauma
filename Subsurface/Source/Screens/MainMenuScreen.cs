@@ -385,7 +385,7 @@ namespace Barotrauma
             XElement modeElement = null;
             foreach (XElement element in doc.Root.Elements())
             {
-                if (element.Name.ToString().ToLower() != "gamemode") continue;
+                if (element.Name.ToString().ToLowerInvariant() != "gamemode") continue;
 
                 modeElement = element;
                 break;

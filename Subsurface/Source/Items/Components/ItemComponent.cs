@@ -221,7 +221,7 @@ namespace Barotrauma.Items.Components
             
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
                     case "requireditems":
@@ -395,7 +395,7 @@ namespace Barotrauma.Items.Components
             if (sound.VolumeProperty == "") return 1.0f;
             
             ObjectProperty op = null;
-            if (properties.TryGetValue(sound.VolumeProperty.ToLower(), out op))
+            if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out op))
             {
                 float newVolume = 0.0f;
                 try
@@ -682,7 +682,7 @@ namespace Barotrauma.Items.Components
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 ObjectProperty property = null;
-                if (!properties.TryGetValue(attribute.Name.ToString().ToLower(), out property)) continue;
+                if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out property)) continue;
                 
                 property.TrySetValue(attribute.Value);
             }
@@ -692,7 +692,7 @@ namespace Barotrauma.Items.Components
 
             foreach (XElement subElement in componentElement.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
@@ -717,7 +717,7 @@ namespace Barotrauma.Items.Components
         public static ItemComponent Load(XElement element, Item item, string file, bool errorMessages = true)
         {
             Type t;
-            string type = element.Name.ToString().ToLower();
+            string type = element.Name.ToString().ToLowerInvariant();
             try
             {
                 // Get the type of a specified class.                

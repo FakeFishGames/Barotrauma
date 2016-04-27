@@ -54,13 +54,13 @@ namespace Barotrauma
 
         public Job(XElement element)
         {
-            string name = ToolBox.GetAttributeString(element, "name", "").ToLower();
-            prefab = JobPrefab.List.Find(jp => jp.Name.ToLower() == name);
+            string name = ToolBox.GetAttributeString(element, "name", "").ToLowerInvariant();
+            prefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == name);
 
             skills = new Dictionary<string, Skill>();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "skill") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "skill") continue;
                 string skillName = ToolBox.GetAttributeString(subElement, "name", "");
                 if (string.IsNullOrEmpty(name)) continue;
                 skills.Add(
@@ -86,6 +86,8 @@ namespace Barotrauma
 
         public void GiveJobItems(Character character, WayPoint spawnPoint)
         {
+            if (SpawnItems == null) return;
+
             foreach (XElement itemElement in SpawnItems.Elements())
             {
                 InitializeJobItem(character, spawnPoint, itemElement);

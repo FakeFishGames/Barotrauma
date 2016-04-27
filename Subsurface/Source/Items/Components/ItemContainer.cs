@@ -101,7 +101,7 @@ namespace Barotrauma.Items.Components
             
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "containable":
                         RelatedItem containable = RelatedItem.Load(subElement);

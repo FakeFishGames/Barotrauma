@@ -137,14 +137,14 @@ namespace Barotrauma
             int n = 0;
             foreach (XAttribute attribute in propertyAttributes)
             {
-                propertyNames[n] = attribute.Name.ToString().ToLower();
+                propertyNames[n] = attribute.Name.ToString().ToLowerInvariant();
                 propertyEffects[n] = ToolBox.GetAttributeObject(attribute);
                 n++;
             }
 
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "explosion":
                         explosion = new Explosion(subElement);

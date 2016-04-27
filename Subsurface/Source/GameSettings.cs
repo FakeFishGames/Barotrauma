@@ -171,7 +171,7 @@ namespace Barotrauma
             
             foreach (XElement subElement in doc.Root.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "contentpackage":
                         string path = ToolBox.GetAttributeString(subElement, "path", "");

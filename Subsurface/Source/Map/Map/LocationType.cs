@@ -69,11 +69,11 @@ namespace Barotrauma
             hireableJobs = new List<Tuple<JobPrefab, float>>();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "hireable") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "hireable") continue;
 
                 string jobName = ToolBox.GetAttributeString(subElement, "name", "");
 
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLower() == jobName.ToLower());
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName.ToLowerInvariant());
                 if (jobPrefab==null)
                 {
                     DebugConsole.ThrowError("Invalid job name ("+jobName+") in location type "+name);

@@ -57,7 +57,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower()!="character") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "character") continue;
 
                 characterInfos.Add(new CharacterInfo(subElement));
             }

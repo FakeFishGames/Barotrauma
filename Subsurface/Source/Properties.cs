@@ -82,7 +82,7 @@ namespace Barotrauma
             }
             else if (property.PropertyType == typeof(bool))
             {
-                propertyInfo.SetValue(obj, (value.ToLower() == "true"), null);                
+                propertyInfo.SetValue(obj, (value.ToLowerInvariant() == "true"), null);                
             }
             else if (property.PropertyType == typeof(int))
             {
@@ -201,7 +201,7 @@ namespace Barotrauma
 
             foreach (var property in properties)
             {
-                dictionary.Add(property.Name.ToLower(), new ObjectProperty(property, obj));
+                dictionary.Add(property.Name.ToLowerInvariant(), new ObjectProperty(property, obj));
             }
 
             return dictionary;
@@ -221,7 +221,7 @@ namespace Barotrauma
             foreach (var property in properties)
             {
                 ObjectProperty objProperty = new ObjectProperty(property, obj);
-                dictionary.Add(property.Name.ToLower(), objProperty);
+                dictionary.Add(property.Name.ToLowerInvariant(), objProperty);
 
                 //set the value of the property to the default value if there is one
                 foreach (var ini in property.Attributes.OfType<HasDefaultValue>())
@@ -238,7 +238,7 @@ namespace Barotrauma
                 foreach (XAttribute attribute in element.Attributes())
                 {
                     ObjectProperty property = null;
-                    if (!dictionary.TryGetValue(attribute.Name.ToString().ToLower(), out property)) continue;
+                    if (!dictionary.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out property)) continue;
                     if (!property.Attributes.OfType<HasDefaultValue>().Any()) continue;
                     property.TrySetValue(attribute.Value);
                 }            
@@ -279,7 +279,7 @@ namespace Barotrauma
                     stringValue = value.ToString();
                 }
 
-                element.Add(new XAttribute(property.Name.ToLower(), stringValue));
+                element.Add(new XAttribute(property.Name.ToLowerInvariant(), stringValue));
             }
         }
     }

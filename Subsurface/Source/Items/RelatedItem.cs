@@ -148,7 +148,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "statuseffect") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "statuseffect") continue;
 
                 ri.statusEffects.Add(StatusEffect.Load(subElement));
             }

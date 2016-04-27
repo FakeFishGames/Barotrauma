@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
         {
             string name = ToolBox.GetAttributeString(element, "name", "");
 
-            TargetItem = ItemPrefab.list.Find(ip => ip.Name.ToLower() == name.ToLower()) as ItemPrefab;
+            TargetItem = ItemPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == name.ToLowerInvariant()) as ItemPrefab;
             if (TargetItem == null)
             {
                 DebugConsole.ThrowError("Error in fabricable item "+name+"! Item ''" + element.Name + "'' not found.");
@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
             {
                 if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
 
-                ItemPrefab requiredItem = ItemPrefab.list.Find(ip => ip.Name.ToLower() == requiredItemName.Trim().ToLower()) as ItemPrefab;
+                ItemPrefab requiredItem = ItemPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == requiredItemName.Trim().ToLowerInvariant()) as ItemPrefab;
                 if (requiredItem == null)
                 {
                     DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item ''" + requiredItemName + "'' not found.");
@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
 
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requiredskill":
                         RequiredSkills.Add(new Skill(

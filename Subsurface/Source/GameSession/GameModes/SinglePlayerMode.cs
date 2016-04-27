@@ -89,7 +89,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "crew") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "crew") continue;
                 
                 GameMain.GameSession.CrewManager = new CrewManager(subElement);                
             }

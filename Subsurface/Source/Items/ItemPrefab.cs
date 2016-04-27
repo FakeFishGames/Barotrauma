@@ -184,7 +184,7 @@ namespace Barotrauma
                 XDocument doc = ToolBox.TryLoadXml(filePath);
                 if (doc == null) return;
 
-                if (doc.Root.Name.ToString().ToLower() == "item")
+                if (doc.Root.Name.ToString().ToLowerInvariant() == "item")
                 {
                     new ItemPrefab(doc.Root, filePath);
                 }
@@ -192,7 +192,7 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (element.Name.ToString().ToLower() != "item") continue;
+                        if (element.Name.ToString().ToLowerInvariant() != "item") continue;
 
                         new ItemPrefab(element, filePath);
                     }
@@ -253,7 +253,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         string spriteFolder = "";

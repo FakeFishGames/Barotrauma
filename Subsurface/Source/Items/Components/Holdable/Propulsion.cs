@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         public Propulsion(Item item, XElement element)
             : base(item,element)
         {
-            switch (ToolBox.GetAttributeString(element, "usablein", "air").ToLower())
+            switch (ToolBox.GetAttributeString(element, "usablein", "air").ToLowerInvariant())
             {
                 case "air":
                     usableIn = ParticlePrefab.DrawTargetType.Air;

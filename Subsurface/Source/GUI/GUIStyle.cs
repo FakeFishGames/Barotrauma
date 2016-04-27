@@ -24,14 +24,14 @@ namespace Barotrauma
             foreach (XElement subElement in doc.Root.Elements())
             {
                 GUIComponentStyle componentStyle = new GUIComponentStyle(subElement);
-                componentStyles.Add(subElement.Name.ToString().ToLower(), componentStyle);
+                componentStyles.Add(subElement.Name.ToString().ToLowerInvariant(), componentStyle);
             }
         }
 
         public void Apply(GUIComponent targetComponent, GUIComponent parent = null)
         {
             GUIComponentStyle componentStyle = null;
-            string name = (parent==null) ? targetComponent.GetType().Name.ToLower() : parent.GetType().Name.ToLower();
+            string name = (parent == null) ? targetComponent.GetType().Name.ToLowerInvariant() : parent.GetType().Name.ToLowerInvariant();
             componentStyles.TryGetValue(name, out componentStyle);
 
             if (componentStyle==null)

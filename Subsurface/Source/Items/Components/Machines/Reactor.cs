@@ -401,7 +401,7 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-             switch (objective.Option.ToLower())
+            switch (objective.Option.ToLowerInvariant())
              {
                  case "power up":
                      float tempDiff = load - temperature;

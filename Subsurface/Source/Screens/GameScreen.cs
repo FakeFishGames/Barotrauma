@@ -179,7 +179,7 @@ namespace Barotrauma
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
             GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
-            if (Character.Controlled!=null)
+            if (Character.Controlled != null)
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }
@@ -194,7 +194,6 @@ namespace Barotrauma
             if (Level.Loaded == null)
             {
                 graphics.Clear(new Color(11, 18, 26, 255));
-
             }
             else
             {
