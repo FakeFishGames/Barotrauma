@@ -975,7 +975,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                string command = ChatMessage.GetChatMessageCommand(message, out message).ToLower();
+                string command = ChatMessage.GetChatMessageCommand(message, out message).ToLowerInvariant();
                 
                 if (command=="r" || command=="radio" && CanUseRadio(Character.Controlled)) type = ChatMessageType.Radio;              
             }

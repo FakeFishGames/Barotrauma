@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class Mission
     {
-        private static List<Mission> list = new List<Mission>();
+        //private static List<Mission> list = new List<Mission>();
         
         private string name;
 
@@ -86,7 +86,7 @@ namespace Barotrauma
             headers = new List<string>();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "message") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "message") continue;
                 headers.Add(ToolBox.GetAttributeString(subElement, "header", ""));
                 messages.Add(ToolBox.GetAttributeString(subElement, "text", ""));
             }

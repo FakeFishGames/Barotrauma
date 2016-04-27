@@ -71,7 +71,7 @@ namespace Barotrauma
 
             currentObjective = null;
 
-            switch (order.Name.ToLower())
+            switch (order.Name.ToLowerInvariant())
             {
                 case "follow":
                     currentObjective = new AIObjectiveGoTo(Character.Controlled, character, true);

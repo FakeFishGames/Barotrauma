@@ -188,7 +188,7 @@ namespace Barotrauma.Items.Components
         {
             base.ReceiveSignal(stepsTaken, signal, connection, sender, power);
 
-            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6).ToLower() == "signal")
+            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6).ToLowerInvariant() == "signal")
             {
                 connection.SendSignal(stepsTaken, signal, sender, 0.0f);
             }

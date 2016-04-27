@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "sprite") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
                 light.LightSprite = new Sprite(subElement);
                 light.LightSprite.Origin = light.LightSprite.size / 2.0f;
                 break;

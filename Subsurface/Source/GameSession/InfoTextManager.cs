@@ -25,7 +25,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                string infoName = subElement.Name.ToString().ToLower();
+                string infoName = subElement.Name.ToString().ToLowerInvariant();
                 List<string> infoList = null;
                 if (!infoTexts.TryGetValue(infoName, out infoList))
                 {
@@ -40,7 +40,7 @@ namespace Barotrauma
         public static string GetInfoText(string infoName)
         {
             List<string> infoList = null;
-            if (!infoTexts.TryGetValue(infoName.ToLower(), out infoList) || !infoList.Any())
+            if (!infoTexts.TryGetValue(infoName.ToLowerInvariant(), out infoList) || !infoList.Any())
             {
 #if DEBUG
                 return "Info text ''" + infoName + "'' not found";

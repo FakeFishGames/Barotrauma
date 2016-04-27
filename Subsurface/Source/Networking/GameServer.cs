@@ -1144,10 +1144,10 @@ namespace Barotrauma.Networking
 
         public void KickPlayer(string playerName, bool ban = false)
         {
-            playerName = playerName.ToLower();
+            playerName = playerName.ToLowerInvariant();
 
-            Client client = ConnectedClients.Find( c => c.name.ToLower() == playerName ||
-                    (c.Character != null && c.Character.Name.ToLower() == playerName));
+            Client client = ConnectedClients.Find(c => c.name.ToLowerInvariant() == playerName ||
+                    (c.Character != null && c.Character.Name.ToLowerInvariant() == playerName));
 
             if (client == null) return;
 
@@ -1434,7 +1434,7 @@ namespace Barotrauma.Networking
 
             ChatMessageType type = gameStarted && myCharacter != null ? ChatMessageType.Default : ChatMessageType.Server;
 
-            string command = ChatMessage.GetChatMessageCommand(message, out message).ToLower();
+            string command = ChatMessage.GetChatMessageCommand(message, out message).ToLowerInvariant();
                 
             if (command=="dead" || command=="d")
             {
@@ -1447,8 +1447,8 @@ namespace Barotrauma.Networking
             else if (command != "")
             {
                 targetClient = ConnectedClients.Find(c =>
-                    command == c.name.ToLower() ||
-                    c.Character != null && command == c.Character.Name.ToLower());
+                    command == c.name.ToLowerInvariant() ||
+                    (c.Character != null && command == c.Character.Name.ToLowerInvariant()));
 
                 if (targetClient == null)
                 {

@@ -163,7 +163,7 @@ namespace Barotrauma
             XElement ragdollElement = doc.Root.Element("ragdoll");
             foreach (XElement limbElement in ragdollElement.Elements())
             {
-                if (ToolBox.GetAttributeString(limbElement, "type", "").ToLower() != "head") continue;
+                if (ToolBox.GetAttributeString(limbElement, "type", "").ToLowerInvariant() != "head") continue;
 
                 XElement spriteElement = limbElement.Element("sprite");
 
@@ -255,7 +255,7 @@ namespace Barotrauma
         {
             Name = ToolBox.GetAttributeString(element, "name", "unnamed");
 
-            string genderStr = ToolBox.GetAttributeString(element, "gender", "male").ToLower();
+            string genderStr = ToolBox.GetAttributeString(element, "gender", "male").ToLowerInvariant();
             gender = (genderStr == "m") ? Gender.Male : Gender.Female;
 
             File            = ToolBox.GetAttributeString(element, "file", "");
@@ -277,7 +277,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "job") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "job") continue;
 
                 Job = new Job(subElement);
                 break;

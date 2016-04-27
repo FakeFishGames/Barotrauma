@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (deconstructProduct.RequireFullCondition && targetItem.Condition < 100.0f) continue;
 
-                    var itemPrefab = ItemPrefab.list.FirstOrDefault(ip => ip.Name.ToLower() == deconstructProduct.ItemPrefabName.ToLower()) as ItemPrefab;
+                    var itemPrefab = ItemPrefab.list.FirstOrDefault(ip => ip.Name.ToLowerInvariant() == deconstructProduct.ItemPrefabName.ToLowerInvariant()) as ItemPrefab;
                     if (itemPrefab==null)
                     {
                         DebugConsole.ThrowError("Tried to deconstruct item ''"+targetItem.Name+"'' but couldn't find item prefab ''"+deconstructProduct+"''!");

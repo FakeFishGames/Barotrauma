@@ -187,7 +187,7 @@ namespace Barotrauma.Items.Components
         {
             var projectiles = GetLoadedProjectiles();
 
-            if (projectiles.Count==0 || (projectiles.Count==1 && objective.Option.ToLower()!="fire at will"))
+            if (projectiles.Count == 0 || (projectiles.Count == 1 && objective.Option.ToLowerInvariant() != "fire at will"))
             {
                 ItemContainer container = null;
                 foreach (MapEntity e in item.linkedTo)
@@ -272,7 +272,7 @@ namespace Barotrauma.Items.Components
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
             if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;
 
-            if (objective.Option.ToLower()=="fire at will") Use(deltaTime, character);
+            if (objective.Option.ToLowerInvariant() == "fire at will") Use(deltaTime, character);
 
 
             return false;

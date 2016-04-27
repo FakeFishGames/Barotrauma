@@ -146,7 +146,7 @@ namespace Barotrauma
             if (command == "") return;
             string[] commands = command.Split(' ');
 
-            switch (commands[0].ToLower())
+            switch (commands[0].ToLowerInvariant())
             {
                 case "help":
                     NewMessage("menu: go to main menu", Color.Cyan);
@@ -203,7 +203,7 @@ namespace Barotrauma
 
                     if (commands.Length > 2)
                     {
-                        switch (commands[2].ToLower())
+                        switch (commands[2].ToLowerInvariant())
                         {
                             case "inside":
                                 spawnPoint = WayPoint.GetRandom(SpawnType.Human);
@@ -233,19 +233,19 @@ namespace Barotrauma
                                 }
                                 break;
                             default:
-                                spawnPoint = WayPoint.GetRandom(commands[1].ToLower()=="human" ? SpawnType.Human : SpawnType.Enemy);
+                                spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant()=="human" ? SpawnType.Human : SpawnType.Enemy);
                                 break;
                         }
 
                     }
                     else
                     {
-                        spawnPoint = WayPoint.GetRandom(commands[1].ToLower() == "human" ? SpawnType.Human : SpawnType.Enemy);
+                        spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy);
                     }
 
                     spawnPosition = spawnPoint == null ? Vector2.Zero : spawnPoint.WorldPosition;
 
-                    if (commands[1].ToLower()=="human")
+                    if (commands[1].ToLowerInvariant()=="human")
                     {
                         spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
                         Character.Controlled = spawnedCharacter;
@@ -315,8 +315,8 @@ namespace Barotrauma
                 case "controlcharacter":
                 case "control":
                     if (commands.Length < 2) break;
-                    commands[1] = commands[1].ToLower();
-                    Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLower() == commands[1]);
+                    commands[1] = commands[1].ToLowerInvariant();
+                    Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLowerInvariant() == commands[1]);
                     break;
                 case "godmode":
                     Submarine.Loaded.GodMode = !Submarine.Loaded.GodMode;

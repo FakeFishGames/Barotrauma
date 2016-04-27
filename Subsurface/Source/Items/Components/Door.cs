@@ -127,7 +127,7 @@ namespace Barotrauma.Items.Components
            // isOpen = false;
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         doorSprite = new Sprite(subElement, Path.GetDirectoryName(item.Prefab.ConfigFile));

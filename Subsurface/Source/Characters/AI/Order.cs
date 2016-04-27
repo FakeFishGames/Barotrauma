@@ -39,7 +39,7 @@ namespace Barotrauma
 
             foreach (XElement orderElement in doc.Root.Elements())
             {
-                if (orderElement.Name.ToString().ToLower() != "order") continue;
+                if (orderElement.Name.ToString().ToLowerInvariant() != "order") continue;
 
                 PrefabList.Add(new Order(orderElement));
             }
@@ -100,7 +100,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in orderElement.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "sprite") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
                 SymbolSprite = new Sprite(subElement);
                 break;
             }

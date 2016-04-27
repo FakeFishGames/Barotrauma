@@ -223,8 +223,8 @@ namespace Barotrauma
 
         private bool EnterAssignedJob(GUITextBox textBox, string text)
         {
-            string trimmedName = text.ToLower().Trim();
-            assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLower() == trimmedName);
+            string trimmedName = text.ToLowerInvariant().Trim();
+            assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == trimmedName);
 
             if (assignedJob !=null && trimmedName!="none")
             {
@@ -757,10 +757,10 @@ namespace Barotrauma
                 w.IdCardTags = idCardTagString.Split(',');
             }
 
-            string jobName = ToolBox.GetAttributeString(element, "job", "").ToLower();
+            string jobName = ToolBox.GetAttributeString(element, "job", "").ToLowerInvariant();
             if (!string.IsNullOrWhiteSpace(jobName))
             {
-                w.assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLower() == jobName);
+                w.assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName);
             }
 
             w.ladderId = (ushort)ToolBox.GetAttributeInt(element, "ladders", 0);

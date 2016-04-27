@@ -51,7 +51,7 @@ namespace Barotrauma.Particles
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLower() != "sprite") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
 
                 Sprites.Add(new Sprite(subElement));
             }
@@ -140,7 +140,7 @@ namespace Barotrauma.Particles
 
             RotateToDirection = ToolBox.GetAttributeBool(element, "rotatetodirection", false);
 
-            switch (ToolBox.GetAttributeString(element, "drawtarget", "air").ToLower())
+            switch (ToolBox.GetAttributeString(element, "drawtarget", "air").ToLowerInvariant())
             {
                 case "air":
                 default:

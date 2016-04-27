@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
             fixableEntities = new List<string>();
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "fixable":
                         fixableEntities.Add(subElement.Attribute("name").Value);

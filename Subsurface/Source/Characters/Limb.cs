@@ -265,7 +265,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         string spritePath = subElement.Attribute("texture").Value;

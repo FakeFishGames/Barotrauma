@@ -122,7 +122,7 @@ namespace Barotrauma
                 foreach (XElement element in xMusic)
                 {
                     string file = ToolBox.GetAttributeString(element, "file", "");
-                    string type = ToolBox.GetAttributeString(element, "type", "").ToLower();
+                    string type = ToolBox.GetAttributeString(element, "type", "").ToLowerInvariant();
                     Vector2 priority = ToolBox.GetAttributeVector2(element, "priorityrange", new Vector2(0.0f, 100.0f));
 
                     musicClips[i] = new BackgroundMusic(file, type, priority);
