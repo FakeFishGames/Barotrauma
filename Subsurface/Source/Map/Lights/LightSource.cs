@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Barotrauma.Lights
 {
@@ -82,6 +83,21 @@ namespace Barotrauma.Lights
             }
         }
 
+        public LightSource (XElement element)
+            :this(Vector2.Zero, 100.0f, Color.White, null)
+        {
+            float range = ToolBox.GetAttributeFloat(element, "range", 100.0f);
+            Color color = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
+
+                LightSprite = new Sprite(subElement);
+                LightSprite.Origin = LightSprite.size / 2.0f;
+            }
+        }
+
         public LightSource(Vector2 position, float range, Color color, Submarine submarine)
         {
             hullsInRange = new List<ConvexHull>();
@@ -110,9 +126,13 @@ namespace Barotrauma.Lights
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
-            float scale = range / (lightTexture.Width / 2.0f);
-            spriteBatch.Draw(lightTexture, new Vector2(WorldPosition.X, -WorldPosition.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
+            if (range > 1.0f)
+            {
+                Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
+                float scale = range / (lightTexture.Width / 2.0f);
+
+                spriteBatch.Draw(lightTexture, new Vector2(WorldPosition.X, -WorldPosition.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
+            }
 
             if (LightSprite != null)
             {
