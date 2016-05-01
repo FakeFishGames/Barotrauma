@@ -28,10 +28,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name "+itemName);
             }
         }
-
+        
         protected override void Start()
         {
-            Vector2 position = Level.Loaded.GetRandomItemPos(30.0f);
+            Vector2 position = Level.Loaded.GetRandomItemPos(Level.PositionType.Cave, 30.0f);
 
             item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;

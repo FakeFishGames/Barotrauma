@@ -14,6 +14,8 @@ namespace Barotrauma
 
         private bool spawnDeep;
 
+        private Level.PositionType spawnPosType;
+
         public override string ToString()
         {
             return "ScriptedEvent (" + characterFile + ")";
@@ -27,6 +29,14 @@ namespace Barotrauma
             minAmount = ToolBox.GetAttributeInt(element, "minamount", 1);
             maxAmount = Math.Max(ToolBox.GetAttributeInt(element, "maxamount", 1), minAmount);
 
+            var spawnPosTypeStr = ToolBox.GetAttributeString(element, "spawntype", "");
+
+            if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
+                !Enum.TryParse<Level.PositionType>(spawnPosTypeStr, true, out spawnPosType))
+            {
+                spawnPosType = Level.PositionType.MainPath;
+            }
+
             spawnDeep = ToolBox.GetAttributeBool(element, "spawndeep", false);
         }
 
@@ -37,7 +47,9 @@ namespace Barotrauma
 
         private void SpawnMonsters()
         {
-            WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Enemy);
+            //WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Enemy);
+
+            Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType);
             
             int amount = Rand.Range(minAmount, maxAmount, false);
 
@@ -45,16 +57,14 @@ namespace Barotrauma
 
             for (int i = 0; i < amount; i++)
             {
-                Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.Position;
-
                 if (spawnDeep)
                 {
-                    position.Y -= Level.Loaded.Size.Y;
+                    spawnPos.Y -= Level.Loaded.Size.Y;
                 }
 
-                position.X += Rand.Range(-0.5f, 0.5f, false);
-                position.Y += Rand.Range(-0.5f, 0.5f, false);
-                monsters[i] = Character.Create(characterFile, position, null, GameMain.Client != null);
+                spawnPos.X += Rand.Range(-0.5f, 0.5f, false);
+                spawnPos.Y += Rand.Range(-0.5f, 0.5f, false);
+                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null);
             }
         }
 

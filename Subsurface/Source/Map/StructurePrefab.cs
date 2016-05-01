@@ -47,6 +47,11 @@ namespace Barotrauma
         {
             get { return stairDirection; }
         }
+
+        public Vector2 Size
+        {
+            get { return size; }
+        }
         
         public static void LoadAll(List<string> filePaths)
         {            
@@ -63,7 +68,7 @@ namespace Barotrauma
                 }
             }
         }
-
+        
         public static StructurePrefab Load(XElement element)
         {
             StructurePrefab sp = new StructurePrefab();

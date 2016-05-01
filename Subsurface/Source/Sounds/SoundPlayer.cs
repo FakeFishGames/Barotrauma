@@ -247,7 +247,11 @@ namespace Barotrauma
             {
                 suitableMusic = musicClips.Where(x => x != null && x.type == OverrideMusicType).ToList();
             }
-            else if (Submarine.Loaded!=null && Submarine.Loaded.AtDamageDepth)
+            else if (Character.Controlled != null && Level.Loaded != null && Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
+            {
+                suitableMusic = musicClips.Where(x => x != null && x.type == "ruins").ToList();
+            }
+            else if (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth)
             {
                 suitableMusic = musicClips.Where(x => x != null && x.type == "deep").ToList();
             }
