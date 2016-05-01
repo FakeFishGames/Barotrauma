@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
+using Barotrauma.Lights;
 
 namespace Barotrauma
 {
@@ -40,6 +41,8 @@ namespace Barotrauma
         public bool inWater;
 
         public FixedMouseJoint pullJoint;
+
+        public readonly Lights.LightSource LightSource;
 
         public readonly LimbType type;
 
@@ -290,6 +293,10 @@ namespace Barotrauma
 
                         damagedSprite = new Sprite(subElement, "", damagedSpritePath);
                         break;
+                    case "lightsource":
+                        LightSource = new LightSource(subElement);
+
+                        break;
                     case "attack":
                         attack = new Attack(subElement);
                         break;
@@ -397,6 +404,11 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            if (LightSource != null)
+            {
+                LightSource.Submarine = body.Submarine;
+                LightSource.Position = Position;
+            }
 
             if (!character.IsDead) damage = Math.Max(0.0f, damage-deltaTime*0.1f);
 
@@ -541,7 +553,7 @@ namespace Barotrauma
                 bodyShapeTexture,
                 new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                 null,
-                Color.White,
+                character.Submarine!=null ? Color.White : Color.Cyan,
                 -body.DrawRotation,
                 new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
         }
@@ -550,6 +562,7 @@ namespace Barotrauma
         public void Remove()
         {
             sprite.Remove();
+            if (LightSource != null) LightSource.Remove();
             if (damagedSprite != null) damagedSprite.Remove();
 
             body.Remove();
@@ -558,7 +571,6 @@ namespace Barotrauma
             {
                 bodyShapeTexture.Dispose();
             }
-
 
             if (hitSound != null) hitSound.Remove();
         }

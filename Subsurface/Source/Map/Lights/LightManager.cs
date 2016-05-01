@@ -152,8 +152,8 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in lights)
             {
-                if (light.hullsInRange.Count > 0 || light.Color.A < 0.01f || light.Range < 1.0f) continue;
-                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
+                if (light.hullsInRange.Count > 0 || light.Color.A < 0.01f) continue;
+                //if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
                 light.Draw(spriteBatch);
             }
