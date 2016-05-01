@@ -8,6 +8,7 @@
     radarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
+        spawntype="ruin"
     itemname="Skyholder Artifact">
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
@@ -20,6 +21,7 @@
     radarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
+    spawntype="ruin"
     itemname="Thermal Artifact">
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>

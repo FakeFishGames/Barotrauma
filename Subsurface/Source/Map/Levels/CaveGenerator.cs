@@ -108,9 +108,23 @@ namespace Barotrauma
 
                     allowedNextCells.Add(adjacent);
                 }
-                
-                if (allowedNextCells.Count == 0) break;
 
+                if (allowedNextCells.Count == 0)
+                {
+                    if (i>5) break;
+                    
+                    foreach (GraphEdge edge in pathCell.edges)
+                    {
+                        var adjacent = edge.AdjacentCell(pathCell);
+                        if (adjacent == null ||
+                            adjacent.CellType == CellType.Removed) continue;
+
+                        allowedNextCells.Add(adjacent);
+                    }
+
+                    if (allowedNextCells.Count == 0) break;
+                }
+                
                 //randomly pick one of the adjacent cells as the next cell
                 pathCell = allowedNextCells[Rand.Int(allowedNextCells.Count, false)];
 
@@ -388,6 +402,8 @@ namespace Barotrauma
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
 
+                if (cell.CellType == CellType.Empty) continue;
+
                 triangles = MathUtils.TriangulateConvexHull(bodyPoints, cell.Center);
 
                 Body edgeBody = new Body(GameMain.World);
@@ -403,7 +419,7 @@ namespace Barotrauma
                     Vertices bodyVertices = new Vertices(triangles[i]);
                     FixtureFactory.AttachPolygon(bodyVertices, 5.0f, edgeBody);
                 }
-
+                
                 edgeBody.UserData = cell;
                 edgeBody.SleepingAllowed = false;
                 edgeBody.BodyType = BodyType.Kinematic;
@@ -442,7 +458,7 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in cells)
             {
-                if (cell.body == null) continue;
+                //if (cell.body == null) continue;
                 foreach (GraphEdge edge in cell.edges)
                 {
                     if (!edge.isSolid) continue;
@@ -482,7 +498,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Invalid right normal");
 #endif
-                        GameMain.World.RemoveBody(cell.body);
+                        if (cell.body != null) GameMain.World.RemoveBody(cell.body);
                         cell.body = null;
                         leftNormal = Vector2.UnitX;
                         break;
@@ -505,7 +521,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Invalid right normal");
 #endif
-                        GameMain.World.RemoveBody(cell.body);
+                        if (cell.body != null) GameMain.World.RemoveBody(cell.body);
                         cell.body = null;
                         rightNormal = Vector2.UnitX;
                         break;

@@ -193,6 +193,18 @@
     <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.15,0.5"/>
   </plasma>
 
+  <largeplasma
+    startsizemin="0.9,3.0" startsizemax="5.0,5.0"
+    sizechange="20.0,-0.5"
+    startcolor="1.0, 1.0, 1.0" startalpha="1.0"
+    colorchange="0.0, 0.0, 0.0, -4.0"
+    lifetime="0.25"
+    drawtarget="both"
+    blendstate="additive"
+    velocitychange="0.0, 0.0">
+    <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.0,0.5"/>
+  </largeplasma>
+  
   <extinguisher
     startsizemin="1.2,1.2" startsizemax="1.5,1.5"
     sizechangemin="1.5,1.5" sizechangemax="2.0,2.0"

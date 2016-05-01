@@ -28,33 +28,6 @@
   </Item>
 
   <Item
-    name="Defibrillator"
-    category="Equipment"
-    Tags="smallitem,medical"
-    pickdistance="150"
-    price="50"
-    canuseonself="true"
-    description="A syringe filled with a potent general-purpose medical compound.">
-
-    <Sprite texture ="med.png" sourcerect="0,0,24,5" depth="0.6"/>
-
-    <Body width="24" height="5" density="20"/>
-
-    <MeleeWeapon slots="Any,RightHand,LeftHand"
-              aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect type="OnUse" target="Character" oxygen="1" setvalue="true" sound="Content/Items/Weapons/stunbaton.ogg">
-        <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>
-        <Explosion range="10.0" force="1.0" shockwave="false" flames="false" camerashake="1.0"/>
-      </StatusEffect>
-    </MeleeWeapon>
-
-    <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell"/>
-    </ItemContainer>
-  </Item>
-
-  <Item
     name="Bandage"
     category="Equipment"
     Tags="smallitem,medical"

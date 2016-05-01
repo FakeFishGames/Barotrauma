@@ -47,11 +47,15 @@
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
         <RequiredItem type="Contained" name="Welding Fuel Tank"/>
       </StatusEffect>
+      <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
+        <RequiredItem type="Contained" name="Oxygenite Shard"/>
+      </StatusEffect>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
+      <Containable name="Oxygenite Shard"/>
     </ItemContainer>  
   </Item>
 
@@ -92,12 +96,16 @@
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
         <RequiredItem type="Contained" name="Welding Fuel Tank"/>
       </StatusEffect>
+      <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
+        <RequiredItem type="Contained" name="Oxygenite Shard"/>
+      </StatusEffect>
       <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0"/>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
+      <Containable name="Oxygenite Shard"/>
     </ItemContainer>
   </Item>
 

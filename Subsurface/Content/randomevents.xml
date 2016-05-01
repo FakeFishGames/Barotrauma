@@ -5,6 +5,7 @@
     commonness="10" 
     difficulty="10"
     minamount="2" maxamount="3"
+    spawntype="mainpath,cave,ruin"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
@@ -12,12 +13,14 @@
     commonness="10"
     difficulty="20"
     minamount="1" maxamount="3"
+    spawntype="mainpath"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Moloch/moloch.xml"
     commonness="10"
     difficulty="30"
+                spawntype="mainpath"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
@@ -25,6 +28,7 @@
     commonness="10"
     difficulty="15"
     minamount="1" maxamount="2"
+    spawntype="mainpath,cave,ruin"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
@@ -33,6 +37,7 @@
     commonness="10"                
     difficulty="5"
     minamount="1" maxamount="1"
+    spawntype="mainpath"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
@@ -41,12 +46,14 @@
     commonness="1"
     difficulty="20"
     minamount="1" maxamount="1"
+    spawntype="mainpath"
     musictype="deep"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Watcher/watcher.xml"
     commonness="3"
     difficulty="5"
+    spawntype="mainpath,cave"
     minamount="1" maxamount="1"/>
 
   <MonsterEvent name="Under attack" description=""
@@ -54,6 +61,16 @@
     commonness="5"
     difficulty="10"
     minamount="2" maxamount="3"
+
+    spawntype="mainpath,cave,ruin"
+    musictype="monster"/>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Fractalguardian/fractalguardian.xml"
+    commonness="5"
+    difficulty="10"
+    minamount="1" maxamount="1"
+    spawntype="ruin"
     musictype="monster"/>
 
   <ArtifactEvent name="Artifact" description=""

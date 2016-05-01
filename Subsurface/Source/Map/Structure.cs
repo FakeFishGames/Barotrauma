@@ -140,7 +140,7 @@ namespace Barotrauma
             //    }
             //}
         }
-                
+
         public Structure(Rectangle rectangle, StructurePrefab sp, Submarine submarine)
             : base(sp, submarine)
         {
@@ -600,6 +600,15 @@ namespace Barotrauma
             if (hadHole == hasHole) return;
             //if (hasHole) Explosion.ApplyExplosionForces(sections[sectionIndex].gap.WorldPosition, 500.0f, 5.0f, 0.0f, 0.0f);
             UpdateSections();
+        }
+
+        public void SetCollisionCategory(Category collisionCategory)
+        {
+            if (bodies == null) return;
+            foreach (Body body in bodies)
+            {
+                body.CollisionCategories = collisionCategory;
+            }
         }
 
         private void UpdateSections()

@@ -14,6 +14,8 @@ namespace Barotrauma
 
         private Item item;
 
+        private Level.PositionType spawnPositionType;
+
         private int state;
 
         public override Vector2 RadarPosition
@@ -30,6 +32,14 @@ namespace Barotrauma
             string itemName = ToolBox.GetAttributeString(element, "itemname", "");
 
             itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
+            
+            string spawnPositionTypeStr = ToolBox.GetAttributeString(element, "spawntype", "");
+
+            if (string.IsNullOrWhiteSpace(spawnPositionTypeStr) ||
+                !Enum.TryParse<Level.PositionType>(spawnPositionTypeStr, true, out spawnPositionType))
+            {
+                spawnPositionType = Level.PositionType.Cave | Level.PositionType.Ruin;
+            }
 
             if (itemPrefab == null)
             {
@@ -39,7 +49,7 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            Vector2 position = Level.Loaded.GetRandomItemPos(30.0f);
+            Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 30.0f);
             
             item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;

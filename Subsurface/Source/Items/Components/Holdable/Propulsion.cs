@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         public Propulsion(Item item, XElement element)
             : base(item,element)
         {
-            switch (ToolBox.GetAttributeString(element, "usablein", "air").ToLowerInvariant())
+            switch (ToolBox.GetAttributeString(element, "usablein", "both").ToLowerInvariant())
             {
                 case "air":
                     usableIn = ParticlePrefab.DrawTargetType.Air;
@@ -38,6 +38,7 @@ namespace Barotrauma.Items.Components
                 case "water":
                     usableIn = ParticlePrefab.DrawTargetType.Water;
                     break;
+                case "both":
                 default:
                     usableIn = ParticlePrefab.DrawTargetType.Both;
                     break;
@@ -49,7 +50,7 @@ namespace Barotrauma.Items.Components
             if (character == null) return false;
             if (!character.IsKeyDown(InputType.Aim) || character.Stun>0.0f) return false;
 
-            if (item.InWater)
+            if (character.AnimController.InWater)
             {
                 if (usableIn == ParticlePrefab.DrawTargetType.Air) return true;
             }

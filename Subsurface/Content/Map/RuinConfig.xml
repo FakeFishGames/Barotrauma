@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Structures>
+  <structure prefab="RuinWallHorizontal" alignment="Top, Bottom" type="Wall"/>
+  <structure prefab="RuinWallHorizontalSmall" alignment="Top, Bottom" type="CorridorWall"/>
+
+  <structure prefab="RuinWallVertical" alignment="Left,Right" type="Wall"/>
+  <structure prefab="RuinWallVerticalSmall" alignment="Left,Right" type="CorridorWall"/>
+
+  <structure prefab="RuinBack" alignment="Center" type="Back" commonness="3"/>
+  <structure prefab="RuinBackCarvings" alignment="Center" type="Back" commonness="1"/>
+
+  <item prefab="RuinBlock" alignment="Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+
+  <item prefab="RuinFractalBall" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+
+  <item prefab="RuinClaw" alignment="Bottom" type="Prop" commonness="5"/>
+
+
+  <item prefab="Oxygenite Shard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+  <item prefab="Sulphurite Shard" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="5"/>
+  
+  <item prefab="Ancient Weapon" alignment="Center,Right,Top,Bottom,Left" type="Prop" commonness="1"/>
+  
+</Structures>
