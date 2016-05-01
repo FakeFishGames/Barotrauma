@@ -95,7 +95,7 @@ namespace Barotrauma
             if (Items[slotIndex] == null) return false;
 
             //save the ID in a variable in case the statuseffect causes the item to be dropped/destroyed
-            int itemID = Items[slotIndex].ID;
+            ushort itemID = Items[slotIndex].ID;
             
             Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
             new NetworkEvent(NetworkEventType.ApplyStatusEffect, character.ID, true, itemID);
@@ -131,6 +131,11 @@ namespace Barotrauma
             }
             return false;
         }
+
+        public override bool CanBePut(Item item, int i)
+        {
+            return base.CanBePut(item, i) && item.AllowedSlots.Contains(limbSlots[i]);
+        } 
 
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
