@@ -36,7 +36,7 @@ namespace Barotrauma.Tutorials
 
             Door tutorialDoor = Item.ItemList.Find(i => i.HasTag("tutorialdoor")).GetComponent<Door>();
 
-            while (!tutorialDoor.IsOpen)
+            while (!tutorialDoor.IsOpen && Character.Controlled.WorldPosition.X < tutorialDoor.Item.WorldPosition.X)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -382,7 +382,7 @@ namespace Barotrauma.Tutorials
                     Character.Controlled.ClosestItem != null && Character.Controlled.ClosestItem.Name == "Diving Suit")
                 {
                     infoBox = CreateInfoFrame("There can only be one item in each inventory slot, so you need to take off "
-                        +"the jumpsuit if you wish to wear a diving suit.");
+                        + "the jumpsuit if you wish to wear a diving suit.");
 
                     divingMaskSelected = true;
                 }
@@ -450,7 +450,7 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
-            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Character.Controlled.WorldPosition + Vector2.UnitY*1000.0f));
+            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Character.Controlled.WorldPosition + Vector2.UnitY * 1000.0f));
 
             infoBox = CreateInfoFrame("Now we're ready to shoot! Select the railgun controller.");
 
@@ -523,10 +523,41 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("The two pumps inside the ballast tanks "
                 + "are connected straight to the navigation terminal and can't be manually controlled unless you mess with their wiring, " +
                 "so you should only use the pump in the middle room to pump out the water. Select it, turn it on and adjust the pumping speed " +
-                "to start pumping water out.");
+                "to start pumping water out.", true);
 
+            while (infoBox != null)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+
+            bool brokenMsgShown = false;
             while (pump.Item.CurrentHull.Volume > 1000.0f)
             {
+                if (!brokenMsgShown && pump.Voltage < pump.MinVoltage && Character.Controlled.SelectedConstruction == pump.Item)
+                {
+                    brokenMsgShown = true;
+
+                    infoBox = CreateInfoFrame("Looks like the pump isn't getting any power. The water must have short-circuited some of the junction "
+                        +"boxes. You can check which boxes are broken by selecting them.");
+
+                    while (true)
+                    {
+                        if (Character.Controlled.SelectedConstruction!=null && 
+                            Character.Controlled.SelectedConstruction.GetComponent<PowerTransfer>() != null && 
+                            Character.Controlled.SelectedConstruction.Condition == 0.0f)
+                        {
+                            infoBox = CreateInfoFrame("Here's our problem: this junction box is broken. Luckily engineers are adept at fixing electrical devices - "
+                                +"you just need to find a spare wire and click the ''Fix''-button to repair the box.");
+                            break;
+                        }
+
+                        if (pump.Voltage > pump.MinVoltage) break;
+
+                        yield return CoroutineStatus.Running;
+                    }
+                }
+
                 yield return CoroutineStatus.Running;
             }
 
@@ -535,29 +566,9 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(4.0f);
 
-            float endPreviewLength = 10.0f;
-
-            DateTime endTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, (int)(1000.0f * endPreviewLength));
-            float secondsLeft = endPreviewLength;
-
             Character.Controlled = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
-
-            //do
-            //{
-            //    secondsLeft = (float)(endTime - DateTime.Now).TotalSeconds;
-
-            //    float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
-            //    Vector2 offset = (new Vector2(
-            //        (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-            //        (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
-
-            //    GameMain.GameScreen.Cam.TargetPos = offset * 0.8f;
-            //    //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
-
-            //    yield return CoroutineStatus.Running;
-            //} while (secondsLeft > 0.0f);
 
             var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, 5.0f);
 
