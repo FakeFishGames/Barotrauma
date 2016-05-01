@@ -1169,17 +1169,23 @@ namespace Barotrauma
                         break;
                 }
 
+                Vector2 position = limb.SimPosition;
+
                 if (!limb.pullJoint.Enabled && mirror)
                 {
                     difference = limb.body.SimPosition - torso.SimPosition;
                     difference = Vector2.Transform(difference, torsoTransform);
                     difference.Y = -difference.Y;
 
-                    TrySetLimbPosition(limb, limb.SimPosition, torso.SimPosition + Vector2.Transform(difference, -torsoTransform));
+                    position = torso.SimPosition + Vector2.Transform(difference, -torsoTransform);
+
+                    //TrySetLimbPosition(limb, limb.SimPosition, );
                 }
 
                 float angle = flipAngle ? -limb.body.Rotation : limb.body.Rotation;
                 if (wrapAngle) angle = MathUtils.WrapAnglePi(angle);
+
+                TrySetLimbPosition(limb, RefLimb.SimPosition, position);
 
                 limb.body.SetTransform(limb.body.SimPosition, angle);
             }

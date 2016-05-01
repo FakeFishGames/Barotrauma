@@ -435,7 +435,7 @@ namespace Barotrauma
             Vector2 normalizedVel = limb.character.AnimController.RefLimb.LinearVelocity == Vector2.Zero ? 
                 Vector2.Zero : Vector2.Normalize(limb.character.AnimController.RefLimb.LinearVelocity);
 
-            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] + normalizedVel);
+            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - normal2);
 
             Hull newHull = Hull.FindHull(targetPos, null);
 
@@ -453,7 +453,7 @@ namespace Barotrauma
             targetPos = limb.character.WorldPosition;
 
             bool gapFound = false;
-            foreach (Gap gap in Gap.GapList)
+            foreach (Gap gap in gaps)
             {
                 if (gap.Open == 0.0f || gap.IsRoomToRoom) continue;
 
@@ -486,7 +486,7 @@ namespace Barotrauma
             if (!gapFound) return true;
 
             var ragdoll = limb.character.AnimController;
-            ragdoll.FindHull();
+            ragdoll.FindHull(newHull.WorldPosition);
 
             return false;
         }
