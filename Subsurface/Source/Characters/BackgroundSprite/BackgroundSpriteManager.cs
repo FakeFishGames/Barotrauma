@@ -148,7 +148,7 @@ namespace Barotrauma
             Vector2 dir = (closestEdge.point1 - closestEdge.point2) / length;
             Vector2 pos = closestEdge.Center;
 
-            pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f);
+            pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, false);
 
             if (prefab.Alignment.HasFlag(Alignment.Top))
             {

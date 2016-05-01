@@ -300,8 +300,6 @@ namespace Barotrauma
 
                 if (!paused) Screen.Selected.Update(deltaTime);
 
-                GUI.Update((float)deltaTime);
-
                 if (NetworkMember != null)
                 {
                     NetworkMember.Update((float)deltaTime);
@@ -310,6 +308,9 @@ namespace Barotrauma
                 {
                     NetworkEvent.Events.Clear();
                 }
+
+                GUI.Update((float)deltaTime);
+
             }
 
             CoroutineManager.Update((float)deltaTime, paused ? 0.0f : (float)deltaTime);

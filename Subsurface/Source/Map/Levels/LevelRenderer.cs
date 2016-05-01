@@ -106,13 +106,6 @@ namespace Barotrauma
                 }
             }
 
-
-            //backgroundPos = new Vector2(cam.WorldView.X, cam.WorldView.Y) + dustOffset;
-            ////if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
-
-            //Rectangle viewRect = cam.WorldView;
-            //viewRect.Y = -viewRect.Y;
-
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
@@ -124,10 +117,6 @@ namespace Barotrauma
 
             if (backgroundCreatureManager!=null) backgroundCreatureManager.Draw(spriteBatch);
 
-            
-
-            //new Vector2((-offset.X*cam.Zoom) % 1024, (-offset.Y*cam.Zoom) % 1024)
-
             spriteBatch.End();
 
 
@@ -136,11 +125,9 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);
 
-
-            //float multiplier = 0.9f;
             for (int i = 1; i < 2; i++)
             {
-                Vector2 offset = new Vector2(cam.WorldView.X, cam.WorldView.Y);// *multiplier;
+                Vector2 offset = new Vector2(cam.WorldView.X, cam.WorldView.Y);
 
                 dustParticles.SourceRect = new Rectangle((int)(offset.X), (int)(-offset.Y), (int)(1024), (int)(1024));
 
@@ -171,14 +158,16 @@ namespace Barotrauma
                     foreach (GraphEdge edge in cell.edges)
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.point1.X, -edge.point1.Y),
-                            new Vector2(edge.point2.X, -edge.point2.Y), Color.White);
+                            new Vector2(edge.point2.X, -edge.point2.Y), cell.body==null ? Color.Gray : Color.White);
                     }
 
                     foreach (Vector2 point in cell.bodyVertices)
                     {
                         GUI.DrawRectangle(spriteBatch, new Vector2(point.X, -point.Y), new Vector2(10.0f, 10.0f), Color.White, true);
                     }
-                }                
+                }
+
+                //RuinGeneration.RuinGenerator.Draw(spriteBatch);
             }
 
 
