@@ -331,7 +331,7 @@ namespace Barotrauma
 
             for (int i = 4; i < asciiBytes.Length; i++)
             {
-                asciiBytes[i % 4] |= asciiBytes[i];
+                asciiBytes[i % 4] ^= asciiBytes[i];
             }
 
             return BitConverter.ToInt32(asciiBytes, 0);
