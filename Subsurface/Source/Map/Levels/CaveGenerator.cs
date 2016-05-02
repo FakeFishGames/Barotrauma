@@ -440,11 +440,11 @@ namespace Barotrauma
 
             foreach (VoronoiCell cell in cells)
             {
-                if (cell.body == null) continue;
+                //if (cell.body == null) continue;
                 foreach (GraphEdge edge in cell.edges)
                 {
-                    if (edge.cell1 != null && edge.cell1.body == null) edge.cell1 = null;
-                    if (edge.cell2 != null && edge.cell2.body == null) edge.cell2 = null;
+                    if (edge.cell1 != null && edge.cell1.body == null && edge.cell1.CellType != CellType.Empty) edge.cell1 = null;
+                    if (edge.cell2 != null && edge.cell2.body == null && edge.cell2.CellType != CellType.Empty) edge.cell2 = null;
 
                     CompareCCW compare = new CompareCCW(cell.Center);
                     if (compare.Compare(edge.point1, edge.point2) == -1)
@@ -463,22 +463,9 @@ namespace Barotrauma
                 {
                     if (!edge.isSolid) continue;
 
-                    GraphEdge leftEdge = null, rightEdge = null;
-
-                    foreach (GraphEdge edge2 in cell.edges)
-                    {
-                        if (edge == edge2) continue;
-                        if (edge.point1 == edge2.point1 ||
-                            edge.point1 == edge2.point2)
-                        {
-                            leftEdge = edge2;
-                        }
-                        else if (edge.point2 == edge2.point2 || edge.point2 == edge2.point1)
-                        {
-                            rightEdge = edge2;
-                        }
-                    }
-
+                    GraphEdge leftEdge  = cell.edges.Find(e => e != edge && (edge.point1 == e.point1 || edge.point1 == e.point2));
+                    GraphEdge rightEdge = cell.edges.Find(e => e != edge && (edge.point2 == e.point1 || edge.point2 == e.point2));
+                    
                     Vector2 leftNormal = Vector2.Zero, rightNormal = Vector2.Zero;
 
                     if (leftEdge == null)
@@ -498,8 +485,11 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Invalid right normal");
 #endif
-                        if (cell.body != null) GameMain.World.RemoveBody(cell.body);
-                        cell.body = null;
+                        if (cell.body != null)
+                        {
+                            GameMain.World.RemoveBody(cell.body);
+                            cell.body = null;
+                        }
                         leftNormal = Vector2.UnitX;
                         break;
                     }
@@ -521,14 +511,14 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Invalid right normal");
 #endif
-                        if (cell.body != null) GameMain.World.RemoveBody(cell.body);
-                        cell.body = null;
+                        if (cell.body != null)
+                        {
+                            GameMain.World.RemoveBody(cell.body);
+                            cell.body = null;
+                        }
                         rightNormal = Vector2.UnitX;
                         break;
                     }
-
-
-
 
                     for (int i = 0; i < 2; i++)
                     {

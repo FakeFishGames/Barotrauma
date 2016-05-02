@@ -42,11 +42,12 @@ namespace Barotrauma.RuinGeneration
             this.rect = rect;
         }
 
-        public void Split(float minDivRatio, float verticalProbability = 0.5f)
+        public void Split(float minDivRatio, float verticalProbability = 0.5f, int minWidth = 200)
         {
             subRooms = new BTRoom[2];
 
-            if (Rand.Range(0.0f, 1.0f, false) < verticalProbability)
+            if (Rand.Range(0.0f, 1.0f, false) < verticalProbability && 
+                rect.Width * minDivRatio >= minWidth)
             {
                 SplitVertical(minDivRatio);
             }
