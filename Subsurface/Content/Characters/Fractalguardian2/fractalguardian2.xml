@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Character name="fractalguardian" humanoid="false" health="800.0" doesbleed="false">
+
+  <sound file="Content/Characters/Fractalguardian/guardian1.ogg" state="Attack" range="3000" />
+  <sound file="Content/Characters/Fractalguardian/guardian2.ogg" state="Attack" range="3000" />
+  
+  <ragdoll waveamplitude="0.0" swimspeed="1.0" walkspeed="0.3" flip="false" canentersubmarine="false" rotatetowardsmovement="false">
+
+    <!-- head -->
+    <limb id = "0" radius="80" height="30" type="Head" steerforce="3.0">
+      <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="299,0,171,208" depth="0.05"/>
+      <attack type="Hit" range="120" duration="0.2" damage="50" stun="2" force="20" damagetype="blunt"/>
+    </limb>
+
+
+    <limb id = "1" width="30" height="178" impacttolerance="100.0">
+      <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="183,60,53,178" depth="0.08" origin="0.5,0.5"/>
+    </limb>
+    <limb id = "2" width="30" height="175">
+      <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
+      <attack type="PinchCCW" range="150" duration="0.5" damage="30" stun="1.0" damagetype="slash"/>      
+    </limb>
+    
+    <limb id = "3" width="30" height="178" impacttolerance="100.0">
+      <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="236,60,53,178" size="-1,1" depth="0.08" origin="0.5,0.5"/>
+    </limb>
+
+    <limb id = "4" width="30" height="175">
+      <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
+      <attack type="PinchCW" range="150" duration="0.5" damage="30" stun="1.0" damagetype="slash"/>            
+    </limb>
+        
+
+    <!-- head to body -->
+    <joint limb1="0" limb1anchor="-37,-40" limb2="1" limb2anchor="0,80" lowerlimit="-60" upperlimit="0"/>
+    <joint limb1="1" limb1anchor="0,-80" limb2="2" limb2anchor="0,80" lowerlimit="0" upperlimit="120"/>
+    
+    <joint limb1="0" limb1anchor="37,-40" limb2="3" limb2anchor="0,80" lowerlimit="0" upperlimit="60"/>
+    <joint limb1="3" limb1anchor="0,-80" limb2="4" limb2anchor="0,80" lowerlimit="-120" upperlimit="0"/>
+    
+    
+  </ragdoll>
+
+  <ai attackrooms="0.0" attackhumans="100" sight="1.0" hearing="2.0" attackcooldown="1"/>
+</Character>
+

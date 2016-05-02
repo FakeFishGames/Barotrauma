@@ -109,32 +109,32 @@
   <bunk sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="0,546,173,129"
     width="173" height="129" depth = "0.9"/>
 
-  <RuinWallHorizontal sprite="Content/Map/ruins.png" sourcerect="0,896,832,128" depth ="0.95" castshadow="true"
+  <RuinWallHorizontal category="Alien"  sprite="Content/Map/ruins.png" sourcerect="0,896,832,128" depth ="0.95" castshadow="true"
     width = "128" height ="128" resizehorizontal="true" body="true" health="500"/>
 
-  <RuinWallVertical sprite="Content/Map/ruins.png" sourcerect="896,0,128,832" depth ="0.94" castshadow="true"
+  <RuinWallVertical category="Alien"  sprite="Content/Map/ruins.png" sourcerect="896,0,128,832" depth ="0.94" castshadow="true"
     width = "128" height ="128" resizevertical="true" body="true" health="500"/>
 
-  <RuinWallHorizontalSmall sprite="Content/Map/ruins.png" sourcerect="0,842,832,54" depth ="0.95" castshadow="true"
+  <RuinWallHorizontalSmall category="Alien"  sprite="Content/Map/ruins.png" sourcerect="0,842,832,54" depth ="0.95" castshadow="true"
     width = "128" height ="54" resizehorizontal="true" body="true" health="500"/>
 
-  <RuinWallVerticalSmall sprite="Content/Map/ruins.png" sourcerect="842,0,54,832" depth ="0.96" castshadow="true"
+  <RuinWallVerticalSmall category="Alien"  sprite="Content/Map/ruins.png" sourcerect="842,0,54,832" depth ="0.96" castshadow="true"
     width = "54" height ="128" resizevertical="true" body="true" health="500"/>
   
 
-  <RuinBack sprite="Content/Map/ruins.png" sourcerect="0,0,512,512" depth ="0.98"
+  <RuinBack category="Alien" sprite="Content/Map/ruins.png" sourcerect="0,0,512,512" depth ="0.98"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
-  <RuinBackCarvings sprite="Content/Map/ruins.png" sourcerect="512,0,233,512" depth ="0.98"
+  <RuinBackCarvings category="Alien"  sprite="Content/Map/ruins.png" sourcerect="512,0,233,512" depth ="0.98"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
-  <RuinBlock sprite="Content/Map/ruins.png" sourcerect="0,513,514,296" depth ="0.99"
+  <RuinBlock category="Alien"  sprite="Content/Map/ruins.png" sourcerect="0,513,514,296" depth ="0.99"
     width="514" height="296"/>
 
-  <RuinFractalBall sprite="Content/Map/ruins2.png" sourcerect="0,0,512,512" depth ="0.97"
+  <RuinFractalBall category="Alien"  sprite="Content/Map/ruins2.png" sourcerect="0,0,512,512" depth ="0.97"
     width="512" height="512"/>
 
-  <RuinClaw sprite="Content/Map/ruins2.png" sourcerect="512,517,126,270" depth ="0.97"
+  <RuinClaw category="Alien"  sprite="Content/Map/ruins2.png" sourcerect="512,517,126,270" depth ="0.97"
     width="126" height="270"/>
 
 </prefabs>

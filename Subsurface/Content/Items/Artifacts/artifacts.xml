@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="Skyholder Artifact"
+    category="Alien"
     pickdistance="150">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="59,0,60,61"/>
@@ -21,8 +22,9 @@
   </Item>
 
   <Item
-     name="Thermal Artifact"
-     pickdistance="150">
+    name="Thermal Artifact"
+    category="Alien"
+    pickdistance="150">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,0,58,56"/>
 
@@ -61,10 +63,11 @@
   </Item>
 
   <Item
-   name="Oxygenite Shard"
-   pickdistance="150"
-   tags="smallitem"
-   impacttolerance="8">
+    name="Oxygenite Shard"
+    category="Alien"
+    pickdistance="150"
+    tags="smallitem"
+    impacttolerance="8">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="119,96,9,32"/>
 
@@ -81,6 +84,7 @@
 
   <Item
    name="Sulphurite Shard"
+   category="Alien"
    pickdistance="150"
    tags="smallitem"
    impacttolerance="8"
@@ -104,7 +108,7 @@
 
   <Item
    name="Ancient Weapon"
-   category="Equipment"
+   category="Alien"
    Tags="smallitem"
    pickdistance="200">
 
@@ -118,12 +122,14 @@
 
     <Body width="85" height="40" density="15"/>
 
-    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,50" handle1="0,11" handle2="2,11"/>
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11"/>
 
-    <RepairTool structurefixamount="-5.0" limbfixamount="-3.0" range="600" barrelpos="30,15" particles="largeplasma">
+    <RepairTool structurefixamount="-5.0" limbfixamount="-2.0" range="600" barrelpos="30,15" particles="largeplasma">
       <Fixable name="structure"/>
 
-      <StatusEffect type="OnUse" target="This" Condition="-0.5"/>
+      <StatusEffect type="OnUse" target="This" Condition="-1.0"/>
+
+      <sound file="alienweapon.ogg" type="OnUse" range="800.0" loop="true"/>
       
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>

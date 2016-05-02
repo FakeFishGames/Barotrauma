@@ -67,8 +67,16 @@
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Fractalguardian/fractalguardian.xml"
-    commonness="5"
-    difficulty="10"
+    commonness="3"
+    difficulty="1"
+    minamount="1" maxamount="1"
+    spawntype="ruin"
+    musictype="monster"/>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml"
+    commonness="3"
+    difficulty="1"
     minamount="1" maxamount="1"
     spawntype="ruin"
     musictype="monster"/>

@@ -47,4 +47,5 @@
   
   <music file="Content/Sounds/Music/amb_JD_drone_clattering_machine.ogg" type="deep"/>
   <music file="Content/Sounds/Music/Controlled Chaos.ogg" type="ruins"/>
+  <music file="Content/Sounds/Music/Controlled Chaos 2.ogg" type="ruins"/>
 </sounds>
