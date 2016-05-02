@@ -11,6 +11,8 @@ namespace Barotrauma.Items.Components
 
         private string particles;
 
+        private float useState;
+
         private ParticlePrefab.DrawTargetType usableIn;
                 
         [HasDefaultValue(0.0f, false)]
@@ -49,6 +51,10 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) return false;
             if (!character.IsKeyDown(InputType.Aim) || character.Stun>0.0f) return false;
+
+            IsActive = true;
+            useState = 0.1f;
+
 
             if (character.AnimController.InWater)
             {
@@ -91,12 +97,13 @@ namespace Barotrauma.Items.Components
 
             return true;
         }
-        
-        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+
+        public override void Update(float deltaTime, Camera cam)
         {
-            IsActive = false;
+            useState -= deltaTime;
+
+            if (useState <= 0.0f) IsActive = false;
         }
-
-
+        
     }
 }

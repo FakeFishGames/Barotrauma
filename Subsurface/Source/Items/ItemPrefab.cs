@@ -229,17 +229,15 @@ namespace Barotrauma
 
             ImpactTolerance     = ToolBox.GetAttributeFloat(element, "impacttolerance", 0.0f);
 
-            string categoriesStr = ToolBox.GetAttributeString(element, "category", "Misc");
-            string[] categories = categoriesStr.Split(',');
+            MapEntityCategory category;
 
-            for (int i = 0; i < categories.Length; i++)
+            if (!Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), true, out category))
             {
-                MapEntityCategory category;
-                if (Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), out category))
-                {
-                    Category = i == 0 ? category : Category | category;
-                }
+                category = MapEntityCategory.Misc;
             }
+
+            Category = category;
+            
             
             string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");
             SpriteColor = new Color(ToolBox.ParseToVector4(spriteColorStr));

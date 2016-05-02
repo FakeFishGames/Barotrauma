@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Barotrauma.Lights
 {
@@ -122,7 +123,7 @@ namespace Barotrauma.Lights
             
             foreach (LightSource light in lights)
             {
-                if (light.hullsInRange.Count == 0 || light.Color.A < 0.01f || light.Range < 1.0f) continue;
+                if (!light.hullsInRange.Any() || light.Color.A < 0.01f || light.Range < 1.0f) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
                             
                 //clear alpha to 1
@@ -135,7 +136,7 @@ namespace Barotrauma.Lights
 
                 foreach (ConvexHull ch in light.hullsInRange)
                 {
-                    if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, ch.BoundingBox)) continue;
+                    //if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, ch.BoundingBox)) continue;
                     //draw shadow
                     ch.DrawShadows(graphics, cam, light, shadowTransform, false);
                 }
@@ -152,7 +153,7 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in lights)
             {
-                if (light.hullsInRange.Count > 0 || light.Color.A < 0.01f) continue;
+                if (light.hullsInRange.Any() || light.Color.A < 0.01f) continue;
                 //if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
                 light.Draw(spriteBatch);
@@ -163,10 +164,6 @@ namespace Barotrauma.Lights
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);
             graphics.SetRenderTarget(null);
-            
-            if (!ObstructVision) return;
-
-
         }
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
