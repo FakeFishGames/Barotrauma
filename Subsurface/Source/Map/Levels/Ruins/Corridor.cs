@@ -163,16 +163,16 @@ namespace Barotrauma.RuinGeneration
                         //if (Math.Min(leaves1[i].Rect.Bottom, leaves2[i].Rect.Bottom) - Math.Max(leaves1[i].Rect.Y, leaves2[j].Rect.Y) < width) continue;
                         
 
-                        if (leaves1[i].Rect.Y > leaves2[j].Rect.Bottom) continue;
-                        if (leaves1[i].Rect.Bottom < leaves2[j].Rect.Y) continue;
+                        if (leaves1[i].Rect.Y > leaves2[j].Rect.Bottom-width) continue;
+                        if (leaves1[i].Rect.Bottom < leaves2[j].Rect.Y+width) continue;
                     }
                     else
                     {
                         //if (Math.Min(leaves1[i].Rect.Right, leaves2[i].Rect.Right) - Math.Max(leaves1[i].Rect.X, leaves2[j].Rect.X) < width) continue;
                         
 
-                        if (leaves1[i].Rect.X > leaves2[j].Rect.Right) continue;
-                        if (leaves1[i].Rect.Right < leaves2[j].Rect.X) continue;
+                        if (leaves1[i].Rect.X > leaves2[j].Rect.Right-width) continue;
+                        if (leaves1[i].Rect.Right < leaves2[j].Rect.X+width) continue;
                     }
 
 

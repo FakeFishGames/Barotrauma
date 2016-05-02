@@ -28,6 +28,11 @@ namespace Barotrauma.RuinGeneration
             protected set;
         }
 
+        public Vector2 Center
+        {
+            get { return rect.Center.ToVector2(); }
+        }
+
         public List<Line> Walls;
 
         public virtual void CreateWalls() { }
@@ -170,6 +175,11 @@ namespace Barotrauma.RuinGeneration
             get { return allShapes; }
         }
 
+        public List<Line> Walls
+        {
+            get { return walls; }
+        }
+
         public Rectangle Area
         {
             get;
@@ -207,7 +217,7 @@ namespace Barotrauma.RuinGeneration
 
             for (int i = 0; i < iterations; i++)
             {
-                rooms.ForEach(l => l.Split(0.3f, verticalProbability));
+                rooms.ForEach(l => l.Split(0.3f, verticalProbability, 300));
 
                 rooms = baseRoom.GetLeaves();
             }
@@ -339,6 +349,11 @@ namespace Barotrauma.RuinGeneration
                         (int)(wall.B.Y + radius), 
                         (int)((wall.B.X - wall.A.X) + radius*2.0f), 
                         (int)((wall.B.Y - wall.A.Y) + radius*2.0f));
+
+                    if (wall.A.Y == wall.B.Y)
+                    {
+                        rect.Inflate(-32, 0);
+                    }
 
                     var structure = new Structure(rect, structurePrefab.Prefab as StructurePrefab, null);
                     structure.MoveWithLevel = true;

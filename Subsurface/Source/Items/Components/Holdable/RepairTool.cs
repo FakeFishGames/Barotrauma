@@ -129,68 +129,85 @@ namespace Barotrauma.Items.Components
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
 
-            Vector2 rayStart = item.WorldPosition;
-            Vector2 rayEnd = targetPosition;
 
-            Body targetBody = Submarine.PickBody(
-                ConvertUnits.ToSimUnits(rayStart - Submarine.Loaded.Position), 
-                ConvertUnits.ToSimUnits(rayEnd - Submarine.Loaded.Position), ignoredBodies);
-
-            pickedPosition = Submarine.LastPickedPosition;
-
-            if (ExtinquishAmount > 0.0f)
+            for (int n = 0; n < 2; n++)
             {
-                Vector2 displayPos = rayStart + (rayEnd-rayStart)*Submarine.LastPickedFraction*0.9f;
-                Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
-                if (hull != null) hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
-            }
+                Vector2 rayStart = ConvertUnits.ToSimUnits(item.WorldPosition);
+                Vector2 rayEnd = ConvertUnits.ToSimUnits(targetPosition);
 
-            if (targetBody == null || targetBody.UserData == null) return true;
-
-            Structure targetStructure;
-            Limb targetLimb;
-            Item targetItem;
-            if ((targetStructure = (targetBody.UserData as Structure)) != null)
-            {
-                if (!fixableEntities.Contains(targetStructure.Name)) return true;
-
-                int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
-                if (sectionIndex < 0) return true;
-
-                targetStructure.HighLightSection(sectionIndex);
-
-                targetStructure.AddDamage(sectionIndex, -StructureFixAmount*degreeOfSuccess);
-
-                //if the next section is small enough, apply the effect to it as well
-                //(to make it easier to fix a small "left-over" section)
-                for (int i = -1; i<2; i+=2)
+                if (n == 0)
                 {
-                    int nextSectionLength = targetStructure.SectionLength(sectionIndex + i);
-                    if ((sectionIndex==1 && i ==-1) ||
-                        (sectionIndex==targetStructure.SectionCount-2 && i == 1) || 
-                        (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f))
+                    //do a raycast in "submarine coordinates"
+                    rayStart -= Submarine.Loaded.SimPosition;
+                    rayEnd -= Submarine.Loaded.SimPosition;
+                }
+                else
+                {
+                    //do a raycast outside the sub if the character is outside
+                    if (character.AnimController.CurrentHull != null) continue;
+                }
+
+                Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies);
+
+                pickedPosition = Submarine.LastPickedPosition;
+
+                if (ExtinquishAmount > 0.0f)
+                {
+                    Vector2 displayPos = rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f;
+                    Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
+                    if (hull != null) hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
+                }
+
+                if (targetBody == null || targetBody.UserData == null) continue;
+
+                Structure targetStructure;
+                Limb targetLimb;
+                Item targetItem;
+                if ((targetStructure = (targetBody.UserData as Structure)) != null)
+                {
+                    if (!fixableEntities.Contains(targetStructure.Name)) continue;
+
+                    int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
+                    if (sectionIndex < 0) continue;
+
+                    targetStructure.HighLightSection(sectionIndex);
+
+                    targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
+
+                    //if the next section is small enough, apply the effect to it as well
+                    //(to make it easier to fix a small "left-over" section)
+                    for (int i = -1; i < 2; i += 2)
                     {
-                        targetStructure.HighLightSection(sectionIndex + i);
-                        targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
+                        int nextSectionLength = targetStructure.SectionLength(sectionIndex + i);
+                        if ((sectionIndex == 1 && i == -1) ||
+                            (sectionIndex == targetStructure.SectionCount - 2 && i == 1) ||
+                            (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f))
+                        {
+                            targetStructure.HighLightSection(sectionIndex + i);
+                            targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
+                        }
+                    }
+
+
+                }
+                else if ((targetLimb = (targetBody.UserData as Limb)) != null)
+                {
+                    if (character.IsKeyDown(InputType.Aim))
+                    {
+                        targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, character);
+                        //isActive = true;
                     }
                 }
-
-
-            }
-            else if ((targetLimb = (targetBody.UserData as Limb)) != null)
-            {
-                if (character.IsKeyDown(InputType.Aim))
+                else if ((targetItem = (targetBody.UserData as Item)) != null)
                 {
-                    targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, character);
-                    //isActive = true;
-                }
-            }
-            else if ((targetItem = (targetBody.UserData as Item)) != null)
-            {
-                targetItem.IsHighlighted = true;
+                    targetItem.IsHighlighted = true;
 
-                ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
+                    ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
+                }
+                
             }
+                        
+          
 
             return true;
         }
