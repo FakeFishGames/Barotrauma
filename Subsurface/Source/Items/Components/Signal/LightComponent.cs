@@ -18,6 +18,8 @@ namespace Barotrauma.Items.Components
 
         private float flicker;
 
+        private bool castShadows;
+
         [Editable, HasDefaultValue(100.0f, true)]
         public float Range
         {
@@ -25,6 +27,17 @@ namespace Barotrauma.Items.Components
             set
             {
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+            }
+        }
+
+        [Editable, HasDefaultValue(true, true)]
+        public bool CastShadows
+        {
+            get { return castShadows; }
+            set
+            {
+                castShadows = value;
+                if (light != null) light.CastShadows = value;
             }
         }
 
@@ -87,17 +100,20 @@ namespace Barotrauma.Items.Components
         public LightComponent(Item item, XElement element)
             : base (item, element)
         {
-            light = new LightSource(item.Position, 100.0f, Color.White, item.CurrentHull == null ? null : item.CurrentHull.Submarine);
+            light = new LightSource(element);
+            light.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+            light.Position = item.Position;
+            light.CastShadows = castShadows;
 
             IsActive = true;
 
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
-                light.LightSprite = new Sprite(subElement);
-                light.LightSprite.Origin = light.LightSprite.size / 2.0f;
-                break;
-            }
+            //foreach (XElement subElement in element.Elements())
+            //{
+            //    if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
+
+            //    light.LightSprite = new Sprite(subElement);
+            //    break;
+            //}
         }
         
         public override void Update(float deltaTime, Camera cam)
@@ -115,6 +131,7 @@ namespace Barotrauma.Items.Components
             if (item.body != null)
             {
                 light.Position = item.Position;
+                light.Rotation = item.body.Dir > 0.0f ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
 
                 if (!item.body.Enabled)
                 {
@@ -150,9 +167,9 @@ namespace Barotrauma.Items.Components
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing = false)
         {
-            if (light.LightSprite != null && (item.body==null || item.body.Enabled))
+            if (light.LightSprite != null && (item.body == null || item.body.Enabled))
             {
-                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, 0.0f, 1.0f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, item.Sprite.Depth-0.0001f);
+                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, 0.0f, 1.0f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, item.Sprite.Depth - 0.0001f);
             } 
         }
         

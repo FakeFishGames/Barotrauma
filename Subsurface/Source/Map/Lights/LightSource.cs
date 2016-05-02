@@ -22,7 +22,11 @@ namespace Barotrauma.Lights
 
         public Sprite LightSprite;
 
+        private Sprite overrideLightTexture;
+
         public Entity Submarine;
+
+        public bool CastShadows;
 
         //what was the range of the light when HullsInRange were last updated
         private float prevHullUpdateRange;
@@ -43,6 +47,12 @@ namespace Barotrauma.Lights
                 UpdateHullsInRange();
                 prevHullUpdatePosition = position;
             }
+        }
+
+        public float Rotation
+        {
+            get;
+            set;
         }
 
         public Vector2 WorldPosition
@@ -84,17 +94,24 @@ namespace Barotrauma.Lights
         }
 
         public LightSource (XElement element)
-            :this(Vector2.Zero, 100.0f, Color.White, null)
+            : this(Vector2.Zero, 100.0f, Color.White, null)
         {
             float range = ToolBox.GetAttributeFloat(element, "range", 100.0f);
             Color color = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
 
+            CastShadows = ToolBox.GetAttributeBool(element, "castshadows", true);
+
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
-
-                LightSprite = new Sprite(subElement);
-                LightSprite.Origin = LightSprite.size / 2.0f;
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "sprite":
+                        LightSprite = new Sprite(subElement);
+                        break;
+                    case "lighttexture":
+                        overrideLightTexture = new Sprite(subElement);
+                        break;
+                }
             }
         }
 
@@ -108,6 +125,8 @@ namespace Barotrauma.Lights
             this.range = range;
             this.color = color;
 
+            CastShadows = true;
+
             texture = LightTexture;
 
             GameMain.LightManager.AddLight(this);
@@ -115,12 +134,25 @@ namespace Barotrauma.Lights
 
         public void UpdateHullsInRange()
         {
+            if (!CastShadows) return;
+
             hullsInRange.Clear();
             if (range < 1.0f || color.A < 0.01f) return;
 
             foreach (ConvexHull ch in ConvexHull.list)
             {
-                if (MathUtils.CircleIntersectsRectangle(position, range, ch.BoundingBox)) hullsInRange.Add(ch);
+                if (Submarine == null && ch.ParentEntity.Submarine != null)
+                {
+                    if (MathUtils.CircleIntersectsRectangle(position - ch.ParentEntity.Submarine.Position, range, ch.BoundingBox))
+                    {
+                        hullsInRange.Add(ch);
+                    }
+                }
+                else if (MathUtils.CircleIntersectsRectangle(position, range, ch.BoundingBox))
+                {
+                    hullsInRange.Add(ch);
+                }
+
             }
         }
 
@@ -128,15 +160,25 @@ namespace Barotrauma.Lights
         {
             if (range > 1.0f)
             {
-                Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
-                float scale = range / (lightTexture.Width / 2.0f);
+                if (overrideLightTexture == null)
+                {
+                    Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
+                    float scale = range / (lightTexture.Width / 2.0f);
 
-                spriteBatch.Draw(lightTexture, new Vector2(WorldPosition.X, -WorldPosition.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
+                    spriteBatch.Draw(lightTexture, new Vector2(WorldPosition.X, -WorldPosition.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
+                }
+                else
+                {
+                    overrideLightTexture.Draw(spriteBatch, 
+                        new Vector2(WorldPosition.X, -WorldPosition.Y), Color, 
+                        overrideLightTexture.Origin, -Rotation, 
+                        new Vector2(overrideLightTexture.size.X/overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y/overrideLightTexture.SourceRect.Height));
+                }
             }
 
             if (LightSprite != null)
             {
-                LightSprite.Draw(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), Color);
+                LightSprite.Draw(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), Color, LightSprite.Origin);
             } 
         }
 

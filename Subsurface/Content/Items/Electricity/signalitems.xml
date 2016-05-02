@@ -295,7 +295,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16"/>
 
-    <LightComponent canbeselected = "true" color="1.0,0.0,0.0,1.0">
+    <LightComponent canbeselected="true" color="1.0,0.0,0.0,1.0" castshadows="false">
       <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="0,96,31,32"/>
     </LightComponent>
 

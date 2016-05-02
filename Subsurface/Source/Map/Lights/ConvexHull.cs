@@ -64,6 +64,12 @@ namespace Barotrauma.Lights
 
         private Rectangle boundingBox;
 
+        public Entity ParentEntity
+        {
+            get { return parentEntity; }
+
+        }
+
         public bool Enabled
         {
             get;
@@ -302,9 +308,13 @@ namespace Barotrauma.Lights
         {
             if (!Enabled) return;
 
+            Vector2 lightSourcePos = light.Position;
+
+            if (light.Submarine==null && parentEntity != null && parentEntity.Submarine != null) lightSourcePos -= parentEntity.Submarine.Position;
+
             CachedShadow cachedShadow = null;
-            if (cachedShadows.TryGetValue(light, out cachedShadow) && 
-                (light.Position == cachedShadow.LightPos || Vector2.DistanceSquared(light.Position, cachedShadow.LightPos) < 1.0f))
+            if (cachedShadows.TryGetValue(light, out cachedShadow) &&
+                (lightSourcePos == cachedShadow.LightPos || Vector2.DistanceSquared(lightSourcePos, cachedShadow.LightPos) < 1.0f))
             {
 
             }
@@ -315,17 +325,17 @@ namespace Barotrauma.Lights
                 //    lightPos = light.Position;
                 //}
 
-                CalculateShadowVertices(light.Position, los);
+                CalculateShadowVertices(lightSourcePos, los);
 
                 if (cachedShadow != null)
                 {
-                    cachedShadow.LightPos = light.Position;
+                    cachedShadow.LightPos = lightSourcePos;
                     cachedShadow.ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
                     cachedShadow.ShadowVertexCount = shadowVertexCount;
                 }
                 else
                 {
-                    cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, light.Position, shadowVertexCount, 0);
+                    cachedShadow = new CachedShadow(shadowVertices, penumbraVertices, lightSourcePos, shadowVertexCount, 0);
                     RemoveCachedShadow(light);
                     cachedShadows.Add(light, cachedShadow);
                 }

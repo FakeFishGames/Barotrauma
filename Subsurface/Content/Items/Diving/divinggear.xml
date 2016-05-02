@@ -133,7 +133,11 @@
     <Propulsion force="80" usablein="water" particles="bubbles">
       <RequiredItems name="Battery Cell,Fulgurium Battery Cell" type="Contained" msg="Battery Cell required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Battery Cell" Condition="-1.0"/>
-      <sound file="scooter.ogg" type="OnUse" range="500.0" loop="true"/>      
+      <sound file="scooter.ogg" type="OnUse" range="500.0" loop="true"/>
+
+      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.2" range="600">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.1, 0.5" size="2.0,1.0"/>
+      </LightComponent>
     </Propulsion>
 
 
