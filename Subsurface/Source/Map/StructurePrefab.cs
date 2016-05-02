@@ -92,6 +92,15 @@ namespace Barotrauma
                 if (ToolBox.GetAttributeBool(element, "flipvertical", false)) sp.sprite.effects = SpriteEffects.FlipVertically;
             }
 
+            MapEntityCategory category;
+
+            if (!Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), true, out category))
+            {
+                category = MapEntityCategory.Structure;
+            }
+
+            sp.Category = category;
+
             sp.Description = ToolBox.GetAttributeString(element, "description", "");
 
             sp.size = Vector2.Zero;

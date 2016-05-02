@@ -10,7 +10,7 @@ namespace Barotrauma
     [Flags]
     enum MapEntityCategory
     {
-        Structure = 1, Machine = 2, Equipment = 4, Electrical = 8, Material = 16, Misc = 32
+        Structure = 1, Machine = 2, Equipment = 4, Electrical = 8, Material = 16, Misc = 32, Alien = 64
     }
 
     class MapEntityPrefab
