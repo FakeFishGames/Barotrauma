@@ -178,12 +178,12 @@ namespace Barotrauma.Items.Components
 
             PlaySound(ActionType.OnWearing, picker.WorldPosition);
 
-            if (containedItems == null) return;
-            for (int j = 0; j < containedItems.Length; j++)
-            {
-                if (containedItems[j] == null) continue;
-                containedItems[j].ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
-            } 
+            //if (containedItems == null) return;
+            //for (int j = 0; j < containedItems.Length; j++)
+            //{
+            //    if (containedItems[j] == null) continue;
+            //    containedItems[j].ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
+            //} 
         }
 
         protected override void RemoveComponentSpecific()

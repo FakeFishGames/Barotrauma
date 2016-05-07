@@ -413,19 +413,10 @@ namespace Barotrauma
                 }
             }
 
-            //for (int i = 0; i < capacity; i++)
-            //{
-            //    slotRect.X = (int)(SlotPositions[i].X + offset.X);
-            //    slotRect.Y = (int)(SlotPositions[i].Y + offset.Y);
-            //    slotRect.Width = 40;
-            //    slotRect.Height = 40;
-
             if (selectedSlot > -1)
             {
                 DrawSubInventory(spriteBatch, highlightedSlot, selectedSlot);
             }
-
-            //}
 
             slotRect.Width = rectWidth;
             slotRect.Height = rectHeight;
@@ -436,6 +427,24 @@ namespace Barotrauma
             }
 
             if (draggingItem == null) return;
+
+            var rootContainer = draggingItem.GetRootContainer();
+            var rootInventory = draggingItem.ParentInventory;
+
+            if (rootContainer != null)
+            {
+                rootInventory = rootContainer.ParentInventory != null ? 
+                    rootContainer.ParentInventory : rootContainer.GetComponent<Items.Components.ItemContainer>().Inventory; 
+            }
+
+            if (rootInventory != null &&
+                rootInventory.Owner != Character.Controlled &&
+                rootInventory.Owner != Character.Controlled.SelectedConstruction &&
+                rootInventory.Owner != Character.Controlled.SelectedCharacter)
+            {
+                draggingItem = null;
+                return;
+            }
 
             if (!draggingItemSlot.Contains(PlayerInput.MousePosition))
             {
