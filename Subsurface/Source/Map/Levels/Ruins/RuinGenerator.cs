@@ -412,6 +412,42 @@ namespace Barotrauma.RuinGeneration
                 }
             }
 
+            var sensorPrefab = ItemPrefab.list.Find(ip => ip.Name == "Alien Motion Sensor") as ItemPrefab;
+            var wirePrefab = ItemPrefab.list.Find(ip => ip.Name == "Wire") as ItemPrefab;
+           
+
+            foreach (Corridor corridor in corridors)
+            {
+                var door = RuinStructure.GetRandom(corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center);
+                if (door == null) continue;
+
+                var item = new Item(door.Prefab as ItemPrefab, corridor.Center - new Vector2(door.Prefab.sprite.size.X, -door.Prefab.sprite.size.Y)/2.0f, null);
+                item.MoveWithLevel = true;
+
+                item.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, false) < 0.8f;
+
+                if (sensorPrefab == null || wirePrefab == null) continue;
+
+                var sensorRoom = corridor.ConnectedRooms.FirstOrDefault(r => r != null && rooms.Contains(r));
+                if (sensorRoom == null) continue;
+
+                var sensor = new Item(sensorPrefab, new Vector2(
+                    Rand.Range(sensorRoom.Rect.X, sensorRoom.Rect.Right, false), 
+                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom,false)), null);
+                sensor.MoveWithLevel = true;
+
+                var wire = new Item(wirePrefab, sensorRoom.Center, null).GetComponent<Items.Components.Wire>();
+                wire.Item.MoveWithLevel = false;
+
+                var conn1 = item.Connections.Find(c => c.Name == "set_state");
+                conn1.AddLink(0, wire);
+                wire.Connect(conn1, false);
+
+                var conn2 = sensor.Connections.Find(c => c.Name == "state_out");
+                conn2.AddLink(0, wire);
+                wire.Connect(conn2, false);
+            }
+
             return shapes;
         }
                 

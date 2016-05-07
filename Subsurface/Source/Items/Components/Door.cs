@@ -127,13 +127,14 @@ namespace Barotrauma.Items.Components
            // isOpen = false;
             foreach (XElement subElement in element.Elements())
             {
+                string texturePath = ToolBox.GetAttributeString(subElement, "texture", "");
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        doorSprite = new Sprite(subElement, Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        doorSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
                         break;
                     case "weldedsprite":
-                        weldedSprite = new Sprite(subElement, Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        weldedSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
                         break;
                 }
             }
@@ -336,7 +337,7 @@ namespace Barotrauma.Items.Components
                 pos.Y = -pos.Y;
 
                 spriteBatch.Draw(doorSprite.Texture, pos,
-                    new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.size.Y * openState),
+                    new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.SourceRect.Y + doorSprite.size.Y * openState),
                     (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
                     color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);  
             }
@@ -346,6 +347,7 @@ namespace Barotrauma.Items.Components
         public override void OnMapLoaded()
         {
             LinkedGap.ConnectedDoor = this;
+            LinkedGap.Open = openState;
 
             Vector2[] corners = GetConvexHullCorners(doorRect);
 

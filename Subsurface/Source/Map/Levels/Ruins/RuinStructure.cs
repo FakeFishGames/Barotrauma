@@ -10,7 +10,7 @@ namespace Barotrauma.RuinGeneration
     [Flags]
     enum RuinStructureType
     {
-        Wall = 1, CorridorWall = 2, Prop = 4, Back = 8
+        Wall = 1, CorridorWall = 2, Prop = 4, Back = 8, Door=16, Hatch=32
     }
 
     class RuinStructure

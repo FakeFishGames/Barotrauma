@@ -175,10 +175,11 @@ namespace Barotrauma
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
             float brightness = Rand.Range(1.0f, 1.3f, false);
-            backgroundColor = Color.Lerp(new Color(11, 18, 26), new Color(11, 26, 18), Rand.Range(0.0f, 1.0f, false)) * brightness;
-
-
+            backgroundColor = Color.Lerp(new Color(11, 18, 26), new Color(50, 46, 20), Rand.Range(0.0f, 1.0f, false)) * brightness;
             backgroundColor = new Color(backgroundColor, 1.0f);
+
+            float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
+            GameMain.LightManager.AmbientLight = new Color(backgroundColor*(40.0f/avgValue), 1.0f);
 
             float minWidth = Submarine.Loaded == null ? 0.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
             minWidth = Math.Max(minWidth, 6500.0f);
@@ -789,7 +790,7 @@ namespace Barotrauma
 
         public void Update (float deltaTime)
         {
-            if (Submarine.Loaded!=null)
+            if (Submarine.Loaded != null)
             {
                 WrappingWall.UpdateWallShift(Submarine.Loaded.WorldPosition, wrappingWalls);
             }
@@ -878,6 +879,8 @@ namespace Barotrauma
         {
             if (renderer!=null) renderer.Dispose();
             renderer = null;
+
+            ruins.Clear();
 
             for (int side = 0; side < 2; side++)
             {
