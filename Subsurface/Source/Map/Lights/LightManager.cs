@@ -69,30 +69,42 @@ namespace Barotrauma.Lights
             lights.Remove(light);
         }
 
-        public void DrawLOS(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
+        public void DrawLOS(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Effect effect)
         {            
-            if (!LosEnabled || ViewTarget==null) return;
+            //if (!LosEnabled || ViewTarget==null) return;
 
-            Vector2 pos = ViewTarget.WorldPosition;
+            //Vector2 pos = ViewTarget.WorldPosition;
 
-            Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
+            //Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
 
-            Matrix shadowTransform = cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+            //Matrix shadowTransform = cam.ShaderTransform
+            //    * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-            foreach (ConvexHull convexHull in ConvexHull.list)
-            {
-                if (!convexHull.Intersects(camView)) continue;
-                //if (!camView.Intersects(convexHull.BoundingBox)) continue;
+            //graphics.SetRenderTarget(losTexture);
+            //graphics.Clear(Color.Transparent);
 
-                convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
-            }
+            //foreach (ConvexHull convexHull in ConvexHull.list)
+            //{
+            //    if (!convexHull.Intersects(camView)) continue;
+            //    //if (!camView.Intersects(convexHull.BoundingBox)) continue;
+
+            //    convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
+            //}
+
+            //graphics.SetRenderTarget(null);
             
-            if (!ObstructVision) return;
+            //if (!ObstructVision) return;
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative);
-            spriteBatch.Draw(losTexture, Vector2.Zero);
-            spriteBatch.End();
+            //spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative);
+            //spriteBatch.Draw(losTexture, Vector2.Zero);
+            //spriteBatch.End();
+
+
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, ObstructVision ? CustomBlendStates.Multiplicative : BlendState.AlphaBlend, null, null, null, effect);
+            //effect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Draw(losTexture, Vector2.Zero, Color.White);
+            spriteBatch.End();  
 
             ObstructVision = false;
 
@@ -148,8 +160,13 @@ namespace Barotrauma.Lights
                 spriteBatch.End();
             }
 
+
             ClearAlphaToOne(graphics, spriteBatch);
+
+
             spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
+
+            GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.Additive);
 
             foreach (LightSource light in lights)
             {
@@ -163,37 +180,59 @@ namespace Barotrauma.Lights
 
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);
+            
             graphics.SetRenderTarget(null);
         }
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
+            if (!LosEnabled && !ObstructVision) return;
 
-            if (!ObstructVision) return;
-            
             graphics.SetRenderTarget(losTexture);
-            graphics.Clear(Color.Black);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, cam.Transform);
+            if (ObstructVision)
+            {
+                graphics.Clear(Color.Black);
 
-            Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
-            diff.Y = -diff.Y;
-            float rotation = MathUtils.VectorToAngle(diff);
+                spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, cam.Transform);
+
+                Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
+                diff.Y = -diff.Y;
+                float rotation = MathUtils.VectorToAngle(diff);
             
-            Vector2 scale = new Vector2(MathHelper.Clamp(diff.Length()/256.0f, 2.0f, 5.0f), 2.0f);
+                Vector2 scale = new Vector2(MathHelper.Clamp(diff.Length()/256.0f, 2.0f, 5.0f), 2.0f);
 
-            spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation, 
-                new Vector2(LightSource.LightTexture.Width*0.2f, LightSource.LightTexture.Height/2), scale, SpriteEffects.None, 0.0f);
-            spriteBatch.End();
+                spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation, 
+                    new Vector2(LightSource.LightTexture.Width*0.2f, LightSource.LightTexture.Height/2), scale, SpriteEffects.None, 0.0f);
+                spriteBatch.End();
 
-            //ClearAlphaToOne(graphics, spriteBatch);
+            }
+            else
+            {
+                graphics.Clear(Color.Transparent);
+            }
 
-            graphics.SetRenderTarget(null);
+            //--------------------------------------
 
-            //spriteBatch.Begin();
-            //spriteBatch.Draw(lightMap, Vector2.Zero, Color.White);
-            //spriteBatch.End();
-            
+            if (LosEnabled && ViewTarget != null)
+            {
+                Vector2 pos = ViewTarget.WorldPosition;
+
+                Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
+
+                Matrix shadowTransform = cam.ShaderTransform
+                    * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+
+                foreach (ConvexHull convexHull in ConvexHull.list)
+                {
+                    if (!convexHull.Intersects(camView)) continue;
+                    //if (!camView.Intersects(convexHull.BoundingBox)) continue;
+
+                    convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
+                }
+            }
+
+            graphics.SetRenderTarget(null);            
         }
 
         private void ClearAlphaToOne(GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -203,15 +242,17 @@ namespace Barotrauma.Lights
             spriteBatch.End();
         }
 
-        public void DrawLightMap(SpriteBatch spriteBatch, Camera cam)
+        public void DrawLightMap(SpriteBatch spriteBatch, Camera cam, Effect effect)
         {
             if (!LightingEnabled) return;
-            
-            //multiply scene with lightmap
-            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative);
-            spriteBatch.Draw(lightMap, Vector2.Zero, Color.White);
-            spriteBatch.End();            
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative, null, null, null, effect);
+            //effect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Draw(lightMap, Vector2.Zero, Color.White);            
+            spriteBatch.End();
         }
+
+
 
         public void ClearLights()
         {

@@ -90,8 +90,9 @@ namespace Barotrauma.Items.Components
 
             set
             {
-                if (base.IsActive == value) return;
                 base.IsActive = value;
+
+                if (light == null) return;
                 light.Color = value ? lightColor : Color.Transparent;
                 if (!value) lightBrightness = 0.0f;
             }
@@ -105,7 +106,7 @@ namespace Barotrauma.Items.Components
             light.Position = item.Position;
             light.CastShadows = castShadows;
 
-            IsActive = true;
+            IsActive = IsOn;
 
             //foreach (XElement subElement in element.Elements())
             //{
@@ -157,12 +158,19 @@ namespace Barotrauma.Items.Components
             else
             {
                 lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(voltage, 1.0f), 0.1f);
+
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);
             }
 
             light.Color = lightColor * lightBrightness * (1.0f-Rand.Range(0.0f,Flicker));
             light.Range = range * (float)Math.Sqrt(lightBrightness);
 
             voltage = 0.0f;
+        }
+
+        public override bool Use(float deltaTime, Character character = null)
+        {
+            return true;
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing = false)

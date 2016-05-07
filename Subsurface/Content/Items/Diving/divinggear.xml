@@ -109,7 +109,6 @@
     </ItemContainer>
   </Item>
 
-
   <Item
     name="Underwater Scooter"
     category="Equipment"
@@ -135,8 +134,8 @@
       <StatusEffect type="OnUse" target="Contained" targetnames="Battery Cell" Condition="-1.0"/>
       <sound file="scooter.ogg" type="OnUse" range="500.0" loop="true"/>
 
-      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.2" range="600">
-        <LightTexture texture="Content/Lights/lightcone.png" origin="0.1, 0.5" size="2.0,1.0"/>
+      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.2" range="800">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0"/>
       </LightComponent>
     </Propulsion>
 

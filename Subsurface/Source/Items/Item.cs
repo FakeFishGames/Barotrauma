@@ -673,7 +673,7 @@ namespace Barotrauma
                 }
                 ic.WasUsed = false;
 
-                if (Container != null) ic.ApplyStatusEffects(ActionType.OnContained, deltaTime);
+                if (parentInventory!=null) ic.ApplyStatusEffects(ActionType.OnContained, deltaTime);
                 
                 if (!ic.IsActive) continue;
 
@@ -795,7 +795,6 @@ namespace Barotrauma
                 {
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical)
                     {
-
                         prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X-rect.Width/2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), color);
                     }
                     else
