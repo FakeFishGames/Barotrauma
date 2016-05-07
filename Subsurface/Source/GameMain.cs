@@ -237,7 +237,7 @@ namespace Barotrauma
             TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;
 
-            GameScreen          =   new GameScreen(Graphics.GraphicsDevice);
+            GameScreen          =   new GameScreen(Graphics.GraphicsDevice, Content);
             TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
