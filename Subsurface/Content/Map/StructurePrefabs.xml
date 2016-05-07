@@ -109,16 +109,17 @@
   <bunk sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="0,546,173,129"
     width="173" height="129" depth = "0.9"/>
 
+  
   <RuinWallHorizontal category="Alien"  sprite="Content/Map/ruins.png" sourcerect="0,896,832,128" depth ="0.95" castshadow="true"
     width = "128" height ="128" resizehorizontal="true" body="true" health="500"/>
 
-  <RuinWallVertical category="Alien"  sprite="Content/Map/ruins.png" sourcerect="896,0,128,832" depth ="0.94" castshadow="true"
+  <RuinWallVertical category="Alien"  sprite="Content/Map/ruins.png" sourcerect="896,192,128,832" depth ="0.94" castshadow="true"
     width = "128" height ="128" resizevertical="true" body="true" health="500"/>
 
   <RuinWallHorizontalSmall category="Alien"  sprite="Content/Map/ruins.png" sourcerect="0,842,832,54" depth ="0.95" castshadow="true"
     width = "128" height ="54" resizehorizontal="true" body="true" health="500"/>
 
-  <RuinWallVerticalSmall category="Alien"  sprite="Content/Map/ruins.png" sourcerect="842,0,54,832" depth ="0.96" castshadow="true"
+  <RuinWallVerticalSmall category="Alien"  sprite="Content/Map/ruins.png" sourcerect="842,192,54,832" depth ="0.96" castshadow="true"
     width = "54" height ="128" resizevertical="true" body="true" health="500"/>
   
 

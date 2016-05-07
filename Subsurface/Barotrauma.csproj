@@ -122,6 +122,7 @@
     <Compile Include="Source\Items\Components\Holdable\Propulsion.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
     <Compile Include="Source\Items\Components\Signal\DelayComponent.cs" />
+    <Compile Include="Source\Items\Components\Signal\MotionSensor.cs" />
     <Compile Include="Source\Items\Components\Signal\RelayComponent.cs" />
     <Compile Include="Source\Items\Components\Signal\WaterDetector.cs" />
     <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
@@ -1046,6 +1047,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\effects.mgfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Items\Artifacts\aliendoor.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Artifacts\alienweapon.ogg">
