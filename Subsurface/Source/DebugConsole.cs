@@ -382,7 +382,7 @@ namespace Barotrauma
                     if (commands.Length>1) float.TryParse(commands[1], out power);
 
                     var reactor = reactorItem.GetComponent<Reactor>();
-                    reactor.ShutDownTemp = 7000.0f;
+                    reactor.ShutDownTemp = power == 0 ? 0 : 7000.0f;
                     reactor.AutoTemp = true;
                     reactor.Temperature = power;
                     break;
