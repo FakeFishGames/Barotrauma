@@ -181,7 +181,10 @@ namespace Barotrauma
                     suicideButton = new GUIButton(
                         new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), "Give in", GUI.Style);
 
-                    suicideButton.ToolTip = "Let go of your character and enter spectator mode (other players will now longer be able to revive you)";
+                    
+                    suicideButton.ToolTip = GameMain.NetworkMember == null ?
+                        "The character can no longer be revived if you give in." :
+                        "Let go of your character and enter spectator mode (other players will now longer be able to revive you)";
 
                     suicideButton.OnClicked = (button, userData) =>
                     {

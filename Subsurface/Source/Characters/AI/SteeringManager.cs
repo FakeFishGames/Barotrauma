@@ -93,7 +93,7 @@ namespace Barotrauma
 
         protected virtual Vector2 DoSteeringWander(float speed = 1.0f)
         {
-            Vector2 circleCenter = (host.Velocity == Vector2.Zero) ? new Vector2(speed, 0.0f) : host.Velocity;
+            Vector2 circleCenter = (host.Steering == Vector2.Zero) ? new Vector2(speed, 0.0f) : host.Steering;
             circleCenter = Vector2.Normalize(circleCenter) * CircleDistance;
 
             Vector2 displacement = new Vector2(
