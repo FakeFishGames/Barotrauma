@@ -157,8 +157,8 @@ namespace Barotrauma
             }
             else
             {
-                steeringManager.SteeringWander(0.8f);            
-                steeringManager.SteeringAvoid(deltaTime, 1.0f);
+                steeringManager.SteeringAvoid(deltaTime, 0.1f);
+                steeringManager.SteeringWander(0.5f);
             }
 
             attackingLimb = null;
