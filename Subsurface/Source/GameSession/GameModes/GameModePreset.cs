@@ -19,19 +19,17 @@ namespace Barotrauma
         public GameModePreset(string name, Type type, bool isSinglePlayer = false)
         {
             this.Name = name;
-            //Constructor = constructor;
 
-
-            Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset) });
+            Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset), typeof(object) });
 
             IsSinglePlayer = isSinglePlayer;
 
             list.Add(this);
         }
 
-        public GameMode Instantiate()
+        public GameMode Instantiate(object param)
         {
-            object[] lobject = new object[] { this };
+            object[] lobject = new object[] { this, param };
             return (GameMode)Constructor.Invoke(lobject);
         }
 

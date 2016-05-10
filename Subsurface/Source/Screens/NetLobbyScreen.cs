@@ -21,6 +21,9 @@ namespace Barotrauma
 
         private GUIButton[] traitorProbabilityButtons;
         private GUITextBlock traitorProbabilityText;
+
+        private GUIButton[] missionTypeButtons;
+        private GUIComponent missionTypeBlock;
         
         private GUIListBox jobList;
 
@@ -73,6 +76,12 @@ namespace Barotrauma
         public GameModePreset SelectedMode
         {
             get { return modeList.SelectedData as GameModePreset; }
+        }
+
+        public int MissionTypeIndex
+        {
+            get { return (int)missionTypeBlock.UserData; }
+            set { missionTypeBlock.UserData = value; }
         }
 
         //for guitextblock delegate
@@ -220,6 +229,23 @@ namespace Barotrauma
             }
 
 
+            //mission type ------------------------------------------------------------------
+
+            missionTypeBlock = new GUITextBlock(new Rectangle(columnX, 0, 300, 20), "Mission type:", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, infoFrame);
+            missionTypeBlock.UserData = 0;
+                       
+            missionTypeButtons = new GUIButton[2];
+
+            missionTypeButtons[0] = new GUIButton(new Rectangle(120, 0, 20, 20), "<", Alignment.BottomLeft, GUI.Style, missionTypeBlock);
+            missionTypeButtons[0].UserData = -1;
+
+            new GUITextBlock(new Rectangle(120, 0, 120, 20), "Random", GUI.Style, Alignment.BottomLeft, Alignment.TopCenter, missionTypeBlock).UserData = 0;
+
+            missionTypeButtons[1] = new GUIButton(new Rectangle(240, 0, 20, 20), ">", Alignment.BottomLeft, GUI.Style, missionTypeBlock);
+            missionTypeButtons[1].UserData = 1;
+            
+            missionTypeBlock.Visible = false;
+
             columnX += columnWidth + 20;
 
             //gamemode description ------------------------------------------------------------------
@@ -256,6 +282,7 @@ namespace Barotrauma
 
             traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 205, 20, 20), ">", GUI.Style, infoFrame);
             traitorProbabilityButtons[1].UserData = 1;
+
 
             //automatic restart ------------------------------------------------------------------
 
@@ -308,6 +335,9 @@ namespace Barotrauma
             traitorProbabilityButtons[0].Enabled = GameMain.Server != null;
             traitorProbabilityButtons[1].Enabled = GameMain.Server != null;
 
+            missionTypeButtons[0].Enabled = GameMain.Server != null;
+            missionTypeButtons[1].Enabled = GameMain.Server != null;
+
             ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
             
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
@@ -325,6 +355,9 @@ namespace Barotrauma
 
                 traitorProbabilityButtons[0].OnClicked = ToggleTraitorsEnabled;
                 traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
+
+                missionTypeButtons[0].OnClicked = ToggleMissionType;
+                missionTypeButtons[1].OnClicked = ToggleMissionType;
 
                 GUIButton startButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
                 startButton.OnClicked = GameMain.Server.StartGameClicked;
@@ -478,6 +511,27 @@ namespace Barotrauma
             GameMain.Server.AutoRestart = tickBox.Selected;
             
             valueChanged = true;
+                       
+            return true;
+        }
+
+        private void SetMissionType(int missionTypeIndex)
+        {
+            if (missionTypeIndex < 0 || missionTypeIndex >= Mission.MissionTypes.Count) return;
+
+            missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[missionTypeIndex];
+            missionTypeBlock.UserData = missionTypeIndex;
+        }
+
+        public bool ToggleMissionType(GUIButton button, object userData)
+        {
+            int missionTypeIndex = (int)missionTypeBlock.UserData;
+            missionTypeIndex += (int)userData;
+
+            if (missionTypeIndex<0) missionTypeIndex = Mission.MissionTypes.Count-1;
+            if (missionTypeIndex>=Mission.MissionTypes.Count) missionTypeIndex=0;
+
+            SetMissionType(missionTypeIndex);
 
             return true;
         }
@@ -830,6 +884,8 @@ namespace Barotrauma
             //}
 
             GameModePreset modePreset = obj as GameModePreset;
+            missionTypeBlock.Visible = modePreset.Name == "Mission";
+
             if (modePreset == null) return false;
 
             valueChanged = true;
@@ -993,11 +1049,9 @@ namespace Barotrauma
 
             msg.WriteRangedInteger(0, 2, (int)GameMain.Server.TraitorsEnabled);
 
-            //msg.Write(AllowSubVoting);
-            //msg.Write(AllowModeVoting);
+            msg.WriteRangedInteger(0, Mission.MissionTypes.Count-1, MissionTypeIndex);
 
             msg.Write((byte)modeList.SelectedIndex);
-            //msg.Write(durationBar.BarScroll);
             msg.Write(LevelSeed);
 
             msg.Write(GameMain.Server != null && GameMain.Server.AutoRestart);
@@ -1035,14 +1089,11 @@ namespace Barotrauma
 
                 traitorsEnabled = (YesNoMaybe)msg.ReadRangedInteger(0, 2);
 
-                //AllowSubVoting  = msg.ReadBoolean();
-                //AllowModeVoting = msg.ReadBoolean();
+                SetMissionType(msg.ReadRangedInteger(0, Mission.MissionTypes.Count - 1));
 
                 modeIndex       = msg.ReadByte();
 
-                //durationScroll = msg.ReadFloat();
-
-                newSeed       = msg.ReadString();
+                newSeed         = msg.ReadString();
 
                 autoRestart     = msg.ReadBoolean();
                 restartTimer    = msg.ReadFloat();
@@ -1063,7 +1114,10 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(mapName) && !GameMain.NetworkMember.Voting.AllowSubVoting) TrySelectSub(mapName, md5Hash);
 
-            if (!GameMain.NetworkMember.Voting.AllowModeVoting) modeList.Select(modeIndex, true);
+            if (!GameMain.NetworkMember.Voting.AllowModeVoting)
+            {
+                SelectMode(modeList.children[modeIndex], modeList.children[modeIndex].UserData);
+            }
 
             SetTraitorsEnabled(traitorsEnabled);
 

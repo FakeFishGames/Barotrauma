@@ -66,7 +66,7 @@ namespace Barotrauma
             get { return shiftSummary; }
         }
 
-        public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset = null)
+        public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset = null, string missionType="")
         {
             GameMain.GameSession = this;
 
@@ -81,7 +81,7 @@ namespace Barotrauma
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", GUI.Style, null);
             infoButton.OnClicked = ToggleInfoFrame;
 
-            if (gameModePreset!=null) gameMode = gameModePreset.Instantiate();
+            if (gameModePreset!=null) gameMode = gameModePreset.Instantiate(missionType);
             this.submarine = submarine;
         }
         

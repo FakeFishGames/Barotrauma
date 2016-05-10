@@ -45,8 +45,8 @@ namespace Barotrauma
             get { return GameMain.GameSession.CrewManager; }
         }
 
-        public SinglePlayerMode(GameModePreset preset)
-            : base(preset)
+        public SinglePlayerMode(GameModePreset preset, object param)
+            : base(preset, param)
         {
 
             CargoManager = new CargoManager();
@@ -79,7 +79,7 @@ namespace Barotrauma
         }
 
         public SinglePlayerMode(XElement element)
-            : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"))
+            : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"), null)
         {
             string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
 

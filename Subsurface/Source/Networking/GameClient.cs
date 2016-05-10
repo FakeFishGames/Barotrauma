@@ -610,6 +610,8 @@ namespace Barotrauma.Networking
 
             string levelSeed = inc.ReadString();
 
+            int missionTypeIndex = inc.ReadByte();
+
             string mapName = inc.ReadString();
             string mapHash = inc.ReadString();
 
@@ -633,7 +635,7 @@ namespace Barotrauma.Networking
             Rand.SetSyncedSeed(seed);
             //int gameModeIndex = inc.ReadInt32();
 
-            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode);
+            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
             GameMain.GameSession.StartShift(levelSeed);
             
             yield return CoroutineStatus.Running;

@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class Mission
     {
-        //private static List<Mission> list = new List<Mission>();
+        public static List<string> MissionTypes = new List<string>() { "Random" };
         
         private string name;
 
@@ -67,6 +67,25 @@ namespace Barotrauma
             get { return failureMessage; }
         }
 
+        public static void Init()
+        {
+            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.Missions);
+            foreach (string file in files)
+            {
+                XDocument doc = ToolBox.TryLoadXml(file);
+                if (doc == null || doc.Root == null) continue;
+
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    string missionTypeName = element.Name.ToString();
+                    missionTypeName = missionTypeName.Replace("Mission", "");
+
+                    if (!MissionTypes.Contains(missionTypeName)) MissionTypes.Add(missionTypeName);
+                }
+
+            }
+        }
+
         public Mission(XElement element)
         {
             name = ToolBox.GetAttributeString(element, "name", "");
@@ -92,8 +111,10 @@ namespace Barotrauma
             }
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand)
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, string missionType = "")
         {
+            missionType = missionType.ToLowerInvariant();
+
             var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.Missions);
             string configFile = files[rand.Next(files.Count)];
 
@@ -106,8 +127,25 @@ namespace Barotrauma
 
             float probabilitySum = 0.0f;
 
+            List<XElement> matchingElements = new List<XElement>();
+
+            if (missionType == "random")
+            {
+                matchingElements = doc.Root.Elements().ToList();
+            }
+            else if (missionType == "none")
+            {
+                return null;
+            }
+            else
+            {
+                matchingElements = doc.Root.Elements().ToList().FindAll(m => m.Name.ToString().ToLowerInvariant().Replace("mission", "") == missionType);
+            }
+
+
+
             int i = 0;
-            foreach (XElement element in doc.Root.Elements())
+            foreach (XElement element in matchingElements)
             {
                 eventProbability[i] = ToolBox.GetAttributeInt(element, "commonness", 1);
 
@@ -119,7 +157,7 @@ namespace Barotrauma
             float randomNumber = (float)rand.NextDouble() * probabilitySum;
 
             i = 0;
-            foreach (XElement element in doc.Root.Elements())
+            foreach (XElement element in matchingElements)
             {
                 if (randomNumber <= eventProbability[i])
                 {
