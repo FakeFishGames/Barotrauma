@@ -256,37 +256,6 @@ namespace Barotrauma.RuinGeneration
 
             rooms.Remove(entranceRoom);
 
-            //var startCell = closestPathCell;
-
-            //Rectangle startCellRect = new Rectangle(
-            //    (int)startCell.edges.Min(e => Math.Min(e.point1.X, e.point2.X)),
-            //    (int)startCell.edges.Min(e => Math.Min(e.point1.Y, e.point2.Y)),
-            //    (int)startCell.edges.Max(e => Math.Max(e.point1.X, e.point2.X)),
-            //    (int)startCell.edges.Max(e => Math.Max(e.point1.Y, e.point2.Y)));
-
-            //startCellRect.Width = startCellRect.Width - startCellRect.X;
-            //startCellRect.Height = startCellRect.Height - startCellRect.Y;
-
-            //int startX = Math.Min(entranceRoom.Rect.Center.X, startCellRect.Center.X);
-            //int endX = Math.Max(entranceRoom.Rect.Right, startCellRect.Right);
-
-            //int startY = Math.Min(entranceRoom.Rect.Center.Y, startCellRect.Center.Y);
-            //int endY = Math.Max(entranceRoom.Rect.Bottom, startCellRect.Bottom);
-
-            //if (entranceRoom.Rect.X > startCellRect.X && entranceRoom.Rect.Right < startCellRect.Right)
-            //{
-            //    corridors.Add(new Corridor(new Rectangle(entranceRoom.Rect.Center.X, startY, 128, endY - startY)));
-            //}
-            //else if (entranceRoom.Rect.Y > startCellRect.Y && entranceRoom.Rect.Bottom < startCellRect.Bottom)
-            //{
-            //    corridors.Add(new Corridor(new Rectangle(startX, entranceRoom.Rect.Center.Y, endX - startX, 128)));
-            //}
-            //else
-            //{
-            //    corridors.Add(new Corridor(new Rectangle(startX, entranceRoom.Rect.Center.Y, endX - startX, 128)));
-            //    corridors.Add(new Corridor(new Rectangle(endX, startY, 128, endY - startY)));
-            //}
-
             //---------------------------
 
             foreach (BTRoom leaf in rooms)
@@ -418,13 +387,32 @@ namespace Barotrauma.RuinGeneration
 
             foreach (Corridor corridor in corridors)
             {
-                var door = RuinStructure.GetRandom(corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center);
-                if (door == null) continue;
+                var doorPrefab = RuinStructure.GetRandom(corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center);
+                if (doorPrefab == null) continue;
 
-                var item = new Item(door.Prefab as ItemPrefab, corridor.Center - new Vector2(door.Prefab.sprite.size.X, -door.Prefab.sprite.size.Y)/2.0f, null);
-                item.MoveWithLevel = true;
+                //find all walls that are parallel to the corridor
+                var suitableWalls = corridor.IsHorizontal ? 
+                    corridor.Walls.FindAll(c => c.A.Y == c.B.Y) : corridor.Walls.FindAll(c => c.A.X == c.B.X);
 
-                item.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, false) < 0.8f;
+                if (!suitableWalls.Any()) continue;
+
+                Vector2 doorPos = corridor.Center;
+
+                //choose a random wall to place the door next to
+                var wall = suitableWalls[Rand.Int(suitableWalls.Count, false)];
+                if (corridor.IsHorizontal)
+                {
+                    doorPos.X = (wall.A.X + wall.B.X) / 2.0f;
+                }
+                else
+                {
+                    doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
+                }
+
+                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos - new Vector2(doorPrefab.Prefab.sprite.size.X, -doorPrefab.Prefab.sprite.size.Y)/2.0f, null);
+                door.MoveWithLevel = true;
+
+                door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, false) < 0.8f;
 
                 if (sensorPrefab == null || wirePrefab == null) continue;
 
@@ -439,7 +427,7 @@ namespace Barotrauma.RuinGeneration
                 var wire = new Item(wirePrefab, sensorRoom.Center, null).GetComponent<Items.Components.Wire>();
                 wire.Item.MoveWithLevel = false;
 
-                var conn1 = item.Connections.Find(c => c.Name == "set_state");
+                var conn1 = door.Connections.Find(c => c.Name == "set_state");
                 conn1.AddLink(0, wire);
                 wire.Connect(conn1, false);
 

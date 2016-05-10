@@ -316,7 +316,10 @@ namespace Barotrauma
 
             GameMain.LightManager.DrawLightMap(spriteBatch, cam, blurEffect);
 
-            GameMain.LightManager.DrawLOS(graphics, spriteBatch, cam, blurEffect);
+            if (Character.Controlled != null)
+            {
+                GameMain.LightManager.DrawLOS(graphics, spriteBatch, cam, blurEffect);
+            }
 
         }
 

@@ -71,7 +71,7 @@ namespace Barotrauma.Lights
 
         public void DrawLOS(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Effect effect)
         {            
-            //if (!LosEnabled || ViewTarget==null) return;
+            if (!LosEnabled || ViewTarget==null) return;
 
             //Vector2 pos = ViewTarget.WorldPosition;
 
