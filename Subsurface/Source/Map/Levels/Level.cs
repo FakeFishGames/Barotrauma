@@ -391,7 +391,7 @@ namespace Barotrauma
             {
                 for (int y = 0; y < cellGrid.GetLength(1); y++)
                 {
-                    cellGrid[x, y] .Clear();
+                    cellGrid[x, y].Clear();
                 }
             }
 
@@ -402,15 +402,8 @@ namespace Barotrauma
 
                 if (x < 0 || y < 0 || x >= cellGrid.GetLength(0) || y >= cellGrid.GetLength(1)) continue;
 
-                cellGrid[x,y].Add(cell);
+                cellGrid[x, y].Add(cell);
             }
-
-
-
-
-
-
-
 
 
             Vector2 ruinSize = new Vector2(Rand.Range(5000.0f, 8000.0f, false), Rand.Range(5000.0f, 8000.0f, false));
@@ -844,9 +837,9 @@ namespace Barotrauma
 
             List<VoronoiCell> cells = new List<VoronoiCell>();
 
-            for (int x = startX; x < endX; x++)
+            for (int x = startX; x <= endX; x++)
             {
-                for (int y = startY; y < endY; y++)
+                for (int y = startY; y <= endY; y++)
                 {
                     foreach (VoronoiCell cell in cellGrid[x, y])
                     {
