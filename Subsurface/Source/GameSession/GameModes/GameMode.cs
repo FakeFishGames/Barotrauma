@@ -50,7 +50,7 @@ namespace Barotrauma
             get { return preset; }
         }
 
-        public GameMode(GameModePreset preset)
+        public GameMode(GameModePreset preset, object param)
         {
             this.preset = preset;
         }

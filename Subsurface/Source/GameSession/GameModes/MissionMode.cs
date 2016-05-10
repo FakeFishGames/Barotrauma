@@ -14,8 +14,8 @@ namespace Barotrauma
             }
         }
 
-        public MissionMode(GameModePreset preset)
-            : base(preset)
+        public MissionMode(GameModePreset preset, object param)
+            : base(preset, param)
         {
             Location[] locations = new Location[2];
 
@@ -25,12 +25,15 @@ namespace Barotrauma
             {
                 locations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f));
             }
-            mission = Mission.LoadRandom(locations, rand);
+
+            mission = Mission.LoadRandom(locations, rand, param as string);
         }
 
         public override void Start()
         {
             base.Start();
+
+            if (mission == null) return;
 
             new GUIMessageBox(mission.Name, mission.Description, 400, 400);
 

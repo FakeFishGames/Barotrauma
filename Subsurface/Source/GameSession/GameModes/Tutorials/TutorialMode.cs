@@ -15,8 +15,8 @@ namespace Barotrauma
             tutorialType.Initialize();
         }
 
-        public TutorialMode(GameModePreset preset)
-            : base(preset)
+        public TutorialMode(GameModePreset preset, object param)
+            : base(preset, param)
         {
         }
 

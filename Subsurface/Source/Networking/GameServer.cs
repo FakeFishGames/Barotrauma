@@ -876,7 +876,7 @@ namespace Barotrauma.Networking
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
        
-            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode);
+            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
             GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
 
             GameServer.Log("Starting a new round...", Color.Cyan);
@@ -977,6 +977,8 @@ namespace Barotrauma.Networking
             msg.Write(seed);
 
             msg.Write(GameMain.NetLobbyScreen.LevelSeed);
+
+            msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
 
             msg.Write(selectedSub.Name);
             msg.Write(selectedSub.MD5Hash.Hash);
