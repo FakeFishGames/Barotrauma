@@ -82,6 +82,8 @@ namespace Barotrauma.Items.Components
 
             AnimController ac = picker.AnimController;
 
+            item.Submarine = picker.Submarine;
+
             if (!throwing)
             {
                 if (picker.IsKeyDown(InputType.Aim))

@@ -241,22 +241,16 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (item.body==null || !item.body.Enabled) return;
+            if (item.body == null || !item.body.Enabled) return;
             if (!picker.HasSelectedItem(item)) IsActive = false;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
             if (item.body.Dir != picker.AnimController.Dir) Flip(item);
 
-            AnimController ac = picker.AnimController;
-
             item.Submarine = picker.Submarine;
 
-            //if (picker.SelectedConstruction != null && picker.SelectedConstruction.GetComponent<Controller>() != null) return;
-
-            //item.sprite.Depth = picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.01f;            
-
-            ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);
+            picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);
         }
 
         protected void Flip(Item item)
