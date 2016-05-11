@@ -86,7 +86,7 @@ namespace Barotrauma.Lights
             {
 
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
-                if (Math.Abs(prevHullUpdateRange - range)<5.0f) return;
+                if (Math.Abs(prevHullUpdateRange - range) < 5.0f) return;
                 
                 UpdateHullsInRange();
                 prevHullUpdateRange = range;
@@ -136,6 +136,8 @@ namespace Barotrauma.Lights
         {
             if (!CastShadows) return;
 
+            if (hullsInRange == null) hullsInRange = new List<ConvexHull>();
+
             hullsInRange.Clear();
             if (range < 1.0f || color.A < 0.01f) return;
 
@@ -154,6 +156,11 @@ namespace Barotrauma.Lights
                 }
 
             }
+        }
+
+        public void NeedsHullUpdate()
+        {
+            hullsInRange = null;
         }
 
         public void Draw(SpriteBatch spriteBatch)

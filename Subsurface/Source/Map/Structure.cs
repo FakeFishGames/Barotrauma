@@ -282,9 +282,13 @@ namespace Barotrauma
 
                 // if there is a gap and we have sections to merge, do it.
                 if (section.gap != null)
+                {
                     GenerateMergedHull(mergedSections);
+                }
                 else
+                {
                     mergedSections.Add(section);
+                }
             }
 
             // take care of any leftover pieces
@@ -323,6 +327,7 @@ namespace Barotrauma
             corners[1] = new Vector2(sectionRect.X, sectionRect.Y);
             corners[2] = new Vector2(sectionRect.Right, sectionRect.Y);
             corners[3] = new Vector2(sectionRect.Right, sectionRect.Y - sectionRect.Height);
+
             return corners;
         }
 
