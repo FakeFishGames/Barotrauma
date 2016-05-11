@@ -35,7 +35,7 @@ namespace Barotrauma.Particles
             }
 
             AngleMin = MathHelper.ToRadians(AngleMin);
-            AngleMin = MathHelper.ToRadians(AngleMax);
+            AngleMax = MathHelper.ToRadians(AngleMax);
 
             if (element.Attribute("velocity") == null)
             {

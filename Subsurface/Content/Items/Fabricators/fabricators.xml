@@ -53,6 +53,8 @@
       
       <fabricableitem name="Fulgurium Battery Cell" requireditems="Steel Bar, Fulgurium Bar, Sulphuric Acid" requiredtime="10"/>
 
+      <fabricableitem name="Flare" requireditems="Phosphorus,Aluminium" requiredtime="10"/>
+      
       <fabricableitem name ="Stun Grenade" requireditems="Steel Bar, Flash Powder, Chloral Hydrate" requiredtime="20">
         <RequiredSkill name="Construction" level="30"/>
       </fabricableitem>

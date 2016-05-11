@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Particles;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +37,8 @@ namespace Barotrauma
 
         private Explosion explosion;
 
+        private List<ParticleEmitterPrefab> particleEmitters;
+
         public readonly float FireSize;
 
         private Sound sound;
@@ -68,6 +71,7 @@ namespace Barotrauma
         protected StatusEffect(XElement element)
         {
             requiredItems = new List<RelatedItem>();
+            particleEmitters = new List<ParticleEmitterPrefab>();
 
             IEnumerable<XAttribute> attributes = element.Attributes();            
             List<XAttribute> propertyAttributes = new List<XAttribute>();
@@ -155,6 +159,9 @@ namespace Barotrauma
                     case "use":
                     case "useitem":
                         useItem = true;
+                        break;
+                    case "particleemitter":
+                        particleEmitters.Add(new ParticleEmitterPrefab(subElement));
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -253,12 +260,28 @@ namespace Barotrauma
 
             if (explosion != null) explosion.Explode(entity.WorldPosition);
 
+            
+            Hull hull = null;
+            if (entity is Character) 
+            {
+                hull = ((Character)entity).AnimController.CurrentHull;
+            }
+            else if (entity is Item)
+            {
+                hull = ((Item)entity).CurrentHull;
+            }
+
             if (FireSize > 0.0f)
             {
-                var fire = new FireSource(entity.WorldPosition);
+                var fire = new FireSource(entity.WorldPosition, hull);
 
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }   
+
+            foreach (ParticleEmitterPrefab emitter in particleEmitters)
+            {
+                emitter.Emit(entity.WorldPosition, hull);
+            }
         }
 
         private IEnumerable<object> ApplyToPropertyOverDuration(float duration, ObjectProperty property, object value)

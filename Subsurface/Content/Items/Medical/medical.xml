@@ -319,7 +319,7 @@
     <Body width="25" height="5" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="-2.0" duration="60.0">
+      <StatusEffect type="OnUse" target="Character" Health="-1.0" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
@@ -375,7 +375,7 @@
     <Body width="25" height="5" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="-20.0" duration="60.0">
+      <StatusEffect type="OnUse" target="Character" Health="-10.0" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>
