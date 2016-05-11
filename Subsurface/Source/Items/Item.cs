@@ -701,7 +701,7 @@ namespace Barotrauma
                 FindHull();
                 
                 Vector2 moveAmount = body.SimPosition - body.LastSentPosition;
-                if (moveAmount != Vector2.Zero && moveAmount.Length() > NetConfig.ItemPosUpdateDistance)
+                if (parentInventory == null && moveAmount != Vector2.Zero && moveAmount.Length() > NetConfig.ItemPosUpdateDistance)
                 {
                     new NetworkEvent(NetworkEventType.PhysicsBodyPosition, ID, false);
                 }

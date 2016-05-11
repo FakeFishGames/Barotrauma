@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
 using Lidgren.Network;
 using System.Collections.Generic;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -281,11 +282,30 @@ namespace Barotrauma
         {
             string toolTip = "";
             Rectangle highlightedSlot = Rectangle.Empty;
-            
-            if (doubleClickedItem!=null &&  doubleClickedItem.ParentInventory!=this)
+
+            if (doubleClickedItem != null)
             {
-                TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                if (doubleClickedItem.ParentInventory != this)
+                {
+                    TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                }
+                else
+                {
+                    if (character.SelectedConstruction != null)
+                    {
+                        var selectedContainer = character.SelectedConstruction.GetComponent<ItemContainer>();
+                        if (selectedContainer != null && selectedContainer.Inventory != null)
+                        {
+                            selectedContainer.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                        }
+                    }
+                    else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                    {
+                        character.SelectedCharacter.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                    }
+                }
             }
+
             doubleClickedItem = null;
 
             const int rectWidth = 40, rectHeight = 40;
