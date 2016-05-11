@@ -169,8 +169,6 @@ namespace Barotrauma
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-            doubleClickedItem = null;
-
             string toolTip = "";
 
             int rectWidth = 40, rectHeight = 40;
