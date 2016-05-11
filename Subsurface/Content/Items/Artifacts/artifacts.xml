@@ -157,7 +157,7 @@
       <sound file="aliendoor.ogg" type="OnUse" range="1000.0"/>
     </Door>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -178,7 +178,7 @@
       <sound file="aliendoor.ogg" type="OnUse" range="3000.0"/>
     </Door>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -196,7 +196,7 @@
 
     <MotionSensor range="300" output="0"/>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="state_out"/>
     </ConnectionPanel>
