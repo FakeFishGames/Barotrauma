@@ -160,13 +160,20 @@ namespace Barotrauma.Items.Components
 
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);                    
                 }
-            }           
- 
-            
-            if (Level.Loaded != null && (item.CurrentHull==null || !DetectSubmarineWalls))
-            {
-                List<VoronoiCell> cells = Level.Loaded.GetCells(item.WorldPosition, 7);
+            }
 
+
+            if (Level.Loaded != null && (item.CurrentHull == null || !DetectSubmarineWalls))
+            {
+                if (Level.Loaded.Size.Y - item.WorldPosition.Y < range)
+                {
+                    CreateBlipsForLine(
+                        new Vector2(item.WorldPosition.X - range, Level.Loaded.Size.Y),
+                        new Vector2(item.WorldPosition.X + range, Level.Loaded.Size.Y),
+                        radius, displayScale, 1.0f);
+                }
+
+                List<VoronoiCell> cells = Level.Loaded.GetCells(item.WorldPosition, 7);
                 foreach (VoronoiCell cell in cells)
                 {
                     foreach (GraphEdge edge in cell.edges)
@@ -183,7 +190,7 @@ namespace Barotrauma.Items.Components
                     }
                 }    
 
-                foreach(RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
+                foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
                 {
                     if (!MathUtils.CircleIntersectsRectangle(item.WorldPosition, range, ruin.Area)) continue;
 
