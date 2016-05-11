@@ -135,8 +135,9 @@ namespace Barotrauma.Lights
             
             foreach (LightSource light in lights)
             {
-                if (!light.hullsInRange.Any() || light.Color.A < 0.01f || light.Range < 1.0f) continue;
-                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
+                if (light.Color.A < 0.01f || light.Range < 1.0f) continue;
+                if (light.hullsInRange == null) light.UpdateHullsInRange();
+                if (!light.hullsInRange.Any() || !MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
                             
                 //clear alpha to 1
                 ClearAlphaToOne(graphics, spriteBatch);
@@ -170,7 +171,7 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in lights)
             {
-                if (light.hullsInRange.Any() || light.Color.A < 0.01f) continue;
+                if (light.hullsInRange==null || light.hullsInRange.Any() || light.Color.A < 0.01f) continue;
                 //if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
                 light.Draw(spriteBatch);

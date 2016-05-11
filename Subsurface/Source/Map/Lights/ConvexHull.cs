@@ -46,8 +46,7 @@ namespace Barotrauma.Lights
     {
         public static List<ConvexHull> list = new List<ConvexHull>();
         static BasicEffect shadowEffect;
-        //static BasicEffect penumbraEffect;
-
+        
         private Dictionary<LightSource, CachedShadow> cachedShadows;
                 
         private Vector2[] vertices;
@@ -57,7 +56,6 @@ namespace Barotrauma.Lights
         private bool[] backFacing;
 
         private VertexPositionColor[] shadowVertices;
-       // private VertexPositionTexture[] penumbraVertices;
         
         int shadowVertexCount;
 
@@ -191,6 +189,7 @@ namespace Barotrauma.Lights
         {
             foreach (KeyValuePair<LightSource, CachedShadow> cachedShadow in cachedShadows)
             {
+                cachedShadow.Key.NeedsHullUpdate();
                 cachedShadow.Value.Dispose();
             }
             cachedShadows.Clear();
@@ -284,55 +283,7 @@ namespace Barotrauma.Lights
                 svCount += 2;
                 currentIndex = (currentIndex + 1) % primitiveCount;
             }
-
-            //if (los)
-            //{
-            //    CalculatePenumbraVertices(startingIndex, endingIndex, lightSourcePos, los);
-            //}
         }
-
-        //private void CalculatePenumbraVertices(int startingIndex, int endingIndex, Vector2 lightSourcePos, bool los)
-        //{
-        //    for (int n = 0; n < 4; n += 3)
-        //    {
-        //        Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex] : vertices[endingIndex], 0.0f);
-
-        //        penumbraVertices[n] = new VertexPositionTexture();
-        //        penumbraVertices[n].Position = penumbraStart;
-        //        penumbraVertices[n].TextureCoordinate = new Vector2(0.0f, 1.0f);
-        //        //penumbraVertices[0].te = fow ? Color.Black : Color.Transparent;
-
-        //        for (int i = 0; i < 2; i++)
-        //        {
-        //            penumbraVertices[n + i + 1] = new VertexPositionTexture();
-        //            Vector3 vertexDir = penumbraStart - new Vector3(lightSourcePos, 0);
-        //            vertexDir.Normalize();
-
-        //            Vector3 normal = (i == 0) ? new Vector3(-vertexDir.Y, vertexDir.X, 0.0f) : new Vector3(vertexDir.Y, -vertexDir.X, 0.0f) * 0.05f;
-        //            if (n > 0) normal = -normal;
-
-        //            vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) - normal * 20.0f);
-        //            vertexDir.Normalize();
-        //            penumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000;
-
-        //            if (los)
-        //            {
-        //                penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
-        //            }
-        //            else
-        //            {
-        //                penumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(1.0f, 0.0f) : Vector2.Zero;
-        //            }
-        //        }
-
-        //        if (n > 0)
-        //        {
-        //            var temp = penumbraVertices[4];
-        //            penumbraVertices[4] = penumbraVertices[5];
-        //            penumbraVertices[5] = temp;
-        //        }
-        //    }
-        //}
 
         public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, LightSource light, Matrix transform, bool los = true)
         {
@@ -343,18 +294,9 @@ namespace Barotrauma.Lights
             if (light.Submarine==null && parentEntity != null && parentEntity.Submarine != null) lightSourcePos -= parentEntity.Submarine.Position;
 
             CachedShadow cachedShadow = null;
-            if (cachedShadows.TryGetValue(light, out cachedShadow) &&
-                (lightSourcePos == cachedShadow.LightPos || Vector2.DistanceSquared(lightSourcePos, cachedShadow.LightPos) < 1.0f))
+            if (!cachedShadows.TryGetValue(light, out cachedShadow) ||
+                Vector2.DistanceSquared(lightSourcePos, cachedShadow.LightPos) > 1.0f)
             {
-
-            }
-            else
-            {
-                //if (light.Submarine!=null && parentEntity != null && parentEntity.Submarine == light.Submarine)
-                //{
-                //    lightPos = light.Position;
-                //}
-
                 CalculateShadowVertices(lightSourcePos, los);
 
                 if (cachedShadow != null)
@@ -390,8 +332,6 @@ namespace Barotrauma.Lights
 
         private void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Matrix transform, bool los = true)
         {
-
-
             Vector3 offset = Vector3.Zero;
             if (parentEntity != null && parentEntity.Submarine != null)
             {
@@ -411,31 +351,18 @@ namespace Barotrauma.Lights
                 {                    
                     shadowEffect.CurrentTechnique.Passes[0].Apply();
                     graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, shadowVertexCount * 2 - 2);
-                }               
-            
+                }
             }
-
-
-//            if (los && false)
-//            {
-//                penumbraEffect.World = shadowEffect.World;
-//                penumbraEffect.CurrentTechnique.Passes[0].Apply();
-
-//#if WINDOWS
-//                graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, 0, 2, VertexPositionTexture.VertexDeclaration);
-//#endif
-//            }
-
         }
 
         public void Remove()
         {
+
+
             ClearCachedShadows();
 
             list.Remove(this);
         }
-
-
     }
 
 }
