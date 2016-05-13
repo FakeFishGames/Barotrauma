@@ -32,7 +32,7 @@
     linkable="true"
     pickdistance="150">
 
-    <Sprite texture ="railguncontroller.png" depth="0.8" sourcerect="0,0,61,97"/>
+    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
     
     <Controller UserPos="-1.0" direction ="Right" canbeselected = "true">
       <limbposition limb="Head" position="-5,-62"/>
@@ -54,13 +54,12 @@
     linkable="true"
     pickdistance="150">
 
-    <Sprite texture ="railgunloader.png" depth =" 0.8"/>
+    <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
       <Containable name="Railgun Shell"/>
       <Containable name="Nuclear Shell"/>
-    </ItemContainer>
-      
+    </ItemContainer>      
   </Item>
   
   <Item
@@ -111,7 +110,7 @@
 
     <Projectile launchimpulse="80.0">
       <Attack damage="1000" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
-      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Reactor/explosion.ogg">
+      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/bigexplosion.ogg">
         <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
       </StatusEffect>
     </Projectile>

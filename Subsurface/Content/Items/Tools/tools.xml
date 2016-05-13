@@ -266,6 +266,8 @@
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10"/>
 
     <LightComponent LightColor="1.0,0.0,0.0,1.0" Flicker="0.5" range="600" IsOn="false">
+      <sprite texture="Content/Lights/light.png" sourcerect="33,0,31,39"/>
+      
       <StatusEffect type="OnUse" target="This" IsOn="true"/>
 
       <StatusEffect type="OnActive" target="This" Condition="-0.5">

@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Depth Charge Tube"
+    category="Machine"
+    focusonselected="true"
+    offsetonselected="700"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
+
+    <Turret canbeselected = "true" linkable="true" barrelpos="23, 76"
+            rotationlimits="90,90"
+            powerconsumption="0.0">
+      <StatusEffect type="OnUse" target="This" sound="Content/Items/Weapons/railgun.ogg">
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0"/>
+      </StatusEffect>
+    </Turret>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="power_in"/>
+      <input name="position_in"/>
+      <input name="trigger_in"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Depth Charge Loader"
+    category="Machine"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="0" canbeselected = "true">
+      <Containable name="Depth Charge Shell"/>
+      <Containable name="Nuclear Depth Charge"/>      
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Depth Charge Shell"
+    category="Misc"
+    pickdistance="150"
+    price="50">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
+    <Sprite texture="railgunetc.png" sourcerect="113,188,47,68" depth ="0.5"/>
+
+    <Body width="47" height="68" density="30"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
+
+    <Projectile launchimpulse="5.0">
+      <Attack damage="1" structuredamage="1" damagetype="Blunt"/>
+      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+    </Projectile>
+
+    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
+      <Containable name="smallitem"/>
+      <Containable name="explosive"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Nuclear Depth Charge"
+    category="Misc"
+    pickdistance="150"
+    price="50">
+
+    <Deconstruct time="20">
+      <Item name="Steel Bar"/>
+      <Item name="Steel Bar"/>
+      <Item name="Uranium Bar"/>
+    </Deconstruct>
+
+    <Sprite texture="railgunetc.png" sourcerect="163,188,46,68" depth="0.5"/>
+
+    <Body width="47" height="68" density="30"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
+
+    <Projectile launchimpulse="5.0">
+      <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/bigexplosion.ogg">
+        <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+    </Projectile>
+
+    <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
+      <Containable name="smallitem"/>
+      <Containable name="explosive"/>
+    </ItemContainer>
+  </Item>
+  
+</Items>
