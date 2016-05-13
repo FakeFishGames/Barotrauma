@@ -94,7 +94,7 @@ namespace Barotrauma
 
             MapEntityCategory category;
 
-            if (!Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), true, out category))
+            if (!Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Structure"), true, out category))
             {
                 category = MapEntityCategory.Structure;
             }

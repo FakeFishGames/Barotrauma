@@ -75,8 +75,19 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
-            barrelSprite = new Sprite(Path.GetDirectoryName(item.Prefab.ConfigFile) + "/" +element.Attribute("barrelsprite").Value,
-                ToolBox.GetAttributeVector2(element, "origin", Vector2.Zero));
+            string barrelSpritePath = ToolBox.GetAttributeString(element, "barrelsprite", "");
+
+            if (!string.IsNullOrWhiteSpace(barrelSpritePath))
+            {
+                if (!barrelSpritePath.Contains("/"))
+                {
+                    barrelSpritePath = Path.Combine(Path.GetDirectoryName(item.Prefab.ConfigFile), barrelSpritePath);
+                }
+
+                barrelSprite = new Sprite(
+                    barrelSpritePath,
+                    ToolBox.GetAttributeVector2(element, "origin", Vector2.Zero));
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing = false)
@@ -85,10 +96,13 @@ namespace Barotrauma.Items.Components
             if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;
             drawPos.Y = -drawPos.Y;
 
-            barrelSprite.Draw(spriteBatch, 
-                 drawPos + barrelPos, Color.White,
-                rotation + MathHelper.PiOver2, 1.0f, 
-                SpriteEffects.None, item.Sprite.Depth+0.01f);
+            if (barrelSprite!=null)
+            {
+                barrelSprite.Draw(spriteBatch, 
+                     drawPos + barrelPos, Color.White,
+                    rotation + MathHelper.PiOver2, 1.0f, 
+                    SpriteEffects.None, item.Sprite.Depth+0.01f);
+            }
 
             if (!editing) return;
 
@@ -168,6 +182,8 @@ namespace Barotrauma.Items.Components
             reload = reloadTime;            
 
             Item projectile = projectiles[0].Item;
+
+            projectile.Drop();
 
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
@@ -298,7 +314,7 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
 
-            barrelSprite.Remove();
+            if (barrelSprite != null) barrelSprite.Remove();
         }
 
         private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)
