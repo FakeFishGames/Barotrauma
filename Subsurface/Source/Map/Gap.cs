@@ -603,8 +603,9 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            UpdateHulls();
+            FindHulls();
         }
+
         public override XElement Save(XDocument doc)
         {
             XElement element = new XElement("Gap");

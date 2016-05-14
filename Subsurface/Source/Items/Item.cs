@@ -319,7 +319,7 @@ namespace Barotrauma
                        
             rect = newRect;
             
-            FindHull();
+            if (submarine==null || !submarine.Loading) FindHull();
 
             condition = 100.0f;
 
@@ -474,7 +474,7 @@ namespace Barotrauma
                 ic.Move(amount);
             }
 
-            if (body != null) FindHull();
+            if (body != null && (Submarine==null || !Submarine.Loading)) FindHull();
         }
 
         public Rectangle TransformTrigger(Rectangle trigger, bool world = false)
@@ -512,11 +512,10 @@ namespace Barotrauma
 
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
 
-
-
             if (body!=null)
             {
-                body.Submarine = CurrentHull == null ? null : Submarine.Loaded;
+                Submarine = CurrentHull == null ? null : Submarine.Loaded;
+                body.Submarine = Submarine;
             }
             return CurrentHull;
         }
