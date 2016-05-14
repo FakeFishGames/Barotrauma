@@ -71,6 +71,12 @@ namespace Barotrauma
             get { return lastPickedFraction; }
         }
 
+        public bool Loading
+        {
+            get;
+            private set;
+        }
+
         public bool GodMode
         {
             get;
@@ -676,7 +682,8 @@ namespace Barotrauma
         public void Load()
         {
             Unload();
-            //string file = filePath;
+
+            Loading = true;
 
             XDocument doc = OpenDoc(filePath);
             if (doc == null || doc.Root == null) return;
@@ -758,6 +765,14 @@ namespace Barotrauma
             loaded = this;
 
             Hull.GenerateEntityGrid();
+            
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                if (MapEntity.mapEntityList[i].Submarine != this) continue;
+                MapEntity.mapEntityList[i].Move(HiddenSubPosition);
+            }
+
+            Loading = false;
 
             MapEntity.MapLoaded();
                

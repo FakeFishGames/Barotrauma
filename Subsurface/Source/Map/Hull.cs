@@ -85,8 +85,11 @@ namespace Barotrauma
             {
                 base.Rect = value;
 
-                Item.UpdateHulls();
-                Gap.UpdateHulls();
+                if (Submarine == null || !Submarine.Loading)
+                {
+                    Item.UpdateHulls();
+                    Gap.UpdateHulls();
+                }
             }
         }
 
@@ -205,13 +208,14 @@ namespace Barotrauma
             hullList.Add(this);
 
             ConnectedGaps = new List<Gap>();
-
-            Item.UpdateHulls();
-            Gap.UpdateHulls();
+            
+            if (submarine==null || !submarine.Loading)
+            {
+                Item.UpdateHulls();
+                Gap.UpdateHulls();
+            }
 
             Volume = 0.0f;
-
-
 
             InsertToList();
         }
@@ -279,16 +283,22 @@ namespace Barotrauma
             rect.X += (int)amount.X;
             rect.Y += (int)amount.Y;
 
-            Item.UpdateHulls();
-            Gap.UpdateHulls();
+            if (Submarine==null || !Submarine.Loading)
+            {
+                Item.UpdateHulls();
+                Gap.UpdateHulls();
+            }
         }
 
         public override void Remove()
         {
             base.Remove();
 
-            Item.UpdateHulls();
-            Gap.UpdateHulls();
+            if (Submarine == null || !Submarine.Loading)
+            {
+                Item.UpdateHulls();
+                Gap.UpdateHulls();
+            }
 
             List<FireSource> fireSourcesToRemove = new List<FireSource>(fireSources);
             foreach (FireSource fireSource in fireSourcesToRemove)
