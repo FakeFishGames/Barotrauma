@@ -229,44 +229,7 @@ namespace Barotrauma
         {
             if (musicClips == null) return;
             
-            Task criticalTask = null;
-            if (GameMain.GameSession!=null && GameMain.GameSession.TaskManager != null)
-            {
-                foreach (Task task in GameMain.GameSession.TaskManager.Tasks)
-                {
-                    if (!task.IsStarted) continue;
-                    if (criticalTask == null || task.Priority > criticalTask.Priority)
-                    {
-                        criticalTask = task;
-                    }
-                }
-            }
-            
-            List<BackgroundMusic> suitableMusic = null;
-            if (OverrideMusicType != null)
-            {
-                suitableMusic = musicClips.Where(x => x != null && x.type == OverrideMusicType).ToList();
-            }
-            else if (Character.Controlled != null && Level.Loaded != null && Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
-            {
-                suitableMusic = musicClips.Where(x => x != null && x.type == "ruins").ToList();
-            }
-            else if (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth)
-            {
-                suitableMusic = musicClips.Where(x => x != null && x.type == "deep").ToList();
-            }
-            else if (criticalTask == null)
-            {
-                suitableMusic = musicClips.Where(x => x != null && x.type == "default").ToList();
-            }
-            else
-            {
-                suitableMusic = musicClips.Where(x =>
-                    x != null &&
-                    x.type == criticalTask.MusicType &&
-                    x.priorityRange.X < criticalTask.Priority &&
-                    x.priorityRange.Y > criticalTask.Priority).ToList();                
-            }
+            List<BackgroundMusic> suitableMusic = GetSuitableMusicClips();
 
             if (suitableMusic.Count > 0 && !suitableMusic.Contains(currentMusic))
             {
@@ -295,6 +258,56 @@ namespace Barotrauma
                 currMusicVolume = MathHelper.Lerp(currMusicVolume, MusicVolume, MusicLerpSpeed);
                 Sound.StreamVolume(currMusicVolume);
             }
+        }
+
+        public static void SwitchMusic()
+        {
+            var suitableMusic = GetSuitableMusicClips();
+
+            if (suitableMusic.Count > 1)
+            {
+                targetMusic = suitableMusic.Find(m => m != currentMusic);
+            }
+        }
+
+        private static List<BackgroundMusic> GetSuitableMusicClips()
+        {
+            Task criticalTask = null;
+            if (GameMain.GameSession != null && GameMain.GameSession.TaskManager != null)
+            {
+                foreach (Task task in GameMain.GameSession.TaskManager.Tasks)
+                {
+                    if (!task.IsStarted) continue;
+                    if (criticalTask == null || task.Priority > criticalTask.Priority)
+                    {
+                        criticalTask = task;
+                    }
+                }
+            }
+
+            if (OverrideMusicType != null)
+            {
+                return musicClips.Where(x => x != null && x.type == OverrideMusicType).ToList();
+            }
+            else if (Character.Controlled != null && Level.Loaded != null && Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
+            {
+                return musicClips.Where(x => x != null && x.type == "ruins").ToList();
+            }
+            else if (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth)
+            {
+                return musicClips.Where(x => x != null && x.type == "deep").ToList();
+            }
+            else if (criticalTask == null)
+            {
+                return musicClips.Where(x => x != null && x.type == "default").ToList();
+            }
+
+            return musicClips.Where(x =>
+                x != null &&
+                x.type == criticalTask.MusicType &&
+                x.priorityRange.X < criticalTask.Priority &&
+                x.priorityRange.Y > criticalTask.Priority).ToList();
+            
         }
 
         public static void PlaySplashSound(Vector2 worldPosition, float strength)

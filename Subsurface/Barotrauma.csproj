@@ -117,7 +117,7 @@
     <Compile Include="Source\GameSession\ShiftSummary.cs" />
     <Compile Include="Source\GUI\GUIDropDown.cs" />
     <Compile Include="Source\GUI\GUIMessage.cs" />
-    <Compile Include="Source\GUI\TitleScreen.cs" />
+    <Compile Include="Source\GUI\LoadingScreen.cs" />
     <Compile Include="Source\Items\Components\Holdable\MeleeWeapon.cs" />
     <Compile Include="Source\Items\Components\Holdable\Propulsion.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />

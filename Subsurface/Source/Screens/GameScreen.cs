@@ -310,11 +310,18 @@ namespace Barotrauma
 
             Submarine.DrawFront(spriteBatch);
                         
-            if (Level.Loaded!=null) Level.Loaded.DrawFront(spriteBatch);            
-
             spriteBatch.End();
 
             GameMain.LightManager.DrawLightMap(spriteBatch, cam, lightBlur.Effect);
+
+            spriteBatch.Begin(SpriteSortMode.BackToFront,
+                BlendState.AlphaBlend, SamplerState.LinearWrap,
+                null, null, null,
+                cam.Transform);
+
+            if (Level.Loaded!=null) Level.Loaded.DrawFront(spriteBatch);            
+
+            spriteBatch.End();
 
             if (Character.Controlled != null)
             {

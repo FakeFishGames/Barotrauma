@@ -58,6 +58,8 @@ namespace Barotrauma
                 if (targetItem == null) return;
             }
 
+            if (moveToTarget == null) return;
+
             if (Vector2.Distance(character.Position, moveToTarget.Position) < targetItem.PickDistance*2.0f)
             {
                 int targetSlot = -1;

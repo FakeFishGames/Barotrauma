@@ -182,7 +182,7 @@ namespace Barotrauma
             spriteBatch.Draw(shaftTexture,
                 new Rectangle((int)(MathUtils.Round(pos.X, 512.0f)), (int)pos.Y, width, 512),
                 new Rectangle(0, 0, width, 256),
-                Color.White, 0.0f,
+                level.BackgroundColor, 0.0f,
                 Vector2.Zero,
                 SpriteEffects.None, 0.0f);
         }
