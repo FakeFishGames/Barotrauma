@@ -503,20 +503,30 @@ namespace Barotrauma
         
         public virtual Hull FindHull()
         {
-            if (parentInventory != null && (parentInventory.Owner as Character) != null)
+            if (parentInventory != null && parentInventory.Owner != null)
             {
-                CurrentHull = (parentInventory.Owner as Character).AnimController.CurrentHull;
-                body.Submarine = (parentInventory.Owner as Character).Submarine;
+                if (parentInventory.Owner is Character)
+                {
+                    CurrentHull = (parentInventory.Owner as Character).AnimController.CurrentHull;
+                }
+                else if (parentInventory.Owner is Item)
+                {
+                    CurrentHull = (parentInventory.Owner as Item).CurrentHull;
+                }
+
+                Submarine = parentInventory.Owner.Submarine;
+                if (body != null) body.Submarine = Submarine;
+
                 return CurrentHull;
             }
 
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
-
-            if (body!=null)
+            if (body != null)
             {
                 Submarine = CurrentHull == null ? null : Submarine.Loaded;
                 body.Submarine = Submarine;
             }
+
             return CurrentHull;
         }
 
