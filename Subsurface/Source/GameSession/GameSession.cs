@@ -146,6 +146,7 @@ namespace Barotrauma
             TaskManager.StartShift(level);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
+            SoundPlayer.SwitchMusic();
         }
 
         public void EndShift(string endMessage)

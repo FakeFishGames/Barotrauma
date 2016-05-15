@@ -92,7 +92,7 @@ namespace Barotrauma
                 int x = (int)Math.Floor(((Vector2)pos).X / GridSize);
                 if (x<0 || x >= sprites.GetLength(0)) continue;
                 int y = (int)Math.Floor(((Vector2)pos).Y / GridSize);
-                if (y<0 || 1 >= sprites.GetLength(1)) continue;
+                if (y<0 || y >= sprites.GetLength(1)) continue;
 
                 sprites[x,y].Add(newSprite);
             }
