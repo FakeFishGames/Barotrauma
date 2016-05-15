@@ -26,6 +26,7 @@
   <Item file="Content/Items/Pump/pump.xml" />
   <Item file="Content/Items/Reactor/reactor.xml" />
   <Item file="Content/Items/Tools/tools.xml" />
+  <Item file="Content/Items/Weapons/depthcharge.xml" />
   <Item file="Content/Items/Weapons/explosives.xml" />
   <Item file="Content/Items/Weapons/railgun.xml" />
   <Item file="Content/Items/Weapons/weapons.xml" />
