@@ -52,6 +52,19 @@ namespace Barotrauma
             set;
         }
 
+        public override string ToolTip
+        {
+            get
+            {
+                return base.ToolTip;
+            }
+            set
+            {
+                base.ToolTip = value;
+                textBlock.ToolTip = value;
+            }
+        }
+
         public override SpriteFont Font
         {
             set

@@ -549,7 +549,8 @@ namespace Barotrauma
 
             if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
             {
-                DebugConsole.ThrowError("The submarine doesn't have a waypoint marked as ''Cargo'', which are used for determining where to place bought items.");
+                DebugConsole.ThrowError("The submarine doesn't have spawnpoints for cargo (which are used for determining where to place bought items). "
+                    +"To fix this, create a new spawnpoint and change its ''spawn type'' parameter to ''cargo''.");
             }
         }
 
