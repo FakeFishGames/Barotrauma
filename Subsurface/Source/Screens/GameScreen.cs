@@ -36,7 +36,12 @@ namespace Barotrauma
                         
             BackgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundSprites/BackgroundCreaturePrefabs.xml");
 
+#if LINUX
+            var blurEffect = content.Load<Effect>("blurshader_opengl");
+#else
             var blurEffect = content.Load<Effect>("blurshader");
+#endif
+
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
 
