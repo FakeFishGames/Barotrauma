@@ -431,13 +431,19 @@ namespace Barotrauma
                     if (limb.character.AnimController.IgnorePlatforms) return false;
                 }
             }
+
+            if (f2.Body.UserData is Limb)
+            {
+                var character = ((Limb)f2.Body.UserData).character;
+                if (character.DisableImpactDamageTimer > 0.0f || ((Limb)f2.Body.UserData).Mass < 100.0f) return true;
+            }
             
             if (!prefab.IsPlatform && prefab.StairDirection == Direction.None)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
 
                 int section = FindSectionIndex(pos);
-                if (section>0)
+                if (section > 0)
                 {
                     Vector2 normal = contact.Manifold.LocalNormal;
 
@@ -529,7 +535,7 @@ namespace Barotrauma
 
         public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
         {
-            if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return new AttackResult(0.0f, 0.0f);
+            if (Submarine.Loaded != null && Submarine.Loaded.GodMode && Submarine == Submarine.Loaded) return new AttackResult(0.0f, 0.0f);
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
             Vector2 transformedPos = position;

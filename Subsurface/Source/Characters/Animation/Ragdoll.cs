@@ -164,7 +164,7 @@ namespace Barotrauma
                 currentHull = value;
                 foreach (Limb limb in Limbs)
                 {
-                    limb.body.Submarine = currentHull == null ? null : Submarine.Loaded;
+                    limb.body.Submarine = currentHull == null ? null : currentHull.Submarine;
                 }
             }
         }
@@ -226,6 +226,7 @@ namespace Barotrauma
                         byte ID = Convert.ToByte(subElement.Attribute("id").Value);
 
                         Limb limb = new Limb(character, subElement, scale);
+
 
                         limb.body.FarseerBody.OnCollision += OnLimbCollision;
                         
@@ -381,6 +382,8 @@ namespace Barotrauma
 
         private void CalculateImpact(Fixture f1, Fixture f2, Contact contact)
         {
+            if (character.DisableImpactDamageTimer > 0.0f) return;
+
             Vector2 normal = contact.Manifold.LocalNormal;
 
             Vector2 avgVelocity = Vector2.Zero;
@@ -574,18 +577,18 @@ namespace Barotrauma
                     for (int i = -1; i < 2; i += 2)
                     {
                         //don't teleport outside the sub if right next to a hull
-                        if (Hull.FindHull(findPos + new Vector2(Submarine.GridSize.X * 2.0f * i, 0.0f), currentHull) != null) return;
-                        if (Hull.FindHull(findPos + new Vector2(0.0f, Submarine.GridSize.Y * 2.0f * i), currentHull) != null) return;
+                        if (Hull.FindHull(findPos + new Vector2(Submarine.GridSize.X * 4.0f * i, 0.0f), currentHull) != null) return;
+                        if (Hull.FindHull(findPos + new Vector2(0.0f, Submarine.GridSize.Y * 4.0f * i), currentHull) != null) return;
                     }
 
-                    Vector2 ragdollSpeed = refLimb.LinearVelocity == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(refLimb.LinearVelocity);
-                    SetPosition(refLimb.SimPosition + ConvertUnits.ToSimUnits(currentHull.Submarine.Position));
-                    character.CursorPosition += currentHull.Submarine.Position;
+                    if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) return;
+
+                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity, true);
+
                 }
-                else if (currentHull == null && newHull != null && newHull.Submarine != null)
+                else if (currentHull == null && newHull.Submarine != null)
                 {
-                   SetPosition(refLimb.SimPosition - ConvertUnits.ToSimUnits(newHull.Submarine.Position));
-                   character.CursorPosition -= newHull.Submarine.Position;
+                    Teleport(-ConvertUnits.ToSimUnits(newHull.Submarine.Position), -newHull.Submarine.Velocity, false);
                 }
             }
             
@@ -593,8 +596,47 @@ namespace Barotrauma
 
             character.Submarine = CurrentHull == null ? null : Submarine.Loaded;
 
-
             UpdateCollisionCategories();
+        }
+        
+        private void Teleport(Vector2 moveAmount, Vector2 velocityChange, bool inToOut)
+        {
+            foreach (Limb limb in Limbs)
+            {
+                if (limb.body.FarseerBody.ContactList == null) continue;
+                
+                ContactEdge ce = limb.body.FarseerBody.ContactList;
+                while (ce != null && ce.Contact != null)
+                {
+                    ce.Contact.Enabled = false;
+                    //if (ce.Contact.IsTouching &&  ce.Contact.Enabled &&
+                    //    ((inToOut && ce.Contact.FixtureA.Body.UserData is Structure) || (!inToOut && ce.Contact.FixtureA.Body.UserData is Submarine)))
+                    //{
+                    //    Vector2 normal;
+                    //    FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
+                    //    ce.Contact.GetWorldManifold(out normal, out worldPoints);
+
+                    //    foreach (Limb limb2 in Limbs)
+                    //    {
+                    //        limb2.body.FarseerBody.ApplyLinearImpulse(limb2.Mass * normal);
+                    //    }
+
+                    //    return false;
+                    //}
+                    ce = ce.Next;
+                }                
+            }    
+
+            foreach (Limb limb in Limbs)
+            {
+                limb.body.LinearVelocity += velocityChange;
+            }
+
+            character.Stun = 0.1f;
+            character.DisableImpactDamageTimer = 0.25f;
+
+            SetPosition(refLimb.SimPosition + moveAmount);
+            character.CursorPosition += moveAmount;
         }
 
         private void UpdateCollisionCategories()
@@ -657,8 +699,8 @@ namespace Barotrauma
             foreach (Limb limb in Limbs)
             {
                 //find the room which the limb is in
-                //the room where the ragdoll is in is used as the "guess", meaning that it's checked first
-                Hull limbHull = Hull.FindHull(limb.WorldPosition, currentHull);
+                //the room where the ragdoll is in is used as the "guess", meaning that it's checked first                
+                Hull limbHull = currentHull == null ? null : Hull.FindHull(limb.WorldPosition, currentHull);
                 
                 bool prevInWater = limb.inWater;
                 limb.inWater = false;
@@ -734,10 +776,18 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                //check visibility from the new position of RefLimb to the new position of this limb
-                Vector2 movePos = limb.SimPosition + moveAmount;
+                if (limb == refLimb)
+                {
+                    TrySetLimbPosition(limb, simPosition, simPosition, lerp);
+                }
+                else
+                {
+                    //check visibility from the new position of RefLimb to the new position of this limb
+                    Vector2 movePos = limb.SimPosition + moveAmount;
 
-                TrySetLimbPosition(limb, simPosition, movePos, lerp);
+                    TrySetLimbPosition(limb, simPosition, movePos, lerp);
+                }
+
             }
         }
 
@@ -749,7 +799,6 @@ namespace Barotrauma
             {
                 Body body = Submarine.CheckVisibility(original, simPosition);
             
-
                 //if there's something in between the limbs
                 if (body != null)
                 {
@@ -757,6 +806,8 @@ namespace Barotrauma
                     movePos = original + ((simPosition - original) * Submarine.LastPickedFraction * 0.9f);
                 }
             }
+
+
 
             if (lerp)
             {
@@ -766,8 +817,15 @@ namespace Barotrauma
             }
             else
             {
-                limb.body.SetTransform(movePos, limb.Rotation);               
+                limb.body.SetTransform(movePos, limb.Rotation);
+                if (limb.pullJoint != null)
+                {
+                    limb.pullJoint.WorldAnchorB = limb.pullJoint.WorldAnchorA;
+                    limb.pullJoint.Enabled = false;
+                }              
             }
+
+
         }
 
         public void SetRotation(float rotation)
@@ -832,7 +890,15 @@ namespace Barotrauma
                 correctionMovement = Vector2.Zero;
                 return;
             }
+          
+            if (resetAll)
+            {
+                System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
 
+                SetPosition(refLimb.body.TargetPosition, dist < 10.0f);
+
+                return;
+            }
 
             if (inWater)
             {
@@ -865,15 +931,7 @@ namespace Barotrauma
                 correctionMovement = Vector2.Lerp(correctionMovement, newCorrectionMovement, 0.5f);
 
                 if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
-            }
-            
-
-            if (resetAll)
-            {
-                System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
-
-                SetPosition(refLimb.body.TargetPosition, true);
-            } 
+            }            
         }
 
         public virtual Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)

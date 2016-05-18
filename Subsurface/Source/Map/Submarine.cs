@@ -365,7 +365,7 @@ namespace Barotrauma
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null || 
-                    (fixture.CollisionCategories != Physics.CollisionWall && fixture.CollisionCategories != Physics.CollisionLevel)) return -1;
+                    (!fixture.CollisionCategories.HasFlag(Physics.CollisionWall) && !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel))) return -1;
 
                 if (ignoreLevel && fixture.CollisionCategories == Physics.CollisionLevel) return -1;
 

@@ -314,6 +314,12 @@ namespace Barotrauma
             private set;
         }
 
+        public float DisableImpactDamageTimer
+        {
+            get;
+            set;
+        }
+
         public float SpeedMultiplier
         {
             get;
@@ -989,6 +995,8 @@ namespace Barotrauma
 
                 networkUpdateSent = false;
             }
+
+            DisableImpactDamageTimer -= deltaTime;
             
             if (needsAir)
             {
@@ -1767,6 +1775,8 @@ namespace Barotrauma
 
                     if (inSub)
                     {
+                        //AnimController.FindHull(ConvertUnits.ToDisplayUnits(pos) - Submarine.Loaded.WorldPosition);
+
                         Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
                         if (newHull != null)
                         {
@@ -1774,10 +1784,14 @@ namespace Barotrauma
                             Submarine = newHull.Submarine;
                         }
                     }
+                    else
+                    {
+                        AnimController.CurrentHull = null;
+                        Submarine = null;
+                    }
 
                     if (secondaryKeyState)
                     {
-
                         cursorPosition = MathUtils.IsValid(relativeCursorPos) ? relativeCursorPos : Vector2.Zero;
                         ViewTarget = viewTargetID == 0 ? this : Entity.FindEntityByID(viewTargetID);
                         if (ViewTarget == null) ViewTarget = this;
@@ -1789,7 +1803,7 @@ namespace Barotrauma
                         cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
 
                         AnimController.TargetDir = dir < 0 ? Direction.Left : Direction.Right;
-                    }   
+                    }
 
                     AnimController.RefLimb.body.TargetPosition = 
                         AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);

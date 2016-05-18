@@ -112,30 +112,41 @@ namespace Barotrauma
 
                 body = BodyFactory.CreateBody(GameMain.World, this);
 
-                foreach (Hull hull in Hull.hullList)
+                foreach (Structure wall in Structure.WallList)
                 {
-                    Rectangle rect = hull.Rect;
-                    foreach (Structure wall in Structure.WallList)
-                    {
-                        if (!Submarine.RectsOverlap(wall.Rect, hull.Rect)) continue;
-
-                        Rectangle wallRect = wall.IsHorizontal ?
-                            new Rectangle(hull.Rect.X, wall.Rect.Y, hull.Rect.Width, wall.Rect.Height) :
-                            new Rectangle(wall.Rect.X, hull.Rect.Y, wall.Rect.Width, hull.Rect.Height);
-
-                        rect = Rectangle.Union(
-                            new Rectangle(wallRect.X, wallRect.Y - wallRect.Height, wallRect.Width, wallRect.Height),
-                            new Rectangle(rect.X, rect.Y - rect.Height, rect.Width, rect.Height));
-                        rect.Y = rect.Y + rect.Height;
-                    }
-
+                    Rectangle rect = wall.Rect;
                     FixtureFactory.AttachRectangle(
-                        ConvertUnits.ToSimUnits(rect.Width),
-                        ConvertUnits.ToSimUnits(rect.Height),
-                        5.0f,
-                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
-                        body, this);
+                          ConvertUnits.ToSimUnits(rect.Width),
+                          ConvertUnits.ToSimUnits(rect.Height),
+                          5.0f,
+                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
+                          body, this);
                 }
+
+                //foreach (Hull hull in Hull.hullList)
+                //{
+                //    Rectangle rect = hull.Rect;
+                //    foreach (Structure wall in Structure.WallList)
+                //    {
+                //        if (!Submarine.RectsOverlap(wall.Rect, hull.Rect)) continue;
+
+                //        Rectangle wallRect = wall.IsHorizontal ?
+                //            new Rectangle(hull.Rect.X, wall.Rect.Y, hull.Rect.Width, wall.Rect.Height) :
+                //            new Rectangle(wall.Rect.X, hull.Rect.Y, wall.Rect.Width, hull.Rect.Height);
+
+                //        rect = Rectangle.Union(
+                //            new Rectangle(wallRect.X, wallRect.Y - wallRect.Height, wallRect.Width, wallRect.Height),
+                //            new Rectangle(rect.X, rect.Y - rect.Height, rect.Width, rect.Height));
+                //        rect.Y = rect.Y + rect.Height;
+                //    }
+
+                //    FixtureFactory.AttachRectangle(
+                //        ConvertUnits.ToSimUnits(rect.Width),
+                //        ConvertUnits.ToSimUnits(rect.Height),
+                //        5.0f,
+                //        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
+                //        body, this);
+                //}
             }
 
 
@@ -311,7 +322,7 @@ namespace Barotrauma
                     Debug.Assert(intersection != null);
 
                     //''+ translatedir'' in order to move the character slightly away from the wall
-                    c.AnimController.SetPosition(c.WorldPosition + ConvertUnits.ToSimUnits((Vector2)intersection - limb.WorldPosition) + translateDir);
+                    c.AnimController.SetPosition(ConvertUnits.ToSimUnits(c.WorldPosition + ((Vector2)intersection - limb.WorldPosition)) + translateDir);
 
                     return;
                 }                
@@ -432,7 +443,7 @@ namespace Barotrauma
             FixedArray2<Vector2> points;
             contact.GetWorldManifold(out normal2, out points);
 
-            Vector2 normalizedVel = limb.character.AnimController.RefLimb.LinearVelocity == Vector2.Zero ? 
+            Vector2 normalizedVel = limb.character.AnimController.RefLimb.LinearVelocity == Vector2.Zero ?
                 Vector2.Zero : Vector2.Normalize(limb.character.AnimController.RefLimb.LinearVelocity);
 
             Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - normal2);
@@ -441,9 +452,9 @@ namespace Barotrauma
 
             if (newHull == null)
             {
-                targetPos = ConvertUnits.ToDisplayUnits(points[0] - normalizedVel);
+                targetPos = ConvertUnits.ToDisplayUnits(points[0] + normalizedVel);
 
-               newHull = Hull.FindHull(targetPos, null);
+                newHull = Hull.FindHull(targetPos, null);
 
                 if (newHull == null) return true;
             }
@@ -452,41 +463,12 @@ namespace Barotrauma
 
             targetPos = limb.character.WorldPosition;
 
-            bool gapFound = false;
-            foreach (Gap gap in gaps)
-            {
-                if (gap.Open == 0.0f || gap.IsRoomToRoom) continue;
+            Gap adjacentGap = Gap.FindAdjacent(gaps, targetPos, 200.0f);
 
-                if (gap.ConnectedWall != null)
-                {
-                    int sectionIndex = gap.ConnectedWall.FindSectionIndex(gap.Position);
-                    if (sectionIndex > -1 && !gap.ConnectedWall.SectionBodyDisabled(sectionIndex)) continue;
-                }
-
-                if (gap.isHorizontal)
-                {
-                    if (targetPos.Y < gap.WorldRect.Y && targetPos.Y > gap.WorldRect.Y - gap.WorldRect.Height && 
-                        Math.Abs(gap.WorldRect.Center.X-targetPos.X)<200.0f)
-                    {
-                        gapFound = true;
-                        break;
-                    }
-                }
-                else
-                {
-                    if (targetPos.X > gap.WorldRect.X && targetPos.X < gap.WorldRect.Right &&
-                        Math.Abs(gap.WorldRect.Y - gap.WorldRect.Height/2 - targetPos.Y) < 200.0f)
-                    {
-                        gapFound = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!gapFound) return true;
+            if (adjacentGap==null) return true;
 
             var ragdoll = limb.character.AnimController;
-            ragdoll.FindHull(newHull.WorldPosition);
+            ragdoll.FindHull(newHull.WorldPosition, true);
 
             return false;
         }
