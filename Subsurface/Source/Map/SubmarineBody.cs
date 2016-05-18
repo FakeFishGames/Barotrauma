@@ -485,7 +485,11 @@ namespace Barotrauma
             Vector2 lastContactPoint = worldPoints[0];
 
             SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(lastContactPoint));
-            GameMain.GameScreen.Cam.Shake = impact * 2.0f;
+
+            if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+            {
+                GameMain.GameScreen.Cam.Shake = impact * 2.0f;
+            }
 
             Vector2 impulse = direction * impact * 0.5f;
 

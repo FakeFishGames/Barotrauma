@@ -210,7 +210,7 @@ namespace Barotrauma
 
             shakeTargetPosition = Rand.Vector(Shake);
             shakePosition = Vector2.Lerp(shakePosition, shakeTargetPosition, 0.5f);
-            Shake = MathHelper.Lerp(Shake, 0.0f, 0.03f);
+            Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime*2.0f);
 
             Translate(moveCam+shakePosition);
         }
