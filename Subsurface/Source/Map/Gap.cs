@@ -586,6 +586,39 @@ namespace Barotrauma
             hull2.Oxygen += Math.Sign(totalOxygen * hull2.FullVolume / (totalVolume) - hull2.Oxygen) * Hull.OxygenDistributionSpeed;            
         }
 
+        public static Gap FindAdjacent(List<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
+        {
+            foreach (Gap gap in gaps)
+            {
+                if (gap.Open == 0.0f || gap.IsRoomToRoom) continue;
+
+                if (gap.ConnectedWall != null)
+                {
+                    int sectionIndex = gap.ConnectedWall.FindSectionIndex(gap.Position);
+                    if (sectionIndex > -1 && !gap.ConnectedWall.SectionBodyDisabled(sectionIndex)) continue;
+                }
+
+                if (gap.isHorizontal)
+                {
+                    if (worldPos.Y < gap.WorldRect.Y && worldPos.Y > gap.WorldRect.Y - gap.WorldRect.Height &&
+                        Math.Abs(gap.WorldRect.Center.X - worldPos.X) < allowedOrthogonalDist)
+                    {
+                        return gap;
+                    }
+                }
+                else
+                {
+                    if (worldPos.X > gap.WorldRect.X && worldPos.X < gap.WorldRect.Right &&
+                        Math.Abs(gap.WorldRect.Y - gap.WorldRect.Height / 2 - worldPos.Y) < allowedOrthogonalDist)
+                    {
+                        return gap;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public override void Remove()
         {
             base.Remove();

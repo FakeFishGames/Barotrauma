@@ -414,14 +414,11 @@ namespace Barotrauma
 
             if (burnt > 0.0f) Burnt -= deltaTime;
 
-            if (LinearVelocity.X>100.0f)
+            if (LinearVelocity.X > 500.0f)
             {
                 //DebugConsole.ThrowError("CHARACTER EXPLODED");
-                foreach (Limb limb in character.AnimController.Limbs)
-                {
-                    limb.body.ResetDynamics();
-                    limb.body.SetTransform(character.AnimController.RefLimb.SimPosition, 0.0f);
-                }                
+                body.ResetDynamics();
+                body.SetTransform(character.AnimController.RefLimb.SimPosition, 0.0f);           
             }
 
             if (inWater)
