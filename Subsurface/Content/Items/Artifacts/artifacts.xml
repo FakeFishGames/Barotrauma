@@ -150,10 +150,10 @@
     linkable="true"
     pickdistance="150.0">
 
-    <Sprite texture="Content/Map/ruins.png" sourcerect="0,842,260,54" depth="0.01" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.8" origin="0.5,0.5"/>
 
     <Door canbeselected="true" horizontal="true">
-      <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.05" origin="0.0,0.5"/>
+      <Sprite texture="Content/Map/ruins.png" sourcerect="0,842,260,54"  depth="0.6" origin="0.0,0.5"/>
       <sound file="aliendoor.ogg" type="OnUse" range="1000.0"/>
     </Door>
 
@@ -171,10 +171,10 @@
    linkable="true"
    pickdistance="150.0">
 
-    <Sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,259" depth="0.8" origin="0.5,0.5"/>
+    <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5"/>
 
     <Door canbeselected="true">
-      <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.6" origin="0.5,0.0"/>
+      <Sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,259" depth="0.6" origin="0.5,0.0"/>
       <sound file="aliendoor.ogg" type="OnUse" range="3000.0"/>
     </Door>
 

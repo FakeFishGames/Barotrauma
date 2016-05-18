@@ -202,8 +202,8 @@ namespace Barotrauma
 
             spawnType += (int)button.UserData;
 
-            if (spawnType > SpawnType.Cargo) spawnType = SpawnType.Path;
-            if (spawnType < SpawnType.Path) spawnType = SpawnType.Cargo;
+            if (spawnType > SpawnType.Cargo) spawnType = SpawnType.Human;
+            if (spawnType < SpawnType.Human) spawnType = SpawnType.Cargo;
 
             spawnTypeText.Text = spawnType.ToString();
 
@@ -247,43 +247,60 @@ namespace Barotrauma
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
             int width = 500;
+            int height = spawnType == SpawnType.Path ? 100 : 140;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 150), Color.Black * 0.5f);
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, height), Color.Black * 0.5f);
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing waypoint", GUI.Style, editingHUD);
-            new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another entity", GUI.Style, editingHUD);
-            new GUITextBlock(new Rectangle(0, 40, 100, 20), "Spawnpoint: ", GUI.Style, editingHUD);
+            if (spawnType == SpawnType.Path)
+            {
+                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing waypoint", GUI.Style, editingHUD);
+                new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another waypoint", GUI.Style, editingHUD);
+            }
+            else
+            {
+                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing spawnpoint", GUI.Style, editingHUD);
+                new GUITextBlock(new Rectangle(0, 25, 100, 20), "Spawn type: ", GUI.Style, editingHUD);
 
-            var spawnTypeText = new GUITextBlock(new Rectangle(0, 40, 200, 20), spawnType.ToString(), GUI.Style, Alignment.Right, Alignment.TopLeft, editingHUD);
+                var spawnTypeText = new GUITextBlock(new Rectangle(0, 25, 200, 20), spawnType.ToString(), GUI.Style, Alignment.Right, Alignment.TopLeft, editingHUD);
 
-            var button = new GUIButton(new Rectangle(-30,0,20,20), "-", Alignment.Right, GUI.Style, spawnTypeText);
-            button.UserData = -1;
-            button.OnClicked = ChangeSpawnType;
+                var button = new GUIButton(new Rectangle(-30,0,20,20), "-", Alignment.Right, GUI.Style, spawnTypeText);
+                button.UserData = -1;
+                button.OnClicked = ChangeSpawnType;
 
-            button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, GUI.Style, spawnTypeText);
-            button.UserData = 1;
-            button.OnClicked = ChangeSpawnType;
+                button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, GUI.Style, spawnTypeText);
+                button.UserData = 1;
+                button.OnClicked = ChangeSpawnType;
+
+                y = 40 + 20;
+
+                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
+                propertyBox.Text = string.Join(", ", idCardTags);
+                propertyBox.OnEnterPressed = EnterIDCardTags;
+                propertyBox.OnTextChanged = TextBoxChanged;
+                propertyBox.ToolTip = "Characters spawning at this spawnpoint will have the specified tags added to their ID card. You can, for example, use these tags to limit access to some parts of the sub.";
+
+                y = y + 30;
+
+                new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
+                propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
+                propertyBox.OnEnterPressed = EnterAssignedJob;
+                propertyBox.OnTextChanged = TextBoxChanged;
+                propertyBox.ToolTip = "Only characters with the specified job will spawn at this spawnpoint.";
+
+            }
+
+
+
+
 
             //spriteBatch.DrawString(GUI.font, "Spawnpoint: " + spawnType.ToString() + " +/-", new Vector2(x, y + 40), Color.Black);
 
-            y = 40+20;                    
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-            GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
-            propertyBox.Text = string.Join(", ", idCardTags);
-            propertyBox.OnEnterPressed = EnterIDCardTags;
-            propertyBox.OnTextChanged = TextBoxChanged;
-            y = y + 30;
-
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-            propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
-            propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
-
-            propertyBox.OnEnterPressed = EnterAssignedJob;
-            propertyBox.OnTextChanged = TextBoxChanged;
             y = y + 30;
             
             return editingHUD;

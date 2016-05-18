@@ -47,7 +47,7 @@ namespace Barotrauma
             set;
         }
 
-        public string ToolTip
+        public virtual string ToolTip
         {
             get;
             set;
