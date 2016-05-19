@@ -284,7 +284,7 @@ namespace Barotrauma
                 if (fixture == null ||
                     fixture.CollisionCategories == Physics.CollisionCharacter ||
                     fixture.CollisionCategories == Physics.CollisionNone ||
-                    fixture.CollisionCategories == Physics.CollisionMisc) return -1;
+                    fixture.CollisionCategories == Physics.CollisionItem) return -1;
 
                 Structure structure = fixture.Body.UserData as Structure;
                 if (structure != null)

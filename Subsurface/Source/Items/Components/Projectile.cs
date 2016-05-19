@@ -155,8 +155,8 @@ namespace Barotrauma.Items.Components
                     item.Move(-submarine.Position);
                     item.Submarine = submarine;
                     item.body.Submarine = submarine;
-                    item.FindHull();
-                    return false;
+                    //item.FindHull();
+                    return true;
                 }
 
                 Limb limb;
@@ -177,7 +177,7 @@ namespace Barotrauma.Items.Components
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
             item.body.FarseerBody.IsBullet = false;
-            item.body.CollisionCategories = Physics.CollisionMisc;
+            item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
 
             IgnoredBodies.Clear();
