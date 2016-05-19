@@ -50,7 +50,7 @@ namespace Barotrauma
                 }
 
 
-                newTargetTimer = currentTarget == null ? 5.0f : 10.0f;
+                newTargetTimer = currentTarget == null ? 5.0f : 15.0f;
             }
             
             newTargetTimer -= deltaTime;            

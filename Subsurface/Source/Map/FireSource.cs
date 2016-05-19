@@ -206,7 +206,7 @@ namespace Barotrauma
 
             LimitSize();
 
-            lightSource.Range = Math.Max(size.X, size.Y) * Rand.Range(8.0f, 10.0f) / 2.0f;
+            lightSource.Range = Math.Max(size.X, size.Y) * 10.0f / 2.0f;
             lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
             lightSource.Position = position;
 

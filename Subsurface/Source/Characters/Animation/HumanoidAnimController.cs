@@ -973,6 +973,8 @@ namespace Barotrauma
         {
             Holdable holdable = item.GetComponent<Holdable>();
 
+            if (character.IsUnconscious || character.Stun > 0.0f) aim = false;
+
             //calculate the handle positions
             Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
             Vector2[] transformedHandlePos = new Vector2[2];
