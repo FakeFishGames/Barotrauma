@@ -276,7 +276,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.Loaded.WorldPosition.Y > 40000.0f)
+            while (Submarine.Loaded.WorldPosition.Y > 24600.0f)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -328,9 +328,6 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(0.1f);
             } while (!broken);
 
-            yield return new WaitForSeconds(0.1f);
-
-
             //fix everything except the command windows
             foreach (Structure w in Structure.WallList)
             {
@@ -351,8 +348,6 @@ namespace Barotrauma.Tutorials
 
                 }
             }
-
-            yield return new WaitForSeconds(0.5f);
 
             Submarine.Loaded.GodMode = true;
 
@@ -532,7 +527,10 @@ namespace Barotrauma.Tutorials
 
 
             bool brokenMsgShown = false;
-            while (pump.Item.CurrentHull.Volume > 1000.0f)
+
+            Item brokenBox = null;
+
+            while (pump.FlowPercentage > 0.0f || pump.CurrFlow <= 0.0f || !pump.IsActive)
             {
                 if (!brokenMsgShown && pump.Voltage < pump.MinVoltage && Character.Controlled.SelectedConstruction == pump.Item)
                 {
@@ -547,6 +545,8 @@ namespace Barotrauma.Tutorials
                             Character.Controlled.SelectedConstruction.GetComponent<PowerTransfer>() != null && 
                             Character.Controlled.SelectedConstruction.Condition == 0.0f)
                         {
+                            brokenBox = Character.Controlled.SelectedConstruction;
+
                             infoBox = CreateInfoFrame("Here's our problem: this junction box is broken. Luckily engineers are adept at fixing electrical devices - "
                                 +"you just need to find a spare wire and click the ''Fix''-button to repair the box.");
                             break;
@@ -558,6 +558,24 @@ namespace Barotrauma.Tutorials
                     }
                 }
 
+                if (brokenBox != null && brokenBox.Condition > 50.0f && pump.Voltage < pump.MinVoltage)
+                {
+                    yield return new WaitForSeconds(1.0f);
+
+                    if (pump.Voltage < pump.MinVoltage)
+                    {
+                        infoBox = CreateInfoFrame("The pump is still not running. Check if there are more broken junction boxes between the pump and the reactor.");
+                    }
+                    brokenBox = null;
+                }
+
+                yield return CoroutineStatus.Running;
+            }
+
+            infoBox = CreateInfoFrame("The pump is up and running. Wait for the water to be drained out.");
+
+            while (pump.Item.CurrentHull.Volume > 1000.0f)
+            {
                 yield return CoroutineStatus.Running;
             }
 
@@ -613,7 +631,7 @@ namespace Barotrauma.Tutorials
         {
             do
             {
-                if (enemy == null) break;
+                if (enemy == null || Character.Controlled == null) break;
 
                 enemy.Health = 50.0f;
 
