@@ -1,4 +1,31 @@
 ---------------------------------------------------------------------------------------------------------
+v0.4.1.0
+---------------------------------------------------------------------------------------------------------
+
+- alien ruins and some special monsters/items that only spawn inside them
+- improved lighting
+- flashlights and flares
+- depth charges
+- items can be moved from the inventory to cabinets/containers by double clicking
+- option to choose mission type in multiplayer
+- fixed crashes when using medical syringes in multiplayer
+- fixed characters occasionally ''exploding'' or being launched to a random direction when
+entering/exiting the sub
+- fixed long map seeds always generating the same map
+- fixed item loading issues when playing the game on a PC using the Turkish locale (and most likely some
+other locales with special uppercase/lowercase rules)
+
+---------------------------------------------------------------------------------------------------------
+v0.4.0.3
+---------------------------------------------------------------------------------------------------------
+
+- stun syncing bugfix
+- fixed dead/unconscious characters being impossible to select in the info menu
+- fixed crashes when detonating nitroglyserine by injecting it
+- oxygen level deteriorates more slowly when unconscious
+- instructions for dealing with broken junction boxes in the tutorial
+
+---------------------------------------------------------------------------------------------------------
 v0.4.0.2
 ---------------------------------------------------------------------------------------------------------
 
