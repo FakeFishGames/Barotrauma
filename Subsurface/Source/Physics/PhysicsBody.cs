@@ -239,7 +239,7 @@ namespace Barotrauma
 
             dir = 1.0f;
             
-            body.CollisionCategories = Physics.CollisionMisc;
+            body.CollisionCategories = Physics.CollisionItem;
             body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
 
             body.Friction = ToolBox.GetAttributeFloat(element, "friction", 0.3f);

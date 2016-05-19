@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
         {
             item.body.FarseerBody.OnCollision -= OnCollision;
 
-            item.body.CollisionCategories = Physics.CollisionMisc;
+            item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.CollisionWall;
 
             //foreach (Limb l in picker.AnimController.Limbs)

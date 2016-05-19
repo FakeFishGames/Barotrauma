@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
             get { return maxOutput; }
         }
 
-        [HasDefaultValue(0.0f, true)]
+        [Editable, HasDefaultValue(0.0f, true)]
         public float Charge
         {
             get { return charge; }

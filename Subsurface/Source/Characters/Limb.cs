@@ -212,7 +212,7 @@ namespace Barotrauma
             {
                 //limbs don't collide with each other
                 body.CollisionCategories = Physics.CollisionCharacter;
-                body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionMisc;
+                body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem;
             }
 
             impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 10.0f);

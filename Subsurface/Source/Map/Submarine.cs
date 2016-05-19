@@ -323,7 +323,7 @@ namespace Barotrauma
             {
                 if (fixture == null || 
                     fixture.CollisionCategories == Category.None || 
-                    fixture.CollisionCategories == Physics.CollisionMisc) return -1;
+                    fixture.CollisionCategories == Physics.CollisionItem) return -1;
 
                 if (collisionCategory != null && !fixture.CollisionCategories.HasFlag((Category)collisionCategory)) return -1;
       

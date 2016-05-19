@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
            
-            light.Submarine = (item.CurrentHull == null) ? null : item.CurrentHull.Submarine;
+            light.Submarine = item.Submarine;
             
             if (item.Container != null)
             {

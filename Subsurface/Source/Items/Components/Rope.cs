@@ -98,7 +98,7 @@ namespace Barotrauma.Items.Components
                 ropeList[i].Mass = 0.01f;
                 ropeList[i].Enabled = false;
                 //only collide with the map
-                ropeList[i].CollisionCategories = Physics.CollisionMisc;
+                ropeList[i].CollisionCategories = Physics.CollisionItem;
                 ropeList[i].CollidesWith = Physics.CollisionWall;
 
                 ropeBodies[i] = new PhysicsBody(ropeList[i]);

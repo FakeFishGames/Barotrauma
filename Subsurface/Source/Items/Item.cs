@@ -707,7 +707,18 @@ namespace Barotrauma
 
             if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
             {
+                Submarine prevSub = Submarine;
+
                 FindHull();
+
+                if (Submarine == null && prevSub != null)
+                {
+                    body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+                }
+                else if (Submarine != null && prevSub == null)
+                {
+                    body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+                }
                 
                 Vector2 moveAmount = body.SimPosition - body.LastSentPosition;
                 if (parentInventory == null && moveAmount != Vector2.Zero && moveAmount.Length() > NetConfig.ItemPosUpdateDistance)
