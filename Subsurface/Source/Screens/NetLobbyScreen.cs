@@ -236,12 +236,12 @@ namespace Barotrauma
                        
             missionTypeButtons = new GUIButton[2];
 
-            missionTypeButtons[0] = new GUIButton(new Rectangle(120, 0, 20, 20), "<", Alignment.BottomLeft, GUI.Style, missionTypeBlock);
+            missionTypeButtons[0] = new GUIButton(new Rectangle(100, 0, 20, 20), "<", Alignment.BottomLeft, GUI.Style, missionTypeBlock);
             missionTypeButtons[0].UserData = -1;
 
-            new GUITextBlock(new Rectangle(120, 0, 120, 20), "Random", GUI.Style, Alignment.BottomLeft, Alignment.TopCenter, missionTypeBlock).UserData = 0;
+            new GUITextBlock(new Rectangle(120, 0, 80, 20), "Random", GUI.Style, Alignment.BottomLeft, Alignment.TopCenter, missionTypeBlock).UserData = 0;
 
-            missionTypeButtons[1] = new GUIButton(new Rectangle(240, 0, 20, 20), ">", Alignment.BottomLeft, GUI.Style, missionTypeBlock);
+            missionTypeButtons[1] = new GUIButton(new Rectangle(200, 0, 20, 20), ">", Alignment.BottomLeft, GUI.Style, missionTypeBlock);
             missionTypeButtons[1].UserData = 1;
             
             missionTypeBlock.Visible = false;
@@ -521,6 +521,8 @@ namespace Barotrauma
 
             missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[missionTypeIndex];
             missionTypeBlock.UserData = missionTypeIndex;
+
+            valueChanged = true;
         }
 
         public bool ToggleMissionType(GUIButton button, object userData)
@@ -532,6 +534,8 @@ namespace Barotrauma
             if (missionTypeIndex>=Mission.MissionTypes.Count) missionTypeIndex=0;
 
             SetMissionType(missionTypeIndex);
+
+            valueChanged = true;
 
             return true;
         }
@@ -1107,8 +1111,9 @@ namespace Barotrauma
                 }
             }
 
-            catch
+            catch (Exception e)
             {
+                DebugConsole.ThrowError("Failed to read lobby update message");
                 return;
             }
 
@@ -1116,7 +1121,11 @@ namespace Barotrauma
 
             if (!GameMain.NetworkMember.Voting.AllowModeVoting)
             {
-                SelectMode(modeList.children[modeIndex], modeList.children[modeIndex].UserData);
+                //SelectMode(modeList.children[modeIndex], modeList.children[modeIndex].UserData);
+                modeList.Select(modeIndex, true);
+
+                GameModePreset modePreset = modeList.children[modeIndex].UserData as GameModePreset;
+                missionTypeBlock.Visible = modePreset.Name == "Mission";
             }
 
             SetTraitorsEnabled(traitorsEnabled);
