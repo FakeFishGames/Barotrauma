@@ -138,7 +138,7 @@ namespace Barotrauma
         public IEnumerable<object> DoLoading(IEnumerable<object> loader)
         {
             drawn = false;
-            LoadState = null;            
+            LoadState = null;
 
             while (!drawn)
             {

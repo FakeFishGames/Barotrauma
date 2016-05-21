@@ -300,7 +300,7 @@ namespace Barotrauma.Networking
             else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && ConnectedClients.Count>0)
             {
                 AutoRestartTimer -= deltaTime;
-                if (AutoRestartTimer < 0.0f)
+                if (AutoRestartTimer < 0.0f && GameMain.NetLobbyScreen.StartButton.Enabled)
                 {
                     StartGameClicked(null,null);
                 }
@@ -437,11 +437,11 @@ namespace Barotrauma.Networking
                             outmsg.Write((byte)PacketTypes.LoggedIn);
                             outmsg.Write(sender.ID);
                             outmsg.Write(gameStarted);
-                            outmsg.Write(gameStarted && sender.Character!=null);
+                            outmsg.Write(gameStarted && sender.Character != null);
                             outmsg.Write(allowSpectating);
 
                             //notify the client about other clients already logged in
-                            outmsg.Write((characterInfo == null) ? ConnectedClients.Count - 1 : ConnectedClients.Count);
+                            outmsg.Write((byte)((characterInfo == null) ? ConnectedClients.Count - 1 : ConnectedClients.Count));
                             foreach (Client c in ConnectedClients)
                             {
                                 if (c.Connection == inc.SenderConnection) continue;
@@ -453,6 +453,14 @@ namespace Barotrauma.Networking
                             {
                                 outmsg.Write(characterInfo.Name);
                                 outmsg.Write(-1);
+                            }
+
+                            var subs = GameMain.NetLobbyScreen.GetSubList();
+                            outmsg.Write((byte)subs.Count);
+                            foreach (Submarine sub in subs)
+                            {
+                                outmsg.Write(sub.Name);
+                                outmsg.Write(sub.MD5Hash.Hash);
                             }
 
                             server.SendMessage(outmsg, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered, 0);
@@ -854,21 +862,37 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-
-            if (ConnectedClients.Any(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath))
-            {
-                new GUIMessageBox("Couldn't start a round",
-                    "Can't start a round while sending the selected submarine to clients. Cancel the transfers or wait for them to finish before starting.", 400, 400);
-                return false;
-            }
-
-            GameMain.ShowLoading(StartGame(selectedSub, selectedMode), false);
+            CoroutineManager.StartCoroutine(WaitForPlayersReady(selectedSub, selectedMode), "WaitForPlayersReady");
  
             return true;
         }
 
+        private IEnumerable<object> WaitForPlayersReady(Submarine selectedSub, GameModePreset selectedMode)
+        {
+            GameMain.NetLobbyScreen.StartButton.Enabled = false;
+
+            if (Voting.AllowSubVoting) yield return new WaitForSeconds(1.0f);
+
+            while (ConnectedClients.Any(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath))
+            {
+                if (GUIMessageBox.MessageBoxes.Peek() == null)
+                {
+                    new GUIMessageBox("File transfer in progress",
+                        "The round will be started after the submarine file has been sent to all players.", 400, 400);
+                }
+
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            GameMain.ShowLoading(StartGame(selectedSub, selectedMode), false);
+
+            yield return CoroutineStatus.Success;
+        }
+        
         private IEnumerable<object> StartGame(Submarine selectedSub, GameModePreset selectedMode)
         {
+            GameMain.NetLobbyScreen.StartButton.Enabled = false;
+
             GUIMessageBox.CloseAll();
 
             AssignJobs();
@@ -965,6 +989,7 @@ namespace Barotrauma.Networking
                 AddChatMessage("Press TAB to chat. Use ''r;'' to talk through the radio.", ChatMessageType.Server);
             }
 
+            GameMain.NetLobbyScreen.StartButton.Enabled = true;
             
             yield return CoroutineStatus.Success;
         }

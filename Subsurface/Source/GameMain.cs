@@ -355,6 +355,7 @@ namespace Barotrauma
         {
             waitForKeyHit = waitKeyHit;
             titleScreenOpen = true;
+            TitleScreen.LoadState = null;
             CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
         }
 

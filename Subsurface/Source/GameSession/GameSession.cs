@@ -164,10 +164,13 @@ namespace Barotrauma
                 GameMain.LobbyScreen.Select();
             }
             
-            GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame(endMessage);
-            GUIMessageBox.MessageBoxes.Enqueue(summaryFrame);
-            var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
-            okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+            if (shiftSummary!=null)
+            {
+                GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame(endMessage);
+                GUIMessageBox.MessageBoxes.Enqueue(summaryFrame);
+                var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
+                okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+            }
 
             TaskManager.EndShift();
 
