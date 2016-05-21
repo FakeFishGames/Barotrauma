@@ -15,6 +15,8 @@ namespace Barotrauma
         private float barSize;
         private float barScroll;
 
+        private float step;
+
         private bool enabled;
 
         public delegate bool OnMovedHandler(GUIScrollBar scrollBar, float barScroll);
@@ -33,26 +35,39 @@ namespace Barotrauma
 
         public float BarScroll
         {
-            get { return barScroll; }
+            get { return step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step); }
             set
             {
                 barScroll = MathHelper.Clamp(value, 0.0f, 1.0f);
                 int newX = bar.Rect.X - frame.Rect.X, newY = bar.Rect.Y - frame.Rect.Y;
+
+                float newScroll = step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step);
+
                 if (isHorizontal)
                 {
-                    newX = (int)(barScroll *(frame.Rect.Width - bar.Rect.Width));
-                    newX = Math.Max(newX, 0);
-                    newX = Math.Min(newX, frame.Rect.Width - bar.Rect.Width);
+                    newX = (int)(newScroll * (frame.Rect.Width - bar.Rect.Width));
+                    newX = MathHelper.Clamp(newX, 0, frame.Rect.Width - bar.Rect.Width);
 
                 }
                 else
                 {
-                    newY = (int)(barScroll * (frame.Rect.Height- bar.Rect.Height));
-                    newY = Math.Max(newY, 0);
-                    newY = Math.Min(newY, frame.Rect.Height - bar.Rect.Height);
+                    newY = (int)(newScroll * (frame.Rect.Height - bar.Rect.Height));
+                    newY = MathHelper.Clamp(newY, 0, frame.Rect.Height - bar.Rect.Height);
 
                 }
                 bar.Rect = new Rectangle(newX + frame.Rect.X, newY + frame.Rect.Y, bar.Rect.Width, bar.Rect.Height);
+            }
+        }
+
+        public float Step
+        {
+            get
+            {
+                return step;
+            }
+            set
+            {
+                step = MathHelper.Clamp(value, 0.0f, 1.0f);
             }
         }
 
@@ -158,25 +173,35 @@ namespace Barotrauma
             //if (barSize == 1.0f) return false;
 
             int newX = bar.Rect.X - frame.Rect.X, newY = bar.Rect.Y - frame.Rect.Y;
-            int moveAmount;
+            float moveAmount;
             if (isHorizontal)
             {
-                moveAmount = (int)PlayerInput.MouseSpeed.X;
-                newX = Math.Min(Math.Max(newX + moveAmount, 0), frame.Rect.Width - bar.Rect.Width);
+                moveAmount = PlayerInput.MouseSpeed.X;
+                barScroll += moveAmount / (frame.Rect.Width - bar.Rect.Width);
+                //newX = Math.Min(Math.Max(newX + moveAmount, 0), frame.Rect.Width - bar.Rect.Width);
 
-                barScroll = (float)newX / ((float)frame.Rect.Width - (float)bar.Rect.Width);
+                //barScroll = (float)newX / ((float)frame.Rect.Width - (float)bar.Rect.Width);
             }
             else
             {
-                moveAmount = (int)PlayerInput.MouseSpeed.Y;
-                newY = Math.Min(Math.Max(newY+moveAmount, 0), frame.Rect.Height - bar.Rect.Height);
+                moveAmount = PlayerInput.MouseSpeed.Y;
+                barScroll += moveAmount / (frame.Rect.Height - bar.Rect.Height);
+                //newY = Math.Min(Math.Max(newY+moveAmount, 0), frame.Rect.Height - bar.Rect.Height);
 
-                barScroll = (float)newY / ((float)frame.Rect.Height - (float)bar.Rect.Height);
+                //barScroll = (float)newY / ((float)frame.Rect.Height - (float)bar.Rect.Height);
             }
 
-            if (moveAmount != 0 && OnMoved != null) OnMoved(this, barScroll);
+            if (moveAmount != 0)
+            {
+                int asdf = 1;
+            }
 
-            bar.Rect = new Rectangle(newX + frame.Rect.X, newY + frame.Rect.Y, bar.Rect.Width, bar.Rect.Height);
+            BarScroll = barScroll;
+
+            if (moveAmount != 0 && OnMoved != null) OnMoved(this, BarScroll);
+
+
+            //bar.Rect = new Rectangle(newX + frame.Rect.X, newY + frame.Rect.Y, bar.Rect.Width, bar.Rect.Height);
 
         }
 

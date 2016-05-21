@@ -257,14 +257,25 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.ClearPlayers();
 
                                 //add the names of other connected clients to the lobby screen
-                                int existingClients = inc.ReadInt32();
-                                for (int i = 1; i <= existingClients; i++)
+                                int clientCount = inc.ReadByte();
+                                for (int i = 0; i < clientCount; i++)
                                 {
                                     Client otherClient = new Client(inc.ReadString(), inc.ReadByte());
 
                                     GameMain.NetLobbyScreen.AddPlayer(otherClient.name);
                                     otherClients.Add(otherClient);
                                 }
+
+                                List<Submarine> submarines = new List<Submarine>();
+                                int subCount = inc.ReadByte();
+                                for (int i = 0; i < subCount; i++ )
+                                {
+                                    string subName = inc.ReadString();
+                                    string subHash = inc.ReadString();
+
+                                    submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
+                                }
+                                GameMain.NetLobbyScreen.UpdateSubList(submarines);
 
                                 //add the name of own client to the lobby screen
                                 GameMain.NetLobbyScreen.AddPlayer(name);
@@ -342,7 +353,10 @@ namespace Barotrauma.Networking
             {
                 if (Screen.Selected != GameMain.GameScreen)
                 {
+                    List<Submarine> subList = GameMain.NetLobbyScreen.GetSubList();
+
                     GameMain.NetLobbyScreen = new NetLobbyScreen();
+                    GameMain.NetLobbyScreen.UpdateSubList(subList);
                     GameMain.NetLobbyScreen.Select();
                 }
                 connected = true;
@@ -819,7 +833,16 @@ namespace Barotrauma.Networking
                 switch (receiver.FileType)
                 {
                     case FileTransferMessageType.Submarine:
-                        Submarine.Preload();
+                        var textBlock = GameMain.NetLobbyScreen.SubList.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName);
+                        if (textBlock != null)
+                        {
+                            Submarine.SavedSubmarines.RemoveAll(s => s.Name + ".sub" == receiver.FileName);
+
+                            (textBlock as GUITextBlock).TextColor = Color.White;
+                            var newSub = new Submarine(receiver.FilePath);
+                            Submarine.SavedSubmarines.Add(newSub);
+                            textBlock.UserData = newSub;
+                        }
                         break;
                 }
             }

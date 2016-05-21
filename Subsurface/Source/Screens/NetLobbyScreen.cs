@@ -63,6 +63,12 @@ namespace Barotrauma
             get { return playerList; }
         }
 
+        public GUIButton StartButton
+        {
+            get;
+            private set;
+        }
+
         public GUIFrame InfoFrame
         {
             get { return infoFrame; }
@@ -200,7 +206,7 @@ namespace Barotrauma
             voteText.UserData = "subvotes";
             voteText.Visible = false;
 
-            UpdateSubList();
+            //UpdateSubList(Submarine.SavedSubmarines);
 
             columnX += columnWidth + 20;
 
@@ -340,7 +346,7 @@ namespace Barotrauma
 
             ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
             
-            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "startButton"));
+            infoFrame.RemoveChild(StartButton);
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
 
@@ -348,6 +354,8 @@ namespace Barotrauma
 
             if (IsServer && GameMain.Server != null)
             {
+                UpdateSubList(Submarine.SavedSubmarines);
+
                 modeList.OnSelected = VotableClicked;
                 modeList.OnSelected = SelectMode;
                 subList.OnSelected = VotableClicked;
@@ -359,9 +367,8 @@ namespace Barotrauma
                 missionTypeButtons[0].OnClicked = ToggleMissionType;
                 missionTypeButtons[1].OnClicked = ToggleMissionType;
 
-                GUIButton startButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
-                startButton.OnClicked = GameMain.Server.StartGameClicked;
-                startButton.UserData = "startButton";
+                StartButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
+                StartButton.OnClicked = GameMain.Server.StartGameClicked;
 
                 GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, GUI.Style, infoFrame);
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
@@ -562,7 +569,17 @@ namespace Barotrauma
 
             if (GameMain.Server != null) GameMain.Server.TraitorsEnabled = enabled;
             (traitorProbabilityText as GUITextBlock).Text = enabled.ToString();
+        }
 
+        public List<Submarine> GetSubList()
+        {
+            List<Submarine> subs = new List<Submarine>();
+            foreach (GUIComponent component in subList.children)
+            {
+                if (component.UserData is Submarine) subs.Add((Submarine)component.UserData);
+            }
+
+            return subs;
         }
 
         private bool SelectSub(GUIComponent component, object obj)
@@ -583,30 +600,47 @@ namespace Barotrauma
             return true;
         }
 
-        public void UpdateSubList()
+        public void UpdateSubList(List<Submarine> submarines)
         {
             if (subList == null) return;
 
             subList.ClearChildren();
 
-            if (Submarine.SavedSubmarines.Count == 0)
+            if (submarines.Count == 0)
             {
-                DebugConsole.ThrowError("No saved submarines found!");
+                DebugConsole.ThrowError("No submarines found!");
             }
             
-            foreach (Submarine sub in Submarine.SavedSubmarines)
+            foreach (Submarine sub in submarines)
             {
-                new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25), sub.Name, GUI.Style,
-                    Alignment.Left, Alignment.Left, subList)
-                {
-                    Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
-                    ToolTip = sub.Description,
-                    UserData = sub
-                };
+                AddSubmarine(sub);
             }
         }
 
+        public void AddSubmarine(Submarine sub)
+        {
+            var subTextBlock = new GUITextBlock(
+                new Rectangle(0, 0, 0, 25), sub.Name, GUI.Style,
+                Alignment.Left, Alignment.Left, subList)
+            {
+                Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
+                ToolTip = sub.Description,
+                UserData = sub
+            };
+
+            var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
+            if (matchingSub == null)
+            {
+                subTextBlock.TextColor = Color.Gray;
+                subTextBlock.ToolTip = "Submarine not found in your submarine folder";
+            }
+            else if (matchingSub.MD5Hash.Hash != sub.MD5Hash.Hash)
+            {
+                subTextBlock.TextColor = Color.LightGray;
+                subTextBlock.ToolTip = "Your version of the submarine doesn't match the servers version";
+            }
+        }
+        
         public bool VotableClicked(GUIComponent component, object userData)
         {
             if (GameMain.Client == null) return false;
@@ -993,6 +1027,12 @@ namespace Barotrauma
             //already downloading the selected sub file
             if (GameMain.Client.ActiveFileTransferName == subName+".sub") return false;
 
+            var matchingListSub = subList.children.Find(c => c.UserData != null && (c.UserData as Submarine).Name == subName);
+            if (matchingListSub!=null)
+            {
+                subList.Select(subList.children.IndexOf(matchingListSub), true);
+            }
+
             Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
             if (sub == null || sub.MD5Hash.Hash != md5Hash)
             {
@@ -1012,7 +1052,7 @@ namespace Barotrauma
                     + "Server's MD5 hash: " + md5Hash + ". ";
                 }
                     
-                string downloadMsg = GameMain.Client.ActiveFileTransferName == "" ?
+                string downloadMsg = string.IsNullOrEmpty(GameMain.Client.ActiveFileTransferName) ?
                     "Do you want to download the file from the server host?" :
                     "Do you want to download the file and cancel downloading ''" + GameMain.Client.ActiveFileTransferName + "''?";
 
@@ -1029,23 +1069,22 @@ namespace Barotrauma
                 return false;
             }
 
-            subList.Select(sub, true);
             return true;
         }
                 
         public void WriteData(NetOutgoingMessage msg)
         {
-            Submarine selectedMap = subList.SelectedData as Submarine;
+            Submarine selectedSub = subList.SelectedData as Submarine;
 
-            if (selectedMap==null)
+            if (selectedSub==null)
             {
                 msg.Write(" ");
                 msg.Write(" ");
             }
             else
             {
-                msg.Write(Path.GetFileName(selectedMap.Name));
-                msg.Write(selectedMap.MD5Hash.Hash);
+                msg.Write(Path.GetFileName(selectedSub.Name));
+                msg.Write(selectedSub.MD5Hash.Hash);
             }
 
             msg.Write(ServerName);
@@ -1113,7 +1152,7 @@ namespace Barotrauma
 
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to read lobby update message");
+                DebugConsole.ThrowError("Failed to read lobby update message ("+e.Message+")");
                 return;
             }
 

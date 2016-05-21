@@ -29,6 +29,12 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+
+        public string FilePath
+        {
+            get;
+            private set;
+        }
         
         public ulong FileSize
         {
@@ -190,7 +196,9 @@ namespace Barotrauma.Networking
                     return;
                 }
 
-                writeStream = new FileStream(Path.Combine(downloadFolder, FileName), FileMode.Create, FileAccess.Write, FileShare.None);
+                FilePath = Path.Combine(downloadFolder, FileName);
+
+                writeStream = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
                 timeStarted = Environment.TickCount;
 
                 Status = FileTransferStatus.NotStarted;

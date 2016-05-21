@@ -187,7 +187,7 @@ namespace Barotrauma
 
         //constructors & generation ----------------------------------------------------
 
-        public Submarine(string filePath, string hash = "") : base(null)
+        public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
         {
             this.filePath = filePath;
             try
@@ -196,7 +196,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error loading map " + filePath + "!", e);
+                DebugConsole.ThrowError("Error loading submarine " + filePath + "!", e);
             }
 
             if (hash != "")
@@ -204,16 +204,21 @@ namespace Barotrauma
                 this.hash = new Md5Hash(hash);
             }
 
-            XDocument doc = OpenDoc(filePath);
-
-            if (doc != null && doc.Root != null)
+            if (tryLoad)
             {
-                Description = ToolBox.GetAttributeString(doc.Root, "description", "");
+                XDocument doc = OpenDoc(filePath);
+
+                if (doc != null && doc.Root != null)
+                {
+                    Description = ToolBox.GetAttributeString(doc.Root, "description", "");
+                }
             }
+
 
             ID = ushort.MaxValue;
             base.Remove();
         }
+
 
         //drawing ----------------------------------------------------
 
@@ -607,7 +612,7 @@ namespace Barotrauma
                 SavedSubmarines.Add(new Submarine(path));
             }
 
-            if (GameMain.NetLobbyScreen!=null) GameMain.NetLobbyScreen.UpdateSubList();
+            //if (GameMain.NetLobbyScreen!=null) GameMain.NetLobbyScreen.UpdateSubList(Submarine.SavedSubmarines);
         }
 
         private XDocument OpenDoc(string file)

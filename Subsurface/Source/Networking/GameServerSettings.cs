@@ -146,9 +146,11 @@ namespace Barotrauma.Networking
 
             subSelectionMode = SelectionMode.Manual;
             Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "SubSelection", "Manual"), out subSelectionMode);
+            Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
 
             modeSelectionMode = SelectionMode.Manual;
             Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
+            Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
 
             FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));            
         }
@@ -184,12 +186,12 @@ namespace Barotrauma.Networking
 
             var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y+22, 100, 10), GUI.Style, 0.1f, innerFrame);
             votesRequiredSlider.UserData = votesRequiredText;
+            votesRequiredSlider.Step = 0.2f;
             votesRequiredSlider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
             votesRequiredSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
 
-                scrollBar.BarScroll = MathUtils.Round(barScroll, 0.2f);
                 EndVoteRequiredRatio = barScroll / 2.0f + 0.5f;
                 voteText.Text = "Votes required: " + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
                 return true;
@@ -197,9 +199,7 @@ namespace Barotrauma.Networking
             votesRequiredSlider.OnMoved(votesRequiredSlider, votesRequiredSlider.BarScroll);
 
             y += 40;
-
-
-
+            
             var randomizeLevelBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Randomize level seed between rounds", Alignment.Left, innerFrame);
             randomizeLevelBox.Selected = randomizeSeed;
             randomizeLevelBox.OnSelected = (GUITickBox) =>
@@ -207,8 +207,7 @@ namespace Barotrauma.Networking
                 randomizeSeed = GUITickBox.Selected;
                 return true;
             };
-
-
+            
             y += 40;
 
             var shareSubsBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Share submarine files with players", Alignment.Left, innerFrame);
