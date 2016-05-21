@@ -21,31 +21,31 @@
     description="A decorative structure with no collision detection"
     width = "32" height ="128" resizevertical="true"/>
 
-  <engineeringLabel sprite="Content/Map/testroom.png" sourcerect="464,336,153,16" depth ="0.99"
+  <engineeringLabel sprite="Content/Map/testroom.png" sourcerect="448,322,153,16" depth ="0.99"
     width = "153" height ="16"/>
-
-  <commandLabel sprite="Content/Map/testroom.png" sourcerect="464,352,128,16" depth ="0.99"
+  
+  <commandLabel sprite="Content/Map/testroom.png" sourcerect="448,339,128,16" depth ="0.99"
     width = "128" height ="16"/>
 
-  <airlockLabel sprite="Content/Map/testroom.png" sourcerect="464,368,199,16" depth ="0.99"
+  <airlockLabel sprite="Content/Map/testroom.png" sourcerect="448,356,199,16" depth ="0.99"
     width = "99" height ="16"/>
   
-  <cabinsLabel sprite="Content/Map/testroom.png" sourcerect="464,384,83,16" depth ="0.99"
+  <cabinsLabel sprite="Content/Map/testroom.png" sourcerect="448,373,83,16" depth ="0.99"
     width = "83" height ="16"/>
 
-  <medicalLabel sprite="Content/Map/testroom.png" sourcerect="464,400,110,16" depth ="0.99"
+  <medicalLabel sprite="Content/Map/testroom.png" sourcerect="448,390,110,16" depth ="0.99"
     width = "110" height ="16"/>
 
-  <arrowUp sprite="Content/Map/testroom.png" sourcerect="592,367,16,16" depth ="0.99"
+  <arrowUp sprite="Content/Map/testroom.png" sourcerect="577,356,16,16" depth ="0.99"
     width = "16" height ="16"/>
 
-  <arrowDown sprite="Content/Map/testroom.png" sourcerect="608,367,16,16" depth ="0.99"
+  <arrowDown sprite="Content/Map/testroom.png" sourcerect="594,356,16,16" depth ="0.99"
     width = "16" height ="16"/>
 
-  <arrowLeft sprite="Content/Map/testroom.png" sourcerect="592,383,16,16" depth ="0.99"
+  <arrowLeft sprite="Content/Map/testroom.png" sourcerect="577,373,16,16" depth ="0.99"
     width = "16" height ="16"/>
 
-  <arrowRight sprite="Content/Map/testroom.png" sourcerect="608,383,16,16" depth ="0.99"
+  <arrowRight sprite="Content/Map/testroom.png" sourcerect="597,373,16,16" depth ="0.99"
     width = "16" height ="16"/>
 
   <leftwall sprite="Content/Map/testroom.png" sourcerect="990,274,32,512" depth ="0.05" castshadow="true"
@@ -56,14 +56,31 @@
     description="A vertical wall with collision detection"
     width = "32" height ="64" resizevertical="true" body="true" health="500"/>
 
-  <topwall sprite="Content/Map/testroom.png" sourcerect="208,439,496,32" depth ="0.06" castshadow="true"
+  <topwall sprite="Content/Map/testroom.png" sourcerect="3,989,512,32" depth ="0.06" castshadow="true"
     description="A horizontal wall with collision detection"
     width = "64" height ="32" resizehorizontal="true" body="true" health="500"/>
 
-  <topwindow sprite="Content/Map/testroom.png" sourcerect="208,352,128,80" depth ="0.05"
+  <TopWallHeavy sprite="Content/Map/testroom.png" sourcerect="193,414,512,96" depth ="0.06" castshadow="true"
+    description="A horizontal wall with collision detection"
+    width = "96" height ="96" resizehorizontal="true" body="true" health="1000"/>
+  
+  <LeftWallHeavy sprite="Content/Map/testroom.png" sourcerect="0,546,96,384" depth ="0.06" castshadow="true"
+    description="A horizontal wall with collision detection"
+    width = "96" height ="96" fliphorizontal="true" resizevertical="true" body="true" health="1000"/>
+
+  <RightWallHeavy sprite="Content/Map/testroom.png" sourcerect="0,546,96,384" depth ="0.06" castshadow="true"
+    description="A horizontal wall with collision detection"
+    width = "96" height ="96" resizevertical="true" body="true" health="1000"/>
+  
+  <CableHolderHorizontal sprite="Content/Map/testroom.png" sourcerect="199,348,96,24" depth = "0.85"
+    width="32" height="24" resizehorizontal="true"/>
+  <CableHolderVertical sprite="Content/Map/testroom.png" sourcerect="705,416,24,96" depth = "0.85"
+    width="24" height="32" resizevertical="true"/>
+
+  <topwindow sprite="Content/Map/testroom.png" sourcerect="625,327,128,80" depth ="0.05"
     width = "128" height ="80" body="true" health="100"/>
 
-  <verticalwindow sprite="Content/Map/testroom.png" sourcerect="256,784,128,224" depth ="0.05"
+  <verticalwindow sprite="Content/Map/testroom.png" sourcerect="399,560,128,224" depth ="0.05"
     width = "128" height ="224" body="true" health="100"/>
 
   <horizontalresizablewindow sprite="Content/Map/testroom.png" sourcerect="896,208,128,64" depth ="0.06"
@@ -94,19 +111,23 @@
   <bgpanelswindow sprite="Content/Map/testroom.png" sourcerect="752,560,224,224" depth = "1.0"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
-  <bgorangepanels sprite="Content/Map/testroom.png" sourcerect="528,784,224,224" depth = "1.0"
+  <bgorangepanels sprite="Content/Map/testroom.png" sourcerect="576,798,446,224" depth = "1.0"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
   <bgorangepanelwindow sprite="Content/Map/testroom.png" sourcerect="528,563,224,224" depth = "1.0"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
 
-  <stairsright sprite="Content/Map/testroom.png" sourcerect="0,704,256,320" 
+  <PipesBackground sprite="Content/Map/testroom.png" sourcerect="381,795,192,192" depth = "1.0"
+    width="64" height="64" resizehorizontal="true" resizevertical="true"/>
+  
+
+  <stairsright sprite="Content/Map/testroom.png" sourcerect="100,667,256,320" 
     width="256" height="320" depth = "0.1" stairdirection="Right"/>
 
-  <stairsleft sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="0,704,256,320" 
+  <stairsleft sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="100,667,256,320" 
     width="256" height="320" depth = "0.1" stairdirection="Left"/>
 
-  <bunk sprite="Content/Map/testroom.png" fliphorizontal="true" sourcerect="0,546,173,129"
+  <bunk sprite="Content/Map/testroom.png" sourcerect="130,514,173,129"
     width="173" height="129" depth = "0.9"/>
 
   
