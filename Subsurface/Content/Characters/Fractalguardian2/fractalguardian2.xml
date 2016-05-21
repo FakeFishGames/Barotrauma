@@ -9,7 +9,7 @@
     <!-- head -->
     <limb id = "0" radius="80" height="30" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="299,0,171,208" depth="0.05"/>
-      <attack type="Hit" range="120" duration="0.2" damage="50" stun="2" force="20" damagetype="blunt"/>
+      <attack type="Hit" range="120" duration="0.2" damage="50" stun="2" force="20" damagetype="blunt" targetforce="100"/>
     </limb>
 
 

@@ -78,11 +78,11 @@ namespace Barotrauma
             if (attacker!=null) aiController.OnAttacked(attacker, amount);
         }
 
-        public override AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
+        public override AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            AttackResult result = base.AddDamage(attacker, position, attack, deltaTime, playSound);
+            AttackResult result = base.AddDamage(attacker, worldPosition, attack, deltaTime, playSound);
 
-            aiController.OnAttacked(attacker, (result.Damage + result.Bleeding)/Math.Max(health,1.0f));
+            aiController.OnAttacked(attacker, (result.Damage + result.Bleeding) / Math.Max(health,1.0f));
 
             return result;
         }

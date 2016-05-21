@@ -46,7 +46,7 @@
     <!-- ""claw" -->
     <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" refjoint="0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
-      <attack type="PinchCW" range="200" duration="0.5" damage="30" stun="0.1" bleedingdamage="5" structuredamage="50" damagetype="slash"/>
+      <attack type="PinchCW" range="200" duration="0.5" damage="30" stun="0.1" bleedingdamage="5" structuredamage="50" damagetype="slash" targetforce="-50"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
 

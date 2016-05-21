@@ -11,7 +11,7 @@
     <!-- head -->
     <limb id = "0" radius="230" height="500" type="Head" steerforce="1.0" flip="true" armorsector="0.0,180.0" armorvalue="100.0" impacttolerance="100">
       <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="0,0,628,1024" depth="0.02" origin ="0.4,0.5"/>
-      <attack type="Hit" range="700" duration="0.2" damage="200" stun="5" force="400" damagetype="blunt"/>
+      <attack type="Hit" range="700" duration="0.2" damage="200" stun="5" force="400" damagetype="blunt" targetforce="100"/>
     </limb>
     
     <limb id = "1" width="50" height="440" flip="true">

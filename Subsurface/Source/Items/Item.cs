@@ -649,7 +649,7 @@ namespace Barotrauma
         }
 
 
-        public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
             float damageAmount = attack.GetDamage(deltaTime);
             Condition -= damageAmount;

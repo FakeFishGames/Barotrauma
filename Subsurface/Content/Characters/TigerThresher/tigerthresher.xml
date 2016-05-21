@@ -17,7 +17,7 @@
     <limb id = "1" width="16" height="103" impacttolerance="50.0">
       <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
-      <attack type="PinchCCW" range="200" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash"/>      
+      <attack type="PinchCCW" range="200" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash" targetforce="-50"/>      
     </limb>
 
     <!-- body -->

@@ -24,6 +24,6 @@ namespace Barotrauma
             get;
         }
 
-        AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound=true);
+        AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound=true);
     }
 }
