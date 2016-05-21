@@ -454,7 +454,7 @@ namespace Barotrauma
                     {
                         MapEntity me = MapEntity.mapEntityList[i];
 
-                        if (me.SimPosition.Length()>200.0f)
+                        if (me.SimPosition.Length()>2000.0f)
                         {
                             DebugConsole.NewMessage("Removed "+me.Name+" (simposition "+me.SimPosition+")", Color.Orange);
                             MapEntity.mapEntityList.RemoveAt(i);
@@ -464,6 +464,19 @@ namespace Barotrauma
                             DebugConsole.NewMessage("Removed " + me.Name + " (MoveWithLevel==true)", Color.Orange);
                             MapEntity.mapEntityList.RemoveAt(i);
                         }
+                        else if (me is Item)
+                        {
+                            Item item = me as Item;
+                            var wire = item.GetComponent<Wire>();
+                            if (wire == null) continue;
+
+                            if (wire.Nodes.Any() && !wire.Connections.Any(c => c != null))
+                            {
+                                wire.Item.Drop(null);
+                                DebugConsole.NewMessage("Dropped wire (ID: "+wire.Item.ID+") - attached on wall but no connections found", Color.Orange);
+                            }
+                        }
+
                     }
                     break;
                 case "messagebox":

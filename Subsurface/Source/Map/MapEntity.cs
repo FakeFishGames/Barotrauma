@@ -291,20 +291,23 @@ namespace Barotrauma
 
             MapEntity highLightedEntity = null;
 
-            foreach (MapEntity e in mapEntityList)
+            if (startMovingPos == Vector2.Zero)
             {
-                if (!e.SelectableInEditor) continue;
-
-                if (highLightedEntity == null || e.Sprite == null ||
-                    (highLightedEntity.Sprite!=null && e.Sprite.Depth < highLightedEntity.Sprite.Depth))
+                foreach (MapEntity e in mapEntityList)
                 {
+                    if (!e.SelectableInEditor) continue;
 
-                    if (e.IsMouseOn(position)) highLightedEntity = e;
+                    if (highLightedEntity == null || e.Sprite == null ||
+                        (highLightedEntity.Sprite != null && e.Sprite.Depth < highLightedEntity.Sprite.Depth))
+                    {
+                        if (e.IsMouseOn(position)) highLightedEntity = e;
+                    }
+                    e.isSelected = false;
                 }
-                e.isSelected = false;
-            }
 
-            if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
+                if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
+
+            }
 
             foreach (MapEntity e in selectedList)
             {
@@ -551,13 +554,6 @@ namespace Barotrauma
                 {
                     resizing = false;
                 }
-
-                //if (resizeHorizontal) placeSize.X = position.X - placePosition.X;
-                //if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
-
-                //Rectangle newRect = Submarine.AbsRect(placePosition, placeSize);
-                //newRect.Width = (int)Math.Max(newRect.Width, Submarine.GridSize.X);
-                //newRect.Height = (int)Math.Max(newRect.Height, Submarine.GridSize.Y);
             }
         }
 

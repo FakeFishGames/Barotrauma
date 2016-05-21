@@ -23,6 +23,11 @@ namespace Barotrauma.Items.Components
 
         private static Wire draggingWire;
         private static int? selectedNodeIndex;
+
+        public Connection[] Connections
+        {
+            get { return connections; }
+        }
                 
         public Wire(Item item, XElement element)
             : base(item, element)

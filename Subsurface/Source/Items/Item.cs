@@ -857,22 +857,25 @@ namespace Barotrauma
                 return;
             }
 
-            GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green);
-
-            foreach (Rectangle t in prefab.Triggers)
+            if (isSelected || isHighlighted)
             {
-                Rectangle transformedTrigger = TransformTrigger(t);
+                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green);
 
-                Vector2 rectWorldPos = new Vector2(transformedTrigger.X, transformedTrigger.Y);
-                if (Submarine!=null) rectWorldPos += Submarine.Position;
-                rectWorldPos.Y = -rectWorldPos.Y;
+                foreach (Rectangle t in prefab.Triggers)
+                {
+                    Rectangle transformedTrigger = TransformTrigger(t);
 
-                GUI.DrawRectangle(spriteBatch, 
-                    rectWorldPos,
-                    new Vector2(transformedTrigger.Width, transformedTrigger.Height), 
-                    Color.Green);
+                    Vector2 rectWorldPos = new Vector2(transformedTrigger.X, transformedTrigger.Y);
+                    if (Submarine!=null) rectWorldPos += Submarine.Position;
+                    rectWorldPos.Y = -rectWorldPos.Y;
+
+                    GUI.DrawRectangle(spriteBatch, 
+                        rectWorldPos,
+                        new Vector2(transformedTrigger.Width, transformedTrigger.Height), 
+                        Color.Green);
+                }
             }
-
+            
             if (!ShowLinks) return;
 
             foreach (MapEntity e in linkedTo)
