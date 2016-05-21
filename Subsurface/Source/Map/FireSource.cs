@@ -144,19 +144,35 @@ namespace Barotrauma
         {
             float count = Rand.Range(0.0f, size.X/50.0f);
 
-            if (fireSoundBasic != null)
+            if (hull.FireSources.Any(fs => fs != this && fs.size.X > size.X))
             {
-                basicSoundIndex = fireSoundBasic.Loop(basicSoundIndex, 
-                    Math.Min(size.X / 100.0f, 1.0f), position + size / 2.0f, 1000.0f);
+                if (basicSoundIndex > 0)
+                {                    
+                    Sounds.SoundManager.Stop(basicSoundIndex);
+                    basicSoundIndex = -1;
+                }
+                if (largeSoundIndex > 0)
+                {
+                    Sounds.SoundManager.Stop(largeSoundIndex);
+                    largeSoundIndex = -1;
+                }
+            }
+            else
+            {
+                if (fireSoundBasic != null)
+                {
+                    basicSoundIndex = fireSoundBasic.Loop(basicSoundIndex, 
+                        Math.Min(size.X / 100.0f, 1.0f), WorldPosition + size / 2.0f, 1000.0f);
 
+                }
+                if (fireSoundLarge != null)
+                {
+                    largeSoundIndex = fireSoundLarge.Loop(largeSoundIndex, 
+                        MathHelper.Clamp((size.X - 200.0f) / 100.0f, 0.0f, 1.0f), WorldPosition + size / 2.0f, 1000.0f);
+                }
             }
-            if (fireSoundLarge != null)
-            {
-                largeSoundIndex = fireSoundLarge.Loop(largeSoundIndex, 
-                    MathHelper.Clamp((size.X - 200.0f) / 100.0f, 0.0f, 1.0f), position + size / 2.0f, 1000.0f);
-            }
-            
-            if (size.X>50.0f)
+
+            if (size.X > 50.0f)
             {
                 this.position.Y = MathHelper.Lerp(this.position.Y, hull.Rect.Y - hull.Rect.Height, deltaTime);
             }
