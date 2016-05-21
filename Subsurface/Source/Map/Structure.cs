@@ -533,12 +533,12 @@ namespace Barotrauma
             return sectionPos;
         }
 
-        public AttackResult AddDamage(IDamageable attacker, Vector2 position, Attack attack, float deltaTime, bool playSound = false)
+        public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             if (Submarine.Loaded != null && Submarine.Loaded.GodMode && Submarine == Submarine.Loaded) return new AttackResult(0.0f, 0.0f);
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
-            Vector2 transformedPos = position;
+            Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
 
             int i = FindSectionIndex(transformedPos);
@@ -551,7 +551,7 @@ namespace Barotrauma
             if (playSound && !SectionBodyDisabled(i))
             {
                 DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
-                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, position);
+                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition);
             }
 
             AddDamage(i, damageAmount);

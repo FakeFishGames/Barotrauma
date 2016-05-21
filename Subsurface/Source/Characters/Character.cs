@@ -1200,9 +1200,7 @@ namespace Barotrauma
 
         public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-
-
-            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound);
+            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce);
 
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
@@ -1213,28 +1211,28 @@ namespace Barotrauma
             return attackResult;
         }
 
-        public AttackResult AddDamage(Vector2 simPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound)
+        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce = 0.0f)
         {
             StartStun(stun);
-            
+
             Limb closestLimb = null;
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
             {
-                float distance = Vector2.Distance(simPosition, limb.SimPosition);
+                float distance = Vector2.Distance(worldPosition, limb.WorldPosition);
                 if (closestLimb == null || distance < closestDistance)
                 {
                     closestLimb = limb;
                     closestDistance = distance;
                 }
             }
+            
+            if (Math.Abs(attackForce) > 0.0f)
+            {
+                closestLimb.body.ApplyForce((closestLimb.WorldPosition - worldPosition) * attackForce);
+            }
 
-            Vector2 pull = simPosition - closestLimb.SimPosition;
-            if (pull != Vector2.Zero) pull = Vector2.Normalize(pull);
-            closestLimb.body.ApplyForce(pull*Math.Min(amount*100.0f, 100.0f));
-
-
-            AttackResult attackResult = closestLimb.AddDamage(simPosition, damageType, amount, bleedingAmount, playSound);
+            AttackResult attackResult = closestLimb.AddDamage(worldPosition, damageType, amount, bleedingAmount, playSound);
 
             AddDamage(damageType == DamageType.Burn ? CauseOfDeath.Burn : causeOfDeath, attackResult.Damage, null);
                         

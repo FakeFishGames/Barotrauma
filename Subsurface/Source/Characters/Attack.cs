@@ -49,6 +49,8 @@ namespace Barotrauma
 
         public readonly float Force;
 
+        public readonly float TargetForce;
+
         private Sound sound;
 
         private ParticleEmitterPrefab particleEmitterPrefab;
@@ -104,6 +106,8 @@ namespace Barotrauma
             bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
 
             Force = ToolBox.GetAttributeFloat(element,"force", 0.0f);
+
+            TargetForce = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
 
             Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
