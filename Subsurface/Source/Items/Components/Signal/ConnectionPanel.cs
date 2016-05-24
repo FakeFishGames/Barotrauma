@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
             if (Screen.Selected != GameMain.EditMapScreen &&
                 character.IsKeyHit(InputType.Select) && 
                 character.SelectedConstruction==this.item) character.SelectedConstruction = null;
-
+            
             Connection.DrawConnections(spriteBatch, this, character);
         }
 

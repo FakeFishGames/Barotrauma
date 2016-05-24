@@ -327,10 +327,19 @@ namespace Barotrauma.Items.Components
             //    GUI.DrawRectangle(spriteBatch, new Rectangle((int)nodes[i].X, (int)-nodes[i].Y, 5, 5), Color.DarkGray, true, wireSprite.Depth - 0.01f);
             //}
 
+            if (item.IsHighlighted)
+            {
+                for (int i = 1; i < Nodes.Count; i++)
+                {
+                    DrawSection(spriteBatch, Nodes[i], Nodes[i - 1], Color.Gold, 0.5f);
+                }
+            }
+
             for (int i = 1; i < Nodes.Count; i++)
             {
                 DrawSection(spriteBatch, Nodes[i], Nodes[i - 1], item.Color);
             }
+
 
             if (IsActive && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
             {
@@ -404,7 +413,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void DrawSection(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color)
+        private void DrawSection(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float width = 0.3f)
         {
             if (Submarine.Loaded!=null)
             {
@@ -419,7 +428,7 @@ namespace Barotrauma.Items.Components
                 start, null, color,
                 MathUtils.VectorToAngle(end - start),
                 new Vector2(0.0f, wireSprite.size.Y / 2.0f),
-                new Vector2((Vector2.Distance(start, end)) / wireSprite.Texture.Width, 0.3f),
+                new Vector2((Vector2.Distance(start, end)) / wireSprite.Texture.Width,  width),
                 SpriteEffects.None,
                 wireSprite.Depth + ((item.ID % 100) * 0.00001f));
         }

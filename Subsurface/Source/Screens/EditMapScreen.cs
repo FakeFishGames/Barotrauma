@@ -432,7 +432,6 @@ namespace Barotrauma
 
             if (characterMode)
             {
-
                 CreateDummyCharacter();
             }
             else if (dummyCharacter != null)
@@ -674,11 +673,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    foreach (MapEntity me in MapEntity.mapEntityList)
-                    {
-                        me.IsHighlighted = false;
-                    }
-
                     if (dummyCharacter.SelectedConstruction==null)
                     {
                         Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition);
@@ -768,7 +762,12 @@ namespace Barotrauma
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
             if ((characterMode || wiringMode) && dummyCharacter != null)                     
-            { 
+            {
+                foreach (MapEntity me in MapEntity.mapEntityList)
+                {
+                    me.IsHighlighted = false;
+                }
+
                 dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false); 
 
                 foreach (Item item in dummyCharacter.SelectedItems)
