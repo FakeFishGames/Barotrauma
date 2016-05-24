@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
                 foreach (Connection c2 in c.Recipients)
                 {
                     PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
-                    if (pt == null) continue;
+                    if (pt == null || !pt.IsActive) continue;
 
                     gridLoad += pt.PowerLoad; 
                 }

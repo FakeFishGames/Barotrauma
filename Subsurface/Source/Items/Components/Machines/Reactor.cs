@@ -452,11 +452,17 @@ namespace Barotrauma.Items.Components
             spriteBatch.DrawString(GUI.Font, "Grid load: " + (int)load + " kW",
                 new Vector2(x + 600, y + 30), Color.Yellow);
 
+            float maxLoad = 0.0f;
+            foreach (float loadVal in loadGraph)
+            {
+                maxLoad = Math.Max(maxLoad, loadVal);
+            }
+
             DrawGraph(tempGraph, spriteBatch,
-                new Rectangle(x + 30, y + 30, 400, 250), 10000.0f, xOffset, Color.Red);
+                new Rectangle(x + 30, y + 30, 400, 250), Math.Max(10000.0f, maxLoad), xOffset, Color.Red);
 
             DrawGraph(loadGraph, spriteBatch,
-                new Rectangle(x + 30, y + 30, 400, 250), 10000.0f, xOffset, Color.Yellow);
+                new Rectangle(x + 30, y + 30, 400, 250),  Math.Max(10000.0f, maxLoad), xOffset, Color.Yellow);
 
             spriteBatch.DrawString(GUI.Font, "Shutdown Temperature: " + (int)shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
 
