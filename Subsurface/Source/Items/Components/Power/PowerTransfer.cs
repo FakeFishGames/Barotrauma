@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
                     //if (it.Updated) continue;
 
                     Powered powered = it.GetComponent<Powered>();
-                    if (powered == null) continue;
+                    if (powered == null || !powered.IsActive) continue;
 
                     if (connectedList.Contains(powered)) continue;
 

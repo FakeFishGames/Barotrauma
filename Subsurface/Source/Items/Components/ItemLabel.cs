@@ -14,6 +14,12 @@ namespace Barotrauma.Items.Components
             set 
             {
                 if (value == TextBlock.Text || item.Rect.Width < 5) return;
+
+                if (textBlock.Rect.Width != item.Rect.Width  || textBlock.Rect.Height != item.Rect.Height)
+                {
+                    textBlock = null;
+                }
+
                 TextBlock.Text = value;
             }
         }
@@ -57,7 +63,7 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
         }
-
+        
         public override void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             base.Draw(spriteBatch, editing);

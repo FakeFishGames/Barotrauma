@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class RelayComponent : ItemComponent
+    class RelayComponent : PowerTransfer
     {
         private float maxPower;
 
@@ -17,27 +17,43 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool isOn;
+
         [Editable, HasDefaultValue(false, true)]
         public bool IsOn
         {
-            get; set; 
+            get
+            {
+                return IsActive;
+            }
+            set
+            {
+                isOn = value;
+                IsActive = value;
+                if (!IsActive)
+                {
+                    currPowerConsumption = 0.0f;
+                }
+            }
         }
 
         public RelayComponent(Item item, XElement element)
             : base (item, element)
         {
-            IsActive = true;
-            IsOn = true;
+            IsActive = isOn;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
+            base.Update(deltaTime, cam);
 
             item.SendSignal(0, IsOn ? "1" : "0", "state_out");
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
         {
+            if (connection.IsPower && connection.Name.Contains("_out")) return;
+
             if (item.Condition <= 0.0f) return;
 
             if (power > maxPower) item.Condition = 0.0f;
