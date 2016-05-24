@@ -487,6 +487,17 @@ namespace Barotrauma.Networking
 
                 switch (packetType)
                 {
+                    case (byte)PacketTypes.CanStartGame:
+                        string subName = inc.ReadString();
+                        string subHash = inc.ReadString();
+
+                        if (GameMain.NetLobbyScreen.TrySelectSub(subName,subHash))
+                        {
+                            NetOutgoingMessage readyToStartMsg = client.CreateMessage();
+                            readyToStartMsg.Write((byte)PacketTypes.StartGame);
+                            client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
+                        }
+                        break;
                     case (byte)PacketTypes.StartGame:
                         if (Screen.Selected == GameMain.GameScreen) continue;
 

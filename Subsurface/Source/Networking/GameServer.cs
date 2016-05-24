@@ -474,6 +474,8 @@ namespace Barotrauma.Networking
                             //send the message to everyone except the client who just logged in
                             SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, inc.SenderConnection);
 
+                            UpdateVoteStatus();
+
                             AddChatMessage(sender.name + " has joined the server", ChatMessageType.Server);
                         }
                     }
@@ -520,6 +522,9 @@ namespace Barotrauma.Networking
                             break;
                         case (byte)PacketTypes.PlayerLeft:
                             DisconnectClient(inc.SenderConnection);
+                            break;
+                        case (byte)PacketTypes.StartGame:
+                            dataSender.ReadyToStart = true;
                             break;
                         case (byte)PacketTypes.CharacterInfo:
                             ReadCharacterData(inc);
@@ -871,17 +876,38 @@ namespace Barotrauma.Networking
         {
             GameMain.NetLobbyScreen.StartButton.Enabled = false;
 
-            if (Voting.AllowSubVoting) yield return new WaitForSeconds(1.0f);
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)PacketTypes.CanStartGame);
+            msg.Write(selectedSub.Name);
+            msg.Write(selectedSub.MD5Hash.Hash);
 
-            while (ConnectedClients.Any(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath))
+            SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+
+            ConnectedClients.ForEach(c => c.ReadyToStart = false);
+
+            float waitForResponseTimer = 5.0f;
+            while (ConnectedClients.Any(c => !c.ReadyToStart) && waitForResponseTimer > 0.0f)
             {
+                waitForResponseTimer -= CoroutineManager.UnscaledDeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            float fileTransferTimeOut = 60.0f;
+            while (ConnectedClients.Any(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath) && fileTransferTimeOut>0.0f)
+            {
+                fileTransferTimeOut -= CoroutineManager.UnscaledDeltaTime;
+
                 if (GUIMessageBox.MessageBoxes.Peek() == null)
                 {
-                    new GUIMessageBox("File transfer in progress",
-                        "The round will be started after the submarine file has been sent to all players.", 400, 400);
+                    var messageBox = new GUIMessageBox("File transfer in progress",
+                        "The round will be started after the submarine file has been sent to all players.", new string[] {"Cancel transfer"}, 400, 400);
+                    messageBox.Buttons[0].UserData = ConnectedClients.Find(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath);
+                    messageBox.Buttons[0].OnClicked = (button, obj) =>
+                        {
+                            (button.UserData as Client).CancelTransfer();
+                            return true;
+                        };
                 }
-
-                yield return new WaitForSeconds(0.1f);
             }
 
             GameMain.ShowLoading(StartGame(selectedSub, selectedMode), false);
@@ -1782,6 +1808,8 @@ namespace Barotrauma.Networking
         public string version;
         public bool inGame;
 
+        public bool ReadyToStart;
+
         private object[] votes;
 
         public List<JobPrefab> jobPreferences;
@@ -1827,6 +1855,16 @@ namespace Barotrauma.Networking
             {
                 votes[i] = null;
             }
+        }
+
+        public void CancelTransfer()
+        {
+            if (FileStreamSender == null) return;
+
+            FileStreamSender.CancelTransfer();
+            FileStreamSender.Dispose();
+
+            FileStreamSender = null;
         }
     }
 }
