@@ -10,7 +10,7 @@ using Barotrauma.Lights;
 
 namespace Barotrauma.Items.Components
 {
-    class Door : ItemComponent
+    class Door : ItemComponent, IDrawableComponent
     {
         private Gap linkedGap;
 
@@ -293,7 +293,7 @@ namespace Barotrauma.Items.Components
             linkedGap.Open = 1.0f;
         }
         
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing)
         {           
             Color color = (item.IsSelected) ? Color.Green : Color.White;
             color = color * (item.Condition / 100.0f);

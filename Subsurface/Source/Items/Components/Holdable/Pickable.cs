@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Pickable : ItemComponent
+    class Pickable : ItemComponent, IDrawableComponent
     {
         protected Character picker;
 
@@ -112,6 +112,7 @@ namespace Barotrauma.Items.Components
             var leftHand = picker.AnimController.GetLimb(LimbType.LeftHand);
             var rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
 
+            Drawable = true;
 
             pickTimer = 0.0f;
             while (pickTimer < requiredTime)
@@ -150,8 +151,10 @@ namespace Barotrauma.Items.Components
 
         private void StopPicking(Character picker)
         {
+            Drawable = false;
+
             picker.AnimController.Anim = AnimController.Animation.None;
-            pickTimer = 0.0f;            
+            pickTimer = 0.0f;         
         }
 
         protected void DropConnectedWires(Character character)
@@ -174,9 +177,13 @@ namespace Barotrauma.Items.Components
         }
 
         
-        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            if (pickTimer <= 0.0f) return;
+            if (pickTimer <= 0.0f)
+            {
+                Drawable = false;
+                return;
+            }
 
             float progressBarWidth = 100.0f;
 

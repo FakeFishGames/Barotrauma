@@ -12,6 +12,11 @@ using System.Globalization;
 
 namespace Barotrauma.Items.Components
 {
+    interface IDrawableComponent
+    {
+        void Draw(SpriteBatch spriteBatch, bool editing);
+    }
+
     class ItemSound
     {
         public readonly Sound Sound;
@@ -101,6 +106,28 @@ namespace Barotrauma.Items.Components
                 }
 
                 isActive = value; 
+            }
+        }
+
+        private bool drawable = true;
+
+        public bool Drawable
+        {
+            get { return drawable; }
+            set 
+            {
+                if (value == drawable) return;
+                drawable = value;
+                if (drawable)
+                {
+                    if (!item.drawableComponents.Contains(this as IDrawableComponent))
+                        item.drawableComponents.Add(this as IDrawableComponent);
+                }
+                else
+                {
+                    item.drawableComponents.Remove(this as IDrawableComponent);
+                }
+                
             }
         }
 
@@ -430,7 +457,10 @@ namespace Barotrauma.Items.Components
         /// <summary>a Character has dropped the item</summary>
         public virtual void Drop(Character dropper)  { }
 
-        public virtual void Draw(SpriteBatch spriteBatch, bool editing = false) { }
+        //public virtual void Draw(SpriteBatch spriteBatch, bool editing = false) 
+        //{
+        //    item.drawableComponents = Array.FindAll(item.drawableComponents, i => i != this);
+        //}
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
         

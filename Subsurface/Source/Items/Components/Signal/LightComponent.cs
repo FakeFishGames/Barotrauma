@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class LightComponent : Powered
+    class LightComponent : Powered, IDrawableComponent
     {
 
         private Color lightColor;
@@ -173,7 +173,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing = false)
         {
             if (light.LightSprite != null && (item.body == null || item.body.Enabled))
             {

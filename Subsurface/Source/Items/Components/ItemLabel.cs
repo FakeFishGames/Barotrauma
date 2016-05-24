@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Xml.Linq;
 namespace Barotrauma.Items.Components
 {
-    class ItemLabel : ItemComponent
+    class ItemLabel : ItemComponent, IDrawableComponent
     {
         private GUITextBlock textBlock;
 
@@ -64,10 +64,8 @@ namespace Barotrauma.Items.Components
         {
         }
         
-        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            base.Draw(spriteBatch, editing);
-
             var drawPos = new Vector2(
                 item.DrawPosition.X - item.Rect.Width/2.0f,
                 -(item.DrawPosition.Y + item.Rect.Height/2.0f));

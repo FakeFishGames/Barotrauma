@@ -8,7 +8,7 @@ using FarseerPhysics;
 
 namespace Barotrauma.Items.Components
 {
-    class Turret : Powered
+    class Turret : Powered, IDrawableComponent
     {
         Sprite barrelSprite;
 
@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             Vector2 drawPos = new Vector2(item.Rect.X, item.Rect.Y);
             if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;

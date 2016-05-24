@@ -42,6 +42,7 @@ namespace Barotrauma
 
         //components that determine the functionality of the item
         public List<ItemComponent> components;
+        public List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
 
@@ -98,7 +99,7 @@ namespace Barotrauma
         {
             get
             {
-                return ParentInventory == null && (body == null || body.Enabled);
+                return parentInventory == null && (body == null || body.Enabled);
             }
         }
 
@@ -312,10 +313,11 @@ namespace Barotrauma
 
             spriteColor = prefab.SpriteColor;
 
-            linkedTo        = new ObservableCollection<MapEntity>();
-            components      = new List<ItemComponent>();
-            FixRequirements = new List<FixRequirement>();
-            tags            = new List<string>();
+            linkedTo            = new ObservableCollection<MapEntity>();
+            components          = new List<ItemComponent>();
+            drawableComponents  = new List<IDrawableComponent>();
+            FixRequirements     = new List<FixRequirement>();
+            tags                = new List<string>();
                        
             rect = newRect;
             
@@ -338,8 +340,6 @@ namespace Barotrauma
             }
 
             properties = ObjectProperty.InitProperties(this, element);
-
-
 
             foreach (XElement subElement in element.Elements())
             {
@@ -365,6 +365,8 @@ namespace Barotrauma
                         if (ic == null) break;
 
                         components.Add(ic);
+
+                        if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
 
                         if (ic.statusEffectLists == null) continue;
 
@@ -394,7 +396,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
+            
             //containers need to handle collision events to notify items inside them about the impact
             if (ImpactTolerance > 0.0f || GetComponent<ItemContainer>() != null)
             {
@@ -846,8 +848,13 @@ namespace Barotrauma
                     }                    
                 }
             }
-            
-            foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
+
+            for (int i = 0; i < drawableComponents.Count; i++ )
+            {
+                drawableComponents[i].Draw(spriteBatch, editing);
+            }
+
+                //foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
 
             if (GameMain.DebugDraw && aiTarget!=null) aiTarget.Draw(spriteBatch);
             
