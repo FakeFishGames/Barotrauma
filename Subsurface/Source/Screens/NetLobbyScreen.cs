@@ -1027,8 +1027,8 @@ namespace Barotrauma
             //already downloading the selected sub file
             if (GameMain.Client.ActiveFileTransferName == subName+".sub") return false;
 
-            var matchingListSub = subList.children.Find(c => c.UserData != null && (c.UserData as Submarine).Name == subName);
-            if (matchingListSub!=null)
+            var matchingListSub = subList.children.Find(c => c.UserData != null && (c.UserData as Submarine).Name == subName) as GUITextBlock;
+            if (matchingListSub != null)
             {
                 subList.Select(subList.children.IndexOf(matchingListSub), true);
             }
@@ -1043,7 +1043,9 @@ namespace Barotrauma
                 }
                 else if (sub.MD5Hash.Hash == null)
                 {
-                    errorMsg = "Couldn't load submarine ''" + subName + "''. The file may be corrupted. "; 
+                    errorMsg = "Couldn't load submarine ''" + subName + "''. The file may be corrupted. ";
+
+                    if (matchingListSub != null) matchingListSub.TextColor = Color.Red;
                 }
                 else
                 {

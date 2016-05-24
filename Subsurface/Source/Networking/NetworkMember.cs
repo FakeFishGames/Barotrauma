@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
 
         RequestNetLobbyUpdate,
 
-        StartGame, EndGame,
+        StartGame, EndGame, CanStartGame,
 
         NewItem, RemoveItem,
 
