@@ -8,7 +8,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
-    class Reactor : Powered
+    class Reactor : Powered, IDrawableComponent
     {
         const float NetworkUpdateInterval = 3.0f;
 
@@ -385,10 +385,8 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            base.Draw(spriteBatch, editing);
-
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(item.Rect.X + item.Rect.Width / 2 - 6, -item.Rect.Y + 29),
                 new Vector2(12, 42), Color.Black);

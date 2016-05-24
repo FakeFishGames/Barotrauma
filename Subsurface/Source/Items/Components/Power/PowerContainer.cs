@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
-    class PowerContainer : Powered
+    class PowerContainer : Powered, IDrawableComponent
     {
         //[power/min]        
         float capacity;
@@ -224,10 +224,8 @@ namespace Barotrauma.Items.Components
             //if (connection.IsPower) voltage = power;    
         }
         
-        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            base.Draw(spriteBatch, editing);
-
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(item.DrawPosition.X- 4, -item.DrawPosition.Y),
                 new Vector2(8, 22), Color.Black);

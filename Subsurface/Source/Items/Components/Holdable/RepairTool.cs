@@ -105,8 +105,6 @@ namespace Barotrauma.Items.Components
 
             //if (DoesUseFail(Character)) return false;
 
-            IsActive = true;
-
             //targetPosition = targetPosition.X, -targetPosition.Y);
 
             float degreeOfSuccess = DegreeOfSuccess(character)/100.0f;
@@ -195,7 +193,6 @@ namespace Barotrauma.Items.Components
                     if (character.IsKeyDown(InputType.Aim))
                     {
                         targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, character);
-                        //isActive = true;
                     }
                 }
                 else if ((targetItem = (targetBody.UserData as Item)) != null)
@@ -203,12 +200,12 @@ namespace Barotrauma.Items.Components
                     targetItem.IsHighlighted = true;
 
                     ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
-                }
-                
+                }                
             }
-                        
-          
 
+            GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition + TransformedBarrelPos,
+                -item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi), ParticleSpeed);
+          
             return true;
         }
 
@@ -247,33 +244,6 @@ namespace Barotrauma.Items.Components
             Use(deltaTime, character);
 
             return leak.Open <= 0.0f;
-
         }
-        
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
-        {
-            if (!IsActive) return;
-
-            //Vector2 particleSpeed =  new Vector2(
-            //    (float)Math.Cos(item.body.Rotation),
-            //    (float)Math.Sin(item.body.Rotation)) *item.body.Dir * 0.1f;
-
-
-            if (!string.IsNullOrWhiteSpace(particles))
-            {
-                GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition+TransformedBarrelPos, 
-                    -item.body.Rotation + ((item.body.Dir>0.0f) ? 0.0f : MathHelper.Pi), ParticleSpeed);
-            }
-            
-            //Vector2 startPos = ConvertUnits.ToDisplayUnits(item.body.Position);
-            //Vector2 endPos = ConvertUnits.ToDisplayUnits(pickedPosition);
-            //endPos = new Vector2(endPos.X + Game1.localRandom.Next(-2, 2), endPos.Y + Game1.localRandom.Next(-2, 2));
-
-            //GUI.DrawLine(spriteBatch, startPos, endPos, Color.Orange, 0.0f);
-
-            IsActive = false;
-        }
-
-
     }
 }

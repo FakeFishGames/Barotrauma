@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Wire : ItemComponent
+    class Wire : ItemComponent, IDrawableComponent
     {
         const float nodeDistance = 32.0f;
         const float heightFromFloor = 128.0f;
@@ -129,6 +129,7 @@ namespace Barotrauma.Items.Components
                     Nodes.Add(newConnection.Item.Position - Submarine.HiddenSubPosition);
                 }
 
+
                 break;
             }
 
@@ -150,6 +151,8 @@ namespace Barotrauma.Items.Components
                 CleanNodes();
             }
 
+            Drawable = Nodes.Any();
+
             if (!loading) Item.NewComponentEvent(this, true, true);
 
             return true;
@@ -160,6 +163,7 @@ namespace Barotrauma.Items.Components
             ClearConnections();
 
             IsActive = true;
+            //Drawable = true;
         }
 
         public override void Unequip(Character character)
@@ -174,7 +178,6 @@ namespace Barotrauma.Items.Components
             ClearConnections();
             
             IsActive = false;
-
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -221,6 +224,8 @@ namespace Barotrauma.Items.Components
             if (newNodePos!= Vector2.Zero && Nodes.Count>0 && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
             {
                 Nodes.Add(newNodePos);
+                Drawable = true;
+
                 newNodePos = Vector2.Zero;
             }
             return true;
@@ -231,8 +236,11 @@ namespace Barotrauma.Items.Components
             if (Nodes.Count > 1)
             {
                 Nodes.RemoveAt(Nodes.Count - 1);
+
                 item.NewComponentEvent(this, true, true);
             }
+
+            Drawable = Nodes.Any();
         }
 
         public override bool Pick(Character picker)
@@ -256,6 +264,8 @@ namespace Barotrauma.Items.Components
 
                 connections[i] = null;
             }
+
+            Drawable = false;
         }
 
         private Vector2 RoundNode(Vector2 position, Hull hull)
@@ -317,15 +327,18 @@ namespace Barotrauma.Items.Components
 
         }
 
-
-        public override void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (Nodes.Count == 0) return;
-
             //for (int i = 0; i < nodes.Count; i++)
             //{
             //    GUI.DrawRectangle(spriteBatch, new Rectangle((int)nodes[i].X, (int)-nodes[i].Y, 5, 5), Color.DarkGray, true, wireSprite.Depth - 0.01f);
             //}
+
+            if (!Nodes.Any())
+            {
+                Drawable = false;
+                return;
+            }
 
             if (item.IsHighlighted)
             {
@@ -347,9 +360,9 @@ namespace Barotrauma.Items.Components
                 //nodes.Add(newNodePos);
             }
 
-            if (!editing || !PlayerInput.MouseInsideWindow || !GameMain.EditMapScreen.WiringMode ) return;
+            if (!editing || !PlayerInput.MouseInsideWindow || !GameMain.EditMapScreen.WiringMode) return;
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null) return;
-            
+
             for (int i = 0; i < Nodes.Count; i++)
             {
                 Vector2 worldPos = Nodes[i];
@@ -396,8 +409,8 @@ namespace Barotrauma.Items.Components
 
                     Vector2 nodeWorldPos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - Submarine.HiddenSubPosition - Submarine.Loaded.Position;// Nodes[(int)selectedNodeIndex];
 
-                    nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X/2.0f);
-                    nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y/2.0f);
+                    nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
+                    nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
 
                     //if (item.Submarine != null) nodeWorldPos += item.Submarine.Position;
 
@@ -478,6 +491,8 @@ namespace Barotrauma.Items.Components
                 Nodes.Add(new Vector2(x, y));
             }
 
+            Drawable = Nodes.Any();
+
         }
 
         protected override void RemoveComponentSpecific()
@@ -513,6 +528,8 @@ namespace Barotrauma.Items.Components
             }
 
             Nodes = newNodes;
+
+            Drawable = Nodes.Any();
         }
     }
 }

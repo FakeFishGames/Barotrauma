@@ -13,7 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
-    class Rope : ItemComponent
+    class Rope : ItemComponent, IDrawableComponent
     {
         PhysicsBody[] ropeBodies;
         RevoluteJoint[] ropeJoints;
@@ -239,10 +239,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            base.Draw(spriteBatch, editing);
-
             if (!IsActive) return;
 
             RevoluteJoint firstJoint = null;

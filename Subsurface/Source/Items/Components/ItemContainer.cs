@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
-    class ItemContainer : ItemComponent
+    class ItemContainer : ItemComponent, IDrawableComponent
     {
         public const int MaxInventoryCount = 4;
 
@@ -29,7 +29,11 @@ namespace Barotrauma.Items.Components
         public bool HideItems
         {
             get { return hideItems; }
-            set { hideItems = value; }
+            set 
+            { 
+                hideItems = value;
+                Drawable = !hideItems;
+            }
         }
         private bool hideItems;
 
@@ -160,10 +164,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            base.Draw(spriteBatch, editing);
-
             if (hideItems || (item.body != null && !item.body.Enabled)) return;
 
             Vector2 transformedItemPos = itemPos;
