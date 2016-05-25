@@ -409,6 +409,8 @@ namespace Barotrauma.Items.Components
                 SpriteEffects.None,
                 0.0f);
 
+            connector.Draw(spriteBatch, end, Color.White, new Vector2(10.0f, 10.0f), MathUtils.VectorToAngle(end - start)+MathHelper.PiOver2);
+
             if (draggingConnected == null && !wireEquipped)
             {
                 if (mouseOn)

@@ -141,7 +141,7 @@ namespace Barotrauma.Items.Components
                     CreateBlipsForLine(
                         start + Submarine.Loaded.WorldPosition, 
                         end + Submarine.Loaded.WorldPosition, 
-                        radius, displayScale, 2.0f);
+                        radius, displayScale, 200.0f, 2.0f);
                 }
 
             }
@@ -170,7 +170,7 @@ namespace Barotrauma.Items.Components
                     CreateBlipsForLine(
                         new Vector2(item.WorldPosition.X - range, Level.Loaded.Size.Y),
                         new Vector2(item.WorldPosition.X + range, Level.Loaded.Size.Y),
-                        radius, displayScale, 1.0f);
+                        radius, displayScale, 300.0f, 1.0f);
                 }
 
                 List<VoronoiCell> cells = Level.Loaded.GetCells(item.WorldPosition, 7);
@@ -179,14 +179,14 @@ namespace Barotrauma.Items.Components
                     foreach (GraphEdge edge in cell.edges)
                     {
                         if (!edge.isSolid) continue;
-                        float cellDot = Vector2.Dot(cell.Center - item.WorldPosition, (edge.Center+cell.Translation) - cell.Center);
+                        float cellDot = Vector2.Dot(cell.Center - item.WorldPosition, (edge.Center + cell.Translation) - cell.Center);
                         if (cellDot > 0) continue;
 
                         float facingDot = Vector2.Dot(
-                            Vector2.Normalize(edge.point1 - edge.point2), 
-                            Vector2.Normalize(cell.Center-item.WorldPosition));
+                            Vector2.Normalize(edge.point1 - edge.point2),
+                            Vector2.Normalize(cell.Center - item.WorldPosition));
 
-                        CreateBlipsForLine(edge.point1 + cell.Translation, edge.point2+cell.Translation, radius, displayScale, 3.0f * (Math.Abs(facingDot) + 1.0f));
+                        CreateBlipsForLine(edge.point1 + cell.Translation, edge.point2 + cell.Translation, radius, displayScale, 350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f));
                     }
                 }    
 
@@ -204,7 +204,7 @@ namespace Barotrauma.Items.Components
                                 Vector2.Normalize((wall.A+wall.B)/2.0f - ruinShape.Center));
                             if (cellDot > 0) continue;
 
-                            CreateBlipsForLine(wall.A, wall.B, radius, displayScale, -cellDot*5.0f);
+                            CreateBlipsForLine(wall.A, wall.B, radius, displayScale, 100.0f, 1000.0f);
                         }                       
                     }
                 }
@@ -295,7 +295,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void CreateBlipsForLine(Vector2 point1, Vector2 point2, float radius, float displayScale, float step)
+        private void CreateBlipsForLine(Vector2 point1, Vector2 point2, float radius, float displayScale, float lineStep, float zStep)
         {
             float pingRadius = radius * pingState;
 
@@ -303,7 +303,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 lineDir = (point2 - point1) / length;
 
-            for (float x = 0; x < length; x += Rand.Range(300.0f, 400.0f))
+            for (float x = 0; x < length; x += lineStep*Rand.Range(0.8f,1.2f))
             {
                 Vector2 point = point1 + lineDir * x;
                 //point += cell.Translation;
@@ -316,7 +316,7 @@ namespace Barotrauma.Items.Components
 
                 //float step = 3.0f * (Math.Abs(facingDot) + 1.0f);
                 float alpha = Rand.Range(1.5f, 2.0f);
-                for (float z = 0; z < radius - pointDist; z += step)
+                for (float z = 0; z < radius - pointDist; z += zStep)
                 {
 
                     var blip = new RadarBlip(
@@ -324,7 +324,7 @@ namespace Barotrauma.Items.Components
                         alpha);
 
                     radarBlips.Add(blip);
-                    step += 0.5f;
+                    zStep += 0.5f;
                     alpha -= (z == 0) ? 0.5f : 0.1f;
                 }
 

@@ -224,7 +224,7 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            for (int i = 0; i < MapEntity.mapEntityList.Count(); i++ )
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++ )
             {
                 MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
@@ -232,7 +232,7 @@ namespace Barotrauma
 
         public static void DrawFront(SpriteBatch spriteBatch, bool editing = false)
         {
-            for (int i = 0; i < MapEntity.mapEntityList.Count(); i++)
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth < 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
@@ -241,7 +241,7 @@ namespace Barotrauma
 
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false)
         {
-            for (int i = 0; i < MapEntity.mapEntityList.Count(); i++)
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth >= 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
@@ -608,7 +608,6 @@ namespace Barotrauma
 
             foreach (string path in filePaths)
             {
-                //Map savedMap = new Map(mapPath);
                 SavedSubmarines.Add(new Submarine(path));
             }
 
