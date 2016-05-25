@@ -11,7 +11,7 @@
     <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
     <Turret canbeselected = "true" linkable="true" barrelpos="23, 76"
-            rotationlimits="90,90"
+            rotationlimits="270,270"
             powerconsumption="0.0"/>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
@@ -28,7 +28,7 @@
 
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="0" canbeselected = "true">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected = "true">
       <Containable name="Depth Charge Shell"/>
       <Containable name="Nuclear Depth Charge"/>      
     </ItemContainer>
@@ -45,9 +45,9 @@
       <Item name="Steel Bar"/>
     </Deconstruct>
 
-    <Sprite texture="railgunetc.png" sourcerect="113,188,47,68" depth ="0.5"/>
+    <Sprite texture="railgunetc.png" sourcerect="114,210,68,47" depth ="0.5"/>
 
-    <Body width="47" height="68" density="30"/>
+    <Body width="68" height="47" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
@@ -74,9 +74,9 @@
       <Item name="Uranium Bar"/>
     </Deconstruct>
 
-    <Sprite texture="railgunetc.png" sourcerect="163,188,46,68" depth="0.5"/>
+    <Sprite texture="railgunetc.png" sourcerect="187,210,68,47" depth="0.5"/>
 
-    <Body width="47" height="68" density="30"/>
+    <Body width="68" height="47" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 

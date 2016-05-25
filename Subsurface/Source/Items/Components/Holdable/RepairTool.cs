@@ -20,6 +20,8 @@ namespace Barotrauma.Items.Components
 
         private string particles;
 
+        private float activeTimer;
+
         [HasDefaultValue(0.0f, false)]
         public float Range
         {
@@ -92,11 +94,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        //public override void Update(float deltaTime, Camera cam)
-        //{
-        //    base.Update(deltaTime, cam);
-
-        //}
+        public override void Update(float deltaTime, Camera cam)
+        {
+            activeTimer -= deltaTime;
+            if (activeTimer <= 0.0f) IsActive = false;
+        }
 
         public override bool Use(float deltaTime, Character character = null)
         {
@@ -126,6 +128,9 @@ namespace Barotrauma.Items.Components
                 if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
+
+            IsActive = true;
+            activeTimer = 0.1f;
 
 
             for (int n = 0; n < 2; n++)

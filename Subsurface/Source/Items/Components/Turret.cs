@@ -131,6 +131,8 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
+            if (minRotation == maxRotation) return;
+
             float targetMidDiff = MathHelper.WrapAngle(targetRotation - (minRotation + maxRotation) / 2.0f);
 
             float maxDist = (maxRotation - minRotation) / 2.0f;
@@ -184,6 +186,7 @@ namespace Barotrauma.Items.Components
             Item projectile = projectiles[0].Item;
 
             projectile.Drop();
+            projectile.body.Dir = 1.0f;
 
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;

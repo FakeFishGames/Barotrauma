@@ -114,12 +114,9 @@ namespace Barotrauma.Items.Components
 
             foreach (FabricableItem fi in fabricableItems)
             {
-                Color color = ((itemList.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.3f;
-
-                new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25), fi.TargetItem.Name,
-                    color, Color.White,
-                    Alignment.Left, Alignment.Left, null, itemList)
+                Color color = ((itemList.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.3f;
+                
+                GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, itemList)
                 {
                     UserData = fi,
                     Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f),
@@ -127,6 +124,21 @@ namespace Barotrauma.Items.Components
                     SelectedColor = Color.Gold * 0.5f,
                     ToolTip = fi.TargetItem.Description
                 };
+
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(40, 0, 0, 25),
+                    fi.TargetItem.Name,
+                    Color.Transparent, Color.White,
+                    Alignment.Left, Alignment.Left,
+                    null, frame);
+                textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+
+                if (fi.TargetItem.sprite != null)
+                {
+                    GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), fi.TargetItem.sprite, Alignment.Left, frame);
+                    img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
+                    img.Color = fi.TargetItem.SpriteColor;
+                }
 
             }
         }
