@@ -676,6 +676,12 @@ namespace Barotrauma.Networking
                 byte id = inc.ReadByte();
                 Character newCharacter = ReadCharacterData(inc, id == myID);
 
+                if (id != myID)
+                {
+                    var characterOwner = otherClients.Find(c => c.ID == id);
+                    characterOwner.Character = newCharacter;
+                }
+
                 crew.Add(newCharacter);
 
                 yield return CoroutineStatus.Running;
@@ -758,15 +764,26 @@ namespace Barotrauma.Networking
             if (fileStreamReceiver != null && 
                 (fileStreamReceiver.Status == FileTransferStatus.Receiving || fileStreamReceiver.Status == FileTransferStatus.NotStarted))
             {
-                Vector2 pos = Screen.Selected == GameMain.NetLobbyScreen ? 
-                    new Vector2(GameMain.NetLobbyScreen.SubList.Rect.X, GameMain.NetLobbyScreen.SubList.Rect.Bottom+5) : new Vector2(GameMain.GraphicsWidth / 2 - 200, 10);
+                //Vector2 pos = Screen.Selected == GameMain.NetLobbyScreen ? 
+                //    new Vector2(GameMain.NetLobbyScreen.SubList.Rect.X, GameMain.NetLobbyScreen.SubList.Rect.Bottom+5) : new Vector2(GameMain.GraphicsWidth / 2 - 200, 10);
 
-                GUI.DrawString(spriteBatch, pos, "Downloading " + fileStreamReceiver.FileName, Color.White);
-                GUI.DrawString(spriteBatch, pos + Vector2.UnitX*300,
-                    MathUtils.GetBytesReadable((long)fileStreamReceiver.Received) + " / " + MathUtils.GetBytesReadable((long)fileStreamReceiver.FileSize), Color.White);
-                GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 20), new Vector2(300, 15), fileStreamReceiver.Progress, Color.Green);
 
-                if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 310, (int)pos.Y + 20, 100, 15), "Cancel", new Color(0.88f, 0.25f, 0.15f, 0.8f)))
+
+                Vector2 pos = new Vector2(GameMain.GraphicsWidth / 2 - 130, GameMain.NetLobbyScreen.InfoFrame.Rect.Y / 2 - 15);
+                
+                GUI.DrawString(spriteBatch, 
+                    pos, 
+                    "Downloading " + fileStreamReceiver.FileName, 
+                    Color.White, null, 0, GUI.SmallFont);
+
+
+                GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 12), new Vector2(200, 15), fileStreamReceiver.Progress, Color.Green);
+
+                GUI.DrawString(spriteBatch, pos + new Vector2(5,12),
+                    MathUtils.GetBytesReadable((long)fileStreamReceiver.Received) + " / " + MathUtils.GetBytesReadable((long)fileStreamReceiver.FileSize), 
+                    Color.White, null, 0, GUI.SmallFont);
+
+                if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 210, (int)pos.Y+12, 65, 15), "Cancel", new Color(0.47f, 0.13f, 0.15f, 0.08f)))
                 {
                     CancelFileTransfer();
                 }
@@ -797,6 +814,24 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
             client.Shutdown("");
             GameMain.NetworkMember = null;
+        }
+
+
+        public override bool SelectCrewCharacter(GUIComponent component, object obj)
+        {
+            var characterFrame = component.Parent.Parent.FindChild("selectedcharacter");
+
+            Character character = obj as Character;
+            if (character == null) return false;
+
+            if (character != myCharacter)
+            {
+                var kickButton = new GUIButton(new Rectangle(0, 0, 130, 20), "Vote to Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                kickButton.UserData = character;
+                kickButton.OnClicked += VoteForKick;
+            }
+
+            return true;
         }
 
         public void ReadCharacterSpawnMessage(NetIncomingMessage message)
@@ -873,6 +908,17 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
+        public bool VoteForKick(GUIButton button, object userdata)
+        {
+            var votedClient = otherClients.Find(c => c.Character == userdata);
+
+            if (votedClient == null) return false;
+
+            Vote(VoteType.Kick, votedClient);
+
+            return true;
+        }
+
         public void Vote(VoteType voteType, object userData)
         {
             NetOutgoingMessage msg = client.CreateMessage();
@@ -889,6 +935,12 @@ namespace Barotrauma.Networking
                     break;
                 case VoteType.EndRound:
                     msg.Write((bool)userData);
+                    break;
+                case VoteType.Kick:
+                    Client votedClient = userData as Client;
+                    if (votedClient == null) return;
+
+                    msg.Write(votedClient.ID);
                     break;
             }
 

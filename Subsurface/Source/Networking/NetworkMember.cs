@@ -47,7 +47,8 @@ namespace Barotrauma.Networking
         Unknown,
         Sub,
         Mode,
-        EndRound
+        EndRound,
+        Kick
     }
 
     class NetworkMember
@@ -351,7 +352,6 @@ namespace Barotrauma.Networking
                         "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
                 }
             }
-
         }
 
         public virtual bool SelectCrewCharacter(GUIComponent component, object obj)
