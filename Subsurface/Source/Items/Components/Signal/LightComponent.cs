@@ -123,6 +123,8 @@ namespace Barotrauma.Items.Components
            
             light.Submarine = item.Submarine;
             
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
+
             if (item.Container != null)
             {
                 light.Color = Color.Transparent;
@@ -158,8 +160,6 @@ namespace Barotrauma.Items.Components
             else
             {
                 lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(voltage, 1.0f), 0.1f);
-
-                ApplyStatusEffects(ActionType.OnActive, deltaTime);
             }
 
             light.Color = lightColor * lightBrightness * (1.0f-Rand.Range(0.0f,Flicker));
@@ -167,7 +167,7 @@ namespace Barotrauma.Items.Components
 
             voltage = 0.0f;
         }
-
+        
         public override bool Use(float deltaTime, Character character = null)
         {
             return true;
