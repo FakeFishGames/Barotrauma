@@ -73,7 +73,7 @@ namespace Barotrauma
             }
             else
             {
-                if (inWater)
+                if (inWater || RefLimb.inWater)
                 {
                     UpdateSineAnim(deltaTime);
                 }
@@ -83,7 +83,7 @@ namespace Barotrauma
                 }
             }
 
-            if (mirror)
+            if (mirror || !inWater)
             {
                 if (!character.IsNetworkPlayer)
                 {
@@ -278,28 +278,44 @@ namespace Barotrauma
             //out whether the  ragdoll is standing on ground
             float closestFraction = 1;
             //Structure closestStructure = null;
+
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                //other limbs and bodies with no collision detection are ignored
-                if (fixture == null ||
-                    fixture.CollisionCategories == Physics.CollisionCharacter ||
-                    fixture.CollisionCategories == Physics.CollisionNone ||
-                    fixture.CollisionCategories == Physics.CollisionItem) return -1;
-
-                Structure structure = fixture.Body.UserData as Structure;
-                if (structure != null)
+                switch (fixture.CollisionCategories)
                 {
-                    if (structure.StairDirection != Direction.None && (stairs == null)) return -1;
-                    if (structure.IsPlatform && (IgnorePlatforms || stairs != null)) return -1;
+                    case Physics.CollisionStairs:
+                        if (inWater && TargetMovement.Y < 0.5f) return -1;
+                        Structure structure = fixture.Body.UserData as Structure;
+                        if (stairs == null && structure != null)
+                        {
+                            if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
+                            {
+                                return -1;
+                            }
+                            else
+                            {
+                                stairs = structure;
+                            }
+                        }
+                        break;
+                    case Physics.CollisionPlatform:
+                        Structure platform = fixture.Body.UserData as Structure;
+                        if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
+                        break;
+                    case Physics.CollisionWall:
+                        break;
+                    default:
+                        return -1;
                 }
 
                 onGround = true;
+                if (fraction < closestFraction)
+                {
+                    closestFraction = fraction;
+                }
                 onFloorTimer = 0.05f;
-
-                if (fraction < closestFraction) closestFraction = fraction;
-                return 1;
-            }
-            , rayStart, rayEnd);
+                return closestFraction;
+            } , rayStart, rayEnd);
 
             //the ragdoll "stays on ground" for 50 millisecs after separation
             if (onFloorTimer <= 0.0f)
