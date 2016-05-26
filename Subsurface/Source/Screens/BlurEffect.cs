@@ -87,7 +87,7 @@ namespace Barotrauma
         /// </summary>
         float ComputeGaussian(float n)
         {
-            float theta = 4.0f;
+            float theta = 2.0f;
 
             return (float)((1.0 / Math.Sqrt(2 * Math.PI * theta)) *
                            Math.Exp(-(n * n) / (2 * theta * theta)));

@@ -46,7 +46,7 @@ namespace Barotrauma
         public static int wallSectionSize = 100;
         public static List<Structure> WallList = new List<Structure>();
 
-        List<ConvexHull> _convexHulls;
+        List<ConvexHull> convexHulls;
 
         StructurePrefab prefab;
 
@@ -126,9 +126,9 @@ namespace Barotrauma
                 }
             }
 
-            if (_convexHulls!=null)
+            if (convexHulls!=null)
             {
-                _convexHulls.ForEach(x => x.Move(amount));
+                convexHulls.ForEach(x => x.Move(amount));
             }
             //if (gaps != null)
             //{
@@ -233,26 +233,6 @@ namespace Barotrauma
 
                     newBody.UserData = this;
                     bodies.Add(newBody);
-
-                    //newBody = BodyFactory.CreateRectangle(Game1.World,
-                    //    ConvertUnits.ToSimUnits(Submarine.GridSize.X*2),
-                    //    ConvertUnits.ToSimUnits(10.0f),
-                    //    1.5f);
-
-                    //newBody.BodyType = BodyType.Static;
-                    ////newBody.IsSensor = true;
-
-                    //newBody.Position = ConvertUnits.ToSimUnits(
-                    //    new Vector2(Position.X + (rect.Width/2 + Submarine.GridSize.X) * ((StairDirection == Direction.Right) ? -1.0f : 1.0f), rect.Y + 5.0f));
-                    ////newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
-                    ////newBody.Friction = 0.8f;
-
-                    //newBody.CollisionCategories = Physics.CollisionStairs;
-
-                    //newBody.UserData = this;
-
-                    //bodies.Add(newBody);
-
                 }
             }
 
@@ -268,18 +248,15 @@ namespace Barotrauma
         private void GenerateConvexHull()
         {
             // If not null and not empty , remove the hulls from the system
-            if(_convexHulls != null && _convexHulls.Any())
-                _convexHulls.ForEach(x => x.Remove());
+            if(convexHulls != null && convexHulls.Any())
+                convexHulls.ForEach(x => x.Remove());
 
             // list all of hulls for this structure
-            _convexHulls = new List<ConvexHull>();
+            convexHulls = new List<ConvexHull>();
 
-            // merged sections
-            // TODO: merge damaged sections
             var mergedSections = new List<WallSection>();
             foreach (var section in sections)
             {
-
                 // if there is a gap and we have sections to merge, do it.
                 if (section.gap != null)
                 {
@@ -298,25 +275,26 @@ namespace Barotrauma
             }
         }
 
-        private void GenerateMergedHull(List<WallSection> mergedSections)
+        private Rectangle GenerateMergedRect(List<WallSection> mergedSections)
         {
-            if (!mergedSections.Any()) return;
-            Rectangle mergedRect;
-
-
             if (isHorizontal)
-                mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
+               return new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
                     mergedSections.Sum(x => x.rect.Width), mergedSections.First().rect.Height);
             else
             {
-                mergedRect = new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
+                return new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
                     mergedSections.First().rect.Width, mergedSections.Sum(x => x.rect.Height));
             }
+        }
 
-
+        private void GenerateMergedHull(List<WallSection> mergedSections)
+        {
+            if (!mergedSections.Any()) return;
+            Rectangle mergedRect = GenerateMergedRect(mergedSections);
+            
             var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
             mergedSections.ForEach(x => x.hull = h);
-            _convexHulls.Add(h);
+            convexHulls.Add(h);
             mergedSections.Clear();
         }
 
@@ -364,7 +342,7 @@ namespace Barotrauma
                     GameMain.World.RemoveBody(b);
             }
 
-            if (_convexHulls != null) _convexHulls.ForEach(x => x.Remove());
+            if (convexHulls != null) convexHulls.ForEach(x => x.Remove());
         }
 
 
@@ -561,7 +539,6 @@ namespace Barotrauma
 
         private void SetDamage(int sectionIndex, float damage)
         {
-
             if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return;
             if (!prefab.HasBody) return;
 
@@ -630,51 +607,36 @@ namespace Barotrauma
             }
             bodies.Clear();
 
-            int x = sections[0].rect.X;
-            int y = sections[0].rect.Y;
-            int width = sections[0].rect.Width;
-            int height = sections[0].rect.Height;
-
             bool hasHoles = false;
-
-            for (int i = 1; i < sections.Length; i++)
+            var mergedSections = new List<WallSection>();
+            for (int i = 0; i < sections.Length; i++ )
             {
-                bool hasHole = SectionBodyDisabled(i);
-                if (hasHole) hasHoles = true;
-
-                //if found a section with a hole or all sections have been gone through, create a body
-                if (hasHole || i == sections.Length - 1)
+                // if there is a gap and we have sections to merge, do it.
+                if (SectionBodyDisabled(i))
                 {
-                    if (width > 0 && height > 0)
-                    {
-                        CreateRectBody(new Rectangle(x, y, width, height));
-                    }
-                    if (isHorizontal)
-                    {
-                        x = sections[i].rect.X + sections[i].rect.Width;
-                        width = 0;
-                    }
-                    else
-                    {
-                        y = sections[i].rect.Y - sections[i].rect.Height;
-                        height = 0;
-                    }
+                    hasHoles = true;
+
+                    if (!mergedSections.Any()) continue;
+                    var mergedRect = GenerateMergedRect(mergedSections);
+                    mergedSections.Clear();
+                    CreateRectBody(mergedRect);
                 }
                 else
                 {
-                    //if no hole, add this section to the merged body
-                    if (isHorizontal)
-                    {
-                        width += sections[i].rect.Width;
-                    }
-                    else
-                    {
-                        height += sections[i].rect.Height;
-                    }
+                    mergedSections.Add(sections[i]);
                 }
             }
 
-            if (hasHoles) CreateRectBody(rect).IsSensor = true;            
+            // take care of any leftover pieces
+            if (mergedSections.Count > 0)
+            {
+                var mergedRect = GenerateMergedRect(mergedSections);
+                CreateRectBody(mergedRect);
+            }
+
+            //if the section has holes (or is just one big hole with no bodies),
+            //we need a sensor for repairtools to be able to target the structure
+            if (hasHoles || !bodies.Any()) CreateRectBody(rect).IsSensor = true;            
         }
 
         private Body CreateRectBody(Rectangle rect)

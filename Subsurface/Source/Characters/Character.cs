@@ -29,7 +29,12 @@ namespace Barotrauma
         public static Character Controlled
         {
             get { return controlled; }
-            set { controlled = value; }
+            set 
+            {
+                if (controlled == value) return;
+                controlled = value;
+                CharacterHUD.Reset();
+            }
         }
 
         private bool enabled;
@@ -1246,11 +1251,11 @@ namespace Barotrauma
             return attackResult;
         }
 
-        public void StartStun(float stunTimer)
+        public void StartStun(float stunTimer, bool allowStunDecrease = false)
         {
-            if (stunTimer <= 0.0f || !MathUtils.IsValid(stunTimer)) return;
+            if ((stunTimer <= 0.0f && !allowStunDecrease) || !MathUtils.IsValid(stunTimer)) return;
 
-            AnimController.ResetPullJoints();
+            if (Math.Sign(stunTimer) != Math.Sign(AnimController.StunTimer)) AnimController.ResetPullJoints();
             AnimController.StunTimer = Math.Max(AnimController.StunTimer, stunTimer);
                 
             selectedConstruction = null;
@@ -1681,7 +1686,7 @@ namespace Barotrauma
                     }
 
                     float newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
-                    StartStun(newStunTimer);
+                    StartStun(newStunTimer, true);
 
                     Oxygen = message.ReadRangedSingle(-100.0f,100.0f, 8);
                     Bleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);     
