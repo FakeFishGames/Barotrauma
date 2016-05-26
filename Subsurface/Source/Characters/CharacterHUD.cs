@@ -20,6 +20,11 @@ namespace Barotrauma
 
         private static float damageOverlayTimer;
 
+        public static void Reset()
+        {
+            damageOverlayTimer = 0.0f;
+        }
+
         public static void TakeDamage(float amount)
         {
             healthBar.Flash();
