@@ -129,16 +129,16 @@
 
   <CargoMission
     name="Handle with care"
-    description="Local reseachers are offering 2000 credits for delivering a large amount of nitroglycerine to [location2]."
+    description="Local reseachers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2]."
     commonness="15"
     reward="2000"
     successmessage="The chemicals have been successfully delivered.">
     <Items>
       <Item name="Explosive Crate">
-        <Item name="Nitroglyserine" amount="10"/>
+        <Item name="Nitroglycerin" amount="10"/>
       </Item>
       <Item name="Explosive Crate">
-        <Item name="Nitroglyserine" amount="10"/>
+        <Item name="Nitroglycerin" amount="10"/>
       </Item>
     </Items>
   </CargoMission>
