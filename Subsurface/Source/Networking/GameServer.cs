@@ -1380,6 +1380,9 @@ namespace Barotrauma.Networking
         {
             if (server.Connections.Count == 0) return;
 
+            var clientsToKick = ConnectedClients.FindAll(c => c.KickVoteCount > ConnectedClients.Count * KickVoteRequiredRatio);
+            clientsToKick.ForEach(c => KickClient(c));
+
             try
             {
                 NetOutgoingMessage msg = server.CreateMessage();
@@ -1417,6 +1420,8 @@ namespace Barotrauma.Networking
 
         public override bool SelectCrewCharacter(GUIComponent component, object obj)
         {
+            base.SelectCrewCharacter(component, obj);
+
             var characterFrame = component.Parent.Parent.FindChild("selectedcharacter");
 
             Character character = obj as Character;
@@ -1424,13 +1429,13 @@ namespace Barotrauma.Networking
 
             if (character != myCharacter)
             {
-                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
-                kickButton.UserData = character.Name;
-                kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
-
                 var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, GUI.Style, characterFrame);
                 banButton.UserData = character.Name;
                 banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+
+                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                kickButton.UserData = character.Name;
+                kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
             }
 
             return true;
@@ -1808,6 +1813,10 @@ namespace Barotrauma.Networking
         public string version;
         public bool inGame;
 
+
+
+        private List<Client> kickVoters;
+
         public bool ReadyToStart;
 
         private object[] votes;
@@ -1823,6 +1832,11 @@ namespace Barotrauma.Networking
 
         public float deleteDisconnectedTimer;
 
+        public int KickVoteCount
+        {
+            get { return kickVoters.Count; }
+        }
+
         public Client(NetPeer server, string name, byte ID)
             : this(name, ID)
         {
@@ -1833,6 +1847,8 @@ namespace Barotrauma.Networking
         {
             this.name = name;
             this.ID = ID;
+
+            kickVoters = new List<Client>();
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
             
@@ -1854,6 +1870,26 @@ namespace Barotrauma.Networking
             for (int i = 0; i<votes.Length; i++)
             {
                 votes[i] = null;
+            }
+        }
+
+        public void AddKickVote(Client voter)
+        {
+            if (!kickVoters.Contains(voter)) kickVoters.Add(voter);
+        }
+
+
+        public void RemoveKickVote(Client voter)
+        {
+            kickVoters.Remove(voter);
+        }
+
+
+        public static void UpdateKickVotes(List<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
             }
         }
 

@@ -64,10 +64,12 @@ namespace Barotrauma
             {
                 voteType = (VoteType)voteTypeByte;
             }
-            catch
+            catch (Exception e)
             {
+                DebugConsole.ThrowError("Failed to cast vote type ''"+voteTypeByte+"''", e);
                 return;
             }
+
             Client sender = connectedClients.Find(x => x.Connection == inc.SenderConnection);
             switch (voteType)
             {
@@ -89,7 +91,17 @@ namespace Barotrauma
                     sender.SetVote(voteType, inc.ReadBoolean());
 
                     GameMain.NetworkMember.EndVoteCount = connectedClients.Count(c => c.Character != null && c.GetVote<bool>(VoteType.EndRound));
-                    GameMain.NetworkMember.EndVoteMax = connectedClients.Count(c => c.Character != null);
+                    GameMain.NetworkMember.EndVoteMax   = connectedClients.Count(c => c.Character != null);
+
+                    break;
+                case VoteType.Kick:
+
+                    byte kickedClientID = inc.ReadByte();
+
+                    Client kicked = connectedClients.Find(x => x.ID == kickedClientID);
+                    if (kicked == null) return;
+
+                    kicked.AddKickVote(sender);
 
                     break;
             }

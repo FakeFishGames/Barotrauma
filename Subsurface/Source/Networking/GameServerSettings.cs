@@ -95,6 +95,8 @@ namespace Barotrauma.Networking
 
         public float EndVoteRequiredRatio = 0.5f;
 
+        public float KickVoteRequiredRatio = 0.5f;
+
         private void SaveSettings()
         {
             XmlWriterSettings settings = new XmlWriterSettings();
