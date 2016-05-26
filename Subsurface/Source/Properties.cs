@@ -255,18 +255,22 @@ namespace Barotrauma
                 object value = property.GetValue();
                 if (value == null) continue;
                 
-                //only save if the value has been changed from the default value and the attribute is saveable
-                bool dontSave = true;
+                //only save 
+                //  - if the attribute is saveable
+                //  - and it's different from the default value or can be changed in the editor
+                bool save = false;
                 foreach (var attribute in property.Attributes.OfType<HasDefaultValue>())
                 {
-                    if (attribute.isSaveable && !attribute.defaultValue.Equals(value))
+                    if (!attribute.isSaveable) continue;
+
+                    if (!attribute.defaultValue.Equals(value) || property.Attributes.OfType<Editable>().Any())
                     {
-                        dontSave = false;
+                        save = true;
                         break;
                     }    
                 }
 
-                if (dontSave) continue;
+                if (!save) continue;
 
                 string stringValue;
                 if (value is float)
