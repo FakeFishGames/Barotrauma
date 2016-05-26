@@ -25,6 +25,8 @@ namespace Barotrauma
         //negative values = escapes targets of this type        
         private float attackRooms, attackHumans, attackWeaker, attackStronger;
 
+        private SteeringManager outsideSteering, insideSteering;
+
         private float updateTargetsTimer;
 
         private float raycastTimer;
@@ -88,7 +90,10 @@ namespace Barotrauma
 
             attackWhenProvoked = ToolBox.GetAttributeBool(aiElement, "attackwhenprovoked", false);
 
-            steeringManager = new SteeringManager(this);
+            outsideSteering = new SteeringManager(this);
+            insideSteering = new IndoorsSteeringManager(this, false);
+
+            steeringManager = outsideSteering;
 
             state = AiState.None;
         }
@@ -133,7 +138,9 @@ namespace Barotrauma
                     state = (targetValue > 0.0f) ? AiState.Attack : AiState.Escape;
                 }
                 //if (coolDownTimer >= 0.0f) return;
-            }        
+            }
+
+            steeringManager = Character.Submarine == null ? outsideSteering : insideSteering;
 
             switch (state)
             {
@@ -210,7 +217,7 @@ namespace Barotrauma
                 raycastTimer = RaycastInterval;
             }
 
-            steeringManager.SteeringAvoid(deltaTime, 1.0f);
+            //steeringManager.SteeringAvoid(deltaTime, 1.0f);
             steeringManager.SteeringSeek(attackSimPosition);
             
             //check if any of the limbs is close enough to attack the target
@@ -252,6 +259,12 @@ namespace Barotrauma
         private void GetTargetEntity()
         {
             targetEntity = null;
+
+            if (Character.AnimController.CurrentHull != null)
+            {
+                wallAttackPos = Vector2.Zero;
+                return;
+            }
             
             //check if there's a wall between the target and the Character   
             Vector2 rayStart = Character.SimPosition;
@@ -274,7 +287,7 @@ namespace Barotrauma
             if (wall == null)
             {
                 wallAttackPos = Submarine.LastPickedPosition;
-                if (selectedAiTarget.Entity.Submarine!=null) wallAttackPos -= ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+                if (selectedAiTarget.Entity.Submarine!=null && Character.Submarine == null) wallAttackPos -= ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
             
             }
             else
@@ -370,7 +383,6 @@ namespace Barotrauma
                         break;
                     }
 
-
                     if (dist < limb.attack.Range)
                     {
                         attackTimer += deltaTime;
@@ -412,6 +424,8 @@ namespace Barotrauma
                 return;
             }
             distanceAccumulator = 0.0f;
+
+            wallAttackPos = Vector2.Zero;
 
             selectedAiTarget = null;
             selectedTargetMemory = null;
