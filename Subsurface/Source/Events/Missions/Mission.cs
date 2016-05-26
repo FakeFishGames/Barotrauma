@@ -137,6 +137,10 @@ namespace Barotrauma
             {
                 return null;
             }
+            else if (string.IsNullOrWhiteSpace(missionType))
+            {
+                matchingElements = doc.Root.Elements().ToList();           
+            }
             else
             {
                 matchingElements = doc.Root.Elements().ToList().FindAll(m => m.Name.ToString().ToLowerInvariant().Replace("mission", "") == missionType);

@@ -69,11 +69,11 @@ namespace Barotrauma
                 return;
             }
 
-            Vector2 position = new Vector2(
-                Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20, false),
-                cargoRoom.Rect.Y - cargoRoom.Rect.Height + 10.0f);
+            //Vector2 position = new Vector2(
+            //    Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20, false),
+            //    cargoRoom.Rect.Y - cargoRoom.Rect.Height + 10.0f);
 
-            var item = new Item(itemPrefab, position, cargoRoom.Submarine);
+            var item = new Item(itemPrefab, cargoSpawnPos.Position + Rand.Vector(10.0f, false), cargoRoom.Submarine);
             item.FindHull();
             items.Add(item);
             
