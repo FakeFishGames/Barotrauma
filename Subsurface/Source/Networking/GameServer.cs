@@ -452,7 +452,7 @@ namespace Barotrauma.Networking
                             if (characterInfo != null)
                             {
                                 outmsg.Write(characterInfo.Name);
-                                outmsg.Write(-1);
+                                outmsg.Write((byte)0);
                             }
 
                             var subs = GameMain.NetLobbyScreen.GetSubList();
@@ -473,8 +473,6 @@ namespace Barotrauma.Networking
                         
                             //send the message to everyone except the client who just logged in
                             SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered, inc.SenderConnection);
-
-                            UpdateVoteStatus();
 
                             AddChatMessage(sender.name + " has joined the server", ChatMessageType.Server);
                         }
@@ -590,6 +588,7 @@ namespace Barotrauma.Networking
                             break;
                         case (byte)PacketTypes.RequestNetLobbyUpdate:
                             UpdateNetLobby(null, null);
+                            UpdateVoteStatus();
                             break;
                         case (byte)PacketTypes.SpectateRequest:
                             if (gameStarted && allowSpectating)
@@ -1712,7 +1711,7 @@ namespace Barotrauma.Networking
             foreach (Client c in clients)
             {
                 int index = c.jobPreferences.FindIndex(jp => jp == job);
-                if (index == -1) index = 1000;
+                if (index == 0) index = 1000;
                 if (preferredClient == null || index < bestPreference)
                 {
                     bestPreference = index;

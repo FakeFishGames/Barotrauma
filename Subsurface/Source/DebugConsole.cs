@@ -606,7 +606,7 @@ namespace Barotrauma
 
             try
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), msg, GUI.Style, Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
+                var textBlock = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 0), msg, GUI.Style, Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
                 textBlock.CanBeFocused = false;
                 textBlock.TextColor = color;
 

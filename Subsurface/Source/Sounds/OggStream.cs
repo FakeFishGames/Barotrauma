@@ -535,7 +535,7 @@ namespace Barotrauma.Sounds
                             }
                             catch
                             {
-                                continue;
+                                finished = true;
                             }
 
                             if (finished)
