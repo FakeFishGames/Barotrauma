@@ -1,4 +1,44 @@
 ---------------------------------------------------------------------------------------------------------
+v0.4.1.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed errors when updating the submarine list if the host is has selected the "play yourself" option
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed the ''queue empty'' error messages when attempting to download a sub from the server
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.1
+---------------------------------------------------------------------------------------------------------
+
+- changes to connection panel layout: less wire overlap, making it easier to select individual wires
+
+- fixed missions not appearing in single player
+
+- clients see the submarines the host has instead of their own subs in the server lobby
+- clients can vote for subs they don't have
+- servers check whether all the clients have the selected submarine file before starting a round, and if not,
+give them some time to start downloading it
+
+- item sprites are visible in fabricator menus
+- some new wall sprites
+- fixed small walls being impossible to fix after they've broken
+- ruin walls look slightly different from normal walls on sonar
+- cargo is placed at the cargo spawnpoint instead of a random position within the hull it's inside
+- fixed light emitted by flares not disappearing after the flare burns out
+- flares won't stop burning if picked up and placed in the inventory
+- minor changes to the lighting - small lights aren't ''skewed''
+- fixed the ''CastShadows'' parameter of light components not being saved
+- fixed fires using up all the sound channels and preventing other sounds from playing
+
+- fixed the ''blood overlay'' still being visible when starting a new round or switching characters
+- fixed fractal guardians occasionally killing themselves by slamming against the walls
+- enemies use pathfinding inside the submarine
+
+---------------------------------------------------------------------------------------------------------
 v0.4.1.0
 ---------------------------------------------------------------------------------------------------------
 

@@ -281,6 +281,8 @@ namespace Barotrauma
 
             int currentTargetIndex = 1;
 
+            int iterationsLeft = cells.Count;
+
             do
             {
                 int edgeIndex = 0;
@@ -325,13 +327,15 @@ namespace Barotrauma
                 currentCell.CellType = CellType.Path;
                 pathCells.Add(currentCell);
 
+                iterationsLeft--;
+
                 if (currentCell == targetCells[currentTargetIndex])
                 {
                     currentTargetIndex += 1;
                     if (currentTargetIndex >= targetCells.Count) break;
                 }
 
-            } while (currentCell != targetCells[targetCells.Count - 1]);
+            } while (currentCell != targetCells[targetCells.Count - 1] && iterationsLeft > 0);
 
 
             Debug.WriteLine("gettooclose: " + sw2.ElapsedMilliseconds + " ms");

@@ -1058,6 +1058,15 @@ namespace Barotrauma
                     "Do you want to download the file from the server host?" :
                     "Do you want to download the file and cancel downloading ''" + GameMain.Client.ActiveFileTransferName + "''?";
 
+                if (GUIMessageBox.MessageBoxes.Count>0)
+                {
+                    var currentMessageBox = GUIMessageBox.MessageBoxes.Peek();
+                    if (currentMessageBox != null && currentMessageBox.UserData as string == subName)
+                    {
+                        return false;
+                    }
+                }
+
                 var requestFileBox = new GUIMessageBox("Submarine not found!", errorMsg+downloadMsg, new string[] { "Yes", "No" }, 400, 300);
                 requestFileBox.Buttons[0].UserData = subName;
                 requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;

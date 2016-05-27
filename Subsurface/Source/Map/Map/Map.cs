@@ -380,10 +380,10 @@ namespace Barotrauma
                 {
                     if (mission !=null && mission.Completed) missionsCompleted++;
 
-                    int seed = (int)locations[0].MapPosition.X + (int)locations[0].MapPosition.Y * 100;
-                    seed += (int)locations[1].MapPosition.X*10000 + (int)locations[1].MapPosition.Y * 1000000;
+                    long seed = (long)locations[0].MapPosition.X + (long)locations[0].MapPosition.Y * 100;
+                    seed += (long)locations[1].MapPosition.X*10000 + (long)locations[1].MapPosition.Y * 1000000;
 
-                    MTRandom rand = new MTRandom(seed + missionsCompleted);
+                    MTRandom rand = new MTRandom((int)((seed + missionsCompleted) % int.MaxValue));
 
                     if (rand.NextDouble() < 0.3f) return null;
 
