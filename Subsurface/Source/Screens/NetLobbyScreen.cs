@@ -404,7 +404,7 @@ namespace Barotrauma
                     spectateButton.UserData = "spectateButton";
                 }
 
-                GameMain.Client.Voting.ResetVotes(GameMain.Client.OtherClients);
+                GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
 
                 UpdatePlayerFrame(GameMain.Client.CharacterInfo);
             }
@@ -593,9 +593,13 @@ namespace Barotrauma
             {
                 (component as GUITextBlock).TextColor = Color.DarkRed * 0.8f;
                 component.CanBeFocused = false;
+                
+                StartButton.Enabled = false;            
 
                 return false;
             }
+
+            StartButton.Enabled = true;
 
             return true;
         }
@@ -1121,7 +1125,7 @@ namespace Barotrauma
 
         public void ReadData(NetIncomingMessage msg)
         {
-            string mapName = "", md5Hash = "";
+            string subName = "", md5Hash = "";
             
             int modeIndex = 0;
             //float durationScroll = 0.0f;
@@ -1135,7 +1139,7 @@ namespace Barotrauma
 
             try
             {
-                mapName         = msg.ReadString();
+                subName         = msg.ReadString();
                 md5Hash         = msg.ReadString();
 
                 ServerName      = msg.ReadString();
@@ -1167,7 +1171,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(mapName) && !GameMain.NetworkMember.Voting.AllowSubVoting) TrySelectSub(mapName, md5Hash);
+            if (!string.IsNullOrWhiteSpace(subName) && !GameMain.NetworkMember.Voting.AllowSubVoting) TrySelectSub(subName, md5Hash);
 
             if (!GameMain.NetworkMember.Voting.AllowModeVoting)
             {

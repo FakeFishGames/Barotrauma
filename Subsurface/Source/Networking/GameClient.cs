@@ -35,9 +35,12 @@ namespace Barotrauma.Networking
             get { return myID; }
         }
 
-        public List<Client> OtherClients
+        public override List<Client> ConnectedClients
         {
-            get { return otherClients; }
+            get
+            {
+                return otherClients;
+            }
         }
 
         public string ActiveFileTransferName
@@ -273,7 +276,14 @@ namespace Barotrauma.Networking
                                     string subName = inc.ReadString();
                                     string subHash = inc.ReadString();
 
-                                    submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
+                                    string mySubPath = Path.Combine(Submarine.SavePath, subName);
+                                    var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
+                                    if (matchingSub != null)
+                                    {
+                                        mySubPath = matchingSub.FilePath;
+                                    }
+
+                                    submarines.Add(new Submarine(mySubPath, subHash, false));
                                 }
                                 GameMain.NetLobbyScreen.UpdateSubList(submarines);
 
@@ -679,7 +689,7 @@ namespace Barotrauma.Networking
                 if (id != myID)
                 {
                     var characterOwner = otherClients.Find(c => c.ID == id);
-                    characterOwner.Character = newCharacter;
+                    if (characterOwner != null) characterOwner.Character = newCharacter;
                 }
 
                 crew.Add(newCharacter);
@@ -824,12 +834,24 @@ namespace Barotrauma.Networking
             Character character = obj as Character;
             if (character == null) return false;
 
-            if (character != myCharacter)
-            {
-                var kickButton = new GUIButton(new Rectangle(0, 0, 130, 20), "Vote to Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
-                kickButton.UserData = character;
-                kickButton.OnClicked += VoteForKick;
-            }
+            //if (character != myCharacter)
+            //{
+            //    var kickButton = new GUIButton(new Rectangle(0, 0, 120, 20), "Vote to Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+            //    kickButton.UserData = character;
+            //    kickButton.OnClicked += VoteForKick;
+            //}
+
+            //if (GameMain.NetworkMember.ConnectedClients != null)
+            //{
+            //    var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
+            //    if (client != null && client.KickVoteCount>0)
+            //    {
+            //        new GUITextBlock(
+            //            new Rectangle(0, 0, 100, 20),
+            //            client.KickVoteCount + "/" + GameMain.NetworkMember.ConnectedClients,
+            //            GUI.Style, Alignment.BottomRight, Alignment.TopLeft, characterFrame);
+            //    }
+            //}
 
             return true;
         }

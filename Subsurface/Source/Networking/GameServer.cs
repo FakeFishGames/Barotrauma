@@ -13,7 +13,7 @@ namespace Barotrauma.Networking
 {
     partial class GameServer : NetworkMember
     {
-        public List<Client> ConnectedClients = new List<Client>();
+        private List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
         private List<Client> disconnectedClients = new List<Client>();
@@ -40,6 +40,14 @@ namespace Barotrauma.Networking
         private GUIScrollBar clientListScrollBar;
 
         public TraitorManager TraitorManager;
+
+        public override List<Client> ConnectedClients
+        {
+            get
+            {
+                return connectedClients;
+            }
+        }
 
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
@@ -173,7 +181,7 @@ namespace Barotrauma.Networking
             request.AddParameter("action", "addserver");
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
-            request.AddParameter("currplayers", ConnectedClients.Count);
+            request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", config.MaximumConnections);
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
 
@@ -206,7 +214,7 @@ namespace Barotrauma.Networking
             var request = new RestRequest("masterserver2.php", Method.GET);
             request.AddParameter("action", "refreshserver");
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
-            request.AddParameter("currplayers", ConnectedClients.Count);
+            request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", config.MaximumConnections);
 
             Log("Refreshing connection with master server...", Color.Cyan);
@@ -275,7 +283,7 @@ namespace Barotrauma.Networking
                 inGameHUD.Update((float)Physics.step);
 
                 bool isCrewDead =  
-                    ConnectedClients.Find(c => c.Character != null && !c.Character.IsDead)==null &&
+                    connectedClients.Find(c => c.Character != null && !c.Character.IsDead)==null &&
                    (myCharacter == null || myCharacter.IsDead);
 
                 //restart if all characters are dead or submarine is at the end of the level
@@ -297,7 +305,7 @@ namespace Barotrauma.Networking
                     return;
                 }
             }
-            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && ConnectedClients.Count>0)
+            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count>0)
             {
                 AutoRestartTimer -= deltaTime;
                 if (AutoRestartTimer < 0.0f && GameMain.NetLobbyScreen.StartButton.Enabled)
@@ -320,7 +328,7 @@ namespace Barotrauma.Networking
                 disconnectedClients.RemoveAt(i);
             }
 
-            foreach (Client c in ConnectedClients)
+            foreach (Client c in connectedClients)
             {
                 if (c.FileStreamSender != null) UpdateFileTransfer(c, deltaTime);                
 
@@ -411,7 +419,7 @@ namespace Barotrauma.Networking
                     Debug.WriteLine(inc.SenderConnection + " status changed. " + (NetConnectionStatus)inc.SenderConnection.Status);
                     if (inc.SenderConnection.Status == NetConnectionStatus.Connected)
                     {
-                        Client sender = ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
+                        Client sender = connectedClients.Find(x => x.Connection == inc.SenderConnection);
 
                         if (sender == null) break;
 
@@ -420,7 +428,7 @@ namespace Barotrauma.Networking
                             DisconnectClient(sender, sender.name+" was unable to connect to the server (nonmatching game version)", 
                                 "Version " + GameMain.Version + " required to connect to the server (Your version: " + sender.version + ")");
                         }
-                        else if (ConnectedClients.Find(x => x.name == sender.name && x != sender)!=null)
+                        else if (connectedClients.Find(x => x.name == sender.name && x != sender)!=null)
                         {
                             DisconnectClient(sender, sender.name + " was unable to connect to the server (name already in use)",
                                 "The name ''"+sender.name+"'' is already in use. Please choose another name.");
@@ -441,8 +449,8 @@ namespace Barotrauma.Networking
                             outmsg.Write(allowSpectating);
 
                             //notify the client about other clients already logged in
-                            outmsg.Write((byte)((characterInfo == null) ? ConnectedClients.Count - 1 : ConnectedClients.Count));
-                            foreach (Client c in ConnectedClients)
+                            outmsg.Write((byte)((characterInfo == null) ? connectedClients.Count - 1 : connectedClients.Count));
+                            foreach (Client c in connectedClients)
                             {
                                 if (c.Connection == inc.SenderConnection) continue;
                                 outmsg.Write(c.name);
@@ -479,7 +487,7 @@ namespace Barotrauma.Networking
                     }
                     else if (inc.SenderConnection.Status == NetConnectionStatus.Disconnected)
                     {
-                        var connectedClient = ConnectedClients.Find(c => c.Connection == inc.SenderConnection);
+                        var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
                         if (connectedClient != null && !disconnectedClients.Contains(connectedClient))
                         {
                             connectedClient.deleteDisconnectedTimer = NetConfig.DeleteDisconnectedTime;
@@ -493,7 +501,7 @@ namespace Barotrauma.Networking
                     break;
                 case NetIncomingMessageType.Data:
 
-                    Client dataSender = ConnectedClients.Find(c => c.Connection == inc.SenderConnection);
+                    Client dataSender = connectedClients.Find(c => c.Connection == inc.SenderConnection);
                     if (dataSender == null) return;
 
                     byte packetType = inc.ReadByte();
@@ -577,7 +585,7 @@ namespace Barotrauma.Networking
                             dataSender.ReliableChannel.HandleLatestMessageID(inc);
                             break;
                         case (byte)PacketTypes.Vote:
-                            Voting.RegisterVote(inc, ConnectedClients);
+                            Voting.RegisterVote(inc, connectedClients);
 
                             if (Voting.AllowEndVoting && EndVoteMax > 0 &&
                                 ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
@@ -621,7 +629,7 @@ namespace Barotrauma.Networking
                 return;                
             }
             
-            if (ConnectedClients.Find(c => c.Connection == inc.SenderConnection)!=null)
+            if (connectedClients.Find(c => c.Connection == inc.SenderConnection)!=null)
             {
                 inc.SenderConnection.Deny("Connection error - already joined");
                 return;
@@ -676,7 +684,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(name + " couldn't join the server (wrong content package hash)", Color.Red);
                 return;
             }
-            else if (ConnectedClients.Find(c => c.name.ToLower() == name.ToLower() && c.ID != userID) != null)
+            else if (connectedClients.Find(c => c.name.ToLower() == name.ToLower() && c.ID != userID) != null)
             {
                 inc.SenderConnection.Deny("The name ''" + name + "'' is already in use. Please choose another name.");
                 DebugConsole.NewMessage(name + " couldn't join the server (name already in use)", Color.Red);
@@ -688,14 +696,14 @@ namespace Barotrauma.Networking
             //existing user re-joining
             if (userID > 0)
             {
-                Client existingClient = ConnectedClients.Find(c => c.ID == userID);
+                Client existingClient = connectedClients.Find(c => c.ID == userID);
                 if (existingClient == null)
                 {
                     existingClient = disconnectedClients.Find(c => c.ID == userID);
                     if (existingClient != null)
                     {
                         disconnectedClients.Remove(existingClient);
-                        ConnectedClients.Add(existingClient);
+                        connectedClients.Add(existingClient);
 
                         UpdateCrewFrame();
                     }
@@ -709,8 +717,8 @@ namespace Barotrauma.Networking
                 }
             }
 
-            userID = (byte)Rand.Range(1, 255);
-            while (ConnectedClients.Find(c => c.ID == userID) != null)
+            userID = 1;
+            while (connectedClients.Any(c => c.ID == userID))
             {
                 userID++;
             }
@@ -719,7 +727,7 @@ namespace Barotrauma.Networking
             newClient.Connection = inc.SenderConnection;
             newClient.version = version;
 
-            ConnectedClients.Add(newClient);
+            connectedClients.Add(newClient);
 
             UpdateCrewFrame();
 
@@ -733,7 +741,7 @@ namespace Barotrauma.Networking
         {
             List<NetConnection> recipients = new List<NetConnection>();
 
-            foreach (Client client in ConnectedClients)
+            foreach (Client client in connectedClients)
             {
                 if (client.Connection != excludedConnection) recipients.Add(client.Connection);                
             }
@@ -750,7 +758,7 @@ namespace Barotrauma.Networking
 
             if (recipients == null)
             {
-                recipients = ConnectedClients.FindAll(c => c.Character != null || c.Spectating);
+                recipients = connectedClients.FindAll(c => c.Character != null || c.Spectating);
             }
 
             if (recipients.Count == 0) return;
@@ -843,7 +851,7 @@ namespace Barotrauma.Networking
 
             if (Voting.AllowSubVoting)
             {
-                selectedSub = Voting.HighestVoted<Submarine>(VoteType.Sub, ConnectedClients);
+                selectedSub = Voting.HighestVoted<Submarine>(VoteType.Sub, connectedClients);
                 if (selectedSub == null) selectedSub = GameMain.NetLobbyScreen.SelectedSub;
             }
             else
@@ -857,7 +865,7 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            GameModePreset selectedMode = Voting.HighestVoted<GameModePreset>(VoteType.Mode, ConnectedClients);
+            GameModePreset selectedMode = Voting.HighestVoted<GameModePreset>(VoteType.Mode, connectedClients);
             if (selectedMode == null) selectedMode = GameMain.NetLobbyScreen.SelectedMode;   
 
             if (selectedMode==null)
@@ -882,17 +890,17 @@ namespace Barotrauma.Networking
 
             SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
-            ConnectedClients.ForEach(c => c.ReadyToStart = false);
+            connectedClients.ForEach(c => c.ReadyToStart = false);
 
             float waitForResponseTimer = 5.0f;
-            while (ConnectedClients.Any(c => !c.ReadyToStart) && waitForResponseTimer > 0.0f)
+            while (connectedClients.Any(c => !c.ReadyToStart) && waitForResponseTimer > 0.0f)
             {
                 waitForResponseTimer -= CoroutineManager.UnscaledDeltaTime;
                 yield return CoroutineStatus.Running;
             }
 
             float fileTransferTimeOut = 60.0f;
-            while (ConnectedClients.Any(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath) && fileTransferTimeOut>0.0f)
+            while (connectedClients.Any(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath) && fileTransferTimeOut>0.0f)
             {
                 fileTransferTimeOut -= CoroutineManager.UnscaledDeltaTime;
 
@@ -900,7 +908,7 @@ namespace Barotrauma.Networking
                 {
                     var messageBox = new GUIMessageBox("File transfer in progress",
                         "The round will be started after the submarine file has been sent to all players.", new string[] {"Cancel transfer"}, 400, 400);
-                    messageBox.Buttons[0].UserData = ConnectedClients.Find(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath);
+                    messageBox.Buttons[0].UserData = connectedClients.Find(c => c.FileStreamSender != null && c.FileStreamSender.FilePath == selectedSub.FilePath);
                     messageBox.Buttons[0].OnClicked = (button, obj) =>
                         {
                             (button.UserData as Client).CancelTransfer();
@@ -937,7 +945,7 @@ namespace Barotrauma.Networking
 
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
 
-            foreach (Client client in ConnectedClients)
+            foreach (Client client in connectedClients)
             {
                 client.inGame = true;
 
@@ -958,13 +966,13 @@ namespace Barotrauma.Networking
 
             WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
             
-            for (int i = 0; i < ConnectedClients.Count; i++)
+            for (int i = 0; i < connectedClients.Count; i++)
             {
-                ConnectedClients[i].Character = Character.Create(
-                    ConnectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
-                ConnectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
+                connectedClients[i].Character = Character.Create(
+                    connectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
+                connectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
 
-                GameMain.GameSession.CrewManager.characters.Add(ConnectedClients[i].Character);
+                GameMain.GameSession.CrewManager.characters.Add(connectedClients[i].Character);
             }
 
             if (characterInfo != null)
@@ -1037,7 +1045,7 @@ namespace Barotrauma.Networking
 
             //msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
-            List<Client> playingClients = ConnectedClients.FindAll(c => c.Character != null);
+            List<Client> playingClients = connectedClients.FindAll(c => c.Character != null);
 
             msg.Write((myCharacter == null) ? (byte)playingClients.Count : (byte)(playingClients.Count + 1));
             foreach (Client client in playingClients)
@@ -1084,7 +1092,7 @@ namespace Barotrauma.Networking
 
             gameStarted = false;
 
-            if (ConnectedClients.Count > 0)
+            if (connectedClients.Count > 0)
             {
                 NetOutgoingMessage msg = server.CreateMessage();
                 msg.Write((byte)PacketTypes.EndGame);
@@ -1095,7 +1103,7 @@ namespace Barotrauma.Networking
                     server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
                 }
 
-                foreach (Client client in ConnectedClients)
+                foreach (Client client in connectedClients)
                 {
                     client.Spectating = false;
                     client.Character = null;
@@ -1126,7 +1134,7 @@ namespace Barotrauma.Networking
 
         private void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
         {
-            Client client = ConnectedClients.Find(x => x.Connection == senderConnection);
+            Client client = connectedClients.Find(x => x.Connection == senderConnection);
             if (client == null) return;
             
             DisconnectClient(client, msg, targetmsg);
@@ -1151,7 +1159,7 @@ namespace Barotrauma.Networking
             outmsg.Write(targetmsg);
             server.SendMessage(outmsg, client.Connection, NetDeliveryMethod.ReliableUnordered, 0);
 
-            ConnectedClients.Remove(client);
+            connectedClients.Remove(client);
 
             outmsg = server.CreateMessage();
             outmsg.Write((byte)PacketTypes.PlayerLeft);
@@ -1182,7 +1190,7 @@ namespace Barotrauma.Networking
         {
             List<Character> crew = new List<Character>();
 
-            foreach (Client c in ConnectedClients)
+            foreach (Client c in connectedClients)
             {
                 if (c.Character == null || !c.inGame) continue;
 
@@ -1198,7 +1206,7 @@ namespace Barotrauma.Networking
         {
             playerName = playerName.ToLowerInvariant();
 
-            Client client = ConnectedClients.Find(c => c.name.ToLowerInvariant() == playerName ||
+            Client client = connectedClients.Find(c => c.name.ToLowerInvariant() == playerName ||
                     (c.Character != null && c.Character.Name.ToLowerInvariant() == playerName));
 
             if (client == null) return;
@@ -1285,7 +1293,7 @@ namespace Barotrauma.Networking
             Log(traitor.Name + " is the traitor and the target is " + target.Name, Color.Cyan);
 
             Client traitorClient = null;
-            foreach (Client c in ConnectedClients)
+            foreach (Client c in connectedClients)
             {
                 if (c.Character != traitor) continue;
                 traitorClient = c;
@@ -1338,7 +1346,7 @@ namespace Barotrauma.Networking
 
             int resentMessages = 0;
 
-            int clientListHeight = ConnectedClients.Count() * 40;
+            int clientListHeight = connectedClients.Count() * 40;
             float scrollBarHeight = (height - 110) / (float)Math.Max(clientListHeight, 110);
 
             if (clientListScrollBar.BarSize != scrollBarHeight)
@@ -1348,7 +1356,7 @@ namespace Barotrauma.Networking
 
             int startY = y + 110;
             y = (startY - (int)(clientListScrollBar.BarScroll * (clientListHeight-(height - 110))));
-            foreach (Client c in ConnectedClients)
+            foreach (Client c in connectedClients)
             {
                 Color clientColor = c.Connection.AverageRoundtripTime > 0.3f ? Color.Red : Color.White;
 
@@ -1379,14 +1387,14 @@ namespace Barotrauma.Networking
         {
             if (server.Connections.Count == 0) return;
 
-            var clientsToKick = ConnectedClients.FindAll(c => c.KickVoteCount > ConnectedClients.Count * KickVoteRequiredRatio);
+            var clientsToKick = connectedClients.FindAll(c => c.KickVoteCount > connectedClients.Count * KickVoteRequiredRatio);
             clientsToKick.ForEach(c => KickClient(c));
 
             try
             {
                 NetOutgoingMessage msg = server.CreateMessage();
                 msg.Write((byte)PacketTypes.VoteStatus);
-                Voting.WriteData(msg, ConnectedClients);
+                Voting.WriteData(msg, connectedClients);
 
                 server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0); 
             }
@@ -1446,7 +1454,7 @@ namespace Barotrauma.Networking
 
             List<Client> recipients = new List<Client>();
 
-            foreach (Client c in ConnectedClients)
+            foreach (Client c in connectedClients)
             {
                 switch (message.Type)
                 {
@@ -1503,7 +1511,7 @@ namespace Barotrauma.Networking
             }
             else if (command != "")
             {
-                targetClient = ConnectedClients.Find(c =>
+                targetClient = connectedClients.Find(c =>
                     command == c.name.ToLowerInvariant() ||
                     (c.Character != null && command == c.Character.Name.ToLowerInvariant()));
 
@@ -1520,7 +1528,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                foreach (Client c in ConnectedClients)
+                foreach (Client c in connectedClients)
                 {
                     if (type != ChatMessageType.Dead || (c.Character == null || c.Character.IsDead)) recipients.Add(c);
                 }
@@ -1577,7 +1585,7 @@ namespace Barotrauma.Networking
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 
-            foreach (Client c in ConnectedClients)
+            foreach (Client c in connectedClients)
             {
                 if (c.Connection != message.SenderConnection) continue;
 
@@ -1642,7 +1650,7 @@ namespace Barotrauma.Networking
 
         private void AssignJobs()
         {
-            List<Client> unassigned = new List<Client>(ConnectedClients);
+            List<Client> unassigned = new List<Client>(connectedClients);
             
             int[] assignedClientCount = new int[JobPrefab.List.Count];
 
@@ -1792,7 +1800,7 @@ namespace Barotrauma.Networking
                 log.Save();
             }
 
-            foreach (Client client in ConnectedClients)
+            foreach (Client client in connectedClients)
             {
                 if (client.FileStreamSender != null) client.FileStreamSender.Dispose();
             }

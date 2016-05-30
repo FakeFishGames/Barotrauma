@@ -1631,7 +1631,7 @@ namespace Barotrauma
                 case NetworkEventType.KillCharacter:
                     if (GameMain.Server != null)
                     {
-                        Client sender =GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+                        Client sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
                         if (sender == null || sender.Character != this) 
                             throw new Exception("Received a KillCharacter message from someone else than the client controlling the Character!");
                     }

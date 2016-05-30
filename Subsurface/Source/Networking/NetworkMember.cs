@@ -51,7 +51,7 @@ namespace Barotrauma.Networking
         Kick
     }
 
-    class NetworkMember
+    abstract class NetworkMember
     {
         protected NetPeer netPeer;
 
@@ -62,8 +62,7 @@ namespace Barotrauma.Networking
 
         protected GUIFrame inGameHUD;
         protected GUIListBox chatBox;
-        protected GUITextBox chatMsgBox;
-        
+        protected GUITextBox chatMsgBox;        
 
         public int EndVoteCount, EndVoteMax;
         //private GUITextBlock endVoteText;
@@ -108,7 +107,13 @@ namespace Barotrauma.Networking
         {
             get { return inGameHUD; }
         }
-        
+
+
+        public virtual List<Client> ConnectedClients
+        {
+            get { return null; }
+        }
+
         public NetworkMember()
         {
             inGameHUD = new GUIFrame(new Rectangle(0,0,0,0), null, null);
