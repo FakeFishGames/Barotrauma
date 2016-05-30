@@ -870,23 +870,39 @@ namespace Barotrauma
 
         private void Unload()
         {
-            if (renderer!=null) renderer.Dispose();
-            renderer = null;
-
-            ruins.Clear();
-
-            for (int side = 0; side < 2; side++)
+            if (renderer!=null) 
             {
-                for (int i = 0; i < 2; i++)
-                {
-                    wrappingWalls[side, i].Dispose();
-                }
+                renderer.Dispose();
+                renderer = null;
             }
-            
+
+            if (ruins != null)
+            {
+                ruins.Clear();
+                ruins = null;
+            }
+
+            if (wrappingWalls!=null)
+            {
+                for (int side = 0; side < 2; side++)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        wrappingWalls[side, i].Dispose();
+                    }
+                }
+
+                wrappingWalls = null;
+            }
+
+
             cells = null;
             
-            bodies.Clear();
-            bodies = null;
+            if (bodies != null)
+            {
+                bodies.Clear();
+                bodies = null;
+            }
 
             loaded = null;
         }

@@ -93,7 +93,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Coroutine " + Coroutines[i] + " threw an exception: " + e.Message);
+                    DebugConsole.ThrowError("Coroutine " + Coroutines[i].Name + " threw an exception: " + e.Message);
 
 #if DEBUG
                     throw e;
