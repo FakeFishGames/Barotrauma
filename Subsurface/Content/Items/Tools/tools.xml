@@ -207,7 +207,7 @@
     </Radar>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell">
+      <Containable name="Battery Cell, Fulgurium Battery Cell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
     </ItemContainer>
@@ -239,7 +239,7 @@
     </LightComponent>
     
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell">
+      <Containable name="Battery Cell, Fulgurium Battery Cell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
     </ItemContainer>

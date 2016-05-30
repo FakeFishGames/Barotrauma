@@ -32,6 +32,8 @@
   <Item file="Content/Items/Weapons/weapons.xml" />
   <Character file="Content/Characters/Crawler/crawler.xml" />
   <Character file="Content/Characters/Endworm/endworm.xml" />
+  <Character file="Content/Characters/Fractalguardian/fractalguardian.xml" />
+  <Character file="Content/Characters/Fractalguardian2/fractalguardian2.xml" /> 
   <Character file="Content/Characters/Human/human.xml" />
   <Character file="Content/Characters/Husk/husk.xml" />
   <Character file="Content/Characters/Mantis/mantis.xml" />
