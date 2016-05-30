@@ -342,7 +342,7 @@
     <Content Include="Content\BackgroundSprites\vegetation2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Characters\Coelanth\Coelanth.png">
+    <Content Include="Content\Characters\Coelanth\coelanth.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Coelanth\coelanth.xml">
