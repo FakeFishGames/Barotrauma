@@ -53,7 +53,7 @@ namespace Barotrauma.Networking
 
         public bool AutoRestart
         {
-            get { return (ConnectedClients.Count != 0) && autoRestart; }
+            get { return (connectedClients.Count != 0) && autoRestart; }
             set
             {
                 autoRestart = value;
