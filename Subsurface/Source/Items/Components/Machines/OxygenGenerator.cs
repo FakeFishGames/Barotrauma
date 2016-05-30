@@ -43,9 +43,7 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
-            ventList = new List<Vent>();
-
-            item.linkedTo.CollectionChanged += delegate { GetVents(); };
+            //item.linkedTo.CollectionChanged += delegate { GetVents(); };
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -77,12 +75,11 @@ namespace Barotrauma.Items.Components
             running = true;
 
             CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount*100.0f;
-            item.CurrentHull.Oxygen += CurrFlow * deltaTime;
+            //item.CurrentHull.Oxygen += CurrFlow * deltaTime;
 
             UpdateVents(CurrFlow);
-
-
-            voltage = 0.0f;
+            
+            voltage -= deltaTime;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -107,13 +104,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void OnMapLoaded()
-        {
-            GetVents();
-        }
+        //public override void OnMapLoaded()
+        //{
+        //    GetVents();
+        //}
                 
         private void UpdateVents(float deltaOxygen)
         {
+            if (ventList == null)
+            {
+                ventList = new List<Vent>();
+                GetVents();
+            }
+
             if (!ventList.Any() || totalHullVolume == 0.0f) return;
 
             foreach (Vent v in ventList)

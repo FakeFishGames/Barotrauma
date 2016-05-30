@@ -21,8 +21,6 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
-
             if (item.CurrentHull == null) return;
 
             item.CurrentHull.Oxygen += oxygenFlow * deltaTime;
