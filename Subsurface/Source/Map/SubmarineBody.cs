@@ -511,7 +511,8 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != submarine || item.CurrentHull == null || item.body == null) continue;
+                if (item.Submarine != submarine || item.CurrentHull == null || 
+                    item.body == null || !item.body.Enabled) continue;
 
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse);                
             }

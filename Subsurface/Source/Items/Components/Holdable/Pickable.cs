@@ -203,9 +203,11 @@ namespace Barotrauma.Items.Components
 
             if (picker == null || picker.Inventory == null)
             {
-                if (item.ParentInventory!=null && item.ParentInventory.Owner!=null)
+                if (item.ParentInventory != null && item.ParentInventory.Owner != null)
                 {
                     bodyDropPos = item.ParentInventory.Owner.SimPosition;
+
+                    if (item.body != null) item.body.ResetDynamics();                    
                 }
             }
             else
@@ -216,6 +218,12 @@ namespace Barotrauma.Items.Components
 
                 Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
                 bodyDropPos = rightHand.SimPosition;
+
+                if (item.body!=null)
+                {
+                    item.body.LinearVelocity = rightHand.body.LinearVelocity;
+                    item.body.AngularVelocity = rightHand.body.AngularVelocity;
+                }
 
                 picker.Inventory.RemoveItem(item);
                 picker = null;

@@ -123,7 +123,8 @@ namespace Barotrauma
 
             if (startNode == null)
             {
-                DebugConsole.ThrowError("Pathfinding error, couldn't find a start node");
+                DebugConsole.NewMessage("Pathfinding error, couldn't find a start node", Color.DarkRed);
+
                 return new SteeringPath();
             }
             
@@ -152,7 +153,7 @@ namespace Barotrauma
 
             if (endNode == null)
             {
-                DebugConsole.ThrowError("Pathfinding error, couldn't find an end node");
+                DebugConsole.NewMessage("Pathfinding error, couldn't find an end node", Color.DarkRed);
                 return new SteeringPath();
             }
 
@@ -185,7 +186,7 @@ namespace Barotrauma
 
             if (startNode == null || endNode == null)
             {
-                DebugConsole.ThrowError("Pathfinding error, couldn't find matching pathnodes to waypoints");
+                DebugConsole.NewMessage("Pathfinding error, couldn't find matching pathnodes to waypoints", Color.DarkRed);
                 return new SteeringPath();
             }
 
