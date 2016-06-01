@@ -55,6 +55,7 @@ namespace Barotrauma.Lights
         private int primitiveCount;
 
         private bool[] backFacing;
+        private bool[] ignoreEdge;
 
         private VertexPositionColor[] shadowVertices;
         private VertexPositionTexture[] penumbraVertices;
@@ -111,10 +112,37 @@ namespace Barotrauma.Lights
             //CalculateDimensions();
             
             backFacing = new bool[primitiveCount];
-            
+            ignoreEdge = new bool[primitiveCount];
+                        
             Enabled = true;
 
+            foreach (ConvexHull ch in list)
+            {
+                UpdateIgnoredEdges(ch);
+                ch.UpdateIgnoredEdges(this);
+            }
+
+
             list.Add(this);
+
+        }
+
+        private void UpdateIgnoredEdges(ConvexHull ch)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                if (vertices[i].X >= ch.boundingBox.X && vertices[i].X <= ch.boundingBox.Right && 
+                    vertices[i].Y >= ch.boundingBox.Y && vertices[i].Y <= ch.boundingBox.Bottom)
+                {
+                    Vector2 p = vertices[(i + 1) % vertices.Length];
+
+                    if (p.X >= ch.boundingBox.X && p.X <= ch.boundingBox.Right && 
+                        p.Y >= ch.boundingBox.Y && p.Y <= ch.boundingBox.Bottom)
+                    {
+                        ignoreEdge[i] = true;
+                    }
+                }                    
+            }            
         }
         
         private void CalculateDimensions()
@@ -199,8 +227,8 @@ namespace Barotrauma.Lights
 
         public bool Intersects(Rectangle rect)
         {
-            if (!Enabled)
-                return false;
+            if (!Enabled) return false;
+
             Rectangle transformedBounds = boundingBox;
             if (parentEntity != null && parentEntity.Submarine != null)
             {
@@ -219,6 +247,12 @@ namespace Barotrauma.Lights
             //compute facing of each edge, using N*L
             for (int i = 0; i < primitiveCount; i++)
             {
+                if (ignoreEdge[i])
+                {
+                    backFacing[i] = false;
+                    continue;
+                }
+
                 Vector2 firstVertex = new Vector2(vertices[i].X, vertices[i].Y);
                 int secondIndex = (i + 1) % primitiveCount;
                 Vector2 secondVertex = new Vector2(vertices[secondIndex].X, vertices[secondIndex].Y);

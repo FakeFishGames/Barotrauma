@@ -257,6 +257,13 @@ namespace Barotrauma
             var mergedSections = new List<WallSection>();
             foreach (var section in sections)
             {
+                if (mergedSections.Count > 5)
+                {
+                    mergedSections.Add(section);
+                    GenerateMergedHull(mergedSections);
+                    continue;
+                }
+
                 // if there is a gap and we have sections to merge, do it.
                 if (section.gap != null)
                 {
