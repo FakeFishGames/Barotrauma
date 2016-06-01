@@ -1680,7 +1680,7 @@ namespace Barotrauma
                     if (body != null) 
                     {
                         body.ReadNetworkData(message, sendingTime);
-                        body.MoveToTargetPosition(false);
+                        body.MoveToTargetPosition();
                     }
                     break;
                 case NetworkEventType.PhysicsBodyPosition:
