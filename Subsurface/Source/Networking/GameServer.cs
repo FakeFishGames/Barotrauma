@@ -1492,12 +1492,15 @@ namespace Barotrauma.Networking
             }   
         }
 
-        public override void SendChatMessage(string message)
+        public override void SendChatMessage(string message, ChatMessageType? type = null)
         {
             List<Client> recipients = new List<Client>();
             Client targetClient = null;
 
-            ChatMessageType type = gameStarted && myCharacter != null ? ChatMessageType.Default : ChatMessageType.Server;
+            if (type == null)
+            {
+                type = gameStarted && myCharacter != null ? ChatMessageType.Default : ChatMessageType.Server;
+            }
 
             string command = ChatMessage.GetChatMessageCommand(message, out message).ToLowerInvariant();
                 
@@ -1536,12 +1539,17 @@ namespace Barotrauma.Networking
 
             var chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, type, gameStarted ? myCharacter : null);
+                message, (ChatMessageType)type, gameStarted ? myCharacter : null);
 
             AddChatMessage(chatMessage);
 
             if (!server.Connections.Any()) return;
 
+            SendChatMessage(chatMessage, recipients);
+        }
+
+        public void SendChatMessage(ChatMessage chatMessage, List<Client> recipients)
+        {
             foreach (Client c in recipients)
             {
                 ReliableMessage msg = c.ReliableChannel.CreateMessage();
@@ -1552,8 +1560,7 @@ namespace Barotrauma.Networking
                 chatMessage.WriteNetworkMessage(msg.InnerMessage);
 
                 c.ReliableChannel.SendMessage(msg, c.Connection);
-            }      
-            
+            }  
         }
 
         private void ReadCharacterData(NetIncomingMessage message)
@@ -1844,6 +1851,7 @@ namespace Barotrauma.Networking
             get { return kickVoters.Count; }
         }
 
+
         public Client(NetPeer server, string name, byte ID)
             : this(name, ID)
         {
@@ -1889,6 +1897,11 @@ namespace Barotrauma.Networking
         public void RemoveKickVote(Client voter)
         {
             kickVoters.Remove(voter);
+        }
+        
+        public bool HasKickVoteFromID(int id)
+        {
+            return kickVoters.Any(k => k.ID == id);
         }
 
 

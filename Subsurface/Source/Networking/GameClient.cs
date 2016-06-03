@@ -834,24 +834,22 @@ namespace Barotrauma.Networking
             Character character = obj as Character;
             if (character == null) return false;
 
-            //if (character != myCharacter)
-            //{
-            //    var kickButton = new GUIButton(new Rectangle(0, 0, 120, 20), "Vote to Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
-            //    kickButton.UserData = character;
-            //    kickButton.OnClicked += VoteForKick;
-            //}
+            if (character != myCharacter)
+            {
+                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
+                if (client != null)
+                {
+                    var kickButton = new GUIButton(new Rectangle(0, 0, 120, 20), "Vote to Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                
+                    if (GameMain.NetworkMember.ConnectedClients != null)
+                    {
+                        kickButton.Enabled = !client.HasKickVoteFromID(myID);                        
+                    }
 
-            //if (GameMain.NetworkMember.ConnectedClients != null)
-            //{
-            //    var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
-            //    if (client != null && client.KickVoteCount>0)
-            //    {
-            //        new GUITextBlock(
-            //            new Rectangle(0, 0, 100, 20),
-            //            client.KickVoteCount + "/" + GameMain.NetworkMember.ConnectedClients,
-            //            GUI.Style, Alignment.BottomRight, Alignment.TopLeft, characterFrame);
-            //    }
-            //}
+                    kickButton.UserData = character;
+                    kickButton.OnClicked += VoteForKick;
+                }
+            }
 
             return true;
         }
@@ -933,10 +931,15 @@ namespace Barotrauma.Networking
         public bool VoteForKick(GUIButton button, object userdata)
         {
             var votedClient = otherClients.Find(c => c.Character == userdata);
+            if (votedClient == null) return false;
+
+            votedClient.AddKickVote(new Client(name, ID));
 
             if (votedClient == null) return false;
 
             Vote(VoteType.Kick, votedClient);
+
+            button.Enabled = false;
 
             return true;
         }
@@ -1070,15 +1073,14 @@ namespace Barotrauma.Networking
             return character;
         }
 
-        public override void SendChatMessage(string message)
+        public override void SendChatMessage(string message, ChatMessageType? type = null)
         {
             //AddChatMessage(message);
 
             if (client.ServerConnection == null) return;
 
-            var type = ChatMessageType.Default;
-            
-            
+            type = ChatMessageType.Default;
+                        
             if (Screen.Selected == GameMain.GameScreen && (myCharacter == null || myCharacter.IsDead)) 
             {
                 type = ChatMessageType.Dead;
@@ -1092,7 +1094,7 @@ namespace Barotrauma.Networking
             
             var chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, type, gameStarted ? myCharacter : null);
+                message, (ChatMessageType)type, gameStarted ? myCharacter : null);
 
             ReliableMessage msg = reliableChannel.CreateMessage();
             msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
