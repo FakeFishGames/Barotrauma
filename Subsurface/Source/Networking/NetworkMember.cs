@@ -300,7 +300,7 @@ namespace Barotrauma.Networking
             GUI.PlayUISound(soundType);
         }
 
-        public virtual void SendChatMessage(string message) { }
+        public virtual void SendChatMessage(string message, ChatMessageType? type = null) { }
 
         public virtual void Update(float deltaTime) 
         {

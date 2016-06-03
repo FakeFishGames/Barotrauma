@@ -103,6 +103,13 @@ namespace Barotrauma
 
                     kicked.AddKickVote(sender);
 
+                    if (GameMain.Server != null)
+                    {
+                        GameMain.Server.SendChatMessage(
+                            ChatMessage.Create("", sender.name + " has voted to kick " + kicked.name, ChatMessageType.Server, null),
+                            GameMain.Server.ConnectedClients);
+                    }
+
                     break;
             }
 
