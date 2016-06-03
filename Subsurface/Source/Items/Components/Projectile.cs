@@ -77,6 +77,8 @@ namespace Barotrauma.Items.Components
 
         private void Launch(Vector2 impulse)
         {
+            item.Drop();
+
             item.body.Enabled = true;
             item.body.ApplyLinearImpulse(impulse);
             
@@ -85,8 +87,6 @@ namespace Barotrauma.Items.Components
 
             item.body.CollisionCategories = Physics.CollisionProjectile;
             item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
-
-            item.Drop();
 
             if (stickJoint == null || !doesStick) return;
 
