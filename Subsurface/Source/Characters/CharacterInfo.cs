@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -43,6 +45,12 @@ namespace Barotrauma
                 if (headSprite == null) LoadHeadSprite();
                 return headSprite;
             }
+        }
+
+        public List<string> SpriteTags
+        {
+            get;
+            private set;
         }
 
         public int HeadSpriteId
@@ -91,6 +99,8 @@ namespace Barotrauma
             headSpriteRange = new Vector2[2];
 
             pickedItems = new List<ushort>();
+
+            SpriteTags = new List<string>();
 
             //ID = -1;
 
@@ -171,8 +181,30 @@ namespace Barotrauma
 
                 spritePath = spritePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
                 spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
-                
-                headSprite = new Sprite(spriteElement, "", spritePath);
+
+                string fileName = Path.GetFileNameWithoutExtension(spritePath);
+
+                //go through the files in the directory to find a matching sprite
+                var files = Directory.GetFiles(Path.GetDirectoryName(spritePath)).ToList();
+                foreach (string file in files)
+                {
+                    string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
+                    fileWithoutTags = fileWithoutTags.Split('[', ']').First();
+
+                    if (fileWithoutTags != fileName) continue;
+                    
+                    headSprite = new Sprite(spriteElement, "", file);
+
+                    //extract the tags out of the filename
+                    SpriteTags = file.Split('[', ']').Skip(1).ToList();
+                    if (SpriteTags.Any())
+                    {
+                        SpriteTags.RemoveAt(SpriteTags.Count-1);
+                    }
+
+                    break;                    
+                }
+
                 break;
             }
         }

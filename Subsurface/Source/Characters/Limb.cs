@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using Barotrauma.Lights;
+using System.Linq;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -273,14 +275,34 @@ namespace Barotrauma
                     case "sprite":
                         string spritePath = subElement.Attribute("texture").Value;
 
-                        if (character.Info!=null)
+                        string spritePathWithTags = spritePath;
+
+                        if (character.Info != null)
                         {
                             spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
                             spritePath = spritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
+
+                            if (character.Info.HeadSprite != null && character.Info.SpriteTags.Any())
+                            {
+                                string tags = "";
+                                character.Info.SpriteTags.ForEach(tag => tags += "[" + tag + "]");
+
+                                spritePathWithTags = Path.Combine(
+                                    Path.GetDirectoryName(spritePath),
+                                    Path.GetFileNameWithoutExtension(spritePath) + tags + Path.GetExtension(spritePath));
+                            }
                         }
 
+                        if (File.Exists(spritePathWithTags))
+                        {
+                            sprite = new Sprite(subElement, "", spritePathWithTags);
+                        }
+                        else
+                        {
 
-                        sprite = new Sprite(subElement, "", spritePath);
+                            sprite = new Sprite(subElement, "", spritePath);
+                        }
+
                         break;
                     case "damagedsprite":
                         string damagedSpritePath = subElement.Attribute("texture").Value;
