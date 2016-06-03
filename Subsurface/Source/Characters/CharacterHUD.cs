@@ -179,7 +179,7 @@ namespace Barotrauma
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
 
-            if (character.IsUnconscious)
+            if (character.IsUnconscious && !character.IsDead)
             {
                 if (suicideButton == null)
                 {
