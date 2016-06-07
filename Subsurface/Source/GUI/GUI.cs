@@ -398,27 +398,27 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                spriteBatch.DrawString(Font,
+                spriteBatch.DrawString(SmallFont,
                     "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
                     new Vector2(10, 10), Color.White);
 
-                spriteBatch.DrawString(Font,
+                spriteBatch.DrawString(SmallFont,
                     "Physics: " + GameMain.World.UpdateTime,
+                    new Vector2(10, 20), Color.White);
+
+                spriteBatch.DrawString(SmallFont,
+                    "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
                     new Vector2(10, 30), Color.White);
 
-                spriteBatch.DrawString(Font,
-                    "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
-                    new Vector2(10, 50), Color.White);
+                spriteBatch.DrawString(SmallFont,
+                    "Camera pos: " + GameMain.GameScreen.Cam.Position.ToPoint(),
+                    new Vector2(10, 40), Color.White);
 
-                spriteBatch.DrawString(Font,
-                    "Camera pos: " + GameMain.GameScreen.Cam.Position,
-                    new Vector2(10, 70), Color.White);
-
-                if (Submarine.Loaded!=null)
+                if (Submarine.Loaded != null)
                 {
-                    spriteBatch.DrawString(Font,
-                        "Sub pos: " + Submarine.Loaded.Position,
-                        new Vector2(10, 90), Color.White);
+                    spriteBatch.DrawString(SmallFont,
+                        "Sub pos: " + Submarine.Loaded.Position.ToPoint(),
+                        new Vector2(10, 50), Color.White);
                 }
             }
             
