@@ -36,6 +36,13 @@ namespace Barotrauma.Items.Components
             get { return maxOutput; }
         }
 
+        [HasDefaultValue(10.0f, true), Editable]
+        public float Capacity
+        {
+            get { return capacity; }
+            set { capacity = Math.Max(value, 1.0f); }
+        }
+
         [Editable, HasDefaultValue(0.0f, true)]
         public float Charge
         {
@@ -45,13 +52,6 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(value)) return;
                 charge = MathHelper.Clamp(value, 0.0f, capacity); 
             }
-        }
-
-        [HasDefaultValue(10.0f, true), Editable]
-        public float Capacity
-        {
-            get { return capacity; }
-            set { capacity = Math.Max(value, 1.0f); }
         }
 
         [HasDefaultValue(10.0f, true), Editable]

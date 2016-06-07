@@ -119,7 +119,12 @@
 
   <PipesBackground sprite="Content/Map/testroom.png" sourcerect="381,795,192,192" depth = "1.0"
     width="64" height="64" resizehorizontal="true" resizevertical="true"/>
-  
+
+  <SlopeForward sprite="Content/Map/structures2.png" sourcerect="0,0,224,64"
+    width="16" height="16" resizehorizontal="true" resizevertical="true" depth = "0.95"/>
+
+  <SlopeBack sprite="Content/Map/structures2.png" sourcerect="0,64,224,64"
+    width="16" height="16" resizehorizontal="true" resizevertical="true" depth = "0.95"/>
 
   <stairsright sprite="Content/Map/testroom.png" sourcerect="100,667,256,320" 
     width="256" height="320" depth = "0.1" stairdirection="Right"/>
