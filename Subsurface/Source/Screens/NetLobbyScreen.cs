@@ -354,6 +354,7 @@ namespace Barotrauma
 
             if (IsServer && GameMain.Server != null)
             {
+                int prevSelected = subList.SelectedIndex;
                 UpdateSubList(Submarine.SavedSubmarines);
 
                 modeList.OnSelected = VotableClicked;
@@ -377,8 +378,11 @@ namespace Barotrauma
                 var banListButton = new GUIButton(new Rectangle(0, 30, 100, 20), "Banned IPs", Alignment.BottomRight, GUI.Style, playerList.Parent);
                 banListButton.OnClicked = GameMain.Server.BanList.ToggleBanFrame;
                 banListButton.UserData = "banListButton";
-                
-                if (subList.CountChildren > 0 && subList.Selected == null) subList.Select(0);
+
+                if (subList.CountChildren > 0 && subList.Selected == null)
+                {
+                    subList.Select(Math.Max(0, prevSelected));
+                }
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
                 if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)

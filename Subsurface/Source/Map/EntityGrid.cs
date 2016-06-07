@@ -40,9 +40,9 @@ namespace Barotrauma
                 return;
             }
 
-            for (int x = Math.Max(indices.X, 0); x <= Math.Min(indices.Width, entities.GetLength(0)); x++)
+            for (int x = Math.Max(indices.X, 0); x <= Math.Min(indices.Width, entities.GetLength(0)-1); x++)
             {
-                for (int y = Math.Max(indices.Y,0); y <= Math.Min(indices.Height, entities.GetLength(1)); y++)
+                for (int y = Math.Max(indices.Y,0); y <= Math.Min(indices.Height, entities.GetLength(1)-1); y++)
                 {
                     entities[x, y].Add(entity);
                 }
