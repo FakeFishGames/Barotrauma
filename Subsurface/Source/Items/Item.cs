@@ -813,6 +813,9 @@ namespace Barotrauma
 
             if (prefab.sprite != null)
             {
+                float depth = Sprite.Depth;
+                depth += (ID % 255) * 0.000001f;
+
                 if (body == null)
                 {
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical)
@@ -821,7 +824,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        prefab.sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color);
+                        prefab.sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
                     }
 
                 }
@@ -830,7 +833,6 @@ namespace Barotrauma
                     var holdable = GetComponent<Holdable>();
                     if (holdable!=null && holdable.Picker !=null)
                     {
-                        float depth = Sprite.Depth;
                         if (holdable.Picker.SelectedItems[0]==this)
                         {
                             depth = holdable.Picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.000001f;
@@ -844,7 +846,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        body.Draw(spriteBatch, prefab.sprite, color);
+                        body.Draw(spriteBatch, prefab.sprite, color, depth);
                     }                    
                 }
             }
