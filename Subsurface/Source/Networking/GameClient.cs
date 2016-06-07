@@ -834,7 +834,7 @@ namespace Barotrauma.Networking
             Character character = obj as Character;
             if (character == null) return false;
 
-            if (character != myCharacter)
+            if (character != myCharacter && Voting.AllowVoteKick)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
                 if (client != null)
