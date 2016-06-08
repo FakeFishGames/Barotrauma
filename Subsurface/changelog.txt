@@ -1,4 +1,42 @@
 ---------------------------------------------------------------------------------------------------------
+v0.4.1.6
+---------------------------------------------------------------------------------------------------------
+
+- vote kicking
+- fixed reverting back to the first sub on the list after each round when using manual submarine selection
+- fixed lights "bleeding" through walls
+- fixed crashing if the submarine contains hulls far away from the rest of the submarine
+- corricodone is slightly more effective
+- battery charge can be set higher than the default capacity of 2000 (assuming the capacity is set higher)
+- job assignment bugfixes
+- head sprites can be given tags (e.g. customhead[tag].png) which will make the game select body sprites
+with a matching tag (e.g. customtorso[tag].png) for the character
+- some new head sprites
+- pathfinding errors (which may be caused by missing or incorrectly placed waypoints in custom subs)
+don't cause the debug console to pop up
+- added missing music clips to the Linux build
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.5
+---------------------------------------------------------------------------------------------------------
+
+- fixed oxygen distribution through vents not being calculated correctly
+- fixed another bug that caused ''object reference not set to an instance of object'' error messages
+when starting a new round
+- fulgurium batteries can be put in flashlights and sonars
+- more powerful oxygen generators in vanilla subs (small rooms aren't deathtraps anymore)
+
+Linux version:
+- fixed ''unable to load coelanth.png'' error messages
+- fixed non-matching content packages between the Linux and Windows versions
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.4
+---------------------------------------------------------------------------------------------------------
+
+- fixed clients failing to select submarines in their "Submarines/Downloaded" folder
+
+---------------------------------------------------------------------------------------------------------
 v0.4.1.3
 ---------------------------------------------------------------------------------------------------------
 
