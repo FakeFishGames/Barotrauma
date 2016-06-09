@@ -132,86 +132,83 @@ namespace Barotrauma.Items.Components
             IsActive = true;
             activeTimer = 0.1f;
 
+            Vector2 rayStart    = ConvertUnits.ToSimUnits(item.WorldPosition);
+            Vector2 rayEnd      = ConvertUnits.ToSimUnits(targetPosition);
 
-            for (int n = 0; n < 2; n++)
+            if (character.Submarine == null)
             {
-                Vector2 rayStart = ConvertUnits.ToSimUnits(item.WorldPosition);
-                Vector2 rayEnd = ConvertUnits.ToSimUnits(targetPosition);
-
-                if (n == 0)
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    //do a raycast in "submarine coordinates"
-                    rayStart -= Submarine.Loaded.SimPosition;
-                    rayEnd -= Submarine.Loaded.SimPosition;
+                    Repair(rayStart - sub.SimPosition, rayEnd - sub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
                 }
-                else
-                {
-                    //do a raycast outside the sub if the character is outside
-                    if (character.AnimController.CurrentHull != null) continue;
-                }
-
-                Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies);
-
-                pickedPosition = Submarine.LastPickedPosition;
-
-                if (ExtinquishAmount > 0.0f)
-                {
-                    Vector2 displayPos = rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f;
-                    Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
-                    if (hull != null) hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
-                }
-
-                if (targetBody == null || targetBody.UserData == null) continue;
-
-                Structure targetStructure;
-                Limb targetLimb;
-                Item targetItem;
-                if ((targetStructure = (targetBody.UserData as Structure)) != null)
-                {
-                    if (!fixableEntities.Contains(targetStructure.Name)) continue;
-
-                    int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
-                    if (sectionIndex < 0) continue;
-
-                    targetStructure.HighLightSection(sectionIndex);
-
-                    targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
-
-                    //if the next section is small enough, apply the effect to it as well
-                    //(to make it easier to fix a small "left-over" section)
-                    for (int i = -1; i < 2; i += 2)
-                    {
-                        int nextSectionLength = targetStructure.SectionLength(sectionIndex + i);
-                        if ((sectionIndex == 1 && i == -1) ||
-                            (sectionIndex == targetStructure.SectionCount - 2 && i == 1) ||
-                            (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f))
-                        {
-                            targetStructure.HighLightSection(sectionIndex + i);
-                            targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
-                        }
-                    }
-
-
-                }
-                else if ((targetLimb = (targetBody.UserData as Limb)) != null)
-                {
-                    if (character.IsKeyDown(InputType.Aim))
-                    {
-                        targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, character);
-                    }
-                }
-                else if ((targetItem = (targetBody.UserData as Item)) != null)
-                {
-                    targetItem.IsHighlighted = true;
-
-                    ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
-                }                
+            }
+            else
+            {
+                Repair(rayStart, rayEnd, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
 
             GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition + TransformedBarrelPos,
                 -item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi), ParticleSpeed);
           
             return true;
+        }
+
+        private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
+        {
+
+            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies);
+
+            pickedPosition = Submarine.LastPickedPosition;
+
+            if (ExtinquishAmount > 0.0f)
+            {
+                Vector2 displayPos = rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f;
+                Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
+                if (hull != null) hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
+            }
+
+            if (targetBody == null || targetBody.UserData == null) return;
+
+            Structure targetStructure;
+            Limb targetLimb;
+            Item targetItem;
+            if ((targetStructure = (targetBody.UserData as Structure)) != null)
+            {
+                if (!fixableEntities.Contains(targetStructure.Name)) return;
+
+                int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
+                if (sectionIndex < 0) return;
+
+                targetStructure.HighLightSection(sectionIndex);
+
+                targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
+
+                //if the next section is small enough, apply the effect to it as well
+                //(to make it easier to fix a small "left-over" section)
+                for (int i = -1; i < 2; i += 2)
+                {
+                    int nextSectionLength = targetStructure.SectionLength(sectionIndex + i);
+                    if ((sectionIndex == 1 && i == -1) ||
+                        (sectionIndex == targetStructure.SectionCount - 2 && i == 1) ||
+                        (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f))
+                    {
+                        targetStructure.HighLightSection(sectionIndex + i);
+                        targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
+                    }
+                }
+
+
+            }
+            else if ((targetLimb = (targetBody.UserData as Limb)) != null)
+            {
+                targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);                
+            }
+            else if ((targetItem = (targetBody.UserData as Item)) != null)
+            {
+                targetItem.IsHighlighted = true;
+
+                ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
+            }        
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)

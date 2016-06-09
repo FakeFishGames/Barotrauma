@@ -729,7 +729,7 @@ namespace Barotrauma.Networking
 
             if (Screen.Selected == GameMain.GameScreen)
             {
-                var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, endPreviewLength);
+                var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
 
                 float secondsLeft = endPreviewLength;
 

@@ -46,7 +46,7 @@ namespace Barotrauma
 
         public string GetSubName()
         {
-            return ((Submarine.Loaded == null) ? "" : Submarine.Loaded.Name);
+            return (Submarine.MainSub == null) ? "" : Submarine.MainSub.Name;
         }
 
         private string GetItemCount()
@@ -231,11 +231,11 @@ namespace Barotrauma
             GUIComponent.MouseOn = null;
             characterMode = false;
 
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                cam.Position = Submarine.Loaded.Position + Submarine.HiddenSubPosition;
-                nameBox.Text = Submarine.Loaded.Name;
-                descriptionBox.Text = ToolBox.LimitString(Submarine.Loaded.Description,15);
+                cam.Position = Submarine.MainSub.Position + Submarine.HiddenSubPosition;
+                nameBox.Text = Submarine.MainSub.Name;
+                descriptionBox.Text = ToolBox.LimitString(Submarine.MainSub.Description, 15);
             }
             else
             {
@@ -303,9 +303,9 @@ namespace Barotrauma
 
             string savePath = nameBox.Text + ".sub";
 
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                savePath = Path.Combine(Path.GetDirectoryName(Submarine.Loaded.FilePath), savePath);
+                savePath = Path.Combine(Path.GetDirectoryName(Submarine.MainSub.FilePath), savePath);
             }
             else
             {
@@ -313,9 +313,9 @@ namespace Barotrauma
             }
 
             Submarine.SaveCurrent(savePath);
-            Submarine.Loaded.CheckForErrors();
+            Submarine.MainSub.CheckForErrors();
 
-            GUI.AddMessage("Submarine saved to " + Submarine.Loaded.FilePath, Color.Green, 3.0f);
+            GUI.AddMessage("Submarine saved to " + Submarine.MainSub.FilePath, Color.Green, 3.0f);
             
             return false;
         }
@@ -560,7 +560,7 @@ namespace Barotrauma
                 return false;
             }
 
-            if (Submarine.Loaded != null) Submarine.Loaded.Name = text;
+            if (Submarine.MainSub != null) Submarine.MainSub.Name = text;
             textBox.Deselect();
 
             textBox.Text = text;
@@ -572,9 +572,9 @@ namespace Barotrauma
 
         private bool ChangeSubDescription(GUITextBox textBox, string text)
         {
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                Submarine.Loaded.Description = text;
+                Submarine.MainSub.Description = text;
             }
             else
             {
@@ -593,9 +593,9 @@ namespace Barotrauma
 
         private void ExpandDescriptionBox(GUITextBox textBox, Keys key)
         {
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                textBox.Text = Submarine.Loaded.Description;
+                textBox.Text = Submarine.MainSub.Description;
             }
             else if (textBox.UserData is string)
             {
@@ -617,7 +617,9 @@ namespace Barotrauma
 
         private bool GenerateWaypoints(GUIButton button, object obj)
         {
-            WayPoint.GenerateSubWaypoints();
+            if (Submarine.MainSub == null) return false;
+
+            WayPoint.GenerateSubWaypoints(Submarine.MainSub);
             return true;
         }
 

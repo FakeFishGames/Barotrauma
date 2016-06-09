@@ -181,7 +181,7 @@ namespace Barotrauma
             float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
             GameMain.LightManager.AmbientLight = new Color(backgroundColor*(40.0f/avgValue), 1.0f);
 
-            float minWidth = Submarine.Loaded == null ? 0.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
+            float minWidth = Submarine.MainSub == null ? 0.0f : Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
             minWidth = Math.Max(minWidth, 6500.0f);
 
             startPosition = new Vector2(minWidth * 2, Rand.Range(minWidth * 2, borders.Height - minWidth * 2, false));
@@ -783,9 +783,9 @@ namespace Barotrauma
 
         public void Update (float deltaTime)
         {
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                WrappingWall.UpdateWallShift(Submarine.Loaded.WorldPosition, wrappingWalls);
+                WrappingWall.UpdateWallShift(Submarine.MainSub.WorldPosition, wrappingWalls);
             }
 
             renderer.Update(deltaTime);

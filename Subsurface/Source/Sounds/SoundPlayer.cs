@@ -183,7 +183,8 @@ namespace Barotrauma
                 startDrone = null;                
             }
 
-            if (Submarine.Loaded==null)  
+            //todo: ambient sounds for multiple subs
+            if (Submarine.MainSub == null)  
             {
                 for (int i = 0; i < waterAmbienceIndexes.Length; i++)
                 {
@@ -213,9 +214,9 @@ namespace Barotrauma
 
             //how fast the sub is moving, scaled to 0.0 -> 1.0
             float movementFactor = 0.0f;
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                movementFactor = (Submarine.Loaded.Velocity == Vector2.Zero) ? 0.0f : Submarine.Loaded.Velocity.Length() / 5.0f;
+                movementFactor = (Submarine.MainSub.Velocity == Vector2.Zero) ? 0.0f : Submarine.MainSub.Velocity.Length() / 5.0f;
 
                 movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
             }
@@ -303,7 +304,7 @@ namespace Barotrauma
             {
                 return musicClips.Where(x => x != null && x.type == "ruins").ToList();
             }
-            else if (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth)
+            else if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth)
             {
                 return musicClips.Where(x => x != null && x.type == "deep").ToList();
             }

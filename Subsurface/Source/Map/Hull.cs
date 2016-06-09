@@ -15,7 +15,7 @@ namespace Barotrauma
     class Hull : MapEntity, IPropertyObject
     {
         public static List<Hull> hullList = new List<Hull>();
-        private static EntityGrid entityGrid;
+        private static List<EntityGrid> entityGrids = new List<EntityGrid>();
 
         public static bool ShowHulls = true;
 
@@ -248,13 +248,15 @@ namespace Barotrauma
             return rect;
         }
 
-        public static void GenerateEntityGrid()
+        public static void GenerateEntityGrid(Submarine submarine)
         {
-            entityGrid = new EntityGrid(Submarine.Borders, 200.0f);
+            var newGrid = new EntityGrid(submarine, 200.0f);
+
+            entityGrids.Add(newGrid);
             
             foreach (Hull hull in hullList)
             {
-                entityGrid.InsertEntity(hull);
+                if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
             }
         }
 
@@ -313,8 +315,14 @@ namespace Barotrauma
             }
 
             //renderer.Dispose();
+            if (entityGrids != null)
+            {
+                foreach (EntityGrid entityGrid in entityGrids)
+                {
+                    entityGrid.RemoveEntity(this);
+                }
+            }
 
-            if (entityGrid != null) entityGrid.RemoveEntity(this);
 
             hullList.Remove(this);
         }
@@ -652,15 +660,14 @@ namespace Barotrauma
         //returns the water block which contains the point (or null if it isn't inside any)
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
         {
-            if (entityGrid == null) return null;
+            if (entityGrids == null) return null;
 
             if (guess != null)
             {
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
             }
 
-            var entities = entityGrid.GetEntities(
-                useWorldCoordinates && Submarine.Loaded!=null ? position-Submarine.Loaded.Position : position);
+            var entities = EntityGrid.GetEntities(entityGrids, position, useWorldCoordinates);
 
             foreach (Hull hull in entities)
             {

@@ -78,6 +78,7 @@ namespace Barotrauma
                 Vector2 pos = host.SimPosition;
                 if (character!=null && character.Submarine==null)
                 {
+                    //todo: take multiple subs into account
                     pos -= Submarine.MainSub.SimPosition;
                 }   
 
@@ -107,6 +108,7 @@ namespace Barotrauma
                 Vector2 pos2 = host.SimPosition;
                 if (character != null && character.Submarine == null)
                 {
+                    //todo: take multiple subs into account
                     pos2 -= Submarine.MainSub.SimPosition;
                 }   
                 return currentTarget-pos2;
@@ -120,6 +122,7 @@ namespace Barotrauma
             Vector2 pos = host.SimPosition;
             if (character != null && character.Submarine == null)
             {
+                //todo: take multiple subs into account
                 pos -= Submarine.MainSub.SimPosition;
             }   
 

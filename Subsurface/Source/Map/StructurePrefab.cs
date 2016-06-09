@@ -128,7 +128,7 @@ namespace Barotrauma
 
         public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
         {
-            Vector2 position = Submarine.MouseToWorldGrid(cam);
+            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
             //Vector2 placeSize = size;
 
             Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
@@ -137,7 +137,7 @@ namespace Barotrauma
             if (placePosition == Vector2.Zero)
             {
                 if (PlayerInput.LeftButtonHeld())
-                    placePosition = Submarine.MouseToWorldGrid(cam);
+                    placePosition = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 newRect.X = (int)position.X;
                 newRect.Y = (int)position.Y;
@@ -154,14 +154,10 @@ namespace Barotrauma
 
                 if (PlayerInput.LeftButtonReleased())
                 {
-                    if (Submarine.Loaded != null)
-                    {
-                        newRect.Location -= Submarine.Loaded.Position.ToPoint();
-                    }
+                    newRect.Location -= Submarine.MainSub.Position.ToPoint();
 
-                    var structure = new Structure(newRect, this, Submarine.Loaded);
-
-                    structure.Submarine = Submarine.Loaded;
+                    var structure = new Structure(newRect, this, Submarine.MainSub);
+                    structure.Submarine = Submarine.MainSub;
 
                     selected = null;
                     return;
