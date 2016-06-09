@@ -22,7 +22,7 @@ namespace Barotrauma.Tutorials
 
             //spawn some fish next to the player
             GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2,
-                Submarine.Loaded.Position + Character.Controlled.Position);
+                Submarine.MainSub.Position + Character.Controlled.Position);
 
             yield return new WaitForSeconds(4.0f);
 
@@ -276,7 +276,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.Loaded.WorldPosition.Y > 24600.0f)
+            while (Submarine.MainSub.WorldPosition.Y > 24600.0f)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -300,7 +300,7 @@ namespace Barotrauma.Tutorials
             bool broken = false;
             do
             {
-                Submarine.Loaded.Velocity = Vector2.Zero;
+                Submarine.MainSub.Velocity = Vector2.Zero;
 
                 moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
                 Vector2 steeringDir = windows[0].WorldPosition - moloch.WorldPosition;
@@ -349,7 +349,7 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-            Submarine.Loaded.GodMode = true;
+            Submarine.MainSub.GodMode = true;
 
             var capacitor1 = Item.ItemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
             var capacitor2 = Item.ItemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
@@ -462,7 +462,7 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
-            Submarine.Loaded.GodMode = false;
+            Submarine.MainSub.GodMode = false;
 
             infoBox = CreateInfoFrame("The creature has died. Now you should fix the damages in the control room: " +
                 "Grab a welding tool from the closet in the railgun room.");
@@ -588,7 +588,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
 
-            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, 5.0f);
+            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, 5.0f);
 
             while (cinematic.Running)
             {

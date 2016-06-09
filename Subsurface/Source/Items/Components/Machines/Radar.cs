@@ -124,38 +124,41 @@ namespace Barotrauma.Items.Components
             float radius = rect.Width / 2.0f;
 
             float displayScale = radius / range;
-
-            if (DetectSubmarineWalls)
+            
+            foreach (Submarine submarine in Submarine.Loaded)
             {
-                for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
-                {
-                    Vector2 start = ConvertUnits.ToDisplayUnits(Submarine.Loaded.HullVertices[i]);
-                    Vector2 end = ConvertUnits.ToDisplayUnits(Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count]);
+                if (item.Submarine == submarine && !DetectSubmarineWalls) continue;
 
-                    if (item.CurrentHull!=null)
+                for (int i = 0; i < submarine.HullVertices.Count; i++)
+                {
+                    Vector2 start = ConvertUnits.ToDisplayUnits(submarine.HullVertices[i]);
+                    Vector2 end = ConvertUnits.ToDisplayUnits(submarine.HullVertices[(i + 1) % submarine.HullVertices.Count]);
+
+                    if (item.Submarine == submarine)
                     {
                         start += Rand.Vector(500.0f);
                         end += Rand.Vector(500.0f);
                     }
 
                     CreateBlipsForLine(
-                        start + Submarine.Loaded.WorldPosition, 
-                        end + Submarine.Loaded.WorldPosition, 
+                        start + submarine.WorldPosition,
+                        end + submarine.WorldPosition,
                         radius, displayScale, 200.0f, 2.0f);
                 }
-
             }
-            else
+
+
+            if (item.Submarine != null && !DetectSubmarineWalls)
             {
                 float simScale = displayScale * Physics.DisplayToSimRation;
 
-                Vector2 offset = ConvertUnits.ToSimUnits(Submarine.Loaded.WorldPosition - item.WorldPosition);
+                Vector2 offset = ConvertUnits.ToSimUnits(item.Submarine.WorldPosition - item.WorldPosition);
 
-                for (int i = 0; i < Submarine.Loaded.HullVertices.Count; i++)
+                for (int i = 0; i < item.Submarine.HullVertices.Count; i++)
                 {
-                    Vector2 start = (Submarine.Loaded.HullVertices[i] + offset) * simScale;
+                    Vector2 start = (item.Submarine.HullVertices[i] + offset) * simScale;
                     start.Y = -start.Y;
-                    Vector2 end = (Submarine.Loaded.HullVertices[(i + 1) % Submarine.Loaded.HullVertices.Count] + offset) * simScale;
+                    Vector2 end = (item.Submarine.HullVertices[(i + 1) % item.Submarine.HullVertices.Count] + offset) * simScale;
                     end.Y = -end.Y;
 
                     GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);                    

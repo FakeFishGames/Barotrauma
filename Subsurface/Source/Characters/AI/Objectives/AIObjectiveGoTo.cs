@@ -89,7 +89,7 @@ namespace Barotrauma
                 }
                 else if (target.Submarine == null)
                 {
-                    currTargetPos -= Submarine.Loaded.SimPosition;
+                    currTargetPos -= character.Submarine.SimPosition;
                 }
             }
 

@@ -78,7 +78,7 @@ namespace Barotrauma
                 Vector2 pos = host.SimPosition;
                 if (character!=null && character.Submarine==null)
                 {
-                    pos -= Submarine.Loaded.SimPosition;
+                    pos -= Submarine.MainSub.SimPosition;
                 }   
 
                 currentPath = pathFinder.FindPath(pos, target);
@@ -107,7 +107,7 @@ namespace Barotrauma
                 Vector2 pos2 = host.SimPosition;
                 if (character != null && character.Submarine == null)
                 {
-                    pos2 -= Submarine.Loaded.SimPosition;
+                    pos2 -= Submarine.MainSub.SimPosition;
                 }   
                 return currentTarget-pos2;
             }
@@ -120,7 +120,7 @@ namespace Barotrauma
             Vector2 pos = host.SimPosition;
             if (character != null && character.Submarine == null)
             {
-                pos -= Submarine.Loaded.SimPosition;
+                pos -= Submarine.MainSub.SimPosition;
             }   
 
             if (currentPath.CurrentNode!= null && currentPath.CurrentNode.Ladders!=null)

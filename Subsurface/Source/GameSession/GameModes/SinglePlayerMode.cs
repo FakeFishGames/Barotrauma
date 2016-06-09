@@ -143,14 +143,14 @@ namespace Barotrauma
 
             CrewManager.Draw(spriteBatch);
 
-            if (Submarine.Loaded == null) return;
+            if (Submarine.MainSub == null) return;
 
-            if (Submarine.Loaded.AtEndPosition)
+            if (Submarine.MainSub.AtEndPosition)
             {
                 endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;                
                 endShiftButton.Draw(spriteBatch);
             }
-            else if (Submarine.Loaded.AtStartPosition)
+            else if (Submarine.MainSub.AtStartPosition)
             {
                 endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
                 endShiftButton.Draw(spriteBatch);
@@ -199,7 +199,7 @@ namespace Barotrauma
 
             if (success)
             {
-                if (Submarine.Loaded.AtEndPosition)
+                if (Submarine.MainSub.AtEndPosition)
                 {
                     Map.MoveToNextLocation();
                 }
@@ -240,7 +240,7 @@ namespace Barotrauma
         {
             isRunning = false;
 
-            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, 5.0f);
+            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endshift" : "crewdead";
 
@@ -253,12 +253,12 @@ namespace Barotrauma
         {
             while (cinematic.Running)
             {
-                if (Submarine.Loaded == null) yield return CoroutineStatus.Success;
+                if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
 
                 yield return CoroutineStatus.Running;
             }
 
-            if (Submarine.Loaded == null) yield return CoroutineStatus.Success;
+            if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
 
             End("");
 

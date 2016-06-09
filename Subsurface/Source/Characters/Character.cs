@@ -855,7 +855,10 @@ namespace Barotrauma
             }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
-            if (AnimController.CurrentHull != null) cursorPosition -= Submarine.Loaded.Position;
+            if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
+            {
+                cursorPosition -= AnimController.CurrentHull.Submarine.Position;
+            }
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
 
@@ -1006,12 +1009,9 @@ namespace Barotrauma
             if (needsAir)
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
-
-                if (Submarine.Loaded != null && Level.Loaded != null)
-                {
-                    protectedFromPressure = protectedFromPressure && WorldPosition.Y > SubmarineBody.DamageDepth;
-                }
                 
+                protectedFromPressure = protectedFromPressure && WorldPosition.Y > SubmarineBody.DamageDepth;
+                           
                 if (!protectedFromPressure && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {

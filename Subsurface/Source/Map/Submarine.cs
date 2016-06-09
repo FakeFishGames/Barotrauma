@@ -30,7 +30,8 @@ namespace Barotrauma
         
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
-        private static Submarine loaded;
+        public static Submarine MainSub;
+        private static List<Submarine> loaded;
 
         private SubmarineBody subBody;
 
@@ -96,16 +97,16 @@ namespace Barotrauma
             }
         }
 
-        public static Submarine Loaded
-        {
-            get { return loaded; }
-        }
+        //public static List<Submarine> Loaded
+        //{
+        //    get { return loaded; }
+        //}
 
-        public static Rectangle Borders
+        public Rectangle Borders
         {
             get 
             { 
-                return (loaded==null) ? Rectangle.Empty : Loaded.subBody.Borders;                
+                return subBody.Borders;                
             }
         }
         
@@ -255,17 +256,17 @@ namespace Barotrauma
 
         //math/physics stuff ----------------------------------------------------
 
-        public static Vector2 MouseToWorldGrid(Camera cam)
+        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
         {
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 
             Vector2 worldGridPos = VectorToWorldGrid(position);
 
-            if (loaded != null)
+            if (sub != null)
             {
-                worldGridPos.X += loaded.Position.X % GridSize.X;
-                worldGridPos.Y += loaded.Position.Y % GridSize.Y;
+                worldGridPos.X += sub.Position.X % GridSize.X;
+                worldGridPos.Y += sub.Position.Y % GridSize.Y;
             }
 
             return worldGridPos;
@@ -435,6 +436,23 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
+        public static Submarine GetClosest(Vector2 worldPosition)
+        {
+            Submarine closest = null;
+            float closestDist = 0.0f;
+            foreach (Submarine sub in Submarine.loaded)
+            {
+                float dist = Vector2.Distance(worldPosition, sub.WorldPosition);
+                if (closest == null || dist < closestDist)
+                {
+                    closest = sub;
+                    closestDist = dist;
+                }
+            }
+
+            return closest;
+        }
+        
         public override bool FillNetworkData(Networking.NetworkEventType type, NetBuffer message, object data)
         {
             if (subBody == null) return false;
@@ -519,15 +537,17 @@ namespace Barotrauma
 
         public static bool SaveCurrent(string filePath)
         {
-            if (loaded==null)
+            if (!loaded.Any())
             {
-                loaded = new Submarine(filePath);
+                loaded.Add(new Submarine(filePath));
                // return;
             }
 
-            loaded.filePath = filePath;
+            System.Diagnostics.Debug.Assert(loaded.Count==1);
 
-            return loaded.SaveAs(filePath);
+            loaded.First().filePath = filePath;
+
+            return loaded.First().SaveAs(filePath);
         }
 
         public void CheckForErrors()
@@ -766,8 +786,8 @@ namespace Barotrauma
 
             subBody = new SubmarineBody(this);
             subBody.SetPosition(HiddenSubPosition);
-            
-            loaded = this;
+
+            loaded.Add(this);
 
             Hull.GenerateEntityGrid();
             
@@ -809,16 +829,19 @@ namespace Barotrauma
 
         public static void Unload()
         {
-            if (loaded == null) return;
 
             Sound.OnGameEnd();
 
             if (GameMain.LightManager != null) GameMain.LightManager.ClearLights();
-            
-            loaded.Remove();
+
+
+            foreach (Submarine sub in loaded)
+            {
+                sub.Remove();
+                sub.Clear();
+            }
 
             loaded.Clear();
-            loaded = null;
         }
 
         private void Clear()

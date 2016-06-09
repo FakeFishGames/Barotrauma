@@ -83,7 +83,7 @@ namespace Barotrauma
         }
 
         public Gap(MapEntityPrefab prefab, Rectangle rectangle)
-           : this (rectangle, Submarine.Loaded)
+           : this (rectangle, Submarine.MainSub)
         { }
 
         public Gap(Rectangle newRect, Submarine submarine)
@@ -253,7 +253,7 @@ namespace Barotrauma
 
                     var particle = GameMain.ParticleManager.CreateParticle(
                         "watersplash",
-                        (Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
+                        (Submarine == null ? pos : pos + Submarine.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
                         velocity);
 
                     if (particle != null)
@@ -269,7 +269,7 @@ namespace Barotrauma
 
                         GameMain.ParticleManager.CreateParticle(
                           "bubbles",
-                          Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position,
+                          Submarine == null ? pos : pos + Submarine.Position,
                           flowForce / 10.0f);  
                     }
                 }
@@ -288,14 +288,14 @@ namespace Barotrauma
 
                         var splash = GameMain.ParticleManager.CreateParticle(
                             "watersplash", 
-                            Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position,
+                            Submarine == null ? pos : pos + Submarine.Position,
                             -velocity, 0, FlowTargetHull);
 
                         if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 
                         GameMain.ParticleManager.CreateParticle(
                             "bubbles", 
-                            Submarine.Loaded == null ? pos : pos + Submarine.Loaded.Position,
+                            Submarine == null ? pos : pos + Submarine.Position,
                             flowForce / 2.0f, 0, FlowTargetHull);
                     }
                 }
@@ -552,7 +552,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    hull1.LethalPressure += (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
+                    hull1.LethalPressure += (Submarine != null && Submarine.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
                 }
             }
             else
@@ -567,7 +567,7 @@ namespace Barotrauma
                 }
                 if (hull1.Volume >= hull1.FullVolume - Hull.MaxCompress)
                 {
-                    hull1.LethalPressure += (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
+                    hull1.LethalPressure += (Submarine != null && Submarine.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
                 }
             }
 

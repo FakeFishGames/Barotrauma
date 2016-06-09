@@ -109,7 +109,7 @@ namespace Barotrauma
 
         public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
         {
-            Vector2 position = Submarine.MouseToWorldGrid(cam); 
+            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub); 
 
             if (PlayerInput.RightButtonClicked())
             {
@@ -121,10 +121,10 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.Loaded);
+                    var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.MainSub);
                     //constructor.Invoke(lobject);
-                    item.Submarine = Submarine.Loaded;
-                    item.SetTransform(ConvertUnits.ToSimUnits(Submarine.Loaded==null ? item.Position : item.Position - Submarine.Loaded.Position), 0.0f);
+                    item.Submarine = Submarine.MainSub;
+                    item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub==null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                     item.FindHull();
 
                     placePosition = Vector2.Zero;
@@ -152,11 +152,11 @@ namespace Barotrauma
 
                     if (PlayerInput.LeftButtonReleased())
                     {
-                        var item = new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this, Submarine.Loaded);
+                        var item = new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this, Submarine.MainSub);
                         placePosition = Vector2.Zero;
 
-                        item.Submarine = Submarine.Loaded;
-                        item.SetTransform(ConvertUnits.ToSimUnits(Submarine.Loaded == null ? item.Position : item.Position - Submarine.Loaded.Position), 0.0f);
+                        item.Submarine = Submarine.MainSub;
+                        item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                         item.FindHull();
                         
                         //selected = null;
