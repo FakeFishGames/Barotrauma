@@ -67,6 +67,8 @@ namespace Barotrauma.Items.Components
                 Vector2 vector = ToolBox.ParseToVector2(value);
                 minRotation = MathHelper.ToRadians(vector.X);
                 maxRotation = MathHelper.ToRadians(vector.Y);
+
+                rotation = (minRotation + maxRotation) / 2;
             }
         }
 

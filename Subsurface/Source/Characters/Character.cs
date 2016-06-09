@@ -1030,6 +1030,12 @@ namespace Barotrauma
                     PressureTimer = 0.0f;
                 }
             }
+
+            if (controlled == this)
+            {
+                Lights.LightManager.ViewTarget = this;
+                CharacterHUD.Update(deltaTime, this);
+            }
             
             if (IsUnconscious)
             {
@@ -1039,8 +1045,6 @@ namespace Barotrauma
 
             if (controlled == this)
             {
-                Lights.LightManager.ViewTarget = this;
-                CharacterHUD.Update(deltaTime,this);
                 ControlLocalPlayer(deltaTime, cam);
             }
 

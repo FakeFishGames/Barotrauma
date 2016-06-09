@@ -128,7 +128,7 @@ namespace Barotrauma
 
                     if (limb.WorldPosition == worldPosition) continue;
 
-                    c.AddDamage(limb.SimPosition, DamageType.None,
+                    c.AddDamage(limb.WorldPosition, DamageType.None,
                         damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor, false);
                     if (force > 0.0f)
                     {
