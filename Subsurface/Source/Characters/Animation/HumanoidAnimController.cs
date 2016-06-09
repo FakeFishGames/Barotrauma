@@ -156,6 +156,13 @@ namespace Barotrauma
             }
             strongestImpact = 0.0f;
 
+            
+            if (stunTimer > 0)
+            {
+                stunTimer -= deltaTime;
+                return;
+            }
+
             if (character.LockHands)
             {
                 var leftHand = GetLimb(LimbType.LeftHand);
@@ -185,15 +192,13 @@ namespace Barotrauma
                 //rightHand.pullJoint.Enabled = true;
                 //rightHand.pullJoint.WorldAnchorB = midPos;
             }
-            
-            if (stunTimer > 0)
+            else
             {
-                stunTimer -= deltaTime;
-                return;
-            }
-            
-            if (Anim != Animation.UsingConstruction) ResetPullJoints(); 
 
+                if (Anim != Animation.UsingConstruction) ResetPullJoints(); 
+
+            }
+        
             if (SimplePhysicsEnabled)
             {
                 UpdateStandingSimple();
@@ -287,7 +292,7 @@ namespace Barotrauma
                 float slowdownFactor = (float)limbsInWater / (float)Limbs.Count();
 
                 float maxSpeed = Math.Max(TargetMovement.Length() - slowdownFactor, 1.0f);
-                if (character.SelectedCharacter!=null) maxSpeed = Math.Min(maxSpeed, 1.0f);
+               // if (character.SelectedCharacter!=null) maxSpeed = Math.Min(maxSpeed, 1.0f);
 
                 TargetMovement = Vector2.Normalize(TargetMovement) * maxSpeed;
             }
@@ -933,10 +938,11 @@ namespace Barotrauma
                 {
                     pullLimb.pullJoint.Enabled = true;
                     pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
-                    pullLimb.pullJoint.MaxForce = 100.0f;
+                    pullLimb.pullJoint.MaxForce = 10000.0f;
 
                     targetLimb.pullJoint.Enabled = true;
                     targetLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition;
+                    targetLimb.pullJoint.MaxForce = 10000.0f;
                 }
 
             }

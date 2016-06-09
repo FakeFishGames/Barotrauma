@@ -93,6 +93,12 @@ namespace Barotrauma.Networking
             get { return allowSpectating; }
         }
 
+        public bool AllowVoteKick
+        {
+            get;
+            private set;
+        }
+
         public float EndVoteRequiredRatio = 0.5f;
 
         public float KickVoteRequiredRatio = 0.5f;
@@ -159,10 +165,9 @@ namespace Barotrauma.Networking
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
-            
+            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);            
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 400), null, Alignment.Center, GUI.Style, settingsFrame);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 420), null, Alignment.Center, GUI.Style, settingsFrame);
             innerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0, -5, 0, 20), "Server settings", GUI.Style, innerFrame, GUI.LargeFont);
@@ -175,6 +180,7 @@ namespace Barotrauma.Networking
 
 
             y += 30;
+
             var endVoteBox = new GUITickBox(new Rectangle(0, y, 20, 20), "End round by voting", Alignment.Left, innerFrame);
             endVoteBox.Selected = Voting.AllowEndVoting;
             endVoteBox.OnSelected = (GUITickBox) =>
@@ -199,6 +205,33 @@ namespace Barotrauma.Networking
                 return true;
             };
             votesRequiredSlider.OnMoved(votesRequiredSlider, votesRequiredSlider.BarScroll);
+            
+            y += 40;
+
+            var voteKickBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow vote kicking", Alignment.Left, innerFrame);
+            voteKickBox.Selected = Voting.AllowVoteKick;
+            voteKickBox.OnSelected = (GUITickBox) =>
+            {
+                Voting.AllowVoteKick = !Voting.AllowVoteKick;
+                GameMain.Server.UpdateVoteStatus();
+                return true;
+            };
+
+            var kickVotesRequiredText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Votes required: 50 %", GUI.Style, innerFrame, GUI.SmallFont);
+
+            var kickVoteSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, innerFrame);
+            kickVoteSlider.UserData = kickVotesRequiredText;
+            kickVoteSlider.Step = 0.2f;
+            kickVoteSlider.BarScroll = (KickVoteRequiredRatio - 0.5f) * 2.0f;
+            kickVoteSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
+
+                KickVoteRequiredRatio = barScroll / 2.0f + 0.5f;
+                voteText.Text = "Votes required: " + (int)MathUtils.Round(KickVoteRequiredRatio * 100.0f, 10.0f) + " %";
+                return true;
+            };
+            kickVoteSlider.OnMoved(kickVoteSlider, kickVoteSlider.BarScroll);
 
             y += 40;
             

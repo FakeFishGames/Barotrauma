@@ -82,7 +82,7 @@ namespace Barotrauma
 
             DrawStatusIcons(spriteBatch, character);
 
-            if (!character.IsUnconscious)
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null && !character.LockHands &&
                     character.Stun >= -0.1f) character.Inventory.DrawOwn(spriteBatch, Vector2.Zero);
@@ -193,7 +193,10 @@ namespace Barotrauma
 
                     suicideButton.OnClicked = (button, userData) =>
                     {
-                        character.Kill(character.CauseOfDeath);
+                        if (Character.Controlled != null)
+                        {
+                            Character.Controlled.Kill(Character.Controlled.CauseOfDeath);
+                        }
                         return true;
                     };
                 }
