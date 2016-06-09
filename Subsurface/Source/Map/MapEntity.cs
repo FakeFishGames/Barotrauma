@@ -518,7 +518,7 @@ namespace Barotrauma
                 Vector2 placePosition = new Vector2(rect.X, rect.Y);
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
-                Vector2 mousePos = Submarine.MouseToWorldGrid(cam);
+                Vector2 mousePos = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 if (resizeDirX >0)
                 {

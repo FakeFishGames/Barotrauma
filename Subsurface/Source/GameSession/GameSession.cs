@@ -68,6 +68,8 @@ namespace Barotrauma
 
         public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset = null, string missionType="")
         {
+            Submarine.MainSub = submarine;
+
             GameMain.GameSession = this;
 
             CrewManager = new CrewManager();
@@ -88,6 +90,8 @@ namespace Barotrauma
         public GameSession(Submarine selectedSub, string saveFile, XDocument doc)
             : this(selectedSub, saveFile)
         {
+            Submarine.MainSub = submarine;
+
             GameMain.GameSession = this;
 
             CrewManager = new CrewManager();

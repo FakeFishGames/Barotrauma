@@ -520,7 +520,7 @@ namespace Barotrauma
 
         public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            if (Submarine.Loaded != null && Submarine.Loaded.GodMode && Submarine == Submarine.Loaded) return new AttackResult(0.0f, 0.0f);
+            if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
 
             Vector2 transformedPos = worldPosition;
@@ -546,7 +546,7 @@ namespace Barotrauma
 
         private void SetDamage(int sectionIndex, float damage)
         {
-            if (Submarine.Loaded != null && Submarine.Loaded.GodMode) return;
+            if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.HasBody) return;
 
             if (!MathUtils.IsValid(damage)) return;

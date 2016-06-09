@@ -289,7 +289,7 @@ namespace Barotrauma.Networking
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((autoRestart && isCrewDead) 
                     || 
-                    (endRoundAtLevelEnd && Submarine.Loaded!=null && Submarine.Loaded.AtEndPosition))
+                    (endRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition))
                 {
                     if (AutoRestart && isCrewDead)
                     {
@@ -363,7 +363,8 @@ namespace Barotrauma.Networking
                     {
                         if (!(c is AICharacter) || c.IsDead) continue;
 
-                        Vector2 diff = c.WorldPosition-Submarine.Loaded.WorldPosition;
+                        //todo: take multiple subs into account
+                        Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
 
                         if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
 
@@ -389,7 +390,13 @@ namespace Barotrauma.Networking
 
         private void SparseUpdate()
         {
-            if (gameStarted) new NetworkEvent(Submarine.Loaded.ID, false);
+            if (gameStarted)
+            {
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    new NetworkEvent(sub.ID, false);
+                }
+            }
 
             foreach (Character c in Character.CharacterList)
             {
@@ -397,7 +404,8 @@ namespace Barotrauma.Networking
 
                 if (c is AICharacter)
                 {
-                    Vector2 diff = c.WorldPosition - Submarine.Loaded.WorldPosition;
+                    //todo: take multiple subs into account
+                    Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
 
                     if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
                 }
@@ -601,7 +609,7 @@ namespace Barotrauma.Networking
                         case (byte)PacketTypes.SpectateRequest:
                             if (gameStarted && allowSpectating)
                             {
-                                var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
+                                var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
                                 server.SendMessage(startMessage, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered);
 
                                 dataSender.Spectating = true;
@@ -985,7 +993,7 @@ namespace Barotrauma.Networking
                 GameMain.GameSession.CrewManager.characters.Add(myCharacter);
             }
 
-            var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
+            var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
             SendMessage(startMessage, NetDeliveryMethod.ReliableUnordered);
 
 
@@ -1113,7 +1121,7 @@ namespace Barotrauma.Networking
 
             float endPreviewLength = 10.0f;
 
-            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, endPreviewLength);
+            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
             
             float secondsLeft = endPreviewLength;
 

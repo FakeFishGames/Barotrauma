@@ -31,7 +31,7 @@ namespace Barotrauma
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
         public static Submarine MainSub;
-        private static List<Submarine> loaded;
+        private static List<Submarine> loaded = new List<Submarine>();
 
         private SubmarineBody subBody;
 
@@ -97,10 +97,10 @@ namespace Barotrauma
             }
         }
 
-        //public static List<Submarine> Loaded
-        //{
-        //    get { return loaded; }
-        //}
+        public static List<Submarine> Loaded
+        {
+            get { return loaded; }
+        }
 
         public Rectangle Borders
         {
@@ -789,7 +789,7 @@ namespace Barotrauma
 
             loaded.Add(this);
 
-            Hull.GenerateEntityGrid();
+            Hull.GenerateEntityGrid(this);
             
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {

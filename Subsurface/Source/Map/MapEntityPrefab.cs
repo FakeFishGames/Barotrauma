@@ -128,7 +128,7 @@ namespace Barotrauma
 
             if (placePosition == Vector2.Zero)
             {
-                Vector2 position = Submarine.MouseToWorldGrid(cam);
+                Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 GUI.DrawLine(spriteBatch, new Vector2(position.X-GameMain.GraphicsWidth, -position.Y), new Vector2(position.X+GameMain.GraphicsWidth, -position.Y), Color.White);
 
@@ -138,7 +138,7 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 position = Submarine.MouseToWorldGrid(cam);
+                Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 if (resizeHorizontal) placeSize.X = position.X - placePosition.X;
                 if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
@@ -147,9 +147,9 @@ namespace Barotrauma
                 newRect.Width = (int)Math.Max(newRect.Width, Submarine.GridSize.X);
                 newRect.Height = (int)Math.Max(newRect.Height, Submarine.GridSize.Y);
 
-                if (Submarine.Loaded != null)
+                if (Submarine.MainSub != null)
                 {
-                    newRect.Location -= Submarine.Loaded.Position.ToPoint();
+                    newRect.Location -= Submarine.MainSub.Position.ToPoint();
                 }
 
                 if (PlayerInput.LeftButtonReleased())
