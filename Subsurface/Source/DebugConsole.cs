@@ -213,8 +213,6 @@ namespace Barotrauma
                                 break;
                             case "near":
                             case "close":
-                                if (Submarine.Loaded == null) break;
-
                                 float closestDist = 0.0f;
                                 foreach (WayPoint wp in WayPoint.WayPointList)
                                 {
@@ -223,7 +221,7 @@ namespace Barotrauma
                                     //don't spawn inside hulls
                                     if (Hull.FindHull(wp.WorldPosition, null) != null) continue;
 
-                                    float dist = Vector2.Distance(wp.WorldPosition, Submarine.Loaded.WorldPosition);
+                                    float dist = Vector2.Distance(wp.WorldPosition, GameMain.GameScreen.Cam.WorldViewCenter);
 
                                     if (spawnPoint == null || dist < closestDist)
                                     {
@@ -319,7 +317,9 @@ namespace Barotrauma
                     Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLowerInvariant() == commands[1]);
                     break;
                 case "godmode":
-                    Submarine.Loaded.GodMode = !Submarine.Loaded.GodMode;
+                    if (Submarine.MainSub == null) return;
+
+                    Submarine.MainSub.GodMode = !Submarine.MainSub.GodMode;
                     break;
                 case "dumpids":
                     int count = commands.Length < 2 ? 10 : int.Parse(commands[1]);
@@ -438,8 +438,11 @@ namespace Barotrauma
                         return;
                     }
 
-                    if (Submarine.SaveCurrent(System.IO.Path.Combine(Submarine.SavePath, fileName +".sub"))) NewMessage("map saved", Color.Green);
-                    Submarine.Loaded.CheckForErrors();
+                    if (Submarine.SaveCurrent(System.IO.Path.Combine(Submarine.SavePath, fileName + ".sub")))
+                    {
+                        NewMessage("Sub saved", Color.Green);
+                        //Submarine.Loaded.First().CheckForErrors();
+                    }
 
                     break;
                 case "loadmap":

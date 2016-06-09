@@ -366,7 +366,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Nodes.Count; i++)
             {
                 Vector2 worldPos = Nodes[i];
-                if (Submarine.Loaded != null) worldPos += Submarine.Loaded.Position + Submarine.HiddenSubPosition;
+                if (item.Submarine != null) worldPos += item.Submarine.Position + Submarine.HiddenSubPosition;
                 worldPos.Y = -worldPos.Y;
 
                 GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.0f);
@@ -407,7 +407,7 @@ namespace Barotrauma.Items.Components
                     MapEntity.DisableSelect = true;
                     //Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)-Submarine.HiddenSubPosition+Submarine.Loaded.Position;
 
-                    Vector2 nodeWorldPos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - Submarine.HiddenSubPosition - Submarine.Loaded.Position;// Nodes[(int)selectedNodeIndex];
+                    Vector2 nodeWorldPos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - Submarine.HiddenSubPosition - item.Submarine.Position;// Nodes[(int)selectedNodeIndex];
 
                     nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
                     nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
@@ -428,10 +428,10 @@ namespace Barotrauma.Items.Components
 
         private void DrawSection(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float width = 0.3f)
         {
-            if (Submarine.Loaded!=null)
+            if (item.Submarine != null)
             {
-                start += Submarine.Loaded.DrawPosition + Submarine.HiddenSubPosition;
-                end += Submarine.Loaded.DrawPosition + Submarine.HiddenSubPosition;
+                start += item.Submarine.DrawPosition + Submarine.HiddenSubPosition;
+                end += item.Submarine.DrawPosition + Submarine.HiddenSubPosition;
             }
 
             start.Y = -start.Y;

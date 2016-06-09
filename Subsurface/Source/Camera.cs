@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -178,9 +179,11 @@ namespace Barotrauma
                     if (GameMain.Config.KeyBind(InputType.Up).IsDown())     moveCam.Y += moveSpeed;
                 }
 
-                if (Submarine.Loaded!=null && Screen.Selected == GameMain.GameScreen)
+                if (Submarine.MainSub != null && Screen.Selected == GameMain.GameScreen)
                 {
-                    moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(Submarine.Loaded.Velocity*deltaTime);
+                    
+
+                    moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(Submarine.MainSub.Velocity*deltaTime);
                 }
                  
                 moveCam = moveCam * deltaTime * 60.0f; 

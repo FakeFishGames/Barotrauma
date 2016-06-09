@@ -414,10 +414,10 @@ namespace Barotrauma
                     "Camera pos: " + GameMain.GameScreen.Cam.Position,
                     new Vector2(10, 70), Color.White);
 
-                if (Submarine.Loaded!=null)
+                if (Submarine.MainSub != null)
                 {
                     spriteBatch.DrawString(Font,
-                        "Sub pos: " + Submarine.Loaded.Position,
+                        "Sub pos: " + Submarine.MainSub.Position,
                         new Vector2(10, 90), Color.White);
                 }
             }

@@ -525,7 +525,7 @@ namespace Barotrauma
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
             if (body != null)
             {
-                Submarine = CurrentHull == null ? null : Submarine.Loaded;
+                Submarine = CurrentHull == null ? null : CurrentHull.Submarine;
                 body.Submarine = Submarine;
             }
 

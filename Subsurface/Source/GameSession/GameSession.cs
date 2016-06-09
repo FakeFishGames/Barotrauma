@@ -121,7 +121,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (reloadSub || Submarine.Loaded != submarine) submarine.Load();
+            if (reloadSub || Submarine.MainSub != submarine) submarine.Load();
 
             if (level != null)
             {

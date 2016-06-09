@@ -51,7 +51,7 @@ namespace Barotrauma
 
             string text = infoList[Rand.Int(infoList.Count)];
 
-            if (Submarine.Loaded!=null) text = text.Replace("[sub]", Submarine.Loaded.Name);
+            if (Submarine.MainSub != null) text = text.Replace("[sub]", Submarine.MainSub.Name);
             if (GameMain.GameSession != null && GameMain.GameSession.Map != null)
             {
                 if (GameMain.GameSession.Map.CurrentLocation!=null)

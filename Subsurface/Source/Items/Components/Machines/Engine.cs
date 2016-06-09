@@ -86,7 +86,7 @@ namespace Barotrauma.Items.Components
             {
                 Vector2 currForce = new Vector2((force / 100.0f) * maxForce * (voltage / minVoltage), 0.0f);
 
-                Submarine.Loaded.ApplyForce(currForce);
+                item.Submarine.ApplyForce(currForce);
 
                 if (item.CurrentHull != null)
                 {
