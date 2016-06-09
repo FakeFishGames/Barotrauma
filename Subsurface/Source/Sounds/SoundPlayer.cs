@@ -7,6 +7,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Barotrauma.Sounds;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -249,7 +250,16 @@ namespace Barotrauma
                 if (currMusicVolume < 0.01f)
                 {
                     Sound.StopStream();
-                    if (targetMusic != null) Sound.StartStream(targetMusic.file, currMusicVolume);
+
+                    try
+                    {
+                        if (targetMusic != null) Sound.StartStream(targetMusic.file, currMusicVolume);
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        DebugConsole.ThrowError("Music clip " + targetMusic.file + " not found!");
+                    }
+
                     currentMusic = targetMusic;
                 }
             }

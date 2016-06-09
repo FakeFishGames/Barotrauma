@@ -12,6 +12,8 @@ namespace Barotrauma
     {
         private bool allowSubVoting, allowModeVoting;
 
+        public bool AllowVoteKick = true;
+
         public bool AllowEndVoting = true;
 
         public bool AllowSubVoting
@@ -243,8 +245,9 @@ namespace Barotrauma
             {
                 msg.Write((byte)voters.Count(v => v.GetVote<bool>(VoteType.EndRound)));
                 msg.Write((byte)voters.Count);
-            }           
-
+            }      
+     
+            msg.Write(AllowVoteKick);
         }
 
         public void ReadData(NetIncomingMessage msg)
@@ -286,6 +289,8 @@ namespace Barotrauma
                 GameMain.NetworkMember.EndVoteCount = msg.ReadByte();
                 GameMain.NetworkMember.EndVoteMax = msg.ReadByte();
             }
+
+            AllowVoteKick = msg.ReadBoolean();
         }
     }
 }

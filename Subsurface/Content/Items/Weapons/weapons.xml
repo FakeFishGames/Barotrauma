@@ -49,7 +49,7 @@
       <RequiredSkill name="Weapons" level="30"/>
     </RangedWeapon>
 
-    <ItemContainer itempos="27,10" iteminterval="0,-8" hideitems="false">
+    <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
       <Containable name="Spear"/>
     </ItemContainer>
   </Item>

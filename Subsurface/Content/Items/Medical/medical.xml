@@ -148,7 +148,7 @@
     </ItemComponent>
 
     <Holdable slots="Any,RightHand,LeftHand">
-      <StatusEffect type="OnUse" target="Character" Health="2.0" duration="5.0">
+      <StatusEffect type="OnUse" target="Character" Health="3.0" duration="5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Holdable>

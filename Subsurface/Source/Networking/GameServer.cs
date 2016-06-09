@@ -1725,8 +1725,9 @@ namespace Barotrauma.Networking
             Client preferredClient = null;
             foreach (Client c in clients)
             {
-                int index = c.jobPreferences.FindIndex(jp => jp == job);
-                if (index == 0) index = 1000;
+                int index = c.jobPreferences.IndexOf(job);
+                if (index == -1) index = 1000;
+
                 if (preferredClient == null || index < bestPreference)
                 {
                     bestPreference = index;
