@@ -81,7 +81,7 @@ namespace Barotrauma
 
             //give  an unique ID
             bool IDfound;
-            id = 1;//Rand.Int(int.MaxValue);
+            id = submarine == null ? (ushort)1 : submarine.IdOffset;
             do
             {
                 id += 1;

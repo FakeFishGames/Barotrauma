@@ -357,7 +357,7 @@ namespace Barotrauma
             borders.Width += outsideWaypointDist * 2;
             borders.Height += outsideWaypointDist * 2;
 
-            borders.Location -= Submarine.HiddenSubPosition.ToPoint();
+            borders.Location -= submarine.HiddenSubPosition.ToPoint();
                 
             if (borders.Width <= outSideWaypointInterval*2)
             {
@@ -379,7 +379,7 @@ namespace Barotrauma
                 for (float x = borders.X + outSideWaypointInterval; x < borders.Right - outSideWaypointInterval; x += outSideWaypointInterval)
                 {
                     var wayPoint = new WayPoint(
-                        new Vector2(x, borders.Y - borders.Height * i) + Submarine.HiddenSubPosition, 
+                        new Vector2(x, borders.Y - borders.Height * i) + submarine.HiddenSubPosition, 
                         SpawnType.Path, submarine);
 
                     if (x == borders.X + outSideWaypointInterval)
@@ -401,7 +401,7 @@ namespace Barotrauma
                 for (float y = borders.Y - borders.Height; y < borders.Y; y += outSideWaypointInterval)
                 {
                     wayPoint = new WayPoint(
-                        new Vector2(borders.X + borders.Width * i, y) + Submarine.HiddenSubPosition, 
+                        new Vector2(borders.X + borders.Width * i, y) + submarine.HiddenSubPosition, 
                         SpawnType.Path, submarine);
 
                     if (y == borders.Y - borders.Height)

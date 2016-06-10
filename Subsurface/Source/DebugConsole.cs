@@ -296,12 +296,12 @@ namespace Barotrauma
                 case "edit":
                     if (commands.Length>1)
                     {
-                        Submarine.Load(string.Join(" ", commands.Skip(1)));
+                        Submarine.Load(string.Join(" ", commands.Skip(1)), true);
                     }
                     GameMain.EditMapScreen.Select();
                     break;
                 case "test":
-                    Submarine.Load("aegir mark ii");
+                    Submarine.Load("aegir mark ii", true);
                     GameMain.DebugDraw = true;
                     GameMain.LightManager.LosEnabled = false;
                     GameMain.EditMapScreen.Select();
@@ -450,10 +450,10 @@ namespace Barotrauma
                 case "load":
                     if (commands.Length < 2) break;
 
-                    Submarine.Load(string.Join(" ", commands.Skip(1)));
+                    Submarine.Load(string.Join(" ", commands.Skip(1)), true);
                     break;
                 case "cleansub":
-                    for (int i = MapEntity.mapEntityList.Count-1; i>=0; i--)
+                    for (int i = MapEntity.mapEntityList.Count - 1; i >= 0; i--)
                     {
                         MapEntity me = MapEntity.mapEntityList[i];
 

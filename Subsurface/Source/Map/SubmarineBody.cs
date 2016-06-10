@@ -392,7 +392,7 @@ namespace Barotrauma
                     (Rand.Int(2) == 0) ? Borders.Y : Borders.Y - Borders.Height);
             }
 
-            damagePos += submarine.Position + Submarine.HiddenSubPosition;
+            damagePos += submarine.Position + submarine.HiddenSubPosition;
             SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f, damagePos, 10000.0f);
 
             GameMain.GameScreen.Cam.Shake = depth * PressureDamageMultiplier * 0.1f;

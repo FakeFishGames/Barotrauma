@@ -85,7 +85,7 @@ namespace Barotrauma
                     transformedPosition -= entityGrid.Submarine.Position;
                 }
 
-                entities.AddRange(entityGrid.GetEntities(position));
+                entities.AddRange(entityGrid.GetEntities(transformedPosition));
             }
 
             return entities;

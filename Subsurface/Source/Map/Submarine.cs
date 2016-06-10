@@ -22,9 +22,20 @@ namespace Barotrauma
     {
         public static string SavePath = "Submarines";
 
+        private static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place
-        public static readonly Vector2 HiddenSubPosition = new Vector2(-50000.0f, 80000.0f);
+        public Vector2 HiddenSubPosition
+        {
+            get;
+            private set;
+        }
+
+        public ushort IdOffset
+        {
+            get;
+            private set;
+        }
 
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
@@ -704,9 +715,9 @@ namespace Barotrauma
             return doc;
         }
 
-        public void Load()
+        public void Load(bool unloadPrevious)
         {
-            Unload();
+            if (unloadPrevious) Unload();
 
             Loading = true;
 
@@ -714,6 +725,19 @@ namespace Barotrauma
             if (doc == null || doc.Root == null) return;
 
             Description = ToolBox.GetAttributeString(doc.Root, "description", "");
+
+
+            HiddenSubPosition = HiddenSubStartPosition;
+            foreach (Submarine sub in Submarine.loaded)
+            {
+                HiddenSubPosition += Vector2.UnitY * (sub.Borders.Height + 5000.0f);
+            }
+
+            IdOffset = 0;
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                IdOffset = Math.Max(IdOffset, me.ID);
+            }
 
             foreach (XElement element in doc.Root.Elements())
             {
@@ -748,11 +772,13 @@ namespace Barotrauma
 
             Vector2 center = Vector2.Zero;
 
-            if (Hull.hullList.Any())
+            var matchingHulls = Hull.hullList.FindAll(h => h.Submarine == this);
+
+            if (matchingHulls.Any())
             {
-                Vector2 topLeft = new Vector2(Hull.hullList[0].Rect.X, Hull.hullList[0].Rect.Y);
-                Vector2 bottomRight = new Vector2(Hull.hullList[0].Rect.X, Hull.hullList[0].Rect.Y);
-                foreach (Hull hull in Hull.hullList)
+                Vector2 topLeft = new Vector2(matchingHulls[0].Rect.X, matchingHulls[0].Rect.Y);
+                Vector2 bottomRight = new Vector2(matchingHulls[0].Rect.X, matchingHulls[0].Rect.Y);
+                foreach (Hull hull in matchingHulls)
                 {
                     if (hull.Rect.X < topLeft.X) topLeft.X = hull.Rect.X;
                     if (hull.Rect.Y > topLeft.Y) topLeft.Y = hull.Rect.Y;
@@ -767,6 +793,8 @@ namespace Barotrauma
 
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.Submarine != this) continue;
+
                     var wire = item.GetComponent<Items.Components.Wire>();
                     if (wire == null) continue;
 
@@ -778,7 +806,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
                 {
-                    if (MapEntity.mapEntityList[i].Submarine == null) continue;
+                    if (MapEntity.mapEntityList[i].Submarine != this) continue;
                 
                     MapEntity.mapEntityList[i].Move(-center);
                 }
@@ -799,7 +827,7 @@ namespace Barotrauma
 
             Loading = false;
 
-            MapEntity.MapLoaded();
+            MapEntity.MapLoaded(this);
                
             //WayPoint.GenerateSubWaypoints();
 
@@ -808,19 +836,19 @@ namespace Barotrauma
             ID = ushort.MaxValue;
         }
 
-        public static Submarine Load(string fileName)
+        public static Submarine Load(string fileName, bool unloadPrevious)
         {
-           return Load(fileName, SavePath);
+           return Load(fileName, SavePath, unloadPrevious);
         }
 
-        public static Submarine Load(string fileName, string folder)
+        public static Submarine Load(string fileName, string folder, bool unloadPrevious)
         {
-            Unload();
+            if (unloadPrevious) Unload();
 
             string path = string.IsNullOrWhiteSpace(folder) ? fileName : System.IO.Path.Combine(SavePath, fileName);
 
             Submarine sub = new Submarine(path);
-            sub.Load();
+            sub.Load(false);
 
             //Entity.dictionary.Add(int.MaxValue, sub);
 

@@ -233,15 +233,17 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
-                cam.Position = Submarine.MainSub.Position + Submarine.HiddenSubPosition;
+                cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
                 nameBox.Text = Submarine.MainSub.Name;
                 descriptionBox.Text = ToolBox.LimitString(Submarine.MainSub.Description, 15);
             }
             else
             {
-                cam.Position = Submarine.HiddenSubPosition;
+                cam.Position = Submarine.MainSub.HiddenSubPosition;
                 nameBox.Text = "";
                 descriptionBox.Text = "";
+
+                Submarine.MainSub = new Submarine("", "", false);
             }
 
             nameBox.Deselect();
@@ -399,7 +401,7 @@ namespace Barotrauma
 
             if (selectedSub == null) return false;
 
-            selectedSub.Load();
+            selectedSub.Load(true);
 
             nameBox.Text = selectedSub.Name;
             descriptionBox.Text = ToolBox.LimitString(selectedSub.Description,15);
@@ -739,7 +741,7 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 GUI.DrawLine(spriteBatch, new Vector2(0.0f, -cam.WorldView.Y), new Vector2(0.0f, -(cam.WorldView.Y - cam.WorldView.Height)), Color.White*0.5f, 1.0f, (int)(2.0f/cam.Zoom));
-                GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
+                GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.MainSub.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.MainSub.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
             }
            
             Submarine.Draw(spriteBatch, true);

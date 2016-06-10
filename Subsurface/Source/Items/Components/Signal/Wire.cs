@@ -117,16 +117,16 @@ namespace Barotrauma.Items.Components
 
                 if (!addNode) break;
 
-                if (Nodes.Count > 0 && Nodes[0] == newConnection.Item.Position - Submarine.HiddenSubPosition) break;
-                if (Nodes.Count > 1 && Nodes[Nodes.Count-1] == newConnection.Item.Position - Submarine.HiddenSubPosition) break;
+                if (Nodes.Count > 0 && Nodes[0] == newConnection.Item.Position - item.Submarine.HiddenSubPosition) break;
+                if (Nodes.Count > 1 && Nodes[Nodes.Count-1] == newConnection.Item.Position - item.Submarine.HiddenSubPosition) break;
 
                 if (i == 0)
                 {
-                    Nodes.Insert(0, newConnection.Item.Position - Submarine.HiddenSubPosition);
+                    Nodes.Insert(0, newConnection.Item.Position - item.Submarine.HiddenSubPosition);
                 }
                 else
                 {
-                    Nodes.Add(newConnection.Item.Position - Submarine.HiddenSubPosition);
+                    Nodes.Add(newConnection.Item.Position - item.Submarine.HiddenSubPosition);
                 }
 
 
@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
             //    position.Y += item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
             //}
 
-            newNodePos = RoundNode(item.Position, item.CurrentHull)-Submarine.HiddenSubPosition;
+            newNodePos = RoundNode(item.Position, item.CurrentHull) - item.Submarine.HiddenSubPosition;
 
             //if (Vector2.Distance(position, nodes[nodes.Count - 1]) > nodeDistance*10)
             //{
@@ -366,7 +366,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Nodes.Count; i++)
             {
                 Vector2 worldPos = Nodes[i];
-                if (item.Submarine != null) worldPos += item.Submarine.Position + Submarine.HiddenSubPosition;
+                if (item.Submarine != null) worldPos += item.Submarine.Position + item.Submarine.HiddenSubPosition;
                 worldPos.Y = -worldPos.Y;
 
                 GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.0f);
@@ -407,7 +407,7 @@ namespace Barotrauma.Items.Components
                     MapEntity.DisableSelect = true;
                     //Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)-Submarine.HiddenSubPosition+Submarine.Loaded.Position;
 
-                    Vector2 nodeWorldPos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - Submarine.HiddenSubPosition - item.Submarine.Position;// Nodes[(int)selectedNodeIndex];
+                    Vector2 nodeWorldPos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - item.Submarine.HiddenSubPosition - item.Submarine.Position;// Nodes[(int)selectedNodeIndex];
 
                     nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
                     nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
@@ -430,8 +430,8 @@ namespace Barotrauma.Items.Components
         {
             if (item.Submarine != null)
             {
-                start += item.Submarine.DrawPosition + Submarine.HiddenSubPosition;
-                end += item.Submarine.DrawPosition + Submarine.HiddenSubPosition;
+                start += item.Submarine.DrawPosition + item.Submarine.HiddenSubPosition;
+                end += item.Submarine.DrawPosition + item.Submarine.HiddenSubPosition;
             }
 
             start.Y = -start.Y;
