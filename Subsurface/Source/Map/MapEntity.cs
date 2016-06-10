@@ -607,10 +607,11 @@ namespace Barotrauma
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
-        public static void MapLoaded()
+        public static void MapLoaded(Submarine sub)
         {
             foreach (MapEntity e in mapEntityList)
             {
+                if (e.Submarine != sub) continue;
                 if (e.linkedToID == null) continue;
                 if (e.linkedToID.Count == 0) continue;
 
@@ -619,6 +620,7 @@ namespace Barotrauma
                 foreach (ushort i in e.linkedToID)
                 {
                     MapEntity linked = FindEntityByID(i) as MapEntity;
+                    Debug.Assert(linked.Submarine == sub);
 
                     if (linked != null) e.linkedTo.Add(linked);
                 }
@@ -626,6 +628,7 @@ namespace Barotrauma
             
             for (int i = 0; i<mapEntityList.Count; i++)
             {
+                if (mapEntityList[i].Submarine != sub) continue;
                 mapEntityList[i].OnMapLoaded();
             }
             

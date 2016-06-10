@@ -66,7 +66,7 @@ namespace Barotrauma
 
                 cam.Zoom = Math.Max(0.2f, cam.Zoom - CoroutineManager.UnscaledDeltaTime * 0.1f);
 
-                Vector2 cameraPos = sub.Position + Submarine.HiddenSubPosition;
+                Vector2 cameraPos = sub.Position + Submarine.MainSub.HiddenSubPosition;
                 cameraPos.Y = Math.Min(cameraPos.Y, ConvertUnits.ToDisplayUnits(Level.Loaded.ShaftBodies[0].Position.Y) - cam.WorldView.Height/2.0f);
 
                 GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, timer/duration);

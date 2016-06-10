@@ -56,7 +56,8 @@ namespace Barotrauma
 
                 if (itemInfo.Second is Vector2)
                 {
-                    Vector2 position = (Vector2)itemInfo.Second - Submarine.HiddenSubPosition;
+                    //todo: take multiple subs into account
+                    Vector2 position = (Vector2)itemInfo.Second - Submarine.MainSub.HiddenSubPosition;
 
                     items.Add(new Item(itemInfo.First, position, null));
                     inventories.Add(null);

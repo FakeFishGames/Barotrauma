@@ -125,13 +125,18 @@ namespace Barotrauma
                 return;
             }
 
-            if (reloadSub || Submarine.MainSub != submarine) submarine.Load();
+            if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
+
+            //var secondSub = new Submarine(submarine.FilePath, submarine.MD5Hash.Hash);
+            //secondSub.Load(false);
 
             if (level != null)
             {
                 level.Generate();
 
                 submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
+
+                //secondSub.SetPosition(level.EndPosition - new Vector2(0.0f, 2000.0f));
 
                 GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(80);
             }
