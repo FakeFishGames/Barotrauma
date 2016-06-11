@@ -153,7 +153,13 @@ namespace Barotrauma
 
             body.BodyType = BodyType.Dynamic;
             body.CollisionCategories = Physics.CollisionWall;
-            body.CollidesWith = Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionCharacter | Physics.CollisionProjectile;
+            body.CollidesWith = 
+                Physics.CollisionItem | 
+                Physics.CollisionLevel | 
+                Physics.CollisionCharacter | 
+                Physics.CollisionProjectile | 
+                Physics.CollisionWall;
+
             body.Restitution = Restitution;
             body.Friction = Friction;
             body.FixedRotation = true;
@@ -179,6 +185,8 @@ namespace Barotrauma
 
             foreach (Structure wall in Structure.WallList)
             {
+                if (wall.Submarine != submarine) continue;
+
                 for (int x = -1; x <= 1; x += 2)
                 {
                     for (int y = -1; y <= 1; y += 2)
@@ -233,7 +241,7 @@ namespace Barotrauma
 
                     ForceTranslate(moveAmount);
 
-                    GameMain.GameScreen.Cam.UpdateTransform(false);
+                    if (submarine == Submarine.MainSub) GameMain.GameScreen.Cam.UpdateTransform(false);
 
                     submarine.SetPrevTransform(submarine.Position);
                     submarine.UpdateTransform();
@@ -336,6 +344,8 @@ namespace Barotrauma
             float volume = 0.0f;
             foreach (Hull hull in Hull.hullList)
             {
+                if (hull.Submarine != submarine) continue;
+
                 waterVolume += hull.Volume;
                 volume += hull.FullVolume;
             }

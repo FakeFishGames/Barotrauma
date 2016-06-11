@@ -136,11 +136,11 @@ namespace Barotrauma
 
                 Ragdoll.UpdateAll(cam, (float)Physics.step);
 
-                if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine!=null)
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    GameMain.GameSession.Submarine.Update((float)Physics.step);
+                    sub.Update((float)Physics.step);
                 }
-
+                
                 GameMain.World.Step((float)Physics.step);
 
                 //Level.AfterWorldStep();

@@ -144,7 +144,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Repair(rayStart, rayEnd, deltaTime, character, degreeOfSuccess, ignoredBodies);
+                Repair(rayStart - character.Submarine.SimPosition, rayEnd - character.Submarine.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
 
             GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition + TransformedBarrelPos,
