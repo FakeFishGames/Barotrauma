@@ -76,10 +76,13 @@ namespace Barotrauma
 
                 currentTarget = target;
                 Vector2 pos = host.SimPosition;
-                if (character!=null && character.Submarine==null)
+                if (character != null && character.Submarine == null)
                 {
-                    //todo: take multiple subs into account
-                    pos -= Submarine.MainSub.SimPosition;
+                    var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
+                    if (targetHull!=null && targetHull.Submarine != null)
+                    {
+                        pos -= targetHull.SimPosition;
+                    }
                 }   
 
                 currentPath = pathFinder.FindPath(pos, target);

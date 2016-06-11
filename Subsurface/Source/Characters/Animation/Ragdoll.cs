@@ -572,6 +572,7 @@ namespace Barotrauma
 
             if (setSubmarine)
             {
+                //in -> out
                 if (newHull == null && currentHull.Submarine != null)
                 {
                     for (int i = -1; i < 2; i += 2)
@@ -584,11 +585,17 @@ namespace Barotrauma
                     if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) return;
 
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity, true);
-
                 }
+                //out -> in
                 else if (currentHull == null && newHull.Submarine != null)
                 {
                     Teleport(-ConvertUnits.ToSimUnits(newHull.Submarine.Position), -newHull.Submarine.Velocity, false);
+                }
+                //from one sub to another
+                else if (newHull != null && currentHull != null && newHull.Submarine != currentHull.Submarine)
+                {
+                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position - newHull.Submarine.Position),
+                        Vector2.Zero, false);
                 }
             }
             
