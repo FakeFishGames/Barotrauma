@@ -1438,6 +1438,8 @@ namespace Barotrauma
 
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID));
+
+            System.Diagnostics.Debug.Assert(Submarine != null);
             
             if (ResizeHorizontal || ResizeVertical)
             {

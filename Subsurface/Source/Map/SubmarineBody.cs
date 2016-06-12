@@ -415,12 +415,9 @@ namespace Barotrauma
 
         public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            VoronoiCell cell = f2.Body.UserData as VoronoiCell;
-            
-            if (cell == null)
+            Limb limb = f2.Body.UserData as Limb;
+            if (limb!= null)
             {
-                Limb limb = f2.Body.UserData as Limb;
-                if (limb == null) return true;
 
                 bool collision = HandleLimbCollision(contact, limb);
 
@@ -436,12 +433,32 @@ namespace Barotrauma
                 return collision;
             }
 
-            var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(body.Position) - cell.Center);
+            VoronoiCell cell = f2.Body.UserData as VoronoiCell;
+            if (cell != null)
+            {
+                var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(body.Position) - cell.Center);
 
-            float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
+                float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
 
-            ApplyImpact(wallImpact, -collisionNormal, contact);
+                ApplyImpact(wallImpact, -collisionNormal, contact);
             
+                return true;
+            }
+
+            Submarine sub = f2.Body.UserData as Submarine;
+            if (sub != null)
+            {
+                Debug.Assert(sub != submarine);
+
+                Vector2 normal;
+                FixedArray2<Vector2> points;
+                contact.GetWorldManifold(out normal, out points);
+
+                ApplyImpact(Vector2.Dot(Velocity - sub.Velocity, normal) / 2.0f, normal, contact);
+
+                return true;
+            }
+
             return true;
         }
 

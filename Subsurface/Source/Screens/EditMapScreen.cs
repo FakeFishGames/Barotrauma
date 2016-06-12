@@ -239,11 +239,11 @@ namespace Barotrauma
             }
             else
             {
-                cam.Position = Submarine.MainSub.HiddenSubPosition;
+                cam.Position = Vector2.Zero;
                 nameBox.Text = "";
                 descriptionBox.Text = "";
 
-                Submarine.MainSub = new Submarine("", "", false);
+                Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, "Unnamed.sub"), "", false);
             }
 
             nameBox.Deselect();
