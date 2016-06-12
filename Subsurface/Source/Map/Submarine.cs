@@ -526,7 +526,7 @@ namespace Barotrauma
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
-                if (e.MoveWithLevel) continue;
+                if (e.MoveWithLevel ||e.Submarine != this) continue;
                 e.Save(doc);
             }
 
@@ -548,17 +548,15 @@ namespace Barotrauma
 
         public static bool SaveCurrent(string filePath)
         {
-            if (!loaded.Any())
+            if (Submarine.MainSub == null)
             {
-                loaded.Add(new Submarine(filePath));
+                Submarine.MainSub = new Submarine(filePath);
                // return;
             }
 
-            System.Diagnostics.Debug.Assert(loaded.Count==1);
+            Submarine.MainSub.filePath = filePath;
 
-            loaded.First().filePath = filePath;
-
-            return loaded.First().SaveAs(filePath);
+            return Submarine.MainSub.SaveAs(filePath);
         }
 
         public void CheckForErrors()

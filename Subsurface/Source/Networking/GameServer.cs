@@ -364,9 +364,9 @@ namespace Barotrauma.Networking
                         if (!(c is AICharacter) || c.IsDead) continue;
 
                         //todo: take multiple subs into account
-                        Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
+                        //Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
 
-                        if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
+                        //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
 
                         new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
                     }
@@ -405,9 +405,9 @@ namespace Barotrauma.Networking
                 if (c is AICharacter)
                 {
                     //todo: take multiple subs into account
-                    Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
+                    //Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
 
-                    if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
+                    //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
                 }
 
                 new NetworkEvent(NetworkEventType.ImportantEntityUpdate, c.ID, false);
