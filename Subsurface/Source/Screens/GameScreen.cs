@@ -155,8 +155,8 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            cam.UpdateTransform();
-
+            cam.UpdateTransform(true, true); 
+            
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
@@ -177,7 +177,7 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
 
-            if (Character.Controlled == null && Submarine.Loaded != null) DrawSubmarineIndicator(spriteBatch, Submarine.MainSub);
+            if (Character.Controlled == null && Submarine.MainSub != null) DrawSubmarineIndicator(spriteBatch, Submarine.MainSub);
             
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         

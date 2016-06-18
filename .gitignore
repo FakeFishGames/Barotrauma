@@ -10,6 +10,8 @@ bld/
 [Bb]in/
 [Oo]bj/
 
+*.suo
+
 #performance reports & sessions
 *.vsp
 *.psess

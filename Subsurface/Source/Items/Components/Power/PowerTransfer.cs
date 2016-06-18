@@ -62,6 +62,7 @@ namespace Barotrauma.Items.Components
                 pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
                 pt.Item.SendSignal(0, "", "power", fullPower / Math.Max(fullLoad, 1.0f));
+                pt.Item.SendSignal(0, "", "power_out", fullPower / Math.Max(fullLoad, 1.0f));
 
                 //damage the item if voltage is too high 
                 //(except if running as a client)
@@ -117,7 +118,6 @@ namespace Barotrauma.Items.Components
             {
                 if (!c.IsPower) continue;
 
-
                 var recipients = c.Recipients;
                                
                 foreach (Connection recipient in recipients)
@@ -138,7 +138,7 @@ namespace Barotrauma.Items.Components
                     PowerContainer powerContainer = powered as PowerContainer;
                     if (powerTransfer != null)
                     {
-                        if (powerTransfer.updateTimer>0) continue;
+                        //if (powerTransfer.updateTimer>0) continue;
                         powerTransfer.CheckJunctions(deltaTime);
                     }
                     else if (powerContainer != null)

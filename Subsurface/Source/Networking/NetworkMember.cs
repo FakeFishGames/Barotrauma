@@ -39,7 +39,9 @@ namespace Barotrauma.Networking
 
         RequestFile, FileStream,
        
-        SpectateRequest
+        SpectateRequest,
+
+        Respawn
     }
 
     enum VoteType
@@ -73,6 +75,9 @@ namespace Barotrauma.Networking
 
         protected Character myCharacter;
         protected CharacterInfo characterInfo;
+
+
+        protected RespawnManager respawnManager;
 
         public Voting Voting;
 

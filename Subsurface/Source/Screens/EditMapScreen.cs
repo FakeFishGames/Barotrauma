@@ -239,7 +239,7 @@ namespace Barotrauma
             }
             else
             {
-                cam.Position = Vector2.Zero;
+                cam.Position = Submarine.HiddenSubStartPosition;
                 nameBox.Text = "";
                 descriptionBox.Text = "";
 
@@ -401,6 +401,7 @@ namespace Barotrauma
 
             if (selectedSub == null) return false;
 
+            Submarine.MainSub = selectedSub;
             selectedSub.Load(true);
 
             nameBox.Text = selectedSub.Name;
@@ -688,6 +689,9 @@ namespace Barotrauma
 
                     dummyCharacter.ControlLocalPlayer((float)deltaTime, cam, false);
                     dummyCharacter.Control((float)deltaTime, cam);
+
+                    dummyCharacter.Submarine = Submarine.MainSub;
+
                     cam.TargetPos = Vector2.Zero;
 
                 }

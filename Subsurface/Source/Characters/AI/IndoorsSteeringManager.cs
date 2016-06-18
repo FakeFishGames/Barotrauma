@@ -109,10 +109,10 @@ namespace Barotrauma
             {
 
                 Vector2 pos2 = host.SimPosition;
-                if (character != null && character.Submarine == null)
+                if (character != null && character.Submarine == null && CurrentPath.Nodes.Last().Submarine != null)
                 {
                     //todo: take multiple subs into account
-                    pos2 -= Submarine.MainSub.SimPosition;
+                    pos2 -= CurrentPath.Nodes.Last().Submarine.SimPosition;
                 }   
                 return currentTarget-pos2;
             }
@@ -123,10 +123,11 @@ namespace Barotrauma
             if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
 
             Vector2 pos = host.SimPosition;
-            if (character != null && character.Submarine == null)
+            if (character != null && character.Submarine == null &&
+                CurrentPath.CurrentNode != null && CurrentPath.CurrentNode.Submarine != null)
             {
                 //todo: take multiple subs into account
-                pos -= Submarine.MainSub.SimPosition;
+                pos -= CurrentPath.CurrentNode.Submarine.SimPosition;
             }   
 
             if (currentPath.CurrentNode!= null && currentPath.CurrentNode.Ladders!=null)

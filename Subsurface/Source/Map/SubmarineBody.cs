@@ -33,11 +33,11 @@ namespace Barotrauma
 
         private readonly Submarine submarine;
         
-        private readonly Body body;
+        public readonly Body Body;
 
         private Vector2? targetPosition;
 
-        private float mass = 10000.0f;
+        //private float mass = 10000.0f;
 
         public Rectangle Borders
         {
@@ -47,11 +47,11 @@ namespace Barotrauma
                 
         public Vector2 Velocity
         {
-            get { return body.LinearVelocity; }
+            get { return Body.LinearVelocity; }
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                body.LinearVelocity = value;
+                Body.LinearVelocity = value;
             }
         }
 
@@ -67,7 +67,7 @@ namespace Barotrauma
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(body.Position); }
+            get { return ConvertUnits.ToDisplayUnits(Body.Position); }
         }
         
         public bool AtDamageDepth
@@ -82,7 +82,7 @@ namespace Barotrauma
             if (!Hull.hullList.Any())
             {
 
-                body = BodyFactory.CreateRectangle(GameMain.World, 1.0f, 1.0f, 1.0f);
+                Body = BodyFactory.CreateRectangle(GameMain.World, 1.0f, 1.0f, 1.0f);
                 DebugConsole.ThrowError("WARNING: no hulls found, generating a physics body for the submarine failed.");
             }
             else
@@ -110,7 +110,7 @@ namespace Barotrauma
 
                 //var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
 
-                body = BodyFactory.CreateBody(GameMain.World, this);
+                Body = BodyFactory.CreateBody(GameMain.World, this);
 
                 foreach (Structure wall in Structure.WallList)
                 {
@@ -118,9 +118,9 @@ namespace Barotrauma
                     FixtureFactory.AttachRectangle(
                           ConvertUnits.ToSimUnits(rect.Width),
                           ConvertUnits.ToSimUnits(rect.Height),
-                          5.0f,
+                          50.0f,
                           ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
-                          body, this);
+                          Body, this);
                 }
 
                 //foreach (Hull hull in Hull.hullList)
@@ -151,24 +151,24 @@ namespace Barotrauma
 
 
 
-            body.BodyType = BodyType.Dynamic;
-            body.CollisionCategories = Physics.CollisionWall;
-            body.CollidesWith = 
+            Body.BodyType = BodyType.Dynamic;
+            Body.CollisionCategories = Physics.CollisionWall;
+            Body.CollidesWith = 
                 Physics.CollisionItem | 
                 Physics.CollisionLevel | 
                 Physics.CollisionCharacter | 
                 Physics.CollisionProjectile | 
                 Physics.CollisionWall;
 
-            body.Restitution = Restitution;
-            body.Friction = Friction;
-            body.FixedRotation = true;
-            body.Mass = mass;
-            body.Awake = true;
-            body.SleepingAllowed = false;
-            body.IgnoreGravity = true;
-            body.OnCollision += OnCollision;
-            body.UserData = submarine;
+            Body.Restitution = Restitution;
+            Body.Friction = Friction;
+            Body.FixedRotation = true;
+            //mass = Body.Mass;
+            Body.Awake = true;
+            Body.SleepingAllowed = false;
+            Body.IgnoreGravity = true;
+            Body.OnCollision += OnCollision;
+            Body.UserData = submarine;
         }
 
 
@@ -237,7 +237,7 @@ namespace Barotrauma
                 
                 if (dist > 1000.0f) //immediately snap the sub to the target position if more than 1000.0f units away
                 {
-                    Vector2 moveAmount = (Vector2)targetPosition - ConvertUnits.ToDisplayUnits(body.Position);
+                    Vector2 moveAmount = (Vector2)targetPosition - ConvertUnits.ToDisplayUnits(Body.Position);
 
                     ForceTranslate(moveAmount);
 
@@ -270,14 +270,14 @@ namespace Barotrauma
 
             Vector2 totalForce = CalculateBuoyancy();
 
-            if (body.LinearVelocity.LengthSquared() > 0.000001f)
+            if (Body.LinearVelocity.LengthSquared() > 0.000001f)
             {
                 float dragCoefficient = 0.01f;
 
-                float speedLength = (body.LinearVelocity == Vector2.Zero) ? 0.0f : body.LinearVelocity.Length();
-                float drag = speedLength * speedLength * dragCoefficient * mass;
+                float speedLength = (Body.LinearVelocity == Vector2.Zero) ? 0.0f : Body.LinearVelocity.Length();
+                float drag = speedLength * speedLength * dragCoefficient * Body.Mass;
 
-                totalForce += -Vector2.Normalize(body.LinearVelocity) * drag;                
+                totalForce += -Vector2.Normalize(Body.LinearVelocity) * drag;                
             }
 
             ApplyForce(totalForce);
@@ -292,11 +292,15 @@ namespace Barotrauma
         /// <param name="amount">Amount to move in display units</param>
         private void ForceTranslate(Vector2 amount)
         {
-            body.SetTransform(body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
+            Body.SetTransform(Body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
             if (Character.Controlled != null) Character.Controlled.CursorPosition += amount;
 
-            GameMain.GameScreen.Cam.Position += amount;
-            if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
+            if ((Character.Controlled != null && Character.Controlled.Submarine == submarine) ||
+                Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine)
+            {
+                GameMain.GameScreen.Cam.Position += amount;
+                if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
+            }
         }
 
 
@@ -308,7 +312,7 @@ namespace Barotrauma
         private void DisplaceCharacters(Vector2 subTranslation)
         {
             Rectangle worldBorders = Borders;
-            worldBorders.Location += ConvertUnits.ToDisplayUnits(body.Position).ToPoint();
+            worldBorders.Location += ConvertUnits.ToDisplayUnits(Body.Position).ToPoint();
 
             Vector2 translateDir = Vector2.Normalize(subTranslation);
 
@@ -355,19 +359,19 @@ namespace Barotrauma
             float neutralPercentage = 0.07f;
 
             float buoyancy = Math.Max(neutralPercentage - waterPercentage, -neutralPercentage*2.0f);
-            buoyancy *= mass;
+            buoyancy *= Body.Mass;
 
             return new Vector2(0.0f, buoyancy*10.0f);
         }
 
         public void ApplyForce(Vector2 force)
         {
-            body.ApplyForce(force);
+            Body.ApplyForce(force);
         }
 
         public void SetPosition(Vector2 position)
         {
-            body.SetTransform(ConvertUnits.ToSimUnits(position), 0.0f);
+            Body.SetTransform(ConvertUnits.ToSimUnits(position), 0.0f);
         }
 
         private void UpdateDepthDamage(float deltaTime)
@@ -423,7 +427,7 @@ namespace Barotrauma
 
                 if (collision && limb.Mass > 100.0f)
                 {
-                    Vector2 normal = Vector2.Normalize(body.Position - limb.SimPosition);
+                    Vector2 normal = Vector2.Normalize(Body.Position - limb.SimPosition);
 
                     float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 5.0f);
 
@@ -436,7 +440,7 @@ namespace Barotrauma
             VoronoiCell cell = f2.Body.UserData as VoronoiCell;
             if (cell != null)
             {
-                var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(body.Position) - cell.Center);
+                var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.Position) - cell.Center);
 
                 float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
 
@@ -525,7 +529,7 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull == null) continue;
+                if (c.Submarine != submarine) continue;
 
                 if (impact > 2.0f) c.StartStun((impact - 2.0f) * 0.1f);
 
