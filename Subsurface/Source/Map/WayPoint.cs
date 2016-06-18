@@ -641,13 +641,11 @@ namespace Barotrauma
             return wayPoints[Rand.Int(wayPoints.Count(), false)];
         }
 
-        public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew)
+        public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
         {
-            List<WayPoint> unassignedWayPoints = new List<WayPoint>();
-            foreach (WayPoint wp in WayPointList)
-            {
-                if (wp.spawnType == SpawnType.Human) unassignedWayPoints.Add(wp);
-            }
+            List<WayPoint> subWayPoints = WayPointList.FindAll(wp => wp.Submarine == submarine);
+
+            List<WayPoint> unassignedWayPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human);
 
             WayPoint[] assignedWayPoints = new WayPoint[crew.Count];
 
@@ -670,7 +668,7 @@ namespace Barotrauma
                 if (assignedWayPoints[i] != null) continue;
 
                 //try to assign a spawnpoint that matches the job, even if the spawnpoint is already assigned to someone else
-                foreach (WayPoint wp in WayPointList)
+                foreach (WayPoint wp in subWayPoints)
                 {
                     if (wp.spawnType != SpawnType.Human || wp.assignedJob != crew[i].Job.Prefab) continue;
 
@@ -681,7 +679,7 @@ namespace Barotrauma
                 if (assignedWayPoints[i] != null) continue;
 
                 //try to assign a spawnpoint that isn't meant for any specific job
-                var nonJobSpecificPoints = WayPointList.FindAll(wp => wp.spawnType == SpawnType.Human && wp.assignedJob == null);
+                var nonJobSpecificPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human && wp.assignedJob == null);
 
                 if (nonJobSpecificPoints.Any())
                 {

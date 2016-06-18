@@ -282,6 +282,8 @@ namespace Barotrauma.Networking
             {
                 inGameHUD.Update((float)Physics.step);
 
+                respawnManager.Update(deltaTime);
+
                 bool isCrewDead =  
                     connectedClients.Find(c => c.Character != null && !c.Character.IsDead)==null &&
                    (myCharacter == null || myCharacter.IsDead);
@@ -949,6 +951,8 @@ namespace Barotrauma.Networking
             GameServer.Log("Game mode: " + selectedMode.Name, Color.Cyan);
             GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
 
+            respawnManager = new RespawnManager(this);
+
             yield return CoroutineStatus.Running;
 
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
@@ -972,7 +976,7 @@ namespace Barotrauma.Networking
                 characterInfos.Add(characterInfo);
             }
 
-            WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
+            WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
             
             for (int i = 0; i < connectedClients.Count; i++)
             {
@@ -1138,6 +1142,14 @@ namespace Barotrauma.Networking
 
             yield return CoroutineStatus.Success;
 
+        }
+
+        public void RespawnClients()
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            respawnManager.WriteNetworkEvent(msg);
+
+            SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         private void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
@@ -1611,7 +1623,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void WriteCharacterData(NetOutgoingMessage message, string name, Character character)
+        public void WriteCharacterData(NetOutgoingMessage message, string name, Character character)
         {
             message.Write(name);
             message.Write(character.ID);

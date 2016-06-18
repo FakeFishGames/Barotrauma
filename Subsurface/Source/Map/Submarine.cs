@@ -22,7 +22,7 @@ namespace Barotrauma
     {
         public static string SavePath = "Submarines";
 
-        private static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
+        public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place
         public Vector2 HiddenSubPosition
@@ -111,6 +111,11 @@ namespace Barotrauma
         public static List<Submarine> Loaded
         {
             get { return loaded; }
+        }
+
+        public SubmarineBody SubBody
+        {
+            get { return subBody; }
         }
 
         public Rectangle Borders

@@ -518,6 +518,9 @@ namespace Barotrauma.Networking
                         string endMessage = inc.ReadString();
                         CoroutineManager.StartCoroutine(EndGame(endMessage));
                         break;
+                    case (byte)PacketTypes.Respawn:
+                        if (gameStarted && respawnManager != null) respawnManager.ReadNetworkEvent(inc);
+                        break;
                     case (byte)PacketTypes.PlayerJoined:
 
                         Client otherClient = new Client(inc.ReadString(), inc.ReadByte());
@@ -672,7 +675,9 @@ namespace Barotrauma.Networking
 
             GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
             GameMain.GameSession.StartShift(levelSeed);
-            
+
+            respawnManager = new RespawnManager(this);
+
             yield return CoroutineStatus.Running;
 
             //myCharacter = ReadCharacterData(inc);
@@ -1023,7 +1028,7 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        private Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter)
+        public Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter)
         {
             string newName      = inc.ReadString();
             ushort ID           = inc.ReadUInt16();

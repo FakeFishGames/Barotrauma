@@ -125,11 +125,17 @@ namespace Barotrauma
         public void Translate(Vector2 amount)
         {
             position += amount;
-            //UpdateTransform();
         }
 
-        public void UpdateTransform(bool interpolate = true)
+        public void UpdateTransform(bool interpolate = true, bool clampPos = false)
         {
+
+            if (clampPos && Level.Loaded != null)
+            {
+                position.Y -= Math.Max(worldView.Y - Level.Loaded.Size.Y, 0.0f);
+            }
+
+
             Vector2 interpolatedPosition = interpolate ? Physics.Interpolate(prevPosition, position) : position;
 
             float interpolatedZoom = interpolate ? Physics.Interpolate(prevZoom, zoom) : zoom;
@@ -179,11 +185,13 @@ namespace Barotrauma
                     if (GameMain.Config.KeyBind(InputType.Up).IsDown())     moveCam.Y += moveSpeed;
                 }
 
-                if (Submarine.MainSub != null && Screen.Selected == GameMain.GameScreen)
+                if (Screen.Selected == GameMain.GameScreen)
                 {
-                    
-
-                    moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(Submarine.MainSub.Velocity*deltaTime);
+                    var closestSub = Submarine.GetClosest(WorldViewCenter);
+                    if (closestSub != null)
+                    {
+                        moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(closestSub.Velocity * deltaTime);
+                    }
                 }
                  
                 moveCam = moveCam * deltaTime * 60.0f; 

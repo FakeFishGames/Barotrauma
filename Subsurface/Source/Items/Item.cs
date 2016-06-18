@@ -523,7 +523,7 @@ namespace Barotrauma
             }
 
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
-            if (body != null)
+            if (body != null && body.Enabled)
             {
                 Submarine = CurrentHull == null ? null : CurrentHull.Submarine;
                 body.Submarine = Submarine;

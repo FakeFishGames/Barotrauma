@@ -33,8 +33,10 @@ namespace Barotrauma.Items.Components
         private float autopilotRayCastTimer;
 
         private float neutralBallastLevel;
+
+        public Vector2? TargetPosition;
         
-        bool AutoPilot
+        public bool AutoPilot
         {
             get { return autoPilot; }
             set
@@ -52,7 +54,7 @@ namespace Barotrauma.Items.Components
                     if (pathFinder==null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
                     steeringPath = pathFinder.FindPath(
                         ConvertUnits.ToSimUnits(item.WorldPosition),
-                        ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+                        TargetPosition == null ? ConvertUnits.ToSimUnits(Level.Loaded.EndPosition) : (Vector2)TargetPosition);
                 }
                 else
                 {
@@ -60,6 +62,12 @@ namespace Barotrauma.Items.Components
                     posToMaintain = null;
                 }
             }
+        }
+
+        public bool MaintainPos
+        {
+            get { return maintainPosTickBox.Selected; }
+            set { maintainPosTickBox.Selected = value; }
         }
 
 
@@ -128,7 +136,7 @@ namespace Barotrauma.Items.Components
                 }
             }
      
-            if (voltage < minVoltage) return;
+            if (voltage < minVoltage && powerConsumption > 0.0f) return;
                
             if (autoPilot)
             {
@@ -158,7 +166,7 @@ namespace Barotrauma.Items.Components
             GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
-            if (voltage < minVoltage) return;
+            if (voltage < minVoltage && powerConsumption > 0.0f) return;
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
