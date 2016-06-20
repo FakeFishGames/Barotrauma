@@ -904,7 +904,7 @@ namespace Barotrauma.Networking
             {
                 fileTransferTimeOut -= CoroutineManager.UnscaledDeltaTime;
 
-                if (GUIMessageBox.MessageBoxes.Peek() == null)
+                if (GUIMessageBox.MessageBoxes.Count==0)
                 {
                     var messageBox = new GUIMessageBox("File transfer in progress",
                         "The round will be started after the submarine file has been sent to all players.", new string[] {"Cancel transfer"}, 400, 400);
