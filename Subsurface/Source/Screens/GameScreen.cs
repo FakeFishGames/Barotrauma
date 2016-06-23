@@ -155,7 +155,7 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            cam.UpdateTransform(true, true); 
+            cam.UpdateTransform(true, !GameMain.DebugDraw); 
             
             DrawMap(graphics, spriteBatch);
 

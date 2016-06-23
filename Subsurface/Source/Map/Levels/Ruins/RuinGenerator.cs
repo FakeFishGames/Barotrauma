@@ -319,9 +319,11 @@ namespace Barotrauma.RuinGeneration
                         (int)((wall.B.X - wall.A.X) + radius*2.0f), 
                         (int)((wall.B.Y - wall.A.Y) + radius*2.0f));
 
+                    //cut a section off from both ends of a horizontal wall to get nicer looking corners 
                     if (wall.A.Y == wall.B.Y)
                     {
                         rect.Inflate(-32, 0);
+                        if (rect.Width < Submarine.GridSize.X) continue;
                     }
 
                     var structure = new Structure(rect, structurePrefab.Prefab as StructurePrefab, null);

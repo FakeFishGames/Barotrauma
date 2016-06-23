@@ -105,9 +105,8 @@ namespace Barotrauma
         {
             if (currentPath == null) return Vector2.Zero;
 
-            if (currentPath.CurrentIndex == currentPath.Nodes.Count)
+            if (currentPath.Finished)
             {
-
                 Vector2 pos2 = host.SimPosition;
                 if (character != null && character.Submarine == null && CurrentPath.Nodes.Last().Submarine != null)
                 {
