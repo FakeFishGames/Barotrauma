@@ -850,6 +850,10 @@ namespace Barotrauma.Networking
                 //save "normal" events again
                 existingEvents = new List<NetworkEvent>(NetworkEvent.Events);
             }
+
+            yield return new WaitForSeconds(0.1f);
+
+            sender.inGame = true;
             
             yield return CoroutineStatus.Success;
         }
@@ -1102,6 +1106,8 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
 
+            respawnManager = null;
+
             gameStarted = false;
 
             if (connectedClients.Count > 0)
@@ -1144,7 +1150,7 @@ namespace Barotrauma.Networking
 
         }
 
-        public void RespawnClients()
+        public void SendRespawnManagerMsg()
         {
             NetOutgoingMessage msg = server.CreateMessage();
             respawnManager.WriteNetworkEvent(msg);
@@ -1340,6 +1346,14 @@ namespace Barotrauma.Networking
             else if (log.LogFrame!=null)
             {
                 log.LogFrame.Draw(spriteBatch);
+            }
+
+            if (respawnManager != null && respawnManager.CurrentState == RespawnManager.State.Waiting && respawnManager.CountdownStarted)
+            {
+                GUI.DrawString(spriteBatch,
+                    new Vector2(GameMain.GraphicsWidth - 500.0f, 20),
+                    "Respawning in " + (int)respawnManager.RespawnTimer + " s",
+                    Color.White, null, 0, GUI.SmallFont);
             }
 
             if (!ShowNetStats) return;

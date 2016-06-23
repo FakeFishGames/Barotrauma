@@ -114,6 +114,8 @@ namespace Barotrauma
 
                 foreach (Structure wall in Structure.WallList)
                 {
+                    if (wall.Submarine != submarine) continue;
+
                     Rectangle rect = wall.Rect;
                     FixtureFactory.AttachRectangle(
                           ConvertUnits.ToSimUnits(rect.Width),
@@ -241,7 +243,11 @@ namespace Barotrauma
 
                     ForceTranslate(moveAmount);
 
-                    if (submarine == Submarine.MainSub) GameMain.GameScreen.Cam.UpdateTransform(false);
+                    if ((Character.Controlled != null && Character.Controlled.Submarine == submarine) ||
+                        (Character.Controlled == null && Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine))
+                    {
+                        GameMain.GameScreen.Cam.UpdateTransform(false);
+                    }
 
                     submarine.SetPrevTransform(submarine.Position);
                     submarine.UpdateTransform();
@@ -296,7 +302,7 @@ namespace Barotrauma
             if (Character.Controlled != null) Character.Controlled.CursorPosition += amount;
 
             if ((Character.Controlled != null && Character.Controlled.Submarine == submarine) ||
-                Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine)
+                (Character.Controlled == null && Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine))
             {
                 GameMain.GameScreen.Cam.Position += amount;
                 if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
