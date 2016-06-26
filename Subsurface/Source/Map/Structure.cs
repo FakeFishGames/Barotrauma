@@ -668,7 +668,7 @@ namespace Barotrauma
         }
 
         
-        public override XElement Save(XDocument doc)
+        public override XElement Save(XElement parentElement)
         {
             XElement element = new XElement("Structure");
             
@@ -696,7 +696,7 @@ namespace Barotrauma
                 element.Add(sectionElement);
             }
             
-            doc.Root.Add(element);
+            parentElement.Add(element);
 
             return element;
         }

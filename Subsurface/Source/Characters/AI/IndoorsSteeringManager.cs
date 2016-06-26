@@ -103,7 +103,7 @@ namespace Barotrauma
 
         private Vector2 DiffToCurrentNode()
         {
-            if (currentPath == null) return Vector2.Zero;
+            if (currentPath == null || currentPath.Finished) return Vector2.Zero;
 
             if (currentPath.Finished)
             {

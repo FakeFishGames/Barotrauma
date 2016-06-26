@@ -260,6 +260,21 @@ namespace Barotrauma
             }
         }
 
+        public void AddToGrid(Submarine submarine)
+        {
+            foreach (EntityGrid grid in entityGrids)
+            {
+                if (grid.Submarine != submarine) continue;
+
+                rect.Location -= submarine.HiddenSubPosition.ToPoint();
+                
+                grid.InsertEntity(this);
+
+                rect.Location += submarine.HiddenSubPosition.ToPoint();
+                return;
+            }
+        }
+
         public override bool IsMouseOn(Vector2 position)
         {
             if (!GameMain.DebugDraw && !ShowHulls) return false;
@@ -295,6 +310,7 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
+            hullList.Remove(this);
 
             if (Submarine == null || !Submarine.Loading)
             {
@@ -324,7 +340,6 @@ namespace Barotrauma
             }
 
 
-            hullList.Remove(this);
         }
 
         public void AddFireSource(FireSource fireSource, bool createNetworkEvent = true)
@@ -712,7 +727,7 @@ namespace Barotrauma
         //    return gaps;
         //}
 
-        public override XElement Save(XDocument doc)
+        public override XElement Save(XElement parentElement)
         {
             XElement element = new XElement("Hull");
 
@@ -725,8 +740,8 @@ namespace Barotrauma
                     rect.Width + "," + rect.Height),
                 new XAttribute("water", volume)
             );
-            
-            doc.Root.Add(element);
+
+            parentElement.Add(element);
 
             return element;
         }

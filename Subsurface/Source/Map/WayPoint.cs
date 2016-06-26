@@ -718,7 +718,7 @@ namespace Barotrauma
             }
         }
 
-        public override XElement Save(XDocument doc)
+        public override XElement Save(XElement parentElement)
         {
             if (MoveWithLevel) return null;
             XElement element = new XElement("WayPoint");
@@ -739,7 +739,7 @@ namespace Barotrauma
             if (ConnectedGap != null) element.Add(new XAttribute("gap", ConnectedGap.ID));
             if (Ladders != null) element.Add(new XAttribute("ladders", Ladders.Item.ID));
 
-            doc.Root.Add(element);
+            parentElement.Add(element);
 
             if (linkedTo != null)
             {

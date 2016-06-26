@@ -114,6 +114,11 @@ namespace Barotrauma
             ep.name = "Spawnpoint";
             ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             list.Add(ep);
+            
+            //ep = new MapEntityPrefab();
+            //ep.name = "Linked Submarine";
+            //ep.Category = 0;
+            //list.Add(ep);
 
         }
 
@@ -154,8 +159,7 @@ namespace Barotrauma
 
                 if (PlayerInput.LeftButtonReleased())
                 {
-                    object[] lobject = new object[] { this, newRect };
-                    constructor.Invoke(lobject);
+                    CreateInstance(newRect);
                     placePosition = Vector2.Zero;
                     selected = null;
                 }
@@ -170,7 +174,12 @@ namespace Barotrauma
                 selected = null;
             }
         }
-    
+
+        protected virtual void CreateInstance(Rectangle rect)
+        {
+            object[] lobject = new object[] { this, rect };
+            constructor.Invoke(lobject);
+        }    
 
         public static bool SelectPrefab(object selection)
         {

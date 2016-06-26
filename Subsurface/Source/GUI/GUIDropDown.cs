@@ -34,7 +34,7 @@ namespace Barotrauma
 
             if (parent != null) parent.AddChild(this);
 
-            button = new GUIButton(Rectangle.Empty, "", Color.White, Alignment.TopLeft, Alignment.TopLeft, null, this);
+            button = new GUIButton(Rectangle.Empty, text, Color.White, Alignment.TopLeft, Alignment.TopLeft, null, this);
 
             button.TextColor = Color.White;
             button.Color = Color.Black * 0.8f;
