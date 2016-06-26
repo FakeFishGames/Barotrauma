@@ -101,7 +101,7 @@ namespace Barotrauma
             {
                 if (hash != null) return hash;
 
-                XDocument doc = OpenDoc(filePath);
+                XDocument doc = OpenFile(filePath);
                 hash = new Md5Hash(doc);
 
                 return hash;
@@ -223,7 +223,7 @@ namespace Barotrauma
 
             if (tryLoad)
             {
-                XDocument doc = OpenDoc(filePath);
+                XDocument doc = OpenFile(filePath);
 
                 if (doc != null && doc.Root != null)
                 {
@@ -438,7 +438,19 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(position)) return;
 
+            Vector2 prevPos = subBody.Position;
+
             subBody.SetPosition(position);
+
+            foreach (Submarine sub in loaded)
+            {
+                if (sub != this && sub.Submarine == this)
+                {
+                    sub.SetPosition(position + sub.WorldPosition);
+                    sub.Submarine = null;
+                }
+
+            }
             //Level.Loaded.SetPosition(-position);
             //prevPosition = position;
         }
@@ -532,7 +544,7 @@ namespace Barotrauma
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
                 if (e.MoveWithLevel ||e.Submarine != this) continue;
-                e.Save(doc);
+                e.Save(doc.Root);
             }
 
             hash = new Md5Hash(doc);
@@ -648,7 +660,7 @@ namespace Barotrauma
             //if (GameMain.NetLobbyScreen!=null) GameMain.NetLobbyScreen.UpdateSubList(Submarine.SavedSubmarines);
         }
 
-        private XDocument OpenDoc(string file)
+        public static XDocument OpenFile(string file)
         {
             XDocument doc = null;
             string extension = "";
@@ -718,16 +730,21 @@ namespace Barotrauma
             return doc;
         }
 
-        public void Load(bool unloadPrevious)
+        public void Load(bool unloadPrevious, XElement submarineElement = null)
         {
             if (unloadPrevious) Unload();
 
             Loading = true;
 
-            XDocument doc = OpenDoc(filePath);
-            if (doc == null || doc.Root == null) return;
+            if (submarineElement == null)
+            {
+                XDocument doc = OpenFile(filePath);
+                if (doc == null || doc.Root == null) return;
 
-            Description = ToolBox.GetAttributeString(doc.Root, "description", "");
+                submarineElement = doc.Root;
+            }
+
+            Description = ToolBox.GetAttributeString(submarineElement, "description", "");
 
 
             HiddenSubPosition = HiddenSubStartPosition;
@@ -742,7 +759,7 @@ namespace Barotrauma
                 IdOffset = Math.Max(IdOffset, me.ID);
             }
 
-            foreach (XElement element in doc.Root.Elements())
+            foreach (XElement element in submarineElement.Elements())
             {
                 string typeName = element.Name.ToString();
 
@@ -836,7 +853,19 @@ namespace Barotrauma
 
             GameMain.LightManager.OnMapLoaded();
 
-            ID = ushort.MaxValue;
+            ID = (ushort)(ushort.MaxValue - Submarine.loaded.Count);
+        }
+
+        public static Submarine Load(XElement element, bool unloadPrevious)
+        {
+            if (unloadPrevious) Unload();
+
+            //tryload -> false
+
+            Submarine sub = new Submarine(ToolBox.GetAttributeString(element, "name", ""));
+            sub.Load(unloadPrevious, element);
+
+            return sub; 
         }
 
         public static Submarine Load(string fileName, bool unloadPrevious)
@@ -851,7 +880,7 @@ namespace Barotrauma
             string path = string.IsNullOrWhiteSpace(folder) ? fileName : System.IO.Path.Combine(SavePath, fileName);
 
             Submarine sub = new Submarine(path);
-            sub.Load(false);
+            sub.Load(unloadPrevious);
 
             //Entity.dictionary.Add(int.MaxValue, sub);
 

@@ -639,7 +639,7 @@ namespace Barotrauma
             FindHulls();
         }
 
-        public override XElement Save(XDocument doc)
+        public override XElement Save(XElement parentElement)
         {
             XElement element = new XElement("Gap");
 
@@ -663,7 +663,7 @@ namespace Barotrauma
             //    }
             //}
 
-            doc.Root.Add(element);
+            parentElement.Add(element);
 
             return element;
         }

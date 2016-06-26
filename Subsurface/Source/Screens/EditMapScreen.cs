@@ -94,13 +94,23 @@ namespace Barotrauma
             button = new GUIButton(new Rectangle(310,0,70,20), "Save", GUI.Style, topPanel);
             button.OnClicked = SaveSub;
 
-            new GUITextBlock(new Rectangle(400, 0, 100, 20), "Description: ", GUI.Style, topPanel);
+            new GUITextBlock(new Rectangle(390, 0, 100, 20), "Description: ", GUI.Style, topPanel);
 
-            descriptionBox = new GUITextBox(new Rectangle(500, 0, 200, 20), null, null, Alignment.TopLeft,
+            descriptionBox = new GUITextBox(new Rectangle(490, 0, 200, 20), null, null, Alignment.TopLeft,
                 Alignment.TopLeft, GUI.Style, topPanel);
             descriptionBox.Wrap = true;
             descriptionBox.OnSelected += ExpandDescriptionBox;
             descriptionBox.OnTextChanged = ChangeSubDescription;
+
+
+            //new GUITextBlock(new Rectangle(390, 0, 100, 20), "Link  ", GUI.Style, topPanel);
+
+            var linkedSubBox = new GUIDropDown(new Rectangle(750,0,200,20), "Add submarine", GUI.Style, topPanel);
+            foreach (Submarine sub in Submarine.SavedSubmarines)
+            {
+                linkedSubBox.AddItem(sub.Name, sub);
+            }
+            linkedSubBox.OnSelected += SelectLinkedSub;
             
             leftPanel = new GUIFrame(new Rectangle(0, 30, 150, GameMain.GraphicsHeight-30), GUI.Style);
             leftPanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
@@ -522,6 +532,18 @@ namespace Barotrauma
             }
 
             return frame;
+        }
+
+        private bool SelectLinkedSub(GUIComponent selected)
+        {
+            var submarine = selected.UserData as Submarine;
+            if (submarine == null) return false;
+
+            var prefab = new LinkedSubmarinePrefab(submarine);
+
+            MapEntityPrefab.SelectPrefab(prefab);
+
+            return true;
         }
 
         private bool SelectWire(GUIComponent component, object userData)

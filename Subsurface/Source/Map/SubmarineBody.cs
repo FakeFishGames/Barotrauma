@@ -125,30 +125,16 @@ namespace Barotrauma
                           Body, this);
                 }
 
-                //foreach (Hull hull in Hull.hullList)
-                //{
-                //    Rectangle rect = hull.Rect;
-                //    foreach (Structure wall in Structure.WallList)
-                //    {
-                //        if (!Submarine.RectsOverlap(wall.Rect, hull.Rect)) continue;
-
-                //        Rectangle wallRect = wall.IsHorizontal ?
-                //            new Rectangle(hull.Rect.X, wall.Rect.Y, hull.Rect.Width, wall.Rect.Height) :
-                //            new Rectangle(wall.Rect.X, hull.Rect.Y, wall.Rect.Width, hull.Rect.Height);
-
-                //        rect = Rectangle.Union(
-                //            new Rectangle(wallRect.X, wallRect.Y - wallRect.Height, wallRect.Width, wallRect.Height),
-                //            new Rectangle(rect.X, rect.Y - rect.Height, rect.Width, rect.Height));
-                //        rect.Y = rect.Y + rect.Height;
-                //    }
-
-                //    FixtureFactory.AttachRectangle(
-                //        ConvertUnits.ToSimUnits(rect.Width),
-                //        ConvertUnits.ToSimUnits(rect.Height),
-                //        5.0f,
-                //        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
-                //        body, this);
-                //}
+                foreach (Hull hull in Hull.hullList)
+                {
+                    Rectangle rect = hull.Rect;
+                    FixtureFactory.AttachRectangle(
+                        ConvertUnits.ToSimUnits(rect.Width),
+                        ConvertUnits.ToSimUnits(rect.Height),
+                        5.0f,
+                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
+                        Body, this);
+                }
             }
 
 
@@ -183,50 +169,17 @@ namespace Barotrauma
 
             List<Vector2> points = new List<Vector2>();
 
-            Vector2 leftMost = Vector2.Zero;
-
             foreach (Structure wall in Structure.WallList)
             {
                 if (wall.Submarine != submarine) continue;
 
-                for (int x = -1; x <= 1; x += 2)
-                {
-                    for (int y = -1; y <= 1; y += 2)
-                    {
-                        Vector2 corner = new Vector2(wall.Rect.X + wall.Rect.Width / 2.0f, wall.Rect.Y - wall.Rect.Height / 2.0f);
-                        corner.X += x * wall.Rect.Width / 2.0f;
-                        corner.Y += y * wall.Rect.Height / 2.0f;
-
-                        if (points.Contains(corner)) continue;
-
-                        points.Add(corner);
-                        if (leftMost == Vector2.Zero || corner.X < leftMost.X) leftMost = corner;
-                    }
-                }
+                points.Add(new Vector2(wall.Rect.X, wall.Rect.Y));
+                points.Add(new Vector2(wall.Rect.X + wall.Rect.Width, wall.Rect.Y));
+                points.Add(new Vector2(wall.Rect.X, wall.Rect.Y - wall.Rect.Height));
+                points.Add(new Vector2(wall.Rect.X + wall.Rect.Width, wall.Rect.Y - wall.Rect.Height));
             }
 
-            List<Vector2> hullPoints = new List<Vector2>();
-
-            Vector2 currPoint = leftMost;
-            Vector2 endPoint;
-            do
-            {
-                hullPoints.Add(currPoint);
-                endPoint = points[0];
-
-                for (int i = 1; i < points.Count; i++)
-                {
-                    if ((currPoint == endPoint)
-                        || (MathUtils.VectorOrientation(currPoint, endPoint, points[i]) == -1))
-                    {
-                        endPoint = points[i];
-                    }
-                }
-                
-                currPoint = endPoint;
-
-            }
-            while (endPoint != hullPoints[0]);
+            List<Vector2> hullPoints = MathUtils.GiftWrap(points);
 
             return hullPoints;
         }

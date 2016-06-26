@@ -118,6 +118,7 @@
     <Compile Include="Source\GUI\GUIDropDown.cs" />
     <Compile Include="Source\GUI\GUIMessage.cs" />
     <Compile Include="Source\GUI\LoadingScreen.cs" />
+    <Compile Include="Source\Items\Components\DockingPort.cs" />
     <Compile Include="Source\Items\Components\Holdable\MeleeWeapon.cs" />
     <Compile Include="Source\Items\Components\Holdable\Propulsion.cs" />
     <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
@@ -143,6 +144,7 @@
     <Compile Include="Source\Map\Lights\LightSource.cs" />
     <Compile Include="Source\Map\Map\LocationType.cs" />
     <Compile Include="Source\Map\SubmarineBody.cs" />
+    <Compile Include="Source\Map\SubmarineLink.cs" />
     <Compile Include="Source\Map\TransitionCinematic.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
@@ -490,6 +492,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\blank.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Items\Door\dockingport.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Items\Jobgear\captainLegs.png">

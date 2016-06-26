@@ -596,7 +596,7 @@ namespace Barotrauma
         }
 
 
-        public virtual XElement Save(XDocument doc)
+        public virtual XElement Save(XElement parentElement)
         {
             DebugConsole.ThrowError("Saving entity " + GetType() + " failed.");
             return null;
@@ -625,15 +625,29 @@ namespace Barotrauma
                     if (linked != null) e.linkedTo.Add(linked);
                 }
             }
+
+            List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
             
             for (int i = 0; i<mapEntityList.Count; i++)
             {
                 if (mapEntityList[i].Submarine != sub) continue;
+
+                if (mapEntityList[i] is LinkedSubmarine)
+                {
+                    linkedSubs.Add((LinkedSubmarine)mapEntityList[i]);
+                    continue;
+                }
+
                 mapEntityList[i].OnMapLoaded();
             }
             
             Item.UpdateHulls();
-            Gap.UpdateHulls();            
+            Gap.UpdateHulls();
+
+            foreach (LinkedSubmarine linkedSub in linkedSubs)
+            {
+                linkedSub.OnMapLoaded();
+            }
         }
 
 

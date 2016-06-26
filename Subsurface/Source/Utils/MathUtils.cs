@@ -288,6 +288,41 @@ namespace Barotrauma
             return triangles;
         }
 
+        public static List<Vector2> GiftWrap(List<Vector2> points)
+        {
+            Vector2 leftMost = points[0];
+            foreach (Vector2 point in points)
+            {
+                if (point.X < leftMost.X) leftMost = point;
+            }
+
+            List<Vector2> wrappedPoints = new List<Vector2>();
+
+            Vector2 currPoint = leftMost;
+            Vector2 endPoint;
+            do
+            {
+                wrappedPoints.Add(currPoint);
+                endPoint = points[0];
+
+                for (int i = 1; i < points.Count; i++)
+                {
+                    if (points[i] == currPoint) continue;
+                    if (currPoint == endPoint ||
+                        MathUtils.VectorOrientation(currPoint, endPoint, points[i]) == -1)
+                    {
+                        endPoint = points[i];
+                    }
+                }
+                
+                currPoint = endPoint;
+
+            }
+            while (endPoint != leftMost);
+
+            return wrappedPoints;
+        }
+
         public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int generations, float offsetAmount)
         {
             List<Vector2[]> segments = new List<Vector2[]>();
