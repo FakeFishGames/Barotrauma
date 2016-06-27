@@ -349,6 +349,14 @@ namespace Barotrauma
                     GameMain.World.RemoveBody(b);
             }
 
+            foreach (WallSection s in sections)
+            {
+                if (s.gap != null)
+                {
+                    s.gap.Remove();
+                    s.gap = null;
+                }
+            }
             if (convexHulls != null) convexHulls.ForEach(x => x.Remove());
         }
 

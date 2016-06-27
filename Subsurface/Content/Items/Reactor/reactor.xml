@@ -67,8 +67,7 @@
 
     <Body radius="6" height="22" density="5"/>
 
-    <Holdable handle1="0,0"/>
-    <Pickable slots="RightHand,Any"/>
+    <Holdable handle1="0,0" slots="RightHand,Any"/>
   </Item>
 
   <Item
@@ -86,8 +85,7 @@
 
     <Body radius="6" height="22" density="5"/>
 
-    <Holdable handle1="0,0"/>
-    <Pickable slots="RightHand,Any"/>
+    <Holdable handle1="0,0" slots="RightHand,Any"/>
   </Item>
   
 
@@ -100,8 +98,7 @@
 
     <Body radius="6" height="22" density="5"/>
 
-    <Holdable handle1="0,0"/>
-    <Pickable slots="Any"/>
+    <Holdable handle1="0,0" slots="Any"/>
   </Item>
 
 </Items>

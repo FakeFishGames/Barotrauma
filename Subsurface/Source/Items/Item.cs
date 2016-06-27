@@ -19,7 +19,7 @@ namespace Barotrauma
 
     public enum ActionType
     {
-        Always, OnPicked, OnUse, 
+        Always, OnPicked, OnUse, OnSecondaryUse,
         OnWearing, OnContaining, OnContained, 
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
@@ -1248,6 +1248,7 @@ namespace Barotrauma
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
+                    ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
 
                     if (picker==Character.Controlled) GUIComponent.MouseOn = null;
 
