@@ -154,9 +154,12 @@ namespace Barotrauma.Items.Components
 
                 pickedPosition = Submarine.LastPickedPosition;
 
-                if (ExtinquishAmount > 0.0f)
+                if (ExtinquishAmount > 0.0f && item.CurrentHull != null)
                 {
-                    Vector2 displayPos = rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f;
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f);
+
+                    displayPos += item.CurrentHull.Submarine.Position;
+
                     Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
                     if (hull != null) hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
                 }
