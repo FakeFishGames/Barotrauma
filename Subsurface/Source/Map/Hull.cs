@@ -53,6 +53,7 @@ namespace Barotrauma
 
         private bool update;
 
+        private Sound currentFlowSound;
         private int soundIndex;
         private float soundVolume;
 
@@ -392,11 +393,23 @@ namespace Barotrauma
             foreach (Gap gap in ConnectedGaps)
             {
                 float gapFlow = gap.LerpedFlowForce.Length();
+
+#if DEBUG
+                var asd = MapEntity.FindEntityByID(gap.ID);
+
+                if (asd != gap)
+                {
+                    int adslkmfdlasfk = 9;
+                }
+#endif
+
+
                 if (gapFlow > strongestFlow)
                 {
                     strongestFlow = gapFlow;
                 }
             }
+
 
             if (strongestFlow>0.1f)
             {
@@ -406,13 +419,24 @@ namespace Barotrauma
                 int index = (int)Math.Floor(strongestFlow / 100.0f);
                 index = Math.Min(index, 2);
 
-                soundIndex = SoundPlayer.flowSounds[index].Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
+                var flowSound = SoundPlayer.flowSounds[index];
+                if (flowSound != currentFlowSound && soundIndex > -1)
+                {
+                    Sounds.SoundManager.Stop(soundIndex);
+                    currentFlowSound = null;
+                    soundIndex = -1;
+                }
+
+                currentFlowSound = flowSound;
+
+                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
             }
             else
             {
                 if (soundIndex > -1)
                 {
                     Sounds.SoundManager.Stop(soundIndex);
+                    currentFlowSound = null;
                     soundIndex = -1;
                 }
             }

@@ -20,22 +20,23 @@ namespace Barotrauma.Items.Components
         private static List<DockingPort> list = new List<DockingPort>();
         
         private Sprite overlaySprite;
-
+        
         private Vector2 distanceTolerance;
 
         private DockingPort dockingTarget;
 
         private float dockingState;
+        private int dockingDir;
 
         private Joint joint;
-
-        private int dockingDir;
 
         private Hull[] hulls;
 
         private Body[] bodies;
 
         private Gap gap;
+
+        private bool docked;
 
         [HasDefaultValue("32.0,32.0", false)]
         public string DistanceTolerance
@@ -58,22 +59,22 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public override bool IsActive
+        public bool Docked
         {
             get
             {
-                return base.IsActive;
+                return docked;
             }
             set
             {
-                if (!IsActive && value)
+                if (!docked && value)
                 {
                     if (dockingTarget == null) AttemptDock();
                     if (dockingTarget == null) return;
 
-                    base.IsActive = value;
+                    docked = true;
                 }
-                else if (IsActive && !value)
+                else if (docked && !value)
                 {
                     Undock();
                 }
@@ -97,10 +98,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            IsActive = true;
+
             list.Add(this);
         }
 
-        private void AttemptDock()
+        private DockingPort FindAdjacentPort()
         {
             foreach (DockingPort port in list)
             {
@@ -109,24 +112,41 @@ namespace Barotrauma.Items.Components
                 if (Math.Abs(port.item.WorldPosition.X - item.WorldPosition.X) > distanceTolerance.X) continue;
                 if (Math.Abs(port.item.WorldPosition.Y - item.WorldPosition.Y) > distanceTolerance.Y) continue;
 
-                Dock(port);
-                return;
-
+                return port;
             }
+
+            return null;
+        }
+
+        private void AttemptDock()
+        {
+            var adjacentPort = FindAdjacentPort();
+            if (adjacentPort != null) Dock(adjacentPort);
         }
 
         private void Dock(DockingPort target)
         {
-            if (dockingTarget!=null)
+            if (dockingTarget != null)
             {
                 Undock();
             }
 
+            PlaySound(ActionType.OnUse, item.WorldPosition);
+
+
             dockingTarget = target;
             dockingTarget.dockingTarget = this;
-            dockingTarget.IsActive = true;
+            dockingTarget.Docked = true;
 
-            dockingDir = Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X);
+            if (Character.Controlled != null &&
+                (Character.Controlled.Submarine == dockingTarget.item.Submarine || Character.Controlled.Submarine == item.Submarine))
+            {
+                GameMain.GameScreen.Cam.Shake = Vector2.Distance(dockingTarget.item.Submarine.Velocity, item.Submarine.Velocity);
+            }
+
+            dockingDir = IsHorizontal ? 
+                Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
+                Math.Sign(item.WorldPosition.Y - dockingTarget.item.WorldPosition.Y);
             dockingTarget.dockingDir = -dockingDir;
             
             CreateJoint(false);
@@ -184,11 +204,8 @@ namespace Barotrauma.Items.Components
                     subs = new Submarine[] { dockingTarget.item.Submarine,item.Submarine };
                 }
 
-
                 hullRects[0] = new Rectangle(hullRects[0].Center.X, hullRects[0].Y, ((int)DockedDistance / 2), hullRects[0].Height);
                 hullRects[1] = new Rectangle(hullRects[1].Center.X - ((int)DockedDistance / 2), hullRects[1].Y, ((int)DockedDistance / 2), hullRects[1].Height);
-
-                
 
                 for (int i = 0; i < 2;i++ )
                 {
@@ -196,47 +213,53 @@ namespace Barotrauma.Items.Components
                     hulls[i] = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
 
-
                     for (int j = 0; j < 2; j++)
                     {
                         bodies[i + j * 2] = BodyFactory.CreateEdge(GameMain.World,
                             ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X, hullRects[i].Y - hullRects[i].Height * j)),
                             ConvertUnits.ToSimUnits(new Vector2(hullRects[i].Right, hullRects[i].Y - hullRects[i].Height * j)));
-
-                        //bodies[i + j * 2] = BodyFactory.CreateRectangle(GameMain.World, ConvertUnits.ToSimUnits(hullRects[i].Width), 0.1f, 5.0f);
-                        //bodies[i + j * 2].SetTransform(ConvertUnits.ToSimUnits(new Vector2(hullRects[i].Center.X, hullRects[i].Y - (hullRects[i].Height+5) * j)), 0.0f);
                     }
                 }
 
-                gap = new Gap(new Rectangle(hullRects[0].Right-2, hullRects[0].Y, 4, hullRects[0].Height), true, item.Submarine);
-                gap.linkedTo.Clear();
-                gap.linkedTo.Add(hulls[0]);
-                gap.linkedTo.Add(hulls[1]);
-
-                    //var hullRect1 = new Rectangle(hullRects.Min(h => h.Center.X), hullRect.Y, ((int)DockedDistance / 2), hullRects[0].Height);
-                    //var hullRect2 = new Rectangle(hullRects.Max(h => h.Center.X), hullRect.Y, ((int)DockedDistance / 2), hullRects[0].Height);
-
-                    //var sub1 = hullRect.Center.X < targetRect.Center.X ? item.Submarine : dockingTarget.item.Submarine;
-                    //var sub2 = hullRect.Center.X > targetRect.Center.X ? item.Submarine : dockingTarget.item.Submarine;
-
-                //    hullRect1.Location -= (sub1.WorldPosition - sub1.HiddenSubPosition).ToPoint();
-                //hulls[0] = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), hullRect1, sub1);
-                //hulls[0].AddToGrid(sub1);
-
-                //hullRect2.Location -= (sub2.WorldPosition - sub2.HiddenSubPosition).ToPoint();
-                //hulls[1] = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), hullRect2, sub2);
-                //hulls[1].AddToGrid(sub2);
-
+                gap = new Gap(new Rectangle(hullRects[0].Right-2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
 
             }
             else
             {
-                //hullRect = new Rectangle(hullRect.X,
-                //    Math.Max(hullRect.Y - hullRect.Height / 2, targetRect.Y - targetRect.Height / 2), hullRect.Width, (int)DockedDistance);
+                if (hullRects[0].Center.Y > hullRects[1].Center.Y)
+                {
+                    hullRects = new Rectangle[] { dockingTarget.item.WorldRect, item.WorldRect };
+                    subs = new Submarine[] { dockingTarget.item.Submarine, item.Submarine };
+                }
+
+                hullRects[0] = new Rectangle(hullRects[0].X, hullRects[0].Y + (int)(-hullRects[0].Height+DockedDistance)/2, hullRects[0].Width, ((int)DockedDistance / 2));
+                hullRects[1] = new Rectangle(hullRects[1].X, hullRects[1].Y - hullRects[1].Height/2, hullRects[1].Width, ((int)DockedDistance / 2));
+
+                for (int i = 0; i < 2; i++)
+                {
+                    hullRects[i].Location -= (subs[i].WorldPosition - subs[i].HiddenSubPosition).ToPoint();
+                    hulls[i] = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), hullRects[i], subs[i]);
+                    hulls[i].AddToGrid(subs[i]);
+
+                    //for (int j = 0; j < 2; j++)
+                    //{
+                    //    bodies[i + j * 2] = BodyFactory.CreateEdge(GameMain.World,
+                    //        ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X + hullRects[i].Width * j, hullRects[i].Y)),
+                    //        ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X + hullRects[i].Width * j, hullRects[i].Y-hullRects[i].Height)));
+                    //}
+                }
+
+                gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), true, subs[0]);
+
             }
+
+            gap.linkedTo.Clear();
+            gap.linkedTo.Add(hulls[0]);
+            gap.linkedTo.Add(hulls[1]);
 
             foreach (Body body in bodies)
             {
+                if (body == null) continue;
                 body.BodyType = BodyType.Static;
                 body.Friction = 0.5f;
 
@@ -248,62 +271,83 @@ namespace Barotrauma.Items.Components
 
         private void Undock()
         {
-            if (dockingTarget == null) return;
+            if (dockingTarget == null || !docked) return;
 
-            dockingTarget.dockingTarget = null;
-            dockingTarget.IsActive = false;
+            PlaySound(ActionType.OnUse, item.WorldPosition);
 
+            docked = false;
+
+            dockingTarget.Undock();
             dockingTarget = null;
 
-            GameMain.World.RemoveJoint(joint);
-            joint = null;
-
-            hulls[0].Remove();
-            hulls[1].Remove();
-
-            gap.Remove();
-            gap = null;
-
-            foreach (Body body in bodies)
+            if (joint != null)
             {
-                GameMain.World.RemoveBody(body);
+                GameMain.World.RemoveJoint(joint);
+                joint = null;
             }
-            bodies = null;
 
+            if (hulls != null)
+            {
+                hulls[0].Remove();
+                hulls[1].Remove();
+                hulls = null;
+            }
 
-            
-            //foreach (Gap g in hulls[0].ConnectedGaps)
-            //{
-            //    g.Remove();
-            //}
+            if (gap != null)
+            {
+                gap.Remove();
+                gap = null;
+            }
 
-            //foreach (Gap g in hulls[1].ConnectedGaps)
-            //{
-            //    g.Remove();
-            //}
+            if (bodies!=null)
+            {
+                foreach (Body body in bodies)
+                {
+                    if (body == null) continue;
+                    GameMain.World.RemoveBody(body);
+                }
+                bodies = null;
+            }
 
-
-            hulls = null;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (dockingTarget==null)
+
+
+            if (dockingTarget == null)
             {
                 dockingState = MathHelper.Lerp(dockingState, 0.0f, deltaTime * 10.0f);
-                if (dockingState < 0.01f) base.IsActive = false;
+                if (dockingState < 0.01f) docked = false;
+
+                item.SendSignal(0, "0", "state_out");
+
+                item.SendSignal(0, (FindAdjacentPort() != null) ? "1" : "0", "proximity_sensor");
+
             }
             else
             {
-                if (joint is DistanceJoint && Vector2.Distance(joint.WorldAnchorA, joint.WorldAnchorB) < 0.05f)
+                if (joint is DistanceJoint)
                 {
-                    GameMain.World.RemoveJoint(joint);
+                    item.SendSignal(0, "0", "state_out");
 
-                    CreateJoint(true);
-                    CreateHull();
+                    if (Vector2.Distance(joint.WorldAnchorA, joint.WorldAnchorB) < 0.05f)
+                    {
+                        GameMain.World.RemoveJoint(joint);
+                        
+                        PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
+
+                        CreateJoint(true);
+                        CreateHull();
+                    }
+                    dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
                 }
+                else
+                {
+                    item.SendSignal(0, "1", "state_out");
 
-                dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
+                    dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
+                }
             }
         }
 
@@ -315,10 +359,11 @@ namespace Barotrauma.Items.Components
             drawPos.Y = -drawPos.Y;
 
             var rect = overlaySprite.SourceRect;
-            drawPos.Y -= rect.Height / 2;
-
+            
             if (IsHorizontal)
             {
+                drawPos.Y -= rect.Height / 2;
+
                 if (dockingDir == 1)
                 {
                     spriteBatch.Draw(overlaySprite.Texture, 
@@ -339,6 +384,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                drawPos.X -= rect.Width / 2;
+
                 if (dockingDir == 1)
                 {
                     spriteBatch.Draw(overlaySprite.Texture,
@@ -362,6 +409,20 @@ namespace Barotrauma.Items.Components
         protected override void RemoveComponentSpecific()
         {
             list.Remove(this);
+        }
+
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)
+        {
+            switch (connection.Name)
+            {
+                case "toggle":
+                    Docked = !docked;
+                    break;
+                case "set_active":
+                case "set_state":
+                    Docked = signal != "0";
+                    break;
+            }
         }
     }
 }

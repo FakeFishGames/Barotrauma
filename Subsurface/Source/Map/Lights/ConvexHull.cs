@@ -375,7 +375,18 @@ namespace Barotrauma.Lights
 
             Vector2 lightSourcePos = light.Position;
 
-            if (light.Submarine==null && parentEntity != null && parentEntity.Submarine != null) lightSourcePos -= parentEntity.Submarine.Position;
+            if (parentEntity != null && parentEntity.Submarine != null)
+            {
+                if (light.Submarine == null)
+                {
+                    lightSourcePos -= parentEntity.Submarine.Position;
+                }
+                else if (light.Submarine != parentEntity.Submarine)
+                {
+                    lightSourcePos += (light.Submarine.Position-parentEntity.Submarine.Position);
+                }
+                
+            }
 
             CachedShadow cachedShadow = null;
             if (!cachedShadows.TryGetValue(light, out cachedShadow) ||

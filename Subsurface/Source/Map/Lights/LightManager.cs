@@ -95,6 +95,7 @@ namespace Barotrauma.Lights
             foreach (LightSource light in lights)
             {
                 if (light.Color.A < 0.01f || light.Range < 1.0f) continue;
+                //!!!!!!!!!!!!!!!!
                 if (light.hullsInRange == null) light.UpdateHullsInRange();
                 if (!light.hullsInRange.Any() || !MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
                             

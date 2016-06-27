@@ -734,6 +734,10 @@ namespace Barotrauma
             {
                 ladderSimPos += character.SelectedConstruction.Submarine.SimPosition;
             }
+            else if (currentHull.Submarine != null && currentHull.Submarine != character.SelectedConstruction.Submarine)
+            {
+                ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
+            }
 
             MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, head.SimPosition.Y + 0.05f), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, torso.SimPosition.Y), 10.5f);
@@ -742,7 +746,9 @@ namespace Barotrauma
 
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
-                head.SimPosition.Y + 0.0f + movement.Y * 0.1f - ladderSimPos.Y);
+                head.SimPosition.Y + movement.Y * 0.1f - ladderSimPos.Y);
+
+            handPos.Y = Math.Min(-0.5f, handPos.Y);
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
@@ -815,8 +821,7 @@ namespace Barotrauma
             //   - moving sideways
             //   - reached the top or bottom of the ladder
             if (notClimbing ||
-                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition * 1.5f) ||
-                (TargetMovement.Y > 0.0f && handPos.Y > 0.1f))
+                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition * 1.5f))
             {
                 Anim = Animation.None;
                 character.SelectedConstruction = null;

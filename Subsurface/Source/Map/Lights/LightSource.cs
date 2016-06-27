@@ -86,7 +86,7 @@ namespace Barotrauma.Lights
             {
 
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
-                if (Math.Abs(prevHullUpdateRange - range) < 5.0f) return;
+                if (Math.Abs(prevHullUpdateRange - range) < 10.0f) return;
                 
                 UpdateHullsInRange();
                 prevHullUpdateRange = range;
@@ -143,18 +143,24 @@ namespace Barotrauma.Lights
 
             foreach (ConvexHull ch in ConvexHull.list)
             {
-                if (Submarine == null && ch.ParentEntity.Submarine != null)
+                Vector2 lightPos = position;
+
+                if (Submarine==null)
                 {
-                    if (MathUtils.CircleIntersectsRectangle(position - ch.ParentEntity.Submarine.Position, range, ch.BoundingBox))
+                    if (ch.ParentEntity.Submarine != null)
                     {
-                        hullsInRange.Add(ch);
+                        lightPos -= ch.ParentEntity.Submarine.Position;
                     }
                 }
-                else if (MathUtils.CircleIntersectsRectangle(position, range, ch.BoundingBox))
+                else if (ch.ParentEntity.Submarine != null && ch.ParentEntity.Submarine != Submarine)
+                {
+                    lightPos -= (ch.ParentEntity.Submarine.Position - Submarine.Position);
+                }
+
+                if (MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox))
                 {
                     hullsInRange.Add(ch);
                 }
-
             }
         }
 
