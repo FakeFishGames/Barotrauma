@@ -815,7 +815,7 @@ namespace Barotrauma
             //   - moving sideways
             //   - reached the top or bottom of the ladder
             if (notClimbing ||
-                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition * 1.5f) ||
+                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition) ||
                 (TargetMovement.Y > 0.0f && handPos.Y > 0.1f))
             {
                 Anim = Animation.None;

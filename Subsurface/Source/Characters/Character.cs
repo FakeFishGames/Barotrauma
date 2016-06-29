@@ -1520,7 +1520,7 @@ namespace Barotrauma
 
                     message.Write(keys[(int)InputType.Run].Held);
 
-                    message.Write(keys[(int)InputType.Crouch].Held);
+                    message.Write(((HumanoidAnimController)AnimController).Crouching);
 
                     
                     if (secondaryHeld)
@@ -1685,6 +1685,7 @@ namespace Barotrauma
                     if (allOk)
                     {
                         bleeding = 0.0f;
+                        Oxygen = 100.0f;
                         AnimController.StunTimer = 0.0f;
                         return;
                     }
