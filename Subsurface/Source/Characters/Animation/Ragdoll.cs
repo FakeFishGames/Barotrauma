@@ -407,7 +407,7 @@ namespace Barotrauma
 
             if (impact > l.impactTolerance)
             {
-                if (!character.IsNetworkPlayer)
+                if (!character.IsNetworkPlayer || GameMain.Server != null)
                 {
                     character.AddDamage(CauseOfDeath.Damage, impact - l.impactTolerance * 0.1f, null);
 

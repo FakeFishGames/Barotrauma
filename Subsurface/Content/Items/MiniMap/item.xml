@@ -1,7 +1,8 @@
 ﻿<Item
   name="MiniMap"
   category="Machine"
-  linkable="true">
+  linkable="true"
+  pickdistance="150">
   
   <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 

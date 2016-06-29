@@ -62,7 +62,7 @@ namespace Barotrauma
         float[] leftDelta;
         float[] rightDelta;
 
-        private float lastSentVolume;
+        private float lastSentVolume, lastSentOxygen;
         private float lastNetworkUpdate;
 
         public List<Gap> ConnectedGaps;
@@ -395,12 +395,13 @@ namespace Barotrauma
             }
             
             //update client hulls if the amount of water has changed by >10%
-            if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f)
+            //or if oxygen percentage has changed by 5%
+            if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f ||
+                Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
-                new Networking.NetworkEvent(ID, false);
-                lastSentVolume = volume;
+                new Networking.NetworkEvent(ID, false);                
             }
-
+            
             if (!update)
             {
                 lethalPressure = 0.0f;
@@ -758,6 +759,7 @@ namespace Barotrauma
         public override bool FillNetworkData(Networking.NetworkEventType type, NetBuffer message, object data)
         {            
             message.WriteRangedSingle(MathHelper.Clamp(volume/FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 6);
+            message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
 
             message.Write((byte)fireSources.Count, 4);
             for (int i = 0; i < Math.Min(fireSources.Count, 16); i++)
@@ -773,6 +775,10 @@ namespace Barotrauma
                 message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 6);
             }
 
+
+            lastSentVolume = volume;
+            lastSentOxygen = OxygenPercentage;
+
             return true;
         }
 
@@ -783,19 +789,24 @@ namespace Barotrauma
             if (sendingTime < lastNetworkUpdate) return;
 
             float newVolume = this.volume;
+            float newOxygen = this.OxygenPercentage;
 
             try
             {
                 float newPercentage = message.ReadRangedSingle(0.0f, 1.5f, 6);
                 newVolume = newPercentage * FullVolume;
+
+                newOxygen = message.ReadRangedSingle(0.0f, 100.0f, 8);
             }
 
-            catch
+            catch (Exception e)
             {
+                DebugConsole.Log("Failed to read network message for Hull {" + ID + "}! " + e.Message);
                 return;
             }
 
             Volume = newVolume;
+            OxygenPercentage = newOxygen;
 
             int fireSourceCount = message.ReadByte(4);
 

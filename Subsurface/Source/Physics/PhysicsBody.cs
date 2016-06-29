@@ -27,9 +27,9 @@ namespace Barotrauma
         protected float prevRotation;
 
         protected Vector2 targetPosition;
-        protected Vector2 targetVelocity;
+        //protected Vector2 targetVelocity;
         protected float targetRotation;
-        protected float targetAngularVelocity;
+        //protected float targetAngularVelocity;
 
         private Vector2 drawPosition;
         private float drawRotation;
@@ -64,16 +64,16 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 TargetVelocity
-        {
-            get { return targetVelocity; }
-            set 
-            {
-                if (!MathUtils.IsValid(value)) return;
-                targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
-                targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f); 
-            }
-        }
+        //public Vector2 TargetVelocity
+        //{
+        //    get { return targetVelocity; }
+        //    set 
+        //    {
+        //        if (!MathUtils.IsValid(value)) return;
+        //        targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+        //        targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f); 
+        //    }
+        //}
 
         public float TargetRotation
         {
@@ -85,15 +85,15 @@ namespace Barotrauma
             }
         }
 
-        public float TargetAngularVelocity
-        {
-            get { return targetAngularVelocity; }
-            set 
-            {
-                if (!MathUtils.IsValid(value)) return;
-                targetAngularVelocity = value; 
-            }
-        }
+        //public float TargetAngularVelocity
+        //{
+        //    get { return targetAngularVelocity; }
+        //    set 
+        //    {
+        //        if (!MathUtils.IsValid(value)) return;
+        //        targetAngularVelocity = value; 
+        //    }
+        //}
 
         public Vector2 DrawPosition
         {
@@ -314,8 +314,8 @@ namespace Barotrauma
             }
 
             body.SetTransform(targetPosition, targetRotation == 0.0f ? body.Rotation : targetRotation);
-            body.LinearVelocity = targetVelocity;
-            body.AngularVelocity = targetAngularVelocity;
+            //body.LinearVelocity = targetVelocity;
+            //body.AngularVelocity = targetAngularVelocity;
             targetPosition = Vector2.Zero;
         }
         
@@ -415,10 +415,10 @@ namespace Barotrauma
                 return;
 
             targetPosition = newTargetPos;
-            TargetVelocity = newTargetVel;
+            LinearVelocity = newTargetVel;
 
             targetRotation = newTargetRotation;
-            targetAngularVelocity = newTargetAngularVel;
+            AngularVelocity = newTargetAngularVel;
 
             lastNetworkUpdateTime = sendingTime;
         }
