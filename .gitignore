@@ -10,6 +10,8 @@ bld/
 [Bb]in/
 [Oo]bj/
 
+*.v12.suo
+
 #performance reports & sessions
 *.vsp
 *.psess
