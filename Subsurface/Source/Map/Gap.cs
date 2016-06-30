@@ -434,11 +434,11 @@ namespace Barotrauma
             else
             {
                 //lower room is full of water
-                if (hull2.Pressure > hull1.Pressure)
+                if ((hull2.Pressure + subOffset.Y) > hull1.Pressure)
                 {
                     float delta = Math.Min(hull2.Volume - hull2.FullVolume + Hull.MaxCompress / 2.0f, deltaTime * 8000.0f * sizeModifier);
 
-                    flowForce = new Vector2(0.0f, Math.Min(hull2.Pressure - hull1.Pressure, 500.0f));
+                    flowForce = new Vector2(0.0f, Math.Min((hull2.Pressure + subOffset.Y) - hull1.Pressure, 500.0f));
 
                     delta = Math.Max(delta, 0.0f);
                     hull1.Volume += delta;
@@ -448,7 +448,7 @@ namespace Barotrauma
 
                     if (hull1.Volume > hull1.FullVolume)
                     {
-                        hull1.Pressure = Math.Max(hull1.Pressure, (hull1.Pressure + hull2.Pressure) / 2);
+                        hull1.Pressure = Math.Max(hull1.Pressure, (hull1.Pressure + (hull2.Pressure + subOffset.Y)) / 2);
                     }                   
 
                 }
@@ -461,16 +461,16 @@ namespace Barotrauma
                     float delta = Math.Min(hull1.Volume, deltaTime * 25000f * sizeModifier);
                     //make sure not to place more water to the target room than it can hold
                     delta = Math.Min(delta, (hull2.FullVolume + Math.Max(hull1.Volume - hull1.FullVolume, 0.0f)) - hull2.Volume + Hull.MaxCompress / 4.0f);
-                    
+
                     hull1.Volume -= delta;
                     hull2.Volume += delta;
 
                     if (hull2.Volume > hull2.FullVolume)
                     {
-                        hull2.Pressure = Math.Max(hull2.Pressure, (hull1.Pressure + hull2.Pressure) / 2);
+                        hull2.Pressure = Math.Max(hull2.Pressure, ((hull1.Pressure - subOffset.Y) + hull2.Pressure) / 2);
                     }
 
-                    flowForce = new Vector2(0.0f,-delta);
+                    flowForce = new Vector2(0.0f, -delta);
 
                     flowForce.X = hull1.WaveY[hull1.GetWaveIndex(rect.X)] - hull1.WaveY[hull1.GetWaveIndex(rect.Right)] * 10.0f;
 
