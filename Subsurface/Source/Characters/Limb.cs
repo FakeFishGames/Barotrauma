@@ -428,7 +428,7 @@ namespace Barotrauma
         {
             if (LightSource != null)
             {
-                LightSource.Submarine = body.Submarine;
+                LightSource.ParentSub = body.Submarine;
                 LightSource.Position = Position;
             }
 

@@ -241,20 +241,22 @@ namespace Barotrauma
 
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
         {
-            Vector2 circleDistance = new Vector2(Math.Abs(circlePos.X - rect.Center.X), Math.Abs(circlePos.Y -rect.Center.Y));
+            float xDist = Math.Abs(circlePos.X - rect.Center.X);
+            int halfWidth = rect.Width / 2;
             
-            if (circleDistance.X > (rect.Width / 2 + radius)) { return false; }
-            if (circleDistance.Y > (rect.Height / 2 + radius)) { return false; }
+            if (xDist > (halfWidth + radius))   { return false; }
+            if (xDist <= (halfWidth))           { return true; }
 
-            if (circleDistance.X <= (rect.Width / 2)) { return true; }
-            if (circleDistance.Y <= (rect.Height / 2)) { return true; }
+            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
+            int halfHeight = rect.Height / 2;
 
-            float distSqX = circleDistance.X - rect.Width / 2;
-            float distSqY = circleDistance.Y - rect.Height / 2;
+            if (yDist > (halfHeight + radius))  { return false; }            
+            if (yDist <= (halfHeight))          { return true; }
 
-            float cornerDistanceSq = distSqX * distSqX + distSqY * distSqY;
+            float distSqX = xDist - halfWidth;
+            float distSqY = yDist - halfHeight;
 
-            return (cornerDistanceSq <= (radius * radius));
+            return (distSqX * distSqX + distSqY * distSqY <= (radius * radius));
         }
         
         /// <summary>
