@@ -73,7 +73,7 @@ namespace Barotrauma.Lights
         {
             foreach (LightSource light in lights)
             {
-                light.UpdateHullsInRange();
+                light.NeedsHullUpdate = true;
             }
         }
 
@@ -94,10 +94,8 @@ namespace Barotrauma.Lights
             
             foreach (LightSource light in lights)
             {
-                if (light.Color.A < 0.01f || light.Range < 1.0f) continue;
-                //!!!!!!!!!!!!!!!!
-                if (light.hullsInRange == null) light.UpdateHullsInRange();
-                if (!light.hullsInRange.Any() || !MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
+                if (light.Color.A < 0.01f || light.Range < 1.0f || !light.CastShadows) continue;
+                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
                             
                 //clear alpha to 1
                 ClearAlphaToOne(graphics, spriteBatch);
@@ -107,12 +105,7 @@ namespace Barotrauma.Lights
                 graphics.RasterizerState = RasterizerState.CullNone;
                 graphics.BlendState = CustomBlendStates.WriteToAlpha;
 
-                foreach (ConvexHull ch in light.hullsInRange)
-                {
-                    //if (!MathUtils.CircleIntersectsRectangle(light.Position, light.Range, ch.BoundingBox)) continue;
-                    //draw shadow
-                    ch.DrawShadows(graphics, cam, light, shadowTransform, false);
-                }
+                light.DrawShadows(graphics, cam, shadowTransform);
 
                 //draw the light shape
                 //where Alpha is 0, nothing will be written
@@ -131,7 +124,7 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in lights)
             {
-                if (light.hullsInRange==null || light.hullsInRange.Any() || light.Color.A < 0.01f) continue;
+                if (light.Color.A < 0.01f || light.Range < 1.0f || light.CastShadows) continue;
                 //if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
                 light.Draw(spriteBatch);
@@ -186,13 +179,18 @@ namespace Barotrauma.Lights
                 Matrix shadowTransform = cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-                foreach (ConvexHull convexHull in ConvexHull.list)
-                {
-                    if (!convexHull.Intersects(camView)) continue;
-                    //if (!camView.Intersects(convexHull.BoundingBox)) continue;
+                var convexHulls = LightSource.GetHullsInRange(viewTarget.Position, cam.WorldView.Width*0.75f, viewTarget.Submarine);
 
-                    convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
-                }
+                if (convexHulls != null)
+                {
+                    foreach (ConvexHull convexHull in convexHulls)
+                    {
+                        if (!convexHull.Intersects(camView)) continue;
+                        //if (!camView.Intersects(convexHull.BoundingBox)) continue;
+
+                        convexHull.DrawShadows(graphics, cam, pos, shadowTransform);
+                    }
+                }                
             }
             graphics.SetRenderTarget(null);            
         }

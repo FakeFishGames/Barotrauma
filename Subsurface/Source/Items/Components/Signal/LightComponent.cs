@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
             : base (item, element)
         {
             light = new LightSource(element);
-            light.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+            light.ParentSub = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
             light.Position = item.Position;
             light.CastShadows = castShadows;
 
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
            
-            light.Submarine = item.Submarine;
+            light.ParentSub = item.Submarine;
             
             ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
