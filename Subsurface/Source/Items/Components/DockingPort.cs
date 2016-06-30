@@ -221,7 +221,20 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                gap = new Gap(new Rectangle(hullRects[0].Right-2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
+                gap = new Gap(new Rectangle(hullRects[0].Right - 2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
+
+                gap.linkedTo.Clear();
+                if (hulls[0].WorldRect.X < hulls[1].WorldRect.X)
+                {
+                    gap.linkedTo.Add(hulls[0]);
+                    gap.linkedTo.Add(hulls[1]);
+                }
+                else
+                {
+                    gap.linkedTo.Add(hulls[1]);
+                    gap.linkedTo.Add(hulls[0]);
+                }
+
 
             }
             else
@@ -249,13 +262,21 @@ namespace Barotrauma.Items.Components
                     //}
                 }
 
-                gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), true, subs[0]);
+                gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
 
+                gap.linkedTo.Clear();
+                if (hulls[0].WorldRect.Y > hulls[1].WorldRect.Y)
+                {
+                    gap.linkedTo.Add(hulls[0]);
+                    gap.linkedTo.Add(hulls[1]);
+                }
+                else
+                {
+                    gap.linkedTo.Add(hulls[1]);
+                    gap.linkedTo.Add(hulls[0]);
+                }
             }
 
-            gap.linkedTo.Clear();
-            gap.linkedTo.Add(hulls[0]);
-            gap.linkedTo.Add(hulls[1]);
 
             foreach (Body body in bodies)
             {
