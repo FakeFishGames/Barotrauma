@@ -23,12 +23,13 @@ namespace Barotrauma
 
             string tempPath = Path.Combine(SaveFolder, "temp");
             
-            if (!Directory.Exists(tempPath))
+            if (Directory.Exists(tempPath))
             {
-                Directory.CreateDirectory(tempPath);
+                Directory.Delete(tempPath, true);    
             }
+            Directory.CreateDirectory(tempPath);   
 
-            try
+            try 
             {
                 if (Submarine.MainSub != null)
                 {

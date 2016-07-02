@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
 
     class DockingPort : ItemComponent, IDrawableComponent
     {
-        private static List<DockingPort> list = new List<DockingPort>();
+        public static List<DockingPort> list = new List<DockingPort>();
         
         private Sprite overlaySprite;
         
@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
             if (adjacentPort != null) Dock(adjacentPort);
         }
 
-        private void Dock(DockingPort target)
+        public void Dock(DockingPort target)
         {
             if (dockingTarget != null)
             {
@@ -133,9 +133,15 @@ namespace Barotrauma.Items.Components
 
             PlaySound(ActionType.OnUse, item.WorldPosition);
 
+            item.linkedTo.Add(target.item);
+
+            if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.DockedTo.Add(item.Submarine);
+            if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.DockedTo.Add(target.item.Submarine);
 
             dockingTarget = target;
             dockingTarget.dockingTarget = this;
+
+            docked = true;
             dockingTarget.Docked = true;
 
             if (Character.Controlled != null &&
@@ -296,6 +302,11 @@ namespace Barotrauma.Items.Components
 
             PlaySound(ActionType.OnUse, item.WorldPosition);
 
+            dockingTarget.item.Submarine.DockedTo.Remove(item.Submarine);
+            item.Submarine.DockedTo.Remove(dockingTarget.item.Submarine);
+
+            item.linkedTo.Clear();
+
             docked = false;
 
             dockingTarget.Undock();
@@ -430,6 +441,17 @@ namespace Barotrauma.Items.Components
         protected override void RemoveComponentSpecific()
         {
             list.Remove(this);
+        }
+
+        public override void OnMapLoaded()
+        {
+            if (!item.linkedTo.Any()) return;
+
+            Item linkedItem = item.linkedTo.First() as Item;
+            if (linkedItem == null) return;
+
+            DockingPort port = linkedItem.GetComponent<DockingPort>();
+            if (port != null) Dock(port);
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)

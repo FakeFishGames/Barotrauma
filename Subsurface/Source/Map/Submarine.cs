@@ -46,10 +46,12 @@ namespace Barotrauma
 
         private SubmarineBody subBody;
 
+        public readonly List<Submarine> DockedTo;
+
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
 
-        Md5Hash hash;
+        private Md5Hash hash;
         
         private string filePath;
         private string name;
@@ -57,8 +59,7 @@ namespace Barotrauma
         private Vector2 prevPosition;
 
         private float lastNetworkUpdate;
-
-
+        
         //properties ----------------------------------------------------
 
         public string Name
@@ -230,6 +231,8 @@ namespace Barotrauma
                     Description = ToolBox.GetAttributeString(doc.Root, "description", "");
                 }
             }
+
+            DockedTo = new List<Submarine>();
 
 
             ID = ushort.MaxValue;
@@ -538,14 +541,7 @@ namespace Barotrauma
             name = System.IO.Path.GetFileNameWithoutExtension(filePath);
 
             XDocument doc = new XDocument(new XElement("Submarine"));
-            doc.Root.Add(new XAttribute("name", name));
-            doc.Root.Add(new XAttribute("description", Description == null ? "" : Description));
-
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                if (e.MoveWithLevel ||e.Submarine != this) continue;
-                e.Save(doc.Root);
-            }
+            SaveToXElement(doc.Root);
 
             hash = new Md5Hash(doc);
             doc.Root.Add(new XAttribute("md5hash", hash.Hash));
@@ -561,6 +557,18 @@ namespace Barotrauma
             }
 
             return true;
+        }
+
+        public void SaveToXElement(XElement element)
+        {
+            element.Add(new XAttribute("name", name));
+            element.Add(new XAttribute("description", Description == null ? "" : Description));
+
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (e.MoveWithLevel || e.Submarine != this) continue;
+                e.Save(element);
+            }
         }
 
         public static bool SaveCurrent(string filePath)
@@ -853,7 +861,7 @@ namespace Barotrauma
 
             GameMain.LightManager.OnMapLoaded();
 
-            ID = (ushort)(ushort.MaxValue - Submarine.loaded.Count);
+            ID = (ushort)(ushort.MaxValue - Submarine.loaded.IndexOf(this));
         }
 
         public static Submarine Load(XElement element, bool unloadPrevious)
@@ -862,7 +870,7 @@ namespace Barotrauma
 
             //tryload -> false
 
-            Submarine sub = new Submarine(ToolBox.GetAttributeString(element, "name", ""));
+            Submarine sub = new Submarine(ToolBox.GetAttributeString(element, "name", ""), "", false);
             sub.Load(unloadPrevious, element);
 
             return sub; 
@@ -898,27 +906,29 @@ namespace Barotrauma
             foreach (Submarine sub in loaded)
             {
                 sub.Remove();
-                sub.Clear();
             }
 
             loaded.Clear();
-        }
 
-        private void Clear()
-        {
             if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
-
-            subBody = null;
-
-            PhysicsBody.list.Clear();
             
+            PhysicsBody.list.Clear();
+
             Ragdoll.list.Clear();
 
             GameMain.World.Clear();
         }
 
+        public override void Remove()
+        {
+            base.Remove();
+
+            subBody = null;
+
+            DockedTo.Clear();
+        }
     }
 
 }

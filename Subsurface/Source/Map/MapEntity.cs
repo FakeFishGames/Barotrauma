@@ -620,7 +620,6 @@ namespace Barotrauma
                 foreach (ushort i in e.linkedToID)
                 {
                     MapEntity linked = FindEntityByID(i) as MapEntity;
-                    Debug.Assert(linked.Submarine == sub);
 
                     if (linked != null) e.linkedTo.Add(linked);
                 }
