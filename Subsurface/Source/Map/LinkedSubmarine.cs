@@ -225,8 +225,10 @@ namespace Barotrauma
             }
             else
             {
-                saveElement = new XElement("LinkedSubmarine");
+                if (!sub.DockedTo.Contains(Submarine.MainSub)) return null;
 
+                saveElement = new XElement("LinkedSubmarine");
+                
                 sub.SaveToXElement(saveElement);
             }
 
