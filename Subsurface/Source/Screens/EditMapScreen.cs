@@ -46,7 +46,7 @@ namespace Barotrauma
 
         public string GetSubName()
         {
-            return ((Submarine.Loaded == null) ? "" : Submarine.Loaded.Name);
+            return (Submarine.MainSub == null) ? "" : Submarine.MainSub.Name;
         }
 
         private string GetItemCount()
@@ -94,13 +94,23 @@ namespace Barotrauma
             button = new GUIButton(new Rectangle(310,0,70,20), "Save", GUI.Style, topPanel);
             button.OnClicked = SaveSub;
 
-            new GUITextBlock(new Rectangle(400, 0, 100, 20), "Description: ", GUI.Style, topPanel);
+            new GUITextBlock(new Rectangle(390, 0, 100, 20), "Description: ", GUI.Style, topPanel);
 
-            descriptionBox = new GUITextBox(new Rectangle(500, 0, 200, 20), null, null, Alignment.TopLeft,
+            descriptionBox = new GUITextBox(new Rectangle(490, 0, 200, 20), null, null, Alignment.TopLeft,
                 Alignment.TopLeft, GUI.Style, topPanel);
             descriptionBox.Wrap = true;
             descriptionBox.OnSelected += ExpandDescriptionBox;
             descriptionBox.OnTextChanged = ChangeSubDescription;
+
+
+            //new GUITextBlock(new Rectangle(390, 0, 100, 20), "Link  ", GUI.Style, topPanel);
+
+            var linkedSubBox = new GUIDropDown(new Rectangle(750,0,200,20), "Add submarine", GUI.Style, topPanel);
+            foreach (Submarine sub in Submarine.SavedSubmarines)
+            {
+                linkedSubBox.AddItem(sub.Name, sub);
+            }
+            linkedSubBox.OnSelected += SelectLinkedSub;
             
             leftPanel = new GUIFrame(new Rectangle(0, 30, 150, GameMain.GraphicsHeight-30), GUI.Style);
             leftPanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
@@ -231,17 +241,19 @@ namespace Barotrauma
             GUIComponent.MouseOn = null;
             characterMode = false;
 
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                cam.Position = Submarine.Loaded.Position + Submarine.HiddenSubPosition;
-                nameBox.Text = Submarine.Loaded.Name;
-                descriptionBox.Text = ToolBox.LimitString(Submarine.Loaded.Description,15);
+                cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
+                nameBox.Text = Submarine.MainSub.Name;
+                descriptionBox.Text = ToolBox.LimitString(Submarine.MainSub.Description, 15);
             }
             else
             {
-                cam.Position = Submarine.HiddenSubPosition;
+                cam.Position = Submarine.HiddenSubStartPosition;
                 nameBox.Text = "";
                 descriptionBox.Text = "";
+
+                Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, "Unnamed.sub"), "", false);
             }
 
             nameBox.Deselect();
@@ -303,9 +315,9 @@ namespace Barotrauma
 
             string savePath = nameBox.Text + ".sub";
 
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                savePath = Path.Combine(Path.GetDirectoryName(Submarine.Loaded.FilePath), savePath);
+                savePath = Path.Combine(Path.GetDirectoryName(Submarine.MainSub.FilePath), savePath);
             }
             else
             {
@@ -313,9 +325,9 @@ namespace Barotrauma
             }
 
             Submarine.SaveCurrent(savePath);
-            Submarine.Loaded.CheckForErrors();
+            Submarine.MainSub.CheckForErrors();
 
-            GUI.AddMessage("Submarine saved to " + Submarine.Loaded.FilePath, Color.Green, 3.0f);
+            GUI.AddMessage("Submarine saved to " + Submarine.MainSub.FilePath, Color.Green, 3.0f);
             
             return false;
         }
@@ -399,7 +411,8 @@ namespace Barotrauma
 
             if (selectedSub == null) return false;
 
-            selectedSub.Load();
+            Submarine.MainSub = selectedSub;
+            selectedSub.Load(true);
 
             nameBox.Text = selectedSub.Name;
             descriptionBox.Text = ToolBox.LimitString(selectedSub.Description,15);
@@ -521,6 +534,18 @@ namespace Barotrauma
             return frame;
         }
 
+        private bool SelectLinkedSub(GUIComponent selected)
+        {
+            var submarine = selected.UserData as Submarine;
+            if (submarine == null) return false;
+
+            var prefab = new LinkedSubmarinePrefab(submarine);
+
+            MapEntityPrefab.SelectPrefab(prefab);
+
+            return true;
+        }
+
         private bool SelectWire(GUIComponent component, object userData)
         {
             if (dummyCharacter == null) return false;
@@ -560,7 +585,7 @@ namespace Barotrauma
                 return false;
             }
 
-            if (Submarine.Loaded != null) Submarine.Loaded.Name = text;
+            if (Submarine.MainSub != null) Submarine.MainSub.Name = text;
             textBox.Deselect();
 
             textBox.Text = text;
@@ -572,9 +597,9 @@ namespace Barotrauma
 
         private bool ChangeSubDescription(GUITextBox textBox, string text)
         {
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                Submarine.Loaded.Description = text;
+                Submarine.MainSub.Description = text;
             }
             else
             {
@@ -593,9 +618,9 @@ namespace Barotrauma
 
         private void ExpandDescriptionBox(GUITextBox textBox, Keys key)
         {
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                textBox.Text = Submarine.Loaded.Description;
+                textBox.Text = Submarine.MainSub.Description;
             }
             else if (textBox.UserData is string)
             {
@@ -617,7 +642,9 @@ namespace Barotrauma
 
         private bool GenerateWaypoints(GUIButton button, object obj)
         {
-            WayPoint.GenerateSubWaypoints();
+            if (Submarine.MainSub == null) return false;
+
+            WayPoint.GenerateSubWaypoints(Submarine.MainSub);
             return true;
         }
 
@@ -684,6 +711,9 @@ namespace Barotrauma
 
                     dummyCharacter.ControlLocalPlayer((float)deltaTime, cam, false);
                     dummyCharacter.Control((float)deltaTime, cam);
+
+                    dummyCharacter.Submarine = Submarine.MainSub;
+
                     cam.TargetPos = Vector2.Zero;
 
                 }
@@ -737,7 +767,7 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 GUI.DrawLine(spriteBatch, new Vector2(0.0f, -cam.WorldView.Y), new Vector2(0.0f, -(cam.WorldView.Y - cam.WorldView.Height)), Color.White*0.5f, 1.0f, (int)(2.0f/cam.Zoom));
-                GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
+                GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.MainSub.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.MainSub.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
             }
            
             Submarine.Draw(spriteBatch, true);

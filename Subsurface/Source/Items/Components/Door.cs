@@ -444,28 +444,31 @@ namespace Barotrauma.Items.Components
 
             if (connection.Name=="toggle")
             {
-                SetState(!isOpen, false);
+                SetState(!isOpen, false, true);
             }
             else if (connection.Name == "set_state")
             {
-                SetState(signal != "0", false);      
+                SetState(signal != "0", false, true);
             }
-
-            item.NewComponentEvent(this, false, true);
         }
 
-        private void SetState(bool state, bool isNetWorkMessage)
+        public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            if (GameMain.Client != null && !isNetWorkMessage) return;
+            if (GameMain.Client != null && !isNetworkMessage) return;
 
-            if (isStuck || isOpen == state) return;
+            if (isStuck || isOpen == open) return;
 
             PlaySound(ActionType.OnUse, item.WorldPosition);
 
-            isOpen = state;
+            isOpen = open;
 
             //opening a partially stuck door makes it less stuck
             if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
+
+            if (sendNetworkMessage)
+            {
+                item.NewComponentEvent(this, false, true);
+            }
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)

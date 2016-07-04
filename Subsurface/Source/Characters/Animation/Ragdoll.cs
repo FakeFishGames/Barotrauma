@@ -572,6 +572,7 @@ namespace Barotrauma
 
             if (setSubmarine)
             {
+                //in -> out
                 if (newHull == null && currentHull.Submarine != null)
                 {
                     for (int i = -1; i < 2; i += 2)
@@ -584,17 +585,23 @@ namespace Barotrauma
                     if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) return;
 
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity, true);
-
                 }
+                //out -> in
                 else if (currentHull == null && newHull.Submarine != null)
                 {
                     Teleport(-ConvertUnits.ToSimUnits(newHull.Submarine.Position), -newHull.Submarine.Velocity, false);
+                }
+                //from one sub to another
+                else if (newHull != null && currentHull != null && newHull.Submarine != currentHull.Submarine)
+                {
+                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position - newHull.Submarine.Position),
+                        Vector2.Zero, false);
                 }
             }
             
             CurrentHull = newHull;
 
-            character.Submarine = CurrentHull == null ? null : Submarine.Loaded;
+            character.Submarine = currentHull == null ? null : currentHull.Submarine;
 
             UpdateCollisionCategories();
         }
@@ -609,20 +616,7 @@ namespace Barotrauma
                 while (ce != null && ce.Contact != null)
                 {
                     ce.Contact.Enabled = false;
-                    //if (ce.Contact.IsTouching &&  ce.Contact.Enabled &&
-                    //    ((inToOut && ce.Contact.FixtureA.Body.UserData is Structure) || (!inToOut && ce.Contact.FixtureA.Body.UserData is Submarine)))
-                    //{
-                    //    Vector2 normal;
-                    //    FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
-                    //    ce.Contact.GetWorldManifold(out normal, out worldPoints);
 
-                    //    foreach (Limb limb2 in Limbs)
-                    //    {
-                    //        limb2.body.FarseerBody.ApplyLinearImpulse(limb2.Mass * normal);
-                    //    }
-
-                    //    return false;
-                    //}
                     ce = ce.Next;
                 }                
             }    
@@ -632,7 +626,7 @@ namespace Barotrauma
                 limb.body.LinearVelocity += velocityChange;
             }
 
-            character.Stun = 0.1f;
+            //character.Stun = 0.1f;
             character.DisableImpactDamageTimer = 0.25f;
 
             SetPosition(refLimb.SimPosition + moveAmount);

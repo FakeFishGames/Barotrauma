@@ -83,12 +83,11 @@ namespace Barotrauma
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
 
-            if (sprite!=null)
+            if (sprite != null && sprite.Texture != null)
             {
                 spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero,
-                    Scale, SpriteEffects.None, 0.0f);  
-            }
-          
+                    Scale, SpriteEffects.None, 0.0f);
+            }          
             
             DrawChildren(spriteBatch);
         }

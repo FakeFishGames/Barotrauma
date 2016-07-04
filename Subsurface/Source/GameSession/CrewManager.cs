@@ -277,7 +277,7 @@ namespace Barotrauma
             listBox.ClearChildren();
             characters.Clear();
 
-            WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
+            WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
 
             for (int i = 0; i < waypoints.Length; i++)
             {

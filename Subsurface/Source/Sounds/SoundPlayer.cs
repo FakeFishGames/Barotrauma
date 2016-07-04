@@ -183,7 +183,8 @@ namespace Barotrauma
                 startDrone = null;                
             }
 
-            if (Submarine.Loaded==null)  
+            //stop submarine ambient sounds if no sub is loaded
+            if (Submarine.MainSub == null)  
             {
                 for (int i = 0; i < waterAmbienceIndexes.Length; i++)
                 {
@@ -212,17 +213,31 @@ namespace Barotrauma
             }
 
             //how fast the sub is moving, scaled to 0.0 -> 1.0
-            float movementFactor = 0.0f;
-            if (Submarine.Loaded != null)
-            {
-                movementFactor = (Submarine.Loaded.Velocity == Vector2.Zero) ? 0.0f : Submarine.Loaded.Velocity.Length() / 5.0f;
+            float movementSoundVolume = 0.0f;
 
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                float movementFactor = (sub.Velocity == Vector2.Zero) ? 0.0f : sub.Velocity.Length() / 5.0f;
                 movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
+
+                if (Character.Controlled==null || Character.Controlled.Submarine != sub)
+                {
+                    float dist = Vector2.Distance(GameMain.GameScreen.Cam.WorldViewCenter, sub.WorldPosition);
+                    movementFactor = movementFactor / Math.Max(dist / 1000.0f, 1.0f);
+                }
+
+                movementSoundVolume = Math.Max(movementSoundVolume, movementFactor);
             }
 
+            //if (Submarine.MainSub != null)
+            //{
+            //    movementFactor = (Submarine.MainSub.Velocity == Vector2.Zero) ? 0.0f : Submarine.MainSub.Velocity.Length() / 5.0f;
+            //    movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
+            //}
+
             SoundManager.LowPassHFGain = lowpassHFGain;
-            waterAmbienceIndexes[0] = waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f-movementFactor));
-            waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementFactor);
+            waterAmbienceIndexes[0] = waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f - movementSoundVolume));
+            waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementSoundVolume);
 
         }
 
@@ -303,7 +318,7 @@ namespace Barotrauma
             {
                 return musicClips.Where(x => x != null && x.type == "ruins").ToList();
             }
-            else if (Submarine.Loaded != null && Submarine.Loaded.AtDamageDepth)
+            else if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth)
             {
                 return musicClips.Where(x => x != null && x.type == "deep").ToList();
             }

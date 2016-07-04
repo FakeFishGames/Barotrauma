@@ -56,9 +56,9 @@ namespace Barotrauma
             {
                 cam.Position = Character.Controlled.WorldPosition;
             }
-            else if (Submarine.Loaded != null)
+            else if (Submarine.MainSub != null)
             {
-                cam.Position = Submarine.Loaded.WorldPosition;
+                cam.Position = Submarine.MainSub.WorldPosition;
             }
 
             foreach (MapEntity entity in MapEntity.mapEntityList)
@@ -119,9 +119,11 @@ namespace Barotrauma
                     //Lights.LightManager.ViewPos = Character.Controlled.WorldPosition; 
                 }
                 cam.MoveCamera((float)Physics.step);
-
-
-                if (Submarine.Loaded != null) Submarine.Loaded.SetPrevTransform(Submarine.Loaded.Position);
+                
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    sub.SetPrevTransform(sub.Position);
+                }
 
                 foreach (PhysicsBody pb in PhysicsBody.list)
                 {
@@ -134,11 +136,11 @@ namespace Barotrauma
 
                 Ragdoll.UpdateAll(cam, (float)Physics.step);
 
-                if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine!=null)
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    GameMain.GameSession.Submarine.Update((float)Physics.step);
+                    sub.Update((float)Physics.step);
                 }
-
+                
                 GameMain.World.Step((float)Physics.step);
 
                 //Level.AfterWorldStep();
@@ -153,8 +155,8 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            cam.UpdateTransform();
-
+            cam.UpdateTransform(true, !GameMain.DebugDraw); 
+            
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
@@ -175,7 +177,7 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
 
-            if (Character.Controlled == null && Submarine.Loaded != null) DrawSubmarineIndicator(spriteBatch, Submarine.Loaded);
+            if (Character.Controlled == null && Submarine.MainSub != null) DrawSubmarineIndicator(spriteBatch, Submarine.MainSub);
             
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         
@@ -187,7 +189,10 @@ namespace Barotrauma
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
 
-            if (Submarine.Loaded != null) Submarine.Loaded.UpdateTransform();
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                sub.UpdateTransform();
+            }
 
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 

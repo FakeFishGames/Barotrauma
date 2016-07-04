@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam) 
         {
             float chargeRate = (float)(Math.Sqrt(charge / capacity));
-            //float gridPower = 0.0f;
+            float gridPower = 0.0f;
             float gridLoad = 0.0f;
 
             //if (item.linkedTo.Count == 0) return;
@@ -126,7 +126,8 @@ namespace Barotrauma.Items.Components
                     PowerTransfer pt = c2.Item.GetComponent<PowerTransfer>();
                     if (pt == null || !pt.IsActive) continue;
 
-                    gridLoad += pt.PowerLoad; 
+                    gridLoad += pt.PowerLoad;
+                    gridPower -= pt.CurrPowerConsumption;
                 }
             }
 
@@ -171,27 +172,21 @@ namespace Barotrauma.Items.Components
                 //   -maxOutput * chargeRate,
                 //   0.1f);
 
-                if (outputVoltage < 1.0f)
+                if (gridPower < gridLoad)
                 {
+                   // CurrPowerOutput = MathHelper.Lerp(
+                   //CurrPowerOutput, Math.Min(maxOutput * chargeRate, gridLoad), 0.05f);
+
                     CurrPowerOutput = MathHelper.Lerp(
-                   CurrPowerOutput, Math.Min(maxOutput * chargeRate, gridLoad), 0.05f);
+                       CurrPowerOutput,
+                       Math.Min(maxOutput * chargeRate, gridLoad - (gridLoad * outputVoltage)),
+                       0.05f);
                 }
                 else
                 {
                     CurrPowerOutput = MathHelper.Lerp(CurrPowerOutput, 0.0f, 0.05f);
                 }
 
-                CurrPowerOutput = MathHelper.Lerp(
-                   CurrPowerOutput,
-                   Math.Min(maxOutput * chargeRate, gridLoad - (gridLoad * outputVoltage)),
-                   0.05f);
-
-                
-
-                //powerConsumption = MathHelper.Lerp(
-                //    powerConsumption,
-                //    -Math.Min(maxOutput * chargeRate, gridLoad - (power)),
-                //    0.1f);
 
                 //powerConsumption = Math.Min(powerConsumption, 0.0f);
                 Charge -= CurrPowerOutput / 3600.0f;

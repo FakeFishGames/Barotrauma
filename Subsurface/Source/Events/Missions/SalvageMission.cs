@@ -69,7 +69,7 @@ namespace Barotrauma
                     state = 1;
                     break;
                 case 1:
-                    if (!Submarine.Loaded.AtEndPosition && !Submarine.Loaded.AtStartPosition) return;
+                    if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) return;
                     ShowMessage(state);
                     state = 2;
                     break;

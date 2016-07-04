@@ -44,7 +44,7 @@ namespace Barotrauma
                         radarPosition = monster.Position;
                     }
                     else if (GameMain.Client == null)
-                    {   Vector2 diff = monster.WorldPosition-Submarine.Loaded.WorldPosition;
+                    {   Vector2 diff = monster.WorldPosition - Submarine.MainSub.WorldPosition;
                         monster.Enabled = FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) < NetConfig.CharacterIgnoreDistance;
                     }
 

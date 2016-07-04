@@ -83,7 +83,7 @@ namespace Barotrauma
             {
                 if (monster.IsDead) continue;
 
-                if (!isStarted && Vector2.Distance(monster.WorldPosition, Submarine.Loaded.WorldPosition) < 5000.0f) isStarted = true;
+                if (!isStarted && Vector2.Distance(monster.WorldPosition, Submarine.MainSub.WorldPosition) < 5000.0f) isStarted = true;
                     
                 monstersDead = false;
                 break;

@@ -22,22 +22,36 @@ namespace Barotrauma
     {
         public static string SavePath = "Submarines";
 
+        public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place
-        public static readonly Vector2 HiddenSubPosition = new Vector2(-50000.0f, 80000.0f);
+        public Vector2 HiddenSubPosition
+        {
+            get;
+            private set;
+        }
+
+        public ushort IdOffset
+        {
+            get;
+            private set;
+        }
 
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
-        private static Submarine loaded;
+        public static Submarine MainSub;
+        private static List<Submarine> loaded = new List<Submarine>();
 
         private SubmarineBody subBody;
+
+        public readonly List<Submarine> DockedTo;
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
 
-        Md5Hash hash;
+        private Md5Hash hash;
         
         private string filePath;
         private string name;
@@ -45,8 +59,7 @@ namespace Barotrauma
         private Vector2 prevPosition;
 
         private float lastNetworkUpdate;
-
-
+        
         //properties ----------------------------------------------------
 
         public string Name
@@ -89,23 +102,28 @@ namespace Barotrauma
             {
                 if (hash != null) return hash;
 
-                XDocument doc = OpenDoc(filePath);
+                XDocument doc = OpenFile(filePath);
                 hash = new Md5Hash(doc);
 
                 return hash;
             }
         }
 
-        public static Submarine Loaded
+        public static List<Submarine> Loaded
         {
             get { return loaded; }
         }
 
-        public static Rectangle Borders
+        public SubmarineBody SubBody
+        {
+            get { return subBody; }
+        }
+
+        public Rectangle Borders
         {
             get 
             { 
-                return (loaded==null) ? Rectangle.Empty : Loaded.subBody.Borders;                
+                return subBody.Borders;                
             }
         }
         
@@ -206,13 +224,15 @@ namespace Barotrauma
 
             if (tryLoad)
             {
-                XDocument doc = OpenDoc(filePath);
+                XDocument doc = OpenFile(filePath);
 
                 if (doc != null && doc.Root != null)
                 {
                     Description = ToolBox.GetAttributeString(doc.Root, "description", "");
                 }
             }
+
+            DockedTo = new List<Submarine>();
 
 
             ID = ushort.MaxValue;
@@ -255,17 +275,17 @@ namespace Barotrauma
 
         //math/physics stuff ----------------------------------------------------
 
-        public static Vector2 MouseToWorldGrid(Camera cam)
+        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
         {
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 
             Vector2 worldGridPos = VectorToWorldGrid(position);
 
-            if (loaded != null)
+            if (sub != null)
             {
-                worldGridPos.X += loaded.Position.X % GridSize.X;
-                worldGridPos.Y += loaded.Position.Y % GridSize.Y;
+                worldGridPos.X += sub.Position.X % GridSize.X;
+                worldGridPos.Y += sub.Position.Y % GridSize.Y;
             }
 
             return worldGridPos;
@@ -421,7 +441,19 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(position)) return;
 
+            Vector2 prevPos = subBody.Position;
+
             subBody.SetPosition(position);
+
+            foreach (Submarine sub in loaded)
+            {
+                if (sub != this && sub.Submarine == this)
+                {
+                    sub.SetPosition(position + sub.WorldPosition);
+                    sub.Submarine = null;
+                }
+
+            }
             //Level.Loaded.SetPosition(-position);
             //prevPosition = position;
         }
@@ -435,6 +467,23 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
+        public static Submarine GetClosest(Vector2 worldPosition)
+        {
+            Submarine closest = null;
+            float closestDist = 0.0f;
+            foreach (Submarine sub in Submarine.loaded)
+            {
+                float dist = Vector2.Distance(worldPosition, sub.WorldPosition);
+                if (closest == null || dist < closestDist)
+                {
+                    closest = sub;
+                    closestDist = dist;
+                }
+            }
+
+            return closest;
+        }
+        
         public override bool FillNetworkData(Networking.NetworkEventType type, NetBuffer message, object data)
         {
             if (subBody == null) return false;
@@ -492,14 +541,7 @@ namespace Barotrauma
             name = System.IO.Path.GetFileNameWithoutExtension(filePath);
 
             XDocument doc = new XDocument(new XElement("Submarine"));
-            doc.Root.Add(new XAttribute("name", name));
-            doc.Root.Add(new XAttribute("description", Description == null ? "" : Description));
-
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                if (e.MoveWithLevel) continue;
-                e.Save(doc);
-            }
+            SaveToXElement(doc.Root);
 
             hash = new Md5Hash(doc);
             doc.Root.Add(new XAttribute("md5hash", hash.Hash));
@@ -517,17 +559,29 @@ namespace Barotrauma
             return true;
         }
 
+        public void SaveToXElement(XElement element)
+        {
+            element.Add(new XAttribute("name", name));
+            element.Add(new XAttribute("description", Description == null ? "" : Description));
+
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (e.MoveWithLevel || e.Submarine != this) continue;
+                e.Save(element);
+            }
+        }
+
         public static bool SaveCurrent(string filePath)
         {
-            if (loaded==null)
+            if (Submarine.MainSub == null)
             {
-                loaded = new Submarine(filePath);
+                Submarine.MainSub = new Submarine(filePath);
                // return;
             }
 
-            loaded.filePath = filePath;
+            Submarine.MainSub.filePath = filePath;
 
-            return loaded.SaveAs(filePath);
+            return Submarine.MainSub.SaveAs(filePath);
         }
 
         public void CheckForErrors()
@@ -614,7 +668,7 @@ namespace Barotrauma
             //if (GameMain.NetLobbyScreen!=null) GameMain.NetLobbyScreen.UpdateSubList(Submarine.SavedSubmarines);
         }
 
-        private XDocument OpenDoc(string file)
+        public static XDocument OpenFile(string file)
         {
             XDocument doc = null;
             string extension = "";
@@ -684,18 +738,36 @@ namespace Barotrauma
             return doc;
         }
 
-        public void Load()
+        public void Load(bool unloadPrevious, XElement submarineElement = null)
         {
-            Unload();
+            if (unloadPrevious) Unload();
 
             Loading = true;
 
-            XDocument doc = OpenDoc(filePath);
-            if (doc == null || doc.Root == null) return;
+            if (submarineElement == null)
+            {
+                XDocument doc = OpenFile(filePath);
+                if (doc == null || doc.Root == null) return;
 
-            Description = ToolBox.GetAttributeString(doc.Root, "description", "");
+                submarineElement = doc.Root;
+            }
 
-            foreach (XElement element in doc.Root.Elements())
+            Description = ToolBox.GetAttributeString(submarineElement, "description", "");
+
+
+            HiddenSubPosition = HiddenSubStartPosition;
+            foreach (Submarine sub in Submarine.loaded)
+            {
+                HiddenSubPosition += Vector2.UnitY * (sub.Borders.Height + 5000.0f);
+            }
+
+            IdOffset = 0;
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                IdOffset = Math.Max(IdOffset, me.ID);
+            }
+
+            foreach (XElement element in submarineElement.Elements())
             {
                 string typeName = element.Name.ToString();
 
@@ -728,11 +800,13 @@ namespace Barotrauma
 
             Vector2 center = Vector2.Zero;
 
-            if (Hull.hullList.Any())
+            var matchingHulls = Hull.hullList.FindAll(h => h.Submarine == this);
+
+            if (matchingHulls.Any())
             {
-                Vector2 topLeft = new Vector2(Hull.hullList[0].Rect.X, Hull.hullList[0].Rect.Y);
-                Vector2 bottomRight = new Vector2(Hull.hullList[0].Rect.X, Hull.hullList[0].Rect.Y);
-                foreach (Hull hull in Hull.hullList)
+                Vector2 topLeft = new Vector2(matchingHulls[0].Rect.X, matchingHulls[0].Rect.Y);
+                Vector2 bottomRight = new Vector2(matchingHulls[0].Rect.X, matchingHulls[0].Rect.Y);
+                foreach (Hull hull in matchingHulls)
                 {
                     if (hull.Rect.X < topLeft.X) topLeft.X = hull.Rect.X;
                     if (hull.Rect.Y > topLeft.Y) topLeft.Y = hull.Rect.Y;
@@ -747,6 +821,8 @@ namespace Barotrauma
 
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.Submarine != this) continue;
+
                     var wire = item.GetComponent<Items.Components.Wire>();
                     if (wire == null) continue;
 
@@ -758,7 +834,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
                 {
-                    if (MapEntity.mapEntityList[i].Submarine == null) continue;
+                    if (MapEntity.mapEntityList[i].Submarine != this) continue;
                 
                     MapEntity.mapEntityList[i].Move(-center);
                 }
@@ -766,10 +842,10 @@ namespace Barotrauma
 
             subBody = new SubmarineBody(this);
             subBody.SetPosition(HiddenSubPosition);
-            
-            loaded = this;
 
-            Hull.GenerateEntityGrid();
+            loaded.Add(this);
+
+            Hull.GenerateEntityGrid(this);
             
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
@@ -779,28 +855,40 @@ namespace Barotrauma
 
             Loading = false;
 
-            MapEntity.MapLoaded();
+            MapEntity.MapLoaded(this);
                
             //WayPoint.GenerateSubWaypoints();
 
             GameMain.LightManager.OnMapLoaded();
 
-            ID = ushort.MaxValue;
+            ID = (ushort)(ushort.MaxValue - Submarine.loaded.IndexOf(this));
         }
 
-        public static Submarine Load(string fileName)
+        public static Submarine Load(XElement element, bool unloadPrevious)
         {
-           return Load(fileName, SavePath);
+            if (unloadPrevious) Unload();
+
+            //tryload -> false
+
+            Submarine sub = new Submarine(ToolBox.GetAttributeString(element, "name", ""), "", false);
+            sub.Load(unloadPrevious, element);
+
+            return sub; 
         }
 
-        public static Submarine Load(string fileName, string folder)
+        public static Submarine Load(string fileName, bool unloadPrevious)
         {
-            Unload();
+           return Load(fileName, SavePath, unloadPrevious);
+        }
+
+        public static Submarine Load(string fileName, string folder, bool unloadPrevious)
+        {
+            if (unloadPrevious) Unload();
 
             string path = string.IsNullOrWhiteSpace(folder) ? fileName : System.IO.Path.Combine(SavePath, fileName);
 
             Submarine sub = new Submarine(path);
-            sub.Load();
+            sub.Load(unloadPrevious);
 
             //Entity.dictionary.Add(int.MaxValue, sub);
 
@@ -809,33 +897,38 @@ namespace Barotrauma
 
         public static void Unload()
         {
-            if (loaded == null) return;
 
             Sound.OnGameEnd();
 
             if (GameMain.LightManager != null) GameMain.LightManager.ClearLights();
-            
-            loaded.Remove();
+
+
+            foreach (Submarine sub in loaded)
+            {
+                sub.Remove();
+            }
 
             loaded.Clear();
-            loaded = null;
-        }
 
-        private void Clear()
-        {
             if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
-
-            subBody = null;
-
-            PhysicsBody.list.Clear();
             
+            PhysicsBody.list.Clear();
+
             Ragdoll.list.Clear();
 
             GameMain.World.Clear();
         }
 
+        public override void Remove()
+        {
+            base.Remove();
+
+            subBody = null;
+
+            DockedTo.Clear();
+        }
     }
 
 }

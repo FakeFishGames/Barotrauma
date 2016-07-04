@@ -36,6 +36,8 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            if (item.Submarine == null) return;
+
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
@@ -48,12 +50,12 @@ namespace Barotrauma.Items.Components
 
             Rectangle miniMap = new Rectangle(x + 20, y + 40, width - 40, height - 60);
 
-            float size = Math.Min((float)miniMap.Width / (float)Submarine.Borders.Width, (float)miniMap.Height / (float)Submarine.Borders.Height);
+            float size = Math.Min((float)miniMap.Width / (float)item.Submarine.Borders.Width, (float)miniMap.Height / (float)item.Submarine.Borders.Height);
             foreach (Hull hull in Hull.hullList)
             {
                 Rectangle hullRect = new Rectangle(
-                    miniMap.X + (int)((hull.Rect.X - Submarine.HiddenSubPosition.X - Submarine.Borders.X) * size),
-                    miniMap.Y - (int)((hull.Rect.Y - Submarine.HiddenSubPosition.Y - Submarine.Borders.Y) * size),
+                    miniMap.X + (int)((hull.Rect.X - item.Submarine.HiddenSubPosition.X - item.Submarine.Borders.X) * size),
+                    miniMap.Y - (int)((hull.Rect.Y - item.Submarine.HiddenSubPosition.Y - item.Submarine.Borders.Y) * size),
                     (int)(hull.Rect.Width * size), 
                     (int)(hull.Rect.Height * size));
 

@@ -19,7 +19,7 @@ namespace Barotrauma
 
     public enum ActionType
     {
-        Always, OnPicked, OnUse, 
+        Always, OnPicked, OnUse, OnSecondaryUse,
         OnWearing, OnContaining, OnContained, 
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
@@ -523,9 +523,9 @@ namespace Barotrauma
             }
 
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
-            if (body != null)
+            if (body != null && body.Enabled)
             {
-                Submarine = CurrentHull == null ? null : Submarine.Loaded;
+                Submarine = CurrentHull == null ? null : CurrentHull.Submarine;
                 body.Submarine = Submarine;
             }
 
@@ -1248,6 +1248,7 @@ namespace Barotrauma
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
+                    ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
 
                     if (picker==Character.Controlled) GUIComponent.MouseOn = null;
 
@@ -1432,12 +1433,14 @@ namespace Barotrauma
             return true;
         }
        
-        public override XElement Save(XDocument doc)
+        public override XElement Save(XElement parentElement)
         {
             XElement element = new XElement("Item");
 
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID));
+
+            System.Diagnostics.Debug.Assert(Submarine != null);
             
             if (ResizeHorizontal || ResizeVertical)
             {
@@ -1473,7 +1476,7 @@ namespace Barotrauma
                 ic.Save(element);
             }
 
-            doc.Root.Add(element);
+            parentElement.Add(element);
 
             return element;
         }

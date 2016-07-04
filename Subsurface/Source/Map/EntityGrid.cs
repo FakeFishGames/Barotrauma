@@ -12,9 +12,12 @@ namespace Barotrauma
 
         private float cellSize;
 
-        public EntityGrid(Rectangle limits, float cellSize)
+        public readonly Submarine Submarine;
+
+        public EntityGrid(Submarine submarine, float cellSize)
         {
-            this.limits = limits;
+            this.limits = submarine.Borders;
+            this.Submarine = submarine;
             this.cellSize = cellSize;
 
             entities = new List<MapEntity>[(int)Math.Ceiling(limits.Width / cellSize), (int)Math.Ceiling(limits.Height / cellSize)];
@@ -71,11 +74,28 @@ namespace Barotrauma
             }
         }
 
+        public static List<MapEntity> GetEntities(List<EntityGrid> entityGrids, Vector2 position, bool useWorldCoordinates = true)
+        {
+            List<MapEntity> entities = new List<MapEntity>();
+            foreach (EntityGrid entityGrid in entityGrids)
+            {
+                Vector2 transformedPosition = position;
+                if (useWorldCoordinates)
+                {
+                    transformedPosition -= entityGrid.Submarine.Position;
+                }
+
+                entities.AddRange(entityGrid.GetEntities(transformedPosition));
+            }
+
+            return entities;
+        }
+
         public List<MapEntity> GetEntities(Vector2 position)
         {
             if (!MathUtils.IsValid(position)) new List<MapEntity>();
 
-            if (Submarine.Loaded != null) position -= Submarine.HiddenSubPosition;
+            if (Submarine != null) position -= Submarine.HiddenSubPosition;
 
             Point indices = GetIndices(position);
 

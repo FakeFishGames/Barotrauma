@@ -82,4 +82,58 @@
       <output name="state_out"/>
     </ConnectionPanel>
   </Item>
+
+  <Item
+    name="Docking Port"
+    linkable="true"
+    pickdistance="150.0">
+
+    <Sprite texture ="dockingport.png" sourcerect="0,0,112,208" depth="0.94" origin="0.5,0.5"/>
+
+    <DockingPort IsHorizontal="true" DistanceTolerance="128,64" DockedDistance="64">
+      <Sprite texture ="dockingport.png" sourcerect="127,0,112,144" depth="0.05" origin="0.5,0.5"/>
+      <sound file="dockingport1.ogg" type="OnUse" range="1000.0"/>
+      <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+    </DockingPort>
+
+    <fixrequirement name="Mechanical repairs">
+      <skill name="Construction" level="60"/>
+      <item name="Welding Tool"/>
+    </fixrequirement>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
+      <output name="state_out"/>
+      <output name="proximity_sensor"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+   name="Docking Hatch"
+   linkable="true"
+   pickdistance="150.0">
+
+    <Sprite texture ="dockingport2.png" sourcerect="0,0,128,112" depth="0.94" origin="0.5,0.5"/>
+
+    <DockingPort IsHorizontal="false" DistanceTolerance="64,128" DockedDistance="64">
+      <Sprite texture ="dockingport.png" sourcerect="127,144,48,112" depth="0.05" origin="0.5,0.5"/>
+      <sound file="dockingport1.ogg" type="OnUse" range="1000.0"/>
+      <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+    </DockingPort>
+
+    <fixrequirement name="Mechanical repairs">
+      <skill name="Construction" level="60"/>
+      <item name="Welding Tool"/>
+    </fixrequirement>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
+      <output name="state_out"/>
+      <output name="proximity_sensor"/>
+    </ConnectionPanel>
+  </Item> 
 </Items>

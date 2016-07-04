@@ -4,7 +4,7 @@ namespace Barotrauma.Items.Components
 {
     class SignalCheckComponent : ItemComponent
     {
-        private string output;
+        private string output, falseOutput;
 
         private string targetSignal;
 
@@ -13,6 +13,12 @@ namespace Barotrauma.Items.Components
         {
             get { return output; }
             set { output = value; }
+        }
+        [InGameEditable, HasDefaultValue("0", true)]
+        public string FalseOutput
+        {
+            get { return falseOutput; }
+            set { falseOutput = value; }
         }
 
         [InGameEditable, HasDefaultValue("", true)]
@@ -32,7 +38,10 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in":
-                    item.SendSignal(stepsTaken, (signal == targetSignal) ? output : "0", "signal_out");
+                    string signalOut = (signal == targetSignal) ? output : falseOutput;
+
+                    if (string.IsNullOrWhiteSpace(signalOut)) return;
+                    item.SendSignal(stepsTaken, signalOut, "signal_out");
 
                     break;
                 case "set_output":

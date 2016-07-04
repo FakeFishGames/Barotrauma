@@ -70,6 +70,11 @@ namespace Barotrauma
             }
         }
 
+        public bool Finished
+        {
+            get { return currentIndex >= nodes.Count; }
+        }
+
         public void SkipToNextNode()
         {
             currentIndex++;
