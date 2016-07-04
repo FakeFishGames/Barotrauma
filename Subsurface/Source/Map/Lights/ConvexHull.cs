@@ -42,9 +42,21 @@ namespace Barotrauma.Lights
         }
     }
 
+    class ConvexHullList
+    {
+        public readonly Submarine Submarine;
+        public List<ConvexHull> List;
+
+        public ConvexHullList(Submarine submarine)
+        {
+            Submarine = submarine;
+            List = new List<ConvexHull>();
+        }
+    }
+
     class ConvexHull
     {
-        public static List<ConvexHull> list = new List<ConvexHull>();
+        public static List<ConvexHullList> HullLists = new List<ConvexHullList>();
         static BasicEffect shadowEffect;
         static BasicEffect penumbraEffect;
 
@@ -116,15 +128,20 @@ namespace Barotrauma.Lights
                         
             Enabled = true;
 
-            foreach (ConvexHull ch in list)
+            var chList = HullLists.Find(x => x.Submarine == parent.Submarine);
+            if (chList == null)
+            {
+                chList = new ConvexHullList(parent.Submarine);
+                HullLists.Add(chList);
+            }                       
+            
+            foreach (ConvexHull ch in chList.List)
             {
                 UpdateIgnoredEdges(ch);
                 ch.UpdateIgnoredEdges(this);
             }
 
-
-            list.Add(this);
-
+            chList.List.Add(this);
         }
 
         private void UpdateIgnoredEdges(ConvexHull ch)
@@ -219,7 +236,7 @@ namespace Barotrauma.Lights
         {
             foreach (KeyValuePair<LightSource, CachedShadow> cachedShadow in cachedShadows)
             {
-                cachedShadow.Key.NeedsHullUpdate();
+                cachedShadow.Key.NeedsHullUpdate = true;
                 cachedShadow.Value.Dispose();
             }
             cachedShadows.Clear();
@@ -375,7 +392,18 @@ namespace Barotrauma.Lights
 
             Vector2 lightSourcePos = light.Position;
 
-            if (light.Submarine==null && parentEntity != null && parentEntity.Submarine != null) lightSourcePos -= parentEntity.Submarine.Position;
+            if (parentEntity != null && parentEntity.Submarine != null)
+            {
+                if (light.ParentSub == null)
+                {
+                    lightSourcePos -= parentEntity.Submarine.Position;
+                }
+                else if (light.ParentSub != parentEntity.Submarine)
+                {
+                    lightSourcePos += (light.ParentSub.Position-parentEntity.Submarine.Position);
+                }
+                
+            }
 
             CachedShadow cachedShadow = null;
             if (!cachedShadows.TryGetValue(light, out cachedShadow) ||
@@ -456,7 +484,16 @@ namespace Barotrauma.Lights
         {
             ClearCachedShadows();
 
-            list.Remove(this);
+            var chList = HullLists.Find(x => x.Submarine == parentEntity.Submarine);
+
+            if (chList != null)
+            {
+                chList.List.Remove(this);
+                if (chList.List.Count == 0)
+                {
+                    HullLists.Remove(chList);
+                }
+            }
         }
 
 

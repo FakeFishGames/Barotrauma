@@ -32,7 +32,7 @@ namespace Barotrauma
             bool singleplayer = GameMain.NetworkMember == null;
 
             bool gameOver = gameSession.CrewManager.characters.All(c => c.IsDead);
-            bool progress = Submarine.Loaded.AtEndPosition;
+            bool progress = Submarine.MainSub.AtEndPosition;
             
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.8f);
             

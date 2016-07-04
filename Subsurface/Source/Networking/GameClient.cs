@@ -413,6 +413,11 @@ namespace Barotrauma.Networking
             
             reliableChannel.Update(deltaTime);
 
+            if (gameStarted && respawnManager != null)
+            {
+                respawnManager.Update(deltaTime);
+            }
+
             if (updateTimer > DateTime.Now) return;
 
             if (myCharacter != null)
@@ -517,6 +522,9 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.EndGame:
                         string endMessage = inc.ReadString();
                         CoroutineManager.StartCoroutine(EndGame(endMessage));
+                        break;
+                    case (byte)PacketTypes.Respawn:
+                        if (gameStarted && respawnManager != null) respawnManager.ReadNetworkEvent(inc);
                         break;
                     case (byte)PacketTypes.PlayerJoined:
 
@@ -672,7 +680,9 @@ namespace Barotrauma.Networking
 
             GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
             GameMain.GameSession.StartShift(levelSeed);
-            
+
+            respawnManager = new RespawnManager(this);
+
             yield return CoroutineStatus.Running;
 
             //myCharacter = ReadCharacterData(inc);
@@ -725,11 +735,13 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
 
+            respawnManager = null;
+
             float endPreviewLength = 10.0f;
 
             if (Screen.Selected == GameMain.GameScreen)
             {
-                var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, endPreviewLength);
+                var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
 
                 float secondsLeft = endPreviewLength;
 
@@ -774,11 +786,6 @@ namespace Barotrauma.Networking
             if (fileStreamReceiver != null && 
                 (fileStreamReceiver.Status == FileTransferStatus.Receiving || fileStreamReceiver.Status == FileTransferStatus.NotStarted))
             {
-                //Vector2 pos = Screen.Selected == GameMain.NetLobbyScreen ? 
-                //    new Vector2(GameMain.NetLobbyScreen.SubList.Rect.X, GameMain.NetLobbyScreen.SubList.Rect.Bottom+5) : new Vector2(GameMain.GraphicsWidth / 2 - 200, 10);
-
-
-
                 Vector2 pos = new Vector2(GameMain.GraphicsWidth / 2 - 130, GameMain.NetLobbyScreen.InfoFrame.Rect.Y / 2 - 15);
                 
                 GUI.DrawString(spriteBatch, 
@@ -798,6 +805,16 @@ namespace Barotrauma.Networking
                     CancelFileTransfer();
                 }
             }
+
+            if (respawnManager != null && respawnManager.CurrentState == RespawnManager.State.Waiting &&
+                myCharacter != null && myCharacter.IsDead)
+            {
+                GUI.DrawString(spriteBatch,
+                    new Vector2(GameMain.GraphicsWidth - 300.0f, 20),
+                    "Respawning in " + (int)respawnManager.RespawnTimer + " s",
+                    Color.White, null, 0, GUI.SmallFont);
+            }
+
 
             if (!GameMain.DebugDraw) return;
 
@@ -1023,7 +1040,7 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        private Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter)
+        public Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter)
         {
             string newName      = inc.ReadString();
             ushort ID           = inc.ReadUInt16();

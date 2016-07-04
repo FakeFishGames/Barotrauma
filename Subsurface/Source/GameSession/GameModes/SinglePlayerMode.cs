@@ -53,7 +53,7 @@ namespace Barotrauma
 
             endShiftButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.Style);
             endShiftButton.Font = GUI.SmallFont;
-            endShiftButton.OnClicked = EndShift;
+            endShiftButton.OnClicked = TryEndShift;
 
             for (int i = 0; i < 3; i++)
             {
@@ -143,14 +143,14 @@ namespace Barotrauma
 
             CrewManager.Draw(spriteBatch);
 
-            if (Submarine.Loaded == null) return;
+            if (Submarine.MainSub == null) return;
 
-            if (Submarine.Loaded.AtEndPosition)
+            if (Submarine.MainSub.AtEndPosition)
             {
                 endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;                
                 endShiftButton.Draw(spriteBatch);
             }
-            else if (Submarine.Loaded.AtStartPosition)
+            else if (Submarine.MainSub.AtStartPosition)
             {
                 endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
                 endShiftButton.Draw(spriteBatch);
@@ -199,7 +199,7 @@ namespace Barotrauma
 
             if (success)
             {
-                if (Submarine.Loaded.AtEndPosition)
+                if (Submarine.MainSub.AtEndPosition)
                 {
                     Map.MoveToNextLocation();
                 }
@@ -236,11 +236,44 @@ namespace Barotrauma
             Submarine.Unload();
         }
 
+        private bool TryEndShift(GUIButton button, object obj)
+        {
+            int subsNotDocked = Submarine.Loaded.Count(s => s != Submarine.MainSub && !s.DockedTo.Contains(Submarine.MainSub));
+
+            if (subsNotDocked > 0)
+            {
+                string msg = "";
+                if (subsNotDocked == 1)
+                {
+                    msg = "One of of your vessels hasn't been docked to " + Submarine.MainSub.Name
+                        + ". If you leave now, you will permanently lose it."
+                        + " Do you want to leave the vessel behind?";
+                }
+                else
+                {
+                    msg = "Some of of your vessels hasn't been docked to " + Submarine.MainSub.Name
+                    + ". If you leave now, you will permanently lose them."
+                    + " Do you want to leave the vessels behind?";
+                }
+
+                var msgBox = new GUIMessageBox("Warning", msg, new string[] {"Yes", "No"});
+                msgBox.Buttons[0].OnClicked += EndShift;
+                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[1].OnClicked += msgBox.Close;
+            }
+            else
+            {
+                EndShift(button, obj);
+            }
+
+            return true;
+        }
+
         private bool EndShift(GUIButton button, object obj)
         {
             isRunning = false;
 
-            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, 5.0f);
+            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endshift" : "crewdead";
 
@@ -253,12 +286,12 @@ namespace Barotrauma
         {
             while (cinematic.Running)
             {
-                if (Submarine.Loaded == null) yield return CoroutineStatus.Success;
+                if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
 
                 yield return CoroutineStatus.Running;
             }
 
-            if (Submarine.Loaded == null) yield return CoroutineStatus.Success;
+            if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
 
             End("");
 

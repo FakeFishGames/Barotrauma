@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -124,10 +125,10 @@ namespace Barotrauma
         public void Translate(Vector2 amount)
         {
             position += amount;
-            //UpdateTransform();
+
         }
 
-        public void UpdateTransform(bool interpolate = true)
+        public void UpdateTransform(bool interpolate = true, bool clampPos = false)
         {
             Vector2 interpolatedPosition = interpolate ? Physics.Interpolate(prevPosition, position) : position;
 
@@ -135,6 +136,13 @@ namespace Barotrauma
 
             worldView.X = (int)(interpolatedPosition.X - worldView.Width / 2.0);
             worldView.Y = (int)(interpolatedPosition.Y + worldView.Height / 2.0);
+
+
+            if (Level.Loaded != null && clampPos)
+            {
+                position.Y -= Math.Max(worldView.Y - Level.Loaded.Size.Y, 0.0f);
+                interpolatedPosition.Y -= Math.Max(worldView.Y - Level.Loaded.Size.Y, 0.0f);
+            }
 
             transform = Matrix.CreateTranslation(
                 new Vector3(-interpolatedPosition.X, interpolatedPosition.Y, 0)) *
@@ -178,9 +186,13 @@ namespace Barotrauma
                     if (GameMain.Config.KeyBind(InputType.Up).IsDown())     moveCam.Y += moveSpeed;
                 }
 
-                if (Submarine.Loaded!=null && Screen.Selected == GameMain.GameScreen)
+                if (Screen.Selected == GameMain.GameScreen)
                 {
-                    moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(Submarine.Loaded.Velocity*deltaTime);
+                    var closestSub = Submarine.GetClosest(WorldViewCenter);
+                    if (closestSub != null)
+                    {
+                        moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(closestSub.Velocity * deltaTime);
+                    }
                 }
                  
                 moveCam = moveCam * deltaTime * 60.0f; 
@@ -205,14 +217,14 @@ namespace Barotrauma
 
                 Vector2 diff = (targetPos + offset) - position;
 
-                moveCam = diff / MoveSmoothness;                
+                moveCam = diff / MoveSmoothness;
             }
 
             shakeTargetPosition = Rand.Vector(Shake);
             shakePosition = Vector2.Lerp(shakePosition, shakeTargetPosition, 0.5f);
-            Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime*2.0f);
+            Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime * 2.0f);
 
-            Translate(moveCam+shakePosition);
+            Translate(moveCam + shakePosition);
         }
         
         public Vector2 Position

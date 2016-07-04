@@ -114,6 +114,11 @@ namespace Barotrauma
             ep.name = "Spawnpoint";
             ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             list.Add(ep);
+            
+            //ep = new MapEntityPrefab();
+            //ep.name = "Linked Submarine";
+            //ep.Category = 0;
+            //list.Add(ep);
 
         }
 
@@ -128,7 +133,7 @@ namespace Barotrauma
 
             if (placePosition == Vector2.Zero)
             {
-                Vector2 position = Submarine.MouseToWorldGrid(cam);
+                Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 GUI.DrawLine(spriteBatch, new Vector2(position.X-GameMain.GraphicsWidth, -position.Y), new Vector2(position.X+GameMain.GraphicsWidth, -position.Y), Color.White);
 
@@ -138,7 +143,7 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 position = Submarine.MouseToWorldGrid(cam);
+                Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 if (resizeHorizontal) placeSize.X = position.X - placePosition.X;
                 if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
@@ -147,15 +152,14 @@ namespace Barotrauma
                 newRect.Width = (int)Math.Max(newRect.Width, Submarine.GridSize.X);
                 newRect.Height = (int)Math.Max(newRect.Height, Submarine.GridSize.Y);
 
-                if (Submarine.Loaded != null)
+                if (Submarine.MainSub != null)
                 {
-                    newRect.Location -= Submarine.Loaded.Position.ToPoint();
+                    newRect.Location -= Submarine.MainSub.Position.ToPoint();
                 }
 
                 if (PlayerInput.LeftButtonReleased())
                 {
-                    object[] lobject = new object[] { this, newRect };
-                    constructor.Invoke(lobject);
+                    CreateInstance(newRect);
                     placePosition = Vector2.Zero;
                     selected = null;
                 }
@@ -170,7 +174,12 @@ namespace Barotrauma
                 selected = null;
             }
         }
-    
+
+        protected virtual void CreateInstance(Rectangle rect)
+        {
+            object[] lobject = new object[] { this, rect };
+            constructor.Invoke(lobject);
+        }    
 
         public static bool SelectPrefab(object selection)
         {

@@ -282,6 +282,8 @@ namespace Barotrauma.Networking
             {
                 inGameHUD.Update((float)Physics.step);
 
+                respawnManager.Update(deltaTime);
+
                 bool isCrewDead =  
                     connectedClients.Find(c => c.Character != null && !c.Character.IsDead)==null &&
                    (myCharacter == null || myCharacter.IsDead);
@@ -289,7 +291,7 @@ namespace Barotrauma.Networking
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((autoRestart && isCrewDead) 
                     || 
-                    (endRoundAtLevelEnd && Submarine.Loaded!=null && Submarine.Loaded.AtEndPosition))
+                    (endRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition))
                 {
                     if (AutoRestart && isCrewDead)
                     {
@@ -363,9 +365,10 @@ namespace Barotrauma.Networking
                     {
                         if (!(c is AICharacter) || c.IsDead) continue;
 
-                        Vector2 diff = c.WorldPosition-Submarine.Loaded.WorldPosition;
+                        //todo: take multiple subs into account
+                        //Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
 
-                        if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
+                        //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
 
                         new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
                     }
@@ -389,7 +392,13 @@ namespace Barotrauma.Networking
 
         private void SparseUpdate()
         {
-            if (gameStarted) new NetworkEvent(Submarine.Loaded.ID, false);
+            if (gameStarted)
+            {
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    new NetworkEvent(sub.ID, false);
+                }
+            }
 
             foreach (Character c in Character.CharacterList)
             {
@@ -397,9 +406,10 @@ namespace Barotrauma.Networking
 
                 if (c is AICharacter)
                 {
-                    Vector2 diff = c.WorldPosition - Submarine.Loaded.WorldPosition;
+                    //todo: take multiple subs into account
+                    //Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
 
-                    if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
+                    //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
                 }
 
                 new NetworkEvent(NetworkEventType.ImportantEntityUpdate, c.ID, false);
@@ -601,7 +611,7 @@ namespace Barotrauma.Networking
                         case (byte)PacketTypes.SpectateRequest:
                             if (gameStarted && allowSpectating)
                             {
-                                var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
+                                var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
                                 server.SendMessage(startMessage, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered);
 
                                 dataSender.Spectating = true;
@@ -840,6 +850,10 @@ namespace Barotrauma.Networking
                 //save "normal" events again
                 existingEvents = new List<NetworkEvent>(NetworkEvent.Events);
             }
+
+            yield return new WaitForSeconds(0.1f);
+
+            sender.inGame = true;
             
             yield return CoroutineStatus.Success;
         }
@@ -941,6 +955,8 @@ namespace Barotrauma.Networking
             GameServer.Log("Game mode: " + selectedMode.Name, Color.Cyan);
             GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
 
+            respawnManager = new RespawnManager(this);
+
             yield return CoroutineStatus.Running;
 
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
@@ -964,7 +980,7 @@ namespace Barotrauma.Networking
                 characterInfos.Add(characterInfo);
             }
 
-            WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos);
+            WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
             
             for (int i = 0; i < connectedClients.Count; i++)
             {
@@ -985,7 +1001,7 @@ namespace Barotrauma.Networking
                 GameMain.GameSession.CrewManager.characters.Add(myCharacter);
             }
 
-            var startMessage = CreateStartMessage(roundStartSeed, Submarine.Loaded, GameMain.GameSession.gameMode.Preset);
+            var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
             SendMessage(startMessage, NetDeliveryMethod.ReliableUnordered);
 
 
@@ -1090,6 +1106,8 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
 
+            respawnManager = null;
+
             gameStarted = false;
 
             if (connectedClients.Count > 0)
@@ -1113,7 +1131,7 @@ namespace Barotrauma.Networking
 
             float endPreviewLength = 10.0f;
 
-            var cinematic = new TransitionCinematic(Submarine.Loaded, GameMain.GameScreen.Cam, endPreviewLength);
+            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
             
             float secondsLeft = endPreviewLength;
 
@@ -1130,6 +1148,14 @@ namespace Barotrauma.Networking
 
             yield return CoroutineStatus.Success;
 
+        }
+
+        public void SendRespawnManagerMsg()
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            respawnManager.WriteNetworkEvent(msg);
+
+            SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         private void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
@@ -1320,6 +1346,14 @@ namespace Barotrauma.Networking
             else if (log.LogFrame!=null)
             {
                 log.LogFrame.Draw(spriteBatch);
+            }
+
+            if (respawnManager != null && respawnManager.CurrentState == RespawnManager.State.Waiting && respawnManager.CountdownStarted)
+            {
+                GUI.DrawString(spriteBatch,
+                    new Vector2(GameMain.GraphicsWidth - 500.0f, 20),
+                    "Respawning in " + (int)respawnManager.RespawnTimer + " s",
+                    Color.White, null, 0, GUI.SmallFont);
             }
 
             if (!ShowNetStats) return;
@@ -1603,7 +1637,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void WriteCharacterData(NetOutgoingMessage message, string name, Character character)
+        public void WriteCharacterData(NetOutgoingMessage message, string name, Character character)
         {
             message.Write(name);
             message.Write(character.ID);

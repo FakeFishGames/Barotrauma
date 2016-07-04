@@ -11,6 +11,7 @@ bld/
 [Oo]bj/
 
 *.v12.suo
+*.suo
 
 #performance reports & sessions
 *.vsp

@@ -17,6 +17,8 @@ namespace Barotrauma
 
     class Level
     {
+        public const float ShaftHeight = 1000.0f;
+
         public static Level Loaded
         {
             get { return loaded; }
@@ -56,7 +58,7 @@ namespace Barotrauma
 
         private WrappingWall[,] wrappingWalls;
 
-        private float shaftHeight;
+        //private float shaftHeight;
 
         //List<Body> bodies;
         private List<VoronoiCell> cells;
@@ -121,7 +123,7 @@ namespace Barotrauma
         {
             get { return backgroundColor; }
         }
-
+        
         public Level(string seed, float difficulty, int width, int height, int siteInterval)
         {
             this.seed = seed;
@@ -181,7 +183,7 @@ namespace Barotrauma
             float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
             GameMain.LightManager.AmbientLight = new Color(backgroundColor*(40.0f/avgValue), 1.0f);
 
-            float minWidth = Submarine.Loaded == null ? 0.0f : Math.Max(Submarine.Borders.Width, Submarine.Borders.Height);
+            float minWidth = Submarine.MainSub == null ? 0.0f : Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
             minWidth = Math.Max(minWidth, 6500.0f);
 
             startPosition = new Vector2(minWidth * 2, Rand.Range(minWidth * 2, borders.Height - minWidth * 2, false));
@@ -513,7 +515,7 @@ namespace Barotrauma
             ShaftBodies = new Body[2];
             for (int i = 0; i < 2; i++)
             {
-                ShaftBodies[i] = BodyFactory.CreateRectangle(GameMain.World, 200.0f, 10.0f, 5.0f);
+                ShaftBodies[i] = BodyFactory.CreateRectangle(GameMain.World, 200.0f, ConvertUnits.ToSimUnits(ShaftHeight), 5.0f);
                 ShaftBodies[i].BodyType = BodyType.Static;
                 ShaftBodies[i].CollisionCategories = Physics.CollisionLevel;
 
@@ -585,7 +587,7 @@ namespace Barotrauma
         {
             List<WayPoint> wayPoints = new List<WayPoint>();
 
-            var newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
+            var newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, borders.Height, 10, 10), null);
             newWaypoint.MoveWithLevel = true;
             wayPoints.Add(newWaypoint);
 
@@ -625,7 +627,7 @@ namespace Barotrauma
                 //prevWaypoint = newWaypoint;
             }
 
-            newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, (int)(borders.Height + shaftHeight), 10, 10), null);
+            newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, borders.Height, 10, 10), null);
             newWaypoint.MoveWithLevel = true;
             wayPoints.Add(newWaypoint);
 
@@ -783,9 +785,9 @@ namespace Barotrauma
 
         public void Update (float deltaTime)
         {
-            if (Submarine.Loaded != null)
+            if (Submarine.MainSub != null)
             {
-                WrappingWall.UpdateWallShift(Submarine.Loaded.WorldPosition, wrappingWalls);
+                WrappingWall.UpdateWallShift(Submarine.MainSub.WorldPosition, wrappingWalls);
             }
 
             renderer.Update(deltaTime);

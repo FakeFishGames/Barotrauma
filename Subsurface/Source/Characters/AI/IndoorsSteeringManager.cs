@@ -76,9 +76,13 @@ namespace Barotrauma
 
                 currentTarget = target;
                 Vector2 pos = host.SimPosition;
-                if (character!=null && character.Submarine==null)
+                if (character != null && character.Submarine == null)
                 {
-                    pos -= Submarine.Loaded.SimPosition;
+                    var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
+                    if (targetHull!=null && targetHull.Submarine != null)
+                    {
+                        pos -= targetHull.SimPosition;
+                    }
                 }   
 
                 currentPath = pathFinder.FindPath(pos, target);
@@ -99,15 +103,15 @@ namespace Barotrauma
 
         private Vector2 DiffToCurrentNode()
         {
-            if (currentPath == null) return Vector2.Zero;
+            if (currentPath == null || currentPath.Finished) return Vector2.Zero;
 
-            if (currentPath.CurrentIndex == currentPath.Nodes.Count)
+            if (currentPath.Finished)
             {
-
                 Vector2 pos2 = host.SimPosition;
-                if (character != null && character.Submarine == null)
+                if (character != null && character.Submarine == null && CurrentPath.Nodes.Last().Submarine != null)
                 {
-                    pos2 -= Submarine.Loaded.SimPosition;
+                    //todo: take multiple subs into account
+                    pos2 -= CurrentPath.Nodes.Last().Submarine.SimPosition;
                 }   
                 return currentTarget-pos2;
             }
@@ -118,9 +122,11 @@ namespace Barotrauma
             if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
 
             Vector2 pos = host.SimPosition;
-            if (character != null && character.Submarine == null)
+            if (character != null && character.Submarine == null &&
+                CurrentPath.CurrentNode != null && CurrentPath.CurrentNode.Submarine != null)
             {
-                pos -= Submarine.Loaded.SimPosition;
+                //todo: take multiple subs into account
+                pos -= CurrentPath.CurrentNode.Submarine.SimPosition;
             }   
 
             if (currentPath.CurrentNode!= null && currentPath.CurrentNode.Ladders!=null)

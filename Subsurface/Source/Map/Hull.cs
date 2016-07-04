@@ -15,7 +15,7 @@ namespace Barotrauma
     class Hull : MapEntity, IPropertyObject
     {
         public static List<Hull> hullList = new List<Hull>();
-        private static EntityGrid entityGrid;
+        private static List<EntityGrid> entityGrids = new List<EntityGrid>();
 
         public static bool ShowHulls = true;
 
@@ -53,6 +53,7 @@ namespace Barotrauma
 
         private bool update;
 
+        private Sound currentFlowSound;
         private int soundIndex;
         private float soundVolume;
 
@@ -178,7 +179,7 @@ namespace Barotrauma
         }
 
         public Hull(MapEntityPrefab prefab, Rectangle rectangle)
-            : this (prefab, rectangle, Submarine.Loaded)
+            : this (prefab, rectangle, Submarine.MainSub)
         {
 
         }
@@ -248,13 +249,30 @@ namespace Barotrauma
             return rect;
         }
 
-        public static void GenerateEntityGrid()
+        public static void GenerateEntityGrid(Submarine submarine)
         {
-            entityGrid = new EntityGrid(Submarine.Borders, 200.0f);
+            var newGrid = new EntityGrid(submarine, 200.0f);
+
+            entityGrids.Add(newGrid);
             
             foreach (Hull hull in hullList)
             {
-                entityGrid.InsertEntity(hull);
+                if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
+            }
+        }
+
+        public void AddToGrid(Submarine submarine)
+        {
+            foreach (EntityGrid grid in entityGrids)
+            {
+                if (grid.Submarine != submarine) continue;
+
+                rect.Location -= submarine.HiddenSubPosition.ToPoint();
+                
+                grid.InsertEntity(this);
+
+                rect.Location += submarine.HiddenSubPosition.ToPoint();
+                return;
             }
         }
 
@@ -293,6 +311,7 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
+            hullList.Remove(this);
 
             if (Submarine == null || !Submarine.Loading)
             {
@@ -313,10 +332,15 @@ namespace Barotrauma
             }
 
             //renderer.Dispose();
+            if (entityGrids != null)
+            {
+                foreach (EntityGrid entityGrid in entityGrids)
+                {
+                    entityGrid.RemoveEntity(this);
+                }
+            }
 
-            if (entityGrid != null) entityGrid.RemoveEntity(this);
 
-            hullList.Remove(this);
         }
 
         public void AddFireSource(FireSource fireSource, bool createNetworkEvent = true)
@@ -369,11 +393,23 @@ namespace Barotrauma
             foreach (Gap gap in ConnectedGaps)
             {
                 float gapFlow = gap.LerpedFlowForce.Length();
+
+#if DEBUG
+                var asd = MapEntity.FindEntityByID(gap.ID);
+
+                if (asd != gap)
+                {
+                    int adslkmfdlasfk = 9;
+                }
+#endif
+
+
                 if (gapFlow > strongestFlow)
                 {
                     strongestFlow = gapFlow;
                 }
             }
+
 
             if (strongestFlow>0.1f)
             {
@@ -383,13 +419,24 @@ namespace Barotrauma
                 int index = (int)Math.Floor(strongestFlow / 100.0f);
                 index = Math.Min(index, 2);
 
-                soundIndex = SoundPlayer.flowSounds[index].Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
+                var flowSound = SoundPlayer.flowSounds[index];
+                if (flowSound != currentFlowSound && soundIndex > -1)
+                {
+                    Sounds.SoundManager.Stop(soundIndex);
+                    currentFlowSound = null;
+                    soundIndex = -1;
+                }
+
+                currentFlowSound = flowSound;
+
+                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
             }
             else
             {
                 if (soundIndex > -1)
                 {
                     Sounds.SoundManager.Stop(soundIndex);
+                    currentFlowSound = null;
                     soundIndex = -1;
                 }
             }
@@ -653,15 +700,14 @@ namespace Barotrauma
         //returns the water block which contains the point (or null if it isn't inside any)
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
         {
-            if (entityGrid == null) return null;
+            if (entityGrids == null) return null;
 
             if (guess != null)
             {
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
             }
 
-            var entities = entityGrid.GetEntities(
-                useWorldCoordinates && Submarine.Loaded!=null ? position-Submarine.Loaded.Position : position);
+            var entities = EntityGrid.GetEntities(entityGrids, position, useWorldCoordinates);
 
             foreach (Hull hull in entities)
             {
@@ -706,7 +752,7 @@ namespace Barotrauma
         //    return gaps;
         //}
 
-        public override XElement Save(XDocument doc)
+        public override XElement Save(XElement parentElement)
         {
             XElement element = new XElement("Hull");
 
@@ -719,8 +765,8 @@ namespace Barotrauma
                     rect.Width + "," + rect.Height),
                 new XAttribute("water", volume)
             );
-            
-            doc.Root.Add(element);
+
+            parentElement.Add(element);
 
             return element;
         }
@@ -836,7 +882,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    var newFire = new FireSource(pos + Submarine.Loaded.Position, this, true);
+                    var newFire = new FireSource(pos + Submarine.Position, this, true);
                     newFire.Size = new Vector2(
                         newFire.Hull == null ? size : size * newFire.Hull.rect.Width, 
                         newFire.Size.Y);

@@ -518,7 +518,7 @@ namespace Barotrauma
                 Vector2 placePosition = new Vector2(rect.X, rect.Y);
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
-                Vector2 mousePos = Submarine.MouseToWorldGrid(cam);
+                Vector2 mousePos = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
                 if (resizeDirX >0)
                 {
@@ -596,7 +596,7 @@ namespace Barotrauma
         }
 
 
-        public virtual XElement Save(XDocument doc)
+        public virtual XElement Save(XElement parentElement)
         {
             DebugConsole.ThrowError("Saving entity " + GetType() + " failed.");
             return null;
@@ -607,10 +607,11 @@ namespace Barotrauma
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
-        public static void MapLoaded()
+        public static void MapLoaded(Submarine sub)
         {
             foreach (MapEntity e in mapEntityList)
             {
+                if (e.Submarine != sub) continue;
                 if (e.linkedToID == null) continue;
                 if (e.linkedToID.Count == 0) continue;
 
@@ -623,14 +624,29 @@ namespace Barotrauma
                     if (linked != null) e.linkedTo.Add(linked);
                 }
             }
+
+            List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
             
             for (int i = 0; i<mapEntityList.Count; i++)
             {
+                if (mapEntityList[i].Submarine != sub) continue;
+
+                if (mapEntityList[i] is LinkedSubmarine)
+                {
+                    linkedSubs.Add((LinkedSubmarine)mapEntityList[i]);
+                    continue;
+                }
+
                 mapEntityList[i].OnMapLoaded();
             }
             
             Item.UpdateHulls();
-            Gap.UpdateHulls();            
+            Gap.UpdateHulls();
+
+            foreach (LinkedSubmarine linkedSub in linkedSubs)
+            {
+                linkedSub.OnMapLoaded();
+            }
         }
 
 

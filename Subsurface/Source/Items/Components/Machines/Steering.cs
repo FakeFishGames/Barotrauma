@@ -33,8 +33,10 @@ namespace Barotrauma.Items.Components
         private float autopilotRayCastTimer;
 
         private float neutralBallastLevel;
+
+        public Vector2? TargetPosition;
         
-        bool AutoPilot
+        public bool AutoPilot
         {
             get { return autoPilot; }
             set
@@ -52,7 +54,7 @@ namespace Barotrauma.Items.Components
                     if (pathFinder==null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
                     steeringPath = pathFinder.FindPath(
                         ConvertUnits.ToSimUnits(item.WorldPosition),
-                        ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+                        TargetPosition == null ? ConvertUnits.ToSimUnits(Level.Loaded.EndPosition) : (Vector2)TargetPosition);
                 }
                 else
                 {
@@ -60,6 +62,12 @@ namespace Barotrauma.Items.Components
                     posToMaintain = null;
                 }
             }
+        }
+
+        public bool MaintainPos
+        {
+            get { return maintainPosTickBox.Selected; }
+            set { maintainPosTickBox.Selected = value; }
         }
 
 
@@ -128,7 +136,7 @@ namespace Barotrauma.Items.Components
                 }
             }
      
-            if (voltage < minVoltage) return;
+            if (voltage < minVoltage && powerConsumption > 0.0f) return;
                
             if (autoPilot)
             {
@@ -158,15 +166,15 @@ namespace Barotrauma.Items.Components
             GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
-            if (voltage < minVoltage) return;
+            if (voltage < minVoltage && powerConsumption > 0.0f) return;
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
 
-            if (Submarine.Loaded != null && Level.Loaded != null)
+            if (item.Submarine != null && Level.Loaded != null)
             {
-                Vector2 realWorldVelocity = ConvertUnits.ToDisplayUnits(Submarine.Loaded.Velocity * Physics.DisplayToRealWorldRatio) * 3.6f;
-                float realWorldDepth = Math.Abs(Submarine.Loaded.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                Vector2 realWorldVelocity = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity * Physics.DisplayToRealWorldRatio) * 3.6f;
+                float realWorldDepth = Math.Abs(item.Submarine.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 65), 
                     "Velocity: " + (int)realWorldVelocity.X + " km/h", Color.LightGreen, null, 0, GUI.SmallFont);
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 50), 
@@ -220,7 +228,7 @@ namespace Barotrauma.Items.Components
 
             if (autopilotRayCastTimer <= 0.0f && steeringPath.NextNode != null)
             {
-                Vector2 diff = Vector2.Normalize(ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - Submarine.Loaded.WorldPosition));
+                Vector2 diff = Vector2.Normalize(ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - item.Submarine.WorldPosition));
 
                 bool nextVisible = true;
                 for (int x = -1; x < 2; x += 2)
@@ -228,9 +236,9 @@ namespace Barotrauma.Items.Components
                     for (int y = -1; y < 2; y += 2)
                     {
                         Vector2 cornerPos =
-                            new Vector2(Submarine.Borders.Width * x, Submarine.Borders.Height * y) / 2.0f;
+                            new Vector2(item.Submarine.Borders.Width * x, item.Submarine.Borders.Height * y) / 2.0f;
 
-                        cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + Submarine.Loaded.WorldPosition);
+                        cornerPos = ConvertUnits.ToSimUnits(cornerPos * 1.2f + item.Submarine.WorldPosition);
 
                         float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
 

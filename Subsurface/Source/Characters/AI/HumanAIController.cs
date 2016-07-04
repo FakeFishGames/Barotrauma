@@ -164,15 +164,15 @@ namespace Barotrauma
 
             GUI.DrawLine(spriteBatch,
                 new Vector2(Character.WorldPosition.X, -Character.WorldPosition.Y),
-                new Vector2(pathSteering.CurrentPath.CurrentNode.Position.X+Submarine.Loaded.Position.X, -(pathSteering.CurrentPath.CurrentNode.Position.Y+Submarine.Loaded.Position.Y)),
+                new Vector2(pathSteering.CurrentPath.CurrentNode.WorldPosition.X, -pathSteering.CurrentPath.CurrentNode.WorldPosition.Y),
                 Color.LightGreen);
 
 
             for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].Position.X + Submarine.Loaded.Position.X, -(pathSteering.CurrentPath.Nodes[i].Position.Y + Submarine.Loaded.Position.Y)),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].Position.X + Submarine.Loaded.Position.X, -(pathSteering.CurrentPath.Nodes[i-1].Position.Y + Submarine.Loaded.Position.Y)),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i].WorldPosition.X, -pathSteering.CurrentPath.Nodes[i].WorldPosition.Y),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].WorldPosition.Y, -pathSteering.CurrentPath.Nodes[i-1].WorldPosition.Y),
                     Color.LightGreen);
             }
         }
