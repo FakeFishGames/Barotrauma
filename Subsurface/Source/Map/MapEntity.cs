@@ -467,13 +467,19 @@ namespace Barotrauma
             }
         }
 
-        public static void SelectEntity(MapEntity entity)
+        public static void DeselectAll()
         {
             foreach (MapEntity e in selectedList)
-            { 
+            {
                 e.isSelected = false;
             }
             selectedList.Clear();
+        }
+
+
+        public static void SelectEntity(MapEntity entity)
+        {
+            DeselectAll();
 
             entity.isSelected = true;
             selectedList.Add(entity);

@@ -927,6 +927,8 @@ namespace Barotrauma
 
             subBody = null;
 
+            if (MainSub == this) MainSub = null;
+
             DockedTo.Clear();
         }
     }

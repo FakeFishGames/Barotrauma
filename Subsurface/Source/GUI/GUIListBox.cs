@@ -309,7 +309,7 @@ namespace Barotrauma
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
-                if (child == frame) continue;
+                if (child == frame || !child.Visible) continue;
 
                 child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
                 if (scrollBar.IsHorizontal)
@@ -321,7 +321,6 @@ namespace Barotrauma
                     y += child.Rect.Height + spacing;
                 }
 
-                child.Visible = false;
 
                 if (scrollBar.IsHorizontal)
                 {
@@ -345,11 +344,7 @@ namespace Barotrauma
                         continue;
                     }
                 }
-
-
-
-                child.Visible = true;
-
+                
                 if (enabled && child.CanBeFocused &&
                     (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
