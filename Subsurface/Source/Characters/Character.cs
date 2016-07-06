@@ -752,8 +752,10 @@ namespace Barotrauma
             }
         }
 
-        private Item FindClosestItem(Vector2 mouseSimPos)
+        private Item FindClosestItem(Vector2 mouseSimPos, out float distance)
         {
+            distance = 0.0f;
+
             Limb torso = AnimController.GetLimb(LimbType.Torso);
 
             if (torso == null) return null;
@@ -769,7 +771,7 @@ namespace Barotrauma
 
             if (selectedConstruction != null) pickPos = ConvertUnits.ToSimUnits(selectedConstruction.WorldPosition);
 
-            return Item.FindPickable(pos, pickPos, AnimController.CurrentHull, selectedItems);
+            return Item.FindPickable(pos, pickPos, AnimController.CurrentHull, selectedItems, out distance);
         }
 
         private Character FindClosestCharacter(Vector2 mouseSimPos, float maxDist = 150.0f)
@@ -890,11 +892,12 @@ namespace Barotrauma
                         closestCharacter = null;
                     }
 
-                    closestItem = FindClosestItem(mouseSimPos);
+                    float closestItemDist = 0.0f;
+                    closestItem = FindClosestItem(mouseSimPos, out closestItemDist);
 
                     if (closestCharacter != null && closestItem != null)
                     {
-                        if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < Vector2.Distance(closestItem.SimPosition, mouseSimPos))
+                        if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist))
                         {
                             if (selectedConstruction != closestItem) closestItem = null;
                         }

@@ -137,7 +137,18 @@ namespace Barotrauma
                 GUItabs[i] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
                 GUItabs[i].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-                GUIListBox itemList = new GUIListBox(new Rectangle(0, 0, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[i]);
+                new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", GUI.Style, Alignment.TopRight, Alignment.TopRight, GUItabs[i], false, GUI.SmallFont);
+
+                GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, GUI.Style, GUItabs[i]);
+                searchBox.Font = GUI.SmallFont;
+                searchBox.OnTextChanged = FilterMessages;
+                GUIComponent.KeyboardDispatcher.Subscriber = searchBox;
+
+                var clearButton = new GUIButton(new Rectangle(0, 0, 15, 15), "x", Alignment.TopRight, GUI.Style, GUItabs[i]);
+                clearButton.OnClicked = ClearFilter;
+                clearButton.UserData = searchBox;
+
+                GUIListBox itemList = new GUIListBox(new Rectangle(0, 20, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[i]);
                 itemList.OnSelected = SelectPrefab;
                 itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
@@ -268,6 +279,8 @@ namespace Barotrauma
             GUIComponent.MouseOn = null;
 
             MapEntityPrefab.Selected = null;
+
+            MapEntity.DeselectAll();
 
             if (characterMode) ToggleCharacterMode();            
 
@@ -425,9 +438,47 @@ namespace Barotrauma
         private bool SelectTab(GUIButton button, object obj)
         {
             selectedTab = (int)obj;
+
+            ClearFilter(GUItabs[selectedTab].GetChild<GUIButton>(), null);
+
+            GUIComponent.KeyboardDispatcher.Subscriber = GUItabs[selectedTab].GetChild<GUITextBox>();            
+
             return true;
         }
 
+        private bool FilterMessages(GUITextBox textBox, string text)
+        {
+            if (selectedTab == -1)
+            {
+                GUIComponent.KeyboardDispatcher.Subscriber = null;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                GUItabs[selectedTab].GetChild<GUIListBox>().children.ForEach(c => c.Visible = true);
+                return true;
+            }
+
+            text = text.ToLower();
+
+            foreach (GUIComponent child in GUItabs[selectedTab].GetChild<GUIListBox>().children)
+            {
+                child.Visible = child.GetChild<GUITextBlock>().Text.ToLower().Contains(text);
+            }
+
+            return true;
+        }
+
+        public bool ClearFilter(GUIComponent button, object obj)
+        {
+            FilterMessages(null, "");
+
+            var searchBox = button.UserData as GUITextBox;
+            if (searchBox != null) searchBox.Text = "";
+
+            return true;
+        }
 
         public void ToggleCharacterMode()
         {

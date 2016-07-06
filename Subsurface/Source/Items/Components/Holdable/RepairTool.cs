@@ -169,6 +169,8 @@ namespace Barotrauma.Items.Components
 
             if (targetBody == null || targetBody.UserData == null) return;
 
+            pickedPosition = Submarine.LastPickedPosition;
+
             Structure targetStructure;
             Limb targetLimb;
             Item targetItem;

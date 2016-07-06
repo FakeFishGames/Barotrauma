@@ -589,8 +589,11 @@ namespace Barotrauma.Items.Components
             var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
             if (sender != null)
             {
-                Networking.GameServer.Log("Reactor settings adjusted by " + sender.name+": ", Color.Orange);
-                Networking.GameServer.Log("Autotemp: " +(autoTemp ? "ON " : "OFF") + "  Shutdown temp: "+shutDownTemp+"  Cooling rate: "+(int)coolingRate+"  Fission rate: "+(int)fissionRate, Color.Orange);
+                Networking.GameServer.Log(
+                    "Reactor settings adjusted by " + sender.name+": \n"+
+                    "Autotemp: " + (autoTemp ? "ON " : "OFF") + "  Shutdown temp: " + shutDownTemp + 
+                    "  Cooling rate: " + (int)coolingRate + "  Fission rate: " + (int)fissionRate, 
+                    Color.Orange);
             }
             
         }

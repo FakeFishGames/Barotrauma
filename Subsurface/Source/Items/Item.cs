@@ -1116,10 +1116,16 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
+        public static Item FindPickable(Vector2 position, Vector2 pickPosition, Hull hull = null, Item[] ignoredItems = null)
+        {
+            float dist;
+            return FindPickable(position, pickPosition, hull, ignoredItems, out dist);
+        }
+
         /// <param name="position">Position of the Character doing the pick, only items that are close enough to this are checked</param>
         /// <param name="pickPosition">the item closest to pickPosition is returned</param>
         /// <param name="hull">If a hull is specified, only items within that hull are checked</param>
-        public static Item FindPickable(Vector2 position, Vector2 pickPosition, Hull hull = null, Item[] ignoredItems=null)
+        public static Item FindPickable(Vector2 position, Vector2 pickPosition, Hull hull, Item[] ignoredItems, out float distance)
         {
             float closestDist = 0.0f, dist;
             Item closest = null;
@@ -1127,55 +1133,59 @@ namespace Barotrauma
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(position);
             Vector2 displayPickPos = ConvertUnits.ToDisplayUnits(pickPosition);
 
+            distance = 1000.0f;
+
             foreach (Item item in ItemList)
             {
-                if (ignoredItems!=null && ignoredItems.Contains(item)) continue;
-                //if (hull != item.CurrentHull && (hull==null || (item.Rect.Height<hull.Rect.Height && item.rect.Width < hull.Rect.Width))) continue;
+                if (ignoredItems != null && ignoredItems.Contains(item)) continue;
                 if (item.body != null && !item.body.Enabled) continue;
+
+                if (item.PickDistance == 0.0f && !item.prefab.Triggers.Any()) continue;
 
                 Pickable pickableComponent = item.GetComponent<Pickable>();
                 if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) continue;
 
+                float pickDist = Vector2.Distance(item.WorldPosition, displayPickPos);
+                
+                bool outsideTrigger = false;
                 foreach (Rectangle trigger in item.prefab.Triggers)
                 {
                     Rectangle transformedTrigger = item.TransformTrigger(trigger, true);
-                    
-                    if (!Submarine.RectContains(transformedTrigger, displayPos)) continue;
-                                        
-                    Vector2 triggerCenter =
-                        new Vector2(
-                            transformedTrigger.X + transformedTrigger.Width / 2.0f,
-                            transformedTrigger.Y - transformedTrigger.Height / 2.0f);
 
-                    //dist = MathHelper.Min(Math.Abs(triggerCenter.X - displayPos.X), Math.Abs(triggerCenter.Y-displayPos.Y));
-                    //if (dist > closestDist && closest!=null) continue;
-
-                    dist = MathHelper.Min(Math.Abs(triggerCenter.X - displayPickPos.X), Math.Abs(triggerCenter.Y - displayPickPos.Y));
-                    if (closest == null || dist < closestDist)
+                    if (!Submarine.RectContains(transformedTrigger, displayPos))
                     {
-                        closest = item;
-                        closestDist = dist;
+                        outsideTrigger = true;
+                        continue;
                     }
-                }
-                
-                if (item.prefab.PickDistance == 0.0f) continue;
 
-                if (Vector2.Distance(displayPos, item.WorldPosition) > item.prefab.PickDistance) continue;
-
-                if (!item.prefab.PickThroughWalls)
-                {
-                    Body body = Submarine.CheckVisibility(item.Submarine == null ? position : position - item.Submarine.SimPosition, item.SimPosition, true);
-                    if (body != null && body.UserData as Item != item) continue;
+                    Vector2 triggerCenter = new Vector2(transformedTrigger.Center.X, transformedTrigger.Y - transformedTrigger.Height / 2);
+                    pickDist = Math.Min(Math.Abs(triggerCenter.X - displayPickPos.X), Math.Abs(triggerCenter.Y - displayPickPos.Y));
                 }
 
-                dist = Vector2.Distance(displayPickPos, item.WorldPosition);
-                if (dist < item.prefab.PickDistance && (closest == null || dist < closestDist))
+                if (outsideTrigger) continue;
+
+                if (pickDist > item.PickDistance && item.PickDistance > 0.0f) continue;
+
+                dist = item.Sprite.Depth * 10.0f + pickDist;
+                if (item.IsMouseOn(displayPickPos)) dist = dist * 0.1f;
+
+                if (closest == null || dist < closestDist)
                 {
-                    closest = item;
+                    if (item.PickDistance > 0.0f && Vector2.Distance(displayPos, item.WorldPosition) > item.prefab.PickDistance) continue;
+                    
+                    if (!item.prefab.PickThroughWalls)
+                    {
+                        Body body = Submarine.CheckVisibility(item.Submarine == null ? position : position - item.Submarine.SimPosition, item.SimPosition, true);
+                        if (body != null && body.UserData as Item != item) continue;
+                    }
+                    
                     closestDist = dist;
+                    closest = item;
+
+                    distance = pickDist;
                 }
             }
-            
+                        
             return closest;
         }
 

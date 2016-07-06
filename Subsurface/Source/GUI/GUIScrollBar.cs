@@ -191,11 +191,6 @@ namespace Barotrauma
                 //barScroll = (float)newY / ((float)frame.Rect.Height - (float)bar.Rect.Height);
             }
 
-            if (moveAmount != 0)
-            {
-                int asdf = 1;
-            }
-
             BarScroll = barScroll;
 
             if (moveAmount != 0 && OnMoved != null) OnMoved(this, BarScroll);

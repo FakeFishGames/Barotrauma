@@ -62,7 +62,18 @@ namespace Barotrauma.Networking
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,400, 400), null, Alignment.Center, GUI.Style, LogFrame);
             innerFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            listBox = new GUIListBox(new Rectangle(0,0,0,355), GUI.Style, innerFrame);
+            new GUITextBlock(new Rectangle(-200,0,100,15), "Filter", GUI.Style, Alignment.TopRight, Alignment.TopRight, innerFrame, false, GUI.SmallFont);
+
+            GUITextBox searchBox = new GUITextBox(new Rectangle(-20,0,180,15), Alignment.TopRight, GUI.Style, innerFrame);
+            searchBox.Font = GUI.SmallFont;
+            searchBox.OnTextChanged = FilterMessages;
+            GUIComponent.KeyboardDispatcher.Subscriber = searchBox;
+
+            var clearButton = new GUIButton(new Rectangle(0,0,15,15), "x", Alignment.TopRight, GUI.Style, innerFrame);
+            clearButton.OnClicked = ClearFilter;
+            clearButton.UserData = searchBox;
+
+            listBox = new GUIListBox(new Rectangle(0,20,0,335), GUI.Style, innerFrame);
 
             var currLines = lines.ToList();
 
@@ -90,6 +101,36 @@ namespace Barotrauma.Networking
 
             textBlock.TextColor = line.Color;
             textBlock.CanBeFocused = false;
+        }
+
+        private bool FilterMessages(GUITextBox textBox, string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                listBox.children.ForEach( c => c.Visible = true);
+                return true;
+            }
+
+            text = text.ToLower();
+
+            foreach (GUITextBlock textBlock in listBox.children)
+            {
+                if (textBlock == null) continue;
+
+                textBlock.Visible = textBlock.Text.ToLower().Contains(text);
+            }
+
+            return true;
+        }
+
+        public bool ClearFilter(GUIComponent button, object obj)
+        {
+            FilterMessages(null, "");
+
+            var searchBox = button.UserData as GUITextBox;
+            if (searchBox != null) searchBox.Text = "";
+
+            return true;
         }
 
         public void Save()
