@@ -204,9 +204,16 @@ namespace Barotrauma.Items.Components
             //    position.Y += item.CurrentHull.Rect.Y - item.CurrentHull.Rect.Height;
             //}
 
+
             Submarine sub = null;
             if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
             if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
+
+            if (item.Submarine != sub)
+            {
+                ClearConnections();
+                Nodes.Clear();
+            }
 
             newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
 

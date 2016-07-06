@@ -395,6 +395,9 @@ namespace Barotrauma.Networking
             {
                 foreach (Submarine sub in Submarine.Loaded)
                 {
+                    //no need to send position updates for submarines that are docked to mainsub
+                    if (sub != Submarine.MainSub && sub.DockedTo.Contains(Submarine.MainSub)) continue;
+
                     new NetworkEvent(sub.ID, false);
                 }
             }
