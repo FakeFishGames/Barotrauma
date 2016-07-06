@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace Barotrauma
         {
             System.Diagnostics.Debug.Assert(Submarine.MainSub != null);
 
-            LinkedSubmarine.Create(Submarine.MainSub, mainSub.FilePath, rect.Location.ToVector2());
+            LinkedSubmarine.CreateDummy(Submarine.MainSub, mainSub.FilePath, rect.Location.ToVector2());
         }
     }
 
@@ -56,20 +57,21 @@ namespace Barotrauma
             InsertToList();
         }
         
-        public static LinkedSubmarine Create(Submarine mainSub, string filePath, Vector2 position)
+        public static LinkedSubmarine CreateDummy(Submarine mainSub, string filePath, Vector2 position)
         {
-            LinkedSubmarine sl = new LinkedSubmarine(mainSub);
-            sl.filePath = filePath;
-
             XDocument doc = Submarine.OpenFile(filePath);
             if (doc == null || doc.Root == null) return null;
 
-            sl.GenerateWallVertices(doc.Root);
+            LinkedSubmarine sl = CreateDummy(mainSub, doc.Root, position);
+            sl.filePath = filePath;
 
-            //for (int i = 0; i < sl.wallVertices.Count; i++)
-            //{
-            //    sl.wallVertices[i] = sl.wallVertices[i] += position;
-            //}
+            return sl;
+        }
+
+        public static LinkedSubmarine CreateDummy(Submarine mainSub, XElement element, Vector2 position)
+        {
+            LinkedSubmarine sl = new LinkedSubmarine(mainSub);
+            sl.GenerateWallVertices(element);
 
             sl.Rect = new Rectangle(
                 (int)sl.wallVertices.Min(v => v.X + position.X),
@@ -166,18 +168,53 @@ namespace Barotrauma
             new GUITextBlock(new Rectangle(0, 0, 100, 20), "Linked submarine", GUI.Style,
                 Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
 
+            var pathBox = new GUITextBox(new Rectangle(10,30,300,20), GUI.Style, editingHUD);
+            pathBox.Font = GUI.SmallFont;
+            pathBox.Text = filePath;
+
+            var reloadButton = new GUIButton(new Rectangle(320,30,80,20), "Refresh", GUI.Style, editingHUD);
+            reloadButton.OnClicked = Reload;
+            reloadButton.UserData = pathBox;
+
+            reloadButton.ToolTip = "Reload the linked submarine from the specified file";
+
             y += 20;
 
             if (!inGame)
             {
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to a docking port",
-                    GUI.Style, Alignment.TopRight, Alignment.TopRight, editingHUD).Font = GUI.SmallFont;
+                    GUI.Style, Alignment.TopRight, Alignment.TopRight, editingHUD, false, GUI.SmallFont);
                 y += 25;
                 
             }
             return editingHUD;
         }
 
+
+        private bool Reload(GUIButton button, object obj)
+        {
+            var pathBox = obj as GUITextBox;
+
+            if (!File.Exists(pathBox.Text))
+            {
+                new GUIMessageBox("Error", "Submarine file ''" + pathBox.Text + "'' not found!");
+                pathBox.Flash(Color.Red);
+                pathBox.Text = filePath;
+                return false;
+            }
+
+            XDocument doc = Submarine.OpenFile(pathBox.Text);
+            if (doc == null || doc.Root == null) return false;
+
+            pathBox.Flash(Color.Green);
+
+            GenerateWallVertices(doc.Root);
+            saveElement = doc.Root;
+
+            filePath = pathBox.Text;
+
+            return true;
+        }
 
         private void GenerateWallVertices(XElement rootElement)
         {
@@ -210,16 +247,27 @@ namespace Barotrauma
 
             if (sub == null)
             {
-                var doc = Submarine.OpenFile(filePath);
-                saveElement = doc.Root;
+                if (this.saveElement == null)
+                {
+                    var doc = Submarine.OpenFile(filePath);
+                    saveElement = doc.Root;
 
-                saveElement.Name = "LinkedSubmarine";
+                    saveElement.Name = "LinkedSubmarine";
 
-                saveElement.Add(new XAttribute("filepath", filePath));
+                    saveElement.Add(new XAttribute("filepath", filePath));
+                }
+                else
+                {
+                    saveElement = this.saveElement;
+                }
 
+
+                
                 var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
                 if (linkedPort != null)
                 {
+                    if (saveElement.Attribute("linkedto") != null) saveElement.Attribute("linkedto").Remove();
+                    
                     saveElement.Add(new XAttribute("linkedto", linkedPort.ID));
                 }
             }
@@ -231,7 +279,8 @@ namespace Barotrauma
                 
                 sub.SaveToXElement(saveElement);
             }
-
+                            
+            if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
             saveElement.Add(new XAttribute("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition)));
 
             parentElement.Add(saveElement);
@@ -247,9 +296,10 @@ namespace Barotrauma
 
             if (Screen.Selected == GameMain.EditMapScreen)
             {
-                string filePath = ToolBox.GetAttributeString(element, "filepath", "");
+                //string filePath = ToolBox.GetAttributeString(element, "filepath", "");
                 
-                linkedSub = Create(submarine, filePath, pos);
+                linkedSub = CreateDummy(submarine, element, pos);
+                linkedSub.saveElement = element;
             }
             else
             {
@@ -258,6 +308,8 @@ namespace Barotrauma
 
                 linkedSub.rect.Location = pos.ToPoint();
             }
+
+            linkedSub.filePath = ToolBox.GetAttributeString(element, "filepath", "");
 
             string linkedToString = ToolBox.GetAttributeString(element, "linkedto", "");
             if (linkedToString != "")
@@ -273,7 +325,7 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            if (saveElement == null) return;
+            if (Screen.Selected == GameMain.EditMapScreen) return;
 
             sub = Submarine.Load(saveElement, false);
             sub.SetPosition(WorldPosition - Submarine.WorldPosition);
@@ -281,30 +333,29 @@ namespace Barotrauma
             
             var linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
 
-            if (linkedItem != null)
+            if (linkedItem == null) return;
+            
+            var linkedPort = ((Item)linkedItem).GetComponent<DockingPort>();
+
+            DockingPort myPort = null;
+            float closestDistance = 0.0f;
+
+            foreach (DockingPort port in DockingPort.list)
             {
-                var linkedPort = ((Item)linkedItem).GetComponent<DockingPort>();
+                if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) continue;
 
-                DockingPort myPort = null;
-                float closestDistance = 0.0f;
-
-                foreach (DockingPort port in DockingPort.list)
+                float dist = Vector2.Distance(port.Item.WorldPosition, linkedPort.Item.WorldPosition);
+                if (myPort == null || dist < closestDistance)
                 {
-                    if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) continue;
-
-                    float dist = Vector2.Distance(port.Item.WorldPosition, linkedPort.Item.WorldPosition);
-                    if (myPort == null || dist < closestDistance)
-                    {
-                        myPort = port;
-                        closestDistance = dist;
-                    }
-                }
-
-                if (myPort != null)
-                {
-                    myPort.Dock(linkedPort);
+                    myPort = port;
+                    closestDistance = dist;
                 }
             }
+
+            if (myPort != null)
+            {
+                myPort.Dock(linkedPort);
+            }            
         }
     }
 }

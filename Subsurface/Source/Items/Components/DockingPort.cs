@@ -345,8 +345,6 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-
-
             if (dockingTarget == null)
             {
                 dockingState = MathHelper.Lerp(dockingState, 0.0f, deltaTime * 10.0f);
@@ -411,7 +409,7 @@ namespace Barotrauma.Items.Components
                         drawPos - Vector2.UnitX * (rect.Width / 2 * dockingState),
                         new Rectangle(
                             rect.X, rect.Y,
-                            (int)(rect.Width / 2 * dockingState), rect.Height), Color.Red);
+                            (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
                 }              
             }
             else
@@ -433,7 +431,7 @@ namespace Barotrauma.Items.Components
                         drawPos - Vector2.UnitY * (rect.Height / 2 * dockingState),
                         new Rectangle(
                             rect.X, rect.Y,
-                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.Red);
+                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
                 }      
             }
         }
@@ -456,6 +454,8 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)
         {
+            if (GameMain.Client != null) return;
+
             switch (connection.Name)
             {
                 case "toggle":
@@ -465,6 +465,50 @@ namespace Barotrauma.Items.Components
                 case "set_state":
                     Docked = signal != "0";
                     break;
+            }
+
+            item.NewComponentEvent(this, false, true);
+        }
+
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        {
+            message.Write(docked);
+
+            if (docked)
+            {
+                message.Write(dockingTarget.item.ID);
+            }
+
+            return true;
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
+        {
+            bool isDocked = message.ReadBoolean();
+
+            if (isDocked)
+            {
+                ushort dockingTargetID = message.ReadUInt16();
+                Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
+                if (targetEntity == null || !(targetEntity is Item))
+                {
+                    DebugConsole.ThrowError("Invalid docking port network event (can't dock to "+targetEntity.ToString()+")");
+                    return;
+                }
+
+                dockingTarget = (targetEntity as Item).GetComponent<DockingPort>();
+
+                if (dockingTarget == null)
+                {
+                    DebugConsole.ThrowError("Invalid docking port network event ("+targetEntity+" doesn't have a docking port component)");
+                    return;
+                }
+
+                Dock(dockingTarget);
+            }
+            else
+            {
+                Undock();
             }
         }
     }

@@ -223,6 +223,8 @@ namespace Barotrauma.Lights
                 //light and convexhull are inside different subs
                 else
                 {
+                    if (sub.DockedTo.Contains(ParentSub) && !NeedsHullUpdate) return list;
+
                     lightPos -= (sub.Position - ParentSub.Position);
 
                     Rectangle subBorders = sub.Borders;
@@ -233,6 +235,7 @@ namespace Barotrauma.Lights
 
                     var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
                     list = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
+                    chList.List = list;
                 }
             }
 
