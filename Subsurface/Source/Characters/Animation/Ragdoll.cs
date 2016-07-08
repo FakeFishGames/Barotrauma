@@ -74,6 +74,11 @@ namespace Barotrauma
             }
         }
 
+        public float FloorY
+        {
+            get { return floorY; }
+        }
+
         public float Mass
         {
             get;
@@ -330,14 +335,8 @@ namespace Barotrauma
                     lowestLimb.Position.X - structure.Rect.X : structure.Rect.Width - (lowestLimb.Position.X - structure.Rect.X);
 
                 
-                if (character.IsDead)
-                {
-                    if (lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + stairPosY - 10.0f) return false; 
-                }
-                else
-                {
-                    if (lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + stairPosY) return false;
-                }
+                if (lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + stairPosY - 10.0f) return false;
+                
 
                 
                 if (targetMovement.Y < 0.5f)
@@ -477,7 +476,10 @@ namespace Barotrauma
                 }
             }
 
-
+            if (ignorePlatforms)
+            {
+                GUI.DrawLine(spriteBatch, new Vector2(refLimb.WorldPosition.X, -refLimb.WorldPosition.Y), new Vector2(refLimb.WorldPosition.X, -refLimb.WorldPosition.Y+50), Color.Orange, 0, 5);
+            }
         }
 
         public virtual void Flip()

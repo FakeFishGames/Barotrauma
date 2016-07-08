@@ -814,7 +814,7 @@ namespace Barotrauma
             }
             else
             {
-                notClimbing = targetMovement.X != 0.0f;
+                notClimbing = Math.Abs(targetMovement.X) > 0.05f;
             }
 
             //stop climbing if:

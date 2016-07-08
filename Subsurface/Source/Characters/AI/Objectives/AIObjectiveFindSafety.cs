@@ -37,7 +37,7 @@ namespace Barotrauma
 
             if (currentHull != null)
             {
-                if (currentHull.Volume / currentHull.FullVolume > 0.5f || character.Oxygen < 80.0f)
+                if (NeedsDivingGear())
                 {
                     if (!FindDivingGear(deltaTime)) return;
                 }
@@ -131,6 +131,19 @@ namespace Barotrauma
             return (otherObjective is AIObjectiveFindSafety);
         }
 
+        private bool NeedsDivingGear()
+        {
+            var currentHull = character.AnimController.CurrentHull;
+            if (currentHull == null) return true;
+
+            //there's lots of water in the room -> get a suit
+            if (currentHull.Volume / currentHull.FullVolume > 0.5f) return true;
+
+            if (currentHull.OxygenPercentage < 30.0f) return true;
+
+            return false;
+        }
+
         public override float GetPriority(Character character)
         {
             if (character.Oxygen < 80.0f)
@@ -142,8 +155,12 @@ namespace Barotrauma
             currenthullSafety = GetHullSafety(character.AnimController.CurrentHull, character);
             priority = 100.0f - currenthullSafety;
 
-            if (divingGearObjective != null && !divingGearObjective.IsCompleted()) priority += 20.0f;
 
+            if (NeedsDivingGear())
+            {
+                if (divingGearObjective != null && !divingGearObjective.IsCompleted()) priority += 20.0f;
+            }
+           
             return priority;
         }
 

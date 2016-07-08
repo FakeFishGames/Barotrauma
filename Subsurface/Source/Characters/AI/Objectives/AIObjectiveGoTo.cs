@@ -16,6 +16,8 @@ namespace Barotrauma
         //how long until the path to the target is declared unreachable
         private float waitUntilPathUnreachable;
 
+        private bool getDivingGearIfNeeded;
+
         public override bool CanBeCompleted
         {
             get
@@ -35,23 +37,25 @@ namespace Barotrauma
             get { return target; }
         }
 
-        public AIObjectiveGoTo(Entity target, Character character, bool repeat = false)
+        public AIObjectiveGoTo(Entity target, Character character, bool repeat = false, bool getDivingGearIfNeeded = true)
             : base (character, "")
         {
             this.target = target;
             this.repeat = repeat;
 
             waitUntilPathUnreachable = 5.0f;
+            this.getDivingGearIfNeeded = getDivingGearIfNeeded;
         }
 
 
-        public AIObjectiveGoTo(Vector2 simPos, Character character, bool repeat = false)
+        public AIObjectiveGoTo(Vector2 simPos, Character character, bool repeat = false, bool getDivingGearIfNeeded = true)
             : base(character, "")
         {
             this.targetPos = simPos;
             this.repeat = repeat;
 
             waitUntilPathUnreachable = 5.0f;
+            this.getDivingGearIfNeeded = getDivingGearIfNeeded;
         }
 
         protected override void Act(float deltaTime)
@@ -108,7 +112,7 @@ namespace Barotrauma
                 {
                     indoorsSteering.SteeringWander();
                 }
-                else if (indoorsSteering.CurrentPath != null && indoorsSteering.HasOutdoorsNodes)
+                else if (getDivingGearIfNeeded && indoorsSteering.CurrentPath != null && indoorsSteering.HasOutdoorsNodes)
                 {
                     AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                 }

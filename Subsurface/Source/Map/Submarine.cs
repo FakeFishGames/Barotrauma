@@ -895,13 +895,19 @@ namespace Barotrauma
             return sub;            
         }
 
+        public static bool Unloading
+        {
+            get;
+            private set;
+        }
+
         public static void Unload()
         {
+            Unloading = true;
 
             Sound.OnGameEnd();
 
             if (GameMain.LightManager != null) GameMain.LightManager.ClearLights();
-
 
             foreach (Submarine sub in loaded)
             {
@@ -919,6 +925,8 @@ namespace Barotrauma
             Ragdoll.list.Clear();
 
             GameMain.World.Clear();
+
+            Unloading = false;
         }
 
         public override void Remove()

@@ -140,7 +140,7 @@ namespace Barotrauma
             int iconY = (int)(Math.Floor(iconIndices[(int)spawnType]*IconSize / (float)iconTexture.Width))*IconSize;
 
             int iconSize = ConnectedGap == null && Ladders == null ? IconSize : (int)(IconSize * 1.5f);
-
+            
             spriteBatch.Draw(iconTexture, 
                 new Rectangle((int)(drawPos.X - iconSize/2), (int)(drawPos.Y - iconSize/2), iconSize, iconSize),
                 new Rectangle(iconX, iconY, IconSize,IconSize), clr);
@@ -176,7 +176,7 @@ namespace Barotrauma
             {
                 editingHUD = CreateEditingHUD();
             }
-
+            
             editingHUD.Update((float)Physics.step);
             editingHUD.Draw(spriteBatch);
 
@@ -321,7 +321,7 @@ namespace Barotrauma
             }
 
             float minDist = 150.0f;
-            float heightFromFloor = 100.0f;
+            float heightFromFloor = 110.0f;
 
             foreach (Hull hull in Hull.hullList)
             {
@@ -607,7 +607,11 @@ namespace Barotrauma
                 float dist = Vector2.Distance(wp.Position, Position);
                 if (closest == null || dist < closestDist)
                 {
-                    if (Submarine.CheckVisibility(SimPosition, wp.SimPosition) != null) continue;
+                    var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, true);
+                    if (body != null)
+                    {
+                        if (body.UserData is Structure) continue;
+                    }
 
                     closestDist = dist;
                     closest = wp;
@@ -620,6 +624,8 @@ namespace Barotrauma
 
         private void ConnectTo(WayPoint wayPoint2)
         {
+            System.Diagnostics.Debug.Assert(this != wayPoint2);
+
             if (!linkedTo.Contains(wayPoint2)) linkedTo.Add(wayPoint2);
             if (!wayPoint2.linkedTo.Contains(this)) wayPoint2.linkedTo.Add(this);
         }

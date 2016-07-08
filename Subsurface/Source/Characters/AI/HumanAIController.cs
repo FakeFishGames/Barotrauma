@@ -71,7 +71,33 @@ namespace Barotrauma
             
             steeringManager.Update(moveSpeed);
 
-            Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X*0.5f));
+            Character.AnimController.IgnorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
+                (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
+
+            var currPath = (steeringManager as IndoorsSteeringManager).CurrentPath;
+            if (currPath != null && currPath.CurrentNode != null)
+            {
+                if (currPath.CurrentNode.WorldPosition.Y < Character.WorldPosition.Y - 200)
+                {
+                    Character.AnimController.IgnorePlatforms = true;
+                }
+
+                if (Character.AnimController.Stairs != null)
+                {
+                    float yDiff = currPath.CurrentNode.WorldPosition.Y - Character.WorldPosition.Y;
+
+                    if (Math.Abs(yDiff)>10.0f)
+                    {
+                        int dir = Math.Sign(yDiff);
+
+                        float movement = Character.AnimController.Stairs.StairDirection == Direction.Right ?
+                            dir * Character.AnimController.TargetMovement.Length() : -dir * Character.AnimController.TargetMovement.Length();
+
+                        Character.AnimController.TargetMovement = new Vector2(movement, 0.0f);
+                    }  
+                }
+            }
+
             (Character.AnimController as HumanoidAnimController).Crouching = false;
 
 
@@ -86,17 +112,20 @@ namespace Barotrauma
 
             if (Character.SelectedConstruction != null && Character.SelectedConstruction.GetComponent<Items.Components.Ladder>()!=null)
             {
-                var currPath = (steeringManager as IndoorsSteeringManager).CurrentPath;
                 if (currPath != null && currPath.CurrentNode != null && currPath.CurrentNode.Ladders != null)
                 {
                     Character.AnimController.TargetMovement = new Vector2( 0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
                 }
             }
 
-            //unequip diving suit if running out of oxygen
-            if (Character.Oxygen < 50.0f && Character.AnimController.CurrentHull!=null &&
-                Character.AnimController.CurrentHull.OxygenPercentage > 20.0f &&
-                Character.AnimController.CurrentHull.Volume < Character.AnimController.CurrentHull.FullVolume*0.3f)
+            //suit can be taken off if there character is inside a hull and there's air in the room
+            bool canTakeOffSuit = Character.AnimController.CurrentHull != null &&
+                Character.AnimController.CurrentHull.OxygenPercentage > 30.0f &&
+                Character.AnimController.CurrentHull.Volume < Character.AnimController.CurrentHull.FullVolume * 0.3f;
+
+            //the suit can be taken off and the character is running out of oxygen (couldn't find a tank for the suit?) or idling
+            //-> take the suit off
+            if (canTakeOffSuit && (Character.Oxygen < 50.0f || objectiveManager.CurrentObjective is AIObjectiveIdle))
             {
                 var divingSuit = Character.Inventory.FindItem("Diving Suit");
                 if (divingSuit != null) divingSuit.Drop(Character);
@@ -121,9 +150,6 @@ namespace Barotrauma
             {
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
-
-
-
         }
 
         public override void OnAttacked(IDamageable attacker, float amount)
@@ -172,7 +198,7 @@ namespace Barotrauma
             {
                 GUI.DrawLine(spriteBatch,
                     new Vector2(pathSteering.CurrentPath.Nodes[i].WorldPosition.X, -pathSteering.CurrentPath.Nodes[i].WorldPosition.Y),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].WorldPosition.Y, -pathSteering.CurrentPath.Nodes[i-1].WorldPosition.Y),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].WorldPosition.X, -pathSteering.CurrentPath.Nodes[i-1].WorldPosition.Y),
                     Color.LightGreen);
             }
         }

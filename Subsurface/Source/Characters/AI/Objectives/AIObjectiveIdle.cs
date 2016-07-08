@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,8 +12,6 @@ namespace Barotrauma
         AITarget currentTarget;
         private float newTargetTimer;
 
-
-
         public AIObjectiveIdle(Character character) : base(character, "")
         {
 
@@ -22,7 +21,6 @@ namespace Barotrauma
         {
             return 1.0f;
         }
-
 
         protected override void Act(float deltaTime)
         {
@@ -53,7 +51,8 @@ namespace Barotrauma
                 newTargetTimer = currentTarget == null ? 5.0f : 15.0f;
             }
             
-            newTargetTimer -= deltaTime;            
+            newTargetTimer -= deltaTime;
+
                   
             //wander randomly if reached the end of the path or the target is unreachable
             if (pathSteering==null || (pathSteering.CurrentPath != null && 
@@ -62,13 +61,28 @@ namespace Barotrauma
                 //steer away from edges of the hull
                 if (character.AnimController.CurrentHull!=null)
                 {
-                    if (character.Position.X < character.AnimController.CurrentHull.Rect.X + WallAvoidDistance)
+                    float leftDist = character.Position.X - character.AnimController.CurrentHull.Rect.X;
+                    float rightDist = character.AnimController.CurrentHull.Rect.Right - character.Position.X;
+
+                    if (leftDist < WallAvoidDistance && rightDist < WallAvoidDistance)
                     {
-                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX*5.0f);
+                        if (Math.Abs(rightDist - leftDist) > WallAvoidDistance / 2)
+                        {
+                            pathSteering.SteeringManual(deltaTime, Vector2.UnitX * Math.Sign(rightDist - leftDist));
+                        }
+                        else
+                        {
+                            pathSteering.Reset();
+                            return;
+                        }
                     }
-                    else if (character.Position.X > character.AnimController.CurrentHull.Rect.Right - WallAvoidDistance)
+                    else if (leftDist < WallAvoidDistance)
                     {
-                        pathSteering.SteeringManual(deltaTime, -Vector2.UnitX);
+                        pathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist)/WallAvoidDistance);
+                    }
+                    else if (rightDist < WallAvoidDistance)
+                    {
+                        pathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist)/WallAvoidDistance);
                     }
                 }
 
@@ -85,7 +99,7 @@ namespace Barotrauma
             }
  
             if (currentTarget == null) return;
-            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition);
+            character.AIController.SteeringManager.SteeringSeek(currentTarget.SimPosition, 2.0f);
         }
 
         private AITarget FindRandomTarget()
