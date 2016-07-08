@@ -1143,7 +1143,14 @@ namespace Barotrauma
 
             Vector2 pos = DrawPosition;
             pos.Y = -pos.Y;
-            
+
+            if (GameMain.DebugDraw)
+            {
+                AnimController.DebugDraw(spriteBatch);
+
+                if (aiTarget != null) aiTarget.Draw(spriteBatch);
+            }
+
             if (this == controlled) return;
 
             if (IsNetworkPlayer && info!=null)
@@ -1156,13 +1163,6 @@ namespace Barotrauma
                 {
                     spriteBatch.DrawString(GUI.Font, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
                 }
-            }
-
-            if (GameMain.DebugDraw)
-            {
-                AnimController.DebugDraw(spriteBatch);
-
-                if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
 
             if (isDead) return;

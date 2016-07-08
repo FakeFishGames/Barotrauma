@@ -20,6 +20,11 @@ namespace Barotrauma
         {
             get;
         }
+
+        Vector2 WorldPosition
+        { 
+            get;
+        }
         
 
 

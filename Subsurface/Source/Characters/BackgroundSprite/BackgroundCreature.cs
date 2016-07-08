@@ -42,6 +42,11 @@ namespace Barotrauma
             get { return FarseerPhysics.ConvertUnits.ToSimUnits(position); }
         }
 
+        public Vector2 WorldPosition
+        {
+            get { return position; }
+        }
+
         public Vector2 Velocity
         {
             get { return new Vector2(velocity.X, velocity.Y); }

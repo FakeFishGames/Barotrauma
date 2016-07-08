@@ -29,12 +29,17 @@ namespace Barotrauma
         
         public Vector2 SimPosition
         {
-            get { return Character.AnimController.Limbs[0].SimPosition; }
+            get { return Character.SimPosition; }
+        }
+
+        public Vector2 WorldPosition
+        {
+            get { return Character.WorldPosition; }
         }
 
         public Vector2 Velocity
         {
-            get { return Character.AnimController.Limbs[0].LinearVelocity; }
+            get { return Character.AnimController.RefLimb.LinearVelocity; }
         }
 
         public AiState State

@@ -1060,12 +1060,21 @@ namespace Barotrauma
             }
         }
 
-        public List<T> GetConnectedComponents<T>()
+        public List<T> GetConnectedComponents<T>(bool recursive = false)
         {
-            ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
-            if (connectionPanel == null) return new List<T>();
-
             List<T> connectedComponents = new List<T>();
+
+            if (recursive)
+            {
+                List<Item> alreadySearched = new List<Item>() {this};
+                GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
+
+                return connectedComponents;
+            }
+
+            ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
+            if (connectionPanel == null) return connectedComponents;
+
 
             foreach (Connection c in connectionPanel.Connections)
             {
@@ -1078,6 +1087,34 @@ namespace Barotrauma
             }
 
             return connectedComponents;
+        }
+
+        private void GetConnectedComponentsRecursive<T>(List<Item> alreadySearched, List<T> connectedComponents)
+        {
+            alreadySearched.Add(this);
+
+            ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
+            if (connectionPanel == null) return;
+
+            foreach (Connection c in connectionPanel.Connections)
+            {
+                var recipients = c.Recipients;
+                foreach (Connection recipient in recipients)
+                {
+                    if (alreadySearched.Contains(recipient.Item)) continue;
+
+                    var component = recipient.Item.GetComponent<T>();
+                    
+                    if (component != null)
+                    {
+                        connectedComponents.Add(component);
+                    }
+
+                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
+
+                    
+                }
+            }
         }
 
         public void SendSignal(int stepsTaken, string signal, string connectionName, float power = 0.0f)

@@ -126,6 +126,8 @@ namespace Barotrauma.Items.Components
 
         public void Dock(DockingPort target)
         {
+            if (item.Submarine.DockedTo.Contains(target.item.Submarine)) return;
+            
             if (dockingTarget != null)
             {
                 Undock();
@@ -154,6 +156,23 @@ namespace Barotrauma.Items.Components
                 Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
                 Math.Sign(item.WorldPosition.Y - dockingTarget.item.WorldPosition.Y);
             dockingTarget.dockingDir = -dockingDir;
+
+            foreach (WayPoint wp in WayPoint.WayPointList)
+            {
+                if (wp.Submarine != item.Submarine || wp.SpawnType != SpawnType.Path) continue;
+
+                if (!Submarine.RectContains(item.Rect, wp.Position)) continue;
+
+                foreach (WayPoint wp2 in WayPoint.WayPointList)
+                {
+                    if (wp2.Submarine != dockingTarget.item.Submarine || wp2.SpawnType != SpawnType.Path) continue;
+
+                    if (!Submarine.RectContains(dockingTarget.item.Rect, wp2.Position)) continue;
+
+                    wp.linkedTo.Add(wp2);
+                    wp2.linkedTo.Add(wp);
+                }
+            }
             
             CreateJoint(false);
         }
@@ -304,6 +323,24 @@ namespace Barotrauma.Items.Components
 
             dockingTarget.item.Submarine.DockedTo.Remove(item.Submarine);
             item.Submarine.DockedTo.Remove(dockingTarget.item.Submarine);
+            
+            //remove all waypoint links between this sub and the dockingtarget
+            foreach (WayPoint wp in WayPoint.WayPointList)
+            {
+                if (wp.Submarine != item.Submarine || wp.SpawnType != SpawnType.Path) continue;
+
+                for (int i = wp.linkedTo.Count - 1; i >= 0; i--)
+                {
+                    var wp2 = wp.linkedTo[i] as WayPoint;
+                    if (wp2 == null) continue;
+
+                    if (wp.Submarine == dockingTarget.item.Submarine)
+                    {
+                        wp.linkedTo.RemoveAt(i);
+                        wp2.linkedTo.Remove(wp);
+                    }
+                }
+            }
 
             item.linkedTo.Clear();
 
@@ -330,7 +367,7 @@ namespace Barotrauma.Items.Components
                 gap.Remove();
                 gap = null;
             }
-
+            
             if (bodies!=null)
             {
                 foreach (Body body in bodies)

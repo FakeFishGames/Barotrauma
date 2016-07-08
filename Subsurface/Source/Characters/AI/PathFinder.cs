@@ -19,7 +19,7 @@ namespace Barotrauma
         public float F,G,H;
 
         public List<PathNode> connections;
-        public float[] distances;
+        public List<float> distances;
         
         public WayPoint Waypoint
         {
@@ -63,15 +63,14 @@ namespace Barotrauma
             var nodeList = nodes.Values.ToList();
             foreach (PathNode node in nodeList)
             {
-                node.distances = new float[node.connections.Count];
-                for (int i = 0; i< node.distances.Length; i++)
+                node.distances = new List<float>();
+                for (int i = 0; i< node.connections.Count; i++)
                 {
-                    node.distances[i] = Vector2.Distance(node.position, node.connections[i].position);
+                    node.distances.Add(Vector2.Distance(node.position, node.connections[i].position));
                 }                
             }
             return nodeList;            
         }
-
     }
 
     class PathFinder
@@ -87,7 +86,64 @@ namespace Barotrauma
         {
             nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.MoveWithLevel != insideSubmarine));
 
+            foreach (WayPoint wp in wayPoints)
+            {
+                wp.linkedTo.CollectionChanged += WaypointLinksChanged;
+            }
+
             this.insideSubmarine = insideSubmarine;
+        }
+
+        void WaypointLinksChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (Submarine.Unloading) return;
+
+            var waypoints = sender as IEnumerable<MapEntity>;
+
+            foreach (MapEntity me in waypoints)
+            {
+                WayPoint wp = me as WayPoint;
+                if (me == null) continue;
+
+                var node = nodes.Find(n => n.Waypoint == wp);
+                if (node == null) return;
+
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                {
+                    for (int i = node.connections.Count - 1; i >= 0; i--)
+                    {
+                        //remove connection if the waypoint isn't connected anymore
+                        if (wp.linkedTo.FirstOrDefault(l => l == node.connections[i].Waypoint) == null)
+                        {
+                            node.connections.RemoveAt(i);
+                            node.distances.RemoveAt(i);
+                        }
+                    }
+                }
+                else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+                {
+                    for (int i = 0; i < wp.linkedTo.Count; i++)
+                    {
+                        WayPoint connected = wp.linkedTo[i] as WayPoint;
+                        if (connected == null) continue;
+
+                        //already connected, continue
+                        if (node.connections.Any(n => n.Waypoint == connected)) continue;
+
+                        var matchingNode = nodes.Find(n => n.Waypoint == connected);
+                        if (matchingNode == null)
+                        {
+#if DEBUG
+                            DebugConsole.ThrowError("Waypoint connections were changed, no matching path node found in PathFinder");
+#endif
+                            return;
+                        }
+
+                        node.connections.Add(matchingNode);
+                        node.distances.Add(Vector2.Distance(node.Position, matchingNode.Position));
+                    }
+                }
+            }
         }
 
         public SteeringPath FindPath(Vector2 start, Vector2 end)
@@ -100,21 +156,21 @@ namespace Barotrauma
             foreach (PathNode node in nodes)
             {
                 Vector2 nodePos = node.Position;
+                
+                float dist = System.Math.Abs(start.X - nodePos.X) +
+                    System.Math.Abs(start.Y - nodePos.Y) * 10.0f; //higher cost for vertical movement
 
-                //if node waypoint is one of submarine waypoints outside the sub, transform position
-                //if (node.Waypoint != null && node.Waypoint.Submarine != null && node.Waypoint.CurrentHull == null)
-                //{
-                //    nodePos -= node.Waypoint.Submarine.Position;
-                //}
-
-                float dist = System.Math.Abs(start.X-nodePos.X)+
-                    System.Math.Abs(start.Y - nodePos.Y)*10.0f +
-                    Vector2.Distance(end,nodePos)/2.0f;
+                //prefer nodes that are closer to the end position
+                dist += Vector2.Distance(end, nodePos) / 10.0f;
 
                 if (dist<closestDist || startNode==null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
-                    if (insideSubmarine && Submarine.CheckVisibility(start, node.Waypoint.SimPosition) != null) continue;
+                    if (insideSubmarine)
+                    {
+                        var body = Submarine.CheckVisibility(start, node.Waypoint.SimPosition);
+                        if (body != null && body.UserData is Structure) continue;
+                    }
 
                     closestDist = dist;
                     startNode = node;
@@ -144,7 +200,11 @@ namespace Barotrauma
                 if (dist < closestDist || endNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
-                    if (insideSubmarine && node.Waypoint.CurrentHull!=null && Submarine.CheckVisibility(end, node.Waypoint.SimPosition) != null) continue;
+                    if (insideSubmarine)
+                    {
+                        var body = Submarine.CheckVisibility(end, node.Waypoint.SimPosition);
+                        if (body != null && body.UserData is Structure) continue;
+                    }
 
                     closestDist = dist;
                     endNode = node;
@@ -234,7 +294,7 @@ namespace Barotrauma
                 for (int i = 0; i < currNode.connections.Count; i++)
                 {
                     PathNode nextNode = currNode.connections[i];
-
+                    
                     //a node that hasn't been searched yet
                     if (nextNode.state==0)
                     {
@@ -272,7 +332,7 @@ namespace Barotrauma
                 }
             }
 
-            if (end.state==0)
+            if (end.state == 0 || end.Parent == null)
             {
                 //path not found
                 return new SteeringPath(true);
@@ -289,6 +349,8 @@ namespace Barotrauma
                 path.Cost += pathNode.F;
                 pathNode = pathNode.Parent;
             }
+
+            finalPath.Add(start.Waypoint);
 
             finalPath.Reverse();
 

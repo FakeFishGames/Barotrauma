@@ -19,6 +19,8 @@ namespace Barotrauma
 
         public bool IgnoreContainedItems;
 
+        private AIObjectiveGoTo goToObjective;
+
         private bool equip;
 
         public override bool CanBeCompleted
@@ -52,13 +54,8 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (targetItem == null)
-            {
-                FindTargetItem();
-                if (targetItem == null) return;
-            }
-
-            if (moveToTarget == null) return;
+            FindTargetItem();
+            if (targetItem == null || moveToTarget == null) return;
 
             if (Vector2.Distance(character.Position, moveToTarget.Position) < targetItem.PickDistance*2.0f)
             {
@@ -97,9 +94,15 @@ namespace Barotrauma
                     character.Inventory.TryPutItem(targetItem, targetSlot, true, false);
                 }
             }
-            else if (!subObjectives.Any())
+            else
             {
-                AddGoToObjective(targetItem);
+                if (goToObjective == null) 
+                {
+                    bool gettingDivingGear = itemName == "diving" || itemName == "Diving Gear";
+                    goToObjective = new AIObjectiveGoTo(moveToTarget, character, false, !gettingDivingGear);
+                }
+
+                goToObjective.TryComplete(deltaTime);
             }
             
         }
@@ -111,7 +114,7 @@ namespace Barotrauma
         {
             float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
 
-            for (int i = 0; i < 5 && currSearchIndex < Item.ItemList.Count - 2; i++)
+            for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 2; i++)
             {
                 currSearchIndex++;
 
@@ -136,22 +139,12 @@ namespace Barotrauma
                 
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
-
-                AddGoToObjective(moveToTarget);
-
             }
 
             //if searched through all the items and a target wasn't found, can't be completed
             if (currSearchIndex >= Item.ItemList.Count && targetItem == null) canBeCompleted = false;
         }
-
-        private void AddGoToObjective(Item gotoToTarget)
-        {
-            subObjectives.Clear();
-            AddSubObjective(new AIObjectiveGoTo(gotoToTarget, character));
-        }
-
-        
+                
         public override bool IsDuplicate(AIObjective otherObjective)
         {
             AIObjectiveGetItem getItem = otherObjective as AIObjectiveGetItem;

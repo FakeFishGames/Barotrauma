@@ -122,12 +122,22 @@ namespace Barotrauma
             if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
 
             Vector2 pos = host.SimPosition;
-            if (character != null && character.Submarine == null &&
-                CurrentPath.CurrentNode != null && CurrentPath.CurrentNode.Submarine != null)
+
+            if (character != null && currentPath.CurrentNode != null)
             {
-                //todo: take multiple subs into account
-                pos -= CurrentPath.CurrentNode.Submarine.SimPosition;
-            }   
+                if (CurrentPath.CurrentNode.Submarine != null)
+                {
+                    if (character.Submarine == null)
+                    {
+                        pos -= CurrentPath.CurrentNode.Submarine.SimPosition;
+                    }
+                    else if (character.Submarine != currentPath.CurrentNode.Submarine)
+                    {
+                        pos -= FarseerPhysics.ConvertUnits.ToSimUnits(currentPath.CurrentNode.Submarine.Position-character.Submarine.Position);
+                    }
+                }
+
+            }
 
             if (currentPath.CurrentNode!= null && currentPath.CurrentNode.Ladders!=null)
             {
@@ -135,16 +145,31 @@ namespace Barotrauma
                 {
                     currentPath.CurrentNode.Ladders.Item.Pick(character, false, true);
                 }
-
-                if (Math.Sign(host.Steering.Y) == currentPath.CurrentNode.SimPosition.Y - pos.Y)
-                {
-                    allowedDistance = 0.0f;
-                }
             }
 
             currentPath.CheckProgress(pos, allowedDistance);
 
             if (currentPath.CurrentNode == null) return Vector2.Zero;
+
+            var hull = character.AnimController.CurrentHull;
+
+            if (character.AnimController.Anim == AnimController.Animation.Climbing)
+            {
+                float x = currentPath.CurrentNode.SimPosition.X - pos.X;
+                float y = (currentPath.CurrentNode.SimPosition.Y) - pos.Y;
+                
+                if (Math.Abs(x) < Math.Abs(y) * 10.0f)                    
+                {
+                    x = 0.0f;                    
+                }
+                else if (character.AnimController.LowestLimb != null && hull != null)
+                {
+                    if (character.AnimController.LowestLimb.Position.Y < hull.Rect.Y - hull.Rect.Height + 10.0f) x = 0.0f;
+                }
+
+                character.AnimController.IgnorePlatforms = false;
+                return new Vector2(x,y);
+            }
 
             return currentPath.CurrentNode.SimPosition - pos;
         }
@@ -153,41 +178,67 @@ namespace Barotrauma
         {
             for (int i = 0; i < 2; i++)
             {
-                WayPoint node = i == 0 ? currentPath.CurrentNode : currentPath.PrevNode;
 
-                if (node == null || node.ConnectedGap == null || node.ConnectedGap.ConnectedDoor == null) continue;
 
-                var door = node.ConnectedGap.ConnectedDoor;
-
-                bool open = currentPath.CurrentNode != null &&
-                    Math.Sign(door.Item.SimPosition.X - host.SimPosition.X) == Math.Sign(currentPath.CurrentNode.SimPosition.X - host.SimPosition.X);
-
-                if (currentPath.CurrentNode==null)
+                WayPoint node = null;
+                WayPoint nextNode = null;
+                
+                if (i==0)
                 {
-                    open = false;
+                    node = currentPath.CurrentNode;
+                    nextNode = currentPath.NextNode;
                 }
                 else
                 {
-                    if (door.LinkedGap.isHorizontal)
-                    {
-                        open = Math.Sign(door.Item.SimPosition.X - character.SimPosition.X) == Math.Sign(currentPath.CurrentNode.SimPosition.X - character.SimPosition.X);
-                    }
-                    else
-                    {
-                        open = Math.Sign(door.Item.SimPosition.Y - character.SimPosition.Y) == Math.Sign(currentPath.CurrentNode.SimPosition.Y - character.SimPosition.Y);
-                    }
+                    node = currentPath.PrevNode;
+                    nextNode = currentPath.CurrentNode;
                 }
 
-                //toggle the door if it's the previous node and open, or if it's current node and closed
-                if (door.IsOpen != open)
+                if (node == null || node.ConnectedGap == null || node.ConnectedGap.ConnectedDoor == null) continue;
+
+                if (nextNode == null) continue;
+
+                var door = node.ConnectedGap.ConnectedDoor;
+
+                bool shouldBeOpen = false;
+
+                if (door.LinkedGap.isHorizontal)
                 {
-                    var buttons = door.Item.GetConnectedComponents<Controller>();
+                    int currentDir = Math.Sign(nextNode.WorldPosition.X - door.Item.WorldPosition.X);
+
+                    shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * currentDir > -50.0f;
+                }
+                else
+                {
+                    int currentDir = Math.Sign(nextNode.WorldPosition.Y - door.Item.WorldPosition.Y);
+
+                    shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * currentDir > -80.0f;
+                }
+                
+
+                //toggle the door if it's the previous node and open, or if it's current node and closed
+                if (door.IsOpen != shouldBeOpen)
+                {
+                    var buttons = door.Item.GetConnectedComponents<Controller>(true);
+
+                    Controller closestButton = null;
+                    float closestDist = 0.0f;
 
                     foreach (Controller controller in buttons)
                     {
-                        if (Vector2.Distance(controller.Item.Position, character.Position) > controller.Item.PickDistance * 2.0f) continue;
+                        float dist = Vector2.Distance(controller.Item.WorldPosition, character.WorldPosition);
+                        if (dist > controller.Item.PickDistance * 2.0f) continue;
 
-                        controller.Item.Pick(character, false, true);
+                        if (dist < closestDist || closestButton == null)
+                        {
+                            closestButton = controller;
+                            closestDist = dist;
+                        }
+                    }
+
+                    if (closestButton != null)
+                    {
+                        closestButton.Item.Pick(character, false, true);
                         break;
                     }
                 }
