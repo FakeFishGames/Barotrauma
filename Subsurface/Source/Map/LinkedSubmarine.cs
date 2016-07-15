@@ -79,7 +79,10 @@ namespace Barotrauma
                 (int)sl.wallVertices.Max(v => v.X + position.X),
                 (int)sl.wallVertices.Min(v => v.Y + position.Y));
 
-            sl.rect = new Rectangle(sl.rect.X, sl.rect.Y, sl.rect.Width - sl.rect.X, sl.rect.Y - sl.rect.Height);
+            int width = sl.rect.Width - sl.rect.X;
+            int height = sl.rect.Y - sl.rect.Height;
+
+            sl.rect = new Rectangle((int)position.X, (int)position.Y, 1, 1);
 
             return sl;
         }
@@ -96,7 +99,7 @@ namespace Barotrauma
             Color color = (isHighlighted) ? Color.Orange : Color.Green;
             if (isSelected) color = Color.Red;
             
-            Vector2 pos = new Vector2(rect.X + rect.Width/2, rect.Y - rect.Height/2);
+            Vector2 pos = Position;
 
             for (int i = 0; i < wallVertices.Count; i++)
             {
@@ -116,6 +119,9 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch, pos + Vector2.UnitY * 50.0f, pos - Vector2.UnitY * 50.0f, color, 0.0f, 5);
             GUI.DrawLine(spriteBatch, pos + Vector2.UnitX * 50.0f, pos - Vector2.UnitX * 50.0f, color, 0.0f, 5);
 
+            Rectangle drawRect = rect;
+            drawRect.Y = -rect.Y;
+            GUI.DrawRectangle(spriteBatch, drawRect, Color.Red, true);
 
             foreach (MapEntity e in linkedTo)
             {
@@ -210,6 +216,7 @@ namespace Barotrauma
 
             GenerateWallVertices(doc.Root);
             saveElement = doc.Root;
+            saveElement.Name = "LinkedSubmarine";
 
             filePath = pathBox.Text;
 
@@ -354,7 +361,7 @@ namespace Barotrauma
 
             if (myPort != null)
             {
-                myPort.Dock(linkedPort);
+                myPort.DockingTarget = linkedPort;
             }            
         }
     }

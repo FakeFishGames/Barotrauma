@@ -126,6 +126,7 @@ namespace Barotrauma
             }
 
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
+            Submarine.MainSub = submarine;
 
             //var secondSub = new Submarine(submarine.FilePath, submarine.MD5Hash.Hash);
             //secondSub.Load(false);

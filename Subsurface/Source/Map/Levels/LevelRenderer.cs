@@ -82,8 +82,8 @@ namespace Barotrauma
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
 
-            Vector2 backgroundPos = cam.Position;
-            //if (Level.Loaded != null) backgroundPos -= Level.Loaded.Position;
+            Vector2 backgroundPos = cam.WorldViewCenter;
+            
             backgroundPos.Y = -backgroundPos.Y;
             backgroundPos /= 20.0f;
 

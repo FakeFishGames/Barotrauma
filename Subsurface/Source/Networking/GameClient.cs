@@ -806,7 +806,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (respawnManager != null && respawnManager.CurrentState == RespawnManager.State.Waiting &&
+            if (respawnManager != null && 
+                respawnManager.CurrentState == RespawnManager.State.Waiting &&
+                respawnManager.CountdownStarted &&
                 myCharacter != null && myCharacter.IsDead)
             {
                 GUI.DrawString(spriteBatch,

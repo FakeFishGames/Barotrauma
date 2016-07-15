@@ -127,6 +127,8 @@ namespace Barotrauma
 
                 foreach (Hull hull in Hull.hullList)
                 {
+                    if (hull.Submarine != submarine) continue;
+
                     Rectangle rect = hull.Rect;
                     FixtureFactory.AttachRectangle(
                         ConvertUnits.ToSimUnits(rect.Width),
@@ -190,30 +192,43 @@ namespace Barotrauma
             {
                 float dist = Vector2.Distance((Vector2)targetPosition, Position);
                 
-                if (dist > 1000.0f) //immediately snap the sub to the target position if more than 1000.0f units away
+                if (dist > 500.0f) //immediately snap the sub to the target position if more than 500.0f units away
                 {
                     Vector2 moveAmount = (Vector2)targetPosition - ConvertUnits.ToDisplayUnits(Body.Position);
 
-                    ForceTranslate(moveAmount);
+                    List<SubmarineBody> dockedBodies = new List<SubmarineBody>() { this };
+                    submarine.DockedTo.ForEach(d => dockedBodies.Add(d.SubBody));
 
-                    if ((Character.Controlled != null && Character.Controlled.Submarine == submarine) ||
-                        (Character.Controlled == null && Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine))
+                    foreach (SubmarineBody dockedBody in dockedBodies)
                     {
-                        GameMain.GameScreen.Cam.UpdateTransform(false);
+                        dockedBody.ForceTranslate(moveAmount);
+
+                        if ((Character.Controlled != null && Character.Controlled.Submarine == dockedBody.submarine) ||
+                            (Character.Controlled == null && Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == dockedBody.submarine))
+                        {
+                            GameMain.GameScreen.Cam.UpdateTransform(false);
+                        }
+
+                        dockedBody.submarine.SetPrevTransform(dockedBody.submarine.Position);
+                        dockedBody.submarine.UpdateTransform();
+                        targetPosition = null;
+
+                        dockedBody.DisplaceCharacters(moveAmount);
                     }
 
-                    submarine.SetPrevTransform(submarine.Position);
-                    submarine.UpdateTransform();
-                    targetPosition = null;
 
-                    DisplaceCharacters(moveAmount);
                 }
-                else if (dist > 50.0f) //lerp the position if (50 < dist < 1000)
+                else if (dist > 50.0f) //lerp the position if (50 < dist < 500)
                 {
                     Vector2 moveAmount = Vector2.Normalize((Vector2)targetPosition - Position);
                     moveAmount *= Math.Min(dist, 100.0f);
 
                     ForceTranslate(moveAmount * deltaTime);
+
+                    foreach (Submarine sub in submarine.DockedTo)
+                    {
+                        sub.SubBody.ForceTranslate(moveAmount * deltaTime);
+                    }
                 }
                 else
                 {
@@ -252,13 +267,17 @@ namespace Barotrauma
         private void ForceTranslate(Vector2 amount)
         {
             Body.SetTransform(Body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
-            if (Character.Controlled != null) Character.Controlled.CursorPosition += amount;
 
-            if ((Character.Controlled != null && Character.Controlled.Submarine == submarine) ||
-                (Character.Controlled == null && Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine))
+            if (Character.Controlled != null)
             {
-                GameMain.GameScreen.Cam.Position += amount;
-                if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
+                Character.Controlled.CursorPosition += amount;
+
+                if (Character.Controlled.Submarine == submarine ||
+                    (Character.Controlled == null && Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine))
+                {
+                    GameMain.GameScreen.Cam.Position += amount;
+                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
+                }
             }
         }
 
@@ -317,10 +336,13 @@ namespace Barotrauma
 
             float neutralPercentage = 0.07f;
 
-            float buoyancy = Math.Max(neutralPercentage - waterPercentage, -neutralPercentage*2.0f);
-            buoyancy *= Body.Mass;
+            Body.IgnoreGravity = true;
 
-            return new Vector2(0.0f, buoyancy*10.0f);
+            float buoyancy = neutralPercentage - waterPercentage;
+
+            if (buoyancy > 0.0f) buoyancy *= 2.0f;
+
+            return new Vector2(0.0f, buoyancy * Body.Mass * 10.0f);
         }
 
         public void ApplyForce(Vector2 force)

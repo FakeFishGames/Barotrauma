@@ -1175,7 +1175,9 @@ namespace Barotrauma.Networking
             if (gameStarted && client.Character != null)
             {
                 client.Character.ClearInputs();
+                client.Character.Kill(CauseOfDeath.Disconnected, true);
             }
+
 
             if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
