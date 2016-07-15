@@ -38,7 +38,7 @@ namespace Barotrauma
         private GUITickBox autoRestartBox;
 
         public bool IsServer;
-        public string ServerName, ServerMessage;
+        public string ServerName;
 
         const float NetworkUpdateInterval = 1.0f;
         private float networkUpdateTimer;
@@ -94,10 +94,6 @@ namespace Barotrauma
         public string GetServerName()
         {
             return ServerName;
-        }
-        public string GetServerMessage()
-        {
-            return ServerMessage;
         }
         
         public List<JobPrefab> JobPreferences
@@ -308,7 +304,6 @@ namespace Barotrauma
 
             serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
             serverMessage.Wrap = true;
-            serverMessage.TextGetter = GetServerMessage;
             serverMessage.OnTextChanged = UpdateServerMessage;
 
         }
@@ -686,7 +681,6 @@ namespace Barotrauma
         public bool UpdateServerMessage(GUITextBox textBox, string text)
         {
             if (GameMain.Server == null) return false;
-            ServerMessage = text;
             valueChanged = true;
 
             return true;
@@ -1107,7 +1101,7 @@ namespace Barotrauma
             }
 
             msg.Write(ServerName);
-            msg.Write(ServerMessage);
+            msg.Write(serverMessage.Text);
 
             msg.WriteRangedInteger(0, 2, (int)GameMain.Server.TraitorsEnabled);
 
@@ -1147,7 +1141,7 @@ namespace Barotrauma
                 md5Hash         = msg.ReadString();
 
                 ServerName      = msg.ReadString();
-                ServerMessage   = msg.ReadString();
+                serverMessage.Text   = msg.ReadString();
 
                 traitorsEnabled = (YesNoMaybe)msg.ReadRangedInteger(0, 2);
 

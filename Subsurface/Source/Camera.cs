@@ -142,6 +142,8 @@ namespace Barotrauma
             {
                 position.Y -= Math.Max(worldView.Y - Level.Loaded.Size.Y, 0.0f);
                 interpolatedPosition.Y -= Math.Max(worldView.Y - Level.Loaded.Size.Y, 0.0f);
+
+                worldView.Y = Math.Min((int)Level.Loaded.Size.Y, worldView.Y); 
             }
 
             transform = Matrix.CreateTranslation(

@@ -819,24 +819,27 @@ namespace Barotrauma
                 center.X -= center.X % GridSize.X;
                 center.Y -= center.Y % GridSize.Y;
 
-                foreach (Item item in Item.ItemList)
+                if (center != Vector2.Zero)
                 {
-                    if (item.Submarine != this) continue;
-
-                    var wire = item.GetComponent<Items.Components.Wire>();
-                    if (wire == null) continue;
-
-                    for (int i = 0; i < wire.Nodes.Count; i++)
+                    foreach (Item item in Item.ItemList)
                     {
-                        wire.Nodes[i] -= center;
-                    }
-                }
+                        if (item.Submarine != this) continue;
 
-                for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
-                {
-                    if (MapEntity.mapEntityList[i].Submarine != this) continue;
-                
-                    MapEntity.mapEntityList[i].Move(-center);
+                        var wire = item.GetComponent<Items.Components.Wire>();
+                        if (wire == null) continue;
+
+                        for (int i = 0; i < wire.Nodes.Count; i++)
+                        {
+                            wire.Nodes[i] -= center;
+                        }
+                    }
+
+                    for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+                    {
+                        if (MapEntity.mapEntityList[i].Submarine != this) continue;
+
+                        MapEntity.mapEntityList[i].Move(-center);
+                    }
                 }
             }
 

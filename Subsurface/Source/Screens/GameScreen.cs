@@ -342,14 +342,14 @@ namespace Barotrauma
 
         private void DrawSubmarineIndicator(SpriteBatch spriteBatch, Submarine submarine)
         {
-            Vector2 subDiff = submarine.WorldPosition - cam.Position;
+            Vector2 subDiff = submarine.WorldPosition - cam.WorldViewCenter;
 
             if (Math.Abs(subDiff.X) > cam.WorldView.Width || Math.Abs(subDiff.Y) > cam.WorldView.Height)
             {
                 Vector2 normalizedSubDiff = Vector2.Normalize(subDiff);
 
                 Vector2 iconPos =
-                    cam.WorldToScreen(cam.Position) +
+                    cam.WorldToScreen(cam.WorldViewCenter) +
                     new Vector2(normalizedSubDiff.X * GameMain.GraphicsWidth * 0.4f, -normalizedSubDiff.Y * GameMain.GraphicsHeight * 0.4f);
 
                 GUI.SubmarineIcon.Draw(spriteBatch, iconPos, Color.LightBlue * 0.5f);

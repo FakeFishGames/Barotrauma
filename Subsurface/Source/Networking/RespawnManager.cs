@@ -118,7 +118,11 @@ namespace Barotrauma.Networking
             int characterToRespawnCount = GetClientsToRespawn().Count;
             if (server.Character != null && server.Character.IsDead) characterToRespawnCount++;
 
-            CountdownStarted = characterToRespawnCount >= MinCharactersToRespawn;
+            bool startCountdown = characterToRespawnCount >= MinCharactersToRespawn;
+
+            if (startCountdown && !CountdownStarted) server.SendRespawnManagerMsg();
+
+            CountdownStarted = startCountdown;
 
             if (!CountdownStarted) return;
 
@@ -170,17 +174,19 @@ namespace Barotrauma.Networking
                     || (respawnShuttle.WorldPosition.Y + respawnShuttle.Borders.Y > Level.Loaded.StartPosition.Y - Level.ShaftHeight && 
                         Math.Abs(Level.Loaded.StartPosition.X - respawnShuttle.WorldPosition.X) < 1000.0f))
                 {
-                    CoroutineManager.StartCoroutine(
-                        ForceShuttleToPos(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + 1000.0f), 100.0f));
-                    
-                    if (GameMain.GameSession != null && GameMain.GameSession.Map != null)
-                    {
-                        string msg = "The transportation shuttle has returned to " + GameMain.GameSession.Map.SelectedLocation;
 
-                        server.SendChatMessage(ChatMessage.Create("", msg, ChatMessageType.Server, null), server.ConnectedClients);
-                    }
+                    CoroutineManager.StopCoroutines("forcepos");
+                    CoroutineManager.StartCoroutine(
+                        ForceShuttleToPos(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + 1000.0f), 100.0f), "forcepos");
                     
+                    //string msg = "The transportation shuttle has returned to ";
+
+                    //server.SendChatMessage(ChatMessage.Create("", msg, ChatMessageType.Server, null), server.ConnectedClients);
+                    
+                   
                     state = State.Waiting;
+                    respawnTimer = RespawnInterval;
+
                     server.SendRespawnManagerMsg();
                 }
 
@@ -200,8 +206,9 @@ namespace Barotrauma.Networking
             server.SendChatMessage(ChatMessage.Create("", "Transportation shuttle dispatched", ChatMessageType.Server, null), server.ConnectedClients);
 
             server.SendRespawnManagerMsg();
-            
-            CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f));
+
+            CoroutineManager.StopCoroutines("forcepos");
+            CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
         }
 
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
@@ -255,6 +262,7 @@ namespace Barotrauma.Networking
                         if (i < clients.Count)
                         {
                             msg.Write((byte)clients[i].ID);
+                            clients[i].Character = character;
                         }
                         else
                         {
@@ -297,7 +305,8 @@ namespace Barotrauma.Networking
                         client.ReadCharacterData(inc, clientId == client.ID);
                     }
 
-                    CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f));
+                    CoroutineManager.StopCoroutines("forcepos");
+                    CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
                     break;
                 case State.Waiting:
                     CountdownStarted = true;

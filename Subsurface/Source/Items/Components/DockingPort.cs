@@ -59,6 +59,12 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        public DockingPort DockingTarget
+        {
+            get { return dockingTarget; }
+            set { dockingTarget = value; }
+        }
+
         public bool Docked
         {
             get
@@ -135,7 +141,8 @@ namespace Barotrauma.Items.Components
 
             PlaySound(ActionType.OnUse, item.WorldPosition);
 
-            item.linkedTo.Add(target.item);
+            if (!item.linkedTo.Contains(target.item)) item.linkedTo.Add(target.item);
+            if (!target.item.linkedTo.Contains(item)) target.item.linkedTo.Add(item);
 
             if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.DockedTo.Add(item.Submarine);
             if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.DockedTo.Add(target.item.Submarine);
@@ -184,7 +191,7 @@ namespace Barotrauma.Items.Components
                 Vector2.UnitX * Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
                 Vector2.UnitY * Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y));
             offset *= DockedDistance * 0.5f;
-
+            
             Vector2 pos1 = item.WorldPosition + offset;
 
             Vector2 pos2 = dockingTarget.item.WorldPosition - offset;
@@ -302,6 +309,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            item.linkedTo.Add(hulls[0]);
+            item.linkedTo.Add(hulls[1]);
+
+            item.linkedTo.Add(gap);
+
 
             foreach (Body body in bodies)
             {
@@ -394,6 +406,22 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                if (!docked)
+                {
+                    Dock(dockingTarget);
+
+                    //if (joint.BodyA.Mass < joint.BodyB.Mass)
+                    //{
+                    //    joint.BodyA.SetTransform(joint.BodyA.Position + (joint.WorldAnchorB - joint.WorldAnchorA), 0.0f);
+                    //}
+                    //else
+                    //{
+                    //    joint.BodyB.SetTransform(joint.BodyB.Position + (joint.WorldAnchorA - joint.WorldAnchorB), 0.0f);
+                    //}
+                    
+
+                }
+
                 if (joint is DistanceJoint)
                 {
                     item.SendSignal(0, "0", "state_out");
@@ -405,7 +433,11 @@ namespace Barotrauma.Items.Components
                         PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
 
                         CreateJoint(true);
-                        CreateHull();
+
+                        if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
+                        {
+                            CreateHull();
+                        }
                     }
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
                 }
@@ -459,7 +491,7 @@ namespace Barotrauma.Items.Components
                         drawPos,
                         new Rectangle(
                             rect.X, rect.Y + rect.Height/2 + (int)(rect.Height / 2 * (1.0f - dockingState)),
-                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
+                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.Red);
 
                 }
                 else
@@ -482,11 +514,31 @@ namespace Barotrauma.Items.Components
         {
             if (!item.linkedTo.Any()) return;
 
-            Item linkedItem = item.linkedTo.First() as Item;
-            if (linkedItem == null) return;
+            foreach (MapEntity entity in item.linkedTo)
+            {
 
-            DockingPort port = linkedItem.GetComponent<DockingPort>();
-            if (port != null) Dock(port);
+                var hull = entity as Hull;
+                if (hull != null)
+                {
+                    hull.Remove();
+                    continue;
+                }
+
+                var gap = entity as Gap;
+                if (gap != null)
+                {
+                    gap.Remove();
+                    continue;
+                }
+
+                Item linkedItem = entity as Item;
+                if (linkedItem == null) continue;
+
+                var dockingPort = linkedItem.GetComponent<DockingPort>();
+                if (dockingPort != null) dockingTarget = dockingPort;
+            }
+
+            item.linkedTo.Clear();
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)
