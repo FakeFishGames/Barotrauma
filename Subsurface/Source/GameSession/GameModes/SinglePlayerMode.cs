@@ -145,12 +145,12 @@ namespace Barotrauma
 
             if (Submarine.MainSub == null) return;
 
-            if (Submarine.MainSub.AtEndPosition)
+            if (Submarine.Loaded.Any(s=> s.AtEndPosition))
             {
                 endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;                
                 endShiftButton.Draw(spriteBatch);
             }
-            else if (Submarine.MainSub.AtStartPosition)
+            else if (Submarine.Loaded.Any(s => s.AtStartPosition))
             {
                 endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
                 endShiftButton.Draw(spriteBatch);
@@ -203,6 +203,24 @@ namespace Barotrauma
                 {
                     Map.MoveToNextLocation();
                 }
+
+                if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition)
+                {
+                    Submarine newMainSub = Submarine.Loaded.Find(s => s.AtEndPosition || s.AtStartPosition);
+                    Submarine oldMainSub = Submarine.MainSub;
+                    Submarine.MainSub = newMainSub;
+
+                    GameMain.GameSession.Submarine = newMainSub;
+
+                    List<Submarine> subsToLeaveBehind = Submarine.Loaded.FindAll(s => s != Submarine.MainSub && !Submarine.MainSub.DockedTo.Contains(s));
+
+                    foreach (Submarine sub in subsToLeaveBehind)
+                    {
+                        MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
+                        LinkedSubmarine.CreateDummy(newMainSub, sub);
+                    }
+                }
+
 
                 SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
             }

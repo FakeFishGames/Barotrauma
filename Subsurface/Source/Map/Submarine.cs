@@ -191,6 +191,7 @@ namespace Barotrauma
         public string FilePath
         {
             get { return filePath; }
+            set { filePath = value; }
         }
 
         public bool AtDamageDepth
