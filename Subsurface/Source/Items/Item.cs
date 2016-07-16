@@ -325,20 +325,9 @@ namespace Barotrauma
 
             condition = 100.0f;
 
-            XElement element = ToolBox.TryLoadXml(Prefab.ConfigFile).Root;
+            XElement element = prefab.ConfigElement;
             if (element == null) return;
-
-            if (ToolBox.GetAttributeString(element, "name", "") != Name)
-            {
-                foreach (XElement subElement in element.Elements())
-                {
-                    if (ToolBox.GetAttributeString(subElement, "name", "") != Name) continue;
-
-                    element = subElement;
-                    break;
-                }
-            }
-
+            
             properties = ObjectProperty.InitProperties(this, element);
 
             foreach (XElement subElement in element.Elements())
