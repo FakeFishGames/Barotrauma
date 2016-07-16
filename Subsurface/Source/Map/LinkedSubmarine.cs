@@ -36,6 +36,7 @@ namespace Barotrauma
 
         private string filePath;
 
+        private bool loadSub;
         private Submarine sub;
 
         private XElement saveElement;
@@ -55,6 +56,14 @@ namespace Barotrauma
             linkedToID = new List<ushort>();
 
             InsertToList();
+        }
+
+        public static LinkedSubmarine CreateDummy(Submarine mainSub, Submarine linkedSub)
+        {
+            LinkedSubmarine sl = new LinkedSubmarine(mainSub);
+            sl.sub = linkedSub;
+
+            return sl;
         }
         
         public static LinkedSubmarine CreateDummy(Submarine mainSub, string filePath, Vector2 position)
@@ -280,15 +289,32 @@ namespace Barotrauma
             }
             else
             {
-                if (!sub.DockedTo.Contains(Submarine.MainSub)) return null;
 
                 saveElement = new XElement("LinkedSubmarine");
-                
+
+
                 sub.SaveToXElement(saveElement);
             }
+
+            if (sub != null)
+            {
+                if (!sub.DockedTo.Contains(Submarine.MainSub))
+                {
+                    saveElement.Add(new XAttribute("location", Level.Loaded.Seed));
+                    saveElement.Add(new XAttribute("worldpos", ToolBox.Vector2ToString(sub.SubBody.Position)));
+
+                }
+                else 
+                {
+                    if (saveElement.Attribute("location") != null) saveElement.Attribute("location").Remove();
+                    if (saveElement.Attribute("worldpos") != null) saveElement.Attribute("worldpos").Remove();
+                }
                             
-            if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
-            saveElement.Add(new XAttribute("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition)));
+                if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
+                saveElement.Add(new XAttribute("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition)));
+            }
+
+
 
             parentElement.Add(saveElement);
 
@@ -313,6 +339,15 @@ namespace Barotrauma
                 linkedSub = new LinkedSubmarine(submarine);
                 linkedSub.saveElement = element;
 
+                string levelSeed = ToolBox.GetAttributeString(element, "location", "");
+                if (!string.IsNullOrWhiteSpace(levelSeed) && GameMain.GameSession.Level != null && GameMain.GameSession.Level.Seed != levelSeed)
+                {
+                    linkedSub.loadSub = false;
+                    return;
+                }
+
+                linkedSub.loadSub = true;
+
                 linkedSub.rect.Location = pos.ToPoint();
             }
 
@@ -332,11 +367,22 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            if (Screen.Selected == GameMain.EditMapScreen) return;
+            if (!loadSub) return;
 
-            sub = Submarine.Load(saveElement, false);
-            sub.SetPosition(WorldPosition - Submarine.WorldPosition);
-            sub.Submarine = Submarine;
+            sub = Submarine.Load(saveElement, false);            
+
+            Vector2 worldPos = ToolBox.GetAttributeVector2(saveElement, "worldpos", Vector2.Zero);
+            if (worldPos != Vector2.Zero)
+            {
+                sub.SetPosition(worldPos);
+            }
+            else
+            {
+                sub.SetPosition(WorldPosition - Submarine.WorldPosition);
+                sub.Submarine = Submarine;
+            }
+            
+            
             
             var linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
 

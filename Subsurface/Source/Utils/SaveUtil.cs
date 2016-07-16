@@ -31,9 +31,13 @@ namespace Barotrauma
 
             try 
             {
+
+
+
                 if (Submarine.MainSub != null)
                 {
-                    Submarine.MainSub.SaveAs(Path.Combine(tempPath, Submarine.MainSub.Name+".sub"));
+                    Submarine.MainSub.FilePath = Path.Combine(tempPath, Submarine.MainSub.Name + ".sub");
+                    Submarine.MainSub.SaveAs(Submarine.MainSub.FilePath);
                 }
             }
             catch (Exception e)

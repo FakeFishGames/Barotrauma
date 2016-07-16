@@ -54,6 +54,7 @@ namespace Barotrauma
         public Submarine Submarine
         {
             get { return submarine; }
+            set { submarine = value; }
         }
 
         public string SaveFile
@@ -124,7 +125,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
                 return;
             }
-
+            
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
 
