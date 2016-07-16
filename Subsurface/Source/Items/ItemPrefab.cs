@@ -52,6 +52,12 @@ namespace Barotrauma
             get { return configFile; }
         }
 
+        public XElement ConfigElement
+        {
+            get;
+            private set;
+        }
+
         public List<DeconstructItem> DeconstructItems
         {
             get;
@@ -203,6 +209,7 @@ namespace Barotrauma
         public ItemPrefab (XElement element, string filePath)
         {
             configFile = filePath;
+            ConfigElement = element;
 
             name = ToolBox.GetAttributeString(element, "name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
