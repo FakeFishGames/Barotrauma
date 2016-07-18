@@ -137,6 +137,35 @@ namespace Barotrauma
         }
 
 
+        private Submarine GetLeavingSub()
+        {
+            if (Character.Controlled != null && Character.Controlled.Submarine != null)
+            {
+                if (Character.Controlled.Submarine.AtEndPosition || Character.Controlled.Submarine.AtStartPosition)
+                {
+                    return Character.Controlled.Submarine;
+                }
+                return null;
+            }
+
+            Submarine closestSub = Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+            if (closestSub != null && (closestSub.AtEndPosition || closestSub.AtStartPosition))
+            {
+                return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
+            }
+
+            return null;
+        }
+
+        private List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)
+        {
+            //leave subs behind if they're not docked to the leaving sub and not at the same exit
+            return Submarine.Loaded.FindAll(s =>
+                s != leavingSub &&
+                !leavingSub.DockedTo.Contains(s) &&
+                (s.AtEndPosition != leavingSub.AtEndPosition || s.AtStartPosition != leavingSub.AtStartPosition));
+        }
+
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!isRunning) return;
@@ -145,17 +174,30 @@ namespace Barotrauma
 
             if (Submarine.MainSub == null) return;
 
-            if (Submarine.Loaded.Any(s=> s.AtEndPosition))
+            Submarine leavingSub = GetLeavingSub();
+
+            if (leavingSub == null)
             {
-                endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;                
-                endShiftButton.Draw(spriteBatch);
+                endShiftButton.Visible = false;
             }
-            else if (Submarine.Loaded.Any(s => s.AtStartPosition))
+            else if (leavingSub.AtEndPosition)
+            {
+                endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;
+                endShiftButton.UserData = leavingSub;
+                endShiftButton.Visible = true;
+            }
+            else if (leavingSub.AtStartPosition)
             {
                 endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
-                endShiftButton.Draw(spriteBatch);
+                endShiftButton.UserData = leavingSub;
+                endShiftButton.Visible = true;
+            }
+            else
+            {
+                endShiftButton.Visible = false;
             }
 
+            endShiftButton.Draw(spriteBatch);
             //chatBox.Draw(spriteBatch);
             //textBox.Draw(spriteBatch);
 
@@ -199,26 +241,30 @@ namespace Barotrauma
 
             if (success)
             {
-                if (Submarine.MainSub.AtEndPosition)
-                {
-                    Map.MoveToNextLocation();
-                }
+                var leavingSub = GetLeavingSub();
 
                 if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition)
                 {
-                    Submarine newMainSub = Submarine.Loaded.Find(s => s.AtEndPosition || s.AtStartPosition);
+                    System.Diagnostics.Debug.Assert(leavingSub != Submarine.MainSub);
+                    
                     Submarine oldMainSub = Submarine.MainSub;
-                    Submarine.MainSub = newMainSub;
+                    Submarine.MainSub = leavingSub;
 
-                    GameMain.GameSession.Submarine = newMainSub;
+                    GameMain.GameSession.Submarine = leavingSub;
 
-                    List<Submarine> subsToLeaveBehind = Submarine.Loaded.FindAll(s => s != Submarine.MainSub && !Submarine.MainSub.DockedTo.Contains(s));
+                    List<Submarine> subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
 
                     foreach (Submarine sub in subsToLeaveBehind)
                     {
                         MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
-                        LinkedSubmarine.CreateDummy(newMainSub, sub);
+                        LinkedSubmarine.CreateDummy(leavingSub, sub);
                     }
+                }
+
+
+                if (Submarine.MainSub.AtEndPosition)
+                {
+                    Map.MoveToNextLocation();
                 }
 
 
@@ -256,22 +302,24 @@ namespace Barotrauma
 
         private bool TryEndShift(GUIButton button, object obj)
         {
-            int subsNotDocked = Submarine.Loaded.Count(s => s != Submarine.MainSub && !s.DockedTo.Contains(Submarine.MainSub));
+            int subsNotDocked = 0;
+
+            var leavingSub = obj as Submarine;
+            if (leavingSub != null)
+            {
+                subsNotDocked = GetSubsToLeaveBehind(leavingSub).Count;
+            }
 
             if (subsNotDocked > 0)
             {
                 string msg = "";
                 if (subsNotDocked == 1)
                 {
-                    msg = "One of of your vessels hasn't been docked to " + Submarine.MainSub.Name
-                        + ". If you leave now, you will permanently lose it."
-                        + " Do you want to leave the vessel behind?";
+                    msg = "One of your vessels isn't at the exit yet. Do you want to leave it behind?";
                 }
                 else
                 {
-                    msg = "Some of of your vessels hasn't been docked to " + Submarine.MainSub.Name
-                    + ". If you leave now, you will permanently lose them."
-                    + " Do you want to leave the vessels behind?";
+                    msg = "Some of your vessels aren't at the exit yet. Do you want to leave them behind?";
                 }
 
                 var msgBox = new GUIMessageBox("Warning", msg, new string[] {"Yes", "No"});
