@@ -209,7 +209,7 @@ namespace Barotrauma.Items.Components
             if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
             if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
 
-            if (item.Submarine != sub)
+            if (item.Submarine != null && item.Submarine != sub)
             {
                 ClearConnections();
                 Nodes.Clear();
