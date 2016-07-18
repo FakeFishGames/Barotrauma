@@ -302,18 +302,18 @@ namespace Barotrauma
 
         private bool TryEndShift(GUIButton button, object obj)
         {
-            int subsNotDocked = 0;
+            List<Submarine> subsNotDocked = new List<Submarine>();
 
             var leavingSub = obj as Submarine;
             if (leavingSub != null)
             {
-                subsNotDocked = GetSubsToLeaveBehind(leavingSub).Count;
+                subsNotDocked = GetSubsToLeaveBehind(leavingSub);
             }
 
-            if (subsNotDocked > 0)
+            if (subsNotDocked.Any())
             {
                 string msg = "";
-                if (subsNotDocked == 1)
+                if (subsNotDocked.Count==1)
                 {
                     msg = "One of your vessels isn't at the exit yet. Do you want to leave it behind?";
                 }
@@ -325,6 +325,8 @@ namespace Barotrauma
                 var msgBox = new GUIMessageBox("Warning", msg, new string[] {"Yes", "No"});
                 msgBox.Buttons[0].OnClicked += EndShift;
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
+                msgBox.Buttons[0].UserData = Submarine.Loaded.FindAll(s => !subsNotDocked.Contains(s));
+
                 msgBox.Buttons[1].OnClicked += msgBox.Close;
             }
             else
@@ -339,7 +341,10 @@ namespace Barotrauma
         {
             isRunning = false;
 
-            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, 5.0f);
+            List<Submarine> leavingSubs = obj as List<Submarine>;
+            if (leavingSubs == null) leavingSubs = new List<Submarine>() { GetLeavingSub() };
+
+            var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endshift" : "crewdead";
 

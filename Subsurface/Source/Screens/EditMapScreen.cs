@@ -464,8 +464,11 @@ namespace Barotrauma
 
             foreach (GUIComponent child in GUItabs[selectedTab].GetChild<GUIListBox>().children)
             {
-                child.Visible = child.GetChild<GUITextBlock>().Text.ToLower().Contains(text);
+                var textBlock = child.GetChild<GUITextBlock>();
+                child.Visible = textBlock.Text.ToLower().Contains(text);
             }
+
+            GUItabs[selectedTab].GetChild<GUIListBox>().BarScroll = 0.0f;
 
             return true;
         }

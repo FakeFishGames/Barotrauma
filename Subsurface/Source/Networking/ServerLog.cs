@@ -120,6 +120,8 @@ namespace Barotrauma.Networking
                 textBlock.Visible = textBlock.Text.ToLower().Contains(text);
             }
 
+            listBox.BarScroll = 0.0f;
+
             return true;
         }
 

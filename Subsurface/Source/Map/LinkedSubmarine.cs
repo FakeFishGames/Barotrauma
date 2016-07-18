@@ -277,6 +277,9 @@ namespace Barotrauma
                     saveElement = this.saveElement;
                 }
 
+                if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
+                saveElement.Add(new XAttribute("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition)));
+
 
                 
                 var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
@@ -298,7 +301,22 @@ namespace Barotrauma
 
             if (sub != null)
             {
+                bool leaveBehind = false;
                 if (!sub.DockedTo.Contains(Submarine.MainSub))
+                {
+                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEndPosition || Submarine.MainSub.AtStartPosition);
+                    if (Submarine.MainSub.AtEndPosition)
+                    {
+                        leaveBehind = sub.AtEndPosition != Submarine.MainSub.AtEndPosition;
+                    }
+                    else
+                    {
+                        leaveBehind = sub.AtStartPosition != Submarine.MainSub.AtStartPosition;
+                    }
+                }
+
+
+                if (leaveBehind)
                 {
                     saveElement.Add(new XAttribute("location", Level.Loaded.Seed));
                     saveElement.Add(new XAttribute("worldpos", ToolBox.Vector2ToString(sub.SubBody.Position)));
