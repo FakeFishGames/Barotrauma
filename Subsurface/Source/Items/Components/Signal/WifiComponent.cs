@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             get { return channel; }
             set
             {
-                channel = MathHelper.Clamp(value, 0, 100);
+                channel = MathHelper.Clamp(value, 0, 10000);
             }
         }
 
