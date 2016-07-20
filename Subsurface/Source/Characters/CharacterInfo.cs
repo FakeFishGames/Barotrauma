@@ -22,6 +22,8 @@ namespace Barotrauma
 
         private List<ushort> pickedItems;
 
+        public ushort? HullID = null;
+
         private Vector2[] headSpriteRange;
 
         private Gender gender;
@@ -134,7 +136,7 @@ namespace Barotrauma
                 HeadSpriteId = Rand.Range((int)headSpriteRange[genderIndex].X, (int)headSpriteRange[genderIndex].Y + 1);
             }
 
-            this.Job = (jobPrefab == null) ? Job.Random() : new Job(jobPrefab);            
+            this.Job = (jobPrefab == null) ? Job.Random() : new Job(jobPrefab);
 
             if (!string.IsNullOrEmpty(name))
             {
@@ -294,6 +296,9 @@ namespace Barotrauma
             Salary          = ToolBox.GetAttributeInt(element, "salary", 1000);
             headSpriteId    = ToolBox.GetAttributeInt(element, "headspriteid", 1);
             StartItemsGiven = ToolBox.GetAttributeBool(element, "startitemsgiven", false);
+            
+            int hullId = ToolBox.GetAttributeInt(element, "hull", -1);
+            if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;            
 
             pickedItems = new List<ushort>();
 
@@ -341,10 +346,19 @@ namespace Barotrauma
                 new XAttribute("salary", Salary),
                 new XAttribute("headspriteid", HeadSpriteId),
                 new XAttribute("startitemsgiven", StartItemsGiven));
-
-            if (Character != null && Character.Inventory != null)
+            
+            if (Character != null)
             {
-                UpdateCharacterItems();
+                if (Character.Inventory != null)
+                {
+                    UpdateCharacterItems();
+                }
+
+                if (Character.AnimController.CurrentHull != null)
+                {
+                    HullID = Character.AnimController.CurrentHull.ID;
+                    charElement.Add(new XAttribute("hull", Character.AnimController.CurrentHull.ID));
+                }
             }
             
             if (pickedItems.Count > 0)
@@ -360,6 +374,7 @@ namespace Barotrauma
 
         public void Remove()
         {
+            Character = null;
             //if (headSprite != null)
             //{
             //    headSprite.Remove();
