@@ -96,9 +96,10 @@ namespace Barotrauma.Networking
             NetPeerConfiguration config = new NetPeerConfiguration("barotrauma");
 
 #if DEBUG
-            config.SimulatedLoss = 0.1f;
-            config.SimulatedMinimumLatency = 0.3f;
-            config.SimulatedRandomLatency = 0.5f;
+            config.SimulatedLoss = 0.05f;
+            config.SimulatedDuplicatesChance = 0.05f;
+            config.SimulatedMinimumLatency = 0.1f;
+            config.SimulatedRandomLatency = 0.2f;
 #endif 
 
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
@@ -448,32 +449,7 @@ namespace Barotrauma.Networking
 
             message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableLidgren);
             if (message != null) client.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-
-            //foreach (NetworkEvent networkEvent in NetworkEvent.Events)
-            //{
-            //    if (networkEvent.IsImportant)
-            //    {
-            //        ReliableMessage reliableMessage = reliableChannel.CreateMessage();
-            //        reliableMessage.InnerMessage.Write((byte)PacketTypes.NetworkEvent);
-
-            //        if (networkEvent.FillData(reliableMessage.InnerMessage))
-            //        {
-            //            reliableChannel.SendMessage(reliableMessage, client.ServerConnection);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        NetOutgoingMessage message = client.CreateMessage();
-            //        message.Write((byte)PacketTypes.NetworkEvent);
-
-
-            //        if (networkEvent.FillData(message))
-            //        {
-            //            client.SendMessage(message, NetDeliveryMethod.Unreliable);
-            //        }
-            //    }
-            //}
-                    
+  
             NetworkEvent.Events.Clear();
             
             // Update current time
@@ -650,7 +626,6 @@ namespace Barotrauma.Networking
             endRoundButton.Selected = false;
 
             int seed = inc.ReadInt32();
-
             string levelSeed = inc.ReadString();
 
             int missionTypeIndex = inc.ReadByte();
@@ -659,6 +634,8 @@ namespace Barotrauma.Networking
             string mapHash = inc.ReadString();
 
             string modeName = inc.ReadString();
+
+            bool respawnAllowed = inc.ReadBoolean();
 
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
@@ -681,7 +658,7 @@ namespace Barotrauma.Networking
             GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
             GameMain.GameSession.StartShift(levelSeed);
 
-            respawnManager = new RespawnManager(this);
+            if (respawnAllowed) respawnManager = new RespawnManager(this);
 
             yield return CoroutineStatus.Running;
 

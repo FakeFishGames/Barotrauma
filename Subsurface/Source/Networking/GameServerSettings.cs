@@ -68,6 +68,12 @@ namespace Barotrauma.Networking
             set;
         }
 
+        public bool AllowRespawn
+        {
+            get;
+            set;
+        }
+
         public SelectionMode SubSelectionMode
         {
             get { return subSelectionMode; }
@@ -123,6 +129,8 @@ namespace Barotrauma.Networking
                 writer.WriteAttributeString("SubSelection", subSelectionMode.ToString());
                 writer.WriteAttributeString("ModeSelection", modeSelectionMode.ToString());
 
+                writer.WriteAttributeString("AllowRespawn", AllowRespawn.ToString());
+
                 writer.Flush();
             }
         }
@@ -160,6 +168,8 @@ namespace Barotrauma.Networking
             Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
 
+            AllowRespawn = ToolBox.GetAttributeBool(doc.Root, "AllowRespawn", true);
+
             FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));            
         }
 
@@ -190,9 +200,20 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            var votesRequiredText = new GUITextBlock(new Rectangle(20, y+20, 20, 20), "Votes required: 50 %", GUI.Style, innerFrame, GUI.SmallFont);
+            y += 30;
 
-            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y+22, 100, 10), GUI.Style, 0.1f, innerFrame);
+            var respawnBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow respawning", Alignment.Left, innerFrame);
+            respawnBox.Selected = AllowRespawn;
+            respawnBox.OnSelected = (GUITickBox) =>
+            {
+                AllowRespawn = !AllowRespawn;
+                return true;
+            };
+
+
+            var votesRequiredText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Votes required: 50 %", GUI.Style, innerFrame, GUI.SmallFont);
+
+            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, innerFrame);
             votesRequiredSlider.UserData = votesRequiredText;
             votesRequiredSlider.Step = 0.2f;
             votesRequiredSlider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;

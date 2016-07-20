@@ -58,7 +58,7 @@ namespace Barotrauma
 
         private Vector2 prevPosition;
 
-        private float lastNetworkUpdate;
+        private float lastNetworkUpdate, networkUpdateTimer;
         
         //properties ----------------------------------------------------
 
@@ -425,7 +425,21 @@ namespace Barotrauma
         {
             if (Level.Loaded == null) return;
 
-            if (subBody!=null) subBody.Update(deltaTime);
+            if (subBody == null) return;
+            
+            subBody.Update(deltaTime);
+
+            if (this != MainSub && MainSub.DockedTo.Contains(this)) return;
+
+            //send updates more frequently if moving fast
+            networkUpdateTimer -= MathHelper.Clamp(Velocity.Length(), 0.1f, 5.0f) * deltaTime;
+
+            if (networkUpdateTimer < 0.0f)
+            {
+                new Networking.NetworkEvent(ID, false);
+                networkUpdateTimer = 1.0f;
+            }
+            
         }
 
         public void ApplyForce(Vector2 force)

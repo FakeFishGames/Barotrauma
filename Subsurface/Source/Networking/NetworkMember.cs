@@ -55,6 +55,10 @@ namespace Barotrauma.Networking
 
     abstract class NetworkMember
     {
+#if DEBUG
+        public Dictionary<string, long> messageCount = new Dictionary<string, long>();
+#endif
+
         protected NetPeer netPeer;
 
         protected string name;
@@ -163,6 +167,24 @@ namespace Barotrauma.Networking
 
                 tempMessage.Position = 0;
                 msgBytes.Add(tempMessage.ReadBytes(tempMessage.LengthBytes));
+
+#if DEBUG
+                string msgType = networkEvent.Type.ToString();
+                if (networkEvent.Type == NetworkEventType.EntityUpdate)
+                {
+                    msgType += " (" + Entity.FindEntityByID(networkEvent.ID) + ")";
+                }
+
+                long sentBytes = 0;
+                if (!messageCount.TryGetValue(msgType, out sentBytes))
+                {
+                    messageCount.Add(msgType, tempMessage.LengthBytes);
+                }
+                else
+                {
+                    messageCount[msgType] += tempMessage.LengthBytes;
+                }
+#endif
             }
 
             if (msgBytes.Count == 0) return null;
@@ -180,6 +202,7 @@ namespace Barotrauma.Networking
                 message.Write((byte)msgData.Length);
                 message.Write(msgData);
             }
+
 
             return message;
         }
