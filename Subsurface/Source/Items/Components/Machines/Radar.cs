@@ -114,7 +114,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
-            Vector2 center = new Vector2(rect.Center.X, rect.Center.Y);
+            Vector2 center = new Vector2(rect.X + rect.Width*0.75f, rect.Center.Y);
 
             if (!IsActive) return;
 
@@ -173,7 +173,7 @@ namespace Barotrauma.Items.Components
                     CreateBlipsForLine(
                         new Vector2(item.WorldPosition.X - range, Level.Loaded.Size.Y),
                         new Vector2(item.WorldPosition.X + range, Level.Loaded.Size.Y),
-                        radius, displayScale, 300.0f, 1.0f);
+                        radius, displayScale, 500.0f, 10.0f);
                 }
 
                 List<VoronoiCell> cells = Level.Loaded.GetCells(item.WorldPosition, 7);
@@ -254,11 +254,11 @@ namespace Barotrauma.Items.Components
 
             DrawMarker(spriteBatch,
                 (GameMain.GameSession.Map == null) ? "Start" : GameMain.GameSession.Map.CurrentLocation.Name,
-                (Level.Loaded.StartPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.55f));
+                (Level.Loaded.StartPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
             DrawMarker(spriteBatch,
                 (GameMain.GameSession.Map == null) ? "End" : GameMain.GameSession.Map.SelectedLocation.Name,
-                (Level.Loaded.EndPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.55f));
+                (Level.Loaded.EndPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
             if (GameMain.GameSession.Mission != null)
             {
@@ -270,6 +270,13 @@ namespace Barotrauma.Items.Components
                         mission.RadarLabel,
                         mission.RadarPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.55f));
                 }
+            }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                if (item.Submarine == sub || sub.DockedTo.Contains(item.Submarine)) continue;
+
+                DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.45f));
             }
 
             if (!GameMain.DebugDraw) return;
@@ -361,15 +368,27 @@ namespace Barotrauma.Items.Components
 
             position *= scale;
             position.Y = -position.Y;
-            
-            Vector2 markerPos = (dist*scale>radius) ? Vector2.Normalize(position) * radius : position;
+
+            float textAlpha = MathHelper.Clamp(1.5f - dist / 50000.0f, 0.5f, 1.0f);
+
+            Vector2 dir = Vector2.Normalize(position);
+
+            Vector2 markerPos = (dist*scale>radius) ? dir * radius : position;
             markerPos += center;
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen);
+            markerPos.X = (int)markerPos.X;
+            markerPos.Y = (int)markerPos.Y;
 
-            spriteBatch.DrawString(GUI.SmallFont, label, new Vector2(markerPos.X + 10, markerPos.Y), Color.LightGreen);
-            spriteBatch.DrawString(GUI.SmallFont, (int)(dist * Physics.DisplayToRealWorldRatio) + " m", 
-                new Vector2(markerPos.X + 10, markerPos.Y + 15), Color.LightGreen);                
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen * textAlpha);
+
+            if (dir.X < 0.0f) markerPos.X -= GUI.SmallFont.MeasureString(label).X+10;
+
+            GUI.DrawString(spriteBatch, new Vector2(markerPos.X + 10, markerPos.Y), label, Color.LightGreen * textAlpha, Color.Black * textAlpha*0.5f, 2, GUI.SmallFont);
+
+            GUI.DrawString(spriteBatch, new Vector2(markerPos.X + 10, markerPos.Y + 15), (int)(dist * Physics.DisplayToRealWorldRatio) + " m",
+                Color.LightGreen * textAlpha, 
+                Color.Black * textAlpha, 2, GUI.SmallFont);
+              
         }
 
         protected override void RemoveComponentSpecific()

@@ -281,16 +281,24 @@ namespace Barotrauma
 
             for (int i = 0; i < waypoints.Length; i++)
             {
-                //WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Human);
-                //Vector2 position = (randomWayPoint == null) ? Vector2.Zero : randomWayPoint.SimPosition;
-                
-                Character character = Character.Create(characterInfos[i], waypoints[i].WorldPosition);
-                Character.Controlled = character;
+                Character character;
 
-                if (character.Info!=null && !character.Info.StartItemsGiven)
+                if (characterInfos[i].HullID != null)
                 {
-                    character.GiveJobItems(waypoints[i]);
-                    character.Info.StartItemsGiven = true;
+                    var hull = Entity.FindEntityByID((ushort)characterInfos[i].HullID) as Hull;
+                    if (hull == null) continue;
+                    character = Character.Create(characterInfos[i], hull.WorldPosition);
+                }
+                else
+                {
+                    character = Character.Create(characterInfos[i], waypoints[i].WorldPosition);
+                    Character.Controlled = character;
+
+                    if (character.Info != null && !character.Info.StartItemsGiven)
+                    {
+                        character.GiveJobItems(waypoints[i]);
+                        character.Info.StartItemsGiven = true;
+                    }
                 }
 
                 AddCharacter(character);
