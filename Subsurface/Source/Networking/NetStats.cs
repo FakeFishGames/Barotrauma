@@ -61,7 +61,7 @@ namespace Barotrauma.Networking
             updateTimer = UpdateInterval;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect)
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect, GameServer server)
         {
             GUI.DrawRectangle(spriteBatch, rect, Color.Black*0.4f, true);
 
@@ -83,6 +83,17 @@ namespace Barotrauma.Networking
 
             spriteBatch.DrawString(GUI.SmallFont, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
                 new Vector2(rect.X + 10, rect.Y + 50), Color.Red);
+#if DEBUG
+            int y = 10;
+
+            foreach (KeyValuePair<string, long> msgBytesSent in server.messageCount.OrderBy(key => key.Value))
+            {
+                spriteBatch.DrawString(GUI.SmallFont, msgBytesSent.Key + ": " + MathUtils.GetBytesReadable(msgBytesSent.Value),
+                    new Vector2(rect.Right - 200, rect.Y + y), Color.Red);
+
+                y += 15;
+            }
+#endif
         }
     }
 

@@ -63,7 +63,7 @@ namespace Barotrauma.Networking
 
 #if DEBUG
             config.SimulatedLoss = 0.05f;
-            config.SimulatedRandomLatency = 0.3f;
+            config.SimulatedRandomLatency = 0.2f;
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
 #endif 
@@ -281,7 +281,7 @@ namespace Barotrauma.Networking
             {
                 inGameHUD.Update((float)Physics.step);
 
-                respawnManager.Update(deltaTime);
+                if (respawnManager != null) respawnManager.Update(deltaTime);
 
                 bool isCrewDead =  
                     connectedClients.Find(c => c.Character != null && !c.Character.IsDead)==null &&
@@ -391,16 +391,16 @@ namespace Barotrauma.Networking
 
         private void SparseUpdate()
         {
-            if (gameStarted)
-            {
-                foreach (Submarine sub in Submarine.Loaded)
-                {
-                    //no need to send position updates for submarines that are docked to mainsub
-                    if (sub != Submarine.MainSub && sub.DockedTo.Contains(Submarine.MainSub)) continue;
+            //if (gameStarted)
+            //{
+            //    foreach (Submarine sub in Submarine.Loaded)
+            //    {
+            //        //no need to send position updates for submarines that are docked to mainsub
+            //        if (sub != Submarine.MainSub && sub.DockedTo.Contains(Submarine.MainSub)) continue;
 
-                    new NetworkEvent(sub.ID, false);
-                }
-            }
+            //        new NetworkEvent(sub.ID, false);
+            //    }
+            //}
 
             foreach (Character c in Character.CharacterList)
             {
@@ -957,7 +957,7 @@ namespace Barotrauma.Networking
             GameServer.Log("Game mode: " + selectedMode.Name, Color.Cyan);
             GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
 
-            respawnManager = new RespawnManager(this);
+            if (AllowRespawn) respawnManager = new RespawnManager(this);
 
             yield return CoroutineStatus.Running;
 
@@ -1061,6 +1061,8 @@ namespace Barotrauma.Networking
 
             msg.Write(selectedMode.Name);
 
+            msg.Write(AllowRespawn);
+
             //msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
             List<Client> playingClients = connectedClients.FindAll(c => c.Character != null);
@@ -1154,6 +1156,8 @@ namespace Barotrauma.Networking
 
         public void SendRespawnManagerMsg()
         {
+            if (respawnManager == null) return;
+
             NetOutgoingMessage msg = server.CreateMessage();
             respawnManager.WriteNetworkEvent(msg);
 
@@ -1418,7 +1422,7 @@ namespace Barotrauma.Networking
             netStats.AddValue(NetStats.NetStatType.SentBytes, server.Statistics.SentBytes);
             netStats.AddValue(NetStats.NetStatType.ReceivedBytes, server.Statistics.ReceivedBytes);
 
-            netStats.Draw(spriteBatch, new Rectangle(200,0,800,200));
+            netStats.Draw(spriteBatch, new Rectangle(200,0,800,200), this);
 
         }
 

@@ -26,11 +26,11 @@ namespace Barotrauma
 
         public TransitionCinematic(List<Submarine> submarines, Camera cam, float duration)
         {
+            if (!submarines.Any(s => s != null)) return;
+
             Vector2 targetPos = new Vector2(
                 submarines.Sum(s => s.Position.X),
                 submarines.Sum(s => s.Position.Y)) / submarines.Count;
-
-            if (!submarines.Any()) return;
 
             if (submarines.First().AtEndPosition)
             {

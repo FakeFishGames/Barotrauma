@@ -100,21 +100,29 @@ namespace Barotrauma
 
                     //message.Write(AnimController.RefLimb.Rotation);
 
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
                     message.Write((byte)((health / maxHealth) * 255.0f));
 
-                    Bleeding = MathHelper.Clamp(Bleeding, 0.0f, 5.0f);
-                    message.WriteRangedSingle(Bleeding, 0.0f, 5.0f, 8);
+                    message.Write(AnimController.StunTimer > 0.0f);
+                    if (AnimController.StunTimer > 0.0f)
+                    {
+                        message.WriteRangedSingle(MathHelper.Clamp(AnimController.StunTimer, 0.0f, 60.0f), 0.0f, 60.0f, 8);
+                    }                   
+
+                    if (DoesBleed)
+                    {
+                        Bleeding = MathHelper.Clamp(Bleeding, 0.0f, 5.0f);
+                        message.WriteRangedSingle(Bleeding, 0.0f, 5.0f, 8);
+                    }
 
                     aiController.FillNetworkData(message);
                     return true;
                 case NetworkEventType.EntityUpdate:
 
                     message.Write(AnimController.Dir > 0.0f);
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 8);
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -1.0f, 1.0f), -1.0f, 1.0f, 8);
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 4);
+                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -1.0f, 1.0f), -1.0f, 1.0f, 4);
                     
-                    message.Write(Submarine != null);
+                    if (AnimController.CanEnterSubmarine) message.Write(Submarine != null);
                                         
                     message.Write(AnimController.RefLimb.SimPosition.X);
                     message.Write(AnimController.RefLimb.SimPosition.Y);
@@ -124,7 +132,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("AICharacter network event had a wrong type ("+type+")");
 #endif
-                    return false;                 
+                    return false;
             }
         }
 
@@ -168,11 +176,17 @@ namespace Barotrauma
 
                     try
                     {
-                        newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
                         newHealth = (message.ReadByte() / 255.0f) * maxHealth;
 
+                        if (message.ReadBoolean())
+                        {
+                            newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
+                        }
 
-                        newBleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);
+                        if (DoesBleed)
+                        {
+                            newBleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);
+                        }
                     }
                     catch (Exception e)
                     {
@@ -199,10 +213,10 @@ namespace Barotrauma
                     try
                     {
                         targetDir = message.ReadBoolean();
-                        targetMovement.X = message.ReadRangedSingle(-1.0f, 1.0f, 8);
-                        targetMovement.Y = message.ReadRangedSingle(-1.0f, 1.0f, 8);
+                        targetMovement.X = message.ReadRangedSingle(-1.0f, 1.0f, 4);
+                        targetMovement.Y = message.ReadRangedSingle(-1.0f, 1.0f, 4);
 
-                        inSub = message.ReadBoolean();
+                        if (AnimController.CanEnterSubmarine) inSub = message.ReadBoolean();
 
                         pos.X = message.ReadFloat();
                         pos.Y = message.ReadFloat();                
