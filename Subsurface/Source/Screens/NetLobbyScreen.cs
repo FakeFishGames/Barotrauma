@@ -345,7 +345,7 @@ namespace Barotrauma
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
 
-            playerList.Parent.RemoveChild(playerList.Parent.children.Find(c => c.UserData as string == "banListButton"));
+            //playerList.Parent.RemoveChild(playerList.Parent.children.Find(c => c.UserData as string == "banListButton"));
 
             if (IsServer && GameMain.Server != null)
             {
@@ -370,9 +370,6 @@ namespace Barotrauma
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
                 settingsButton.UserData = "settingsButton";
 
-                var banListButton = new GUIButton(new Rectangle(0, 30, 100, 20), "Banned IPs", Alignment.BottomRight, GUI.Style, playerList.Parent);
-                banListButton.OnClicked = GameMain.Server.BanList.ToggleBanFrame;
-                banListButton.UserData = "banListButton";
 
                 if (subList.CountChildren > 0 && subList.Selected == null)
                 {
@@ -428,11 +425,11 @@ namespace Barotrauma
                     playYourself.UserData = "playyourself";
                 }
 
-                new GUITextBlock(new Rectangle(100, 30, 200, 30), "Name: ", GUI.Style, myPlayerFrame);
+                //new GUITextBlock(new Rectangle(100, 30, 200, 30), "Name: ", GUI.Style, myPlayerFrame);
 
-                GUITextBox playerName = new GUITextBox(new Rectangle(100, 55, 0, 20), Alignment.TopLeft, GUI.Style, myPlayerFrame);
-                playerName.Text = characterInfo.Name;
-                playerName.OnEnterPressed += ChangeCharacterName;
+                //GUITextBox playerName = new GUITextBox(new Rectangle(100, 55, 0, 20), Alignment.TopLeft, GUI.Style, myPlayerFrame);
+                //playerName.Text = characterInfo.Name;
+                //playerName.OnEnterPressed += ChangeCharacterName;
 
                 GUIButton toggleHead = new GUIButton(new Rectangle(0, 50, 15, 15), "<", GUI.Style, myPlayerFrame);
                 toggleHead.UserData = -1;
@@ -441,21 +438,21 @@ namespace Barotrauma
                 toggleHead.UserData = 1;
                 toggleHead.OnClicked = ToggleHead;
 
-                new GUITextBlock(new Rectangle(0, 90, 200, 30), "Gender: ", GUI.Style, myPlayerFrame);
+                new GUITextBlock(new Rectangle(100, 30, 200, 30), "Gender: ", GUI.Style, myPlayerFrame);
 
-                GUIButton maleButton = new GUIButton(new Rectangle(0, 110, 60, 20), "Male",
+                GUIButton maleButton = new GUIButton(new Rectangle(100, 50, 60, 20), "Male",
                     Alignment.TopLeft, GUI.Style, myPlayerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
-                GUIButton femaleButton = new GUIButton(new Rectangle(70, 110, 60, 20), "Female",
+                GUIButton femaleButton = new GUIButton(new Rectangle(170, 50, 60, 20), "Female",
                     Alignment.TopLeft, GUI.Style, myPlayerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-                new GUITextBlock(new Rectangle(0, 150, 200, 30), "Job preferences:", GUI.Style, myPlayerFrame);
+                new GUITextBlock(new Rectangle(0, 120, 20, 30), "Job preferences:", GUI.Style, myPlayerFrame);
 
-                jobList = new GUIListBox(new Rectangle(0, 180, 0, 0), GUI.Style, myPlayerFrame);
+                jobList = new GUIListBox(new Rectangle(0, 150, 0, 0), GUI.Style, myPlayerFrame);
                 jobList.Enabled = false;
 
 
@@ -798,12 +795,7 @@ namespace Barotrauma
             {
                 autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
             }
-
-            if (GameMain.Server != null && GameMain.Server.BanList != null)
-            {
-                if (GameMain.Server.BanList.BanFrame != null) GameMain.Server.BanList.BanFrame.Update((float)deltaTime);
-            }
-
+            
             if (valueChanged && GameMain.Server != null)
             {
                 networkUpdateTimer -= (float)deltaTime;
@@ -839,12 +831,7 @@ namespace Barotrauma
             //if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
 
             if (playerFrame != null) playerFrame.Draw(spriteBatch);
-
-            if (GameMain.Server!=null && GameMain.Server.BanList!=null)
-            {
-                if (GameMain.Server.BanList.BanFrame != null) GameMain.Server.BanList.BanFrame.Draw(spriteBatch);
-            }
-
+            
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             spriteBatch.End();
@@ -949,24 +936,24 @@ namespace Barotrauma
             return true;
         }
 
-        private bool ChangeCharacterName(GUITextBox textBox, string newName)
-        {
-            if (string.IsNullOrEmpty(newName)) return false;
+        //private bool ChangeCharacterName(GUITextBox textBox, string newName)
+        //{
+        //    if (string.IsNullOrEmpty(newName)) return false;
 
-            if (GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo == null) return true;
+        //    if (GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo == null) return true;
 
-            GameMain.NetworkMember.CharacterInfo.Name = newName;
-            if (GameMain.Client != null)
-            {
-                GameMain.Client.Name = newName;
-                GameMain.Client.SendCharacterData();
-            }
+        //    GameMain.NetworkMember.CharacterInfo.Name = newName;
+        //    if (GameMain.Client != null)
+        //    {
+        //        GameMain.Client.Name = newName;
+        //        GameMain.Client.SendCharacterData();
+        //    }
 
-            textBox.Text = newName;
-            textBox.Selected = false;
+        //    textBox.Text = newName;
+        //    textBox.Selected = false;
 
-            return true;
-        }
+        //    return true;
+        //}
 
         private bool ViewJobInfo(GUIButton button, object obj)
         {
