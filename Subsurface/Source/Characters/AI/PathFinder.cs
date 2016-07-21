@@ -346,6 +346,14 @@ namespace Barotrauma
             {
                 finalPath.Add(pathNode.Waypoint);
 
+                //there was one bug report that seems to have been caused by this loop never terminating:
+                //couldn't reproduce or figure out what caused it, but here's a workaround that prevents the game from crashing in case it happens again
+                if (finalPath.Count > nodes.Count)
+                {
+                    DebugConsole.ThrowError("Pathfinding error: constructing final path failed");
+                    return new SteeringPath(true);
+                }
+
                 path.Cost += pathNode.F;
                 pathNode = pathNode.Parent;
             }

@@ -65,42 +65,42 @@ namespace Barotrauma
 
             for (int i = Coroutines.Count-1; i>=0; i--)
             {
-                if (Coroutines[i].Coroutine.Current != null)
+                try
                 {
-                    WaitForSeconds wfs = Coroutines[i].Coroutine.Current as WaitForSeconds;
-                    if (wfs != null)
+                    if (Coroutines[i].Coroutine.Current != null)
                     {
-                        if (!wfs.CheckFinished(unscaledDeltaTime)) continue;
-                    }
-                    else
-                    {
-                        switch ((CoroutineStatus)Coroutines[i].Coroutine.Current)
+                        WaitForSeconds wfs = Coroutines[i].Coroutine.Current as WaitForSeconds;
+                        if (wfs != null)
                         {
-                            case CoroutineStatus.Success:
-                                Coroutines.RemoveAt(i);
-                                continue;
-                            case CoroutineStatus.Failure:
-                                DebugConsole.ThrowError("Coroutine ''" + Coroutines[i]+ "'' has failed");
-                                break;
+                            if (!wfs.CheckFinished(unscaledDeltaTime)) continue;
+                        }
+                        else
+                        {
+                            switch ((CoroutineStatus)Coroutines[i].Coroutine.Current)
+                            {
+                                case CoroutineStatus.Success:
+                                    Coroutines.RemoveAt(i);
+                                    continue;
+                                case CoroutineStatus.Failure:
+                                    DebugConsole.ThrowError("Coroutine ''" + Coroutines[i]+ "'' has failed");
+                                    break;
+                            }
                         }
                     }
+
+                    Coroutines[i].Coroutine.MoveNext();
                 }
 
-                //try
-                //{
-                    Coroutines[i].Coroutine.MoveNext();
-                //}
-
-                //catch (Exception e)
-                //{
-                //    DebugConsole.ThrowError("Coroutine " + Coroutines[i].Name + " threw an exception: " + e.Message);
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Coroutine " + Coroutines[i].Name + " threw an exception: " + e.Message);
 
 //#if DEBUG
 //                    throw e;
 //#endif
 
-//                    Coroutines.RemoveAt(i);
-//                }
+                    Coroutines.RemoveAt(i);
+                }
 
             }
         }
