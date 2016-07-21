@@ -318,18 +318,17 @@ namespace Barotrauma
 
                 if (leaveBehind)
                 {
-                    saveElement.Add(new XAttribute("location", Level.Loaded.Seed));
-                    saveElement.Add(new XAttribute("worldpos", ToolBox.Vector2ToString(sub.SubBody.Position)));
+                    saveElement.SetAttributeValue("location", Level.Loaded.Seed);
+                    saveElement.SetAttributeValue("worldpos", ToolBox.Vector2ToString(sub.SubBody.Position));
 
                 }
                 else 
                 {
                     if (saveElement.Attribute("location") != null) saveElement.Attribute("location").Remove();
                     if (saveElement.Attribute("worldpos") != null) saveElement.Attribute("worldpos").Remove();
-                }
-                            
-                if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
-                saveElement.Add(new XAttribute("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition)));
+                }                            
+
+                saveElement.SetAttributeValue("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition));
             }
 
 
