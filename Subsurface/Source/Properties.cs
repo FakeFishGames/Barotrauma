@@ -247,7 +247,7 @@ namespace Barotrauma
             return dictionary;
         }
     
-        public static void SaveProperties(IPropertyObject obj, XElement element)
+        public static void SaveProperties(IPropertyObject obj, XElement element, bool saveIfDefault = false)
         {
             var saveProperties = GetProperties<HasDefaultValue>(obj);
             foreach (var property in saveProperties)
@@ -255,22 +255,25 @@ namespace Barotrauma
                 object value = property.GetValue();
                 if (value == null) continue;
                 
-                //only save 
-                //  - if the attribute is saveable
-                //  - and it's different from the default value or can be changed in the editor
-                bool save = false;
-                foreach (var attribute in property.Attributes.OfType<HasDefaultValue>())
+                if (!saveIfDefault)
                 {
-                    if (!attribute.isSaveable) continue;
-
-                    if (!attribute.defaultValue.Equals(value) || property.Attributes.OfType<Editable>().Any())
+                    //only save 
+                    //  - if the attribute is saveable
+                    //  - and it's different from the default value or can be changed in the editor
+                    bool save = false;
+                    foreach (var attribute in property.Attributes.OfType<HasDefaultValue>())
                     {
-                        save = true;
-                        break;
-                    }    
-                }
+                        if (!attribute.isSaveable) continue;
 
-                if (!save) continue;
+                        if (!attribute.defaultValue.Equals(value) || property.Attributes.OfType<Editable>().Any())
+                        {
+                            save = true;
+                            break;
+                        }    
+                    }
+
+                    if (!save) continue;
+                }
 
                 string stringValue;
                 if (value is float)

@@ -111,7 +111,6 @@ namespace Barotrauma
 
             saveNameBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 30), 30, 180, 20),
                 Alignment.TopLeft, GUI.Style, menuTabs[(int)Tab.NewGame]);
-            saveNameBox.Text = SaveUtil.CreateSavePath();
 
             new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 60, 100, 20),
                 "Map Seed: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
@@ -236,6 +235,9 @@ namespace Barotrauma
 
             switch (selectedTab)
             {
+                case (int)Tab.NewGame:
+                    saveNameBox.Text = SaveUtil.CreateSavePath();
+                    break;
                 case (int)Tab.LoadGame:
                     UpdateLoadScreen();
                     break;

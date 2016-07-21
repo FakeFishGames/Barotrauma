@@ -290,7 +290,7 @@ namespace Barotrauma.Networking
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((autoRestart && isCrewDead) 
                     || 
-                    (endRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition))
+                    (EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition))
                 {
                     if (AutoRestart && isCrewDead)
                     {
@@ -458,7 +458,7 @@ namespace Barotrauma.Networking
                             outmsg.Write(sender.ID);
                             outmsg.Write(gameStarted);
                             outmsg.Write(gameStarted && sender.Character != null);
-                            outmsg.Write(allowSpectating);
+                            outmsg.Write(AllowSpectating);
 
                             //notify the client about other clients already logged in
                             outmsg.Write((byte)((characterInfo == null) ? connectedClients.Count - 1 : connectedClients.Count));
@@ -549,7 +549,7 @@ namespace Barotrauma.Networking
                             break;
                         case (byte)PacketTypes.RequestFile:
                             
-                            if (!allowFileTransfers)
+                            if (!AllowFileTransfers)
                             {
                                 SendCancelTransferMessage(dataSender, "File transfers have been disabled by the server.");
                                 break;
@@ -611,7 +611,7 @@ namespace Barotrauma.Networking
                             UpdateVoteStatus();
                             break;
                         case (byte)PacketTypes.SpectateRequest:
-                            if (gameStarted && allowSpectating)
+                            if (gameStarted && AllowSpectating)
                             {
                                 var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
                                 server.SendMessage(startMessage, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered);
@@ -1098,7 +1098,7 @@ namespace Barotrauma.Networking
 
             if (autoRestart) AutoRestartTimer = 20.0f;
 
-            if (saveServerLogs) log.Save();
+            if (SaveServerLogs) log.Save();
 
             return true;
         }
@@ -1789,7 +1789,7 @@ namespace Barotrauma.Networking
 
         public static void Log(string line, Color? color)
         {
-            if (GameMain.Server == null || !GameMain.Server.saveServerLogs) return;
+            if (GameMain.Server == null || !GameMain.Server.SaveServerLogs) return;
 
             GameMain.Server.log.WriteLine(line, color);
         }
@@ -1845,7 +1845,7 @@ namespace Barotrauma.Networking
                 restClient = null;
             }
 
-            if (saveServerLogs)
+            if (SaveServerLogs)
             {
                 Log("Shutting down server...", Color.Cyan);
                 log.Save();
