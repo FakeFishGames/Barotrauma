@@ -114,7 +114,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
-            Vector2 center = new Vector2(rect.X + rect.Width*0.75f, rect.Center.Y);
+            Vector2 center = new Vector2(rect.X + rect.Width*0.5f, rect.Center.Y);
 
             if (!IsActive) return;
 
@@ -128,6 +128,8 @@ namespace Barotrauma.Items.Components
             foreach (Submarine submarine in Submarine.Loaded)
             {
                 if (item.Submarine == submarine && !DetectSubmarineWalls) continue;
+                if (item.Submarine != null && item.Submarine.DockedTo.Contains(submarine)) continue;
+                if (submarine.HullVertices == null) continue;
 
                 for (int i = 0; i < submarine.HullVertices.Count; i++)
                 {
@@ -152,16 +154,21 @@ namespace Barotrauma.Items.Components
             {
                 float simScale = displayScale * Physics.DisplayToSimRation;
 
-                Vector2 offset = ConvertUnits.ToSimUnits(item.Submarine.WorldPosition - item.WorldPosition);
-
-                for (int i = 0; i < item.Submarine.HullVertices.Count; i++)
+                foreach (Submarine submarine in Submarine.Loaded)
                 {
-                    Vector2 start = (item.Submarine.HullVertices[i] + offset) * simScale;
-                    start.Y = -start.Y;
-                    Vector2 end = (item.Submarine.HullVertices[(i + 1) % item.Submarine.HullVertices.Count] + offset) * simScale;
-                    end.Y = -end.Y;
+                    if (submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
 
-                    GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);                    
+                    Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - item.WorldPosition);
+
+                    for (int i = 0; i < submarine.HullVertices.Count; i++)
+                    {
+                        Vector2 start = (submarine.HullVertices[i] + offset) * simScale;
+                        start.Y = -start.Y;
+                        Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
+                        end.Y = -end.Y;
+
+                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
+                    }
                 }
             }
 

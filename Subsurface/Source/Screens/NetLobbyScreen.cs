@@ -136,10 +136,10 @@ namespace Barotrauma
             if (GameMain.Server != null)
             {
                 if (!GameMain.Server.AutoRestart) return "";
-                return "Restarting in " + (int)GameMain.Server.AutoRestartTimer;
+                return "Restarting in " + ToolBox.SecondsToReadableTime(GameMain.Server.AutoRestartTimer);
             }
             if (autoRestartTimer == 0.0f) return "";            
-            return "Restarting in " + (int)autoRestartTimer;
+            return "Restarting in " + ToolBox.SecondsToReadableTime(autoRestartTimer);
         }
                
         public NetLobbyScreen()
