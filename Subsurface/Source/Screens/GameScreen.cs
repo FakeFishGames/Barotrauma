@@ -92,7 +92,8 @@ namespace Barotrauma
                 if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
                 if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
-                GameMain.GameSession.Submarine.ApplyForce(targetMovement * 100000.0f);
+                if (targetMovement != Vector2.Zero)
+                    GameMain.GameSession.Submarine.ApplyForce(targetMovement * GameMain.GameSession.Submarine.SubBody.Body.Mass * 100.0f);
             }
 #endif
 

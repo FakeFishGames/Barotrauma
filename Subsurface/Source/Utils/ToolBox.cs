@@ -411,6 +411,23 @@ namespace Barotrauma
             return wrappedText.ToString();
         }
 
+        public static string SecondsToReadableTime(float seconds)
+        {
+            if (seconds <= 60.0f)
+            {
+                return (int)seconds + " s";
+            }
+            else
+            {
+                int m = (int)(seconds / 60.0f);
+                int s = (int)(seconds % 60.0f);
+
+                return s == 0 ?
+                    m + " m" :
+                    m + " m " + s + " s";
+            }
+        }
+
         public static string GetRandomLine(string filePath)
         {
             try

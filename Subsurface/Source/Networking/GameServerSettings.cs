@@ -34,7 +34,6 @@ namespace Barotrauma.Networking
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
 
         private SelectionMode subSelectionMode, modeSelectionMode;
-
         
         private bool registeredToMaster;
 
@@ -56,6 +55,29 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+
+
+        [HasDefaultValue(120.0f, true)]
+        public float RespawnInterval
+        {
+            get;
+            private set;
+        }
+
+        [HasDefaultValue(60.0f, true)]
+        public float MaxTransportTime
+        {
+            get;
+            private set;
+        }
+
+        [HasDefaultValue(0.2f, true)]
+        public float MinRespawnRatio
+        {
+            get;
+            private set;
+        }
+
 
         [HasDefaultValue(60.0f, true)]
         public float AutoRestartInterval
@@ -150,9 +172,19 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public float EndVoteRequiredRatio = 0.5f;
+        [HasDefaultValue(0.6f, true)]
+        public float EndVoteRequiredRatio
+        {
+            get;
+            private set;
+        }
 
-        public float KickVoteRequiredRatio = 0.5f;
+        [HasDefaultValue(0.6f, true)]
+        public float KickVoteRequiredRatio
+        {
+            get;
+            private set;
+        }
 
         private void SaveSettings()
         {
@@ -195,7 +227,9 @@ namespace Barotrauma.Networking
             Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
             
-            FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));            
+            FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));
+
+            showLogButton.Visible = SaveServerLogs;
         }
 
         private void CreateSettingsFrame()
@@ -220,14 +254,6 @@ namespace Barotrauma.Networking
             }
 
             settingsTabs[2].Padding = Vector4.Zero;
-
-            //var gameTabButton = new GUIButton(new Rectangle(0, 35, 100, 20), "Rounds", GUI.Style, innerFrame);
-            //gameTabButton.UserData = 0;
-            //gameTabButton.OnClicked = SelectSettingsTab;
-
-            //var serverTabButton = new GUIButton(new Rectangle(105, 35, 100, 20), "Server", GUI.Style, innerFrame);
-            //serverTabButton.UserData = 1;
-            //serverTabButton.OnClicked = SelectSettingsTab;
 
             SelectSettingsTab(null, 0);
             
@@ -306,22 +332,48 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            y += 40;
 
+            var respawnIntervalText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Respawn interval", GUI.Style, settingsTabs[0], GUI.SmallFont);
 
-            var randomizeLevelBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Randomize level seed between rounds", Alignment.Left, settingsTabs[0]);
-            randomizeLevelBox.Selected = RandomizeSeed;
-            randomizeLevelBox.OnSelected = (GUITickBox) =>
+            var respawnIntervalSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            respawnIntervalSlider.UserData = respawnIntervalText;
+            respawnIntervalSlider.Step = 0.05f;
+            respawnIntervalSlider.BarScroll = RespawnInterval / 600.0f;
+            respawnIntervalSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                RandomizeSeed = GUITickBox.Selected;
+                GUITextBlock text = scrollBar.UserData as GUITextBlock;
+
+                RespawnInterval = Math.Max(barScroll * 600.0f, 10.0f);
+                text.Text = "Interval: " + ToolBox.SecondsToReadableTime(RespawnInterval);
                 return true;
             };
+            respawnIntervalSlider.OnMoved(respawnIntervalSlider, respawnIntervalSlider.BarScroll);
+            
+            y += 40;
+
+            var minRespawnText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Minimum players to respawn", GUI.Style, settingsTabs[0]);
+            minRespawnText.ToolTip = "What percentage of players has to be dead/spectating until a respawn shuttle is dispatched";
+
+            var minRespawnSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            minRespawnSlider.ToolTip = minRespawnText.ToolTip;
+            minRespawnSlider.UserData = minRespawnText;
+            minRespawnSlider.Step = 0.1f;
+            minRespawnSlider.BarScroll = MinRespawnRatio;
+            minRespawnSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
+
+                MinRespawnRatio = barScroll;
+                voteText.Text = "Minimum players to respawn: " + (int)MathUtils.Round(MinRespawnRatio * 100.0f, 10.0f) + " %";
+                return true;
+            };
+            minRespawnSlider.OnMoved(minRespawnSlider, MinRespawnRatio);
 
             y += 40;
 
 
             //--------------------------------------------------------------------------------
-            //                              game settings 
+            //                              server settings 
             //--------------------------------------------------------------------------------
 
             y = 0;
@@ -330,7 +382,7 @@ namespace Barotrauma.Networking
             var startIntervalText = new GUITextBlock(new Rectangle(-10, y, 100, 20), "Autorestart delay", GUI.Style, settingsTabs[1]);
             var startIntervalSlider = new GUIScrollBar(new Rectangle(10, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[1]);
             startIntervalSlider.UserData = startIntervalText;
-            startIntervalSlider.Step = 0.1f;
+            startIntervalSlider.Step = 0.05f;
             startIntervalSlider.BarScroll = AutoRestartInterval / 300.0f;
             startIntervalSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
@@ -338,9 +390,7 @@ namespace Barotrauma.Networking
 
                 AutoRestartInterval = Math.Max(barScroll * 300.0f, 10.0f);
 
-                var timeSpan = new TimeSpan(0, 0, (int)AutoRestartInterval);
-
-                text.Text = "Autorestart delay: " + timeSpan.ToString("mm':'ss");
+                text.Text = "Autorestart delay: " + ToolBox.SecondsToReadableTime(AutoRestartInterval);
                 return true;
             };
             startIntervalSlider.OnMoved(startIntervalSlider, startIntervalSlider.BarScroll);
@@ -392,6 +442,15 @@ namespace Barotrauma.Networking
                 return true;
             };
 
+            y += 40;
+
+            var randomizeLevelBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Randomize level seed between rounds", Alignment.Left, settingsTabs[1]);
+            randomizeLevelBox.Selected = RandomizeSeed;
+            randomizeLevelBox.OnSelected = (GUITickBox) =>
+            {
+                RandomizeSeed = GUITickBox.Selected;
+                return true;
+            };
 
             y += 40;
             

@@ -11,9 +11,7 @@ namespace Barotrauma
         private Attack attack;
         
         private float force;
-
-        private LightSource light;
-
+        
         public float CameraShake;
 
         private bool sparks, shockwave, flames;
@@ -30,7 +28,7 @@ namespace Barotrauma
 
             CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range*0.1f);
         }
-
+        
         public void Explode(Vector2 worldPosition)
         {
             Hull hull = Hull.FindHull(worldPosition);
@@ -62,8 +60,8 @@ namespace Barotrauma
             float displayRange = attack.Range;
             if (displayRange < 0.1f) return;
 
-            light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
-            CoroutineManager.StartCoroutine(DimLight());
+            var light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
+            CoroutineManager.StartCoroutine(DimLight(light));
 
             float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, worldPosition)/2.0f;
             GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist) / displayRange, 0.0f);
@@ -92,7 +90,7 @@ namespace Barotrauma
 
         }
 
-        private IEnumerable<object> DimLight()
+        private IEnumerable<object> DimLight(LightSource light)
         {
             float currBrightness= 1.0f;
             float startRange = light.Range;
@@ -102,7 +100,7 @@ namespace Barotrauma
                 light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, currBrightness);
                 light.Range = startRange * currBrightness;
 
-                currBrightness -= 0.05f;
+                currBrightness -= CoroutineManager.DeltaTime*10.0f;
 
                 yield return CoroutineStatus.Running;
             }
