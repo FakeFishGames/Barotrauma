@@ -313,8 +313,8 @@ namespace Barotrauma
                 case "controlcharacter":
                 case "control":
                     if (commands.Length < 2) break;
-                    commands[1] = commands[1].ToLowerInvariant();
-                    Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLowerInvariant() == commands[1]);
+                    string name = string.Join(" ", commands.Skip(1)).ToLowerInvariant();
+                    Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLowerInvariant() == name);
                     break;
                 case "godmode":
                     if (Submarine.MainSub == null) return;

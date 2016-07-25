@@ -128,6 +128,8 @@ namespace Barotrauma
                     message.Write(AnimController.RefLimb.SimPosition.Y);
 
                     return true;
+                case NetworkEventType.InventoryUpdate:
+                    return base.FillNetworkData(type, message, data);
                 default:
 #if DEBUG
                     DebugConsole.ThrowError("AICharacter network event had a wrong type ("+type+")");
@@ -145,6 +147,9 @@ namespace Barotrauma
             {
                 case NetworkEventType.KillCharacter:
                     Kill(CauseOfDeath.Damage, true);
+                    return;
+                case NetworkEventType.InventoryUpdate:
+                    base.ReadNetworkData(type, message, sendingTime, out data);
                     return;
                 case NetworkEventType.ImportantEntityUpdate:
 
