@@ -31,10 +31,12 @@ namespace Barotrauma.Items.Components
         private Joint joint;
 
         private Hull[] hulls;
+        private ushort?[] hullIds;
 
         private Body[] bodies;
 
         private Gap gap;
+        private ushort? gapId;
 
         private bool docked;
 
@@ -105,6 +107,8 @@ namespace Barotrauma.Items.Components
             }
 
             IsActive = true;
+
+            hullIds = new ushort?[2];
 
             list.Add(this);
         }
@@ -286,6 +290,8 @@ namespace Barotrauma.Items.Components
                     hulls[i] = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
 
+                    if (hullIds[i] != null) hulls[i].ID = (ushort)hullIds[i];
+
                     //for (int j = 0; j < 2; j++)
                     //{
                     //    bodies[i + j * 2] = BodyFactory.CreateEdge(GameMain.World,
@@ -295,6 +301,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
+                if (gapId != null) gap.ID = (ushort)gapId;
 
                 gap.linkedTo.Clear();
                 if (hulls[0].WorldRect.Y > hulls[1].WorldRect.Y)
@@ -312,8 +319,12 @@ namespace Barotrauma.Items.Components
             item.linkedTo.Add(hulls[0]);
             item.linkedTo.Add(hulls[1]);
 
-            item.linkedTo.Add(gap);
+            hullIds[0] = hulls[0].ID;
+            hullIds[1] = hulls[1].ID;
 
+            gapId = gap.ID;
+
+            item.linkedTo.Add(gap);
 
             foreach (Body body in bodies)
             {
@@ -327,9 +338,11 @@ namespace Barotrauma.Items.Components
 
         }
 
-        private void Undock()
+        public void Undock()
         {
             if (dockingTarget == null || !docked) return;
+
+            item.NewComponentEvent(this, false, true);
 
             PlaySound(ActionType.OnUse, item.WorldPosition);
 
@@ -379,6 +392,11 @@ namespace Barotrauma.Items.Components
                 gap.Remove();
                 gap = null;
             }
+
+            hullIds[0] = null;
+            hullIds[1] = null;
+
+            gapId = null;
             
             if (bodies!=null)
             {
@@ -437,6 +455,8 @@ namespace Barotrauma.Items.Components
                         if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
                         {
                             CreateHull();
+
+                            item.NewComponentEvent(this, false, true);
                         }
                     }
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
@@ -491,7 +511,7 @@ namespace Barotrauma.Items.Components
                         drawPos,
                         new Rectangle(
                             rect.X, rect.Y + rect.Height/2 + (int)(rect.Height / 2 * (1.0f - dockingState)),
-                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.Red);
+                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
 
                 }
                 else
@@ -555,8 +575,6 @@ namespace Barotrauma.Items.Components
                     Docked = signal != "0";
                     break;
             }
-
-            item.NewComponentEvent(this, false, true);
         }
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
@@ -566,6 +584,10 @@ namespace Barotrauma.Items.Components
             if (docked)
             {
                 message.Write(dockingTarget.item.ID);
+                message.Write((ushort)hullIds[0]);
+                message.Write((ushort)hullIds[1]);
+
+                message.Write((ushort)gapId);
             }
 
             return true;
@@ -593,7 +615,13 @@ namespace Barotrauma.Items.Components
                     return;
                 }
 
+                hullIds[0] = message.ReadUInt16();
+                hullIds[1] = message.ReadUInt16();
+
+                gapId = message.ReadUInt16();
+
                 Dock(dockingTarget);
+
             }
             else
             {
