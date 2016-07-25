@@ -12,10 +12,9 @@ namespace Barotrauma.Networking
 {
     class RespawnManager
     {
-        const int MinCharactersToRespawn = 1;
-
-        const float RespawnInterval = 20.0f;
-
+        private readonly float respawnInterval;
+        private float maxTransportTime;
+        
         public enum State
         {
             Waiting,
@@ -31,9 +30,20 @@ namespace Barotrauma.Networking
         private Steering shuttleSteering;
         private List<Door> shuttleDoors;
 
+        /// <summary>
+        /// How long until the shuttle is dispatched with respawned characters
+        /// </summary>
         public float RespawnTimer
         {
             get { return respawnTimer; }
+        }
+
+        /// <summary>
+        /// how long until the shuttle starts heading back out of the level
+        /// </summary>
+        public float TransportTimer
+        {
+            get { return shuttleTransportTimer; }
         }
 
         public bool CountdownStarted
@@ -47,18 +57,20 @@ namespace Barotrauma.Networking
             get { return state; }
         }
 
-        private float respawnTimer, shuttleReturnTimer;
+        private float respawnTimer, shuttleReturnTimer, shuttleTransportTimer;
 
-        public RespawnManager(NetworkMember server)
+        private float updateReturnTimer;
+
+        public RespawnManager(NetworkMember networkMember)
         {
-            this.networkMember = server;
+            this.networkMember = networkMember;
 
             respawnShuttle = new Submarine("Submarines/Shuttle Mark I.sub");
             respawnShuttle.Load(false);
 
-            ResetShuttlePos();
+            ResetShuttle();
 
-            respawnShuttle.GodMode = true;
+            //respawnShuttle.GodMode = true;
             
             shuttleDoors = new List<Door>();
             foreach (Item item in Item.ItemList)
@@ -74,7 +86,14 @@ namespace Barotrauma.Networking
 
             shuttleSteering.TargetPosition = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
 
-            respawnTimer = RespawnInterval;
+            var server = networkMember as GameServer;
+            if (server != null)
+            {
+                respawnInterval = server.RespawnInterval;
+                maxTransportTime = server.MaxTransportTime;
+            }            
+
+            respawnTimer = respawnInterval;            
         }
         
         private List<Client> GetClientsToRespawn()
@@ -116,20 +135,33 @@ namespace Barotrauma.Networking
             shuttleSteering.MaintainPos = false;
 
             int characterToRespawnCount = GetClientsToRespawn().Count;
-            if (server.Character != null && server.Character.IsDead) characterToRespawnCount++;
+            int totalCharacterCount = server.ConnectedClients.Count;
+            if (server.Character != null)
+            {
+                totalCharacterCount++;
+                if (server.Character.IsDead) characterToRespawnCount++;
+            }
+            bool startCountdown = (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * server.MinRespawnRatio, 1.0f);
 
-            bool startCountdown = characterToRespawnCount >= MinCharactersToRespawn;
-
-            if (startCountdown && !CountdownStarted) server.SendRespawnManagerMsg();
-
-            CountdownStarted = startCountdown;
+            if (startCountdown)
+            {
+                if (!CountdownStarted)
+                {
+                    CountdownStarted = true;
+                    server.SendRespawnManagerMsg();
+                }
+            }
+            else
+            {
+                CountdownStarted = false;
+            }
 
             if (!CountdownStarted) return;
 
             respawnTimer -= deltaTime;
             if (respawnTimer <= 0.0f)
             {
-                respawnTimer = RespawnInterval;
+                respawnTimer = respawnInterval;
 
                 Respawn();
             }
@@ -137,27 +169,61 @@ namespace Barotrauma.Networking
 
         private void UpdateTransporting(float deltaTime)
         {
+            shuttleTransportTimer -= deltaTime;
+
+            if (shuttleReturnTimer + deltaTime > 15.0f && shuttleReturnTimer <= 15.0f &&
+                networkMember.Character != null &&
+                networkMember.Character.Submarine == respawnShuttle)
+            {
+                networkMember.AddChatMessage("The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.", ChatMessageType.Server);
+            }
+
             var server = networkMember as GameServer;
             if (server == null) return;
 
-            if (Character.CharacterList.Any(c => c.Submarine == respawnShuttle && !c.IsDead)) return;
 
-            shuttleReturnTimer += deltaTime;
-            if (shuttleReturnTimer > 10.0f)
+            //if there are no living chracters inside, transporting can be stopped immediately
+            if (!Character.CharacterList.Any(c => c.Submarine == respawnShuttle && !c.IsDead))
+            {
+                shuttleTransportTimer = 0.0f;
+            }
+
+            if (shuttleTransportTimer <= 0.0f)
             {
                 state = State.Returning;
 
                 server.SendRespawnManagerMsg();
-                shuttleReturnTimer = 0.0f;
+                shuttleReturnTimer = maxTransportTime;
+                shuttleTransportTimer = maxTransportTime;
             }
+
+            //shuttleReturnTimer += deltaTime;
+            //if (shuttleReturnTimer > 10.0f)
+            //{
+            //    state = State.Returning;
+
+            //    server.SendRespawnManagerMsg();
+            //    shuttleReturnTimer = 0.0f;
+            //}
         }
 
         private void UpdateReturning(float deltaTime)
         {
-            shuttleReturnTimer += deltaTime;
-            
-            if (shuttleReturnTimer > 1.0f)
+            //if (shuttleReturnTimer == maxTransportTime && 
+            //    networkMember.Character != null && 
+            //    networkMember.Character.Submarine == respawnShuttle)
+            //{
+            //    networkMember.AddChatMessage("The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.", ChatMessageType.Server);
+            //}
+
+            shuttleReturnTimer -= deltaTime;
+
+            updateReturnTimer += deltaTime;
+
+            if (updateReturnTimer > 10.0f)
             {
+                updateReturnTimer = 0.0f;
+
                 shuttleSteering.AutoPilot = true;
                 shuttleSteering.MaintainPos = false;
 
@@ -166,31 +232,41 @@ namespace Barotrauma.Networking
                     if (door.IsOpen) door.SetState(false, false, true);
                 }
 
+                var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
+                shuttleGaps.ForEach(g => g.Remove());
+
+                var dockingPorts = Item.ItemList.FindAll(i => i.Submarine == respawnShuttle && i.GetComponent<DockingPort>() != null);
+                dockingPorts.ForEach(d => d.GetComponent<DockingPort>().Undock());
+
                 var server = networkMember as GameServer;
                 if (server == null) return;
-
+                
                 //shuttle has returned if the path has been traversed or the shuttle is close enough to the exit
-                if (shuttleSteering.SteeringPath != null && shuttleSteering.SteeringPath.Finished
-                    || (respawnShuttle.WorldPosition.Y + respawnShuttle.Borders.Y > Level.Loaded.StartPosition.Y - Level.ShaftHeight && 
-                        Math.Abs(Level.Loaded.StartPosition.X - respawnShuttle.WorldPosition.X) < 1000.0f))
+
+                if (!CoroutineManager.IsCoroutineRunning("forcepos"))
                 {
+                    if (shuttleSteering.SteeringPath != null && shuttleSteering.SteeringPath.Finished
+                        || (respawnShuttle.WorldPosition.Y + respawnShuttle.Borders.Y > Level.Loaded.StartPosition.Y - Level.ShaftHeight &&
+                            Math.Abs(Level.Loaded.StartPosition.X - respawnShuttle.WorldPosition.X) < 1000.0f))
+                    {
+                        CoroutineManager.StopCoroutines("forcepos");
+                        CoroutineManager.StartCoroutine(
+                            ForceShuttleToPos(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + 1000.0f), 100.0f), "forcepos");
 
+                    }
+                }
+
+                if (respawnShuttle.WorldPosition.Y > Level.Loaded.Size.Y || shuttleReturnTimer <= 0.0f)
+                {
                     CoroutineManager.StopCoroutines("forcepos");
-                    CoroutineManager.StartCoroutine(
-                        ForceShuttleToPos(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + 1000.0f), 100.0f), "forcepos");
-                    
-                    //string msg = "The transportation shuttle has returned to ";
 
-                    //server.SendChatMessage(ChatMessage.Create("", msg, ChatMessageType.Server, null), server.ConnectedClients);
-                    
-                   
+                    ResetShuttle();
+
                     state = State.Waiting;
-                    respawnTimer = RespawnInterval;
+                    respawnTimer = respawnInterval;
 
                     server.SendRespawnManagerMsg();
                 }
-
-                shuttleReturnTimer = 0.0f;
             }
         }
 
@@ -201,7 +277,7 @@ namespace Barotrauma.Networking
 
             state = State.Transporting;
 
-            ResetShuttlePos();
+            ResetShuttle();
 
             server.SendChatMessage(ChatMessage.Create("", "Transportation shuttle dispatched", ChatMessageType.Server, null), server.ConnectedClients);
 
@@ -229,8 +305,44 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private void ResetShuttlePos()
+        private void ResetShuttle()
         {
+            shuttleTransportTimer = maxTransportTime;
+            shuttleReturnTimer = maxTransportTime;
+
+            foreach (Structure wall in Structure.WallList)
+            {
+                if (wall.Submarine != respawnShuttle) continue;
+
+                for (int i = 0; i < wall.SectionCount; i++)
+                {
+                    wall.AddDamage(i, -100000.0f);
+                }            
+            }
+
+            var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
+            shuttleGaps.ForEach(g => g.Remove());
+
+            foreach (Hull hull in Hull.hullList)
+            {
+                if (hull.Submarine != respawnShuttle) continue;
+
+                hull.OxygenPercentage = 100.0f;
+                hull.Volume = 0.0f;
+            }
+
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.Submarine == respawnShuttle)
+                {
+                    if (Character.Controlled == c) Character.Controlled = null;
+                    //if (networkMember.Character == c) networkMember.Character = null;
+                    c.Enabled = false;
+
+                    c.Kill(CauseOfDeath.Damage, true);
+                }
+            }
+
             respawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + respawnShuttle.Borders.Height));
 
             respawnShuttle.Velocity = Vector2.Zero;
@@ -247,7 +359,12 @@ namespace Barotrauma.Networking
             switch (state)
             {
                 case State.Transporting:
+                    msg.Write(maxTransportTime);
+
                     var clients = GetClientsToRespawn();
+
+                    server.AssignJobs(clients);
+                    clients.ForEach(c => c.characterInfo.Job = new Job(c.assignedJob));
 
                     List<CharacterInfo> characterInfos = clients.Select(c => c.characterInfo).ToList();
                     if (server.Character != null && server.Character.IsDead) characterInfos.Add(server.CharacterInfo);
@@ -271,6 +388,7 @@ namespace Barotrauma.Networking
                             Character.Controlled = character;
                         }
 
+                        character.SpawnPoint = waypoints[i];
                         character.GiveJobItems(waypoints[i]);
 
                         GameMain.GameSession.CrewManager.characters.Add(character);
@@ -280,7 +398,13 @@ namespace Barotrauma.Networking
                                         
                     break;
                 case State.Waiting:
+                    msg.Write(CountdownStarted);
                     msg.Write(respawnTimer);
+                    break;
+                case State.Returning:
+                    //CoroutineManager.StopCoroutines("forcepos");
+                    //CoroutineManager.StartCoroutine(
+                    //    ForceShuttleToPos(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + 1000.0f), 100.0f), "forcepos");
                     break;
             }
         }
@@ -292,8 +416,10 @@ namespace Barotrauma.Networking
             switch (state)
             {
                 case State.Transporting:
+                    maxTransportTime = inc.ReadSingle();
+
                     CountdownStarted = false;
-                    ResetShuttlePos();
+                    ResetShuttle();
 
                     var client = networkMember as GameClient;
 
@@ -310,9 +436,16 @@ namespace Barotrauma.Networking
                     break;
                 case State.Waiting:
                     CountdownStarted = true;
+
+                    respawnShuttle.SubBody.Body.RestoreCollisionWith(Level.Loaded.ShaftBodies[0]);
+
+                    ResetShuttle();
+
                     respawnTimer = inc.ReadSingle();
                     break;
                 case State.Returning:
+                    respawnShuttle.SubBody.Body.IgnoreCollisionWith(Level.Loaded.ShaftBodies[0]);
+
                     CountdownStarted = false;
                     break;
             }

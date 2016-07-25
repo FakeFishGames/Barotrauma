@@ -435,6 +435,11 @@ namespace Barotrauma
             
             foreach (AITarget target in AITarget.List)
             {
+                if (Level.Loaded != null && target.WorldPosition.Y > Level.Loaded.Size.Y)
+                {
+                    continue;
+                }
+
                 float valueModifier = 0.0f;
                 float dist = 0.0f;
                 

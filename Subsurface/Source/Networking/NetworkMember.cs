@@ -385,6 +385,31 @@ namespace Barotrauma.Networking
                         "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
                 }
             }
+
+            if (respawnManager != null)
+            {
+                string respawnInfo = "";
+
+                if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
+                    respawnManager.CountdownStarted &&
+                    myCharacter != null && myCharacter.IsDead)
+                {
+                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : "Respawning in " + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
+
+                }
+                else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
+                {
+                    respawnInfo = respawnManager.TransportTimer <= 0.0f ? "" : "Shuttle leaving in " + ToolBox.SecondsToReadableTime(respawnManager.TransportTimer);
+                }
+
+                if (!string.IsNullOrEmpty(respawnInfo))
+                {                
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(GameMain.GraphicsWidth - 300.0f, 20),
+                        respawnInfo, Color.White, null, 0, GUI.SmallFont);
+                }
+
+            }
         }
 
         public virtual bool SelectCrewCharacter(GUIComponent component, object obj)

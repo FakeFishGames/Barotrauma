@@ -8,6 +8,10 @@ namespace Barotrauma
     {
         private readonly Queue<Pair<ItemPrefab, object>> spawnQueue;
 
+
+        public List<Item> spawnItems = new List<Item>();
+
+
         public ItemSpawner()
         {
             spawnQueue = new Queue<Pair<ItemPrefab, object>>();
@@ -67,6 +71,7 @@ namespace Barotrauma
                 if (itemInfo.Second is Inventory)
                 {
                     var item = new Item(itemInfo.First, Vector2.Zero, null);
+                    spawnItems.Add(item);
 
                     var inventory = (Inventory)itemInfo.Second;
                     inventory.TryPutItem(item, null, false);
@@ -88,7 +93,7 @@ namespace Barotrauma
                 message.Write(items[i].Prefab.Name);
                 message.Write(items[i].ID);
 
-                message.Write((inventories[i]==null || inventories[i].Owner == null) ? (ushort)0 : inventories[i].Owner.ID);
+                message.Write((inventories == null || inventories[i] == null || inventories[i].Owner == null) ? (ushort)0 : inventories[i].Owner.ID);
             }
         }
 
@@ -128,17 +133,25 @@ namespace Barotrauma
                     }
                 }                
 
-                var item = new Item(itemPrefab, Vector2.Zero, null);
+                var item = new Item(itemPrefab, Vector2.Zero, null);                
                 item.ID = itemId;
                 if (inventory != null) inventory.TryPutItem(item, null, false);
 
             }
+        }
+
+        public void Clear()
+        {
+            spawnQueue.Clear();
+            spawnItems.Clear();
         }
     }
 
     class ItemRemover
     {
         private readonly Queue<Item> removeQueue;
+        
+        public List<Item> removedItems = new List<Item>();
 
         public ItemRemover()
         {
@@ -165,6 +178,7 @@ namespace Barotrauma
             while (removeQueue.Count > 0)
             {
                 var item = removeQueue.Dequeue();
+                removedItems.Add(item);
 
                 item.Remove();
 
@@ -191,10 +205,16 @@ namespace Barotrauma
                 ushort itemId = message.ReadUInt16();
 
                 var item = MapEntity.FindEntityByID(itemId);
-                if (item == null || item is Item) continue;
+                if (item == null || !(item is Item)) continue;
 
                 item.Remove();
             }
+        }
+
+        public void Clear()
+        {
+            removeQueue.Clear();
+            removedItems.Clear();
         }
     }
 }
