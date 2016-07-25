@@ -9,9 +9,8 @@ namespace Barotrauma
         
         public static void StartTutorial(TutorialType tutorialType)
         {
-            Submarine.Load("Content/Map/TutorialSub.sub", "", true);
-
-
+            Submarine.MainSub = Submarine.Load("Content/Map/TutorialSub.sub", "", true);
+            
             tutorialType.Initialize();
         }
 

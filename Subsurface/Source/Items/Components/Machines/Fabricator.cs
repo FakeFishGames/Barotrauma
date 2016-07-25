@@ -323,7 +323,12 @@ namespace Barotrauma.Items.Components
                 for (int i = 0; i<ip.Item2; i++)
                 {
                     var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1);
+                    if (requiredItem == null) continue;
+
+                    Item.Remover.QueueItem(requiredItem);
                     containers[0].Inventory.RemoveItem(requiredItem);
+
+
                 }
             }
                         

@@ -17,7 +17,7 @@ namespace Barotrauma
     class SubmarineBody
     {
         public const float DamageDepth = -30000.0f;
-        private const float PressureDamageMultiplier = 0.001f;
+        //private const float PressureDamageMultiplier = 0.001f;
 
         private const float DamageMultiplier = 50.0f;
 
@@ -360,11 +360,10 @@ namespace Barotrauma
             if (Position.Y > DamageDepth) return;
 
             float depth = DamageDepth - Position.Y;
-            depth = Math.Min(depth, 40000.0f);
 
            // float prevTimer = depthDamageTimer;
 
-            depthDamageTimer -= deltaTime*Math.Min(depth,20000)*PressureDamageMultiplier;
+            depthDamageTimer -= deltaTime;
 
             //if (prevTimer>5.0f && depthDamageTimer<=5.0f)
             //{
@@ -373,29 +372,45 @@ namespace Barotrauma
 
             if (depthDamageTimer > 0.0f) return;
 
-            Vector2 damagePos = Vector2.Zero;
-            if (Rand.Int(2)==0)
+            foreach (Structure wall in Structure.WallList)
             {
-                damagePos = new Vector2(
-                    (Rand.Int(2) == 0) ? Borders.X : Borders.X+Borders.Width, 
-                    Rand.Range(Borders.Y - Borders.Height, Borders.Y));
-            }
-            else
-            {
-                damagePos = new Vector2(
-                    Rand.Range(Borders.X, Borders.X + Borders.Width),
-                    (Rand.Int(2) == 0) ? Borders.Y : Borders.Y - Borders.Height);
-            }
+                if (wall.Submarine != submarine) continue;
+                //if (Rand.Int(5) < 4) continue;
 
-            damagePos += submarine.Position + submarine.HiddenSubPosition;
-            SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f, damagePos, 10000.0f);
+                if (wall.Health < depth*0.01f)
+                {
+                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, depth*0.01f);
 
-            if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
-            {
-                GameMain.GameScreen.Cam.Shake = depth * PressureDamageMultiplier * 0.1f;
+                    if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+                    {
+                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(depth *0.001f, 50.0f));
+                    }
+                }
             }
 
-            Explosion.RangedStructureDamage(damagePos, depth * PressureDamageMultiplier * 50.0f, depth * PressureDamageMultiplier);
+            //Vector2 damagePos = Vector2.Zero;
+            //if (Rand.Int(2)==0)
+            //{
+            //    damagePos = new Vector2(
+            //        (Rand.Int(2) == 0) ? Borders.X : Borders.X+Borders.Width, 
+            //        Rand.Range(Borders.Y - Borders.Height, Borders.Y));
+            //}
+            //else
+            //{
+            //    damagePos = new Vector2(
+            //        Rand.Range(Borders.X, Borders.X + Borders.Width),
+            //        (Rand.Int(2) == 0) ? Borders.Y : Borders.Y - Borders.Height);
+            //}
+
+            //damagePos += submarine.Position + submarine.HiddenSubPosition;
+            //SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f, damagePos, 10000.0f);
+
+            //if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+            //{
+            //    GameMain.GameScreen.Cam.Shake = depth * PressureDamageMultiplier * 0.1f;
+            //}
+
+            //Explosion.RangedStructureDamage(damagePos, depth * PressureDamageMultiplier * 50.0f, depth * PressureDamageMultiplier);
             //SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, Rand.Range(0.0f, 100.0f), damagePos, 5000.0f);
             
             depthDamageTimer = 10.0f;
@@ -441,8 +456,14 @@ namespace Barotrauma
                 Vector2 normal;
                 FixedArray2<Vector2> points;
                 contact.GetWorldManifold(out normal, out points);
+                if (contact.FixtureA.Body == sub.SubBody.Body)
+                {
+                    normal = -normal;
+                }
 
-                ApplyImpact(Vector2.Dot(Velocity - sub.Velocity, normal) / 2.0f, normal, contact);
+                float massRatio = sub.SubBody.Body.Mass / (sub.SubBody.Body.Mass + Body.Mass);
+
+                ApplyImpact((Vector2.Dot(Velocity - sub.Velocity, normal) / 2.0f)*massRatio, normal, contact);
 
                 return true;
             }
