@@ -247,7 +247,7 @@ namespace Barotrauma.Networking
                                 {                           
                                     new GUIMessageBox("Please wait",
                                         (allowSpectating) ?
-                                        "A round is already running, but you can spectate the game while waiting for a new one to start." :
+                                        "A round is already running, but you can spectate the game while waiting for a respawn shuttle or a new round." :
                                         "A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.");
                                 }
 
@@ -255,7 +255,7 @@ namespace Barotrauma.Networking
                                 {
                                     GameMain.NetLobbyScreen.Select();
 
-                                    new GUIMessageBox("Connection timed out", "You were disconnected for too long and your Character was deleted. Please wait for another round to start.");
+                                    new GUIMessageBox("Connection timed out", "You were disconnected for too long and your character was deleted. Please wait for another round to start.");
                                 }
 
                                 GameMain.NetLobbyScreen.ClearPlayers();
@@ -667,24 +667,65 @@ namespace Barotrauma.Networking
 
             List<Character> crew = new List<Character>();
 
-            int count = inc.ReadByte();
-            for (int n = 0; n < count; n++)
+            byte characterCount = inc.ReadByte();
+            for (int i = 0; i < characterCount; i++)
             {
-                byte id = inc.ReadByte();
-                Character newCharacter = ReadCharacterData(inc, id == myID);
+                bool isAiCharacter = inc.ReadBoolean();
+                ushort id = inc.ReadUInt16();
 
-                if (id != myID)
+                if (isAiCharacter)
                 {
-                    var characterOwner = otherClients.Find(c => c.ID == id);
-                    if (characterOwner != null) characterOwner.Character = newCharacter;
+                    string configPath = inc.ReadString();
+
+                    Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
+
+                    var existingEntity = Entity.FindEntityByID(id);
+                    if (existingEntity is AICharacter && existingEntity.ID == id)
+                    {
+                        continue;
+                    }
+
+                    var character = Character.Create(configPath, position, null, true);
+                    if (character != null) character.ID = id;
+                }
+                else
+                {
+                    bool hasOwner = inc.ReadBoolean();
+                    int ownerId = -1;
+                    if (hasOwner)
+                    {
+                        ownerId = inc.ReadByte();
+                    }
+
+                    Character newCharacter = ReadCharacterData(inc, ownerId == myID);
+
+                    if (id != myID)
+                    {
+                        var characterOwner = otherClients.Find(c => c.ID == ownerId);
+                        if (characterOwner != null) characterOwner.Character = newCharacter;
+                    }
+
+                    crew.Add(newCharacter);
                 }
 
-                crew.Add(newCharacter);
+                //int count = inc.ReadByte();
+                //for (int n = 0; n < count; n++)
+                //{
+                //    byte id = inc.ReadByte();
+                //    Character newCharacter = ReadCharacterData(inc, id == myID);
 
-                yield return CoroutineStatus.Running;
+                //    if (id != myID)
+                //    {
+                //        var characterOwner = otherClients.Find(c => c.ID == id);
+                //        if (characterOwner != null) characterOwner.Character = newCharacter;
+                //    }
+
+                //    crew.Add(newCharacter);
+
+                //    yield return CoroutineStatus.Running;
+                //}
             }
-
-            gameStarted = true;
+                gameStarted = true;
 
             endRoundButton.Visible = Voting.AllowEndVoting && myCharacter != null;
 
@@ -782,18 +823,6 @@ namespace Barotrauma.Networking
                     CancelFileTransfer();
                 }
             }
-
-            if (respawnManager != null && 
-                respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                respawnManager.CountdownStarted &&
-                myCharacter != null && myCharacter.IsDead)
-            {
-                GUI.DrawString(spriteBatch,
-                    new Vector2(GameMain.GraphicsWidth - 300.0f, 20),
-                    "Respawning in " + (int)respawnManager.RespawnTimer + " s",
-                    Color.White, null, 0, GUI.SmallFont);
-            }
-
 
             if (!GameMain.DebugDraw) return;
 
@@ -1032,6 +1061,8 @@ namespace Barotrauma.Networking
             string jobName = inc.ReadString();
             JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
 
+            ushort spawnPointID = inc.ReadUInt16();
+
             if (inc.Position > inc.LengthBits)
             {
                 return null;
@@ -1040,30 +1071,42 @@ namespace Barotrauma.Networking
             CharacterInfo ch = new CharacterInfo(Character.HumanConfigFile, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
             ch.HeadSpriteId = headSpriteID;
 
-            WayPoint closestWaypoint = null;
-            float closestDist = 0.0f;
-            foreach (WayPoint wp in WayPoint.WayPointList)
-            {
-                if (wp.SpawnType != SpawnType.Human) continue;
-                float dist = Vector2.Distance(wp.WorldPosition, position);
-                if (closestWaypoint != null && dist > closestDist) continue;
-                
-                closestWaypoint = wp;
-                closestDist = dist;
-                continue;                
-            }
-
             Character character = Character.Create(ch, position, !isMyCharacter, false);
             GameMain.GameSession.CrewManager.characters.Add(character);            
 
             character.ID = ID;
-            
-            character.GiveJobItems(closestWaypoint);
+
+            WayPoint spawnPoint = Entity.FindEntityByID(spawnPointID) as WayPoint;
+            if (spawnPoint != null)
+            {
+                character.GiveJobItems(spawnPoint);
+            }
+
+            for (int i = 0; i < character.Inventory.Items.Length; i++)
+            {
+                ushort itemID = inc.ReadUInt16();
+
+                System.Diagnostics.Debug.Assert((itemID == 0) == (character.Inventory.Items[i] == null));
+                if (character.Inventory.Items[i] == null) continue;
+
+                character.Inventory.Items[i].ID = itemID;
+
+                int containedCount = inc.ReadByte();
+                if (containedCount > 0)
+                {
+                    var containedItems = character.Inventory.Items[i].ContainedItems;
+                    for (int j = 0; j<containedCount; j++)
+                    {
+                        ushort containedID = inc.ReadUInt16();
+                        if (containedItems[j] != null) containedItems[j].ID = containedID;
+                    }
+                }
+            }
 
             if (isMyCharacter)
             {
                 myCharacter = character;
-                Character.Controlled = character;   
+                Character.Controlled = character;
             }
 
             return character;

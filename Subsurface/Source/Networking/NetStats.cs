@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
 #if DEBUG
             int y = 10;
 
-            foreach (KeyValuePair<string, long> msgBytesSent in server.messageCount.OrderBy(key => key.Value))
+            foreach (KeyValuePair<string, long> msgBytesSent in server.messageCount.OrderBy(key => -key.Value))
             {
                 spriteBatch.DrawString(GUI.SmallFont, msgBytesSent.Key + ": " + MathUtils.GetBytesReadable(msgBytesSent.Value),
                     new Vector2(rect.Right - 200, rect.Y + y), Color.Red);

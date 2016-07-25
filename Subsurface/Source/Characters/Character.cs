@@ -19,8 +19,6 @@ namespace Barotrauma
     {
         public static List<Character> CharacterList = new List<Character>();
         
-        public static Queue<CharacterInfo> NewCharacterQueue = new Queue<CharacterInfo>();
-
         public static bool DisableControls;
 
         //the Character that the player is currently controlling
@@ -36,6 +34,8 @@ namespace Barotrauma
                 CharacterHUD.Reset();
             }
         }
+
+        public bool SpawnedMidRound;
 
         private bool enabled;
 
@@ -159,6 +159,12 @@ namespace Barotrauma
         public CharacterInventory Inventory
         {
             get { return inventory; }
+        }
+
+        public WayPoint SpawnPoint
+        {
+            get;
+            set;
         }
 
         private Color speechBubbleColor;
@@ -783,7 +789,7 @@ namespace Barotrauma
             
             foreach (Character c in CharacterList)
             {
-                if (c == this) continue;
+                if (c == this || !c.enabled) continue;
 
                 if (Vector2.Distance(SimPosition, c.SimPosition) > maxDist) continue;
 

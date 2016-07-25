@@ -360,16 +360,23 @@ namespace Barotrauma.Networking
                 {
                     if (myCharacter != null && !myCharacter.IsDead) new NetworkEvent(NetworkEventType.EntityUpdate, myCharacter.ID, false);
 
+                    float ignoreDistance = FarseerPhysics.ConvertUnits.ToDisplayUnits(NetConfig.CharacterIgnoreDistance);
+
                     foreach (Character c in Character.CharacterList)
                     {
                         if (!(c is AICharacter) || c.IsDead) continue;
 
+                        if (Character.CharacterList.Any(
+                            c2 => c2.IsNetworkPlayer &&
+                                Vector2.Distance(c2.WorldPosition, c.WorldPosition) < ignoreDistance))
+                        {
+                            new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
+                        }
+
                         //todo: take multiple subs into account
                         //Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
 
-                        //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
-
-                        new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
+                        //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;                        
                     }
                 }
 
@@ -760,8 +767,16 @@ namespace Barotrauma.Networking
 
             if (recipients.Count == 0) return;
 
-            server.SendMessage(msg, recipients, deliveryMethod, 0);  
-            
+            SendMessage(msg, deliveryMethod, recipients);              
+        }
+
+        private void SendMessage(NetOutgoingMessage msg, NetDeliveryMethod deliveryMethod, List<NetConnection> recipients)
+        {
+            if (recipients == null) recipients = connectedClients.Select(c => c.Connection).ToList();
+
+            if (recipients.Count == 0) return;
+
+            server.SendMessage(msg, recipients, deliveryMethod, 0);
         }
 
         private void SendNetworkEvents(List<Client> recipients = null)
@@ -807,9 +822,20 @@ namespace Barotrauma.Networking
         {
             yield return new WaitForSeconds(3.0f);
 
+            foreach (Item item in Item.Remover.removedItems)
+            {
+                Item.Spawner.spawnItems.Remove(item);
+            }
+
+            SendItemRemoveMessage(Item.Remover.removedItems, new List<NetConnection>() { sender.Connection });
+            SendItemSpawnMessage(Item.Spawner.spawnItems, null, new List<NetConnection>() { sender.Connection });
+
+            yield return new WaitForSeconds(1.0f);
+
             //save all the current events to a list and clear them
             var existingEvents = new List<NetworkEvent>(NetworkEvent.Events);
             NetworkEvent.Events.Clear();
+
 
             foreach (Hull hull in Hull.hullList)
             {
@@ -822,6 +848,21 @@ namespace Barotrauma.Networking
                 new NetworkEvent(NetworkEventType.EntityUpdate, c.ID, false);
                 if (c.Inventory != null) new NetworkEvent(NetworkEventType.InventoryUpdate, c.ID, false);
                 if (c.IsDead) new NetworkEvent(NetworkEventType.KillCharacter, c.ID, false);
+            }
+
+            foreach (Structure wall in Structure.WallList)
+            {
+                bool takenDamage = false;
+                for (int i = 0; i<wall.SectionCount; i++)
+                {
+                    if (wall.SectionDamage(i) < wall.Health)
+                    {
+                        takenDamage = true;
+                        break;
+                    }
+                }
+
+                if (takenDamage) new NetworkEvent(NetworkEventType.ImportantEntityUpdate, wall.ID, false);
             }
 
             foreach (Item item in Item.ItemList)
@@ -940,11 +981,14 @@ namespace Barotrauma.Networking
         
         private IEnumerable<object> StartGame(Submarine selectedSub, GameModePreset selectedMode)
         {
+            Item.Spawner.Clear();
+            Item.Remover.Clear();
+
             GameMain.NetLobbyScreen.StartButton.Enabled = false;
 
             GUIMessageBox.CloseAll();
 
-            AssignJobs();
+            AssignJobs(connectedClients);
 
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
@@ -988,8 +1032,9 @@ namespace Barotrauma.Networking
             {
                 connectedClients[i].Character = Character.Create(
                     connectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
+                connectedClients[i].Character.SpawnPoint = assignedWayPoints[i];
                 connectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
-
+                
                 GameMain.GameSession.CrewManager.characters.Add(connectedClients[i].Character);
             }
 
@@ -998,6 +1043,7 @@ namespace Barotrauma.Networking
                 myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
                 Character.Controlled = myCharacter;
 
+                myCharacter.SpawnPoint = assignedWayPoints[assignedWayPoints.Length - 1];
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
 
                 GameMain.GameSession.CrewManager.characters.Add(myCharacter);
@@ -1005,8 +1051,7 @@ namespace Barotrauma.Networking
 
             var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
             SendMessage(startMessage, NetDeliveryMethod.ReliableUnordered);
-
-
+            
             yield return CoroutineStatus.Running;
             
             UpdateCrewFrame();
@@ -1065,20 +1110,65 @@ namespace Barotrauma.Networking
 
             //msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
-            List<Client> playingClients = connectedClients.FindAll(c => c.Character != null);
+            var characters = Character.CharacterList.FindAll(c => !(c is AICharacter) || c.SpawnedMidRound);
 
-            msg.Write((myCharacter == null) ? (byte)playingClients.Count : (byte)(playingClients.Count + 1));
-            foreach (Client client in playingClients)
+            msg.Write((byte)characters.Count);
+            foreach (Character c in characters)
             {
-                msg.Write(client.ID);
-                WriteCharacterData(msg, client.Character.Name, client.Character);
+                msg.Write(c is AICharacter);
+                msg.Write(c.ID);
+
+                if (c is AICharacter)
+                {
+                    msg.Write(c.ConfigPath);
+
+                    msg.Write(c.Position.X);
+                    msg.Write(c.Position.Y);
+                }
+                else
+                {
+                    Client client = connectedClients.Find(cl => cl.Character == c);
+                    if (client != null)
+                    {
+                        msg.Write(true);
+                        msg.Write(client.ID);
+                    }
+                    else if (myCharacter == c)
+                    {
+                        msg.Write(true);
+                        msg.Write((byte)0);                        
+                    }
+                    else{
+                        msg.Write(false);
+                    }
+                    WriteCharacterData(msg, c.Name, c);
+                }
             }
 
-            if (myCharacter != null)
-            {
-                msg.Write((byte)0);
-                WriteCharacterData(msg, myCharacter.Info.Name, myCharacter);
-            }
+            //            message.Write((byte)PacketTypes.NewCharacter);
+
+            //message.Write(character.ConfigPath);
+
+            //message.Write(character.ID);
+
+            //message.Write(character.Position.X);
+            //message.Write(character.Position.Y);
+
+
+            //List<Client> playingClients = connectedClients.FindAll(c => c.Character != null);
+            
+            //msg.Write((myCharacter == null) ? (byte)playingClients.Count : (byte)(playingClients.Count + 1));
+            //foreach (Client client in playingClients)
+            //{
+            //    msg.Write(client.ID);
+            //    WriteCharacterData(msg, client.Character.Name, client.Character);
+            //}
+
+            //if (myCharacter != null)
+            //{
+            //    msg.Write((byte)0);
+            //    WriteCharacterData(msg, myCharacter.Info.Name, myCharacter);
+            //}
 
             return msg;
         }
@@ -1096,7 +1186,7 @@ namespace Barotrauma.Networking
 
             GameMain.GameSession.gameMode.End(endMessage);
 
-            if (autoRestart) AutoRestartTimer = 20.0f;
+            if (autoRestart) AutoRestartTimer = AutoRestartInterval;
 
             if (SaveServerLogs) log.Save();
 
@@ -1109,6 +1199,13 @@ namespace Barotrauma.Networking
             myCharacter = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
+
+            Item.Spawner.Clear();
+            Item.Remover.Clear();
+
+#if DEBUG
+            messageCount.Clear();
+#endif
 
             respawnManager = null;
 
@@ -1355,14 +1452,6 @@ namespace Barotrauma.Networking
             {
                 log.LogFrame.Update(0.016f);
                 log.LogFrame.Draw(spriteBatch);
-            }
-
-            if (respawnManager != null && respawnManager.CurrentState == RespawnManager.State.Waiting && respawnManager.CountdownStarted)
-            {
-                GUI.DrawString(spriteBatch,
-                    new Vector2(GameMain.GraphicsWidth - 500.0f, 20),
-                    "Respawning in " + (int)respawnManager.RespawnTimer + " s",
-                    Color.White, null, 0, GUI.SmallFont);
             }
 
             if (!ShowNetStats) return;
@@ -1656,11 +1745,38 @@ namespace Barotrauma.Networking
 
             message.Write(character.WorldPosition.X);
             message.Write(character.WorldPosition.Y);
-
+            
             message.Write(character.Info.Job.Name);
+            message.Write(character.SpawnPoint == null ? (ushort)0 : character.SpawnPoint.ID);
+
+            for (int i = 0; i < character.Inventory.Items.Length; i++)
+            {
+                if (character.Inventory.Items[i] == null)
+                {
+                    message.Write((ushort)0);
+                }
+                else
+                {
+                    message.Write(character.Inventory.Items[i].ID);
+                    var containedItems = character.Inventory.Items[i].ContainedItems;
+                    if (containedItems == null || !containedItems.Any(c => c != null))
+                    {
+                        message.Write((byte)0);
+                    }
+                    else
+                    {
+                        message.Write((byte)containedItems.Length);
+                        for (int j = 0; j < containedItems.Length; j++)
+                        {
+                            message.Write(containedItems[j] == null ? (ushort)0 : containedItems[j].ID);
+                        }
+                    }
+                }               
+
+            }
         }
 
-        public void SendCharacterSpawnMessage(Character character)
+        public void SendCharacterSpawnMessage(Character character, List<NetConnection> recipients = null)
         {
             NetOutgoingMessage message = server.CreateMessage();
             message.Write((byte)PacketTypes.NewCharacter);
@@ -1672,41 +1788,50 @@ namespace Barotrauma.Networking
             message.Write(character.Position.X);
             message.Write(character.Position.Y);
             
-            SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            SendMessage(message, NetDeliveryMethod.ReliableUnordered, recipients);
         }
 
-        public void SendItemSpawnMessage(List<Item> items, List<Inventory> inventories = null)
+        public void SendItemSpawnMessage(List<Item> items, List<Inventory> inventories = null, List<NetConnection> recipients = null)
         {
             if (items == null || !items.Any()) return;
 
             NetOutgoingMessage message = server.CreateMessage();
             message.Write((byte)PacketTypes.NewItem);
 
-            Item.Spawner.FillNetworkData(message, items, inventories);
+            Item.Spawner.FillNetworkData(message, items, inventories);            
 
-            SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            SendMessage(message, NetDeliveryMethod.ReliableOrdered, recipients);
         }
 
-        public void SendItemRemoveMessage(List<Item> items)
+        public void SendItemRemoveMessage(List<Item> items, List<NetConnection> recipients = null)
         {
             if (items == null || !items.Any()) return;
 
             NetOutgoingMessage message = server.CreateMessage();
-
+            message.Write((byte)PacketTypes.RemoveItem);
             Item.Remover.FillNetworkData(message, items);
 
-            SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            SendMessage(message, NetDeliveryMethod.ReliableOrdered, recipients);
         }
 
-        private void AssignJobs()
+        public void AssignJobs(List<Client> unassigned)
         {
-            List<Client> unassigned = new List<Client>(connectedClients);
+            unassigned = new List<Client>(unassigned);
             
             int[] assignedClientCount = new int[JobPrefab.List.Count];
 
             if (characterInfo!=null)
             {
                 assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])]=1;
+            }
+
+            foreach (Client c in connectedClients)
+            {
+                if (unassigned.Contains(c)) continue;
+                if (c.Character == null || !c.Character.IsDead) continue;
+
+                assignedClientCount[JobPrefab.List.IndexOf(c.Character.Info.Job.Prefab)]++;
+
             }
 
             //if any of the players has chosen a job that is Always Allowed, give them that job
@@ -1827,7 +1952,7 @@ namespace Barotrauma.Networking
             {
                 msg.Write(Rand.Int(2) == 0);
             }
-            SendMessage(msg, (Rand.Int(2) == 0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable, null);
+            SendMessage(msg, (Rand.Int(2) == 0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable);
 
         }
 

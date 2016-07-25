@@ -87,10 +87,10 @@ namespace Barotrauma
 
                 foreach (Submarine sub in subs)
                 {
-                    sub.ApplyForce((Vector2.Normalize(sub.Position - targetPos) * targetSpeed - sub.Velocity) * 500.0f);
+                    if (sub.Position == targetPos) continue;
+                    sub.ApplyForce((Vector2.Normalize(targetPos - sub.Position) * targetSpeed - sub.Velocity) * 500.0f);
                 }
-                    
-
+                
                 timer += CoroutineManager.UnscaledDeltaTime;
 
                 yield return CoroutineStatus.Running;

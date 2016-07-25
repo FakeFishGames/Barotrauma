@@ -261,7 +261,11 @@ namespace Barotrauma
                         spawnedCharacter = Character.Create("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", spawnPosition);
                     }
 
-                    if (spawnedCharacter != null && GameMain.Server != null) GameMain.Server.SendCharacterSpawnMessage(spawnedCharacter);
+                    if (spawnedCharacter != null && GameMain.Server != null)
+                    {
+                        spawnedCharacter.SpawnedMidRound = true;
+                        GameMain.Server.SendCharacterSpawnMessage(spawnedCharacter);
+                    }
 
                     break;
                 case "disablecrewai":
