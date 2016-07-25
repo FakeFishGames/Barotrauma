@@ -181,6 +181,8 @@ namespace Barotrauma.Items.Components
             {
                 Lights.LightManager.ViewTarget = focusTarget;
                 cam.TargetPos = focusTarget.WorldPosition;
+
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime*10.0f);
             }
             
             if (!character.IsNetworkPlayer || character.ViewTarget == focusTarget)
