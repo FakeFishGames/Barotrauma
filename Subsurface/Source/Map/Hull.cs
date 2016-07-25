@@ -807,21 +807,24 @@ namespace Barotrauma
             message.WriteRangedSingle(MathHelper.Clamp(volume/FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 6);
             message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
 
-            message.Write((byte)fireSources.Count, 4);
-            for (int i = 0; i < Math.Min(fireSources.Count, 16); i++)
+            message.Write(fireSources.Count > 0);
+            if (fireSources.Count > 0)
             {
-                var fireSource = fireSources[i];
+                message.Write((byte)fireSources.Count);
+                for (int i = 0; i < Math.Min(fireSources.Count, 16); i++)
+                {
+                    var fireSource = fireSources[i];
 
-                Vector2 normalizedPos = new Vector2(
-                    (fireSource.Position.X - rect.X) / rect.Width,
-                    (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
-                message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 4);
-                message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 4);
+                    Vector2 normalizedPos = new Vector2(
+                        (fireSource.Position.X - rect.X) / rect.Width,
+                        (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
+                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 4);
+                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 4);
 
-                message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 6);
+                    message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 6);
+                }
             }
-
-
+            
             lastSentVolume = volume;
             lastSentOxygen = OxygenPercentage;
 
@@ -854,44 +857,51 @@ namespace Barotrauma
             Volume = newVolume;
             OxygenPercentage = newOxygen;
 
-            int fireSourceCount = message.ReadByte(4);
+            bool hasFireSources = message.ReadBoolean();
+
 
             List<FireSource> newFireSources = new List<FireSource>();
-            for (int i = 0; i < fireSourceCount; i++)
+            if (hasFireSources)
             {
-                Vector2 pos = Vector2.Zero;
-                float size = 0.0f;
-                pos.X = message.ReadRangedSingle(0.0f, 1.0f, 4);
-                pos.Y = message.ReadRangedSingle(0.0f, 1.0f, 4);
-                size = message.ReadRangedSingle(0.0f, 1.0f, 6);
-                if (!MathUtils.IsValid(pos)) continue;
-
-                pos.X = MathHelper.Clamp(pos.X, 0.05f, 0.95f);
-                pos.Y = MathHelper.Clamp(pos.Y, 0.05f, 0.95f);
-
-                pos = new Vector2(rect.X + rect.Width * pos.X, rect.Y - rect.Height + (rect.Height * pos.Y));
-
-                var existingFire = fireSources.Find(fs => fs.Contains(pos));
-                if (existingFire!=null)
+                int fireSourceCount = message.ReadByte();
+                for (int i = 0; i < fireSourceCount; i++)
                 {
-                    newFireSources.Add(existingFire);
-                    existingFire.Position = pos;
-                    existingFire.Size = new Vector2(
-                        existingFire.Hull == null ?  size : size*existingFire.Hull.rect.Width, 
-                        existingFire.Size.Y);
-                }
-                else
-                {
-                    var newFire = new FireSource(pos + Submarine.Position, this, true);
-                    newFire.Size = new Vector2(
-                        newFire.Hull == null ? size : size * newFire.Hull.rect.Width, 
-                        newFire.Size.Y);
+                    Vector2 pos = Vector2.Zero;
+                    float size = 0.0f;
+                    pos.X = message.ReadRangedSingle(0.0f, 1.0f, 4);
+                    pos.Y = message.ReadRangedSingle(0.0f, 1.0f, 4);
+                    size = message.ReadRangedSingle(0.0f, 1.0f, 6);
+                    if (!MathUtils.IsValid(pos)) continue;
 
-                    //ignore if the fire wasn't added to this room (invalid position)?
-                    if (!fireSources.Contains(newFire)) continue;
-                    newFireSources.Add(newFire);
+                    pos.X = MathHelper.Clamp(pos.X, 0.05f, 0.95f);
+                    pos.Y = MathHelper.Clamp(pos.Y, 0.05f, 0.95f);
+
+                    pos = new Vector2(rect.X + rect.Width * pos.X, rect.Y - rect.Height + (rect.Height * pos.Y));
+
+                    var existingFire = fireSources.Find(fs => fs.Contains(pos));
+                    if (existingFire!=null)
+                    {
+                        newFireSources.Add(existingFire);
+                        existingFire.Position = pos;
+                        existingFire.Size = new Vector2(
+                            existingFire.Hull == null ?  size : size*existingFire.Hull.rect.Width, 
+                            existingFire.Size.Y);
+                    }
+                    else
+                    {
+                        var newFire = new FireSource(pos + Submarine.Position, this, true);
+                        newFire.Size = new Vector2(
+                            newFire.Hull == null ? size : size * newFire.Hull.rect.Width, 
+                            newFire.Size.Y);
+
+                        //ignore if the fire wasn't added to this room (invalid position)?
+                        if (!fireSources.Contains(newFire)) continue;
+                        newFireSources.Add(newFire);
+                    }
                 }
             }
+
+            
 
             var toBeRemoved = fireSources.FindAll(fs => !newFireSources.Contains(fs));
             for (int i = toBeRemoved.Count - 1; i >= 0; i--)
