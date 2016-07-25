@@ -1632,7 +1632,12 @@ namespace Barotrauma
                     if (body != null) body.FillNetworkData(message);
                     break;
                 case NetworkEventType.PhysicsBodyPosition:
-                    System.Diagnostics.Debug.Assert(body != null, "Tried to send a PhysicsBodyPosition message for an item that has no physics body");
+#if DEBUG
+                    System.Diagnostics.Debug.Assert(body != null, "Tried to send a PhysicsBodyPosition message for an item that has no physics body ("+Name+")");
+#else
+                    if (body == null) return;
+#endif
+                    
                     body.FillNetworkData(message);
                     break;
                 case NetworkEventType.ItemFixed:
