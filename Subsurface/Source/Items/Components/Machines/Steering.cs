@@ -81,7 +81,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private Vector2 TargetVelocity
+        public Vector2 TargetVelocity
         {
             get { return targetVelocity;}
             set 
@@ -91,12 +91,7 @@ namespace Barotrauma.Items.Components
                 targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
             }
         }
-
-        public Vector2 CurrTargetVelocity
-        {
-            get { return targetVelocity; }
-        }
-
+        
         public SteeringPath SteeringPath
         {
             get { return steeringPath; }
@@ -227,7 +222,7 @@ namespace Barotrauma.Items.Components
             steeringPath.CheckProgress(ConvertUnits.ToSimUnits(item.Submarine.WorldPosition), 10.0f);
 
             if (autopilotRayCastTimer <= 0.0f && steeringPath.NextNode != null)
-            {
+            {                
                 Vector2 diff = Vector2.Normalize(ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - item.Submarine.WorldPosition));
 
                 bool nextVisible = true;
@@ -259,6 +254,25 @@ namespace Barotrauma.Items.Components
             {
                 SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
             }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                if (sub == item.Submarine) continue;
+
+                float thisSize = Math.Max(item.Submarine.Borders.Width, item.Submarine.Borders.Height);
+                float otherSize = Math.Max(sub.Borders.Width, sub.Borders.Height);
+
+                Vector2 diff = sub.WorldPosition - item.Submarine.WorldPosition;
+
+                float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
+
+                if (dist > thisSize + otherSize) continue;
+
+                diff = Vector2.Normalize(diff);
+
+                TargetVelocity = Vector2.Lerp(-diff * 100.0f, TargetVelocity, (dist / (thisSize + otherSize)) - 0.5f);
+            }
+
         }
 
         private void SteerTowardsPosition(Vector2 worldPosition)
@@ -275,7 +289,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                targetVelocity = targetSpeed/5.0f;
+                TargetVelocity = targetSpeed/5.0f;
             }
 
 

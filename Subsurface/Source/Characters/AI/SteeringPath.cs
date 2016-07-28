@@ -25,6 +25,14 @@ namespace Barotrauma
         {
             if (node == null) return;
             nodes.Add(node);
+
+            if (node.CurrentHull == null) HasOutdoorsNodes = true;
+        }
+        
+        public bool HasOutdoorsNodes
+        {
+            get;
+            private set;
         }
 
         public int CurrentIndex

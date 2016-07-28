@@ -260,7 +260,7 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("The green rectangle in the middle is the submarine, and the flickering shapes outside it are the walls of an underwater cavern. "
                 + "Try moving the submarine by clicking somewhere on the monitor and dragging the pointer to the direction you want to go to.");
 
-            while (steering.CurrTargetVelocity == Vector2.Zero && steering.CurrTargetVelocity.Length() < 50.0f)
+            while (steering.TargetVelocity == Vector2.Zero && steering.TargetVelocity.Length() < 50.0f)
             {
                 yield return CoroutineStatus.Running;
             }

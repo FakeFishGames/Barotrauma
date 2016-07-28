@@ -33,12 +33,6 @@ namespace Barotrauma
             get { return currentTarget; }
         }
 
-        public bool HasOutdoorsNodes
-        {
-            get;
-            private set;
-        }
-
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors)
             : base(host)
         {
@@ -87,8 +81,6 @@ namespace Barotrauma
 
                 currentPath = pathFinder.FindPath(pos, target);
 
-                HasOutdoorsNodes = currentPath.Nodes.Find(n => n.CurrentHull == null) != null;
-                
                 findPathTimer = Rand.Range(1.0f,1.2f);
 
                 return DiffToCurrentNode();

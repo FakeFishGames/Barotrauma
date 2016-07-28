@@ -112,7 +112,7 @@ namespace Barotrauma
                 {
                     indoorsSteering.SteeringWander();
                 }
-                else if (getDivingGearIfNeeded && indoorsSteering.CurrentPath != null && indoorsSteering.HasOutdoorsNodes)
+                else if (getDivingGearIfNeeded && indoorsSteering.CurrentPath != null && indoorsSteering.CurrentPath.HasOutdoorsNodes)
                 {
                     AddSubObjective(new AIObjectiveFindDivingGear(character, true));
                 }
