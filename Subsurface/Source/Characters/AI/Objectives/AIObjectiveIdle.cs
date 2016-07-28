@@ -54,9 +54,12 @@ namespace Barotrauma
             newTargetTimer -= deltaTime;
 
                   
-            //wander randomly if reached the end of the path or the target is unreachable
+            //wander randomly 
+            // - if reached the end of the path 
+            // - if the target is unreachable
+            // - if the path requires going outside
             if (pathSteering==null || (pathSteering.CurrentPath != null && 
-                (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable)))
+                (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable || pathSteering.CurrentPath.HasOutdoorsNodes)))
             {
                 //steer away from edges of the hull
                 if (character.AnimController.CurrentHull!=null)
