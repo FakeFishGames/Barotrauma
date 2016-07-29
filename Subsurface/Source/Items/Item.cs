@@ -301,7 +301,12 @@ namespace Barotrauma
         }
 
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
-            : this(new Rectangle((int)position.X, (int)position.Y, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab, submarine)
+            : this(new Rectangle(
+                (int)(position.X - itemPrefab.sprite.size.X / 2), 
+                (int)(position.Y + itemPrefab.sprite.size.Y / 2), 
+                (int)itemPrefab.sprite.size.X, 
+                (int)itemPrefab.sprite.size.Y), 
+            itemPrefab, submarine)
         {
 
         }
@@ -511,6 +516,7 @@ namespace Barotrauma
                 return CurrentHull;
             }
 
+
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
             if (body != null && body.Enabled)
             {
@@ -689,8 +695,7 @@ namespace Barotrauma
                     ic.UpdateBroken(deltaTime, cam);
                 }
             }
-
-
+            
             inWater = IsInWater();
             if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
             

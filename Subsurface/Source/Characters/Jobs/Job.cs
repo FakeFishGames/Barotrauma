@@ -127,6 +127,7 @@ namespace Barotrauma
                 }
             }
 
+            character.SpawnItems.Add(item);
 
             if (parentItem != null) parentItem.Combine(item);
 

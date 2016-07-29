@@ -71,7 +71,7 @@ namespace Barotrauma
 
             Vector2 position = new Vector2(
                 cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, false),
-                cargoRoom.Rect.Y - cargoRoom.Rect.Height + 16.0f);
+                cargoRoom.Rect.Y - cargoRoom.Rect.Height);
 
             var item = new Item(itemPrefab, position, cargoRoom.Submarine);
             item.FindHull();
