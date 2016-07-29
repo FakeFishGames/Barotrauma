@@ -1782,6 +1782,11 @@ namespace Barotrauma
                     pos.X = message.ReadFloat();
                     pos.Y = message.ReadFloat();
 
+                    if (inSub != (Submarine != null))
+                    {
+                        AnimController.Teleport(pos - SimPosition, Vector2.Zero);
+                    }
+
                     if (inSub)
                     {
                         //AnimController.FindHull(ConvertUnits.ToDisplayUnits(pos) - Submarine.Loaded.WorldPosition);

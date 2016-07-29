@@ -586,18 +586,18 @@ namespace Barotrauma
 
                     if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) return;
 
-                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity, true);
+                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity);
                 }
                 //out -> in
                 else if (currentHull == null && newHull.Submarine != null)
                 {
-                    Teleport(-ConvertUnits.ToSimUnits(newHull.Submarine.Position), -newHull.Submarine.Velocity, false);
+                    Teleport(-ConvertUnits.ToSimUnits(newHull.Submarine.Position), -newHull.Submarine.Velocity);
                 }
                 //from one sub to another
                 else if (newHull != null && currentHull != null && newHull.Submarine != currentHull.Submarine)
                 {
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position - newHull.Submarine.Position),
-                        Vector2.Zero, false);
+                        Vector2.Zero);
                 }
             }
             
@@ -608,7 +608,7 @@ namespace Barotrauma
             UpdateCollisionCategories();
         }
         
-        private void Teleport(Vector2 moveAmount, Vector2 velocityChange, bool inToOut)
+        public void Teleport(Vector2 moveAmount, Vector2 velocityChange)
         {
             foreach (Limb limb in Limbs)
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -81,7 +82,7 @@ namespace Barotrauma
                     default:
                         SlotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 6)%5),
-                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>10) ? 2 : 1));
+                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>10) ? 1 : 2));
                         break;
                 }
             }
@@ -143,7 +144,7 @@ namespace Barotrauma
         /// </summary>
         public override bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
-            if (allowedSlots == null) return false;
+            if (allowedSlots == null || ! allowedSlots.Any()) return false;
 
             //try to place the item in LimBlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any))
@@ -302,6 +303,19 @@ namespace Barotrauma
                     else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                     {
                         character.SelectedCharacter.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                    }
+                    else //doubleclicked and no other inventory is selected
+                    {
+                        //not equipped -> attempt to equip
+                        if (IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
+                        {
+                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);                            
+                        }
+                        //equipped -> attempt to unequip
+                        else if (doubleClickedItem.AllowedSlots.Contains(InvSlotType.Any))
+                        {
+                            TryPutItem(doubleClickedItem, new List<InvSlotType>() { InvSlotType.Any }, true);
+                        }
                     }
                 }
             }

@@ -314,6 +314,16 @@ namespace Barotrauma.Networking
             shuttleTransportTimer = maxTransportTime;
             shuttleReturnTimer = maxTransportTime;
 
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != respawnShuttle) continue;
+
+                if (item.body != null && item.body.Enabled && item.ParentInventory == null)
+                {
+                    Item.Remover.QueueItem(item);
+                }
+            }
+
             foreach (Structure wall in Structure.WallList)
             {
                 if (wall.Submarine != respawnShuttle) continue;
@@ -397,7 +407,7 @@ namespace Barotrauma.Networking
                             var divingSuit  = new Item(divingSuitPrefab, pos, respawnShuttle);
                             var oxyTank     = new Item(oxyPrefab, pos, respawnShuttle);
 
-                            oxyTank.Combine(divingSuit);
+                            divingSuit.Combine(oxyTank);
 
                             spawnedItems.Add(divingSuit);
                             spawnedItems.Add(oxyTank);
