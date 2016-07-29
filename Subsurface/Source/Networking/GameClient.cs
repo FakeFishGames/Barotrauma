@@ -456,6 +456,8 @@ namespace Barotrauma.Networking
             updateTimer = DateTime.Now + updateInterval;  
         }
 
+        private CoroutineHandle startGameCoroutine;
+
         /// <summary>
         /// Check for new incoming messages from server
         /// </summary>
@@ -463,6 +465,8 @@ namespace Barotrauma.Networking
         {
             // Create new incoming message holder
             NetIncomingMessage inc;
+
+            if (startGameCoroutine != null && CoroutineManager.IsCoroutineRunning(startGameCoroutine)) return;
             
             while ((inc = client.ReadMessage()) != null)
             {
@@ -492,7 +496,7 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.StartGame:
                         if (Screen.Selected == GameMain.GameScreen) continue;
 
-                        GameMain.ShowLoading(StartGame(inc), false);
+                        startGameCoroutine = GameMain.ShowLoading(StartGame(inc), false);
 
                         break;
                     case (byte)PacketTypes.EndGame:
@@ -615,7 +619,9 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.RemoveItem:
                         Item.Remover.ReadNetworkData(inc);
                         break;
-                }                
+                }
+
+                if (packetType == (byte)PacketTypes.StartGame) break;
             }
         }
 
@@ -650,7 +656,6 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-            yield return CoroutineStatus.Running;
 
             Rand.SetSyncedSeed(seed);
             //int gameModeIndex = inc.ReadInt32();
@@ -660,7 +665,6 @@ namespace Barotrauma.Networking
 
             if (respawnAllowed) respawnManager = new RespawnManager(this);
 
-            yield return CoroutineStatus.Running;
 
             //myCharacter = ReadCharacterData(inc);
             //Character.Controlled = myCharacter;                       
@@ -699,7 +703,7 @@ namespace Barotrauma.Networking
 
                     Character newCharacter = ReadCharacterData(inc, ownerId == myID);
 
-                    if (id != myID)
+                    if (ownerId != myID)
                     {
                         var characterOwner = otherClients.Find(c => c.ID == ownerId);
                         if (characterOwner != null) characterOwner.Character = newCharacter;
@@ -707,7 +711,6 @@ namespace Barotrauma.Networking
 
                     crew.Add(newCharacter);
                 }
-
                 //int count = inc.ReadByte();
                 //for (int n = 0; n < count; n++)
                 //{
@@ -725,7 +728,8 @@ namespace Barotrauma.Networking
                 //    yield return CoroutineStatus.Running;
                 //}
             }
-                gameStarted = true;
+            
+            gameStarted = true;
 
             endRoundButton.Visible = Voting.AllowEndVoting && myCharacter != null;
 
@@ -1061,12 +1065,7 @@ namespace Barotrauma.Networking
             string jobName = inc.ReadString();
             JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
 
-            ushort spawnPointID = inc.ReadUInt16();
-
-            if (inc.Position > inc.LengthBits)
-            {
-                return null;
-            }
+            //ushort spawnPointID = inc.ReadUInt16();
 
             CharacterInfo ch = new CharacterInfo(Character.HumanConfigFile, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
             ch.HeadSpriteId = headSpriteID;
@@ -1076,32 +1075,13 @@ namespace Barotrauma.Networking
 
             character.ID = ID;
 
-            WayPoint spawnPoint = Entity.FindEntityByID(spawnPointID) as WayPoint;
-            if (spawnPoint != null)
-            {
-                character.GiveJobItems(spawnPoint);
-            }
+            //WayPoint spawnPoint = Entity.FindEntityByID(spawnPointID) as WayPoint;
+            //if (spawnPoint != null)
+            //{
+            //    //character.GiveJobItems(spawnPoint);
+            //}
 
-            for (int i = 0; i < character.Inventory.Items.Length; i++)
-            {
-                ushort itemID = inc.ReadUInt16();
-
-                System.Diagnostics.Debug.Assert((itemID == 0) == (character.Inventory.Items[i] == null));
-                if (character.Inventory.Items[i] == null) continue;
-
-                character.Inventory.Items[i].ID = itemID;
-
-                int containedCount = inc.ReadByte();
-                if (containedCount > 0)
-                {
-                    var containedItems = character.Inventory.Items[i].ContainedItems;
-                    for (int j = 0; j<containedCount; j++)
-                    {
-                        ushort containedID = inc.ReadUInt16();
-                        if (containedItems[j] != null) containedItems[j].ID = containedID;
-                    }
-                }
-            }
+            Item.Spawner.ReadNetworkData(inc);
 
             if (isMyCharacter)
             {

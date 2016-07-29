@@ -351,12 +351,12 @@ namespace Barotrauma
         }
 
         static bool waitForKeyHit = true;
-        public static void ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
+        public static CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             waitForKeyHit = waitKeyHit;
             titleScreenOpen = true;
             TitleScreen.LoadState = null;
-            CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
+            return CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
         }
 
         protected override void OnExiting(object sender, EventArgs args)

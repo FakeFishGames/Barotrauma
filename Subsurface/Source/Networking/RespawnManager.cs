@@ -223,6 +223,8 @@ namespace Barotrauma.Networking
             if (updateReturnTimer > 10.0f)
             {
                 updateReturnTimer = 0.0f;
+                
+                respawnShuttle.SubBody.Body.IgnoreCollisionWith(Level.Loaded.ShaftBodies[0]);
 
                 shuttleSteering.AutoPilot = true;
                 shuttleSteering.MaintainPos = false;
@@ -278,6 +280,8 @@ namespace Barotrauma.Networking
             state = State.Transporting;
 
             ResetShuttle();
+
+            shuttleSteering.TargetVelocity = Vector2.Zero;
 
             server.SendChatMessage(ChatMessage.Create("", "Transportation shuttle dispatched", ChatMessageType.Server, null), server.ConnectedClients);
 
@@ -346,6 +350,9 @@ namespace Barotrauma.Networking
             respawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + respawnShuttle.Borders.Height));
 
             respawnShuttle.Velocity = Vector2.Zero;
+
+            respawnShuttle.SubBody.Body.RestoreCollisionWith(Level.Loaded.ShaftBodies[0]);
+
         }
 
         public void WriteNetworkEvent(NetOutgoingMessage msg)
@@ -371,10 +378,33 @@ namespace Barotrauma.Networking
 
                     var waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnShuttle);
 
+                    ItemPrefab divingSuitPrefab = ItemPrefab.list.Find(ip => ip.Name == "Diving Suit") as ItemPrefab;
+                    ItemPrefab oxyPrefab        = ItemPrefab.list.Find(ip => ip.Name == "Oxygen Tank") as ItemPrefab;
+
+                    var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnShuttle && wp.SpawnType == SpawnType.Cargo);
+
+                    List<Item> spawnedItems = new List<Item>();
+
                     msg.Write((byte)characterInfos.Count);
                     for (int i = 0; i < characterInfos.Count; i++)
                     {
                         var character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, true, false);
+
+                        if (divingSuitPrefab != null && oxyPrefab != null)
+                        {
+                            Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
+
+                            var divingSuit  = new Item(divingSuitPrefab, pos, respawnShuttle);
+                            var oxyTank     = new Item(oxyPrefab, pos, respawnShuttle);
+
+                            oxyTank.Combine(divingSuit);
+
+                            spawnedItems.Add(divingSuit);
+                            spawnedItems.Add(oxyTank);
+
+                            Item.Spawner.AddToSpawnedList(divingSuit);
+                            Item.Spawner.AddToSpawnedList(oxyTank);
+                        }
 
                         if (i < clients.Count)
                         {
@@ -388,14 +418,14 @@ namespace Barotrauma.Networking
                             Character.Controlled = character;
                         }
 
-                        character.SpawnPoint = waypoints[i];
                         character.GiveJobItems(waypoints[i]);
 
                         GameMain.GameSession.CrewManager.characters.Add(character);
 
                         server.WriteCharacterData(msg, character.Name, character);
                     }
-                                        
+
+                    GameMain.Server.SendItemSpawnMessage(spawnedItems);                
                     break;
                 case State.Waiting:
                     msg.Write(CountdownStarted);
@@ -437,14 +467,11 @@ namespace Barotrauma.Networking
                 case State.Waiting:
                     CountdownStarted = true;
 
-                    respawnShuttle.SubBody.Body.RestoreCollisionWith(Level.Loaded.ShaftBodies[0]);
-
                     ResetShuttle();
 
                     respawnTimer = inc.ReadSingle();
                     break;
                 case State.Returning:
-                    respawnShuttle.SubBody.Body.IgnoreCollisionWith(Level.Loaded.ShaftBodies[0]);
 
                     CountdownStarted = false;
                     break;

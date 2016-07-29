@@ -411,7 +411,7 @@ namespace Barotrauma.RuinGeneration
                     doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
                 }
 
-                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos - new Vector2(doorPrefab.Prefab.sprite.size.X, -doorPrefab.Prefab.sprite.size.Y)/2.0f, null);
+                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos, null);
                 door.MoveWithLevel = true;
 
                 door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, false) < 0.8f;

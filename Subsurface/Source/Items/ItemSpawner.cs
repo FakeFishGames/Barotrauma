@@ -52,7 +52,7 @@ namespace Barotrauma
             if (!spawnQueue.Any()) return;
 
             List<Item> items = new List<Item>();
-            List<Inventory> inventories = new List<Inventory>();
+            //List<Inventory> inventories = new List<Inventory>();
 
             while (spawnQueue.Count>0)
             {
@@ -71,20 +71,25 @@ namespace Barotrauma
                 if (itemInfo.Second is Inventory)
                 {
                     var item = new Item(itemInfo.First, Vector2.Zero, null);
-                    spawnItems.Add(item);
+                    AddToSpawnedList(item);
 
                     var inventory = (Inventory)itemInfo.Second;
                     inventory.TryPutItem(item, null, false);
 
                     items.Add(item);
-                    inventories.Add(inventory);
+                    //inventories.Add(inventory);
                 }
             }
 
-            if (GameMain.Server != null) GameMain.Server.SendItemSpawnMessage(items, inventories);
+            if (GameMain.Server != null) GameMain.Server.SendItemSpawnMessage(items);
         }
 
-        public void FillNetworkData(Lidgren.Network.NetBuffer message, List<Item> items, List<Inventory> inventories)
+        public void AddToSpawnedList(Item item)
+        {
+            spawnItems.Add(item);
+        }
+
+        public void FillNetworkData(Lidgren.Network.NetBuffer message, List<Item> items)
         {
             message.Write((byte)items.Count);
 
@@ -93,7 +98,25 @@ namespace Barotrauma
                 message.Write(items[i].Prefab.Name);
                 message.Write(items[i].ID);
 
-                message.Write((inventories == null || inventories[i] == null || inventories[i].Owner == null) ? (ushort)0 : inventories[i].Owner.ID);
+                if (items[i].ParentInventory == null || items[i].ParentInventory.Owner == null)
+                {
+                    message.Write((ushort)0);
+
+                    message.Write(items[i].Position.X);
+                    message.Write(items[i].Position.Y);
+                }
+                else
+                {
+                    message.Write(items[i].ParentInventory.Owner.ID);
+
+                    int index = items[i].ParentInventory.FindIndex(items[i]);
+                    message.Write(index < 0 ? (byte)255 : (byte)index);
+                }
+                                
+                if (items[i].Name == "ID Card")
+                {
+                    message.Write(items[i].Tags);
+                }
             }
         }
 
@@ -103,10 +126,29 @@ namespace Barotrauma
             for (int i = 0; i < itemCount; i++)
             {
                 string itemName = message.ReadString();
-                ushort itemId = message.ReadUInt16();
+                ushort itemId   = message.ReadUInt16();
 
+                Vector2 pos = Vector2.Zero;
                 ushort inventoryId = message.ReadUInt16();
 
+                Submarine sub = null;
+                
+                int inventorySlotIndex = -1;
+                
+                if (inventoryId > 0)
+                {
+                    inventorySlotIndex = message.ReadByte();
+                }
+                else
+                {
+                    pos = new Vector2(message.ReadSingle(), message.ReadSingle());
+                }
+
+                string tags = "";
+                if (itemName == "ID Card")
+                {
+                    tags = message.ReadString();
+                }                
 
                 var prefab = MapEntityPrefab.list.Find(me => me.Name == itemName);
                 if (prefab == null) continue;
@@ -133,9 +175,23 @@ namespace Barotrauma
                     }
                 }                
 
-                var item = new Item(itemPrefab, Vector2.Zero, null);                
+                var item = new Item(itemPrefab, pos, null);                
+
                 item.ID = itemId;
-                if (inventory != null) inventory.TryPutItem(item, null, false);
+                item.CurrentHull = Hull.FindHull(pos, null, false); 
+                item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+
+                if (!string.IsNullOrEmpty(tags)) item.Tags = tags;
+
+                if (inventory != null)
+                {
+                    if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
+                        inventory.TryPutItem(item, inventorySlotIndex, false, false))
+                    {
+                        continue;
+                    }
+                    inventory.TryPutItem(item, item.AllowedSlots, false);
+                }
 
             }
         }
@@ -204,8 +260,8 @@ namespace Barotrauma
             {
                 ushort itemId = message.ReadUInt16();
 
-                var item = MapEntity.FindEntityByID(itemId);
-                if (item == null || !(item is Item)) continue;
+                var item = MapEntity.FindEntityByID(itemId) as Item;
+                if (item == null) continue;
 
                 item.Remove();
             }

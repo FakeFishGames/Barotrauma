@@ -621,7 +621,7 @@ namespace Barotrauma.Networking
                             if (gameStarted && AllowSpectating)
                             {
                                 var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
-                                server.SendMessage(startMessage, inc.SenderConnection, NetDeliveryMethod.ReliableUnordered);
+                                server.SendMessage(startMessage, inc.SenderConnection, NetDeliveryMethod.ReliableOrdered);
 
                                 dataSender.Spectating = true;
                                 CoroutineManager.StartCoroutine(SyncSpectator(dataSender));
@@ -828,7 +828,7 @@ namespace Barotrauma.Networking
             }
 
             SendItemRemoveMessage(Item.Remover.removedItems, new List<NetConnection>() { sender.Connection });
-            SendItemSpawnMessage(Item.Spawner.spawnItems, null, new List<NetConnection>() { sender.Connection });
+            SendItemSpawnMessage(Item.Spawner.spawnItems, new List<NetConnection>() { sender.Connection });
 
             yield return new WaitForSeconds(1.0f);
 
@@ -1032,7 +1032,6 @@ namespace Barotrauma.Networking
             {
                 connectedClients[i].Character = Character.Create(
                     connectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
-                connectedClients[i].Character.SpawnPoint = assignedWayPoints[i];
                 connectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
                 
                 GameMain.GameSession.CrewManager.characters.Add(connectedClients[i].Character);
@@ -1043,15 +1042,17 @@ namespace Barotrauma.Networking
                 myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
                 Character.Controlled = myCharacter;
 
-                myCharacter.SpawnPoint = assignedWayPoints[assignedWayPoints.Length - 1];
                 myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
 
                 GameMain.GameSession.CrewManager.characters.Add(myCharacter);
             }
-
+           
             var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
-            SendMessage(startMessage, NetDeliveryMethod.ReliableUnordered);
+
+            SendMessage(startMessage, NetDeliveryMethod.ReliableOrdered);
             
+            //SendItemSpawnMessage(allItems, inventories);
+
             yield return CoroutineStatus.Running;
             
             UpdateCrewFrame();
@@ -1747,33 +1748,8 @@ namespace Barotrauma.Networking
             message.Write(character.WorldPosition.Y);
             
             message.Write(character.Info.Job.Name);
-            message.Write(character.SpawnPoint == null ? (ushort)0 : character.SpawnPoint.ID);
-
-            for (int i = 0; i < character.Inventory.Items.Length; i++)
-            {
-                if (character.Inventory.Items[i] == null)
-                {
-                    message.Write((ushort)0);
-                }
-                else
-                {
-                    message.Write(character.Inventory.Items[i].ID);
-                    var containedItems = character.Inventory.Items[i].ContainedItems;
-                    if (containedItems == null || !containedItems.Any(c => c != null))
-                    {
-                        message.Write((byte)0);
-                    }
-                    else
-                    {
-                        message.Write((byte)containedItems.Length);
-                        for (int j = 0; j < containedItems.Length; j++)
-                        {
-                            message.Write(containedItems[j] == null ? (ushort)0 : containedItems[j].ID);
-                        }
-                    }
-                }               
-
-            }
+            
+            Item.Spawner.FillNetworkData(message, character.SpawnItems);
         }
 
         public void SendCharacterSpawnMessage(Character character, List<NetConnection> recipients = null)
@@ -1791,14 +1767,14 @@ namespace Barotrauma.Networking
             SendMessage(message, NetDeliveryMethod.ReliableUnordered, recipients);
         }
 
-        public void SendItemSpawnMessage(List<Item> items, List<Inventory> inventories = null, List<NetConnection> recipients = null)
+        public void SendItemSpawnMessage(List<Item> items, List<NetConnection> recipients = null)
         {
             if (items == null || !items.Any()) return;
 
             NetOutgoingMessage message = server.CreateMessage();
             message.Write((byte)PacketTypes.NewItem);
 
-            Item.Spawner.FillNetworkData(message, items, inventories);            
+            Item.Spawner.FillNetworkData(message, items);            
 
             SendMessage(message, NetDeliveryMethod.ReliableOrdered, recipients);
         }

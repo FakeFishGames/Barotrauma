@@ -37,6 +37,8 @@ namespace Barotrauma
 
         public bool SpawnedMidRound;
 
+        public List<Item> SpawnItems = new List<Item>();
+
         private bool enabled;
 
         public bool Enabled
@@ -73,11 +75,7 @@ namespace Barotrauma
         }
 
         protected Key[] keys;
-
-        //protected Key selectKeyHit;
-        //protected Key actionKeyHit, actionKeyDown;
-        //protected Key secondaryKeyHit, secondaryKeyDown;
-                
+        
         private Item selectedConstruction;
         private Item[] selectedItems;
         
@@ -160,13 +158,7 @@ namespace Barotrauma
         {
             get { return inventory; }
         }
-
-        public WayPoint SpawnPoint
-        {
-            get;
-            set;
-        }
-
+        
         private Color speechBubbleColor;
         private float speechBubbleTimer;
 
