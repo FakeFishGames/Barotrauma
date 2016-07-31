@@ -21,7 +21,8 @@ namespace Barotrauma
         Message,
         RadioMessage,
         DeadMessage,
-        Click
+        Click,
+        Inventory,
     }
     
     public class GUI
@@ -90,11 +91,14 @@ namespace Barotrauma
 
             if (loadSounds)
             {
-                sounds = new Sound[4];
+                sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
                 sounds[(int)GUISoundType.Message] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
                 sounds[(int)GUISoundType.RadioMessage] = Sound.Load("Content/Sounds/UI/radiomsg.ogg", false);
                 sounds[(int)GUISoundType.DeadMessage] = Sound.Load("Content/Sounds/UI/deadmsg.ogg", false);
                 sounds[(int)GUISoundType.Click] = Sound.Load("Content/Sounds/UI/beep-shinymetal.ogg", false);
+
+                sounds[(int)GUISoundType.Inventory] = Sound.Load("Content/Sounds/pickItem.ogg", false);
+
             }
 
             // create 1x1 texture for line drawing
