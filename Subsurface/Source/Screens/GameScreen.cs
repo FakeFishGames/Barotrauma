@@ -317,8 +317,6 @@ namespace Barotrauma
                 null, null, null,
                 cam.Transform);
 
-            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
-
             Submarine.DrawFront(spriteBatch);
                         
             spriteBatch.End();
@@ -330,7 +328,9 @@ namespace Barotrauma
                 null, null, null,
                 cam.Transform);
 
-            if (Level.Loaded!=null) Level.Loaded.DrawFront(spriteBatch);            
+            if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch);            
+
+            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
 
             spriteBatch.End();
 

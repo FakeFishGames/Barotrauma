@@ -111,6 +111,7 @@ namespace Barotrauma.Lights
                 //where Alpha is 0, nothing will be written
                 spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
                 light.Draw(spriteBatch);
+
                 spriteBatch.End();
             }
 
@@ -122,6 +123,7 @@ namespace Barotrauma.Lights
 
             GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.Additive);
 
+
             foreach (LightSource light in lights)
             {
                 if (light.Color.A < 0.01f || light.Range < 1.0f || light.CastShadows) continue;
@@ -130,6 +132,11 @@ namespace Barotrauma.Lights
                 light.Draw(spriteBatch);
             }
 
+            if (Character.Controlled != null && Character.Controlled.ClosestItem != null)
+            {
+                Character.Controlled.ClosestItem.Draw(spriteBatch, false, true);
+                Character.Controlled.ClosestItem.IsHighlighted = true;
+            }
             spriteBatch.End();
 
             //clear alpha, to avoid messing stuff up later

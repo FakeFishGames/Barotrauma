@@ -1165,10 +1165,13 @@ namespace Barotrauma
 
             if (isDead) return;
 
-            Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
+            if (health < maxHealth * 0.98f)
+            {
+                Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
             
-            GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
-
+                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
+            }
+            
             if (speechBubbleTimer > 0.0f)
             {
                 GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f, 
