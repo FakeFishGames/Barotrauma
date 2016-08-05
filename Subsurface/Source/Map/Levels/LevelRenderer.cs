@@ -185,6 +185,13 @@ namespace Barotrauma
                 level.BackgroundColor, 0.0f,
                 Vector2.Zero,
                 SpriteEffects.None, 0.0f);
+
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)(MathUtils.Round(pos.X, 512.0f)), (int)-GameMain.GameScreen.Cam.WorldView.Y, width, (int)(GameMain.GameScreen.Cam.WorldView.Y - level.Size.Y)), Color.Black, true );
+
+            //background.DrawTiled(spriteBatch,
+            //           (backgroundPos.Y < 0) ? new Vector2(0.0f, -backgroundPos.Y) : Vector2.Zero,
+            //           new Vector2(GameMain.GraphicsWidth, 1024 - backgroundPos.Y),
+            //           Vector2.Zero, level.BackgroundColor);
         }
 
 
