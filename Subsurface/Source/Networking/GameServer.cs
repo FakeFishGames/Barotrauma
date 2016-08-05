@@ -905,6 +905,7 @@ namespace Barotrauma.Networking
         public bool StartGameClicked(GUIButton button, object obj)
         {
             Submarine selectedSub = null;
+            Submarine selectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle;
 
             if (Voting.AllowSubVoting)
             {
@@ -922,6 +923,12 @@ namespace Barotrauma.Networking
                 return false;
             }
 
+            if (selectedShuttle == null)
+            {
+                GameMain.NetLobbyScreen.ShuttleList.Flash();
+                return false;
+            }
+
             GameModePreset selectedMode = Voting.HighestVoted<GameModePreset>(VoteType.Mode, connectedClients);
             if (selectedMode == null) selectedMode = GameMain.NetLobbyScreen.SelectedMode;   
 
@@ -931,12 +938,12 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            CoroutineManager.StartCoroutine(WaitForPlayersReady(selectedSub, selectedMode), "WaitForPlayersReady");
+            CoroutineManager.StartCoroutine(WaitForPlayersReady(selectedSub, selectedShuttle, selectedMode), "WaitForPlayersReady");
  
             return true;
         }
 
-        private IEnumerable<object> WaitForPlayersReady(Submarine selectedSub, GameModePreset selectedMode)
+        private IEnumerable<object> WaitForPlayersReady(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
             GameMain.NetLobbyScreen.StartButton.Enabled = false;
 
@@ -944,6 +951,9 @@ namespace Barotrauma.Networking
             msg.Write((byte)PacketTypes.CanStartGame);
             msg.Write(selectedSub.Name);
             msg.Write(selectedSub.MD5Hash.Hash);
+
+            msg.Write(selectedShuttle.Name);
+            msg.Write(selectedShuttle.MD5Hash.Hash);
 
             SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
@@ -974,12 +984,12 @@ namespace Barotrauma.Networking
                 }
             }
 
-            GameMain.ShowLoading(StartGame(selectedSub, selectedMode), false);
+            GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
 
             yield return CoroutineStatus.Success;
         }
         
-        private IEnumerable<object> StartGame(Submarine selectedSub, GameModePreset selectedMode)
+        private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
             Item.Spawner.Clear();
             Item.Remover.Clear();
@@ -1001,7 +1011,7 @@ namespace Barotrauma.Networking
             GameServer.Log("Game mode: " + selectedMode.Name, Color.Cyan);
             GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
 
-            if (AllowRespawn) respawnManager = new RespawnManager(this);
+            if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
 
             yield return CoroutineStatus.Running;
 
@@ -1104,6 +1114,9 @@ namespace Barotrauma.Networking
 
             msg.Write(selectedSub.Name);
             msg.Write(selectedSub.MD5Hash.Hash);
+
+            msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
+            msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
             msg.Write(selectedMode.Name);
 

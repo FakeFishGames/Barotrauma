@@ -7,6 +7,7 @@ using FarseerPhysics;
 using FarseerPhysics.Factories;
 using FarseerPhysics.Dynamics;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -37,6 +38,8 @@ namespace Barotrauma
 
         private GUITickBox autoRestartBox;
 
+        private GUIDropDown shuttleList;
+
         public bool IsServer;
         public string ServerName;
 
@@ -51,6 +54,11 @@ namespace Barotrauma
         public GUIListBox SubList
         {
             get { return subList; }
+        }
+
+        public GUIDropDown ShuttleList
+        {
+            get { return shuttleList; }
         }
 
         public GUIListBox ModeList
@@ -77,6 +85,11 @@ namespace Barotrauma
         public Submarine SelectedSub
         {
             get { return subList.SelectedData as Submarine; }
+        }
+
+        public Submarine SelectedShuttle
+        {
+            get { return shuttleList.SelectedData as Submarine; }
         }
 
         public GameModePreset SelectedMode
@@ -206,10 +219,17 @@ namespace Barotrauma
 
             columnX += columnWidth + 20;
 
+
+            //respawn shuttle ------------------------------------------------------------------
+
+            new GUITextBlock(new Rectangle(columnX, 120, 20, 20), "Respawn shuttle:", GUI.Style, infoFrame);
+            shuttleList = new GUIDropDown(new Rectangle(columnX, 150, 200, 20), "", GUI.Style, infoFrame);
+
+
             //gamemode ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 120, 0, 30), "Game mode: ", GUI.Style, infoFrame);
-            modeList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), GUI.Style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 180, 0, 30), "Game mode: ", GUI.Style, infoFrame);
+            modeList = new GUIListBox(new Rectangle(columnX, 200, columnWidth, infoFrame.Rect.Height - 300), GUI.Style, infoFrame);
             modeList.OnSelected = VotableClicked;
             
             voteText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Votes: ", GUI.Style, Alignment.TopLeft, Alignment.TopRight, infoFrame);
@@ -229,8 +249,7 @@ namespace Barotrauma
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = mode;
             }
-
-
+                        
             //mission type ------------------------------------------------------------------
 
             missionTypeBlock = new GUITextBlock(new Rectangle(columnX, 0, 300, 20), "Mission type:", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, infoFrame);
@@ -318,8 +337,7 @@ namespace Barotrauma
             GameMain.LightManager.LosEnabled = false;
             
             textBox.Select();
-
-
+            
             textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
             textBox.OnTextChanged = GameMain.NetworkMember.TypingChatMessage;
 
@@ -327,6 +345,7 @@ namespace Barotrauma
             //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             subList.Enabled         = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting;
+            shuttleList.Enabled = subList.Enabled;
             playerList.Enabled      = GameMain.Server != null;
             modeList.Enabled        = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowModeVoting;                  
             seedBox.Enabled         = GameMain.Server != null;                       
@@ -349,8 +368,11 @@ namespace Barotrauma
 
             if (IsServer && GameMain.Server != null)
             {
-                int prevSelected = subList.SelectedIndex;
-                UpdateSubList(Submarine.SavedSubmarines);
+                int prevSelectedSub = subList.SelectedIndex;
+                UpdateSubList(subList, Submarine.SavedSubmarines);
+
+                int prevSelectedShuttle = shuttleList.SelectedIndex;
+                UpdateSubList(shuttleList, Submarine.SavedSubmarines);
 
                 modeList.OnSelected = VotableClicked;
                 modeList.OnSelected = SelectMode;
@@ -369,12 +391,21 @@ namespace Barotrauma
                 GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, GUI.Style, infoFrame);
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
                 settingsButton.UserData = "settingsButton";
-
-
-                if (subList.CountChildren > 0 && subList.Selected == null)
+                
+                if (subList.Selected == null) subList.Select(Math.Max(0, prevSelectedSub));
+                if (shuttleList.Selected == null)
                 {
-                    subList.Select(Math.Max(0, prevSelected));
+                    var shuttles = shuttleList.GetChildren().FindAll(c => c.UserData is Submarine && ((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
+                    if (prevSelectedShuttle==-1 && shuttles.Any())
+                    {
+                        shuttleList.SelectItem(shuttles[0].UserData);
+                    }
+                    else
+                    {
+                        shuttleList.Select(Math.Max(0, prevSelectedShuttle));
+                    }
                 }
+
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
                 if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
@@ -600,7 +631,7 @@ namespace Barotrauma
             return true;
         }
 
-        public void UpdateSubList(List<Submarine> submarines)
+        public void UpdateSubList(GUIComponent subList, List<Submarine> submarines)
         {
             if (subList == null) return;
 
@@ -613,11 +644,11 @@ namespace Barotrauma
             
             foreach (Submarine sub in submarines)
             {
-                AddSubmarine(sub);
+                AddSubmarine(subList, sub);
             }
         }
 
-        public void AddSubmarine(Submarine sub)
+        public void AddSubmarine(GUIComponent subList, Submarine sub)
         {
             var subTextBlock = new GUITextBlock(
                 new Rectangle(0, 0, 0, 25), sub.Name, GUI.Style,
@@ -639,7 +670,15 @@ namespace Barotrauma
                 subTextBlock.TextColor = Color.LightGray;
                 subTextBlock.ToolTip = "Your version of the submarine doesn't match the servers version";
             }
+            else
+            {
+                if (subList == shuttleList || subList == shuttleList.ListBox)
+                {
+                    subTextBlock.TextColor = sub.HasTag(SubmarineTag.Shuttle) ? Color.White : Color.DarkGray;
+                }
+            }
         }
+        
         
         public bool VotableClicked(GUIComponent component, object userData)
         {
@@ -1011,7 +1050,7 @@ namespace Barotrauma
             if (GameMain.Client!=null) GameMain.Client.SendCharacterData();
         }
 
-        public bool TrySelectSub(string subName, string md5Hash)
+        public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
         {
             //already downloading the selected sub file
             if (GameMain.Client.ActiveFileTransferName == subName+".sub") return false;
@@ -1078,13 +1117,24 @@ namespace Barotrauma
 
             if (selectedSub==null)
             {
-                msg.Write(" ");
-                msg.Write(" ");
+                msg.Write("");
+                msg.Write("");
             }
             else
             {
                 msg.Write(Path.GetFileName(selectedSub.Name));
                 msg.Write(selectedSub.MD5Hash.Hash);
+            }
+
+            if (SelectedShuttle == null)
+            {
+                msg.Write("");
+                msg.Write("");
+            }
+            else
+            {
+                msg.Write(Path.GetFileName(SelectedShuttle.Name));
+                msg.Write(selectedShuttle.MD5Hash.Hash);
             }
 
             msg.Write(ServerName);
@@ -1110,7 +1160,8 @@ namespace Barotrauma
 
         public void ReadData(NetIncomingMessage msg)
         {
-            string subName = "", md5Hash = "";
+            string subName = "", subHash = "";
+            string shuttleName = "", shuttleHash = "";
             
             int modeIndex = 0;
             //float durationScroll = 0.0f;
@@ -1125,7 +1176,10 @@ namespace Barotrauma
             try
             {
                 subName         = msg.ReadString();
-                md5Hash         = msg.ReadString();
+                subHash         = msg.ReadString();
+
+                shuttleName     = msg.ReadString();
+                shuttleHash     = msg.ReadString();
 
                 ServerName      = msg.ReadString();
                 serverMessage.Text   = msg.ReadString();
@@ -1156,7 +1210,9 @@ namespace Barotrauma
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(subName) && !GameMain.NetworkMember.Voting.AllowSubVoting) TrySelectSub(subName, md5Hash);
+            if (!string.IsNullOrWhiteSpace(subName) && !GameMain.NetworkMember.Voting.AllowSubVoting) TrySelectSub(subName, subHash, subList);
+
+            if (!string.IsNullOrWhiteSpace(shuttleName)) TrySelectSub(shuttleName, shuttleHash, shuttleList.ListBox);
 
             if (!GameMain.NetworkMember.Voting.AllowModeVoting)
             {

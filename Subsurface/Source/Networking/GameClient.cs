@@ -286,7 +286,8 @@ namespace Barotrauma.Networking
 
                                     submarines.Add(new Submarine(mySubPath, subHash, false));
                                 }
-                                GameMain.NetLobbyScreen.UpdateSubList(submarines);
+                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, Submarine.SavedSubmarines);
+                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, Submarine.SavedSubmarines);
 
                                 //add the name of own client to the lobby screen
                                 GameMain.NetLobbyScreen.AddPlayer(name);
@@ -367,7 +368,9 @@ namespace Barotrauma.Networking
                     List<Submarine> subList = GameMain.NetLobbyScreen.GetSubList();
 
                     GameMain.NetLobbyScreen = new NetLobbyScreen();
-                    GameMain.NetLobbyScreen.UpdateSubList(subList);
+                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, subList);
+                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, subList);
+                    
                     GameMain.NetLobbyScreen.Select();
                 }
                 connected = true;
@@ -486,7 +489,11 @@ namespace Barotrauma.Networking
                         string subName = inc.ReadString();
                         string subHash = inc.ReadString();
 
-                        if (GameMain.NetLobbyScreen.TrySelectSub(subName,subHash))
+                        string shuttleName = inc.ReadString();
+                        string shuttleHash = inc.ReadString();
+
+                        if (GameMain.NetLobbyScreen.TrySelectSub(subName,subHash,GameMain.NetLobbyScreen.SubList) &&
+                            GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox))
                         {
                             NetOutgoingMessage readyToStartMsg = client.CreateMessage();
                             readyToStartMsg.Write((byte)PacketTypes.StartGame);
@@ -636,8 +643,11 @@ namespace Barotrauma.Networking
 
             int missionTypeIndex = inc.ReadByte();
 
-            string mapName = inc.ReadString();
-            string mapHash = inc.ReadString();
+            string subName = inc.ReadString();
+            string subHash = inc.ReadString();
+            
+            string shuttleName = inc.ReadString();
+            string shuttleHash = inc.ReadString();
 
             string modeName = inc.ReadString();
 
@@ -651,11 +661,15 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-            if (!GameMain.NetLobbyScreen.TrySelectSub(mapName, mapHash))
+            if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList))
             {
                 yield return CoroutineStatus.Success;
             }
 
+            if (!GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox))
+            {
+                yield return CoroutineStatus.Success;
+            }
 
             Rand.SetSyncedSeed(seed);
             //int gameModeIndex = inc.ReadInt32();
@@ -663,7 +677,7 @@ namespace Barotrauma.Networking
             GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
             GameMain.GameSession.StartShift(levelSeed);
 
-            if (respawnAllowed) respawnManager = new RespawnManager(this);
+            if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
 
 
             //myCharacter = ReadCharacterData(inc);

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,8 +19,18 @@ namespace Barotrauma
         None = 0, Left = 1, Right = 2
     }
 
+    [Flags]
+    public enum SubmarineTag
+    {
+        [Description("Shuttle")]
+        Shuttle = 1,
+        [Description("Hide in menus")]
+        HideInMenus = 2
+    }
+
     class Submarine : Entity
     {
+
         public static string SavePath = "Submarines";
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
@@ -55,6 +66,8 @@ namespace Barotrauma
         
         private string filePath;
         private string name;
+
+        private SubmarineTag tags;
 
         private Vector2 prevPosition;
 
@@ -230,6 +243,7 @@ namespace Barotrauma
                 if (doc != null && doc.Root != null)
                 {
                     Description = ToolBox.GetAttributeString(doc.Root, "description", "");
+                    Enum.TryParse(ToolBox.GetAttributeString(doc.Root, "tags", ""), out tags);
                 }
             }
 
@@ -240,6 +254,24 @@ namespace Barotrauma
             base.Remove();
         }
 
+        public bool HasTag(SubmarineTag tag)
+        {
+            return tags.HasFlag(tag);
+        }
+
+        public void AddTag(SubmarineTag tag)
+        {
+            if (tags.HasFlag(tag)) return;
+
+            tags |= tag;
+        }
+
+        public void RemoveTag(SubmarineTag tag)
+        {
+            if (!tags.HasFlag(tag)) return;
+
+            tags &= ~tag;
+        }
 
         //drawing ----------------------------------------------------
 
@@ -579,6 +611,8 @@ namespace Barotrauma
             element.Add(new XAttribute("name", name));
             element.Add(new XAttribute("description", Description == null ? "" : Description));
 
+            element.Add(new XAttribute("tags", tags.ToString()));
+
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
                 if (e.MoveWithLevel || e.Submarine != this) continue;
@@ -768,7 +802,7 @@ namespace Barotrauma
             }
 
             Description = ToolBox.GetAttributeString(submarineElement, "description", "");
-
+            Enum.TryParse(ToolBox.GetAttributeString(submarineElement, "tags", ""), out tags);
 
             HiddenSubPosition = HiddenSubStartPosition;
             foreach (Submarine sub in Submarine.loaded)

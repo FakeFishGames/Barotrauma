@@ -61,11 +61,11 @@ namespace Barotrauma.Networking
 
         private float updateReturnTimer;
 
-        public RespawnManager(NetworkMember networkMember)
+        public RespawnManager(NetworkMember networkMember, Submarine shuttle)
         {
             this.networkMember = networkMember;
 
-            respawnShuttle = new Submarine("Submarines/Shuttle Mark I.sub");
+            respawnShuttle = shuttle;
             respawnShuttle.Load(false);
 
             ResetShuttle();
@@ -398,7 +398,9 @@ namespace Barotrauma.Networking
                     msg.Write((byte)characterInfos.Count);
                     for (int i = 0; i < characterInfos.Count; i++)
                     {
-                        var character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, true, false);
+                        bool myCharacter = i >= clients.Count;
+
+                        var character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, !myCharacter, false);
 
                         if (divingSuitPrefab != null && oxyPrefab != null)
                         {
@@ -416,16 +418,16 @@ namespace Barotrauma.Networking
                             Item.Spawner.AddToSpawnedList(oxyTank);
                         }
 
-                        if (i < clients.Count)
-                        {
-                            msg.Write((byte)clients[i].ID);
-                            clients[i].Character = character;
-                        }
-                        else
+                        if (myCharacter)
                         {
                             msg.Write((byte)0);
                             server.Character = character;
                             Character.Controlled = character;
+                        }
+                        else
+                        {
+                            msg.Write((byte)clients[i].ID);
+                            clients[i].Character = character;
                         }
 
                         character.GiveJobItems(waypoints[i]);
