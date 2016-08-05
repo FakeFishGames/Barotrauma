@@ -1134,7 +1134,7 @@ namespace Barotrauma
             else
             {
                 msg.Write(Path.GetFileName(SelectedShuttle.Name));
-                msg.Write(selectedShuttle.MD5Hash.Hash);
+                msg.Write(SelectedShuttle.MD5Hash.Hash);
             }
 
             msg.Write(ServerName);
