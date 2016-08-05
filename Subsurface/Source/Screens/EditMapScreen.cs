@@ -3,8 +3,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace Barotrauma
 {
@@ -19,7 +21,9 @@ namespace Barotrauma
 
         private GUIFrame loadFrame;
 
-        private GUITextBox nameBox, descriptionBox;
+        private GUIFrame saveFrame;
+
+        private GUITextBox nameBox;
 
         const int PreviouslyUsedCount = 10;
         private GUIListBox previouslyUsedList;
@@ -88,24 +92,23 @@ namespace Barotrauma
             var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", GUI.Style, topPanel);
             button.OnClicked = CreateLoadScreen;
 
-            nameBox = new GUITextBox(new Rectangle(150, 0, 150, 20), GUI.Style, topPanel);
-            nameBox.OnEnterPressed = ChangeSubName;
+            button = new GUIButton(new Rectangle(80,0,70,20), "Save", GUI.Style, topPanel);
+            button.OnClicked = (GUIButton btn, object data) =>
+            {
+                CreateSaveScreen();
 
-            button = new GUIButton(new Rectangle(310,0,70,20), "Save", GUI.Style, topPanel);
-            button.OnClicked = SaveSub;
+                return true;
+            };
 
-            new GUITextBlock(new Rectangle(390, 0, 100, 20), "Description: ", GUI.Style, topPanel);
-
-            descriptionBox = new GUITextBox(new Rectangle(490, 0, 200, 20), null, null, Alignment.TopLeft,
-                Alignment.TopLeft, GUI.Style, topPanel);
-            descriptionBox.Wrap = true;
-            descriptionBox.OnSelected += ExpandDescriptionBox;
-            descriptionBox.OnTextChanged = ChangeSubDescription;
-
-
-            //new GUITextBlock(new Rectangle(390, 0, 100, 20), "Link  ", GUI.Style, topPanel);
+            var nameLabel = new GUITextBlock(new Rectangle(170, -4, 150, 20), "", GUI.Style, topPanel, GUI.LargeFont);
+            nameLabel.TextGetter = GetSubName;
 
             var linkedSubBox = new GUIDropDown(new Rectangle(750,0,200,20), "Add submarine", GUI.Style, topPanel);
+            linkedSubBox.ToolTip = 
+                "Places another submarine into the current submarine file. "+
+                "Can be used for adding things such as smaller vessels, "+
+                "escape pods or detachable sections into the main submarine.";
+
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
                 linkedSubBox.AddItem(sub.Name, sub);
@@ -121,8 +124,7 @@ namespace Barotrauma
             GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 50, 0, 20), "", GUI.Style, leftPanel);
             structureCount.TextGetter = GetStructureCount;
 
-            GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];
-                       
+            GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];                       
 
             int width = 400, height = 400;
             int y = 90;
@@ -255,19 +257,19 @@ namespace Barotrauma
             if (Submarine.MainSub != null)
             {
                 cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
-                nameBox.Text = Submarine.MainSub.Name;
-                descriptionBox.Text = ToolBox.LimitString(Submarine.MainSub.Description, 15);
+                //nameBox.Text = Submarine.MainSub.Name;
+                //descriptionBox.Text = ToolBox.LimitString(Submarine.MainSub.Description, 15);
             }
             else
             {
                 cam.Position = Submarine.HiddenSubStartPosition;
-                nameBox.Text = "";
-                descriptionBox.Text = "";
+                //if (nameBox != null) nameBox.Text = "";
+                //descriptionBox.Text = "";
 
                 Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, "Unnamed.sub"), "", false);
             }
 
-            nameBox.Deselect();
+            //nameBox.Deselect();
 
             cam.UpdateTransform();
         }
@@ -343,6 +345,91 @@ namespace Barotrauma
             GUI.AddMessage("Submarine saved to " + Submarine.MainSub.FilePath, Color.Green, 3.0f);
             
             return false;
+        }
+
+        private void CreateSaveScreen()
+        {
+            int width = 400, height = 400;
+
+            int y = 0;
+
+            saveFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style, null);
+            saveFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+
+            new GUITextBlock(new Rectangle(0,0,200,30), "Save submarine", GUI.Style, saveFrame, GUI.LargeFont);
+
+            y += 30;
+
+            new GUITextBlock(new Rectangle(0,y,150,20), "Name:", GUI.Style, saveFrame);
+            y += 20;
+
+            nameBox = new GUITextBox(new Rectangle(5, y, 150, 20), GUI.Style, saveFrame);
+            nameBox.OnEnterPressed = ChangeSubName;
+            nameBox.Text = GetSubName();
+
+            y += 30;
+            
+            new GUITextBlock(new Rectangle(0, y, 150, 20), "Description:", GUI.Style, saveFrame);
+            y += 20;
+
+            var descriptionBox = new GUITextBox(new Rectangle(5, y, 0, 100), null, null, Alignment.TopLeft,
+                Alignment.TopLeft, GUI.Style, saveFrame);
+            descriptionBox.Wrap = true;
+            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
+            descriptionBox.OnSelected += ExpandDescriptionBox;
+            descriptionBox.OnTextChanged = ChangeSubDescription;
+
+            y += descriptionBox.Rect.Height + 15;
+            new GUITextBlock(new Rectangle(0, y, 150, 20), "Settings:", GUI.Style, saveFrame);
+
+            y += 20;
+
+            int tagX = 10, tagY = 0;
+            foreach (SubmarineTag tag in Enum.GetValues(typeof(SubmarineTag)))
+            {
+                FieldInfo fi = typeof(SubmarineTag).GetField(tag.ToString());
+                DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+
+                string tagStr = attributes.Length > 0 ? attributes[0].Description : "";
+
+                var tagTickBox = new GUITickBox(new Rectangle(tagX, y+ tagY, 20, 20), tagStr, Alignment.TopLeft, saveFrame);
+                tagTickBox.Selected = Submarine.MainSub == null ? false : Submarine.MainSub.HasTag(tag);
+                tagTickBox.UserData = tag;
+
+                tagTickBox.OnSelected = (GUITickBox tickBox) =>
+                    {
+                        if (Submarine.MainSub == null) return false;
+
+                        if (tickBox.Selected)
+                        {
+                            Submarine.MainSub.AddTag((SubmarineTag)tickBox.UserData);
+                        }
+                        else
+                        {
+                            Submarine.MainSub.RemoveTag((SubmarineTag)tickBox.UserData);
+                        }
+
+                        return true;
+                    };
+
+                tagY += 25;
+                if (tagY > 100)
+                {
+                    tagY = 0;
+                    tagX += 200;
+                }
+            }
+            
+            var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), "Save", Alignment.Right | Alignment.Bottom, GUI.Style, saveFrame);
+            saveButton.OnClicked = SaveSub;
+
+            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Cancel", Alignment.Right | Alignment.Bottom, GUI.Style, saveFrame);
+            cancelButton.OnClicked = (GUIButton btn, object userdata) =>
+            {
+                saveFrame = null;
+                return true;
+            };
+
         }
 
         private bool CreateLoadScreen(GUIButton button, object obj)
@@ -427,8 +514,8 @@ namespace Barotrauma
             Submarine.MainSub = selectedSub;
             selectedSub.Load(true);
 
-            nameBox.Text = selectedSub.Name;
-            descriptionBox.Text = ToolBox.LimitString(selectedSub.Description,15);
+            //nameBox.Text = selectedSub.Name;
+            //descriptionBox.Text = ToolBox.LimitString(selectedSub.Description,15);
 
             loadFrame = null;
 
@@ -737,10 +824,10 @@ namespace Barotrauma
 
             if (GUIComponent.MouseOn == null)
             {
-                if (nameBox.Selected && PlayerInput.LeftButtonClicked())
-                {
-                    ChangeSubName(nameBox, nameBox.Text);
-                }
+                //if (nameBox.Selected && PlayerInput.LeftButtonClicked())
+                //{
+                //    ChangeSubName(nameBox, nameBox.Text);
+                //}
 
                 cam.MoveCamera((float)deltaTime);
                 //cam.Zoom = MathHelper.Clamp(cam.Zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f)*cam.Zoom, 0.1f, 2.0f);
@@ -796,6 +883,10 @@ namespace Barotrauma
             {
                 loadFrame.Update((float)deltaTime);
                 if (PlayerInput.RightButtonClicked()) loadFrame = null;
+            }
+            else if (saveFrame != null)
+            {
+                saveFrame.Update((float)deltaTime);
             }
             else if (selectedTab > -1)
             {
@@ -878,6 +969,10 @@ namespace Barotrauma
                 if (loadFrame!=null)
                 {
                     loadFrame.Draw(spriteBatch);
+                }
+                else if (saveFrame != null)
+                {
+                    saveFrame.Draw(spriteBatch);
                 }
                 else if (selectedTab > -1)
                 {

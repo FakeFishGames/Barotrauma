@@ -103,6 +103,19 @@ namespace Barotrauma
             set { textBlock.Text = value; }
         }
 
+        public override string ToolTip
+        {
+            get
+            {
+                return base.ToolTip;
+            }
+            set
+            {
+                textBlock.ToolTip = value;
+                base.ToolTip = value;
+            }
+        }
+
         public bool Selected { get; set; }
 
         public GUIButton(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null)

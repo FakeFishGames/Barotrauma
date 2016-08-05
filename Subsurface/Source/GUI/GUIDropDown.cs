@@ -26,6 +26,53 @@ namespace Barotrauma
                 return listBox.Selected.UserData;
             }
         }
+
+        public bool Enabled
+        {
+            get { return listBox.Enabled; }
+            set { listBox.Enabled = value; }
+        }
+
+        public GUIComponent Selected
+        {
+            get { return listBox.Selected; }
+        }
+
+        public GUIListBox ListBox
+        {
+            get { return listBox; }
+        }
+
+        public object SelectedData
+        {
+            get
+            {
+                return (listBox.Selected == null) ? null : listBox.Selected.UserData;
+            }
+        }
+
+        public int SelectedIndex
+        {
+            get
+            {
+                if (listBox.Selected == null) return -1;
+                return listBox.children.FindIndex(x => x == listBox.Selected);
+            }
+        }
+
+        public override string ToolTip
+        {
+            get
+            {
+                return base.ToolTip;
+            }
+            set
+            {
+                base.ToolTip    = value;
+                button.ToolTip  = value;
+                listBox.ToolTip = value;
+            }
+        }
         
         public GUIDropDown(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null)
             : base(style)
@@ -34,7 +81,7 @@ namespace Barotrauma
 
             if (parent != null) parent.AddChild(this);
 
-            button = new GUIButton(Rectangle.Empty, text, Color.White, Alignment.TopLeft, Alignment.TopLeft, null, this);
+            button = new GUIButton(this.rect, text, Color.White, Alignment.TopLeft, Alignment.TopLeft, null, null);
 
             button.TextColor = Color.White;
             button.Color = Color.Black * 0.8f;
@@ -45,6 +92,11 @@ namespace Barotrauma
             listBox = new GUIListBox(new Rectangle(this.rect.X, this.rect.Bottom, this.rect.Width, 200), style, null);
             listBox.OnSelected = SelectItem;
             //listBox.ScrollBarEnabled = false;
+        }
+
+        public override void AddChild(GUIComponent child)
+        {
+            listBox.AddChild(child);
         }
 
         public void AddItem(string text, object userData = null)
@@ -59,6 +111,11 @@ namespace Barotrauma
             //}
 
             //listBox.Rect = new Rectangle(listBox.Rect.X,listBox.Rect.Y,listBox.Rect.Width,totalHeight);
+        }
+
+        public List<GUIComponent> GetChildren()
+        {
+            return listBox.children;
         }
 
         private bool SelectItem(GUIComponent component, object obj)
@@ -83,6 +140,11 @@ namespace Barotrauma
             listBox.Select(userData);
 
             //SelectItem(child, userData);
+        }
+
+        public void Select(int index)
+        {
+            listBox.Select(index);
         }
        
 
@@ -116,13 +178,12 @@ namespace Barotrauma
             {
                 Rectangle listBoxRect = listBox.Rect;
                 listBoxRect.Width += 20;
-                if (!listBoxRect.Contains(PlayerInput.MousePosition))
+                if (!listBoxRect.Contains(PlayerInput.MousePosition) && !button.Rect.Contains(PlayerInput.MousePosition))
                 {
                     Dropped = false;
                 }
             }
-
-
+            
             button.Update(deltaTime);
 
             if (Dropped) listBox.Update(deltaTime);
