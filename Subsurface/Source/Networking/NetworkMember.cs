@@ -391,10 +391,9 @@ namespace Barotrauma.Networking
                 string respawnInfo = "";
 
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                    respawnManager.CountdownStarted &&
-                    myCharacter != null && myCharacter.IsDead)
+                    respawnManager.CountdownStarted)
                 {
-                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : "Respawning in " + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
+                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : "Respawn Shuttle dispatching in " + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
 
                 }
                 else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
@@ -405,7 +404,7 @@ namespace Barotrauma.Networking
                 if (!string.IsNullOrEmpty(respawnInfo))
                 {                
                     GUI.DrawString(spriteBatch,
-                        new Vector2(GameMain.GraphicsWidth - 300.0f, 20),
+                        new Vector2(GameMain.GraphicsWidth - 400.0f, 20),
                         respawnInfo, Color.White, null, 0, GUI.SmallFont);
                 }
 

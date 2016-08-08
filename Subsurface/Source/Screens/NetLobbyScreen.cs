@@ -224,7 +224,7 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(columnX, 120, 20, 20), "Respawn shuttle:", GUI.Style, infoFrame);
             shuttleList = new GUIDropDown(new Rectangle(columnX, 150, 200, 20), "", GUI.Style, infoFrame);
-
+            
 
             //gamemode ------------------------------------------------------------------
 
@@ -345,7 +345,7 @@ namespace Barotrauma
             //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             subList.Enabled         = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting;
-            shuttleList.Enabled = subList.Enabled;
+            shuttleList.Enabled     = subList.Enabled;
             playerList.Enabled      = GameMain.Server != null;
             modeList.Enabled        = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowModeVoting;                  
             seedBox.Enabled         = GameMain.Server != null;                       
@@ -368,16 +368,20 @@ namespace Barotrauma
 
             if (IsServer && GameMain.Server != null)
             {
+                List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+
                 int prevSelectedSub = subList.SelectedIndex;
-                UpdateSubList(subList, Submarine.SavedSubmarines);
+                UpdateSubList(subList, subsToShow);
 
                 int prevSelectedShuttle = shuttleList.SelectedIndex;
-                UpdateSubList(shuttleList, Submarine.SavedSubmarines);
+                UpdateSubList(shuttleList, subsToShow);
 
                 modeList.OnSelected = VotableClicked;
                 modeList.OnSelected = SelectMode;
                 subList.OnSelected = VotableClicked;
                 subList.OnSelected = SelectSub;
+
+                shuttleList.OnSelected = SelectSub;
 
                 traitorProbabilityButtons[0].OnClicked = ToggleTraitorsEnabled;
                 traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
@@ -613,10 +617,10 @@ namespace Barotrauma
         {
             valueChanged = true;
 
-            var hash = (obj as Submarine).MD5Hash;
+            var hash = obj is Submarine ? ((Submarine)obj).MD5Hash.Hash : "";
             
             //hash will be null if opening the sub file failed -> don't select the sub
-            if (string.IsNullOrWhiteSpace(hash.Hash))
+            if (string.IsNullOrWhiteSpace(hash))
             {
                 (component as GUITextBlock).TextColor = Color.DarkRed * 0.8f;
                 component.CanBeFocused = false;
