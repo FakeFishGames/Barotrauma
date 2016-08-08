@@ -19,6 +19,6 @@
   <Self_CauseOfDeath.Suffocation>You have suffocated.</Self_CauseOfDeath.Suffocation>
   <Self_CauseOfDeath.Pressure>You have been crushed by water pressure.</Self_CauseOfDeath.Pressure>  
   <Self_CauseOfDeath.Burn>You have burned to death.</Self_CauseOfDeath.Burn>
-  <CauseOfDeath.Disconnected>You have been disconnected from the server.</CauseOfDeath.Disconnected>
+  <Self_CauseOfDeath.Disconnected>You have been disconnected from the server.</Self_CauseOfDeath.Disconnected>
 
 </infotexts>

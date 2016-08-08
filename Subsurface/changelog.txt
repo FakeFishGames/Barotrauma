@@ -1,4 +1,55 @@
 ---------------------------------------------------------------------------------------------------------
+v0.4.2.0
+---------------------------------------------------------------------------------------------------------
+
+Support for multiple submarines (no full-fledged submarine vs submarine battles yet, but they're coming
+up in future updates!):
+	- Submarine files can be "merged", i.e. submarines can consist of multiple separate parts which can
+	be docked into each other
+	- the multiplayer mode has a "respawn shuttle" which transports respawned players from the entrance
+	to the main submarine
+	- parts of the submarine and characters inside them can be left behind in the single player mode
+	(and later salvaged if you wish to do so)
+
+Multiplayer:
+	- fixed a bunch of bugs that caused entity IDs not to match between the clients and the server (which
+	caused severe syncing issues)
+	- fixed monster inventory syncing (although atm husks are the only monsters with an inventory)
+	- fixed server description box not being synced with clients
+	- search bar for server logs
+	- more server options
+	- fixed the occasional "queue empty" error messages when attempting to send submarine files to players
+	- characters can't be freely named anymore - they'll have the same name as the client
+
+Items:
+	- items can be equipped/unequipped by double clicking
+	- longer railgun view distance
+	- changes to the logic that determines which item is being highlighted - now it's much easier to
+	select specific items in cramped subs
+	- highlighted items glow (so it's easier to see which item you're targeting in the dark)
+	- fixed an electricity bug that sometimes caused parts of the grid to not carry any power after 
+	a junction box has been broken and repaired
+	- option to choose the output of a signal check component when the signal doesn't match
+	- fixed fire extinquishers
+	- item search bar in the submarine editor
+	- fixed cargo items spawning in incorrect positions (which occasionally caused some serious problems 
+	if the item happened to be a crate full of nitroglycerin)
+
+
+- the mass of a submarine depends on its size - larger submarines require more force to move around
+(custom subs may need some modifications to get the top speeds of the smaller/larger subs back to a
+steerable level)
+
+- changes to depth damage logic: structures with more health need more pressure before they start taking
+damage (i.e. submarines with thicker walls and no windows can go deeper)
+- fixed flashes from explosions/sparks/flares occasionally ''staying on''
+- NPCs won't close doors/hatches on themselves and are better at handling stairs/ladders
+- pathfinding bugfixes
+- stunned characters can't move items in their inventory
+- characters can run while grabbing/dragging someone
+
+
+---------------------------------------------------------------------------------------------------------
 v0.4.1.6
 ---------------------------------------------------------------------------------------------------------
 

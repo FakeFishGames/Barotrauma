@@ -193,6 +193,7 @@ namespace Barotrauma
 
                     suicideButton.OnClicked = (button, userData) =>
                     {
+                        GUIComponent.MouseOn = null;
                         if (Character.Controlled != null)
                         {
                             Character.Controlled.Kill(Character.Controlled.CauseOfDeath);

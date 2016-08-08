@@ -58,9 +58,12 @@ namespace Barotrauma
             frame.Color = Color.White * 0.4f;
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            listBox = new GUIListBox(new Rectangle(0,0,0, frame.Rect.Height-40), Color.Black*0.9f, GUI.Style, frame);
+            listBox = new GUIListBox(new Rectangle(0, 0, 0, frame.Rect.Height - 40), Color.Black, GUI.Style, frame);
+            listBox.Color = Color.Black * 0.7f;
 
-            textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black*0.6f, Color.White, Alignment.BottomLeft, Alignment.Left, GUI.Style, frame);
+            textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black, Color.White, Alignment.BottomLeft, Alignment.Left, GUI.Style, frame);
+            textBox.Color = Color.Black * 0.7f;
+
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
             NewMessage("Enter ''help'' for a list of available console commands", Color.Cyan);
 
