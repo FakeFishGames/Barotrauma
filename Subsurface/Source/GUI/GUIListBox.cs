@@ -84,6 +84,20 @@ namespace Barotrauma
             set { enabled = value; }
         }
 
+        public override Color Color
+        {
+            get
+            {
+                return base.Color;
+            }
+            set
+            {
+                base.Color = value;
+
+                frame.Color = value;
+            }
+        }
+
         public bool ScrollBarEnabled
         {
             get { return scrollBarEnabled; }

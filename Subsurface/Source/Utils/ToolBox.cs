@@ -413,7 +413,7 @@ namespace Barotrauma
 
         public static string SecondsToReadableTime(float seconds)
         {
-            if (seconds <= 60.0f)
+            if (seconds < 60.0f)
             {
                 return (int)seconds + " s";
             }
