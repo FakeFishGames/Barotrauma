@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
+using System.Linq;
 using System.Xml.Linq;
 using System.IO;
 
@@ -90,6 +91,8 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(0, 0, 0, 30), "Selected submarine:", null, null, Alignment.Left, GUI.Style, menuTabs[(int)Tab.NewGame]);
             mapList = new GUIListBox(new Rectangle(0, 30, 200, panelRect.Height-100), GUI.Style, menuTabs[(int)Tab.NewGame]);
+
+            var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {

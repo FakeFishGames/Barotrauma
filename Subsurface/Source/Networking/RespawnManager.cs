@@ -178,6 +178,9 @@ namespace Barotrauma.Networking
                 networkMember.AddChatMessage("The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.", ChatMessageType.Server);
             }
 
+            //infinite transport time -> shuttle wont return
+            if (maxTransportTime < 0.1f) return;
+
             var server = networkMember as GameServer;
             if (server == null) return;
 
@@ -196,15 +199,6 @@ namespace Barotrauma.Networking
                 shuttleReturnTimer = maxTransportTime;
                 shuttleTransportTimer = maxTransportTime;
             }
-
-            //shuttleReturnTimer += deltaTime;
-            //if (shuttleReturnTimer > 10.0f)
-            //{
-            //    state = State.Returning;
-
-            //    server.SendRespawnManagerMsg();
-            //    shuttleReturnTimer = 0.0f;
-            //}
         }
 
         private void UpdateReturning(float deltaTime)
@@ -477,7 +471,7 @@ namespace Barotrauma.Networking
                     CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
                     break;
                 case State.Waiting:
-                    CountdownStarted = true;
+                    CountdownStarted = inc.ReadBoolean();
 
                     ResetShuttle();
 

@@ -348,7 +348,7 @@ namespace Barotrauma
 
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
 
-            displayModeDD.OnSelected = (guiComponent) => { GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData; return true; };
+            displayModeDD.OnSelected = (guiComponent, obj) => { GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData; return true; };
 
             y += 70;
 
@@ -408,7 +408,7 @@ namespace Barotrauma
             return true;
         }
 
-        private bool SelectResolution(GUIComponent selected)
+        private bool SelectResolution(GUIComponent selected, object userData)
         {
             DisplayMode mode = selected.UserData as DisplayMode;
             if (mode == null) return false;

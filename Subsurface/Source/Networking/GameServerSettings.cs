@@ -57,14 +57,14 @@ namespace Barotrauma.Networking
         }
 
 
-        [HasDefaultValue(120.0f, true)]
+        [HasDefaultValue(300.0f, true)]
         public float RespawnInterval
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(60.0f, true)]
+        [HasDefaultValue(180.0f, true)]
         public float MaxTransportTime
         {
             get;
@@ -236,7 +236,7 @@ namespace Barotrauma.Networking
         {
             settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);            
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 420), null, Alignment.Center, GUI.Style, settingsFrame);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 430), null, Alignment.Center, GUI.Style, settingsFrame);
             innerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0, -5, 0, 20), "Settings", GUI.Style, innerFrame, GUI.LargeFont);
@@ -361,13 +361,43 @@ namespace Barotrauma.Networking
             minRespawnSlider.BarScroll = MinRespawnRatio;
             minRespawnSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
+                GUITextBlock txt = scrollBar.UserData as GUITextBlock;
 
                 MinRespawnRatio = barScroll;
-                voteText.Text = "Minimum players to respawn: " + (int)MathUtils.Round(MinRespawnRatio * 100.0f, 10.0f) + " %";
+                txt.Text = "Minimum players to respawn: " + (int)MathUtils.Round(MinRespawnRatio * 100.0f, 10.0f) + " %";
                 return true;
             };
             minRespawnSlider.OnMoved(minRespawnSlider, MinRespawnRatio);
+
+            y += 35;
+
+            var respawnDurationText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Duration of respawn transport", GUI.Style, settingsTabs[0]);
+            respawnDurationText.ToolTip = "The amount of time respawned players have to navigate the respawn shuttle to the main submarine. " +
+                "After the duration expires, the shuttle will automatically head back out of the level.";
+
+            var respawnDurationSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            respawnDurationSlider.ToolTip = minRespawnText.ToolTip;
+            respawnDurationSlider.UserData = respawnDurationText;
+            respawnDurationSlider.Step = 0.1f;
+            respawnDurationSlider.BarScroll = MinRespawnRatio;
+            respawnDurationSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GUITextBlock txt = scrollBar.UserData as GUITextBlock;
+
+                if (barScroll == 1.0f)
+                {
+                    MaxTransportTime = 0;
+                    txt.Text = "Duration of respawn transport: unlimited";
+                }
+                else
+                {
+                    MaxTransportTime = barScroll * 600.0f + 60.0f;
+                    txt.Text = "Duration of respawn transport: " + ToolBox.SecondsToReadableTime(MaxTransportTime);
+                }
+
+                return true;
+            };
+            respawnDurationSlider.OnMoved(respawnDurationSlider, (MaxTransportTime - 60.0f)/600.0f);
 
             y += 40;
 

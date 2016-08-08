@@ -10,7 +10,7 @@ namespace Barotrauma
     public class GUIDropDown : GUIComponent
     {
 
-        public delegate bool OnSelectedHandler(GUIComponent selected);
+        public delegate bool OnSelectedHandler(GUIComponent selected, object obj = null);
         public OnSelectedHandler OnSelected;
 
         private GUIButton button;
@@ -126,7 +126,7 @@ namespace Barotrauma
 
             Dropped = false;
 
-            if (OnSelected != null) OnSelected(component);
+            if (OnSelected != null) OnSelected(component, component.UserData);
 
             return true;
         }

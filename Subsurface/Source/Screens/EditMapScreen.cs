@@ -363,7 +363,7 @@ namespace Barotrauma
             new GUITextBlock(new Rectangle(0,y,150,20), "Name:", GUI.Style, saveFrame);
             y += 20;
 
-            nameBox = new GUITextBox(new Rectangle(5, y, 150, 20), GUI.Style, saveFrame);
+            nameBox = new GUITextBox(new Rectangle(5, y, 250, 20), GUI.Style, saveFrame);
             nameBox.OnEnterPressed = ChangeSubName;
             nameBox.Text = GetSubName();
 
@@ -376,8 +376,7 @@ namespace Barotrauma
                 Alignment.TopLeft, GUI.Style, saveFrame);
             descriptionBox.Wrap = true;
             descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
-            descriptionBox.OnSelected += ExpandDescriptionBox;
-            descriptionBox.OnTextChanged = ChangeSubDescription;
+            descriptionBox.OnEnterPressed = ChangeSubDescription;
 
             y += descriptionBox.Rect.Height + 15;
             new GUITextBlock(new Rectangle(0, y, 150, 20), "Settings:", GUI.Style, saveFrame);
@@ -675,7 +674,7 @@ namespace Barotrauma
             return frame;
         }
 
-        private bool SelectLinkedSub(GUIComponent selected)
+        private bool SelectLinkedSub(GUIComponent selected, object userData)
         {
             var submarine = selected.UserData as Submarine;
             if (submarine == null) return false;
@@ -747,7 +746,7 @@ namespace Barotrauma
                 textBox.UserData = text;
             }
 
-            textBox.Rect = new Rectangle(textBox.Rect.Location, new Point(textBox.Rect.Width, 20));
+            // textBox.Rect = new Rectangle(textBox.Rect.Location, new Point(textBox.Rect.Width, 20));
             
             textBox.Text = ToolBox.LimitString(text, 15);
 
@@ -756,21 +755,7 @@ namespace Barotrauma
 
             return true;
         }
-
-        private void ExpandDescriptionBox(GUITextBox textBox, Keys key)
-        {
-            if (Submarine.MainSub != null)
-            {
-                textBox.Text = Submarine.MainSub.Description;
-            }
-            else if (textBox.UserData is string)
-            {
-                textBox.Text = (string)textBox.UserData;
-            }
-            
-            textBox.Rect = new Rectangle(textBox.Rect.Location, new Point(textBox.Rect.Width, 150));
-        }
-
+        
         private bool SelectPrefab(GUIComponent component, object obj)
         {
             AddPreviouslyUsed(obj as MapEntityPrefab);
