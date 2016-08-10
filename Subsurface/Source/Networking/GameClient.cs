@@ -19,6 +19,7 @@ namespace Barotrauma.Networking
         private ReliableChannel reliableChannel;
 
         private FileStreamReceiver fileStreamReceiver;
+        private Queue<Pair<string, FileTransferMessageType>> requestFileQueue;
 
         private GUITickBox endRoundButton;
 
@@ -62,6 +63,8 @@ namespace Barotrauma.Networking
             Hull.EditWater = false;
 
             name = newName;
+
+            requestFileQueue = new Queue<Pair<string, FileTransferMessageType>>();
 
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name);
             characterInfo.Job = null;
@@ -251,7 +254,7 @@ namespace Barotrauma.Networking
                                         "A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.");
                                 }
 
-                                if (gameStarted && !hasCharacter && myCharacter!=null)
+                                if (gameStarted && !hasCharacter && myCharacter != null)
                                 {
                                     GameMain.NetLobbyScreen.Select();
 
@@ -277,17 +280,19 @@ namespace Barotrauma.Networking
                                     string subName = inc.ReadString();
                                     string subHash = inc.ReadString();
 
-                                    string mySubPath = Path.Combine(Submarine.SavePath, subName);
                                     var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
                                     if (matchingSub != null)
                                     {
-                                        mySubPath = matchingSub.FilePath;
+                                        submarines.Add(matchingSub);
                                     }
-
-                                    submarines.Add(new Submarine(mySubPath, subHash, false));
+                                    else
+                                    {
+                                        submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
+                                    }
+                                    
                                 }
-                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, Submarine.SavedSubmarines);
-                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, Submarine.SavedSubmarines);
+                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
+                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);
 
                                 //add the name of own client to the lobby screen
                                 GameMain.NetLobbyScreen.AddPlayer(name);
@@ -470,6 +475,12 @@ namespace Barotrauma.Networking
             NetIncomingMessage inc;
 
             if (startGameCoroutine != null && CoroutineManager.IsCoroutineRunning(startGameCoroutine)) return;
+
+            if (fileStreamReceiver == null && requestFileQueue.Count > 0)
+            {
+                var newRequest = requestFileQueue.Dequeue();
+                RequestFile(newRequest.First, newRequest.Second);
+            }
             
             while ((inc = client.ReadMessage()) != null)
             {
@@ -913,7 +924,14 @@ namespace Barotrauma.Networking
         {
             if (fileStreamReceiver!=null)
             {
-                CancelFileTransfer();
+                var request = new Pair<string, FileTransferMessageType>()
+                {
+                    First = file,
+                    Second = fileType
+                };
+
+                requestFileQueue.Enqueue(request);
+                return;
             }
 
             NetOutgoingMessage msg = client.CreateMessage();

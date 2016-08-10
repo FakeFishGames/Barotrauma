@@ -84,7 +84,10 @@ namespace Barotrauma.Networking
                 if (door != null) shuttleDoors.Add(door);
             }
 
-            shuttleSteering.TargetPosition = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
+            if (shuttleSteering != null)
+            {
+                shuttleSteering.TargetPosition = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
+            }
 
             var server = networkMember as GameServer;
             if (server != null)

@@ -2,6 +2,8 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Barotrauma.Networking;
+using System.Linq;
+using System;
 
 namespace Barotrauma
 {
@@ -128,30 +130,13 @@ namespace Barotrauma
 
         public static void DumpIds(int count)
         {
-            List<Entity> e = new List<Entity>();
+            List<Entity> entities = dictionary.Values.OrderByDescending(e => e.id).ToList();
 
-            foreach (Entity ent in dictionary.Values)
+            count = Math.Min(entities.Count, count);
+
+            for (int i = 0; i < count; i++)
             {
-                int index = 0;
-                for (int i = 0; i < e.Count; i++)
-                {
-                    if (e[i].id < ent.id)
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-
-                e.Insert(index, ent);
-            }
-
-            int c = 0;
-            foreach (Entity ent in e)
-            {
-                if (c>count) break;
-
-                DebugConsole.ThrowError(ent.id+": "+ent.ToString());
-                c++;
+                DebugConsole.ThrowError(entities[i].id + ": " + entities[i].ToString());
             }
         }
     }

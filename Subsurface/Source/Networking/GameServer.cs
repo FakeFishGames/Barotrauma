@@ -100,6 +100,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     log.LogFrame = null;
+                    GUIComponent.KeyboardDispatcher.Subscriber = null;
                 }
                 return true;
             };
@@ -464,7 +465,7 @@ namespace Barotrauma.Networking
                             outmsg.Write((byte)PacketTypes.LoggedIn);
                             outmsg.Write(sender.ID);
                             outmsg.Write(gameStarted);
-                            outmsg.Write(gameStarted && sender.Character != null);
+                            outmsg.Write(gameStarted && sender.Character != null && !sender.Character.IsDead);
                             outmsg.Write(AllowSpectating);
 
                             //notify the client about other clients already logged in
