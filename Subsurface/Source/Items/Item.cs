@@ -1301,14 +1301,19 @@ namespace Barotrauma
 
             System.Diagnostics.Debug.WriteLine("Item.Pick(" + picker + ", " + forceSelectKey + ")");
 
-            if (picker.SelectedConstruction == this)
+            if (selected)
             {
-                if (picker.IsKeyHit(InputType.Select)) picker.SelectedConstruction = null;
+                if (picker.SelectedConstruction == this)
+                {
+                    picker.SelectedConstruction = null;
+                }
+                else
+                {
+                    picker.SelectedConstruction = this;
+                }
             }
-            else if (selected)
-            {        
-                picker.SelectedConstruction = this;
-            }
+
+
             
             if (!hasRequiredSkills && Character.Controlled==picker && Screen.Selected != GameMain.EditMapScreen)
             {

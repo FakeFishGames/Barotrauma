@@ -814,15 +814,12 @@ namespace Barotrauma
             }
             else
             {
-                notClimbing = Math.Abs(targetMovement.X) > 0.05f;
+                notClimbing = Math.Abs(targetMovement.X) > 0.05f ||
+                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition) ||
+                (TargetMovement.Y > 0.0f && handPos.Y > 0.1f);
             }
 
-            //stop climbing if:
-            //   - moving sideways
-            //   - reached the top or bottom of the ladder
-            if (notClimbing ||
-                (TargetMovement.Y < 0.0f && ConvertUnits.ToSimUnits(trigger.Height) + handPos.Y < HeadPosition) ||
-                (TargetMovement.Y > 0.0f && handPos.Y > 0.1f))
+            if (notClimbing)
             {
                 Anim = Animation.None;
                 character.SelectedConstruction = null;

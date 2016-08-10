@@ -17,7 +17,7 @@
 
         //if a ragdoll is further than this from the correct position, teleport it there
         //(in sim units)
-        public const float ResetRagdollDistance = 2.0f;
+        public const float ResetRagdollDistance = 1.0f;
 
         //if the ragdoll is closer than this, don't try to correct its position
         public const float AllowedRagdollDistance = 0.1f;
