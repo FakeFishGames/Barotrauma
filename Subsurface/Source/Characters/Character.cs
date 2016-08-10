@@ -1602,6 +1602,7 @@ namespace Barotrauma
                             GameServer.Log(Name + " selected " + pickedItem.Name, Color.Orange);
                         }
                         pickedItem.Pick(this, false, pickHit, actionHit);
+
                     }
 
                     return;
@@ -1731,6 +1732,8 @@ namespace Barotrauma
 #endif
                         return;
                     }
+
+                    if (GameMain.Server != null && (isDead || IsUnconscious)) return;
 
                     keys[(int)InputType.Use].Held = actionKeyState;
                     keys[(int)InputType.Use].SetState(false, actionKeyState);

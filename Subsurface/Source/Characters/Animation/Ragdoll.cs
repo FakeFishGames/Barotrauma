@@ -793,7 +793,10 @@ namespace Barotrauma
 
             if (original != simPosition)
             {
-                Body body = Submarine.CheckVisibility(original, simPosition);
+                Category collisionCategory = Physics.CollisionWall | Physics.CollisionLevel;
+                if (!ignorePlatforms) collisionCategory |= Physics.CollisionPlatform;
+
+                Body body = Submarine.PickBody(original, simPosition, null, collisionCategory);
             
                 //if there's something in between the limbs
                 if (body != null)
@@ -803,13 +806,10 @@ namespace Barotrauma
                 }
             }
 
-
-
             if (lerp)
             {
                 limb.body.TargetPosition = movePos;
-                limb.body.MoveToTargetPosition(Vector2.Distance(limb.SimPosition, movePos) < 10.0f);
-                
+                limb.body.MoveToTargetPosition(Vector2.Distance(limb.SimPosition, movePos) < 10.0f);                
             }
             else
             {

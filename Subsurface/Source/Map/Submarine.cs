@@ -383,12 +383,18 @@ namespace Barotrauma
                     fixture.CollisionCategories == Category.None || 
                     fixture.CollisionCategories == Physics.CollisionItem) return -1;
 
-                if (collisionCategory != null && !fixture.CollisionCategories.HasFlag((Category)collisionCategory)) return -1;
+                if (collisionCategory != null && 
+                    !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
+                    !((Category)collisionCategory).HasFlag(fixture.CollisionCategories)) return -1;
       
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
-
+                
                 Structure structure = fixture.Body.UserData as Structure;                
-                if (structure != null && (structure.IsPlatform || !structure.HasBody)) return -1;
+                if (structure != null)
+                {
+                    if (!structure.HasBody) return -1;
+                    if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
+                }                    
 
                 if (fraction < closestFraction)
                 {
