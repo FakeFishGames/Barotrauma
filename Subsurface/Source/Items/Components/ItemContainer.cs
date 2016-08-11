@@ -121,6 +121,8 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
+
+            IsActive = true;
         }
 
         public void RemoveContained(Item item)

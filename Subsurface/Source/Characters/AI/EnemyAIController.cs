@@ -580,7 +580,7 @@ namespace Barotrauma
         {
             message.WriteRangedInteger(0, Enum.GetValues(typeof(AiState)).Length-1, (int)state);
 
-            bool wallAttack = (wallAttackPos != Vector2.Zero && state == AiState.Attack);
+            //bool wallAttack = (wallAttackPos != Vector2.Zero && state == AiState.Attack);
 
             //message.Write(wallAttack);
 

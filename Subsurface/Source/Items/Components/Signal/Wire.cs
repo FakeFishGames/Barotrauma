@@ -119,6 +119,8 @@ namespace Barotrauma.Items.Components
 
                 if (!addNode) break;
 
+                if (newConnection.Item.Submarine == null) continue;
+
                 if (Nodes.Count > 0 && Nodes[0] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
                 if (Nodes.Count > 1 && Nodes[Nodes.Count-1] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
 
