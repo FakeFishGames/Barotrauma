@@ -343,6 +343,8 @@ namespace Barotrauma
             Submarine.MainSub.CheckForErrors();
 
             GUI.AddMessage("Submarine saved to " + Submarine.MainSub.FilePath, Color.Green, 3.0f);
+
+            saveFrame = null;
             
             return false;
         }
@@ -376,7 +378,7 @@ namespace Barotrauma
                 Alignment.TopLeft, GUI.Style, saveFrame);
             descriptionBox.Wrap = true;
             descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
-            descriptionBox.OnEnterPressed = ChangeSubDescription;
+            descriptionBox.OnTextChanged = ChangeSubDescription;
 
             y += descriptionBox.Rect.Height + 15;
             new GUITextBlock(new Rectangle(0, y, 150, 20), "Settings:", GUI.Style, saveFrame);
@@ -454,10 +456,16 @@ namespace Barotrauma
                     new Rectangle(0, 0, 0, 25),
                     sub.Name,
                     GUI.Style,
-                    Alignment.Left, Alignment.Left, subList);
+                    Alignment.Left, Alignment.CenterY | Alignment.Right, subList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = sub;
                 textBlock.ToolTip = sub.FilePath;
+
+                if (sub.HasTag(SubmarineTag.Shuttle))
+                {
+                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
+                    shuttleText.TextColor = textBlock.TextColor * 0.8f;
+                }
             }
 
             var deleteButton = new GUIButton(new Rectangle(0, 0, 70, 20), "Delete", Alignment.BottomLeft, GUI.Style, loadFrame);
@@ -748,10 +756,10 @@ namespace Barotrauma
 
             // textBox.Rect = new Rectangle(textBox.Rect.Location, new Point(textBox.Rect.Width, 20));
             
-            textBox.Text = ToolBox.LimitString(text, 15);
+            //textBox.Text = ToolBox.LimitString(text, 15);
 
-            textBox.Flash(Color.Green);
-            textBox.Deselect();
+            //textBox.Flash(Color.Green);
+            //textBox.Deselect();
 
             return true;
         }

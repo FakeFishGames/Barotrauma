@@ -15,7 +15,7 @@ namespace Barotrauma
         GUIFrame buttonsTab;
 
         private GUIFrame[] menuTabs;
-        private GUIListBox mapList;
+        private GUIListBox subList;
 
         private GUIListBox saveList;
 
@@ -85,40 +85,45 @@ namespace Barotrauma
             //----------------------------------------------------------------------
 
             menuTabs[(int)Tab.NewGame] = new GUIFrame(panelRect, GUI.Style);
-            //menuTabs[(int)Tabs.NewGame].Padding = GUI.style.smallPadding;
+            menuTabs[(int)Tab.NewGame].Padding = new Vector4(20.0f,20.0f,20.0f,20.0f);
 
             //new GUITextBlock(new Rectangle(0, -20, 0, 30), "New Game", null, null, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.NewGame]);
 
             new GUITextBlock(new Rectangle(0, 0, 0, 30), "Selected submarine:", null, null, Alignment.Left, GUI.Style, menuTabs[(int)Tab.NewGame]);
-            mapList = new GUIListBox(new Rectangle(0, 30, 200, panelRect.Height-100), GUI.Style, menuTabs[(int)Tab.NewGame]);
+            subList = new GUIListBox(new Rectangle(0, 30, 230, panelRect.Height-100), GUI.Style, menuTabs[(int)Tab.NewGame]);
 
             var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
-                new GUITextBlock(
+                var textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    sub.Name, GUI.Style,
-                    Alignment.Left, Alignment.Left, mapList)
+                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width-65), GUI.Style,
+                    Alignment.Left, Alignment.Left, subList)
                 {
                     Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
                     ToolTip = sub.Description,
                     UserData = sub
                 };
 
+                if (sub.HasTag(SubmarineTag.Shuttle))
+                {
+                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
+                    shuttleText.TextColor = textBlock.TextColor * 0.8f;
+                }
             }
-            if (Submarine.SavedSubmarines.Count > 0) mapList.Select(Submarine.SavedSubmarines[0]);
+            if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
 
-            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 0, 100, 20),
+            new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 0, 100, 20),
                 "Save name: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
 
-            saveNameBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 30), 30, 180, 20),
+            saveNameBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 30, 180, 20),
                 Alignment.TopLeft, GUI.Style, menuTabs[(int)Tab.NewGame]);
 
-            new GUITextBlock(new Rectangle((int)(mapList.Rect.Width + 20), 60, 100, 20),
+            new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 60, 100, 20),
                 "Map Seed: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
 
-            seedBox = new GUITextBox(new Rectangle((int)(mapList.Rect.Width + 30), 90, 180, 20),
+            seedBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 90, 180, 20),
                 Alignment.TopLeft, GUI.Style, menuTabs[(int)Tab.NewGame]);
             seedBox.Text = ToolBox.RandomSeed(8);
 
@@ -492,7 +497,7 @@ namespace Barotrauma
                 return false;
             }
 
-            Submarine selectedSub = mapList.SelectedData as Submarine;
+            Submarine selectedSub = subList.SelectedData as Submarine;
             if (selectedSub == null) return false;
 
             if (!Directory.Exists(SaveUtil.TempPath))
