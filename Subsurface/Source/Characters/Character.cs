@@ -393,7 +393,34 @@ namespace Barotrauma
 
         public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, bool hasAi=true)
         {
-            if (!System.IO.File.Exists(file)) return null;
+#if LINUX            
+            if (!System.IO.File.Exists(file)) 
+            {
+
+                //if the file was not found, attempt to convert the name of the folder to upper case
+                var splitPath = file.Split('/');
+                if (splitPath.Length > 2)
+                {
+                    splitPath[splitPath.Length-2] = 
+                        splitPath[splitPath.Length-2].First().ToString().ToUpper() + splitPath[splitPath.Length-2].Substring(1);
+                    
+                    file = string.Join("/", splitPath);
+                }
+
+                if (!System.IO.File.Exists(file))
+                {
+                    DebugConsole.ThrowError("Spawning a character failed - file ''"+file+"'' not found!");
+                    return null;
+                }
+            }
+#else
+            if (!System.IO.File.Exists(file))
+            {
+                DebugConsole.ThrowError("Spawning a character failed - file ''"+file+"'' not found!");
+                return null;
+            }
+#endif
+            
 
             if (file != humanConfigFile)
             {

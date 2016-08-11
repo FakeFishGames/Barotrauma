@@ -1645,7 +1645,7 @@ namespace Barotrauma
 #if DEBUG
                     System.Diagnostics.Debug.Assert(body != null, "Tried to send a PhysicsBodyPosition message for an item that has no physics body ("+Name+")");
 #else
-                    if (body == null) return;
+                    if (body == null) return false;
 #endif
                     
                     body.FillNetworkData(message);
