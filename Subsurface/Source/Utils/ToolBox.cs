@@ -308,8 +308,27 @@ namespace Barotrauma
 
             if (maxCharacters < 4 || str.Length <= maxCharacters) return str;
             
-            return str.Substring(0, maxCharacters-3) + "...";
+            return str.Substring(0, maxCharacters-3) + "...";            
+        }
+
+        public static string LimitString(string str, SpriteFont font, int maxWidth)
+        {
+            if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) return "";
+
+            StringBuilder sb = new StringBuilder();
             
+            float currWidth = font.MeasureString("...").X;
+            for (int i = 0; i < str.Length; i++ )
+            {
+                currWidth += font.MeasureString(str[i].ToString()).X;
+
+                if (currWidth > maxWidth)
+                {
+                    return str.Substring(0, i + 1) + "...";
+                }
+            }
+
+            return str;
         }
 
         public static string RandomSeed(int length)

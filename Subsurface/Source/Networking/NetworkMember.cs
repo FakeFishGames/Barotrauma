@@ -404,7 +404,7 @@ namespace Barotrauma.Networking
                 if (!string.IsNullOrEmpty(respawnInfo))
                 {                
                     GUI.DrawString(spriteBatch,
-                        new Vector2(GameMain.GraphicsWidth - 400.0f, 20),
+                        new Vector2(120.0f, 10),
                         respawnInfo, Color.White, null, 0, GUI.SmallFont);
                 }
 
