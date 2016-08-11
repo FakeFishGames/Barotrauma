@@ -620,6 +620,11 @@ namespace Barotrauma.Items.Components
 
                 gapId = message.ReadUInt16();
 
+                if (hulls[0] != null) hulls[0].ID = (ushort)hullIds[0];
+                if (hulls[1] != null) hulls[1].ID = (ushort)hullIds[1];
+
+                if (gap != null) gap.ID = (ushort)gapId;
+
                 Dock(dockingTarget);
 
             }
