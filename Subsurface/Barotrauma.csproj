@@ -468,7 +468,7 @@
     <Content Include="Content\Characters\Husk\legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Characters\TigerThresher\damagedtigerthresher.png">
+    <Content Include="Content\Characters\Tigerthresher\damagedtigerthresher.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Watcher\watcher.xml">
@@ -641,10 +641,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Content\Characters\TigerThresher\tigerthresher.png">
+    <Content Include="Content\Characters\Tigerthresher\tigerthresher.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Content\Characters\TigerThresher\tigerthresher.xml">
+    <Content Include="Content\Characters\Tigerthresher\tigerthresher.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
