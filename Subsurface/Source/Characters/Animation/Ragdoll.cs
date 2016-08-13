@@ -794,7 +794,7 @@ namespace Barotrauma
             if (original != simPosition)
             {
                 Category collisionCategory = Physics.CollisionWall | Physics.CollisionLevel;
-                if (!ignorePlatforms) collisionCategory |= Physics.CollisionPlatform;
+                //if (!ignorePlatforms) collisionCategory |= Physics.CollisionPlatform;
 
                 Body body = Submarine.PickBody(original, simPosition, null, collisionCategory);
             
@@ -820,8 +820,6 @@ namespace Barotrauma
                     limb.pullJoint.Enabled = false;
                 }              
             }
-
-
         }
 
         public void SetRotation(float rotation)
