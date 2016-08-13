@@ -140,10 +140,21 @@ namespace Barotrauma.Items.Components
             return -1;
         }
 
+        public void TryAddLink(Wire wire)
+        {
+            for (int i = 0; i < MaxLinked; i++)
+            {
+                if (Wires[i] == null)
+                {
+                    Wires[i] = wire;
+                    UpdateRecipients();
+                    return;
+                }
+            }
+        }
+        
         public void AddLink(int index, Wire wire)
         {
-            //linked[index] = connectedItem;
-            //recipient[index] = otherConnection;
             Wires[index] = wire;
             UpdateRecipients();
         }
@@ -458,6 +469,7 @@ namespace Barotrauma.Items.Components
         public void ConnectLinked()
         {
             if (wireId == null) return;
+
 
             for (int i = 0; i < MaxLinked; i++)
             {

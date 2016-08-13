@@ -182,7 +182,7 @@ namespace Barotrauma.Networking
 
         private void UpdateTransporting(float deltaTime)
         {
-            //shuttleTransportTimer -= deltaTime;
+            shuttleTransportTimer -= deltaTime;
 
             if (shuttleReturnTimer + deltaTime > 15.0f && shuttleReturnTimer <= 15.0f &&
                 networkMember.Character != null &&
@@ -401,7 +401,8 @@ namespace Barotrauma.Networking
             var waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnShuttle);
 
             ItemPrefab divingSuitPrefab = ItemPrefab.list.Find(ip => ip.Name == "Diving Suit") as ItemPrefab;
-            ItemPrefab oxyPrefab = ItemPrefab.list.Find(ip => ip.Name == "Oxygen Tank") as ItemPrefab;
+            ItemPrefab oxyPrefab        = ItemPrefab.list.Find(ip => ip.Name == "Oxygen Tank") as ItemPrefab;
+            ItemPrefab scooterPrefab    = ItemPrefab.list.Find(ip => ip.Name == "Underwater Scooter") as ItemPrefab; 
 
             var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnShuttle && wp.SpawnType == SpawnType.Cargo);
 
@@ -428,24 +429,24 @@ namespace Barotrauma.Networking
                 {
                     Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
 
-                    var divingSuit = new Item(divingSuitPrefab, pos, respawnShuttle);
-                    var oxyTank = new Item(oxyPrefab, pos, respawnShuttle);
+                    var divingSuit  = new Item(divingSuitPrefab, pos, respawnShuttle);
+                    var oxyTank     = new Item(oxyPrefab, pos, respawnShuttle);
+                    var scooter     = new Item(scooterPrefab, pos, respawnShuttle);
 
                     divingSuit.Combine(oxyTank);
 
                     spawnedItems.Add(divingSuit);
                     spawnedItems.Add(oxyTank);
+                    spawnedItems.Add(scooter);
 
                     Item.Spawner.AddToSpawnedList(divingSuit);
                     Item.Spawner.AddToSpawnedList(oxyTank);
+                    Item.Spawner.AddToSpawnedList(scooter);
                 }
 
-
                 character.GiveJobItems(waypoints[i]);
-
                 GameMain.GameSession.CrewManager.characters.Add(character);
             }
-
 
             server.SendRespawnManagerMsg(spawnedCharacters, spawnedItems);
         }

@@ -687,11 +687,11 @@ namespace Barotrauma
                 }
             }
 
-
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
                 var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, subTextBlock, false, GUI.SmallFont);
                 shuttleText.TextColor = subTextBlock.TextColor * 0.8f;
+                shuttleText.ToolTip = subTextBlock.ToolTip;
             }
         }
         

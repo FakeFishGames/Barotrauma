@@ -252,9 +252,10 @@ namespace Barotrauma.Items.Components
             wire.RemoveConnection(item);
             wire.RemoveConnection(dockingTarget.item);
 
-            powerConnection.AddLink(4, wire);
+
+            powerConnection.TryAddLink(wire);
             wire.Connect(powerConnection, false);
-            recipient.AddLink(4, wire);
+            recipient.TryAddLink(wire);
             wire.Connect(recipient, false);
         }
 
