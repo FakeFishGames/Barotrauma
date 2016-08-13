@@ -897,6 +897,11 @@ namespace Barotrauma.Networking
 
             yield return new WaitForSeconds(0.1f);
 
+            SendRespawnManagerMsg(null, null, new List<NetConnection>() { sender.Connection });
+
+            yield return new WaitForSeconds(0.1f);
+
+
             sender.inGame = true;
             
             yield return CoroutineStatus.Success;
@@ -1266,14 +1271,16 @@ namespace Barotrauma.Networking
 
         }
 
-        public void SendRespawnManagerMsg()
+        public void SendRespawnManagerMsg(List<Character> spawnedCharacters = null, List<Item> spawnedItems = null, List<NetConnection> recipients = null)
         {
             if (respawnManager == null) return;
 
             NetOutgoingMessage msg = server.CreateMessage();
-            respawnManager.WriteNetworkEvent(msg);
+            msg.Write((byte)PacketTypes.Respawn);
 
-            SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            respawnManager.WriteNetworkEvent(msg, spawnedCharacters, spawnedItems);
+
+            SendMessage(msg, NetDeliveryMethod.ReliableUnordered, recipients);
         }
 
         private void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
