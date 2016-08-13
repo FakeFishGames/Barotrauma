@@ -24,6 +24,8 @@ namespace Barotrauma.Items.Components
         private static Wire draggingWire;
         private static int? selectedNodeIndex;
 
+        public bool Hidden, Locked;
+
         public Connection[] Connections
         {
             get { return connections; }
@@ -109,7 +111,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            item.Submarine = newConnection.Item.Submarine;
+            if (item.body != null) item.Submarine = newConnection.Item.Submarine;
 
             for (int i = 0; i < 2; i++)
             {
@@ -149,7 +151,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (item.Container != null) item.Container.RemoveContained(this.item);
 
-                item.body.Enabled = false;
+                if (item.body != null) item.body.Enabled = false;
 
                 IsActive = false;
 

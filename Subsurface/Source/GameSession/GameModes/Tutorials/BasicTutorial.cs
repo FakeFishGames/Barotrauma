@@ -18,11 +18,18 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
-            //Submarine.Loaded.SetPosition(new Vector2(Submarine.Loaded.Position.X, 38500.0f));
-
             //spawn some fish next to the player
             GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2,
                 Submarine.MainSub.Position + Character.Controlled.Position);
+
+            foreach (Item item in Item.ItemList)
+            {
+                var wire = item.GetComponent<Wire>();
+                if (wire != null && wire.Connections.Any(c => c != null))
+                {
+                    wire.Locked = true;
+                }
+            }
 
             yield return new WaitForSeconds(4.0f);
 

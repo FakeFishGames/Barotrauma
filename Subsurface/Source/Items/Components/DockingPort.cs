@@ -105,7 +105,7 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-
+            
             IsActive = true;
 
             hullIds = new ushort?[2];
@@ -131,16 +131,23 @@ namespace Barotrauma.Items.Components
         private void AttemptDock()
         {
             var adjacentPort = FindAdjacentPort();
+
             if (adjacentPort != null) Dock(adjacentPort);
         }
 
         public void Dock(DockingPort target)
         {
             if (item.Submarine.DockedTo.Contains(target.item.Submarine)) return;
-            
+                        
             if (dockingTarget != null)
             {
                 Undock();
+            }
+
+            if (target.item.Submarine == item.Submarine)
+            {
+                DebugConsole.ThrowError("Error - tried to a submarine to itself");
+                return;
             }
 
             PlaySound(ActionType.OnUse, item.WorldPosition);
@@ -223,6 +230,32 @@ namespace Barotrauma.Items.Components
 
 
             joint.CollideConnected = true;
+        }
+
+        private void ConnectWireBetweenPorts()
+        {
+            Wire wire = item.GetComponent<Wire>();
+            if (wire == null) return;
+
+            wire.Hidden = true;
+            wire.Locked = true;
+
+            if (Item.Connections == null) return;
+
+            var powerConnection = Item.Connections.Find(c => c.IsPower);
+            if (powerConnection == null) return;
+
+            if (dockingTarget == null || dockingTarget.item.Connections == null) return;
+            var recipient = dockingTarget.item.Connections.Find(c => c.IsPower);
+            if (recipient == null) return;
+
+            wire.RemoveConnection(item);
+            wire.RemoveConnection(dockingTarget.item);
+
+            powerConnection.AddLink(4, wire);
+            wire.Connect(powerConnection, false);
+            recipient.AddLink(4, wire);
+            wire.Connect(recipient, false);
         }
 
         private void CreateHull()
@@ -374,6 +407,12 @@ namespace Barotrauma.Items.Components
             dockingTarget.Undock();
             dockingTarget = null;
 
+            var wire = item.GetComponent<Wire>();
+            if (wire != null)
+            {
+                wire.Drop(null);
+            }
+
             if (joint != null)
             {
                 GameMain.World.RemoveJoint(joint);
@@ -427,17 +466,6 @@ namespace Barotrauma.Items.Components
                 if (!docked)
                 {
                     Dock(dockingTarget);
-
-                    //if (joint.BodyA.Mass < joint.BodyB.Mass)
-                    //{
-                    //    joint.BodyA.SetTransform(joint.BodyA.Position + (joint.WorldAnchorB - joint.WorldAnchorA), 0.0f);
-                    //}
-                    //else
-                    //{
-                    //    joint.BodyB.SetTransform(joint.BodyB.Position + (joint.WorldAnchorA - joint.WorldAnchorB), 0.0f);
-                    //}
-                    
-
                 }
 
                 if (joint is DistanceJoint)
@@ -449,6 +477,9 @@ namespace Barotrauma.Items.Components
                         GameMain.World.RemoveJoint(joint);
                         
                         PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
+
+                            ConnectWireBetweenPorts();
+                        
 
                         CreateJoint(true);
 
