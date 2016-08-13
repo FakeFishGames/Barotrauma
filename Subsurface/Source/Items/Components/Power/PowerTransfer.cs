@@ -175,6 +175,8 @@ namespace Barotrauma.Items.Components
         
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            if (!canBeSelected) return;
+
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 

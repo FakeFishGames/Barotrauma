@@ -96,6 +96,9 @@
       <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
     </DockingPort>
 
+    <PowerTransfer/>
+    <Wire/>
+    
     <fixrequirement name="Mechanical repairs">
       <skill name="Construction" level="60"/>
       <item name="Welding Tool"/>
@@ -105,6 +108,7 @@
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
+      <input name="power"/>
       <output name="state_out"/>
       <output name="proximity_sensor"/>
     </ConnectionPanel>
@@ -123,6 +127,15 @@
       <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
     </DockingPort>
 
+    <fixrequirement name="Electrical repairs">
+      <skill name="Electrical Engineering" level="40"/>
+      <item name="Wire"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
+
+    <PowerTransfer/>
+    <Wire/>
+
     <fixrequirement name="Mechanical repairs">
       <skill name="Construction" level="60"/>
       <item name="Welding Tool"/>
@@ -132,6 +145,7 @@
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
+      <input name="power"/>
       <output name="state_out"/>
       <output name="proximity_sensor"/>
     </ConnectionPanel>

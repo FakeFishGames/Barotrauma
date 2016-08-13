@@ -82,13 +82,23 @@ namespace Barotrauma.Networking
 
                 var door = item.GetComponent<Door>();
                 if (door != null) shuttleDoors.Add(door);
+
+                //lock all wires to prevent the players from messing up the electronics
+                var connectionPanel = item.GetComponent<ConnectionPanel>();
+                if (connectionPanel != null)
+                {
+                    foreach (Connection connection in connectionPanel.Connections)
+                    {
+                        Array.ForEach(connection.Wires, w => { if (w != null) w.Locked = true; });
+                    }
+                }
             }
 
             if (shuttleSteering != null)
             {
                 shuttleSteering.TargetPosition = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
             }
-
+            
             var server = networkMember as GameServer;
             if (server != null)
             {

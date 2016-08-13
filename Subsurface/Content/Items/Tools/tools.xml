@@ -268,7 +268,7 @@
     <LightComponent LightColor="1.0,0.0,0.0,1.0" Flicker="0.5" range="600" IsOn="false">
       <StatusEffect type="OnUse" target="This" IsOn="true"/>
 
-      <StatusEffect type="OnActive" target="This" Condition="-5.0">
+      <StatusEffect type="OnActive" target="This" Condition="-1.0">
         <ParticleEmitter particle="flare"/>
         <ParticleEmitter particle="bubbles"/>
       </StatusEffect>
