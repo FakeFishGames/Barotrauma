@@ -120,7 +120,15 @@ namespace Barotrauma.Networking
 
             if (overridePrevious[(int)type])
             {
-                if (Events.Any(e => e.id == id && e.eventType == type)) return;
+                if (type == NetworkEventType.ComponentUpdate || type == NetworkEventType.ImportantComponentUpdate)
+                {
+                    if (Events.Any(e => e.id == id && e.eventType == type && data == e.data)) return;
+                }
+                else
+                {
+                    if (Events.Any(e => e.id == id && e.eventType == type)) return;
+                }
+
             }
 
             this.id = id;

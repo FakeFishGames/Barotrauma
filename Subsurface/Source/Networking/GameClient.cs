@@ -1119,6 +1119,7 @@ namespace Barotrauma.Networking
             {
                 myCharacter = character;
                 Character.Controlled = character;
+                GameMain.LightManager.LosEnabled = true;
             }
 
             return character;

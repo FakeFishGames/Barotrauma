@@ -176,13 +176,13 @@ namespace Barotrauma.Networking
             {
                 respawnTimer = respawnInterval;
 
-                Respawn();
+                DispatchShuttle();
             }
         }
 
         private void UpdateTransporting(float deltaTime)
         {
-            shuttleTransportTimer -= deltaTime;
+            //shuttleTransportTimer -= deltaTime;
 
             if (shuttleReturnTimer + deltaTime > 15.0f && shuttleReturnTimer <= 15.0f &&
                 networkMember.Character != null &&
@@ -208,6 +208,7 @@ namespace Barotrauma.Networking
             {
                 state = State.Returning;
 
+                CountdownStarted = false;
                 server.SendRespawnManagerMsg();
                 shuttleReturnTimer = maxTransportTime;
                 shuttleTransportTimer = maxTransportTime;
@@ -273,13 +274,14 @@ namespace Barotrauma.Networking
 
                     state = State.Waiting;
                     respawnTimer = respawnInterval;
+                    CountdownStarted = false;
 
                     server.SendRespawnManagerMsg();
                 }
             }
         }
 
-        private void Respawn()
+        private void DispatchShuttle()
         {
             var server = networkMember as GameServer;
             if (server == null) return;
@@ -292,7 +294,7 @@ namespace Barotrauma.Networking
 
             server.SendChatMessage(ChatMessage.Create("", "Transportation shuttle dispatched", ChatMessageType.Server, null), server.ConnectedClients);
 
-            server.SendRespawnManagerMsg();
+            RespawnCharacters();
 
             CoroutineManager.StopCoroutines("forcepos");
             CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
@@ -328,6 +330,14 @@ namespace Barotrauma.Networking
                 if (item.body != null && item.body.Enabled && item.ParentInventory == null)
                 {
                     Item.Remover.QueueItem(item);
+                }
+
+                item.Condition = 100.0f;
+
+                var powerContainer = item.GetComponent<PowerContainer>();
+                if (powerContainer != null)
+                {
+                    powerContainer.Charge = powerContainer.Capacity;
                 }
             }
 
@@ -372,11 +382,77 @@ namespace Barotrauma.Networking
 
         }
 
-        public void WriteNetworkEvent(NetOutgoingMessage msg)
+        public void RespawnCharacters()
         {
             var server = networkMember as GameServer;
+            if (server == null) return;
 
-            msg.Write((byte)PacketTypes.Respawn);
+            List<Item> spawnedItems             = new List<Item>();
+            List<Character> spawnedCharacters   = new List<Character>();
+
+            var clients = GetClientsToRespawn();
+
+            server.AssignJobs(clients);
+            clients.ForEach(c => c.characterInfo.Job = new Job(c.assignedJob));
+
+            List<CharacterInfo> characterInfos = clients.Select(c => c.characterInfo).ToList();
+            if (server.Character != null && server.Character.IsDead) characterInfos.Add(server.CharacterInfo);
+
+            var waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnShuttle);
+
+            ItemPrefab divingSuitPrefab = ItemPrefab.list.Find(ip => ip.Name == "Diving Suit") as ItemPrefab;
+            ItemPrefab oxyPrefab = ItemPrefab.list.Find(ip => ip.Name == "Oxygen Tank") as ItemPrefab;
+
+            var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnShuttle && wp.SpawnType == SpawnType.Cargo);
+
+            for (int i = 0; i < characterInfos.Count; i++)
+            {
+                bool myCharacter = i >= clients.Count;
+
+                var character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, !myCharacter, false);
+
+                if (myCharacter)
+                {
+                    server.Character = character;
+                    Character.Controlled = character;
+                    GameMain.LightManager.LosEnabled = true;
+                }
+                else
+                {
+                    clients[i].Character = character;
+                }
+
+                spawnedCharacters.Add(character);
+
+                if (divingSuitPrefab != null && oxyPrefab != null)
+                {
+                    Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
+
+                    var divingSuit = new Item(divingSuitPrefab, pos, respawnShuttle);
+                    var oxyTank = new Item(oxyPrefab, pos, respawnShuttle);
+
+                    divingSuit.Combine(oxyTank);
+
+                    spawnedItems.Add(divingSuit);
+                    spawnedItems.Add(oxyTank);
+
+                    Item.Spawner.AddToSpawnedList(divingSuit);
+                    Item.Spawner.AddToSpawnedList(oxyTank);
+                }
+
+
+                character.GiveJobItems(waypoints[i]);
+
+                GameMain.GameSession.CrewManager.characters.Add(character);
+            }
+
+
+            server.SendRespawnManagerMsg(spawnedCharacters, spawnedItems);
+        }
+
+        public void WriteNetworkEvent(NetOutgoingMessage msg, List<Character> spawnedCharacters, List<Item> spawnedItems)
+        {
+            var server = networkMember as GameServer;
 
             msg.WriteRangedInteger(0, Enum.GetNames(typeof(State)).Length, (int)state);
 
@@ -384,67 +460,31 @@ namespace Barotrauma.Networking
             {
                 case State.Transporting:
                     msg.Write(maxTransportTime);
-
-                    var clients = GetClientsToRespawn();
-
-                    server.AssignJobs(clients);
-                    clients.ForEach(c => c.characterInfo.Job = new Job(c.assignedJob));
-
-                    List<CharacterInfo> characterInfos = clients.Select(c => c.characterInfo).ToList();
-                    if (server.Character != null && server.Character.IsDead) characterInfos.Add(server.CharacterInfo);
-
-                    var waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnShuttle);
-
-                    ItemPrefab divingSuitPrefab = ItemPrefab.list.Find(ip => ip.Name == "Diving Suit") as ItemPrefab;
-                    ItemPrefab oxyPrefab        = ItemPrefab.list.Find(ip => ip.Name == "Oxygen Tank") as ItemPrefab;
-
-                    var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnShuttle && wp.SpawnType == SpawnType.Cargo);
-
-                    List<Item> spawnedItems = new List<Item>();
-
-                    msg.Write((byte)characterInfos.Count);
-                    for (int i = 0; i < characterInfos.Count; i++)
+                    
+                    if (spawnedCharacters == null)
                     {
-                        bool myCharacter = i >= clients.Count;
-
-                        var character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, !myCharacter, false);
-
-                        if (divingSuitPrefab != null && oxyPrefab != null)
+                        msg.Write((byte)0);
+                    }
+                    else
+                    {
+                        msg.Write((byte)spawnedCharacters.Count);
+                        foreach (Character character in spawnedCharacters)
                         {
-                            Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
+                            if (character == server.Character)
+                            {
+                                msg.Write((byte)0);
+                            }
+                            else
+                            {
+                                var ownerClient = server.ConnectedClients.Find(cl => cl.Character == character);
+                                msg.Write((byte)ownerClient.ID);
+                            }
 
-                            var divingSuit  = new Item(divingSuitPrefab, pos, respawnShuttle);
-                            var oxyTank     = new Item(oxyPrefab, pos, respawnShuttle);
-
-                            divingSuit.Combine(oxyTank);
-
-                            spawnedItems.Add(divingSuit);
-                            spawnedItems.Add(oxyTank);
-
-                            Item.Spawner.AddToSpawnedList(divingSuit);
-                            Item.Spawner.AddToSpawnedList(oxyTank);
+                            server.WriteCharacterData(msg, character.Name, character);
                         }
-
-                        if (myCharacter)
-                        {
-                            msg.Write((byte)0);
-                            server.Character = character;
-                            Character.Controlled = character;
-                        }
-                        else
-                        {
-                            msg.Write((byte)clients[i].ID);
-                            clients[i].Character = character;
-                        }
-
-                        character.GiveJobItems(waypoints[i]);
-
-                        GameMain.GameSession.CrewManager.characters.Add(character);
-
-                        server.WriteCharacterData(msg, character.Name, character);
                     }
 
-                    GameMain.Server.SendItemSpawnMessage(spawnedItems);                
+                    if (spawnedItems != null) GameMain.Server.SendItemSpawnMessage(spawnedItems);                
                     break;
                 case State.Waiting:
                     msg.Write(CountdownStarted);
@@ -460,28 +500,34 @@ namespace Barotrauma.Networking
 
         public void ReadNetworkEvent(NetIncomingMessage inc)
         {
-            state = (State)inc.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
+            var newState = (State)inc.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
 
-            switch (state)
+            switch (newState)
             {
                 case State.Transporting:
                     maxTransportTime = inc.ReadSingle();
 
                     CountdownStarted = false;
-                    ResetShuttle();
 
                     var client = networkMember as GameClient;
-
                     int clientCount = inc.ReadByte();
+
+                    //respawning characters -> reset shuttle
+                    if (clientCount > 0) ResetShuttle();
+                    
                     for (int i = 0; i < clientCount; i++)
                     {
                         byte clientId = inc.ReadByte();
 
-                        client.ReadCharacterData(inc, clientId == client.ID);
+                        var character = client.ReadCharacterData(inc, clientId == client.ID);
                     }
 
-                    CoroutineManager.StopCoroutines("forcepos");
-                    CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
+                    if (state != newState)
+                    {
+                        CoroutineManager.StopCoroutines("forcepos");
+                        CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
+                    }
+
                     break;
                 case State.Waiting:
                     CountdownStarted = inc.ReadBoolean();
@@ -495,6 +541,8 @@ namespace Barotrauma.Networking
                     CountdownStarted = false;
                     break;
             }
+
+            state = newState;
         }
     }
 }
