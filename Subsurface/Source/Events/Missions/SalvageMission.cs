@@ -78,7 +78,7 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (item.CurrentHull == null || item.Removed) return;
+            if (item.CurrentHull == null || !item.CurrentHull.Submarine.AtEndPosition || item.Removed) return;
             item.Remove();
 
             GiveReward();

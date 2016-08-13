@@ -454,9 +454,9 @@ namespace Barotrauma
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    sub.Name,
+                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 80),
                     GUI.Style,
-                    Alignment.Left, Alignment.CenterY | Alignment.Right, subList);
+                    Alignment.Left, Alignment.CenterY | Alignment.Left, subList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = sub;
                 textBlock.ToolTip = sub.FilePath;
