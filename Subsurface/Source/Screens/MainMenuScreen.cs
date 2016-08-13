@@ -112,6 +112,7 @@ namespace Barotrauma
 
                     var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
                     shuttleText.TextColor = textBlock.TextColor * 0.8f;
+                    shuttleText.ToolTip = textBlock.ToolTip;
                 }
             }
             if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);

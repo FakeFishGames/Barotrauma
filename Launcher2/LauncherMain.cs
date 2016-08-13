@@ -168,7 +168,7 @@ namespace Launcher2
 
             displayModeDD.SelectItem(settings.WindowMode);
 
-            displayModeDD.OnSelected = (guiComponent) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };
+            displayModeDD.OnSelected = (guiComponent, userData) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };
 
             //var fullScreenTick = new GUITickBox(new Rectangle(x,y+150,20,20), "Fullscreen", Alignment.TopLeft, guiRoot);
             //fullScreenTick.OnSelected = ToggleFullScreen;

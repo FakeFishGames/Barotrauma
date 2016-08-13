@@ -282,7 +282,8 @@ namespace Barotrauma.Items.Components
             foreach (Submarine sub in Submarine.Loaded)
             {
                 if (item.Submarine == sub || sub.DockedTo.Contains(item.Submarine)) continue;
-
+                if (sub.WorldPosition.Y > Level.Loaded.Size.Y) continue;
+                
                 DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.45f));
             }
 
