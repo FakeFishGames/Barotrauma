@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -210,7 +211,10 @@ namespace Barotrauma.Networking
         private void LoadSettings()
         {
             XDocument doc = null;
-            doc = ToolBox.TryLoadXml(SettingsFile);
+            if (File.Exists(SettingsFile))
+            {
+                doc = ToolBox.TryLoadXml(SettingsFile);
+            }           
 
             if (doc == null || doc.Root == null)
             {
@@ -379,7 +383,7 @@ namespace Barotrauma.Networking
             respawnDurationSlider.ToolTip = minRespawnText.ToolTip;
             respawnDurationSlider.UserData = respawnDurationText;
             respawnDurationSlider.Step = 0.1f;
-            respawnDurationSlider.BarScroll = MinRespawnRatio;
+            respawnDurationSlider.BarScroll = MaxTransportTime <= 0.0f ? 1.0f : (MaxTransportTime - 60.0f) / 600.0f;
             respawnDurationSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock txt = scrollBar.UserData as GUITextBlock;
@@ -397,7 +401,7 @@ namespace Barotrauma.Networking
 
                 return true;
             };
-            respawnDurationSlider.OnMoved(respawnDurationSlider, (MaxTransportTime - 60.0f)/600.0f);
+            respawnDurationSlider.OnMoved(respawnDurationSlider, respawnDurationSlider.BarScroll);
 
             y += 40;
 
