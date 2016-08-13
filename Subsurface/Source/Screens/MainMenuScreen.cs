@@ -108,6 +108,8 @@ namespace Barotrauma
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
+                    textBlock.TextColor = textBlock.TextColor * 0.85f;
+
                     var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
                     shuttleText.TextColor = textBlock.TextColor * 0.8f;
                 }
@@ -129,7 +131,29 @@ namespace Barotrauma
 
 
             button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.Style,  menuTabs[(int)Tab.NewGame]);
-            button.OnClicked = StartGame;
+            button.OnClicked = (GUIButton btn, object userData) =>
+                {
+                    Submarine selectedSub = subList.SelectedData as Submarine;
+                    if (selectedSub != null && selectedSub.HasTag(SubmarineTag.Shuttle))
+                    {
+                        var msgBox = new GUIMessageBox("Shuttle selected",                             
+                            "Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. "+
+                            "Are you sure you want to choose a shuttle as your vessel?", 
+                            new string[] {"Yes", "No"});
+
+                        msgBox.Buttons[0].OnClicked = StartGame;
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
+                    }
+
+                    StartGame(btn, userData);
+
+                    return true;
+                };
+
+                //            Submarine selectedSub = subList.SelectedData as Submarine;
 
             //----------------------------------------------------------------------
 
@@ -485,7 +509,7 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private bool StartGame(GUIButton button, object obj)
+        private bool StartGame(GUIButton button, object userData)
         {
             if (string.IsNullOrEmpty(saveNameBox.Text)) return false;
 
@@ -498,8 +522,12 @@ namespace Barotrauma
             }
 
             Submarine selectedSub = subList.SelectedData as Submarine;
-            if (selectedSub == null) return false;
-
+            if (selectedSub == null)
+            {
+                new GUIMessageBox("Submarine not selected", "Please select a submarine");
+                return false;
+            }
+            
             if (!Directory.Exists(SaveUtil.TempPath))
             {
                 Directory.CreateDirectory(SaveUtil.TempPath);

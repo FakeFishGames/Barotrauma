@@ -133,9 +133,10 @@ namespace Barotrauma
             if (Submarine!=null) drawPos += Submarine.DrawPosition;
             drawPos.Y = -drawPos.Y;
 
-            Color clr = (isSelected) ? Color.Red : Color.White;
+            Color clr = currentHull == null ? Color.Blue : Color.White;
+            if (isSelected) clr = Color.Red;
             if (isHighlighted) clr = Color.DarkRed;
-            
+                        
             int iconX = iconIndices[(int)spawnType]*IconSize % iconTexture.Width;
             int iconY = (int)(Math.Floor(iconIndices[(int)spawnType]*IconSize / (float)iconTexture.Width))*IconSize;
 

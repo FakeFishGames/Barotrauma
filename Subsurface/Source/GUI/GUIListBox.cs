@@ -172,11 +172,11 @@ namespace Barotrauma
             scrollBar.BarScroll = 0.0f;
         }
 
-        public void Select(object selection, bool force = false)
+        public void Select(object userData, bool force = false)
         {
             for (int i = 0; i < children.Count; i++)
             {
-                if (!children[i].UserData.Equals(selection)) continue;
+                if (!children[i].UserData.Equals(userData)) continue;
 
                 Select(i, force);
 

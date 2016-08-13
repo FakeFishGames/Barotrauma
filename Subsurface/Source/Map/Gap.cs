@@ -259,7 +259,6 @@ namespace Barotrauma
                         particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f), 5.0f);
                     }
 
-
                     if (Math.Abs(flowForce.X) > 300.0f)
                     {
                         pos.X += Math.Sign(flowForce.X) * 10.0f;
@@ -387,7 +386,7 @@ namespace Barotrauma
                     else if (dir == 1)
                     {
                         if (!(hull1.Volume > 0.0f)) return;
-                        //lowerSurface = hull2.Surface - hull2.WaveY[1];
+                        lowerSurface = hull2.Surface - hull2.WaveY[hull2.WaveY.Length - 1];
 
                         flowTargetHull = hull2;
 

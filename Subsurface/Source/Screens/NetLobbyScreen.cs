@@ -423,7 +423,11 @@ namespace Barotrauma
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
 
                 if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
-                if (GameMain.Server.SubSelectionMode == SelectionMode.Random) subList.Select(Rand.Range(0,subList.CountChildren));
+                if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
+                {
+                    var nonShuttles = subList.children.FindAll(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
+                    subList.Select(nonShuttles[Rand.Range(0, nonShuttles.Count)].UserData);
+                }
                 if (GameMain.Server.ModeSelectionMode == SelectionMode.Random) modeList.Select(Rand.Range(0, modeList.CountChildren));
             }
             else if (GameMain.Client != null)
