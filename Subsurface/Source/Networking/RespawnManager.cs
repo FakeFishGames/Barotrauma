@@ -402,7 +402,8 @@ namespace Barotrauma.Networking
 
             ItemPrefab divingSuitPrefab = ItemPrefab.list.Find(ip => ip.Name == "Diving Suit") as ItemPrefab;
             ItemPrefab oxyPrefab        = ItemPrefab.list.Find(ip => ip.Name == "Oxygen Tank") as ItemPrefab;
-            ItemPrefab scooterPrefab    = ItemPrefab.list.Find(ip => ip.Name == "Underwater Scooter") as ItemPrefab; 
+            ItemPrefab scooterPrefab    = ItemPrefab.list.Find(ip => ip.Name == "Underwater Scooter") as ItemPrefab;
+            ItemPrefab batteryPrefab    = ItemPrefab.list.Find(ip => ip.Name == "Battery Cell") as ItemPrefab;
 
             var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnShuttle && wp.SpawnType == SpawnType.Cargo);
 
@@ -425,24 +426,32 @@ namespace Barotrauma.Networking
 
                 spawnedCharacters.Add(character);
 
+                    Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
+
                 if (divingSuitPrefab != null && oxyPrefab != null)
                 {
-                    Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
 
                     var divingSuit  = new Item(divingSuitPrefab, pos, respawnShuttle);
                     var oxyTank     = new Item(oxyPrefab, pos, respawnShuttle);
-                    var scooter     = new Item(scooterPrefab, pos, respawnShuttle);
 
                     divingSuit.Combine(oxyTank);
 
                     spawnedItems.Add(divingSuit);
                     spawnedItems.Add(oxyTank);
-                    spawnedItems.Add(scooter);
-
-                    Item.Spawner.AddToSpawnedList(divingSuit);
-                    Item.Spawner.AddToSpawnedList(oxyTank);
-                    Item.Spawner.AddToSpawnedList(scooter);
                 }
+
+                if (scooterPrefab != null && batteryPrefab != null)
+                {
+                    var scooter     = new Item(scooterPrefab, pos, respawnShuttle);
+                    var battery     = new Item(batteryPrefab, pos, respawnShuttle);
+
+                    scooter.Combine(battery);
+
+                    spawnedItems.Add(scooter);
+                    spawnedItems.Add(battery);
+                }
+
+                spawnedItems.ForEach(s => Item.Spawner.AddToSpawnedList(s));                
 
                 character.GiveJobItems(waypoints[i]);
                 GameMain.GameSession.CrewManager.characters.Add(character);
