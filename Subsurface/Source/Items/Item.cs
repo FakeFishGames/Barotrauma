@@ -1178,22 +1178,20 @@ namespace Barotrauma
 
                 float pickDist = Vector2.Distance(item.WorldPosition, displayPickPos);
                 
-                bool outsideTrigger = false;
+                bool insideTrigger = false;
                 foreach (Rectangle trigger in item.prefab.Triggers)
                 {
                     Rectangle transformedTrigger = item.TransformTrigger(trigger, true);
 
-                    if (!Submarine.RectContains(transformedTrigger, displayPos))
-                    {
-                        outsideTrigger = true;
-                        continue;
-                    }
+                    if (!Submarine.RectContains(transformedTrigger, displayPos)) continue;                    
+                        
+                    insideTrigger = true;                    
 
                     Vector2 triggerCenter = new Vector2(transformedTrigger.Center.X, transformedTrigger.Y - transformedTrigger.Height / 2);
                     pickDist = Math.Min(Math.Abs(triggerCenter.X - displayPickPos.X), Math.Abs(triggerCenter.Y - displayPickPos.Y));
                 }
 
-                if (outsideTrigger) continue;
+                if (!insideTrigger && item.prefab.Triggers.Any()) continue;
 
                 if (pickDist > item.PickDistance && item.PickDistance > 0.0f) continue;
 
@@ -1204,7 +1202,7 @@ namespace Barotrauma
                 {
                     if (item.PickDistance > 0.0f && Vector2.Distance(displayPos, item.WorldPosition) > item.prefab.PickDistance) continue;
                     
-                    if (!item.prefab.PickThroughWalls)
+                    if (!item.prefab.PickThroughWalls && Screen.Selected != GameMain.EditMapScreen && !insideTrigger)
                     {
                         Body body = Submarine.CheckVisibility(item.Submarine == null ? position : position - item.Submarine.SimPosition, item.SimPosition, true);
                         if (body != null && body.UserData as Item != item) continue;
@@ -1301,19 +1299,14 @@ namespace Barotrauma
 
             System.Diagnostics.Debug.WriteLine("Item.Pick(" + picker + ", " + forceSelectKey + ")");
 
-            if (selected)
+            if (picker.SelectedConstruction == this)
             {
-                if (picker.SelectedConstruction == this)
-                {
-                    picker.SelectedConstruction = null;
-                }
-                else
-                {
-                    picker.SelectedConstruction = this;
-                }
+                if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
             }
-
-
+            else if (selected)
+            {        
+                picker.SelectedConstruction = this;
+            }
             
             if (!hasRequiredSkills && Character.Controlled==picker && Screen.Selected != GameMain.EditMapScreen)
             {
