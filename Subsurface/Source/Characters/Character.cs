@@ -1479,6 +1479,10 @@ namespace Barotrauma
                     message.Write((ushort)pickData[0]);
                     message.Write((int)pickData[1] == 1);
                     message.Write((int)pickData[2] == 1);
+
+                    var pickedItem = Entity.FindEntityByID((ushort)pickData[0]);
+                    message.Write(pickedItem != null && selectedConstruction == pickedItem);
+
                     message.WritePadBits();
 
                     return true;
@@ -1613,6 +1617,8 @@ namespace Barotrauma
                     bool pickHit = message.ReadBoolean();
                     bool actionHit = message.ReadBoolean();
 
+                    bool isSelected = message.ReadBoolean();
+
                     data = new int[] { (int)itemId, pickHit ? 1 : 0, actionHit ? 1: 0 };
 
                     System.Diagnostics.Debug.WriteLine("item id: "+itemId);
@@ -1629,7 +1635,7 @@ namespace Barotrauma
                             GameServer.Log(Name + " selected " + pickedItem.Name, Color.Orange);
                         }
                         pickedItem.Pick(this, false, pickHit, actionHit);
-
+                        selectedConstruction = isSelected ? pickedItem : null;
                     }
 
                     return;
