@@ -386,6 +386,10 @@ namespace Barotrauma.Networking
 
         public override void Update(float deltaTime)
         {
+#if DEBUG
+            if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.P)) return;
+#endif
+
             base.Update(deltaTime);
 
             if (!connected) return;
@@ -736,22 +740,6 @@ namespace Barotrauma.Networking
 
                     crew.Add(newCharacter);
                 }
-                //int count = inc.ReadByte();
-                //for (int n = 0; n < count; n++)
-                //{
-                //    byte id = inc.ReadByte();
-                //    Character newCharacter = ReadCharacterData(inc, id == myID);
-
-                //    if (id != myID)
-                //    {
-                //        var characterOwner = otherClients.Find(c => c.ID == id);
-                //        if (characterOwner != null) characterOwner.Character = newCharacter;
-                //    }
-
-                //    crew.Add(newCharacter);
-
-                //    yield return CoroutineStatus.Running;
-                //}
             }
             
             gameStarted = true;
@@ -1107,11 +1095,6 @@ namespace Barotrauma.Networking
 
             character.ID = ID;
 
-            //WayPoint spawnPoint = Entity.FindEntityByID(spawnPointID) as WayPoint;
-            //if (spawnPoint != null)
-            //{
-            //    //character.GiveJobItems(spawnPoint);
-            //}
 
             Item.Spawner.ReadNetworkData(inc);
 
@@ -1120,6 +1103,8 @@ namespace Barotrauma.Networking
                 myCharacter = character;
                 Character.Controlled = character;
                 GameMain.LightManager.LosEnabled = true;
+
+                if (endRoundButton != null) endRoundButton.Visible = Voting.AllowEndVoting;
             }
 
             return character;
