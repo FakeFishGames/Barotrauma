@@ -457,6 +457,7 @@ namespace Barotrauma.Networking
                         {
                             //AssignJobs();
 
+                            GameMain.NetLobbyScreen.RemovePlayer(sender.name);
                             GameMain.NetLobbyScreen.AddPlayer(sender.name);
 
                             // Notify the client that they have logged in
@@ -1301,6 +1302,8 @@ namespace Barotrauma.Networking
                 client.Character.Kill(CauseOfDeath.Disconnected, true);
             }
 
+            client.Character = null;
+            client.inGame = false;
 
             if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";

@@ -65,7 +65,7 @@ namespace Barotrauma.Networking
         {
             this.networkMember = networkMember;
 
-            respawnShuttle = shuttle;
+            respawnShuttle = new Submarine(shuttle.FilePath, shuttle.MD5Hash.Hash, true);
             respawnShuttle.Load(false);
 
             ResetShuttle();
