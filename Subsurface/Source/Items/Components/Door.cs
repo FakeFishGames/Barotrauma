@@ -33,6 +33,11 @@ namespace Barotrauma.Items.Components
 
         private float lastReceivedMessage;
 
+        public PhysicsBody Body
+        {
+            get { return body; }
+        }
+
         private float stuck;
         public float Stuck
         {
@@ -145,13 +150,14 @@ namespace Barotrauma.Items.Components
                 (int)doorSprite.size.X,
                 (int)doorSprite.size.Y);
 
-            body = new PhysicsBody(BodyFactory.CreateRectangle(GameMain.World,
+            body = new PhysicsBody(
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),
-                1.5f));
+                0.0f,
+                1.5f);
 
-            body.CollisionCategories = Physics.CollisionWall;
             body.UserData = item;
+            body.CollisionCategories = Physics.CollisionWall;
             body.BodyType = BodyType.Static;
             body.SetTransform(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
