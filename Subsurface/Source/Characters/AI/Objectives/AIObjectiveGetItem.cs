@@ -63,6 +63,12 @@ namespace Barotrauma
                 if (equip)
                 {
                     var pickable = targetItem.GetComponent<Pickable>();
+                    if (pickable == null)
+                    {
+                        canBeCompleted = false;
+                        return;
+                    }
+
                     //check if all the slots required by the item are free
                     foreach (InvSlotType slots in pickable.AllowedSlots)
                     {
@@ -112,8 +118,14 @@ namespace Barotrauma
         /// </summary>
         private void FindTargetItem()
         {
-            float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
+            if (itemName == null)
+            {
+                if (targetItem == null) canBeCompleted = false;
+                return;
+            }
 
+            float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
+            
             for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 2; i++)
             {
                 currSearchIndex++;

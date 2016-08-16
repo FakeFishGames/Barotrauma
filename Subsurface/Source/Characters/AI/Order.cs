@@ -21,6 +21,7 @@ namespace Barotrauma
         public readonly Sprite SymbolSprite;
 
         public readonly Type ItemComponentType;
+        public readonly string ItemName;
 
         public readonly Color Color;
 
@@ -75,6 +76,8 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error in " + ConfigFile + ", item component type " + targetItemName + " not found", e);
                 }
             }
+
+            ItemName = ToolBox.GetAttributeString(orderElement, "targetitemname", "");
 
             Color = new Color(ToolBox.GetAttributeVector4(orderElement, "color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f)));
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -71,8 +72,8 @@ namespace Barotrauma
             for (int n = 0; n<2; n++)
             {                                      
                 List<Order> orders = (n==0) ? 
-                    Order.PrefabList.FindAll(o => o.ItemComponentType == null) : 
-                    Order.PrefabList.FindAll(o=> o.ItemComponentType != null);
+                    Order.PrefabList.FindAll(o => o.ItemComponentType == null && string.IsNullOrEmpty(o.ItemName)) : 
+                    Order.PrefabList.FindAll(o => o.ItemComponentType != null || !string.IsNullOrEmpty(o.ItemName));
 
                 int startX = -(buttonWidth * orders.Count + spacing * (orders.Count - 1)) / 2;
                 
@@ -81,9 +82,12 @@ namespace Barotrauma
                 {
                     int x = startX + (buttonWidth + spacing) * (i % orders.Count);
 
-                    if (order.ItemComponentType!=null)
+                    if (order.ItemComponentType!=null || !string.IsNullOrEmpty(order.ItemName))
                     {
-                        var matchingItems = Item.ItemList.FindAll(it => it.components.Find(ic => ic.GetType() == order.ItemComponentType) != null);
+                        List<Item> matchingItems = !string.IsNullOrEmpty(order.ItemName) ?
+                            Item.ItemList.FindAll(it => it.Name == order.ItemName) :
+                            Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
+
                         int y2 = y;
                         foreach (Item it in matchingItems)
                         {
