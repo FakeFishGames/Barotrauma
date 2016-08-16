@@ -101,7 +101,7 @@ namespace Barotrauma.Items.Components
                 ropeList[i].CollisionCategories = Physics.CollisionItem;
                 ropeList[i].CollidesWith = Physics.CollisionWall;
 
-                ropeBodies[i] = new PhysicsBody(ropeList[i]);
+                //ropeBodies[i] = new PhysicsBody(ropeList[i]);
             }
 
             List<RevoluteJoint> joints = PathManager.AttachBodiesWithRevoluteJoint(GameMain.World, ropeList, 

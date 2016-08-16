@@ -42,8 +42,8 @@ namespace Barotrauma
             private set;
         }
 
-        public readonly Shape bodyShape;
-        public readonly float height, width, radius;
+        private Shape bodyShape;
+        public float height, width, radius;
         
         private float density;
         
@@ -52,6 +52,11 @@ namespace Barotrauma
         float dir;
 
         Vector2 offsetFromTargetPos;
+
+        public Shape BodyShape
+        {
+            get { return bodyShape; }
+        }
 
         public Vector2 TargetPosition
         {
@@ -192,14 +197,12 @@ namespace Barotrauma
         {
         }
 
-        public PhysicsBody(Body body)
-        {         
-            this.body = body;
-
-            density = 10.0f;
-
+        public PhysicsBody(float width, float height, float radius, float density)
+        {
+            CreateBody(width, height, radius, density);
+            
             dir = 1.0f;
-
+            
             LastSentPosition = body.Position;
 
             list.Add(this);
@@ -213,29 +216,7 @@ namespace Barotrauma
 
             density = ToolBox.GetAttributeFloat(element, "density", 10.0f);
 
-            if (width != 0.0f && height != 0.0f)
-            {
-                body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
-                bodyShape = Shape.Rectangle;
-            }
-            else if (radius != 0.0f && height != 0.0f)
-            {
-                body = BodyFactory.CreateCapsule(GameMain.World, height, radius, density);
-                bodyShape = Shape.Capsule;
-            }
-            else if (radius != 0.0f)
-            {
-                body = BodyFactory.CreateCircle(GameMain.World, radius, density);
-                bodyShape = Shape.Circle;
-            }
-            else
-            {
-                DebugConsole.ThrowError("Invalid body dimensions in " + element);
-            }
-
-            this.width = width;
-            this.height = height;
-            this.radius = radius;
+            CreateBody(width, height, radius, density);
 
             dir = 1.0f;
             
@@ -255,6 +236,33 @@ namespace Barotrauma
             LastSentPosition = position;
             
             list.Add(this);
+        }
+
+        private void CreateBody(float width, float height, float radius, float density)
+        {
+            if (width != 0.0f && height != 0.0f)
+            {
+                body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
+                bodyShape = Shape.Rectangle;
+            }
+            else if (radius != 0.0f && height != 0.0f)
+            {
+                body = BodyFactory.CreateCapsule(GameMain.World, height, radius, density);
+                bodyShape = Shape.Capsule;
+            }
+            else if (radius != 0.0f)
+            {
+                body = BodyFactory.CreateCircle(GameMain.World, radius, density);
+                bodyShape = Shape.Circle;
+            }
+            else
+            {
+                DebugConsole.ThrowError("Invalid physics body dimensions (width: " + width + ", height: " + height + ", radius: " + radius + ")");
+            }
+
+            this.width = width;
+            this.height = height;
+            this.radius = radius;
         }
 
         public void ResetDynamics()

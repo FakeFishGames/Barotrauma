@@ -549,7 +549,7 @@ namespace Barotrauma
 
             if (bodyShapeTexture == null)
             {
-                switch (body.bodyShape)
+                switch (body.BodyShape)
                 {
                     case PhysicsBody.Shape.Rectangle:
                         bodyShapeTexture = GUI.CreateRectangle(
