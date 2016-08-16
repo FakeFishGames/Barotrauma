@@ -164,18 +164,18 @@ namespace Barotrauma
         {
             if (Mission != null) Mission.End();
 
-            if (GameMain.Server!=null)
-            {                
+            if (GameMain.Server != null)
+            {
                 CoroutineManager.StartCoroutine(GameMain.Server.EndGame(endMessage));
 
             }
-            else if (GameMain.Client==null)
+            else if (GameMain.Client == null)
             {
                 //Submarine.Unload();
                 GameMain.LobbyScreen.Select();
             }
-            
-            if (shiftSummary!=null)
+
+            if (shiftSummary != null)
             {
                 GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame(endMessage);
                 GUIMessageBox.MessageBoxes.Enqueue(summaryFrame);
