@@ -831,11 +831,13 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime, out object data)
+        public override bool ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
 
-            if (sendingTime < lastNetworkUpdate) return;
+            if (GameMain.Server != null) return false;
+
+            if (sendingTime < lastNetworkUpdate) return false;
 
             float newVolume = this.volume;
             float newOxygen = this.OxygenPercentage;
@@ -851,7 +853,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.Log("Failed to read network message for Hull {" + ID + "}! " + e.Message);
-                return;
+                return false;
             }
 
             Volume = newVolume;
@@ -901,8 +903,6 @@ namespace Barotrauma
                 }
             }
 
-            
-
             var toBeRemoved = fireSources.FindAll(fs => !newFireSources.Contains(fs));
             for (int i = toBeRemoved.Count - 1; i >= 0; i--)
             {
@@ -911,6 +911,8 @@ namespace Barotrauma
             fireSources = newFireSources;
 
             lastNetworkUpdate = sendingTime;
+
+            return true;
         }
     
 

@@ -138,19 +138,22 @@ namespace Barotrauma
             }
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
+        public override bool ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
             Enabled = true;
 
+            //server doesn't accept AICharacter updates from the clients
+            if (GameMain.Server != null) return false;
+
             switch (type)
             {
                 case NetworkEventType.KillCharacter:
+
                     Kill(CauseOfDeath.Damage, true);
-                    return;
+                    break;
                 case NetworkEventType.InventoryUpdate:
-                    base.ReadNetworkData(type, message, sendingTime, out data);
-                    return;
+                    return base.ReadNetworkData(type, message, sendingTime, out data);
                 case NetworkEventType.ImportantEntityUpdate:
 
                     Vector2 limbPos = AnimController.RefLimb.SimPosition;
@@ -168,7 +171,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Failed to read AICharacter update message", e);
 #endif
-                        return;
+                        return false;
                     }
 
                     if (AnimController.RefLimb.body != null)
@@ -199,7 +202,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Failed to read AICharacter update message", e);
 #endif
 
-                        return;
+                        return false;
                     }
 
                     AnimController.StunTimer = newStunTimer;
@@ -208,9 +211,9 @@ namespace Barotrauma
                     Bleeding = newBleeding;
 
                     aiController.ReadNetworkData(message);
-                    return;
+                    break;
                 case NetworkEventType.EntityUpdate:
-                    if (sendingTime <= LastNetworkUpdate) return;
+                    if (sendingTime <= LastNetworkUpdate) return false;
 
                     Vector2 targetMovement  = Vector2.Zero, pos = Vector2.Zero;
                     bool targetDir = false,inSub = false;
@@ -231,7 +234,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Failed to read AICharacter update message", e);
 #endif
-                        return;
+                        return false;
                     }
 
                     AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
@@ -251,8 +254,10 @@ namespace Barotrauma
                     }
                       
                     LastNetworkUpdate = sendingTime;
-                    return;
+                    break;
             }
+
+            return true;
         }
 
 

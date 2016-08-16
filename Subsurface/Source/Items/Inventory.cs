@@ -403,11 +403,13 @@ namespace Barotrauma
             //List<ushort> newItemIDs = new List<ushort>();
             //List<Item> droppedItems = new List<Item>();
             List<Item> prevItems = new List<Item>(Items);
+            
+            Client sender = GameMain.Server == null ? null : GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
                        
             for (int i = 0; i < capacity; i++)
             {
                 ushort itemId = message.ReadUInt16();
-                if (itemId==0)
+                if (itemId == 0)
                 {
                     if (Items[i] != null) Items[i].Drop();
                 }
@@ -416,6 +418,15 @@ namespace Barotrauma
                     var item = Entity.FindEntityByID(itemId) as Item;
                     if (item == null) continue;
 
+                    //if the item is in the inventory of some other character and said character isn't dead/unconscious,
+                    //don't let this character pick it up
+                    if (GameMain.Server != null)
+                    {
+                        if (sender == null || sender.Character == null) return;
+
+                        if (!sender.Character.CanAccessItem(item)) continue;                        
+                    }
+
                     TryPutItem(item, i, true, false);
                 }
             }
@@ -423,7 +434,6 @@ namespace Barotrauma
             lastUpdate = sendingTime;
 
             if (GameMain.Server == null) return;
-            var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
             if (sender != null && sender.Character != null)
             {
                 foreach (Item item in Items)

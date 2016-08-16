@@ -777,6 +777,28 @@ namespace Barotrauma
             }
         }
 
+        public bool CanAccessInventory(Inventory inventory)
+        {
+            if (inventory.Owner is Character && inventory.Owner != this)
+            {
+                var owner = (Character)inventory.Owner;
+
+                return owner.isDead || owner.IsUnconscious || owner.Stun > 0.0f || owner.LockHands;
+            }
+
+            return true;
+        }
+
+        public bool CanAccessItem(Item item)
+        {
+            if (item.ParentInventory != null)
+            {
+                if (!CanAccessInventory(item.ParentInventory)) return false;
+            }
+
+            return true;
+        }
+
         private Item FindClosestItem(Vector2 mouseSimPos, out float distance)
         {
             distance = 0.0f;
@@ -1337,46 +1359,7 @@ namespace Barotrauma
             }
             Kill(CauseOfDeath.Pressure, isNetworkMessage);
         }
-
-        //private IEnumerable<object> DeathAnim(Camera cam)
-        //{
-        //    if (controlled != this) yield return CoroutineStatus.Success;
-
-        //    Character.controlled = null;
-
-        //    float dimDuration = 8.0f;
-        //    float timer = 0.0f;
-
-        //    Color prevAmbientLight = GameMain.LightManager.AmbientLight;
-        //    Color darkLight = new Color(0.2f, 0.2f, 0.2f, 1.0f);
-
-        //    while (timer < dimDuration && Character.controlled == null)
-        //    {
-        //        timer += CoroutineManager.UnscaledDeltaTime;
-
-        //        if (cam != null) cam.OffsetAmount = 0.0f;
-
-        //        cam.TargetPos = WorldPosition;
-
-        //        GameMain.LightManager.AmbientLight = Color.Lerp(prevAmbientLight, darkLight, timer / dimDuration);
-                
-        //        yield return CoroutineStatus.Running;
-        //    }
-            
-        //    float lerpLightBack = 0.0f;
-        //    while (lerpLightBack < 1.0f)
-        //    {
-        //        lerpLightBack = Math.Min(lerpLightBack + CoroutineManager.UnscaledDeltaTime*5.0f, 1.0f);
-
-        //        GameMain.LightManager.AmbientLight = Color.Lerp(darkLight, prevAmbientLight, lerpLightBack);
-        //        yield return CoroutineStatus.Running;
-        //    }
-
-        //    cam.TargetPos = Vector2.Zero;
-
-        //    yield return CoroutineStatus.Success;
-        //}
-
+        
         public void Kill(CauseOfDeath causeOfDeath, bool isNetworkMessage = false)
         {
             if (isDead) return;
@@ -1604,14 +1587,27 @@ namespace Barotrauma
             }
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
+        public override bool ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             Enabled = true;
             data = null;
 
+            if (GameMain.Server != null && type != NetworkEventType.InventoryUpdate)
+            {
+                Client sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+                if (sender == null || sender.Character != this)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Received a character update message from someone else than the client controlling the Character!");
+#endif                    
+                    return false;
+                }                    
+            }
+
             switch (type)
             {
                 case NetworkEventType.PickItem:
+
                     ushort itemId = message.ReadUInt16();
 
                     bool pickHit = message.ReadBoolean();
@@ -1626,6 +1622,8 @@ namespace Barotrauma
                     Item pickedItem = FindEntityByID(itemId) as Item;
                     if (pickedItem != null)
                     {
+                        if (!CanAccessItem(pickedItem)) return false;
+
                         if (pickedItem == selectedConstruction)
                         {
                             GameServer.Log(Name + " deselected " + pickedItem.Name, Color.Orange);
@@ -1638,7 +1636,7 @@ namespace Barotrauma
                         selectedConstruction = isSelected ? pickedItem : null;
                     }
 
-                    return;
+                    break;
                 case NetworkEventType.SelectCharacter:
                     bool performingCPR = message.ReadBoolean();
 
@@ -1648,11 +1646,11 @@ namespace Barotrauma
                     if (characterId==0)
                     {
                         DeselectCharacter(false);
-                        return;
+                        return true;
                     }
                  
                     Character character = FindEntityByID(characterId) as Character;
-                    if (character == null || !character.IsHumanoid) return;
+                    if (character == null || !character.IsHumanoid) return true;
                     
                     SelectCharacter(character, false);
                     if (performingCPR)
@@ -1668,16 +1666,9 @@ namespace Barotrauma
                     {
                         AnimController.Anim = AnimController.Animation.None;
                     }
-                    
-                    return;
-                case NetworkEventType.KillCharacter:
-                    if (GameMain.Server != null)
-                    {
-                        Client sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
-                        if (sender == null || sender.Character != this) 
-                            throw new Exception("Received a KillCharacter message from someone else than the client controlling the Character!");
-                    }
 
+                    break;
+                case NetworkEventType.KillCharacter:
                     CauseOfDeath causeOfDeath = CauseOfDeath.Damage;                    
                     try
                     {
@@ -1699,23 +1690,29 @@ namespace Barotrauma
                     {
                         Kill(causeOfDeath, true);
                     }
-                    return;
+                    break;
                 case NetworkEventType.InventoryUpdate:
-                    if (inventory == null) return;
+                    if (inventory == null) return false;
+                    
                     inventory.ReadNetworkData(NetworkEventType.InventoryUpdate, message, sendingTime);
-                    return;
+                    return true;
                 case NetworkEventType.ApplyStatusEffect:
                     ushort id = message.ReadUInt16();
 
                     data = id;
 
                     var item = FindEntityByID(id) as Item;
-                    if (item == null) return;
+                    if (item == null) return false;
 
                     item.ApplyStatusEffects(ActionType.OnUse, 1.0f, this);
 
                     break;
                 case NetworkEventType.ImportantEntityUpdate:
+
+                    if (GameMain.Server != null)
+                    {
+                        return false;
+                    }
 
                     health = message.ReadRangedSingle(minHealth, 100.0f, 8);
                         
@@ -1725,16 +1722,16 @@ namespace Barotrauma
                         bleeding = 0.0f;
                         Oxygen = 100.0f;
                         AnimController.StunTimer = 0.0f;
-                        return;
+                        return true;
                     }
 
                     float newStunTimer = message.ReadRangedSingle(0.0f, 60.0f, 8);
                     StartStun(newStunTimer, true);
 
                     Oxygen = message.ReadRangedSingle(-100.0f,100.0f, 8);
-                    Bleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);     
+                    Bleeding = message.ReadRangedSingle(0.0f, 5.0f, 8);
 
-                    return;
+                    break;
                 case NetworkEventType.EntityUpdate:
                     Vector2 relativeCursorPos = Vector2.Zero;
 
@@ -1763,10 +1760,10 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Error in Character.ReadNetworkData: " + e.Message);
 #endif
-                        return;
+                        return false;
                     }
 
-                    if (GameMain.Server != null && (isDead || IsUnconscious)) return;
+                    if (GameMain.Server != null && (isDead || IsUnconscious)) return false;
 
                     keys[(int)InputType.Use].Held = actionKeyState;
                     keys[(int)InputType.Use].SetState(false, actionKeyState);
@@ -1774,7 +1771,7 @@ namespace Barotrauma
                     keys[(int)InputType.Aim].Held = secondaryKeyState;
                     keys[(int)InputType.Aim].SetState(false, secondaryKeyState);
 
-                    if (sendingTime <= LastNetworkUpdate) return;
+                    if (sendingTime <= LastNetworkUpdate) return false;
 
                     keys[(int)InputType.Left].Held      = leftKeyState;
                     keys[(int)InputType.Right].Held     = rightKeyState;
@@ -1813,7 +1810,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Failed to read networkevent for "+this.ToString());
 #endif
-                        return;
+                        return false;
                     }
 
                     bool inSub = message.ReadBoolean();
@@ -1863,13 +1860,15 @@ namespace Barotrauma
 
                     LastNetworkUpdate = sendingTime;
 
-                    return;
+                    break;
                 default:
 #if DEBUG
                     DebugConsole.ThrowError("Character " + this + " tried to read a networkevent of the wrong type: " + type);
 #endif
-                    return;
+                    return false;
             }
+
+            return true;
         }
 
         public override void Remove()

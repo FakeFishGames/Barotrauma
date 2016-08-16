@@ -550,14 +550,16 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
+        public override bool ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
+
+            if (GameMain.Server != null) return false;
 
             Vector2 newTargetPosition, newSpeed;
             try
             {
-                if (sendingTime <= lastNetworkUpdate) return;
+                if (sendingTime <= lastNetworkUpdate) return false;
 
                 newTargetPosition = new Vector2(message.ReadFloat(), message.ReadFloat());
                 newSpeed = new Vector2(message.ReadFloat(), message.ReadFloat());
@@ -568,10 +570,10 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError("invalid network message", e);
 #endif
-                return;
+                return false;
             }
 
-            if (!newSpeed.IsValid() || !newTargetPosition.IsValid()) return;
+            if (!newSpeed.IsValid() || !newTargetPosition.IsValid()) return false;
 
             //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
 
@@ -579,6 +581,8 @@ namespace Barotrauma
             subBody.Velocity = newSpeed;
 
             lastNetworkUpdate = sendingTime;
+
+            return true;
         }
             
 

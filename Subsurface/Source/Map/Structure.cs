@@ -793,11 +793,13 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
+        public override bool ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
 
-            if (sendingTime < lastUpdate) return;
+            if (GameMain.Server != null) return false;
+
+            if (sendingTime < lastUpdate) return false;
 
            // int sectionCount = message.ReadByte();
 
@@ -812,6 +814,8 @@ namespace Barotrauma
             }
 
             lastUpdate = sendingTime;
+
+            return true;
         }
     
     }
