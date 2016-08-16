@@ -526,8 +526,7 @@ namespace Barotrauma
                     if (Items[i] != null)
                     {
                         droppedItems.Add(Items[i]);
-                        Items[i].Drop(character, false);
-                        
+                        Items[i].Drop(character, false);                        
                     }
                 }
                 else
@@ -537,6 +536,17 @@ namespace Barotrauma
 
                     //item already in the right slot, no need to do anything
                     if (Items[i] == item) continue;
+
+                    //if the item is in the inventory of some other character and said character isn't dead/unconscious,
+                    //don't let this character pick it up
+                    if (GameMain.Server != null)
+                    {
+                        var owner = item.ParentInventory == null ? null : item.ParentInventory.Owner as Character;
+                        if (owner != null && owner != character)
+                        {
+                            if (!character.CanAccessItem(item)) return;
+                        }
+                    }
 
                     //some other item already in the slot -> drop it
                     if (Items[i] != null) Items[i].Drop(character, false);

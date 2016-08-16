@@ -1217,7 +1217,7 @@ namespace Barotrauma
                         
             return closest;
         }
-
+        
         public bool IsInsideTrigger(Vector2 worldPosition)
         {
             foreach (Rectangle trigger in prefab.Triggers)
@@ -1716,7 +1716,7 @@ namespace Barotrauma
             return true;
         }
 
-        public override void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
+        public override bool ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
 
@@ -1725,6 +1725,15 @@ namespace Barotrauma
             switch (type)
             {
                 case NetworkEventType.DropItem:
+                    if (GameMain.Server != null)
+                    {
+                        Client sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+                        if (sender == null || sender.Character == null || !sender.Character.CanAccessItem(this))
+                        {
+                            return false;
+                        }
+                    }
+
                     Drop(null, false);
                     if (body != null) 
                     {
@@ -1733,22 +1742,23 @@ namespace Barotrauma
                     }
                     break;
                 case NetworkEventType.PhysicsBodyPosition:
+                    //clients don't have authority over item positions
+                    if (GameMain.Server != null) return false;
                     if (body != null) body.ReadNetworkData(message, sendingTime);
 
                     FindHull();
                     break;
                 case NetworkEventType.ItemFixed:
-
                     byte requirementIndex = message.ReadByte();
                     data = requirementIndex;
 
-                    if (requirementIndex >= FixRequirements.Count) return;
+                    if (requirementIndex >= FixRequirements.Count) return false;
 
                     FixRequirements[requirementIndex].Fixed = true;
                     break;
                 case NetworkEventType.InventoryUpdate:
                     var itemContainers = GetComponents<ItemContainer>();
-                    if (itemContainers == null || !itemContainers.Any()) return;
+                    if (itemContainers == null || !itemContainers.Any()) return false;
 
                     int containerCount = message.ReadRangedInteger(1, ItemContainer.MaxInventoryCount);
                     for (int i = 0; i < containerCount;i++ )
@@ -1763,7 +1773,7 @@ namespace Barotrauma
 
                     data = componentIndex;
 
-                    if (componentIndex < 0 || componentIndex > components.Count - 1) return;
+                    if (componentIndex < 0 || componentIndex > components.Count - 1) return false;
 
                     components[componentIndex].NetworkUpdateSent = true;
                     components[componentIndex].ReadNetworkData(type, message, sendingTime);
@@ -1787,12 +1797,12 @@ namespace Barotrauma
                     }
                     catch
                     {
-                        return;
+                        return false;
                     }
 
                     var allProperties = GetProperties<InGameEditable>();
                     ObjectProperty property = allProperties.Find(op => op.Name == propertyName);
-                    if (property == null) return;
+                    if (property == null) return false;
 
                     try
                     {
@@ -1815,11 +1825,13 @@ namespace Barotrauma
 
                     catch
                     {
-                        return;
+                        return false;
                     }
 
                     break;
             }
+
+            return true;
         }
 
         public override void Remove()

@@ -227,7 +227,10 @@ namespace Barotrauma.Networking
 
             try
             {
-                e.ReadNetworkData(eventType, message, sendingTime, out data);
+                if (!e.ReadNetworkData(eventType, message, sendingTime, out data))
+                {
+                    resend = false;
+                }
             }
             catch (Exception exception)
             {

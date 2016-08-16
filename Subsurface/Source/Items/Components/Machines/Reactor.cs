@@ -539,7 +539,10 @@ namespace Barotrauma.Items.Components
         public override bool FillNetworkData(NetworkEventType type, NetBuffer message)
         {
             message.Write(autoTemp);
-            message.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
+            if (GameMain.Server != null)
+            {
+                message.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
+            }
             message.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 8);
 
             message.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
@@ -553,13 +556,16 @@ namespace Barotrauma.Items.Components
             if (sendingTime < lastUpdate) return;
 
             bool newAutoTemp;
-            float newTemperature, newShutDownTemp;
+            float newTemperature = Temperature, newShutDownTemp;
             float newCoolingRate, newFissionRate;
 
             try
             {
                 newAutoTemp = message.ReadBoolean();
-                newTemperature = message.ReadRangedSingle(0.0f, 10000.0f, 16);
+                if (GameMain.Server == null)
+                {
+                    newTemperature = message.ReadRangedSingle(0.0f, 10000.0f, 16);
+                }
                 newShutDownTemp = message.ReadRangedSingle(0.0f, 10000.0f, 8);
                 newShutDownTemp = MathUtils.RoundTowardsClosest(newShutDownTemp, 100.0f);
 
@@ -585,7 +591,6 @@ namespace Barotrauma.Items.Components
             lastUpdate = sendingTime;
 
             if (GameMain.Server == null) return;
-            
             var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
             if (sender != null)
             {
