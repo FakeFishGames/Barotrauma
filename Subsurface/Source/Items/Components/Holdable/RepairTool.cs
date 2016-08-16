@@ -141,6 +141,7 @@ namespace Barotrauma.Items.Components
                 {
                     Repair(rayStart - sub.SimPosition, rayEnd - sub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
                 }
+                Repair(rayStart, rayEnd, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
             else
             {
