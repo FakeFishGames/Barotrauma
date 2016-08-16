@@ -200,6 +200,8 @@ namespace Barotrauma
                 GameMain.NetworkMember = null;
             }
 
+            GameMain.GameSession = null;
+
             GameMain.MainMenuScreen.Select();
             //Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);
 

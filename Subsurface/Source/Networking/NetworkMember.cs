@@ -335,7 +335,7 @@ namespace Barotrauma.Networking
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 chatMsgBox.Visible = Character.Controlled == null || 
-                    (!Character.Controlled.IsUnconscious && Character.Controlled.Stun >= 0.0f);
+                    (!Character.Controlled.IsUnconscious && Character.Controlled.Stun <= 0.0f);
 
                 inGameHUD.Update(deltaTime);
 
