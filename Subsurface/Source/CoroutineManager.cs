@@ -65,41 +65,43 @@ namespace Barotrauma
 
             for (int i = Coroutines.Count-1; i>=0; i--)
             {
+                CoroutineHandle handle = Coroutines[i];
+
                 try
                 {
-                    if (Coroutines[i].Coroutine.Current != null)
+                    if (handle.Coroutine.Current != null)
                     {
-                        WaitForSeconds wfs = Coroutines[i].Coroutine.Current as WaitForSeconds;
+                        WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
                         if (wfs != null)
                         {
                             if (!wfs.CheckFinished(unscaledDeltaTime)) continue;
                         }
                         else
                         {
-                            switch ((CoroutineStatus)Coroutines[i].Coroutine.Current)
+                            switch ((CoroutineStatus)handle.Coroutine.Current)
                             {
                                 case CoroutineStatus.Success:
                                     Coroutines.RemoveAt(i);
                                     continue;
                                 case CoroutineStatus.Failure:
-                                    DebugConsole.ThrowError("Coroutine ''" + Coroutines[i]+ "'' has failed");
-                                    break;
+                                    DebugConsole.ThrowError("Coroutine ''" + handle.Name + "'' has failed");
+                                    continue;
                             }
                         }
                     }
 
-                    Coroutines[i].Coroutine.MoveNext();
+                    handle.Coroutine.MoveNext();
                 }
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Coroutine " + Coroutines[i].Name + " threw an exception: " + e.Message);
+                    DebugConsole.ThrowError("Coroutine " + handle.Name + " threw an exception: " + e.Message);
 
 //#if DEBUG
 //                    throw e;
 //#endif
 
-                    Coroutines.RemoveAt(i);
+                    Coroutines.Remove(handle);
                 }
 
             }
