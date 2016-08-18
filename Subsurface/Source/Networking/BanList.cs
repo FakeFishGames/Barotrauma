@@ -7,6 +7,18 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
+    class BannedPlayer
+    {
+        public string Name;
+        public string IP;
+
+        public BannedPlayer(string name, string ip)
+        {
+            this.Name = name;
+            this.IP = ip;
+        }
+    }
+
     class BanList
     {
         const string SavePath = "Data/bannedplayers.txt";
@@ -31,52 +43,55 @@ namespace Barotrauma.Networking
                 {
                     lines = File.ReadAllLines(SavePath);
                 }
-                catch (Exception e) 
+                catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to open the list of banned players in "+SavePath, e);
+                    DebugConsole.ThrowError("Failed to open the list of banned players in " + SavePath, e);
                     return;
                 }
-                
+
                 foreach (string line in lines)
                 {
                     string[] separatedLine = line.Split(',');
-                    if (separatedLine.Length != 2) continue;
+                    if (separatedLine.Length < 2) continue;
 
-                    bannedPlayers.Add(new BannedPlayer(separatedLine[0],separatedLine[1]));
+                    string name = String.Join(",", separatedLine.Take(separatedLine.Length - 1));
+                    string ip = separatedLine.Last();
+
+                    bannedPlayers.Add(new BannedPlayer(name, ip));
                 }
             }
         }
 
         public void BanPlayer(string name, string ip)
         {
-            if (bannedPlayers.FirstOrDefault(bp => bp.IP == ip)!=null) return;
+            if (bannedPlayers.Any(bp => bp.IP == ip)) return;
 
-            bannedPlayers.Add(new BannedPlayer(name,ip));
+            bannedPlayers.Add(new BannedPlayer(name, ip));
         }
 
         public bool IsBanned(string IP)
         {
-            return bannedPlayers.FirstOrDefault(bp => bp.IP == IP)!=null;
+            return bannedPlayers.Any(bp => bp.IP == IP);
         }
-        
+
         public GUIComponent CreateBanFrame(GUIComponent parent)
         {
             //GUIFrame banFrame = new GUIFrame(new Rectangle(0,0,0,0), null, Alignment.Center, GUI.Style, parent);
 
             //new GUITextBlock(new Rectangle(0, -10, 0, 30), "Banned IPs:", GUI.Style, Alignment.Left, Alignment.Left, banFrame, false, GUI.LargeFont);
-            banFrame = new GUIListBox(new Rectangle(0,0,0,0), GUI.Style, parent);
+            banFrame = new GUIListBox(new Rectangle(0, 0, 0, 0), GUI.Style, parent);
 
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    bannedPlayer.IP+" ("+bannedPlayer.Name+")",
+                    bannedPlayer.IP + " (" + bannedPlayer.Name + ")",
                     GUI.Style,
                     Alignment.Left, Alignment.Left, banFrame);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = banFrame;
 
-                var removeButton = new GUIButton(new Rectangle(0,00,100,20), "Remove", Alignment.Right | Alignment.CenterY, GUI.Style, textBlock);
+                var removeButton = new GUIButton(new Rectangle(0, 00, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, GUI.Style, textBlock);
                 removeButton.UserData = bannedPlayer;
                 removeButton.OnClicked = RemoveBan;
             }
@@ -93,8 +108,9 @@ namespace Barotrauma.Networking
             BannedPlayer banned = obj as BannedPlayer;
             if (banned == null) return false;
 
-            bannedPlayers.Remove(banned);
+            GameServer.Log("Removing ban from " + banned.Name, null);
 
+            bannedPlayers.Remove(banned);
 
             if (banFrame != null)
             {
@@ -114,6 +130,9 @@ namespace Barotrauma.Networking
 
         public void Save()
         {
+
+            GameServer.Log("Saving banlist", null);
+
             List<string> lines = new List<string>();
 
             foreach (BannedPlayer banned in bannedPlayers)
@@ -127,21 +146,8 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Saving the list of banned players to "+SavePath+" failed", e);
+                DebugConsole.ThrowError("Saving the list of banned players to " + SavePath + " failed", e);
             }
-        }
-
-    }    
-    
-    class BannedPlayer
-    {
-        public string Name;
-        public string IP;
-
-        public BannedPlayer(string name, string ip)
-        {
-            this.Name = name;
-            this.IP = ip;
         }
     }
 }

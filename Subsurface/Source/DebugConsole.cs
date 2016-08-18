@@ -189,6 +189,9 @@ namespace Barotrauma
 
                     NewMessage(" ", Color.Cyan);
 
+
+                    NewMessage("kick [name]: kick a player out from the server", Color.Cyan);
+                    NewMessage("ban [name]: kick and ban the player", Color.Cyan);
                     NewMessage("debugdraw: toggles the ''debug draw mode''", Color.Cyan);
                     NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
                     
@@ -278,8 +281,13 @@ namespace Barotrauma
                     HumanAIController.DisableCrewAI = false;
                     break;
                 case "kick":
-                    if (GameMain.Server == null) break;
-                    GameMain.Server.KickPlayer(commands[1]);
+                    if (GameMain.Server == null || commands.Length < 2) break;
+                    GameMain.Server.KickPlayer(string.Join(" ", commands.Skip(1)));
+
+                    break;
+                case "ban":
+                    if (GameMain.Server == null || commands.Length < 2) break;
+                    GameMain.Server.KickPlayer(string.Join(" ", commands.Skip(1)), true);                  
                     break;
                 case "startclient":
                     if (commands.Length == 1) return;
