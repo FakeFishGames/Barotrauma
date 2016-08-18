@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.0.2
+---------------------------------------------------------------------------------------------------------
+
+- more server-side sanity checks to prevent (desynced or hacking) players from doing things their 
+characters shouldn't be able to do
+- fixed collision issues at docking ports (such as shooting up in the air when trying to drop down into
+a docked shuttle while shuttle hatch is closed)
+- fixed crashing when commanding a crew member to use a railgun in the single player mode
+- fixed chatbox staying disabled after being stunned (and reappearing when being stunned again)
+
+---------------------------------------------------------------------------------------------------------
 v0.5.0.1
 ---------------------------------------------------------------------------------------------------------
 
