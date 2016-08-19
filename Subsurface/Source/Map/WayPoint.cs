@@ -631,12 +631,13 @@ namespace Barotrauma
             if (!wayPoint2.linkedTo.Contains(this)) wayPoint2.linkedTo.Add(this);
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null, Submarine sub = null)
         {
             List<WayPoint> wayPoints = new List<WayPoint>();
 
             foreach (WayPoint wp in WayPointList)
             {
+                if (sub != null && wp.Submarine != sub) continue;
                 if (wp.spawnType != spawnType) continue;
                 if (assignedJob != null && wp.assignedJob != assignedJob.Prefab) continue;
 

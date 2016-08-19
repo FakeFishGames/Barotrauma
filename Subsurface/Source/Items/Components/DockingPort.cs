@@ -377,6 +377,7 @@ namespace Barotrauma.Items.Components
             hullIds[0] = hulls[0].ID;
             hullIds[1] = hulls[1].ID;
 
+            gap.DisableHullRechecks = true;
             gapId = gap.ID;
 
             item.linkedTo.Add(gap);
