@@ -19,7 +19,7 @@ namespace Barotrauma
 
         public void CreateItems()
         {
-            WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo);
+            WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
 
             if (wp==null)
             {

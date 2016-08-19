@@ -54,7 +54,7 @@ namespace Barotrauma
                 return;
             }
 
-            WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo);
+            WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
             if (cargoSpawnPos==null)
             {
                 DebugConsole.ThrowError("Couldn't spawn items for cargo mission, cargo spawnpoint not found");

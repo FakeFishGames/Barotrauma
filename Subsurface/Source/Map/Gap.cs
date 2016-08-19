@@ -30,6 +30,9 @@ namespace Barotrauma
         private float higherSurface;
         private float lowerSurface;
 
+        //if set to true, hull connections of this gap won't be updated when changes are being done to hulls
+        public bool DisableHullRechecks;
+
         public float Open
         {
             get { return open; }
@@ -119,6 +122,7 @@ namespace Barotrauma
         {
             foreach (Gap g in GapList)
             {
+                if (g.DisableHullRechecks) continue;
                 g.FindHulls();
             }
         }
