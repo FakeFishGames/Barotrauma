@@ -191,7 +191,8 @@ namespace Barotrauma
 
 
                     NewMessage("kick [name]: kick a player out from the server", Color.Cyan);
-                    NewMessage("ban [name]: kick and ban the player", Color.Cyan);
+                    NewMessage("ban [name]: kick and ban the player from the server", Color.Cyan);
+                    NewMessage("banip [IP address]: ban the IP address from the server", Color.Cyan);
                     NewMessage("debugdraw: toggles the ''debug draw mode''", Color.Cyan);
                     NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
                     
@@ -288,6 +289,19 @@ namespace Barotrauma
                 case "ban":
                     if (GameMain.Server == null || commands.Length < 2) break;
                     GameMain.Server.KickPlayer(string.Join(" ", commands.Skip(1)), true);                  
+                    break;
+                case "banip":
+                    if (GameMain.Server == null || commands.Length < 2) break;
+
+                    var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == commands[1]);
+                    if (client == null)
+                    {
+                        GameMain.Server.BanList.BanPlayer("Unnamed", commands[1]);
+                    }
+                    else
+                    {
+                        GameMain.Server.KickClient(client, true);   
+                    }                    
                     break;
                 case "startclient":
                     if (commands.Length == 1) return;

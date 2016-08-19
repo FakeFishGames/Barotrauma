@@ -13,9 +13,9 @@ namespace Barotrauma.Networking
     {
         Unknown,
 
-        Login, LoggedIn, LogOut,
+        Login, LoggedIn,
 
-        PlayerJoined, PlayerLeft, KickedOut,
+        PlayerJoined, PlayerLeft,
 
         RequestNetLobbyUpdate,
 
