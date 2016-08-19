@@ -108,21 +108,13 @@ namespace Barotrauma.Networking
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
                 | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
 
-            // Create new client, with previously created configs
             client = new NetClient(config);
             netPeer = client;
             reliableChannel = new ReliableChannel(client);
-                      
-            NetOutgoingMessage outmsg = client.CreateMessage();                        
             client.Start();
 
+            NetOutgoingMessage outmsg = client.CreateMessage();            
             outmsg.Write((byte)PacketTypes.Login);
-            outmsg.Write(myID);
-            outmsg.Write(password);
-            outmsg.Write(GameMain.Version.ToString());
-            outmsg.Write(GameMain.SelectedPackage.Name);
-            outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
-            outmsg.Write(name);
 
 
             System.Net.IPEndPoint IPEndPoint = null;
@@ -141,6 +133,7 @@ namespace Barotrauma.Networking
             try
             {
                 client.Connect(IPEndPoint, outmsg);
+
             }
             catch (Exception e)
             {
@@ -150,17 +143,9 @@ namespace Barotrauma.Networking
                 GameMain.ServerListScreen.Select();
                 return;
             }
-
-
+            
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
-            // Set timer to tick every 50ms
-            //update = new System.Timers.startTimer(50);
-
-            // When time has elapsed ( 50ms in this case ), call "update_Elapsed" funtion
-            //update.Elapsed += new System.Timers.ElapsedEventHandler(Update);
-
-            // Funtion that waits for connection approval info from server
             if (reconnectBox==null)
             {
                 reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[] { "Cancel" });
@@ -169,7 +154,7 @@ namespace Barotrauma.Networking
                 reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
             }
 
-            CoroutineManager.StartCoroutine(WaitForStartingInfo());
+            CoroutineManager.StartCoroutine(WaitForStartingInfo(password));
             
             // Start the timer
             //update.Start();
@@ -203,7 +188,7 @@ namespace Barotrauma.Networking
         }
 
         // Before main looping starts, we loop here and wait for approval message
-        private IEnumerable<object> WaitForStartingInfo()
+        private IEnumerable<object> WaitForStartingInfo(string password)
         {
             connectCanceled = false;
             // When this is set to true, we are approved and ready to go
@@ -303,18 +288,12 @@ namespace Barotrauma.Networking
                                 lobbyUpdateRequest.Write((byte)PacketTypes.RequestNetLobbyUpdate);
                                 client.SendMessage(lobbyUpdateRequest, NetDeliveryMethod.ReliableUnordered);
                             }
-                            else if (packetType == (byte)PacketTypes.KickedOut)
-                            {
-                                string msg = inc.ReadString();
-                                DebugConsole.ThrowError(msg);
-
-                                GameMain.MainMenuScreen.Select();
-                            }
                             break;
                         case NetIncomingMessageType.StatusChanged:
-                            DebugConsole.NewMessage("Connection status changed: " + client.ConnectionStatus.ToString(), Color.Orange);
 
                             NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
+                            DebugConsole.NewMessage("Connection status changed: " + connectionStatus.ToString(), Color.Orange);
+                            
                             if (connectionStatus == NetConnectionStatus.Disconnected)
                             {
                                 string denyMessage = inc.ReadString();
@@ -329,6 +308,25 @@ namespace Barotrauma.Networking
                                 }
 
                                 connectCanceled = true;
+                            }
+                            else if (connectionStatus == NetConnectionStatus.Connected)
+                            {
+                                int nonce = inc.SenderConnection.RemoteHailMessage.ReadInt32();
+
+                                var outmsg = client.CreateMessage();
+
+                                NetEncryption algo = new NetXtea(client, password);
+                                outmsg.Write((byte)PacketTypes.Login);
+                                outmsg.Write(nonce);
+                                outmsg.Write(myID);
+                                outmsg.Write(GameMain.Version.ToString());
+                                outmsg.Write(GameMain.SelectedPackage.Name);
+                                outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
+                                outmsg.Write(name);
+
+                                outmsg.Encrypt(algo);
+
+                                client.SendMessage(outmsg, NetDeliveryMethod.ReliableUnordered);
                             }
 
                             break;
@@ -394,19 +392,6 @@ namespace Barotrauma.Networking
 
             if (!connected) return;
             
-            if (client.ConnectionStatus == NetConnectionStatus.Disconnected)
-            {
-                //GameMain.NetLobbyScreen.RemovePlayer(myID);
-                if (reconnectBox==null)
-                {
-                    reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
-                    connected = false;
-                    ConnectToServer(serverIP);
-                }
-
-                return;
-            }
-
             if (reconnectBox!=null)
             {
                 reconnectBox.Close(null,null);
@@ -488,6 +473,33 @@ namespace Barotrauma.Networking
             
             while ((inc = client.ReadMessage()) != null)
             {
+                if (inc.MessageType == NetIncomingMessageType.StatusChanged)
+                {
+                    NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
+                    DebugConsole.NewMessage("Connection status changed: " + connectionStatus.ToString(), Color.Orange);
+
+                    if (connectionStatus == NetConnectionStatus.Disconnected)
+                    {
+                        string disconnectMessage = inc.ReadString();
+                        if (string.IsNullOrEmpty(disconnectMessage) || disconnectMessage == "Connection timed out")
+                        {
+                            if (reconnectBox == null)
+                            {
+                                reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
+                                connected = false;
+                                ConnectToServer(serverIP);
+                            }
+                        }
+                        else
+                        {
+                            new GUIMessageBox("Disconnected", disconnectMessage);
+
+                            Disconnect();
+                            GameMain.ServerListScreen.Select();
+                        }
+                    }
+                }
+
                 if (inc.MessageType != NetIncomingMessageType.Data) continue;
                 
                 byte packetType = inc.ReadByte();
@@ -589,16 +601,6 @@ namespace Barotrauma.Networking
                         }
 
                         //GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
-
-                        break;
-
-                    case (byte)PacketTypes.KickedOut:
-                        string msg = inc.ReadString();
-
-                        new GUIMessageBox("Disconnected from server", msg);
-                        
-                        Disconnect();
-                        GameMain.MainMenuScreen.Select();
 
                         break;
                     case (byte)PacketTypes.Chatmessage:
@@ -784,16 +786,6 @@ namespace Barotrauma.Networking
                 {
                     secondsLeft -= CoroutineManager.UnscaledDeltaTime;
 
-                    //float camAngle = (float)((DateTime.Now - endTime).TotalSeconds / endPreviewLength) * MathHelper.TwoPi;
-                    //Vector2 offset = (new Vector2(
-                    //    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-                    //    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
-
-                    //GameMain.GameScreen.Cam.TargetPos = Submarine.Loaded.Position + offset * 0.8f;
-                    //Game1.GameScreen.Cam.MoveCamera((float)deltaTime);
-
-                    //messageBox.Text = endMessage + "\nReturning to lobby in " + (int)secondsLeft + " s";
-
                     yield return CoroutineStatus.Running;
                 } while (secondsLeft > 0.0f);
             }
@@ -801,8 +793,6 @@ namespace Barotrauma.Networking
             Submarine.Unload();
 
             GameMain.NetLobbyScreen.Select();
-
-            //if (GameMain.GameSession!=null) GameMain.GameSession.EndShift("");
 
             myCharacter = null;
             foreach (Client c in otherClients)
@@ -948,16 +938,23 @@ namespace Barotrauma.Networking
                 switch (receiver.FileType)
                 {
                     case FileTransferMessageType.Submarine:
-                        var textBlock = GameMain.NetLobbyScreen.SubList.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName);
-                        if (textBlock != null)
-                        {
                             Submarine.SavedSubmarines.RemoveAll(s => s.Name + ".sub" == receiver.FileName);
 
+                        for (int i = 0; i<2; i++)
+                        {
+
+                            var textBlock = (i == 0) ?
+                                GameMain.NetLobbyScreen.ShuttleList.ListBox.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName) :
+                                GameMain.NetLobbyScreen.SubList.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName);
+                            if (textBlock == null) continue;                            
+
                             (textBlock as GUITextBlock).TextColor = Color.White;
+
                             var newSub = new Submarine(receiver.FilePath);
                             Submarine.SavedSubmarines.Add(newSub);
                             textBlock.UserData = newSub;
                         }
+
                         break;
                 }
             }
@@ -1063,7 +1060,7 @@ namespace Barotrauma.Networking
 
             var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
             int count = Math.Min(jobPreferences.Count, 3);
-            msg.Write(count);
+            msg.Write((byte)count);
             for (int i = 0; i < count; i++ )
             {
                 msg.Write(jobPreferences[i].Name);
@@ -1094,8 +1091,7 @@ namespace Barotrauma.Networking
             GameMain.GameSession.CrewManager.characters.Add(character);            
 
             character.ID = ID;
-
-
+            
             Item.Spawner.ReadNetworkData(inc);
 
             if (isMyCharacter)
@@ -1112,8 +1108,6 @@ namespace Barotrauma.Networking
 
         public override void SendChatMessage(string message, ChatMessageType? type = null)
         {
-            //AddChatMessage(message);
-
             if (client.ServerConnection == null) return;
 
             type = ChatMessageType.Default;

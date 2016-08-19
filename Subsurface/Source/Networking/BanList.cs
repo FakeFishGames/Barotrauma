@@ -66,7 +66,10 @@ namespace Barotrauma.Networking
         {
             if (bannedPlayers.Any(bp => bp.IP == ip)) return;
 
+            DebugConsole.Log("Banned " + name);
+
             bannedPlayers.Add(new BannedPlayer(name, ip));
+            Save();
         }
 
         public bool IsBanned(string IP)
@@ -108,9 +111,12 @@ namespace Barotrauma.Networking
             BannedPlayer banned = obj as BannedPlayer;
             if (banned == null) return false;
 
+            DebugConsole.Log("Removing ban from " + banned.Name);
             GameServer.Log("Removing ban from " + banned.Name, null);
 
             bannedPlayers.Remove(banned);
+
+            Save();
 
             if (banFrame != null)
             {
@@ -130,7 +136,6 @@ namespace Barotrauma.Networking
 
         public void Save()
         {
-
             GameServer.Log("Saving banlist", null);
 
             List<string> lines = new List<string>();
