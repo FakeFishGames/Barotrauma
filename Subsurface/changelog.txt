@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.0.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed "submarine not found" errors when starting a round after downloading a shuttle from the server
+- console command for banning
+- a more secure password authentication method
+- fixed players with a space in their name being impossible to kick/ban via the console
+- banlist is saved immediately after banning someone instead of when shutting down the server
+- IP addresses are visible in netstats
+- client names are sanitized
+- bunch of miscellaneous anti-cheat measures
+- fixed docking ports leaking if multiple vessels dock to the main sub
+- cargo is always spawned in the main sub even if there are cargo spawnpoints in the docked vessels
+
+---------------------------------------------------------------------------------------------------------
 v0.5.0.2
 ---------------------------------------------------------------------------------------------------------
 
