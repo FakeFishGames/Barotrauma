@@ -148,6 +148,7 @@
     <Compile Include="Source\Map\TransitionCinematic.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
+    <Compile Include="Source\Networking\Client.cs" />
     <Compile Include="Source\Networking\FileStreamReceiver.cs" />
     <Compile Include="Source\Networking\FileStreamSender.cs" />
     <Compile Include="Source\Networking\GameServerLogin.cs" />
@@ -989,6 +990,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="README.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wrap_oal.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

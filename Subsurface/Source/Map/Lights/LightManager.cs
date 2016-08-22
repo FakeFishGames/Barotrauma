@@ -132,10 +132,17 @@ namespace Barotrauma.Lights
                 light.Draw(spriteBatch);
             }
 
-            if (Character.Controlled != null && Character.Controlled.ClosestItem != null)
+            if (Character.Controlled != null)
             {
-                Character.Controlled.ClosestItem.Draw(spriteBatch, false, true);
-                Character.Controlled.ClosestItem.IsHighlighted = true;
+                if (Character.Controlled.ClosestItem != null)
+                {
+                    Character.Controlled.ClosestItem.Draw(spriteBatch, false, true);
+                    Character.Controlled.ClosestItem.IsHighlighted = true;
+                }
+                else if (Character.Controlled.ClosestCharacter != null)
+                {
+                    Character.Controlled.ClosestCharacter.Draw(spriteBatch);
+                }
             }
             spriteBatch.End();
 

@@ -398,7 +398,11 @@ namespace Barotrauma.Networking
             List<CharacterInfo> characterInfos = clients.Select(c => c.characterInfo).ToList();
             if (server.Character != null && server.Character.IsDead) characterInfos.Add(server.CharacterInfo);
 
-            var waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnShuttle);
+            //the spawnpoints where the characters will spawn
+            var shuttleSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnShuttle);
+            //the spawnpoints where they would spawn if they were spawned inside the main sub
+            //(in order to give them appropriate ID card tags)
+            var mainSubSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
 
             ItemPrefab divingSuitPrefab = ItemPrefab.list.Find(ip => ip.Name == "Diving Suit") as ItemPrefab;
             ItemPrefab oxyPrefab        = ItemPrefab.list.Find(ip => ip.Name == "Oxygen Tank") as ItemPrefab;
@@ -411,7 +415,7 @@ namespace Barotrauma.Networking
             {
                 bool myCharacter = i >= clients.Count;
 
-                var character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, !myCharacter, false);
+                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, !myCharacter, false);
 
                 if (myCharacter)
                 {
@@ -426,11 +430,10 @@ namespace Barotrauma.Networking
 
                 spawnedCharacters.Add(character);
 
-                    Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
+                Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
 
                 if (divingSuitPrefab != null && oxyPrefab != null)
                 {
-
                     var divingSuit  = new Item(divingSuitPrefab, pos, respawnShuttle);
                     var oxyTank     = new Item(oxyPrefab, pos, respawnShuttle);
 
@@ -452,8 +455,8 @@ namespace Barotrauma.Networking
                 }
 
                 spawnedItems.ForEach(s => Item.Spawner.AddToSpawnedList(s));                
-
-                character.GiveJobItems(waypoints[i]);
+                
+                character.GiveJobItems(mainSubSpawnPoints[i]);
                 GameMain.GameSession.CrewManager.characters.Add(character);
             }
 
