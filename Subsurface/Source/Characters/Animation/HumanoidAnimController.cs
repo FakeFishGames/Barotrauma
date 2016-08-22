@@ -931,7 +931,7 @@ namespace Barotrauma
                 LimbType type = i == 0 ? leftHandTarget: rightHandTarget;
                 Limb targetLimb = target.AnimController.GetLimb(type);
                 
-                Limb pullLimb = GetLimb(i == 0 ?LimbType.LeftHand: LimbType.RightHand);
+                Limb pullLimb = GetLimb(i == 0 ? LimbType.LeftHand: LimbType.RightHand);
 
                 if (i==1 && inWater)
                 {
@@ -939,15 +939,16 @@ namespace Barotrauma
                 }
                 else
                 {
+                    Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
+
                     pullLimb.pullJoint.Enabled = true;
-                    pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
+                    pullLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition + diff;
                     pullLimb.pullJoint.MaxForce = 10000.0f;
 
                     targetLimb.pullJoint.Enabled = true;
-                    targetLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition;
+                    targetLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition - diff;
                     targetLimb.pullJoint.MaxForce = 10000.0f;
                 }
-
             }
 
 
