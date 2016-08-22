@@ -12,7 +12,6 @@ namespace Barotrauma
                 
         public readonly XElement Items;
         public readonly List<string> ItemNames;
-        //public List<bool> EquipItem;
 
         public List<SkillPrefab> Skills;
 
@@ -71,7 +70,6 @@ namespace Barotrauma
             AllowAlways = ToolBox.GetAttributeBool(element, "allowalways", false);
 
             ItemNames = new List<string>();
-            //EquipItem = new List<bool>();
 
             Skills = new List<SkillPrefab>();
 
@@ -83,16 +81,9 @@ namespace Barotrauma
                         Items = subElement;
                         foreach (XElement itemElement in subElement.Elements())
                         {
-                            string itemName = ToolBox.GetAttributeString(subElement, "name", "");
-                            ItemNames.Add(itemName);
+                            string itemName = ToolBox.GetAttributeString(itemElement, "name", "");
+                            if (!string.IsNullOrWhiteSpace(itemName)) ItemNames.Add(itemName);
                         }
-                        //string itemName = ToolBox.GetAttributeString(subElement, "name", "");
-                        //bool equipItem = ToolBox.GetAttributeBool(subElement, "equip", false);
-                        //if (!string.IsNullOrEmpty(itemName))
-                        //{
-                        //    ItemNames.Add(itemName);
-                        //    EquipItem.Add(equipItem);
-                        //}
                         break;
                     case "skills":
                         foreach (XElement skillElement in subElement.Elements())
@@ -152,9 +143,6 @@ namespace Barotrauma
 
                 y += 20;
             }
-
-
-
 
             return backFrame;
         }

@@ -715,7 +715,7 @@ namespace Barotrauma
 
             if (selectedCharacter!=null)
             {
-                if (Vector2.Distance(selectedCharacter.SimPosition, SimPosition) > 3.0f || !selectedCharacter.CanBeSelected)
+                if (Vector2.Distance(selectedCharacter.WorldPosition, WorldPosition) > 300.0f || !selectedCharacter.CanBeSelected)
                 {
                     DeselectCharacter(controlled == this);
                 }
