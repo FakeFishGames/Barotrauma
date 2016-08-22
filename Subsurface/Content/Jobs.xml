@@ -79,7 +79,7 @@
       <Skill name="Weapons" level="10,20"/>
       <Skill name="Construction" level="10,20"/>
       <Skill name="Electrical Engineering" level="10,20"/>
-      <Skill name="Medical" level="55,70"/>
+      <Skill name="Medical" level="60,70"/>
     </Skills>
     <Items>
       <Item name="ID Card"/>

@@ -82,7 +82,7 @@ namespace Barotrauma
                     default:
                         SlotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 6)%5),
-                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>10) ? 1 : 2));
+                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>10) ? 2 : 1));
                         break;
                 }
             }
