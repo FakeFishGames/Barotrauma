@@ -252,15 +252,17 @@ namespace Barotrauma
 
                     if (commands[1].ToLowerInvariant()=="human")
                     {
-                        spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
-                        Character.Controlled = spawnedCharacter;
+                        spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);                        
 
                         if (GameMain.GameSession != null)
                         {
                             SinglePlayerMode mode = GameMain.GameSession.gameMode as SinglePlayerMode;
-                            if (mode == null) break;
-                            GameMain.GameSession.CrewManager.AddCharacter(Character.Controlled);
-                            GameMain.GameSession.CrewManager.SelectCharacter(null, Character.Controlled);
+                            if (mode != null)
+                            {
+                                Character.Controlled = spawnedCharacter;
+                                GameMain.GameSession.CrewManager.AddCharacter(Character.Controlled);
+                                GameMain.GameSession.CrewManager.SelectCharacter(null, Character.Controlled);
+                            }
                         }
                     }
                     else

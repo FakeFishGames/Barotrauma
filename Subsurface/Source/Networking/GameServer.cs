@@ -1587,10 +1587,17 @@ namespace Barotrauma.Networking
 
             message.Write(character.ConfigPath);
 
-            message.Write(character.ID);
+            if (character.ConfigPath == Character.HumanConfigFile)
+            {
+                WriteCharacterData(message, character.Name, character);
+            }
+            else
+            {
+                message.Write(character.ID);
 
-            message.Write(character.Position.X);
-            message.Write(character.Position.Y);
+                message.Write(character.Position.X);
+                message.Write(character.Position.Y);
+            }
             
             SendMessage(message, NetDeliveryMethod.ReliableUnordered, recipients);
         }
