@@ -432,8 +432,7 @@ namespace Barotrauma
 
                 return enemyCharacter;
             }
-
-            if (hasAi && !isNetworkPlayer)
+            else if (hasAi)
             {
                 var aiCharacter = new AICharacter(file, position, characterInfo, isNetworkPlayer);
                 var ai = new HumanAIController(aiCharacter);
@@ -442,7 +441,6 @@ namespace Barotrauma
                 aiCharacter.minHealth = -100.0f;
 
                 return aiCharacter;
-
             }
 
             var character = new Character(file, position, characterInfo, isNetworkPlayer);
@@ -1200,7 +1198,7 @@ namespace Barotrauma
 
             if (this == controlled) return;
 
-            if (IsNetworkPlayer && info!=null)
+            if (info != null)
             {
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 120.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
                 spriteBatch.DrawString(GUI.Font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);

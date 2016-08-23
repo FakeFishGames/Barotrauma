@@ -890,12 +890,19 @@ namespace Barotrauma.Networking
         {
             string configPath = message.ReadString();
 
-            ushort id = message.ReadUInt16();
+            if (configPath != Character.HumanConfigFile)
+            {
+                ushort id = message.ReadUInt16();
 
-            Vector2 position = new Vector2(message.ReadFloat(), message.ReadFloat());
+                Vector2 position = new Vector2(message.ReadFloat(), message.ReadFloat());
             
-            var character = Character.Create(configPath, position, null, true);
-            if (character != null) character.ID = id;
+                var character = Character.Create(configPath, position, null, true);
+                if (character != null) character.ID = id;
+            }
+            else
+            {
+                ReadCharacterData(message, false, true);
+            }
         }
 
         public void RequestFile(string file, FileTransferMessageType fileType)
@@ -1069,7 +1076,7 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter)
+        public Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter, bool hasAi = false)
         {
             string newName      = inc.ReadString();
             ushort ID           = inc.ReadUInt16();
@@ -1082,12 +1089,10 @@ namespace Barotrauma.Networking
             string jobName = inc.ReadString();
             JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
 
-            //ushort spawnPointID = inc.ReadUInt16();
-
             CharacterInfo ch = new CharacterInfo(Character.HumanConfigFile, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
             ch.HeadSpriteId = headSpriteID;
 
-            Character character = Character.Create(ch, position, !isMyCharacter, false);
+            Character character = Character.Create(ch, position, !isMyCharacter, hasAi);
             GameMain.GameSession.CrewManager.characters.Add(character);            
 
             character.ID = ID;
