@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
             //----------------------------------------
 
             var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
-            endRoundButton.OnClicked = EndButtonHit;
+            endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
 
             log = new ServerLog(name);
             showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, GUI.Style, inGameHUD);
@@ -108,9 +108,9 @@ namespace Barotrauma.Networking
             banList = new BanList();
 
             LoadSettings();
+            LoadClientPermissions();
             
             //----------------------------------------
-
             
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
@@ -312,8 +312,8 @@ namespace Barotrauma.Networking
                     {
                         Log("Ending round (submarine reached the end of the level)", Color.Cyan);
                     }
-                    
-                    EndButtonHit(null, null);                    
+
+                    EndGame();               
                     UpdateNetLobby(null,null);
                     return;
                 }
@@ -496,17 +496,45 @@ namespace Barotrauma.Networking
 
                             break;
                         case (byte)PacketTypes.Chatmessage:
-                            //SendChatMessage(ChatMessage.ReadNetworkMessage(inc));
-                            //!!!!!!!!!!!
-
                             ReadChatMessage(inc);
-
                             break;
                         case (byte)PacketTypes.PlayerLeft:
                             DisconnectClient(inc.SenderConnection);
                             break;
                         case (byte)PacketTypes.StartGame:
                             sender.ReadyToStart = true;
+                            break;
+                        case (byte)PacketTypes.EndGame:
+                            if (!sender.HasPermission(ClientPermissions.EndRound))
+                            {
+                                Log(sender.name+" attempted to end the round (insufficient permissions)", Color.Red);
+                            }
+                            else
+                            {
+                                Log("Round ended by " + sender.name, Color.Red);
+                                EndGame();
+                            }
+                            break;
+                        case (byte)PacketTypes.KickPlayer:                            
+                            bool ban = inc.ReadBoolean();
+                            string kickedName = inc.ReadString();
+
+                            var kickedClient = connectedClients.Find(c => c.name.ToLowerInvariant() == kickedName.ToLowerInvariant());
+                            if (kickedClient == null || kickedClient == sender) return;
+
+                            if (ban && !sender.HasPermission(ClientPermissions.Ban))
+                            {
+                                Log(sender.name + " attempted to ban " + kickedClient.name + " (insufficient permissions)", Color.Red);
+
+                            }
+                            else if (!sender.HasPermission(ClientPermissions.Kick))
+                            {
+                                Log(sender.name + " attempted to kick " + kickedClient.name + " (insufficient permissions)", Color.Red);
+                            }
+                            else
+                            {
+                                KickClient(kickedClient, ban);
+                            }
                             break;
                         case (byte)PacketTypes.CharacterInfo:
                             ReadCharacterData(inc);
@@ -565,7 +593,7 @@ namespace Barotrauma.Networking
                                 ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
                             {
                                 Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", Color.Cyan);
-                                EndButtonHit(null, null);
+                                EndGame();
                             }
                             break;
                         case (byte)PacketTypes.RequestNetLobbyUpdate:
@@ -578,7 +606,6 @@ namespace Barotrauma.Networking
                                 var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
                                 server.SendMessage(startMessage, inc.SenderConnection, NetDeliveryMethod.ReliableOrdered);
 
-                                sender.Spectating = true;
                                 CoroutineManager.StartCoroutine(SyncSpectator(sender));
                             }
                             break;
@@ -619,7 +646,7 @@ namespace Barotrauma.Networking
 
             if (recipients == null)
             {
-                recipients = connectedClients.FindAll(c => c.Character != null || c.Spectating);
+                recipients = connectedClients.FindAll(c => c.inGame);
             }
 
             if (recipients.Count == 0) return;
@@ -1002,9 +1029,9 @@ namespace Barotrauma.Networking
             return msg;
         }
 
-        private bool EndButtonHit(GUIButton button, object obj)
+        public void EndGame()
         {
-            if (!gameStarted) return false;
+            if (!gameStarted) return;
 
             string endMessage = "The round has ended." + '\n';
 
@@ -1018,12 +1045,7 @@ namespace Barotrauma.Networking
             if (autoRestart) AutoRestartTimer = AutoRestartInterval;
 
             if (SaveServerLogs) log.Save();
-
-            return true;
-        }
-
-        public IEnumerable<object> EndGame(string endMessage)
-        {
+            
             Character.Controlled = null;
             myCharacter = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
@@ -1037,7 +1059,6 @@ namespace Barotrauma.Networking
 #endif
 
             respawnManager = null;
-
             gameStarted = false;
 
             if (connectedClients.Count > 0)
@@ -1053,12 +1074,16 @@ namespace Barotrauma.Networking
 
                 foreach (Client client in connectedClients)
                 {
-                    client.Spectating = false;
                     client.Character = null;
                     client.inGame = false;
                 }
             }
 
+            CoroutineManager.StartCoroutine(EndCinematic());
+        }
+
+        public IEnumerable<object> EndCinematic()
+        {            
             float endPreviewLength = 10.0f;
 
             var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
@@ -1077,7 +1102,6 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.Select();
 
             yield return CoroutineStatus.Success;
-
         }
 
         public void SendRespawnManagerMsg(List<Character> spawnedCharacters = null, List<Item> spawnedItems = null, List<NetConnection> recipients = null)
@@ -1163,7 +1187,7 @@ namespace Barotrauma.Networking
             //if (GameMain.GameSession!=null) GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
         }
 
-        public void KickPlayer(string playerName, bool ban = false)
+        public override void KickPlayer(string playerName, bool ban)
         {
             playerName = playerName.ToLowerInvariant();
 
@@ -1384,6 +1408,27 @@ namespace Barotrauma.Networking
             server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);            
 
             return true;
+        }
+
+        public void UpdateClientPermissions(Client client)
+        {
+            var msg = server.CreateMessage();
+            msg.Write((byte)PacketTypes.Permissions);
+            msg.Write((int)client.Permissions);
+
+            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
+
+            clientPermissions.RemoveAll(cp => cp.IP == client.Connection.RemoteEndPoint.Address.ToString());
+
+            if (client.Permissions != ClientPermissions.None)
+            {
+                clientPermissions.Add(new SavedClientPermission(
+                    client.name, 
+                    client.Connection.RemoteEndPoint.Address.ToString(), 
+                    client.Permissions));
+            }
+
+            SaveClientPermissions();
         }
 
         public override bool SelectCrewCharacter(GUIComponent component, object obj)
@@ -1792,133 +1837,6 @@ namespace Barotrauma.Networking
             }
 
             server.Shutdown("The server has been shut down");
-        }
-    }
-
-    class Client
-    {
-        public string name;
-        public byte ID;
-
-        public Character Character;
-        public CharacterInfo characterInfo;
-        public NetConnection Connection { get; set; }
-        public string version;
-        public bool inGame;
-
-        private List<Client> kickVoters;
-
-        public bool ReadyToStart;
-
-        private object[] votes;
-
-        public List<JobPrefab> jobPreferences;
-        public JobPrefab assignedJob;
-
-        public FileStreamSender FileStreamSender;
-
-        public bool Spectating;
-
-        public ReliableChannel ReliableChannel;
-
-        public float deleteDisconnectedTimer;
-
-        public int KickVoteCount
-        {
-            get { return kickVoters.Count; }
-        }
-
-
-        public Client(NetPeer server, string name, byte ID)
-            : this(name, ID)
-        {
-            ReliableChannel = new ReliableChannel(server);
-        }
-
-        public Client(string name, byte ID)
-        {
-            this.name = name;
-            this.ID = ID;
-
-            kickVoters = new List<Client>();
-
-            votes = new object[Enum.GetNames(typeof(VoteType)).Length];
-            
-            jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0,3));
-        }
-
-        public static bool IsValidName(string name)
-        {
-            if (name.Contains("\n") || name.Contains("\r\n")) return false;
-
-            return (name.All(c =>
-                c != ';' &&
-                c != ',' &&
-                c != '<' &&
-                c != '/'));
-        }
-        
-        public static string SanitizeName(string name)
-        {            
-            if (name.Length > 20)
-            {
-                name = name.Substring(0, 20);
-            }
-
-            return name;
-        }
-
-        public T GetVote<T>(VoteType voteType)
-        {
-            return (votes[(int)voteType] is T) ? (T)votes[(int)voteType] : default(T);
-        }
-
-        public void SetVote(VoteType voteType, object value)
-        {
-            votes[(int)voteType] = value;
-        }
-
-        public void ResetVotes()
-        {
-            for (int i = 0; i<votes.Length; i++)
-            {
-                votes[i] = null;
-            }
-        }
-
-        public void AddKickVote(Client voter)
-        {
-            if (!kickVoters.Contains(voter)) kickVoters.Add(voter);
-        }
-
-
-        public void RemoveKickVote(Client voter)
-        {
-            kickVoters.Remove(voter);
-        }
-        
-        public bool HasKickVoteFromID(int id)
-        {
-            return kickVoters.Any(k => k.ID == id);
-        }
-
-
-        public static void UpdateKickVotes(List<Client> connectedClients)
-        {
-            foreach (Client client in connectedClients)
-            {
-                client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
-            }
-        }
-
-        public void CancelTransfer()
-        {
-            if (FileStreamSender == null) return;
-
-            FileStreamSender.CancelTransfer();
-            FileStreamSender.Dispose();
-
-            FileStreamSender = null;
         }
     }
 }

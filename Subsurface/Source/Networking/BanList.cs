@@ -79,9 +79,6 @@ namespace Barotrauma.Networking
 
         public GUIComponent CreateBanFrame(GUIComponent parent)
         {
-            //GUIFrame banFrame = new GUIFrame(new Rectangle(0,0,0,0), null, Alignment.Center, GUI.Style, parent);
-
-            //new GUITextBlock(new Rectangle(0, -10, 0, 30), "Banned IPs:", GUI.Style, Alignment.Left, Alignment.Left, banFrame, false, GUI.LargeFont);
             banFrame = new GUIListBox(new Rectangle(0, 0, 0, 0), GUI.Style, parent);
 
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
@@ -91,17 +88,13 @@ namespace Barotrauma.Networking
                     bannedPlayer.IP + " (" + bannedPlayer.Name + ")",
                     GUI.Style,
                     Alignment.Left, Alignment.Left, banFrame);
-                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
+                textBlock.Padding = new Vector4(10.0f, 10.0f, 0.0f, 0.0f);
                 textBlock.UserData = banFrame;
 
-                var removeButton = new GUIButton(new Rectangle(0, 00, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, GUI.Style, textBlock);
+                var removeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, GUI.Style, textBlock);
                 removeButton.UserData = bannedPlayer;
                 removeButton.OnClicked = RemoveBan;
             }
-
-            //var closeButton = new GUIButton(new Rectangle(0,30,100,20), "Close", Alignment.BottomRight, GUI.Style, banFrame);
-            //closeButton.OnClicked = CloseFrame;
-
 
             return banFrame;
         }

@@ -136,18 +136,37 @@ namespace Barotrauma
             frame.Draw(spriteBatch);
         }
 
+        private static bool IsCommandPermitted(string command, GameClient client)
+        {
+            switch (command)
+            {
+                case "kick":
+                    return client.HasPermission(ClientPermissions.Kick);
+                case "ban":
+                case "banip":
+                    return client.HasPermission(ClientPermissions.Ban);
+                case "netstats":
+                case "help":
+                case "dumpids":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public static void ExecuteCommand(string command, GameMain game)
         {
+            if (string.IsNullOrWhiteSpace(command)) return;
+            string[] commands = command.Split(' ');
+
+
 #if !DEBUG
-            if (GameMain.Client != null)
+            if (GameMain.Client != null && !IsCommandPermitted(commands[0].ToLowerInvariant(), GameMain.Client))
             {
-                ThrowError("Console commands are disabled in multiplayer mode");
+                ThrowError("You're not permitted to use the command ''" + commands[0].ToLowerInvariant()+"''!");
                 return;
             }
 #endif
-
-            if (command == "") return;
-            string[] commands = command.Split(' ');
 
             switch (commands[0].ToLowerInvariant())
             {
@@ -188,7 +207,6 @@ namespace Barotrauma
                     NewMessage("power [amount]: immediately sets the temperature of the reactor to the specified value", Color.Cyan);
 
                     NewMessage(" ", Color.Cyan);
-
 
                     NewMessage("kick [name]: kick a player out from the server", Color.Cyan);
                     NewMessage("ban [name]: kick and ban the player from the server", Color.Cyan);
@@ -284,13 +302,14 @@ namespace Barotrauma
                     HumanAIController.DisableCrewAI = false;
                     break;
                 case "kick":
-                    if (GameMain.Server == null || commands.Length < 2) break;
-                    GameMain.Server.KickPlayer(string.Join(" ", commands.Skip(1)));
+                    if (GameMain.NetworkMember == null || commands.Length < 2) break;
+                    GameMain.NetworkMember.KickPlayer(string.Join(" ", commands.Skip(1)), false);
 
                     break;
                 case "ban":
-                    if (GameMain.Server == null || commands.Length < 2) break;
-                    GameMain.Server.KickPlayer(string.Join(" ", commands.Skip(1)), true);                  
+                    if (GameMain.NetworkMember == null || commands.Length < 2) break;
+                    GameMain.NetworkMember.KickPlayer(string.Join(" ", commands.Skip(1)), true);
+               
                     break;
                 case "banip":
                     if (GameMain.Server == null || commands.Length < 2) break;
@@ -601,6 +620,7 @@ namespace Barotrauma
                         DebugConsole.NewMessage("Deleted filelist", Color.Green);
                     }
 
+
                     if (System.IO.File.Exists("Submarines/TutorialSub.sub"))
                     {
                         System.IO.File.Delete("Submarines/TutorialSub.sub");
@@ -612,6 +632,13 @@ namespace Barotrauma
                     {
                         System.IO.File.Delete(GameServer.SettingsFile);
                         DebugConsole.NewMessage("Deleted server settings", Color.Green);
+                    }
+
+                    if (System.IO.File.Exists(GameServer.ClientPermissionsFile))
+                    {
+                        System.IO.File.Delete(GameServer.ClientPermissionsFile);
+                        DebugConsole.NewMessage("Deleted client permission file", Color.Green);
+
                     }
 
                     if (System.IO.File.Exists("crashreport.txt"))

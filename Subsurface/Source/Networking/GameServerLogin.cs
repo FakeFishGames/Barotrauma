@@ -177,6 +177,12 @@ namespace Barotrauma.Networking
             newClient.Connection = inc.SenderConnection;
             newClient.version = version;
 
+            var savedPermissions = clientPermissions.Find(cp => cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
+            if (savedPermissions != null)
+            {
+                newClient.SetPermissions(savedPermissions.Permissions);
+            }
+
             connectedClients.Add(newClient);
 
             UpdateCrewFrame();
@@ -214,6 +220,7 @@ namespace Barotrauma.Networking
 
                 outmsg.Write((byte)PacketTypes.LoggedIn);
                 outmsg.Write(sender.ID);
+                outmsg.Write((int)sender.Permissions);
                 outmsg.Write(gameStarted);
                 outmsg.Write(gameStarted && sender.Character != null && !sender.Character.IsDead);
                 outmsg.Write(AllowSpectating);
