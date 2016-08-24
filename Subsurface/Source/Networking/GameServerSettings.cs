@@ -21,7 +21,24 @@ namespace Barotrauma.Networking
 
     partial class GameServer : NetworkMember, IPropertyObject
     {
+        private class SavedClientPermission
+        {
+            public readonly string IP;
+            public readonly string Name;
+
+            public ClientPermissions Permissions;
+
+            public SavedClientPermission(string name, string ip, ClientPermissions permissions)
+            {
+                this.Name = name;
+                this.IP = ip;
+
+                this.Permissions = permissions;
+            }
+        }
+
         public const string SettingsFile = "serversettings.xml";
+        public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.txt";
 
         public Dictionary<string, ObjectProperty> ObjectProperties
         {
@@ -49,6 +66,8 @@ namespace Barotrauma.Networking
         public float AutoRestartTimer;
         
         private bool autoRestart;
+
+        private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
 
         [HasDefaultValue(true, true)]
         public bool RandomizeSeed
@@ -504,6 +523,60 @@ namespace Barotrauma.Networking
 
 
             banList.CreateBanFrame(settingsTabs[2]);
+            
+        }
+
+        public void LoadClientPermissions()
+        {
+            if (!File.Exists(ClientPermissionsFile)) return;
+            
+            string[] lines;
+            try
+            {
+                lines = File.ReadAllLines(ClientPermissionsFile);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to open client permission file " + ClientPermissionsFile, e);
+                return;
+            }
+
+            clientPermissions.Clear();
+            foreach (string line in lines)
+            {
+                string[] separatedLine = line.Split('|');
+                if (separatedLine.Length < 3) continue;
+
+                string name = String.Join("|", separatedLine.Take(separatedLine.Length - 2));
+                string ip = separatedLine[separatedLine.Length - 2];
+
+                ClientPermissions permissions = ClientPermissions.None;
+                if (Enum.TryParse<ClientPermissions>(separatedLine.Last(), out permissions))
+                {
+                    clientPermissions.Add(new SavedClientPermission(name, ip, permissions));
+                }
+            }            
+        }
+        
+        public void SaveClientPermissions()
+        {
+            GameServer.Log("Saving client permissions", null);
+
+            List<string> lines = new List<string>();
+
+            foreach (SavedClientPermission clientPermission in clientPermissions)
+            {
+                lines.Add(clientPermission.Name + "|" + clientPermission.IP+"|"+clientPermission.Permissions.ToString());
+            }
+
+            try
+            {
+                File.WriteAllLines(ClientPermissionsFile, lines);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving client permissions to " + ClientPermissionsFile + " failed", e);
+            }
         }
 
         private bool SwitchSubSelection(GUITickBox tickBox)

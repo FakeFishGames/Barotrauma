@@ -17,6 +17,10 @@ namespace Barotrauma.Networking
 
         PlayerJoined, PlayerLeft,
 
+        KickPlayer,
+
+        Permissions,
+
         RequestNetLobbyUpdate,
 
         StartGame, EndGame, CanStartGame,
@@ -329,6 +333,8 @@ namespace Barotrauma.Networking
         }
 
         public virtual void SendChatMessage(string message, ChatMessageType? type = null) { }
+
+        public virtual void KickPlayer(string kickedName, bool ban) { }
 
         public virtual void Update(float deltaTime) 
         {

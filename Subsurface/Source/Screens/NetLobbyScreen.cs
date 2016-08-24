@@ -9,6 +9,8 @@ using FarseerPhysics.Dynamics;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
+using System.ComponentModel;
 
 namespace Barotrauma
 {
@@ -346,7 +348,7 @@ namespace Barotrauma
 
             subList.Enabled         = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting;
             shuttleList.Enabled     = subList.Enabled;
-            playerList.Enabled      = GameMain.Server != null;
+            //playerList.Enabled      = GameMain.Server != null;
             modeList.Enabled        = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowModeVoting;                  
             seedBox.Enabled         = GameMain.Server != null;                       
             serverMessage.Enabled   = GameMain.Server != null;
@@ -758,24 +760,91 @@ namespace Barotrauma
 
         private bool SelectPlayer(GUIComponent component, object obj)
         {
+            if (GameMain.Client != null)
+            {
+                if (!GameMain.Client.HasPermission(ClientPermissions.Ban) &&
+                    !GameMain.Client.HasPermission(ClientPermissions.Kick))
+                {
+                    return false;
+                }
+            }
+
             playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.3f);
 
-            var playerFrameInner = new GUIFrame(new Rectangle(0,0,300,150), null, Alignment.Center, GUI.Style, playerFrame);
+            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 150), null, Alignment.Center, GUI.Style, playerFrame);
             playerFrameInner.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0,0,200,20), component.UserData.ToString(), 
                 GUI.Style, Alignment.TopLeft, Alignment.TopLeft,
                 playerFrameInner, false, GUI.LargeFont);
 
-            var kickButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, playerFrameInner);
-            kickButton.UserData = obj;
-            kickButton.OnClicked += KickPlayer;
-            kickButton.OnClicked += ClosePlayerFrame;
+            if (GameMain.Server != null)
+            {
+                var selectedClient = GameMain.Server.ConnectedClients.Find(c => c.name == component.UserData.ToString());
 
-            var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomLeft, GUI.Style, playerFrameInner);
-            banButton.UserData = obj;
-            banButton.OnClicked += BanPlayer;
-            banButton.OnClicked += ClosePlayerFrame;
+                new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), GUI.Style, playerFrameInner);
+
+                //var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 85), GUI.Style, playerFrameInner);
+                //permissionsBox.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                //permissionsBox.UserData = selectedClient;
+
+                //new GUITextBlock(new Rectangle(0, 0, 0, 15), "Permissions:", GUI.Style, permissionsBox);
+                //int x = 0, y = 0;
+                //foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                //{
+                //    if (permission == ClientPermissions.None) continue;
+
+                //    FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
+                //    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+
+                //    string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
+                    
+                //    var permissionTick = new GUITickBox(new Rectangle(x,y+20,15,15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
+                //    permissionTick.UserData = permission;
+                //    permissionTick.Selected = selectedClient.HasPermission(permission);
+
+                //    permissionTick.OnSelected = (tickBox) =>
+                //        {
+                //            var client = tickBox.Parent.UserData as Client;
+                //            if (client == null) return false;
+
+                //            var thisPermission = (ClientPermissions)tickBox.UserData;
+
+                //            if (tickBox.Selected)
+                //                client.GivePermission(thisPermission);
+                //            else
+                //                client.RemovePermission(thisPermission);
+
+                //            GameMain.Server.UpdateClientPermissions(client);
+
+                //            return true;
+                //        };
+
+
+                //    y += 20;
+                //    if (y >= permissionsBox.Rect.Height -20)
+                //    {
+                //        y = 0;
+                //        x += 100;
+                //    }
+                //}
+            }
+
+            if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
+            {
+                var kickButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+                kickButton.UserData = obj;
+                kickButton.OnClicked += KickPlayer;
+                kickButton.OnClicked += ClosePlayerFrame;
+            }
+
+            if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Ban))
+            {
+                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+                banButton.UserData = obj;
+                banButton.OnClicked += BanPlayer;
+                banButton.OnClicked += ClosePlayerFrame;
+            }
 
             var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, playerFrameInner);
             closeButton.OnClicked = ClosePlayerFrame;
@@ -792,18 +861,32 @@ namespace Barotrauma
 
         public bool KickPlayer(GUIButton button, object userData)
         {
-            if (GameMain.Server == null || userData == null) return false;
+            if (userData == null) return false;
 
-            GameMain.Server.KickPlayer(userData.ToString());
+            if (GameMain.Server!=null)
+            {
+                GameMain.Server.KickPlayer(userData.ToString(), false);
+            }
+            else if (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.Kick))
+            {
+                GameMain.Client.KickPlayer(userData.ToString(), false);
+            }            
             
             return false;
         }
 
         public bool BanPlayer(GUIButton button, object userData)
         {
-            if (GameMain.Server == null || userData == null) return false;
+            if (userData == null) return false;
 
-            GameMain.Server.KickPlayer(userData.ToString(), true);
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.KickPlayer(userData.ToString(), true);
+            }
+            else if (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.Ban))
+            {
+                GameMain.Client.KickPlayer(userData.ToString(), true);
+            }         
 
             return false;
         }
@@ -913,15 +996,6 @@ namespace Barotrauma
 
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
         }
-        
-        //public bool EnterChatMessage(GUITextBox textBox, string message)
-        //{
-        //    if (String.IsNullOrEmpty(message)) return false;
-
-        //    GameMain.NetworkMember.SendChatMessage(ChatMessage.Create(message, ChatMessageType.Default, null));
-            
-        //    return true;
-        //}
 
         private void UpdatePreviewPlayer(CharacterInfo characterInfo)
         {

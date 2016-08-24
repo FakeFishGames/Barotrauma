@@ -166,7 +166,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                CoroutineManager.StartCoroutine(GameMain.Server.EndGame(endMessage));
+                //CoroutineManager.StartCoroutine(GameMain.Server.EndGame(endMessage));
 
             }
             else if (GameMain.Client == null)

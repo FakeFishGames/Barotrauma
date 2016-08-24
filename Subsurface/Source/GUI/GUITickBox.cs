@@ -41,6 +41,11 @@ namespace Barotrauma
         }
 
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
+            : this(rect, label, alignment, GUI.Font, parent)
+        {
+        }
+
+        public GUITickBox(Rectangle rect, string label, Alignment alignment, SpriteFont font, GUIComponent parent)
             : base(null)
         {
             if (parent != null)
@@ -50,7 +55,7 @@ namespace Barotrauma
             box.HoverColor = Color.Gray;
             box.SelectedColor = Color.DarkGray;
             
-            text = new GUITextBlock(new Rectangle(rect.X + 30, rect.Y+2, 20, rect.Height), label, Color.Transparent, Color.White, Alignment.TopLeft, null, this);
+            text = new GUITextBlock(new Rectangle(rect.Right + 10, rect.Y+2, 20, rect.Height), label, GUI.Style, this, font);
 
             this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
 

@@ -7,6 +7,7 @@ using FarseerPhysics;
 using System.IO;
 using System.Linq;
 using Barotrauma.Items.Components;
+using System.ComponentModel;
 
 namespace Barotrauma.Networking
 {
@@ -21,7 +22,10 @@ namespace Barotrauma.Networking
         private FileStreamReceiver fileStreamReceiver;
         private Queue<Pair<string, FileTransferMessageType>> requestFileQueue;
 
-        private GUITickBox endRoundButton;
+        private GUIButton endRoundButton;
+        private GUITickBox endVoteTickBox;
+
+        private ClientPermissions permissions;
 
         private bool connected;
 
@@ -51,8 +55,22 @@ namespace Barotrauma.Networking
 
         public GameClient(string newName)
         {
-            endRoundButton = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, 20, 20, 20), "End round", Alignment.TopLeft, inGameHUD);
-            endRoundButton.OnSelected = ToggleEndRoundVote;
+            endVoteTickBox = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, 20, 20, 20), "End round", Alignment.TopLeft, inGameHUD);
+            endVoteTickBox.OnSelected = ToggleEndRoundVote;
+            endVoteTickBox.Visible = false;
+
+            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
+            endRoundButton.OnClicked = (btn, userdata) => 
+            {
+                if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
+
+                var msg = client.CreateMessage();
+
+                msg.Write((byte)PacketTypes.EndGame);
+                client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+
+                return true; 
+            };
             endRoundButton.Visible = false;
 
             newName = newName.Replace(":", "");
@@ -227,9 +245,12 @@ namespace Barotrauma.Networking
                             if (packetType == (byte)PacketTypes.LoggedIn)
                             {
                                 myID = inc.ReadByte();
+                                permissions = (ClientPermissions)inc.ReadInt32();
                                 gameStarted = inc.ReadBoolean();
                                 bool hasCharacter = inc.ReadBoolean();
                                 bool allowSpectating = inc.ReadBoolean();
+                                
+                                endRoundButton.Visible = permissions.HasFlag(ClientPermissions.EndRound);
 
                                 if (gameStarted && Screen.Selected != GameMain.GameScreen)
                                 {                           
@@ -550,6 +571,46 @@ namespace Barotrauma.Networking
                         AddChatMessage(otherClient.name + " has joined the server", ChatMessageType.Server);
 
                         break;
+                    case (byte)PacketTypes.Permissions:
+                        ClientPermissions newPermissions = (ClientPermissions)inc.ReadInt32();
+
+                        if (newPermissions != permissions)
+                        {
+                            if (GUIMessageBox.MessageBoxes.Count > 0)
+                            {
+                                var existingMsgBox = GUIMessageBox.MessageBoxes.Peek();
+                                if (existingMsgBox.UserData as string == "permissions")
+                                {
+                                    GUIMessageBox.MessageBoxes.Dequeue();
+                                }
+                            }
+
+                            //new GUIMessageBox("The host has changed you permissions. New permissions")
+                            string msg = "";
+                            if (newPermissions == ClientPermissions.None)
+                            {
+                                msg = "The host has removed all your special permissions.";
+                            }
+                            else
+                            {
+                                msg = "Your current permissions:\n";
+                                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                                {
+                                    if (!newPermissions.HasFlag(permissions) || permission == ClientPermissions.None) continue;
+
+                                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
+                                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+
+                                    msg += "   - " + attributes[0].Description+"\n";
+                                }
+                            }
+
+                            new GUIMessageBox("Permissions changed", msg).UserData = "permissions";
+                        }
+
+                        endRoundButton.Visible = permissions.HasFlag(ClientPermissions.EndRound);
+
+                        break;
                     case (byte)PacketTypes.RequestFile:
                         bool accepted = inc.ReadBoolean();
 
@@ -572,11 +633,9 @@ namespace Barotrauma.Networking
                             //todo: unexpected file
                         }
                         else
-                        {
-    
+                        {    
                             fileStreamReceiver.ReadMessage(inc);
                         }
-
                         
                         break;
                     case (byte)PacketTypes.PlayerLeft:
@@ -653,7 +712,7 @@ namespace Barotrauma.Networking
         {
             if (Character != null) Character.Remove();
 
-            endRoundButton.Selected = false;
+            endVoteTickBox.Selected = false;
 
             int seed = inc.ReadInt32();
             string levelSeed = inc.ReadString();
@@ -746,7 +805,7 @@ namespace Barotrauma.Networking
             
             gameStarted = true;
 
-            endRoundButton.Visible = Voting.AllowEndVoting && myCharacter != null;
+            endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
 
             GameMain.GameScreen.Select();
 
@@ -804,6 +863,11 @@ namespace Barotrauma.Networking
 
         }
 
+        public bool HasPermission(ClientPermissions permission)
+        {
+            return permissions.HasFlag(permission);
+        }
+
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
@@ -839,6 +903,10 @@ namespace Barotrauma.Networking
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
             spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
 
+            spriteBatch.DrawString(GUI.Font, "Ping: " + (int)(client.ServerConnection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x + 10, y + 25), Color.White);
+
+            y += 15;
+
             spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + client.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
             spriteBatch.DrawString(GUI.SmallFont, "Received packets: " + client.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
 
@@ -866,21 +934,35 @@ namespace Barotrauma.Networking
             Character character = obj as Character;
             if (character == null) return false;
 
-            if (character != myCharacter && Voting.AllowVoteKick)
+            if (character != myCharacter)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
-                if (client != null)
+                if (client == null) return false;
+                
+                if (HasPermission(ClientPermissions.Ban))
                 {
-                    var kickButton = new GUIButton(new Rectangle(0, 0, 120, 20), "Vote to Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                    var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, GUI.Style, characterFrame);
+                    banButton.UserData = character.Name;
+                    banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;                    
+                }
+                if (HasPermission(ClientPermissions.Kick))
+                {
+                    var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                    kickButton.UserData = character.Name;
+                    kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
+                }
+                else if (Voting.AllowVoteKick)
+                {
+                    var kickVoteButton = new GUIButton(new Rectangle(0, 0, 120, 20), "Vote to Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
                 
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {
-                        kickButton.Enabled = !client.HasKickVoteFromID(myID);                        
+                        kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);                        
                     }
 
-                    kickButton.UserData = character;
-                    kickButton.OnClicked += VoteForKick;
-                }
+                    kickVoteButton.UserData = character;
+                    kickVoteButton.OnClicked += VoteForKick;
+                }                
             }
 
             return true;
@@ -979,6 +1061,19 @@ namespace Barotrauma.Networking
             msg.Write((byte)PacketTypes.RequestFile);
             msg.Write((byte)FileTransferMessageType.Cancel);
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public override void KickPlayer(string kickedName, bool ban)
+        {
+            if (!permissions.HasFlag(ClientPermissions.Kick) && !ban) return;
+            if (!permissions.HasFlag(ClientPermissions.Ban) && ban) return;
+
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)PacketTypes.KickPlayer);
+            msg.Write(ban);
+            msg.Write(kickedName);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);            
         }
 
         public bool VoteForKick(GUIButton button, object userdata)
@@ -1105,7 +1200,7 @@ namespace Barotrauma.Networking
                 Character.Controlled = character;
                 GameMain.LightManager.LosEnabled = true;
 
-                if (endRoundButton != null) endRoundButton.Visible = Voting.AllowEndVoting;
+                if (endVoteTickBox != null) endVoteTickBox.Visible = Voting.AllowEndVoting;
             }
 
             return character;
