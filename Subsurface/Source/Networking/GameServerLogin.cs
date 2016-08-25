@@ -1,5 +1,4 @@
-﻿using Barotrauma.Networking.ReliableMessages;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -161,7 +160,6 @@ namespace Barotrauma.Networking
                 if (existingClient != null)
                 {
                     existingClient.Connection = inc.SenderConnection;
-                    existingClient.ReliableChannel = new ReliableChannel(server);
                     LogClientIn(inc);
                     return;
                 }
