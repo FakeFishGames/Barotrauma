@@ -1565,14 +1565,17 @@ namespace Barotrauma
                         message.Write(AnimController.Dir > 0.0f);
                     }
 
-                    message.Write(Submarine != null);
+                    if (GameMain.Server != null)
+                    {
+                        message.Write(Submarine != null);
 
-                    //Vector2 position = Submarine == null ? SimPosition : SimPosition - Submarine.SimPosition;
+                        //Vector2 position = Submarine == null ? SimPosition : SimPosition - Submarine.SimPosition;
 
-                    //if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return true;
+                        //if ((AnimController.RefLimb.SimPosition - Submarine.Loaded.SimPosition).Length() > NetConfig.CharacterIgnoreDistance) return true;
 
-                    message.Write(SimPosition.X);
-                    message.Write(SimPosition.Y);
+                        message.Write(SimPosition.X);
+                        message.Write(SimPosition.Y);
+                    }
 
                     networkUpdateSent = true;
 
@@ -1811,31 +1814,34 @@ namespace Barotrauma
                         return false;
                     }
 
-                    bool inSub = message.ReadBoolean();
-
-                    pos.X = message.ReadFloat();
-                    pos.Y = message.ReadFloat();
-
-                    if (inSub != (Submarine != null))
+                    if (GameMain.Server == null)
                     {
-                        AnimController.Teleport(pos - SimPosition, Vector2.Zero);
-                    }
+                        bool inSub = message.ReadBoolean();
 
-                    if (inSub)
-                    {
-                        //AnimController.FindHull(ConvertUnits.ToDisplayUnits(pos) - Submarine.Loaded.WorldPosition);
+                        pos.X = message.ReadFloat();
+                        pos.Y = message.ReadFloat();
 
-                        Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
-                        if (newHull != null)
+                        if (inSub != (Submarine != null))
                         {
-                            AnimController.CurrentHull = newHull;
-                            Submarine = newHull.Submarine;
+                            AnimController.Teleport(pos - SimPosition, Vector2.Zero);
                         }
-                    }
-                    else
-                    {
-                        AnimController.CurrentHull = null;
-                        Submarine = null;
+
+                        if (inSub)
+                        {
+                            //AnimController.FindHull(ConvertUnits.ToDisplayUnits(pos) - Submarine.Loaded.WorldPosition);
+
+                            Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
+                            if (newHull != null)
+                            {
+                                AnimController.CurrentHull = newHull;
+                                Submarine = newHull.Submarine;
+                            }
+                        }
+                        else
+                        {
+                            AnimController.CurrentHull = null;
+                            Submarine = null;
+                        }
                     }
 
                     if (secondaryKeyState)
@@ -1853,8 +1859,11 @@ namespace Barotrauma
                         AnimController.TargetDir = dir < 0 ? Direction.Left : Direction.Right;
                     }
 
-                    AnimController.RefLimb.body.TargetPosition = 
-                        AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);
+                    if (GameMain.Server == null)
+                    {
+                        AnimController.RefLimb.body.TargetPosition =
+                            AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);
+                    }
 
                     LastNetworkUpdate = sendingTime;
 
