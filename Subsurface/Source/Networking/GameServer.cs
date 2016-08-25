@@ -6,7 +6,6 @@ using System.Linq;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
-using Barotrauma.Networking.ReliableMessages;
 using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
@@ -343,9 +342,7 @@ namespace Barotrauma.Networking
 
             foreach (Client c in connectedClients)
             {
-                if (c.FileStreamSender != null) UpdateFileTransfer(c, deltaTime);                
-
-                c.ReliableChannel.Update(deltaTime);
+                if (c.FileStreamSender != null) UpdateFileTransfer(c, deltaTime);
             }
 
             NetIncomingMessage inc = null; 
@@ -482,12 +479,6 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    if (packetType == (byte)PacketTypes.ReliableMessage)
-                    {
-                        if (!sender.ReliableChannel.CheckMessage(inc)) return;
-                        packetType = inc.ReadByte();
-                    }
-
                     switch (packetType)
                     {
                         case (byte)PacketTypes.NetworkEvent:
@@ -581,10 +572,8 @@ namespace Barotrauma.Networking
 
                             break;
                         case (byte)PacketTypes.ResendRequest:
-                            sender.ReliableChannel.HandleResendRequest(inc);
                             break;
                         case (byte)PacketTypes.LatestMessageID:
-                            sender.ReliableChannel.HandleLatestMessageID(inc);
                             break;
                         case (byte)PacketTypes.Vote:
                             Voting.RegisterVote(inc, connectedClients);
@@ -653,17 +642,7 @@ namespace Barotrauma.Networking
 
             foreach (Client c in recipients)
             {
-                var message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableChannel, c.Connection);
-                if (message != null)
-                {
-                    ReliableMessage reliableMessage = c.ReliableChannel.CreateMessage();
-                    message.Position = 0;
-                    reliableMessage.InnerMessage.Write(message.ReadBytes(message.LengthBytes));
-
-                    c.ReliableChannel.SendMessage(reliableMessage, c.Connection);
-                }
-
-                message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableLidgren, c.Connection);
+                var message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableLidgren, c.Connection);
                 if (message!=null)
                 {
                     server.SendMessage(message, c.Connection, NetDeliveryMethod.ReliableUnordered);
@@ -1483,19 +1462,7 @@ namespace Barotrauma.Networking
                 recipients.Add(c);
             }
 
-            AddChatMessage(message);
-
-            foreach (Client c in recipients)
-            {
-                ReliableMessage msg = c.ReliableChannel.CreateMessage();
-                msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-                //msg.InnerMessage.Write((byte)type);
-                //msg.InnerMessage.Write(message);  
-
-                message.WriteNetworkMessage(msg.InnerMessage);
-
-                c.ReliableChannel.SendMessage(msg, c.Connection);
-            }   
+            AddChatMessage(message); 
         }
 
         public override void SendChatMessage(string message, ChatMessageType? type = null)
@@ -1556,17 +1523,7 @@ namespace Barotrauma.Networking
 
         public void SendChatMessage(ChatMessage chatMessage, List<Client> recipients)
         {
-            foreach (Client c in recipients)
-            {
-                ReliableMessage msg = c.ReliableChannel.CreateMessage();
-                msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-                //msg.InnerMessage.Write((byte)type);
-                //msg.InnerMessage.Write(message);  
-
-                chatMessage.WriteNetworkMessage(msg.InnerMessage);
-
-                c.ReliableChannel.SendMessage(msg, c.Connection);
-            }  
+            
         }
 
         private void ReadCharacterData(NetIncomingMessage message)

@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking.ReliableMessages;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;

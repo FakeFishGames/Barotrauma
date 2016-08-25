@@ -1,5 +1,4 @@
-﻿using Barotrauma.Networking.ReliableMessages;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,8 +39,6 @@ namespace Barotrauma.Networking
         public JobPrefab assignedJob;
 
         public FileStreamSender FileStreamSender;
-        
-        public ReliableChannel ReliableChannel;
 
         public float deleteDisconnectedTimer;
 
@@ -55,7 +52,7 @@ namespace Barotrauma.Networking
         public Client(NetPeer server, string name, byte ID)
             : this(name, ID)
         {
-            ReliableChannel = new ReliableChannel(server);
+            
         }
 
         public Client(string name, byte ID)

@@ -2,7 +2,6 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using Barotrauma.Networking.ReliableMessages;
 using FarseerPhysics;
 using System.IO;
 using System.Linq;
@@ -16,8 +15,6 @@ namespace Barotrauma.Networking
         private NetClient client;
 
         private GUIMessageBox reconnectBox;
-
-        private ReliableChannel reliableChannel;
 
         private FileStreamReceiver fileStreamReceiver;
         private Queue<Pair<string, FileTransferMessageType>> requestFileQueue;
@@ -128,7 +125,6 @@ namespace Barotrauma.Networking
 
             client = new NetClient(config);
             netPeer = client;
-            reliableChannel = new ReliableChannel(client);
             client.Start();
 
             NetOutgoingMessage outmsg = client.CreateMessage();            
@@ -429,8 +425,6 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Error while receiving message from server", e);
 #endif            
             }
-            
-            reliableChannel.Update(deltaTime);
 
             if (gameStarted && respawnManager != null)
             {
@@ -452,17 +446,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            var message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableChannel);
-            if (message != null)
-            {
-                ReliableMessage reliableMessage = reliableChannel.CreateMessage();
-                message.Position = 0;
-                reliableMessage.InnerMessage.Write(message.ReadBytes(message.LengthBytes));
-
-                reliableChannel.SendMessage(reliableMessage, client.ServerConnection);
-            }
-
-            message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.Unreliable);
+            var message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.Unreliable);
             if (message != null) client.SendMessage(message, NetDeliveryMethod.Unreliable);
 
             message = ComposeNetworkEventMessage(NetworkEventDeliveryMethod.ReliableLidgren);
@@ -524,12 +508,6 @@ namespace Barotrauma.Networking
                 if (inc.MessageType != NetIncomingMessageType.Data) continue;
                 
                 byte packetType = inc.ReadByte();
-
-                if (packetType == (byte)PacketTypes.ReliableMessage)
-                {
-                    if (!reliableChannel.CheckMessage(inc)) continue;
-                    packetType = inc.ReadByte();
-                }
 
                 switch (packetType)
                 {
@@ -685,10 +663,8 @@ namespace Barotrauma.Networking
 
                         break;
                     case (byte)PacketTypes.ResendRequest:
-                        reliableChannel.HandleResendRequest(inc);
                         break;
                     case (byte)PacketTypes.LatestMessageID:
-                        reliableChannel.HandleLatestMessageID(inc);
                         break;
                     case  (byte)PacketTypes.VoteStatus:
                         Voting.ReadData(inc);
@@ -1226,12 +1202,6 @@ namespace Barotrauma.Networking
             var chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
                 message, (ChatMessageType)type, gameStarted ? myCharacter : null);
-
-            ReliableMessage msg = reliableChannel.CreateMessage();
-            msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-            chatMessage.WriteNetworkMessage(msg.InnerMessage);
-
-            reliableChannel.SendMessage(msg, client.ServerConnection);
         }
 
         /// <summary>
