@@ -173,19 +173,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
-            //oxygen = ToolBox.GetAttributeFloat(element, "oxygen", 0.0f);
-
-            
-            //deteriorateOnActive = ToolBox.GetAttributeFloat(element, "deteriorateonactive", 0.0f);
-            //deteriorateOnUse = ToolBox.GetAttributeFloat(element, "deteriorateonuse", 0.0f);
         }
-
-
-        //public virtual void Apply(ActionType type, float deltaTime, Item item, Character Character = null)
-        //{
-        //    if (this.type == type) Apply(deltaTime, Character, item);
-        //}
 
         private bool HasRequiredItems(Entity entity)
         {

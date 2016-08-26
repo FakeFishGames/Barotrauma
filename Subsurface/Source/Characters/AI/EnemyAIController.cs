@@ -218,24 +218,27 @@ namespace Barotrauma
             }
 
             //steeringManager.SteeringAvoid(deltaTime, 1.0f);
-            steeringManager.SteeringSeek(attackSimPosition);
-            
+
+            Limb attackLimb = attackingLimb;
             //check if any of the limbs is close enough to attack the target
             if (attackingLimb == null)
             {
                 foreach (Limb limb in Character.AnimController.Limbs)
                 {
-                    if (limb.attack==null || limb.attack.Type == AttackType.None) continue;
+                    if (limb.attack==null) continue;
+                    attackLimb = limb;
+
                     if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;
                                         
                     attackingLimb = limb;
                     break;   
                 }
-                return;
             }
-
-            UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
-                  
+            if (attackLimb != null)
+            {
+                steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition));
+                if (attackingLimb != null) UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
+            }   
         }
 
         private void UpdateCoolDown(Vector2 attackPosition, float deltaTime)
@@ -330,84 +333,15 @@ namespace Barotrauma
 
         private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition)
         {
-            IDamageable damageTarget = null;
+            var damageTarget = (wallAttackPos != Vector2.Zero && targetEntity != null) ? targetEntity : selectedAiTarget.Entity as IDamageable;
 
-            float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackPosition));
+            limb.UpdateAttack(deltaTime, attackPosition, damageTarget);
 
-            switch (limb.attack.Type)
-            {
-                case AttackType.PinchCW:
-                case AttackType.PinchCCW:
-
-                    float dir = (limb.attack.Type == AttackType.PinchCW) ? 1.0f : -1.0f;
-
-                    damageTarget = (wallAttackPos != Vector2.Zero && targetEntity != null) ? targetEntity : selectedAiTarget.Entity as IDamageable;
-                                        
-                    attackTimer += deltaTime*0.05f;
-
-                    if (damageTarget == null)
-                    {
-                        attackTimer = limb.attack.Duration;
-                        break;
-                    }
-
-                    if (dist < limb.attack.Range * 0.5f)
-                    {
-                        attackTimer += deltaTime;
-                        limb.body.ApplyTorque(limb.Mass * 50.0f * Character.AnimController.Dir * dir);
-
-                        if (attackTimer >= limb.attack.Duration)
-                        {
-                            limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, 1.0f, (limb.soundTimer <= 0.0f));
-
-                            limb.soundTimer = Limb.SoundInterval;
-                        }
-                    }
-
-                    Vector2 diff = attackPosition - limb.SimPosition;
-                    if (diff.LengthSquared() > 0.00001f)
-                    {
-                        limb.body.ApplyLinearImpulse(limb.Mass * 10.0f *
-                            Vector2.Normalize(attackPosition - limb.SimPosition));
-                    }
-
-                    steeringManager.SteeringSeek(attackPosition + (limb.SimPosition-SimPosition), 5.0f);
-
-                    break;
-                case AttackType.Hit:
-                    damageTarget = (wallAttackPos != Vector2.Zero && targetEntity != null) ? targetEntity : selectedAiTarget.Entity as IDamageable;
-                                        
-                    if (damageTarget == null)
-                    {
-                        attackTimer = limb.attack.Duration;
-                        break;
-                    }
-
-                    if (dist < limb.attack.Range)
-                    {
-                        attackTimer += deltaTime;
-                        limb.body.ApplyForce(limb.Mass * limb.attack.Force * Vector2.Normalize(attackPosition - limb.SimPosition));
-
-                        if (damageTarget is Character && dist<limb.attack.Range*0.5f)
-                        {
-                            limb.attack.DoDamage(Character, damageTarget, limb.WorldPosition, deltaTime, (limb.soundTimer <= 0.0f));
-                            limb.soundTimer = Limb.SoundInterval;
-                        }
-                    }
-                    
-                    steeringManager.SteeringSeek(attackPosition + (limb.SimPosition-SimPosition), 5.0f);
-                    break;
-                default:
-                    attackTimer = limb.attack.Duration;
-                    break;
-            }
-
-            if (attackTimer >= limb.attack.Duration)
+            if (limb.AttackTimer >= limb.attack.Duration)
             {
                 wallAttackPos = Vector2.Zero;
-                attackTimer = 0.0f;
-                if (Vector2.Distance(limb.SimPosition, attackPosition)<5.0) coolDownTimer = attackCoolDown;
-                
+                limb.AttackTimer = 0.0f;
+                if (Vector2.Distance(limb.SimPosition, attackPosition)<5.0) coolDownTimer = attackCoolDown;                
             }
         }
         

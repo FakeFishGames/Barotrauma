@@ -2,6 +2,7 @@
 using Barotrauma.Particles;
 using System;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
 
 namespace Barotrauma
@@ -12,11 +13,6 @@ namespace Barotrauma
     }
 
     public enum DamageType { None, Blunt, Slash, Burn }
-
-    public enum AttackType
-    {
-        None, PinchCW, PinchCCW, Hit
-    }
 
     struct AttackResult
     {
@@ -36,8 +32,6 @@ namespace Barotrauma
 
     class Attack
     {
-
-        public readonly AttackType Type;
         public readonly float Range;
         public readonly float Duration;
 
@@ -47,7 +41,11 @@ namespace Barotrauma
         private readonly float damage;
         private readonly float bleedingDamage;
 
+        private readonly List<StatusEffect> statusEffects;
+
         public readonly float Force;
+
+        public readonly float Torque;
 
         public readonly float TargetForce;
 
@@ -74,23 +72,8 @@ namespace Barotrauma
             return (Duration == 0.0f) ? structureDamage : structureDamage * deltaTime;
         }
 
-
-        //public Attack(AttackType type, float range,)
-        //{
-
-        //}
-
         public Attack(XElement element)
         {
-            try
-            {
-                Type = (AttackType)Enum.Parse(typeof(AttackType), element.Attribute("type").Value, true);
-            }
-            catch
-            {
-                Type = AttackType.None;
-            }
-
             try
             {
                 DamageType = (DamageType)Enum.Parse(typeof(DamageType), ToolBox.GetAttributeString(element, "damagetype", "None"), true);
@@ -106,8 +89,9 @@ namespace Barotrauma
             bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
 
             Force = ToolBox.GetAttributeFloat(element,"force", 0.0f);
-
             TargetForce = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
+
+            Torque = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
 
             Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
@@ -123,10 +107,20 @@ namespace Barotrauma
 
             priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
 
+            statusEffects = new List<StatusEffect>();
+
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "particleemitter") continue;
-                particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "particleemitter":
+                        particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
+                        break;
+                    case "statuseffect":
+                        statusEffects.Add(StatusEffect.Load(subElement));
+                        break;
+                }
+
             }
         }
 
@@ -142,6 +136,19 @@ namespace Barotrauma
             {
                 sound.Play(1.0f, 500.0f, worldPosition);
             }
+
+            foreach (StatusEffect effect in statusEffects)
+            {
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.This) && attacker is Character)
+                {
+                    effect.Apply(ActionType.OnUse, deltaTime, (Character)attacker, (Character)attacker);
+                }
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.Character) && target is Character)
+                {
+                    effect.Apply(ActionType.OnUse, deltaTime, (Character)target, (Character)target);
+                }                    
+            }
+            
 
             return target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
 
