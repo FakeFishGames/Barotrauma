@@ -16,12 +16,22 @@
 
     <!-- head -->
     <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="5.0">
-      <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="93,1,34,31" depth="0.04" origin="0.5,0.5"/>
-      <attack type="PinchCCW" range="100" duration="0.5" damage="10" stun="0.1" bleedingdamage="3" structuredamage="30" damagetype="slash"/>
+      <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="95,0,33,25" depth="0.04" origin="0.5,0.5"/>
     </limb>
+
+
+    <!-- spike/tentacle thingy -->
+    <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" impacttolerance="5.0" flip="true" pullpos="0.0,25.0">
+      <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.05" origin="0.5,0.5"/>
+      <attack range="70" duration="0.2" bleedingdamage="3" damage="10" stun="0.5" torque="-50" damagetype="slash" targetforce="10">
+        <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01" disabledeltatime="true"/>
+        <StatusEffect type="OnUse" target="This" Health="1.0" disabledeltatime="true"/>
+      </attack>
+    </limb>
+
     <!-- body -->
     <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3" impacttolerance="10.0">
-      <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="Torso" sourcerect="40,0,42,97" origin="0.5,0.55"/>
+      <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="Torso" sourcerect="41,1,42,96" origin="0.5,0.55"/>
     </limb>
     <limb id = "12" radius="13" mass = "20" type="Waist" impacttolerance="10.0">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="0,0,1,1" depth="0.045" origin="0.5,0.5"/>
@@ -66,14 +76,14 @@
     <limb id = "11" radius="5" height="13" mass = "2" type ="RightFoot" flip="true" pullpos="-5.0,0.0">
       <sprite texture="Content/Characters/Husk/legs.png" sourcerect="35,53,16,25" origin="0.5,0.5"/>
       <sound file ="Content/step.ogg"/>
-    </limb>
-  
-  
+    </limb> 
 
     <!-- head to body -->
-    <joint limb1="0" limb1anchor="-10,-10" limb2="1" limb2anchor="-8,33" lowerlimit="0" upperlimit="10"/>
-    <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,15" lowerlimit="30" upperlimit="60"/>   
+    <joint limb1="0" limb1anchor="-10,-10" limb2="1" limb2anchor="-3,28" lowerlimit="0" upperlimit="10"/>
+    <!-- spike to head -->
+    <joint limb1="0" limb1anchor="35,-8" limb2="13" limb2anchor="30,0" lowerlimit="-40" upperlimit="0"/>
     
+    <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,15" lowerlimit="30" upperlimit="60"/>       
     
     <!-- body to left arm -->
     <joint limb1="1" limb1anchor="-3,14" limb2="2" limb2anchor="0,12"/>

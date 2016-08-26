@@ -18,7 +18,7 @@
     </limb>
     <limb id = "2" width="30" height="175" impacttolerance="100">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-      <attack type="PinchCCW" range="150" duration="0.5" damage="30" stun="1.0" damagetype="slash"/>      
+      <attack range="150" duration="0.5" damage="30" stun="1.0" torque="150" damagetype="slash"/>      
     </limb>
     
     <limb id = "3" width="30" height="178" impacttolerance="100.0">
@@ -27,7 +27,7 @@
 
     <limb id = "4" width="30" height="175" impacttolerance="100">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-      <attack type="PinchCW" range="150" duration="0.5" damage="30" stun="1.0" damagetype="slash"/>            
+      <attack range="150" duration="0.5" damage="30" stun="1.0" torque="-150" damagetype="slash"/>            
     </limb>
         
 

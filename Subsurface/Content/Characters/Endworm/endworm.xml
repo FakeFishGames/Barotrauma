@@ -44,12 +44,12 @@
 
     <limb id = "8" width="50" height="320" impacttolerance="100.0">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="755,552,137,470" depth="0.08" origin="0.5,0.5"/>
-      <attack type="PinchCCW" range="800" duration="0.5" damage="30" stun="5.0" structuredamage="500" damagetype="slash"/>
+      <attack range="800" duration="0.5" damage="30" stun="5.0" torque="-100" structuredamage="500" damagetype="slash"/>
     </limb>
     
     <limb id = "9" width="50" height="320" impacttolerance="100.0">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="892,552,137,470" depth="0.08" origin="0.6,0.5"/>
-      <attack type="PinchCW" range="800" duration="0.5" damage="30" stun="5.0" structuredamage="500" damagetype="slash"/>
+      <attack range="800" duration="0.5" damage="30" stun="5.0" torque="100" structuredamage="500" damagetype="slash"/>
     </limb>
         
 

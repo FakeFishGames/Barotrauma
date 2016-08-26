@@ -156,6 +156,8 @@ namespace Barotrauma
 
         private float scale;
 
+        public float AttackTimer;
+
         //public float Damage
         //{
         //    get { return damage; }
@@ -223,6 +225,8 @@ namespace Barotrauma
 
             refJointIndex = -1;
 
+            Vector2 pullJointPos = Vector2.Zero;
+
             if (element.Attribute("type") != null)
             {
                 try
@@ -236,24 +240,25 @@ namespace Barotrauma
                 }
 
 
-                Vector2 jointPos = ToolBox.GetAttributeVector2(element, "pullpos", Vector2.Zero) * scale;
-                jointPos = ConvertUnits.ToSimUnits(jointPos);
+                pullJointPos = ToolBox.GetAttributeVector2(element, "pullpos", Vector2.Zero) * scale;
+                pullJointPos = ConvertUnits.ToSimUnits(pullJointPos);
 
                 stepOffset = ToolBox.GetAttributeVector2(element, "stepoffset", Vector2.Zero) * scale;
                 stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
                 refJointIndex = ToolBox.GetAttributeInt(element, "refjoint", -1);
 
-                pullJoint = new FixedMouseJoint(body.FarseerBody, jointPos);
-                pullJoint.Enabled = false;
-                pullJoint.MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass;
-
-                GameMain.World.AddJoint(pullJoint);
             }
             else
             {
                 type = LimbType.None;
             }
+
+            pullJoint = new FixedMouseJoint(body.FarseerBody, pullJointPos);
+            pullJoint.Enabled = false;
+            pullJoint.MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass;
+
+            GameMain.World.AddJoint(pullJoint);
 
             steerForce = ToolBox.GetAttributeFloat(element, "steerforce", 0.0f);
 
@@ -484,6 +489,39 @@ namespace Barotrauma
             //}
         }
 
+        public void ActivateDamagedSprite()
+        {
+            damage = 100.0f;
+        }
+
+        public void UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget)
+        {
+            float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
+
+            AttackTimer += deltaTime;
+
+            if (dist < attack.Range * 0.5f)
+            {
+                AttackTimer += deltaTime;
+                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
+
+                if (AttackTimer >= attack.Duration && damageTarget != null)
+                {
+                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, (soundTimer <= 0.0f));
+
+                    soundTimer = Limb.SoundInterval;
+                }
+            }
+
+            Vector2 diff = attackPosition - SimPosition;
+            if (diff.LengthSquared() > 0.00001f)
+            {
+                Vector2 pos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
+                body.ApplyLinearImpulse(Mass * attack.Force *
+                    Vector2.Normalize(attackPosition - SimPosition), pos);
+            }
+
+        }
 
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -492,7 +530,9 @@ namespace Barotrauma
 
             body.Dir = Dir;
 
-            if (wearingItems.Find(w => w != null && w.HideLimb) == null)
+            bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
+
+            if (!hideLimb)
             {
                 body.Draw(spriteBatch, sprite, color, null, scale);
             }
@@ -526,7 +566,7 @@ namespace Barotrauma
                     scale, spriteEffect, depth);
             }
             
-            if (damage>0.0f && damagedSprite!=null)
+            if (damage>0.0f && damagedSprite!=null && !hideLimb)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
                 
