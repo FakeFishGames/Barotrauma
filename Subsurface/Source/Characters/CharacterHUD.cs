@@ -197,6 +197,7 @@ namespace Barotrauma
                         if (Character.Controlled != null)
                         {
                             Character.Controlled.Kill(Character.Controlled.CauseOfDeath);
+                            Character.Controlled = null;
                         }
                         return true;
                     };

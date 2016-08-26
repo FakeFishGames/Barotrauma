@@ -499,12 +499,10 @@ namespace Barotrauma
             float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
 
             AttackTimer += deltaTime;
+                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
             if (dist < attack.Range * 0.5f)
             {
-                AttackTimer += deltaTime;
-                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
-
                 if (AttackTimer >= attack.Duration && damageTarget != null)
                 {
                     attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, (soundTimer <= 0.0f));
@@ -520,7 +518,6 @@ namespace Barotrauma
                 body.ApplyLinearImpulse(Mass * attack.Force *
                     Vector2.Normalize(attackPosition - SimPosition), pos);
             }
-
         }
 
         public void Draw(SpriteBatch spriteBatch)
