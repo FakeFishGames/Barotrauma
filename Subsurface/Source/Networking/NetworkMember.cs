@@ -340,15 +340,12 @@ namespace Barotrauma.Networking
         {
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                chatMsgBox.Visible = Character.Controlled == null || 
-                    (!Character.Controlled.IsUnconscious && Character.Controlled.Stun <= 0.0f);
+                chatMsgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
 
                 inGameHUD.Update(deltaTime);
 
                 GameMain.GameSession.CrewManager.Update(deltaTime);
-
-                //if (crewFrameOpen) crewFrame.Update(deltaTime);
-
+                
                 if (Character.Controlled == null || Character.Controlled.IsDead)
                 {
                     GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;

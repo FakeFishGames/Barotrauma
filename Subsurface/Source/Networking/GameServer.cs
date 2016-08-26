@@ -1623,7 +1623,7 @@ namespace Barotrauma.Networking
 
         public void SendCharacterSpawnMessage(Character character, List<NetConnection> recipients = null)
         {
-            if (recipients == null || !recipients.Any()) return;
+            if (recipients != null && !recipients.Any()) return;
 
             NetOutgoingMessage message = server.CreateMessage();
             message.Write((byte)PacketTypes.NewCharacter);

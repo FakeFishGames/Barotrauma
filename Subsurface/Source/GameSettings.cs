@@ -383,6 +383,12 @@ namespace Barotrauma
             {
                 new GUITextBlock(new Rectangle(x, y, 100, 20), inputNames[i]+": ", GUI.Style, settingsFrame);
                 var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 15), GUI.Style, settingsFrame);
+
+                if (keyMapping[i]==null)
+                {
+                    keyMapping[i] = new KeyOrMouse(Keys.D1);
+                }
+
                 keyBox.Text = keyMapping[i].ToString();
                 keyBox.UserData = i;
                 keyBox.OnSelected += KeyBoxSelected;

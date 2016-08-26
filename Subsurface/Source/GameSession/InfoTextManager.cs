@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -50,6 +51,11 @@ namespace Barotrauma
             }
 
             string text = infoList[Rand.Int(infoList.Count)];
+
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {
+                text = text.Replace("[" + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
+            }
 
             if (Submarine.MainSub != null) text = text.Replace("[sub]", Submarine.MainSub.Name);
             if (GameMain.GameSession != null && GameMain.GameSession.Map != null)

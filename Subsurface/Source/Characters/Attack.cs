@@ -136,22 +136,24 @@ namespace Barotrauma
             {
                 sound.Play(1.0f, 500.0f, worldPosition);
             }
+            
+            var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
+
+            var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
 
             foreach (StatusEffect effect in statusEffects)
             {
                 if (effect.Targets.HasFlag(StatusEffect.TargetType.This) && attacker is Character)
                 {
-                    effect.Apply(ActionType.OnUse, deltaTime, (Character)attacker, (Character)attacker);
+                    effect.Apply(effectType, deltaTime, (Character)attacker, (Character)attacker);
                 }
                 if (effect.Targets.HasFlag(StatusEffect.TargetType.Character) && target is Character)
                 {
-                    effect.Apply(ActionType.OnUse, deltaTime, (Character)target, (Character)target);
-                }                    
+                    effect.Apply(effectType, deltaTime, (Character)target, (Character)target);
+                }
             }
-            
 
-            return target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
-
+            return attackResult;
         }
     }
 }

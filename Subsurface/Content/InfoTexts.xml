@@ -21,4 +21,15 @@
   <Self_CauseOfDeath.Burn>You have burned to death.</Self_CauseOfDeath.Burn>
   <Self_CauseOfDeath.Disconnected>You have been disconnected from the server.</Self_CauseOfDeath.Disconnected>
 
+  <HuskDormant>Your throat feels sore</HuskDormant>
+  <HuskDormant>Your feel feverish</HuskDormant>  
+  <HuskDormant>It feels as if something was stuck in your throat</HuskDormant>
+  <HuskDormant>Your muscles are aching</HuskDormant>
+
+  <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
+
+
+  <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
+  
+  
 </infotexts>

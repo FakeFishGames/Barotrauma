@@ -49,7 +49,7 @@ namespace Barotrauma
 
             if (isDead || health <= 0.0f) return;
 
-            if (Controlled == this) return;
+            if (Controlled == this || !aiController.Enabled) return;
 
             if (soundTimer > 0)
             {
@@ -117,6 +117,12 @@ namespace Barotrauma
                     aiController.FillNetworkData(message);
                     return true;
                 case NetworkEventType.EntityUpdate:
+                    message.Write(Controlled == this);
+
+                    if (Controlled == this)
+                    {
+                        return base.FillNetworkData(type, message, data);
+                    }
 
                     message.Write(AnimController.Dir > 0.0f);
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 4);
@@ -214,6 +220,15 @@ namespace Barotrauma
                     break;
                 case NetworkEventType.EntityUpdate:
                     if (sendingTime <= LastNetworkUpdate) return false;
+
+                    bool playerControlled = message.ReadBoolean();
+                    if (playerControlled)
+                    {
+                        aiController.Enabled = false;
+                        return base.ReadNetworkData(type, message, sendingTime, out data);                        
+                    }
+
+                    aiController.Enabled = true;
 
                     Vector2 targetMovement  = Vector2.Zero, pos = Vector2.Zero;
                     bool targetDir = false,inSub = false;

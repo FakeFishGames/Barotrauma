@@ -10,6 +10,8 @@ namespace Barotrauma
         public enum AiState { None, Attack, GoTo, Escape }
         public enum SteeringState { Wander, Seek, Escape }
 
+        public bool Enabled;
+
         public readonly Character Character;
         
         protected AiState state;
@@ -51,6 +53,8 @@ namespace Barotrauma
         public AIController (Character c)
         {
             Character = c;
+
+            Enabled = true;
         }
 
         public virtual void DebugDraw(SpriteBatch spriteBatch) { }
