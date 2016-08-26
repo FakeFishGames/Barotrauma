@@ -532,7 +532,7 @@ namespace Barotrauma.Networking
                     {
                         byte clientId = inc.ReadByte();
 
-                        var character = client.ReadCharacterData(inc, clientId == client.ID);
+                        var character = client.ReadCharacterData(inc);
                     }
 
                     if (state != newState)

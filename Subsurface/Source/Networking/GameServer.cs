@@ -995,35 +995,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)characters.Count);
             foreach (Character c in characters)
             {
-                msg.Write(c is AICharacter);
-                msg.Write(c.ID);
-
-                if (c is AICharacter)
-                {
-                    msg.Write(c.ConfigPath);
-
-                    msg.Write(c.Position.X);
-                    msg.Write(c.Position.Y);
-                }
-                else
-                {
-                    Client client = connectedClients.Find(cl => cl.Character == c);
-                    if (client != null)
-                    {
-                        msg.Write(true);
-                        msg.Write(client.ID);
-                    }
-                    else if (myCharacter == c)
-                    {
-                        msg.Write(true);
-                        msg.Write((byte)0);                        
-                    }
-                    else
-                    {
-                        msg.Write(false);
-                    }
-                    WriteCharacterData(msg, c.Name, c);
-                }
+                WriteCharacterData(msg, c.Name, c);
             }
 
             return msg;
@@ -1609,41 +1581,55 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void WriteCharacterData(NetOutgoingMessage message, string name, Character character)
+        public void WriteCharacterData(NetOutgoingMessage msg, string name, Character c)
         {
-            message.Write(name);
-            message.Write(character.ID);
-            message.Write(character.Info.Gender == Gender.Female);
+            msg.Write(c.Info == null);
+            msg.Write(c.ID);
+            msg.Write(c.ConfigPath);
 
-            message.Write((byte)character.Info.HeadSpriteId);
+            msg.Write(c.WorldPosition.X);
+            msg.Write(c.WorldPosition.Y);
 
-            message.Write(character.WorldPosition.X);
-            message.Write(character.WorldPosition.Y);
+            msg.Write(c.Enabled);
+
+            if (c.Info != null)
+            {
+                Client client = connectedClients.Find(cl => cl.Character == c);
+                if (client != null)
+                {
+                    msg.Write(true);
+                    msg.Write(client.ID);
+                }
+                else if (myCharacter == c)
+                {
+                    msg.Write(true);
+                    msg.Write((byte)0);
+                }
+                else
+                {
+                    msg.Write(false);
+                }
+
+                msg.Write(name);
+
+                msg.Write(c is AICharacter);
+                msg.Write(c.Info.Gender == Gender.Female);
+                msg.Write((byte)c.Info.HeadSpriteId);                            
+                msg.Write(c.Info.Job == null ? "" : c.Info.Job.Name);
             
-            message.Write(character.Info.Job.Name);
-            
-            Item.Spawner.FillNetworkData(message, character.SpawnItems);
+                Item.Spawner.FillNetworkData(msg, c.SpawnItems);
+            }
         }
 
         public void SendCharacterSpawnMessage(Character character, List<NetConnection> recipients = null)
         {
+            if (recipients == null || !recipients.Any()) return;
+
             NetOutgoingMessage message = server.CreateMessage();
             message.Write((byte)PacketTypes.NewCharacter);
 
-            message.Write(character.ConfigPath);
-
-            if (character.ConfigPath == Character.HumanConfigFile)
-            {
-                WriteCharacterData(message, character.Name, character);
-            }
-            else
-            {
-                message.Write(character.ID);
-
-                message.Write(character.Position.X);
-                message.Write(character.Position.Y);
-            }
-            
+            WriteCharacterData(message, character.Name, character);
+                        
             SendMessage(message, NetDeliveryMethod.ReliableUnordered, recipients);
         }
 
