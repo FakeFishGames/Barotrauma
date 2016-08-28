@@ -55,7 +55,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
 
-    <Body width="25" height="5" density="40"/>
+    <Body width="8" height="16" density="40"/>
 
     <Holdable slots="Any,RightHand,LeftHand"/>
   </Item>
@@ -68,9 +68,9 @@
      pickdistance="150"
      description="A mild stimulant which is used as an incredient in the manufacture of various medicines.">
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
+    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
-    <Body width="25" height="5" density="20"/>
+    <Body width="8" height="17" density="20"/>
     
     <ItemComponent>
       <StatusEffect type="OnUse" target="Character" Health="0.1" duration="20"/>
@@ -95,7 +95,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
-    <Body width="25" height="5" density="20"/>
+    <Body width="8" height="16" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-0.3" Oxygen="2.0" duration="10">
@@ -115,7 +115,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
-    <Body width="25" height="5" density="20"/>
+    <Body width="8" height="16" density="20"/>
 
     <ItemComponent>
       <StatusEffect type="OnUse" target="Character" Bleeding="-0.1" duration="10.0"/>
@@ -140,7 +140,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="20"/>
+    <Body width="8" height="16" density="20"/>
     
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
@@ -164,7 +164,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="20"/>
+    <Body width="8" height="16" density="20"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="1.0" Oxygen="2.0" Bleeding="-0.05" duration="60.0">
@@ -180,9 +180,9 @@
     Tags="smallitem,chem,medical"
     pickdistance="150">
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="17" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-0.1" duration="20.0">
@@ -204,9 +204,9 @@
       <StatusEffect type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0"/>      
     </ItemComponent>
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="7" density="10"/>
     
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0">
@@ -224,7 +224,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="16" density="10"/>
     
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
@@ -242,7 +242,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="16" density="10"/>
     
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
@@ -260,7 +260,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="16" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnFire" target="this" condition="-50"/> 
@@ -278,9 +278,9 @@
     Tags="smallitem,chem,medical"
     pickdistance="150">
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="17" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" Stun="10" disabledeltatime="true">
@@ -298,7 +298,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="16" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
@@ -314,9 +314,9 @@
     Tags="smallitem,chem,medical"
     pickdistance="150">
 
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="17" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-1.0" duration="60.0">
@@ -334,7 +334,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="15"/>
+    <Body width="8" height="16" density="25"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" duration="60.0">
@@ -353,7 +353,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="15"/>
+    <Body width="8" height="16" density="15"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" SpeedMultiplier="1.5" setvalue="true" duration="60.0">
@@ -372,7 +372,7 @@
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
-    <Body width="25" height="5" density="10"/>
+    <Body width="8" height="16" density="10"/>
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnUse" target="Character" Health="-10.0" duration="60.0">
@@ -380,6 +380,45 @@
       </StatusEffect>
     </Holdable>
   </Item>
+
+  <Item
+   name="Velonaceps Calyx Eggs"
+   category="Material"
+   spritecolor="0.0,0.0,0.0,1.0"
+   Tags="smallitem,chem,medical"
+   pickdistance="150"
+   description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+
+  <Item
+   name="Calyxanide"
+   category="Material"
+   spritecolor="0.0,0.0,0.0,1.0"
+   Tags="smallitem,chem,medical"
+   pickdistance="150"
+   description="An antiparasitic drug used in the treatment of husk parasite infections.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="10"/>
+
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.0" setvalue="true">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  
 </Items>
 
   
