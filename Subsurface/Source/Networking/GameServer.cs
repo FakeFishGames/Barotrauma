@@ -1471,7 +1471,7 @@ namespace Barotrauma.Networking
             }
            
             float similarity = 0;
-            similarity += sender.ChatSpamSpeed; //the faster messages are being sent, the faster the filter will block
+            similarity += sender.ChatSpamSpeed * 0.05f; //the faster messages are being sent, the faster the filter will block
             for (int i = 0; i < sender.ChatMessages.Count; i++)
             {
                 float closeFactor = 1.0f / (20.0f - i);
