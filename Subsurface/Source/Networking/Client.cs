@@ -92,8 +92,21 @@ namespace Barotrauma.Networking
             {
                 name = name.Substring(0, 20);
             }
+            string rName = "";
+            for (int i=0;i<name.Length;i++)
+            {
+                if (name[i] < 32 || name[i] > 126)
+                {
+                    //TODO: allow safe unicode characters, this is just to prevent players from taking names that look similar but aren't the same
+                    rName += '?';
+                }
+                else
+                {
+                    rName += name[i];
+                }
+            }
 
-            return name;
+            return rName;
         }
 
         public void SetPermissions(ClientPermissions permissions)

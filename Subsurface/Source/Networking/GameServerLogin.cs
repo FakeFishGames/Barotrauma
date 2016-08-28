@@ -75,6 +75,7 @@ namespace Barotrauma.Networking
             else
             {
                 inc.SenderConnection.Disconnect("Authentication failed");
+                return;
             }
 
             DebugConsole.NewMessage("New player has joined the server", Color.White);
