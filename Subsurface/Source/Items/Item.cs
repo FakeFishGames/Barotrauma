@@ -1732,13 +1732,22 @@ namespace Barotrauma
                         {
                             return false;
                         }
+                        Drop(sender.Character, false);
+                        if (body != null)
+                        {
+                            body.TargetPosition = sender.Character.SimPosition;
+                            body.MoveToTargetPosition();
+                        }
                     }
-
-                    Drop(null, false);
-                    if (body != null) 
+                    else
                     {
-                        body.ReadNetworkData(message, sendingTime);
-                        body.MoveToTargetPosition();
+                        //client should not tell the server where the item should drop
+                        Drop(null, false);
+                        if (body != null)
+                        {
+                            body.ReadNetworkData(message, sendingTime);
+                            body.MoveToTargetPosition();
+                        }
                     }
                     break;
                 case NetworkEventType.PhysicsBodyPosition:

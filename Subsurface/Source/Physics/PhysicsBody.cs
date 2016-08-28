@@ -395,6 +395,10 @@ namespace Barotrauma
 
         public void ReadNetworkData(NetIncomingMessage message, float sendingTime)
         {
+            if (GameMain.Server != null)
+            {
+                return;
+            }
             if (sendingTime < lastNetworkUpdateTime) return;
 
             Vector2 newTargetPos = Vector2.Zero;
