@@ -664,8 +664,8 @@ namespace Barotrauma.Networking
                         break;
                     case (byte)PacketTypes.Chatmessage:
                         //ChatMessageType messageType = (ChatMessageType)inc.ReadByte();
-
-                        AddChatMessage(ChatMessage.ReadNetworkMessage(inc));                        
+                        var chatMsg = ChatMessage.ReadNetworkMessage(inc);
+                        AddChatMessage(chatMsg);
                         break;
                     case (byte)PacketTypes.NetworkEvent:
                         //read the data from the message and update client state accordingly
