@@ -222,7 +222,7 @@ namespace Barotrauma
         {
             DrawTiled(spriteBatch, pos, targetSize, Vector2.Zero, color);
         }
-        public Point DrawTiledT(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color, Point offset)
+        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color, Point offset)
         {
             //how many times the texture needs to be drawn on the x-axis
             int xTiles = (int)Math.Ceiling((targetSize.X + startOffset.X) / sourceRect.Width);
@@ -254,7 +254,6 @@ namespace Barotrauma
                         TexPerspective.X = sourceRect.X;
                 }
             }
-            return sourceRect.Location-TexPerspective.Location;
         }
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color)
         {

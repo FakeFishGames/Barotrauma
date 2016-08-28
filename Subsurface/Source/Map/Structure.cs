@@ -375,13 +375,13 @@ namespace Barotrauma
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
             if(sections.Length == 1)
-                prefab.sprite.DrawTiledT(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color,Point.Zero);
+                prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color,Point.Zero);
 
             foreach (WallSection s in sections)
             {
                 Point offset = rect.Location - s.rect.Location;
                 if (sections.Length != 1 && s.damage < prefab.MaxHealth)
-                   prefab.sprite.DrawTiledT(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
+                   prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
 
                 if (s.isHighLighted)
                 {
