@@ -233,11 +233,12 @@ namespace Barotrauma
                 healthBar.Draw(spriteBatch);
             }
 
-            int bloodDropCount = (int)Math.Floor(character.Bleeding);
-            bloodDropCount = MathHelper.Clamp(bloodDropCount, 0, 5);
-            for (int i = 1; i < bloodDropCount; i++)
+            float bloodDropCount = character.Bleeding;
+            bloodDropCount = MathHelper.Clamp(bloodDropCount, 0.0f, 5.0f);
+            for (int i = 0; i < Math.Ceiling(bloodDropCount); i++)
             {
-                spriteBatch.Draw(statusIcons.Texture, new Vector2(5.0f + 20 * i, healthBar.Rect.Y - 20.0f), new Rectangle(39, 3, 15, 19), Color.White * 0.8f);
+                float alpha = MathHelper.Clamp(bloodDropCount-i, 0.2f, 1.0f);
+                spriteBatch.Draw(statusIcons.Texture, new Vector2(25.0f + 20 * i, healthBar.Rect.Y - 20.0f), new Rectangle(39, 3, 15, 19), Color.White * alpha);
             }
 
             float pressureFactor = (character.AnimController.CurrentHull == null) ?

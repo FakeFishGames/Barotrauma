@@ -11,6 +11,7 @@
   <CauseOfDeath.Suffocation>Suffocated</CauseOfDeath.Suffocation>
   <CauseOfDeath.Pressure>Crushed by water pressure</CauseOfDeath.Pressure>
   <CauseOfDeath.Burn>Burned to death</CauseOfDeath.Burn>
+  <CauseOfDeath.Husk>Taken over by a parasite</CauseOfDeath.Husk>
   <CauseOfDeath.Disconnected>Disconnected</CauseOfDeath.Disconnected>
 
   <Self_CauseOfDeath.Damage>You have succumbed to your injuries.</Self_CauseOfDeath.Damage>
@@ -19,6 +20,7 @@
   <Self_CauseOfDeath.Suffocation>You have suffocated.</Self_CauseOfDeath.Suffocation>
   <Self_CauseOfDeath.Pressure>You have been crushed by water pressure.</Self_CauseOfDeath.Pressure>  
   <Self_CauseOfDeath.Burn>You have burned to death.</Self_CauseOfDeath.Burn>
+  <Self_CauseOfDeath.Husk>The parasite has taken over your body.</Self_CauseOfDeath.Husk>
   <Self_CauseOfDeath.Disconnected>You have been disconnected from the server.</Self_CauseOfDeath.Disconnected>
 
   <HuskDormant>Your throat feels sore</HuskDormant>
@@ -28,8 +30,7 @@
 
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
 
+  <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>  
+  
 
-  <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
-  
-  
 </infotexts>
