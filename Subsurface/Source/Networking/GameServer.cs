@@ -1474,13 +1474,13 @@ namespace Barotrauma.Networking
             similarity += sender.ChatSpamSpeed * 0.05f; //the faster messages are being sent, the faster the filter will block
             for (int i = 0; i < sender.ChatMessages.Count; i++)
             {
-                float closeFactor = 1.0f / (20.0f - i);
+                float closeFactor = 1.0f / (sender.ChatMessages.Count - i);
 
                 int levenshteinDist = ToolBox.LevenshteinDistance(message.Text, sender.ChatMessages[i]);
                 similarity += Math.Max((message.Text.Length - levenshteinDist) / message.Text.Length * closeFactor, 0.0f);
             }
             
-            if (similarity > 6.0f)
+            if (similarity > 5.0f)
             {
                 sender.ChatSpamCount++;
 
