@@ -346,6 +346,9 @@ namespace Barotrauma.Networking
                 if (c.FileStreamSender != null) UpdateFileTransfer(c, deltaTime);                
 
                 c.ReliableChannel.Update(deltaTime);
+
+                //slowly reset spam timers
+                c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
             }
 
             NetIncomingMessage inc = null; 
@@ -1428,6 +1431,7 @@ namespace Barotrauma.Networking
 
         private void ReadChatMessage(NetIncomingMessage inc)
         {
+            Client sender = connectedClients.Find(x => x.Connection == inc.SenderConnection);
             ChatMessage message = ChatMessage.ReadNetworkMessage(inc);
 
             List<Client> recipients = new List<Client>();
@@ -1455,19 +1459,64 @@ namespace Barotrauma.Networking
                 recipients.Add(c);
             }
 
+            //SPAM FILTER
+            if (sender.ChatSpamTimer > 0.0f)
+            {
+                //player has already been spamming, stop again
+                ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                sender.ChatSpamTimer = 10.0f;
+                SendChatMessage(denyMsg, sender);
+
+                return;
+            }
+           
+            float similarity = 0;
+            similarity += sender.ChatSpamSpeed; //the faster messages are being sent, the faster the filter will block
+            for (int i = 0; i < sender.ChatMessages.Count; i++)
+            {
+                float closeFactor = 1.0f / (20.0f - i);
+
+                int levenshteinDist = ToolBox.LevenshteinDistance(message.Text, sender.ChatMessages[i]);
+                similarity += Math.Max((message.Text.Length - levenshteinDist) / message.Text.Length * closeFactor, 0.0f);
+            }
+            
+            if (similarity > 6.0f)
+            {
+                sender.ChatSpamCount++;
+
+                if (sender.ChatSpamCount > 3)
+                {
+                    //kick for spamming too much
+                    KickClient(sender, false);
+                }
+                else
+                {
+                    ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                    sender.ChatSpamTimer = 10.0f;
+                    SendChatMessage(denyMsg, sender);
+                }
+                return;
+            }
+
+            sender.ChatMessages.Add(message.Text);
+            if (sender.ChatMessages.Count > 20)
+            {
+                sender.ChatMessages.RemoveAt(0);
+            }
+
             AddChatMessage(message);
+            sender.ChatSpamSpeed += 5.0f;
 
             foreach (Client c in recipients)
             {
                 ReliableMessage msg = c.ReliableChannel.CreateMessage();
                 msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-                //msg.InnerMessage.Write((byte)type);
-                //msg.InnerMessage.Write(message);  
 
                 message.WriteNetworkMessage(msg.InnerMessage);
 
                 c.ReliableChannel.SendMessage(msg, c.Connection);
-            }   
+            }
+            
         }
 
         public override void SendChatMessage(string message, ChatMessageType? type = null)
@@ -1526,18 +1575,21 @@ namespace Barotrauma.Networking
             SendChatMessage(chatMessage, recipients);
         }
 
+        public void SendChatMessage(ChatMessage chatMessage, Client recipient)
+        {
+            ReliableMessage msg = recipient.ReliableChannel.CreateMessage();
+            msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
+
+            chatMessage.WriteNetworkMessage(msg.InnerMessage);
+
+            recipient.ReliableChannel.SendMessage(msg, recipient.Connection);
+        }
+
         public void SendChatMessage(ChatMessage chatMessage, List<Client> recipients)
         {
-            foreach (Client c in recipients)
+            foreach (Client recipient in recipients)
             {
-                ReliableMessage msg = c.ReliableChannel.CreateMessage();
-                msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-                //msg.InnerMessage.Write((byte)type);
-                //msg.InnerMessage.Write(message);  
-
-                chatMessage.WriteNetworkMessage(msg.InnerMessage);
-
-                c.ReliableChannel.SendMessage(msg, c.Connection);
+                SendChatMessage(chatMessage, recipient);
             }  
         }
 
