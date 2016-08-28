@@ -868,7 +868,7 @@ namespace Barotrauma
             if (inventory.Owner is Item)
             {
                 var owner = (Item)inventory.Owner;
-                if (Vector2.Distance(SimPosition, owner.SimPosition) > owner.PickDistance * 0.01f)
+                if (!CanAccessItem(owner))
                 {
                     return false;
                 }
@@ -886,8 +886,13 @@ namespace Barotrauma
                 }
                 return true;
             }
-            
-            if (Vector2.Distance(SimPosition, item.SimPosition) > item.PickDistance * 0.01f)
+
+            float maxDist = item.PickDistance;
+            if (maxDist<=0.01f)
+            {
+                maxDist = 150.0f;
+            }
+            if (Vector2.Distance(SimPosition, item.SimPosition) > maxDist * 0.01f && item.ConfigFile.ToLower().IndexOf("ladder.xml")<0)
             {
                 return false;
             }
