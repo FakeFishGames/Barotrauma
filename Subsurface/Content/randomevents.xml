@@ -9,7 +9,7 @@
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
-    characterfile="Content/Characters/TigerThresher/tigerthresher.xml"
+    characterfile="Content/Characters/Tigerthresher/tigerthresher.xml"
     commonness="10"
     difficulty="20"
     minamount="1" maxamount="3"
