@@ -105,6 +105,10 @@ namespace Barotrauma.Networking
                 return true;
             };
 
+            GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, GUI.Style, inGameHUD);
+            settingsButton.OnClicked = ToggleSettingsFrame;
+            settingsButton.UserData = "settingsButton";
+
             banList = new BanList();
 
             LoadSettings();
@@ -349,6 +353,7 @@ namespace Barotrauma.Networking
 
                 //slowly reset spam timers
                 c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
+                c.ChatSpamSpeed = Math.Max(0.0f, c.ChatSpamSpeed - deltaTime);
             }
 
             NetIncomingMessage inc = null; 
