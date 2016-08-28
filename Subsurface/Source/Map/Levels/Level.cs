@@ -203,11 +203,6 @@ namespace Barotrauma
                 pathNodes.Add(new Vector2(x, Rand.Range(pathBorders.Y, pathBorders.Bottom, false)));
             }
 
-            for (int i = 2; i < pathNodes.Count; i+=3 )
-            {
-                positionsOfInterest.Add(new InterestingPosition(pathNodes[i], PositionType.MainPath));
-            }
-
             pathNodes.Add(endPosition);
             pathNodes.Add(new Vector2(endPosition.X, borders.Height));
 
@@ -276,6 +271,12 @@ namespace Barotrauma
             
             List<VoronoiCell> mainPath = CaveGenerator.GeneratePath(pathNodes, cells, cellGrid, GridCellSize,                
                 new Rectangle(pathBorders.X, pathBorders.Y, pathBorders.Width, borders.Height), 0.3f, mirror);
+
+
+            for (int i = 2; i < mainPath.Count; i += 3)
+            {
+                positionsOfInterest.Add(new InterestingPosition(mainPath[i].Center, PositionType.MainPath));
+            }
 
             List<VoronoiCell> pathCells = new List<VoronoiCell>(mainPath);
 
@@ -734,7 +735,7 @@ namespace Barotrauma
             return newCells;
         }
 
-        public Vector2 GetRandomItemPos(PositionType spawnPosType, float offsetFromWall = 10.0f)
+        public Vector2 GetRandomItemPos(PositionType spawnPosType, float randomSpread, float offsetFromWall = 10.0f)
         {
             if (!positionsOfInterest.Any()) return Size*0.5f;
 
@@ -746,6 +747,8 @@ namespace Barotrauma
             do
             {
                 Vector2 startPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType);
+
+                startPos += Rand.Vector(Rand.Range(0.0f, randomSpread, false), false);
                 
                 Vector2 endPos = startPos - Vector2.UnitY * Size.Y;
 
