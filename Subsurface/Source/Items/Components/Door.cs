@@ -487,6 +487,10 @@ namespace Barotrauma.Items.Components
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
         {
             if (sendingTime < lastReceivedMessage) return;
+            if (GameMain.Server != null)
+            {
+                return;
+            }
 
             lastReceivedMessage = sendingTime;
 

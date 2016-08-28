@@ -1702,7 +1702,7 @@ namespace Barotrauma
         {
             data = null;
 
-            if (GameMain.Server != null && type != NetworkEventType.InventoryUpdate)
+            if (GameMain.Server != null && (type != NetworkEventType.InventoryUpdate || (!IsUnconscious && !IsDead)))
             {
                 Client sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
                 if (sender == null || sender.Character != this)
