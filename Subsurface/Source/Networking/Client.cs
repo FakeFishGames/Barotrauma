@@ -30,6 +30,11 @@ namespace Barotrauma.Networking
         public string version;
         public bool inGame;
 
+        public List<string> ChatMessages = new List<string>();
+        public float ChatSpamSpeed = (float)0.0;
+        public float ChatSpamTimer = (float)0.0;
+        public int ChatSpamCount = 0;
+
         private List<Client> kickVoters;
 
         public bool ReadyToStart;

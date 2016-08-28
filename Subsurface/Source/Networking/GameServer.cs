@@ -346,6 +346,24 @@ namespace Barotrauma.Networking
                 if (c.FileStreamSender != null) UpdateFileTransfer(c, deltaTime);                
 
                 c.ReliableChannel.Update(deltaTime);
+
+                //slowly reset spam timers
+                if (c.ChatSpamTimer>(float)0.0)
+                {
+                    c.ChatSpamTimer -= deltaTime;
+                    if (c.ChatSpamTimer<(float)0.0)
+                    {
+                        c.ChatSpamTimer = (float)0.0;
+                    }
+                }
+                if (c.ChatSpamSpeed > (float)0.0)
+                {
+                    c.ChatSpamSpeed -= deltaTime;
+                    if (c.ChatSpamSpeed < (float)0.0)
+                    {
+                        c.ChatSpamSpeed = (float)0.0;
+                    }
+                }
             }
 
             NetIncomingMessage inc = null; 
@@ -1456,6 +1474,7 @@ namespace Barotrauma.Networking
 
         private void ReadChatMessage(NetIncomingMessage inc)
         {
+            Client sender = connectedClients.Find(x => x.Connection == inc.SenderConnection);
             ChatMessage message = ChatMessage.ReadNetworkMessage(inc);
 
             List<Client> recipients = new List<Client>();
@@ -1483,19 +1502,117 @@ namespace Barotrauma.Networking
                 recipients.Add(c);
             }
 
-            AddChatMessage(message);
-
-            foreach (Client c in recipients)
+            //SPAM FILTER
+            if (sender.ChatSpamTimer > (float)0.0)
             {
-                ReliableMessage msg = c.ReliableChannel.CreateMessage();
-                msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-                //msg.InnerMessage.Write((byte)type);
-                //msg.InnerMessage.Write(message);  
+                //player has already been spamming, stop again
+                recipients.Clear();
+                recipients.Add(sender);
+                ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                sender.ChatSpamTimer = (float)10.0;
+                SendChatMessage(denyMsg, recipients);
+            }
+            else
+            {
+                float similarity = 0; //TODO: find good way to calculate score if this isn't good enough
+                similarity += sender.ChatSpamSpeed; //the faster messages are being sent, the faster the filter will block
+                for (int i = 0; i < sender.ChatMessages.Count; i++)
+                {
+                    float closeFactor = (float)1.0 / ((float)20.0 - i);
+                    if (sender.ChatMessages[i] == message.Text)
+                    {
+                        //this is the exact same message
+                        similarity += (float)1.5 * (float)message.Text.Length * closeFactor;
+                    }
+                    else
+                    {
+                        //check for similar messages
+                        //TODO: improve so padding isn't enough to circumvent this
+                        for (int j = 0; j < Math.Min(message.Text.Length, sender.ChatMessages[i].Length); j++)
+                        {
+                            bool didCheck = false;
+                            if (message.Text[j] == sender.ChatMessages[i][j])
+                            {
+                                similarity += (float)3.0 * closeFactor;
+                                didCheck = true;
+                            }
+                            if (j > 0 && !didCheck)
+                            {
+                                if (message.Text[j] == sender.ChatMessages[i][j - 1])
+                                {
+                                    similarity += (float)2.0 * closeFactor;
+                                    didCheck = true;
+                                }
+                            }
+                            if (j < Math.Min(message.Text.Length, sender.ChatMessages[i].Length) - 1 && !didCheck)
+                            {
+                                if (message.Text[j] == sender.ChatMessages[i][j + 1])
+                                {
+                                    similarity += (float)2.0 * closeFactor;
+                                    didCheck = true;
+                                }
+                            }
+                            if (j > 1 && !didCheck)
+                            {
+                                if (message.Text[j] == sender.ChatMessages[i][j - 2])
+                                {
+                                    similarity += (float)1.0 * closeFactor;
+                                    didCheck = true;
+                                }
+                            }
+                            if (j < Math.Min(message.Text.Length, sender.ChatMessages[i].Length) - 2 && !didCheck)
+                            {
+                                if (message.Text[j] == sender.ChatMessages[i][j + 2])
+                                {
+                                    similarity += (float)1.0 * closeFactor;
+                                    didCheck = true;
+                                }
+                            }
+                        }
+                    }
+                }
 
-                message.WriteNetworkMessage(msg.InnerMessage);
+                if (similarity < (float)6.0)
+                {
+                    sender.ChatMessages.Add(message.Text);
+                    if (sender.ChatMessages.Count > 20)
+                    {
+                        sender.ChatMessages.RemoveAt(0);
+                    }
 
-                c.ReliableChannel.SendMessage(msg, c.Connection);
-            }   
+                    AddChatMessage(message);
+                    sender.ChatSpamSpeed += (float)5.0;
+
+                    foreach (Client c in recipients)
+                    {
+                        ReliableMessage msg = c.ReliableChannel.CreateMessage();
+                        msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
+                        //msg.InnerMessage.Write((byte)type);
+                        //msg.InnerMessage.Write(message);  
+
+                        message.WriteNetworkMessage(msg.InnerMessage);
+
+                        c.ReliableChannel.SendMessage(msg, c.Connection);
+                    }
+                }
+                else
+                {
+                    sender.ChatSpamCount++;
+                    recipients.Clear();
+                    recipients.Add(sender);
+                    if (sender.ChatSpamCount > 3)
+                    {
+                        //kick for spamming too much
+                        KickClient(sender, false);
+                    }
+                    else
+                    {
+                        ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                        sender.ChatSpamTimer = (float)10.0;
+                        SendChatMessage(denyMsg, recipients);
+                    }
+                }
+            }
         }
 
         public override void SendChatMessage(string message, ChatMessageType? type = null)
