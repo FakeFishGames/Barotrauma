@@ -233,25 +233,42 @@ namespace Barotrauma
             Rectangle TexPerspective = sourceRect;
 
             TexPerspective.Location += offset;
+            while (TexPerspective.Location.X >= sourceRect.X + sourceRect.Width)
+                TexPerspective.X = sourceRect.X + (TexPerspective.Location.X - (sourceRect.X + sourceRect.Width));
+            while (TexPerspective.Location.Y >= sourceRect.Y + sourceRect.Height)
+                TexPerspective.Y = sourceRect.Y + (TexPerspective.Location.Y - (sourceRect.Y + sourceRect.Height));
             TexPerspective.Width = (int)Math.Min(targetSize.X, sourceRect.Width);
             TexPerspective.Height = (int)Math.Min(targetSize.Y, sourceRect.Height);
             for (int y = 0; y < yTiles; y++)
             {
-                TexPerspective.X = sourceRect.X;
                 TexPerspective.Width = (int)Math.Min(targetSize.X, sourceRect.Width);
                 TexPerspective.Height = (int)Math.Min(targetSize.Y, sourceRect.Height);
                 float top = pos.Y + TexPerspective.Height * y;
                 for (int x = 0; x < xTiles; x++)
                 {
                     float left = pos.X + TexPerspective.Width * x;
-                    if (xTiles - 1 == x && x != 0)
-                        TexPerspective.Width = (int)(targetSize.X - TexPerspective.Width * x);
+                    TexPerspective.Width = Math.Min((int)(targetSize.X - TexPerspective.Width * x), TexPerspective.Width);
                     TexPerspective.Height = Math.Min((int)(targetSize.Y - TexPerspective.Height * y), TexPerspective.Height);
-                    
+                    var movementX = TexPerspective.Width;
+                    var movementY = TexPerspective.Height;
+                    if (TexPerspective.X+TexPerspective.Width > sourceRect.X + sourceRect.Width)
+                    {
+                        float diff = (TexPerspective.X + TexPerspective.Width) - (sourceRect.X + sourceRect.Width);
+                        TexPerspective.Width -= (int)diff;
+                        spriteBatch.Draw(texture, new Vector2(left+ TexPerspective.Width, top), new Rectangle(sourceRect.X, TexPerspective.Y,(int)diff, TexPerspective.Height), color, rotation, Vector2.Zero, 1.0f, effects, depth);
+                    }
+                    else if (TexPerspective.Y + TexPerspective.Height > sourceRect.Y + sourceRect.Height)
+                    {
+                        float diff = (TexPerspective.Y + TexPerspective.Height) - (sourceRect.Y + sourceRect.Height);
+                        TexPerspective.Height -= (int)diff;
+                        spriteBatch.Draw(texture, new Vector2(left, top+ TexPerspective.Height), new Rectangle(TexPerspective.X, sourceRect.Y, TexPerspective.Width, (int)diff), color, rotation, Vector2.Zero, 1.0f, effects, depth);
+                    }
+
                     spriteBatch.Draw(texture, new Vector2(left,top),TexPerspective, color, rotation, Vector2.Zero, 1.0f, effects, depth);
-                    TexPerspective.X += TexPerspective.Width;
-                    if (TexPerspective.X >= sourceRect.X+sourceRect.Width)
+                    if (TexPerspective.X+ movementX >= sourceRect.X + sourceRect.Width)
                         TexPerspective.X = sourceRect.X;
+                    if (TexPerspective.Y + movementY >= sourceRect.Y + sourceRect.Height)
+                        TexPerspective.Y = sourceRect.Y;
                 }
             }
         }
