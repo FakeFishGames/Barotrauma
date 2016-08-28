@@ -1443,6 +1443,7 @@ namespace Barotrauma.Networking
 
             foreach (Client c in connectedClients)
             {
+                if (!sender.inGame && c.inGame) continue; //people in lobby can't talk to people ingame
                 switch (message.Type)
                 {
                     case ChatMessageType.Dead:
@@ -1509,7 +1510,14 @@ namespace Barotrauma.Networking
                 sender.ChatMessages.RemoveAt(0);
             }
 
-            AddChatMessage(message);
+            if (sender.inGame || (Screen.Selected == GameMain.NetLobbyScreen))
+            {
+                AddChatMessage(message);
+            }
+            else
+            {
+                GameServer.Log(message.Text, message.Color);
+            }
             sender.ChatSpamSpeed += 5.0f;
 
             foreach (Client c in recipients)
