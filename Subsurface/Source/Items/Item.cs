@@ -1722,16 +1722,21 @@ namespace Barotrauma
 
             Condition = (float)message.ReadByte()/2.55f;
 
-            switch (type)
+            Client sender = null;
+            if (GameMain.Server != null)
+            {
+                sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
+                if (sender == null || sender.Character == null || !sender.Character.CanAccessItem(this))
+                {
+                    return false;
+                }
+            }
+
+                switch (type)
             {
                 case NetworkEventType.DropItem:
                     if (GameMain.Server != null)
                     {
-                        Client sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
-                        if (sender == null || sender.Character == null || !sender.Character.CanAccessItem(this))
-                        {
-                            return false;
-                        }
                         Drop(sender.Character, false);
                         if (body != null)
                         {
