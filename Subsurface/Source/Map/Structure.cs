@@ -379,7 +379,7 @@ namespace Barotrauma
 
             foreach (WallSection s in sections)
             {
-                Point offset = rect.Location - s.rect.Location;
+                Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
                 if (sections.Length != 1 && s.damage < prefab.MaxHealth)
                    prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
 
