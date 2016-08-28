@@ -222,7 +222,39 @@ namespace Barotrauma
         {
             DrawTiled(spriteBatch, pos, targetSize, Vector2.Zero, color);
         }
+        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color, Point offset)
+        {
+            //how many times the texture needs to be drawn on the x-axis
+            int xTiles = (int)Math.Ceiling((targetSize.X + startOffset.X) / sourceRect.Width);
+            //how many times the texture needs to be drawn on the y-axis
+            int yTiles = (int)Math.Ceiling((targetSize.Y + startOffset.Y) / sourceRect.Height);
 
+
+            Rectangle TexPerspective = sourceRect;
+
+            TexPerspective.Location += offset;
+            TexPerspective.Width = (int)Math.Min(targetSize.X, sourceRect.Width);
+            TexPerspective.Height = (int)Math.Min(targetSize.Y, sourceRect.Height);
+            for (int y = 0; y < yTiles; y++)
+            {
+                TexPerspective.X = sourceRect.X;
+                TexPerspective.Width = (int)Math.Min(targetSize.X, sourceRect.Width);
+                TexPerspective.Height = (int)Math.Min(targetSize.Y, sourceRect.Height);
+                float top = pos.Y + TexPerspective.Height * y;
+                for (int x = 0; x < xTiles; x++)
+                {
+                    float left = pos.X + TexPerspective.Width * x;
+                    if (xTiles - 1 == x && x != 0)
+                        TexPerspective.Width = (int)(targetSize.X - TexPerspective.Width * x);
+                    TexPerspective.Height = Math.Min((int)(targetSize.Y - TexPerspective.Height * y), TexPerspective.Height);
+                    
+                    spriteBatch.Draw(texture, new Vector2(left,top),TexPerspective, color, rotation, Vector2.Zero, 1.0f, effects, depth);
+                    TexPerspective.X += TexPerspective.Width;
+                    if (TexPerspective.X >= sourceRect.X+sourceRect.Width)
+                        TexPerspective.X = sourceRect.X;
+                }
+            }
+        }
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color)
         {
             //pos.X = (int)pos.X;
