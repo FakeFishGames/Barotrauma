@@ -67,7 +67,7 @@ namespace Barotrauma
 
             state = InfectionState.Dormant;
 
-            IncubationTimer += 100* deltaTime / IncubationDuration;
+            IncubationTimer += deltaTime / IncubationDuration;
 
             if (Character.Controlled != character) return;
             
@@ -79,7 +79,7 @@ namespace Barotrauma
 
         private void UpdateTransitionState(float deltaTime, Character character)
         {
-            IncubationTimer += deltaTime*10.0f/ IncubationDuration;
+            IncubationTimer += deltaTime / IncubationDuration;
 
             if (state == InfectionState.Dormant && Character.Controlled == character)
             {
@@ -98,7 +98,7 @@ namespace Barotrauma
                 state = InfectionState.Active;
             }
 
-            character.AddDamage(CauseOfDeath.Damage, 0.5f*deltaTime, null);
+            character.AddDamage(CauseOfDeath.Husk, 0.5f*deltaTime, null);
 
             if (character.AnimController.limbJoints[0].LimitEnabled &&
                 (character.AnimController.CurrentHull == null ||

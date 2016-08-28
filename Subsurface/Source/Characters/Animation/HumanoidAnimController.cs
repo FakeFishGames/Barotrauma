@@ -338,13 +338,13 @@ namespace Barotrauma
 
             if (!onGround || (LowestLimb.SimPosition.Y - floorY > 0.5f && stairs == null)) return;
 
-            float? ceilingY = null;
-            if (Submarine.PickBody(head.SimPosition, head.SimPosition + Vector2.UnitY, null, Physics.CollisionWall)!=null)
-            {
-                ceilingY = Submarine.LastPickedPosition.Y;
+            //float? ceilingY = null;
+            //if (Submarine.PickBody(head.SimPosition, head.SimPosition + Vector2.UnitY, null, Physics.CollisionWall)!=null)
+            //{
+            //    ceilingY = Submarine.LastPickedPosition.Y;
 
-                if (ceilingY - floorY < HeadPosition) Crouching = true;
-            }
+            //    if (ceilingY - floorY < HeadPosition) Crouching = true;
+            //}
 
             getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.5f);
 
@@ -456,24 +456,20 @@ namespace Barotrauma
             else
             {
                 float movementFactor = (movement.X / 4.0f) * movement.X * Math.Sign(movement.X);
-                
 
-
-                //MoveLimb(leftFoot, footPos, 2.5f);
-
-                for (int i = -1; i < 2; i+=2 )
+                for (int i = -1; i < 2; i += 2)
                 {
-                Vector2 footPos = new Vector2(
-                    Crouching ?  waist.SimPosition.X + Math.Sign(stepSize.X*i)*Dir*0.3f : waist.SimPosition.X,
-                    colliderPos.Y - 0.2f);
+                    Vector2 footPos = new Vector2(
+                        Crouching ? waist.SimPosition.X + Math.Sign(stepSize.X * i) * Dir * 0.3f : GetCenterOfMass().X,
+                        colliderPos.Y - 0.1f);
 
                     var foot = i == -1 ? rightFoot : leftFoot;
 
-                    MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X)*50.0f);
+                    MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
                 }
 
-                leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
-                rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 5.0f);
+                leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 50.0f);
+                rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 50.0f);
 
                 if (!rightHand.Disabled)
                 {
@@ -1183,7 +1179,7 @@ namespace Barotrauma
 
                 Vector2 position = limb.SimPosition;
 
-                if (!limb.pullJoint.Enabled && mirror)
+                if ((limb.pullJoint==null || !limb.pullJoint.Enabled) && mirror)
                 {
                     difference = limb.body.SimPosition - torso.SimPosition;
                     difference = Vector2.Transform(difference, torsoTransform);

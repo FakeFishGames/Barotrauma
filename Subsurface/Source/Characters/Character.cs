@@ -1816,6 +1816,7 @@ namespace Barotrauma
                         bleeding = 0.0f;
                         Oxygen = 100.0f;
                         AnimController.StunTimer = 0.0f;
+                        huskInfection = null;
                         return true;
                     }
 
@@ -1827,7 +1828,11 @@ namespace Barotrauma
 
                     if (message.ReadBoolean())
                     {
-                        HuskInfectionState = message.ReadRangedSingle(0.0f, 1.0f, 4);
+                        float infectionState = message.ReadRangedSingle(0.0f, 1.0f, 4);
+                        if (infectionState == 0.0f) 
+                            huskInfection = null;
+                        else
+                            HuskInfectionState = infectionState;
                     }
 
                     break;

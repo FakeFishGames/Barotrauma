@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     enum CauseOfDeath
     {
-        Damage, Bloodloss, Pressure, Suffocation, Drowning, Burn, Disconnected
+        Damage, Bloodloss, Pressure, Suffocation, Drowning, Burn, Husk, Disconnected
     }
 
     public enum DamageType { None, Blunt, Slash, Burn }
