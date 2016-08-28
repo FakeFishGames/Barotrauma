@@ -595,8 +595,8 @@ namespace Barotrauma
                 }
             }
 
-            if (sections[sectionIndex].gap != null)                    
-                sections[sectionIndex].gap.Open = (float)Math.Pow(((damage / prefab.MaxHealth)-0.5)*2.0, 2.0);
+            if (sections[sectionIndex].gap != null)
+                sections[sectionIndex].gap.Open = (damage/prefab.MaxHealth - 0.5f)*2;
 
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.MaxHealth);
