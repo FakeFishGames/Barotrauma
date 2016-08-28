@@ -374,11 +374,14 @@ namespace Barotrauma
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
-            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);
-
+            if(sections.Length == 1)
+                prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color,Point.Zero);
 
             foreach (WallSection s in sections)
             {
+                Point offset = rect.Location - s.rect.Location;
+                if (sections.Length != 1 && s.damage < prefab.MaxHealth)
+                   prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
 
                 if (s.isHighLighted)
                 {
@@ -391,9 +394,9 @@ namespace Barotrauma
                 
                 if (s.damage < 0.01f) continue;
                 
-                GUI.DrawRectangle(spriteBatch,
-                    new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
-                    Color.Black * (s.damage / prefab.MaxHealth), true); 
+               /* GUI.DrawRectangle(spriteBatch,
+                   new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
+                    Color.Black * (s.damage / prefab.MaxHealth), true);*/ 
             }
             /*
             if(_convexHulls == null) return;
