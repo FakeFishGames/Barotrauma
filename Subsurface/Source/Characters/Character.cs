@@ -865,6 +865,14 @@ namespace Barotrauma
                 return owner.isDead || owner.IsUnconscious || owner.Stun > 0.0f || owner.LockHands;
             }
 
+            if (inventory.Owner is Item)
+            {
+                var owner = (Item)inventory.Owner;
+                if (Vector2.Distance(SimPosition, owner.SimPosition) > owner.PickDistance * 0.01f)
+                {
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -872,9 +880,17 @@ namespace Barotrauma
         {
             if (item.ParentInventory != null)
             {
-                if (!CanAccessInventory(item.ParentInventory)) return false;
+                if (!CanAccessInventory(item.ParentInventory))
+                {
+                    return false;
+                }
+                return true;
             }
-
+            
+            if (Vector2.Distance(SimPosition, item.SimPosition) > item.PickDistance * 0.01f)
+            {
+                return false;
+            }
             return true;
         }
 
