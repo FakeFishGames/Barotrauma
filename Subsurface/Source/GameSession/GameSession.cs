@@ -246,7 +246,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                var manageButton = new GUIButton(new Rectangle(200, -30, 100, 20), "Manage players", GUI.Style, infoFrame);
+                var manageButton = new GUIButton(new Rectangle(200, -30, 130, 20), "Manage players", GUI.Style, infoFrame);
                 manageButton.UserData = InfoFrameTab.ManagePlayers;
                 manageButton.OnClicked = SelectInfoFrameTab;
             }
