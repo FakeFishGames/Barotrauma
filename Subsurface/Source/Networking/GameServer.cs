@@ -1485,7 +1485,7 @@ namespace Barotrauma.Networking
             similarity += sender.ChatSpamSpeed * 0.05f; //the faster messages are being sent, the faster the filter will block
             for (int i = 0; i < sender.ChatMessages.Count; i++)
             {
-                float closeFactor = 1.0f / (sender.ChatMessages.Count - i);
+                float closeFactor = 1.0f / (20.0f - i);
 
                 int levenshteinDist = ToolBox.LevenshteinDistance(message.Text, sender.ChatMessages[i]);
                 similarity += Math.Max((message.Text.Length - levenshteinDist) / message.Text.Length * closeFactor, 0.0f);
@@ -1613,6 +1613,9 @@ namespace Barotrauma.Networking
 
         private void ReadCharacterData(NetIncomingMessage message)
         {
+            Client sender = connectedClients.Find(c => c.Connection == message.SenderConnection);
+            if (sender == null) return;
+
             string name = "";
             Gender gender = Gender.Male;
             int headSpriteId = 0;
@@ -1630,6 +1633,11 @@ namespace Barotrauma.Networking
                 headSpriteId = 0;
             }
 
+            if (sender.characterInfo != null)
+            {
+                //clients can't change their character's name once it's been set
+                name = sender.characterInfo.Name;
+            }
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
             int count = message.ReadByte();
@@ -1639,9 +1647,6 @@ namespace Barotrauma.Networking
                 JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
-
-            Client sender = connectedClients.Find(c => c.Connection == message.SenderConnection);
-            if (sender == null) return;
 
             sender.characterInfo = new CharacterInfo(Character.HumanConfigFile, name, gender);
             sender.characterInfo.HeadSpriteId = headSpriteId;
