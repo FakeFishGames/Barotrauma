@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     class GameSession
     {
-        public enum InfoFrameTab { Crew, Mission };
+        public enum InfoFrameTab { Crew, Mission, ManagePlayers };
 
         public readonly TaskManager TaskManager;
         
@@ -244,6 +244,13 @@ namespace Barotrauma
             missionButton.UserData = InfoFrameTab.Mission;
             missionButton.OnClicked = SelectInfoFrameTab;
 
+            if (GameMain.Server != null)
+            {
+                var manageButton = new GUIButton(new Rectangle(200, -30, 100, 20), "Manage players", GUI.Style, infoFrame);
+                manageButton.UserData = InfoFrameTab.ManagePlayers;
+                manageButton.OnClicked = SelectInfoFrameTab;
+            }
+
             var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, infoFrame);
             closeButton.OnClicked = ToggleInfoFrame;
 
@@ -262,6 +269,9 @@ namespace Barotrauma
                     break;
                 case InfoFrameTab.Mission:
                     CreateMissionInfo(infoFrame);
+                    break;
+                case InfoFrameTab.ManagePlayers:
+                    GameMain.Server.ManagePlayersFrame(infoFrame);
                     break;
             }
 
@@ -283,7 +293,7 @@ namespace Barotrauma
 
             
         }
-
+        
         public void Update(float deltaTime)
         {
             TaskManager.Update(deltaTime);

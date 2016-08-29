@@ -1732,7 +1732,7 @@ namespace Barotrauma
                 }
             }
 
-                switch (type)
+            switch (type)
             {
                 case NetworkEventType.DropItem:
                     if (GameMain.Server != null)
