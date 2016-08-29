@@ -157,7 +157,7 @@ namespace Barotrauma
 
             SetTextPos();
 
-            if (rect.Height == 0 && !string.IsNullOrWhiteSpace(Text))
+            if (rect.Height == 0 && !string.IsNullOrEmpty(Text))
             {
                 this.rect.Height = (int)Font.MeasureString(wrappedText).Y;
             }
