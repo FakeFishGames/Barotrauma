@@ -508,12 +508,11 @@ namespace Barotrauma
 
             Properties = ObjectProperty.GetProperties(this);
 
+            Info = characterInfo;
             if (file == humanConfigFile && characterInfo == null)
             {
                 Info = new CharacterInfo(file);
             }
-
-            Info = characterInfo;
 
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
