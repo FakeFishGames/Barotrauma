@@ -1,4 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.1.0
+---------------------------------------------------------------------------------------------------------
+
+- getting attacked by a husk will slowly turn the victim into a husk
+
+- spam filter
+- added server options to the ingame HUD
+- fixed tiger thresher spawning on Linux
+- a more secure password authentication method (again)
+- ingame players can't receive messages from lobby players anymore
+- more server-side security checks
+
+- medical doctors always have a high enough medical skill to fabricate any drug
+- ai-controlled crew can be spawned using the console in multiplayer
+- it's possible to manually attack when controlling a creature
+- randomly spawned artifacts are spread out better throughout the level
+- characters won't let go of a person they're dragging when entering/exiting the sub
+- respawned players get the same ID card tags they would've gotten if they had spawned inside the main sub
+- highlighted characters glow in the dark
+
+---------------------------------------------------------------------------------------------------------
 v0.5.0.3
 ---------------------------------------------------------------------------------------------------------
 

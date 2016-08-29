@@ -833,7 +833,7 @@ namespace Barotrauma.Networking
 
         public bool HasPermission(ClientPermissions permission)
         {
-            return permissions.HasFlag(permission);
+            return false;// permissions.HasFlag(permission);
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
