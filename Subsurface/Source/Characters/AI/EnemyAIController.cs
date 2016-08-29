@@ -528,6 +528,8 @@ namespace Barotrauma
 
         public override void ReadNetworkData(NetIncomingMessage message)
         {
+            if (GameMain.Server != null) return;
+
             AiState newState = AiState.None;
             Vector2 newWallAttackPos = Vector2.Zero;
             float wanderAngle;
