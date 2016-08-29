@@ -56,7 +56,11 @@ namespace Barotrauma.Networking
             name = name.Replace(";", "");
 
             this.name = name;
-            this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            this.password = "";
+            if (password.Length>0)
+            {
+                this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            }
             
             config = new NetPeerConfiguration("barotrauma");
 
