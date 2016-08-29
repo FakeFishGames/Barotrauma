@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
@@ -55,7 +56,7 @@ namespace Barotrauma.Networking
             name = name.Replace(";", "");
 
             this.name = name;
-            this.password = password;
+            this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
             
             config = new NetPeerConfiguration("barotrauma");
 
