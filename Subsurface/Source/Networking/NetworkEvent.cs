@@ -150,7 +150,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                if (!e.FillNetworkData(eventType, message, data)) return false;
+                
             }
 
             catch (Exception exception)
@@ -227,10 +227,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                if (!e.ReadNetworkData(eventType, message, sendingTime, out data))
-                {
-                    resend = false;
-                }
+                
             }
             catch (Exception exception)
             {

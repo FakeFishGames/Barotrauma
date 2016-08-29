@@ -92,31 +92,7 @@ namespace Barotrauma
 
             dictionary.Add(id, this);
         }
-
-        /// <summary>
-        /// Writes the state of the entity into the message
-        /// </summary>
-        /// <param name="data">some data that was saved when the networkevent was created</param>
-        /// <returns>false if something went wrong when filling the message, true if the msg is ready to be sent</returns>
-        public virtual bool FillNetworkData(NetworkEventType type, NetBuffer message, object data) 
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Updates the state of the entity based on the data in the message
-        /// </summary>
-
-        /// <param name="sendingTime"></param>
-        /// <param name="data"></param>
-        /// <returns>false if the message is not valid (client trying to change something they're not authorized to, corrupt data, etc) and should be ignored</returns>
-        public virtual bool ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
-        {
-            data = null;
-
-            return false;
-        }
-
+        
         /// <summary>
         /// Find an entity based on the ID
         /// </summary>

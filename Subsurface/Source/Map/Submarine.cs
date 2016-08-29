@@ -537,55 +537,6 @@ namespace Barotrauma
             return closest;
         }
         
-        public override bool FillNetworkData(Networking.NetworkEventType type, NetBuffer message, object data)
-        {
-            if (subBody == null) return false;
-
-            message.Write(subBody.Position.X);
-            message.Write(subBody.Position.Y);
-
-            message.Write(Velocity.X);
-            message.Write(Velocity.Y);
-
-            return true;
-        }
-
-        public override bool ReadNetworkData(Networking.NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
-        {
-            data = null;
-
-            if (GameMain.Server != null) return false;
-
-            Vector2 newTargetPosition, newSpeed;
-            try
-            {
-                if (sendingTime <= lastNetworkUpdate) return false;
-
-                newTargetPosition = new Vector2(message.ReadFloat(), message.ReadFloat());
-                newSpeed = new Vector2(message.ReadFloat(), message.ReadFloat());
-            }
-
-            catch (Exception e)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("invalid network message", e);
-#endif
-                return false;
-            }
-
-            if (!newSpeed.IsValid() || !newTargetPosition.IsValid()) return false;
-
-            //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
-
-            subBody.TargetPosition = newTargetPosition;
-            subBody.Velocity = newSpeed;
-
-            lastNetworkUpdate = sendingTime;
-
-            return true;
-        }
-            
-
         //saving/loading ----------------------------------------------------
 
         public bool Save()

@@ -405,26 +405,7 @@ namespace Barotrauma.Items.Components
             if (screenOverlay != null) screenOverlay.Remove();
 
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-            message.Write(IsActive);
-
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            try
-            {
-                IsActive = message.ReadBoolean();
-                isActiveTickBox.Selected = IsActive;
-            }
-            catch
-            {
-                return;
-            }
-        }
+        
     }
 
     class RadarBlip

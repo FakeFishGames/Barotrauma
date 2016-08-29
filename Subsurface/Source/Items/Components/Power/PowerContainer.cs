@@ -245,32 +245,6 @@ namespace Barotrauma.Items.Components
 
             spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-            message.WriteRangedSingle(MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-            message.WriteRangedSingle(MathHelper.Clamp(charge / capacity, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            float newRechargeSpeed = 0f;
-            float newCharge = 0.0f;
-
-            try
-            {
-                newRechargeSpeed = message.ReadRangedSingle(0.0f, 1.0f, 8);
-                newRechargeSpeed *= MaxRechargeSpeed;
-                newCharge = message.ReadRangedSingle(0.0f, 1.0f, 8);
-                newCharge *= capacity;
-            }
-            catch { }
-
-            RechargeSpeed = newRechargeSpeed;
-            Charge = newCharge;
-        }
-
+        
     }
 }

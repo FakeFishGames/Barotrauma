@@ -1579,7 +1579,6 @@ namespace Barotrauma.Networking
             
             message.Write(character.Info.Job.Name);
             
-            Item.Spawner.FillNetworkData(message, character.SpawnItems);
         }
 
         public void SendCharacterSpawnMessage(Character character, List<NetConnection> recipients = null)
@@ -1610,8 +1609,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage message = server.CreateMessage();
             message.Write((byte)PacketTypes.NewItem);
-
-            Item.Spawner.FillNetworkData(message, items);            
+        
 
             SendMessage(message, NetDeliveryMethod.ReliableOrdered, recipients);
         }
@@ -1622,8 +1620,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage message = server.CreateMessage();
             message.Write((byte)PacketTypes.RemoveItem);
-            Item.Remover.FillNetworkData(message, items);
-
+            
             SendMessage(message, NetDeliveryMethod.ReliableOrdered, recipients);
         }
 
