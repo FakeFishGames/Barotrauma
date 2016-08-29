@@ -1640,15 +1640,12 @@ namespace Barotrauma.Networking
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 
-            foreach (Client c in connectedClients)
-            {
-                if (c.Connection != message.SenderConnection) continue;
+            Client sender = connectedClients.Find(c => c.Connection == message.SenderConnection);
+            if (sender == null) return;
 
-                c.characterInfo = new CharacterInfo(Character.HumanConfigFile, name, gender);
-                c.characterInfo.HeadSpriteId = headSpriteId;
-                c.jobPreferences = jobPreferences;
-                break;
-            }
+            sender.characterInfo = new CharacterInfo(Character.HumanConfigFile, name, gender);
+            sender.characterInfo.HeadSpriteId = headSpriteId;
+            sender.jobPreferences = jobPreferences;
         }
 
         public void WriteCharacterData(NetOutgoingMessage msg, string name, Character c)
