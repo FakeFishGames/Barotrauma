@@ -367,46 +367,6 @@ namespace Barotrauma.Items.Components
 
             return true;
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-            int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
-
-            message.WriteRangedInteger(-1, fabricableItems.Count-1, itemIndex);
-
-            var containers = item.GetComponents<ItemContainer>();
-            containers[0].Inventory.FillNetworkData(type, message, null);
-            containers[1].Inventory.FillNetworkData(type, message, null);
-            
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            if (sendingTime < lastNetworkUpdate) return;
-
-            int itemIndex = message.ReadRangedInteger(-1, fabricableItems.Count-1);
-
-            var containers = item.GetComponents<ItemContainer>();
-            containers[0].Inventory.ReadNetworkData(type, message, sendingTime);
-            containers[1].Inventory.ReadNetworkData(type, message, sendingTime);
-
-            if (itemIndex == -1)
-            {
-                CancelFabricating();
-            }
-            else
-            {
-                //if already fabricating the selected item, return
-                if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) != itemIndex) return;
-
-                if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
-
-                SelectItem(null, fabricableItems[itemIndex]);
-                StartFabricating(fabricableItems[itemIndex]);
-            }
-
-            lastNetworkUpdate = sendingTime;
-        }
+        
     }
 }

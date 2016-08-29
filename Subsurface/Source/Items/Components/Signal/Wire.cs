@@ -525,35 +525,6 @@ namespace Barotrauma.Items.Components
 
             base.RemoveComponentSpecific();
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-            message.Write((byte)Math.Min(Nodes.Count, 10));
-            for (int i = 0; i < Math.Min(Nodes.Count,10); i++)
-            {
-                message.Write(Nodes[i].X);
-                message.Write(Nodes[i].Y);
-            }
-
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            Nodes.Clear();
-
-            List<Vector2> newNodes = new List<Vector2>();
-            int nodeCount = message.ReadByte();
-            for (int i = 0; i<nodeCount; i++)
-            {
-                Vector2 newNode = new Vector2(message.ReadFloat(), message.ReadFloat());
-                if (!MathUtils.IsValid(newNode)) return;
-                newNodes.Add(newNode);
-            }
-
-            Nodes = newNodes;
-
-            Drawable = Nodes.Any();
-        }
+        
     }
 }

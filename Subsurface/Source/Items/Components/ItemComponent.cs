@@ -789,14 +789,6 @@ namespace Barotrauma.Items.Components
 
             return ic;
         }
-
-        public virtual bool FillNetworkData(NetworkEventType type, NetBuffer message)
-        {
-            return false;
-        }
-
-        public virtual void ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime)
-        {
-        }
+        
     }
 }

@@ -769,54 +769,6 @@ namespace Barotrauma
                 if (s.gap != null) s.gap.ConnectedWall = this;
             }
         }
-
-        public override bool FillNetworkData(NetworkEventType type, NetBuffer message, object data)
-        {
-            //var updateSections = Array.FindAll(sections, s => s != null && Math.Abs(s.damage - s.lastSentDamage) > 0.01f);
-
-            //if (updateSections.Length == 0) return false;
-
-            //Debug.Assert(updateSections.Length<255);
-
-           // message.Write((byte)updateSections.Length);
-
-            for (int i = 0; i < sections.Length; i++)
-            {
-                //if (Math.Abs(sections[i].damage - sections[i].lastSentDamage) < 0.01f) continue;
-
-                //message.Write((byte)i);
-                message.WriteRangedSingle(sections[i].damage / Health, 0.0f, 1.0f, 8);
-
-                sections[i].lastSentDamage = sections[i].damage;
-            }
-
-            return true;
-        }
-
-        public override bool ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
-        {
-            data = null;
-
-            if (GameMain.Server != null) return false;
-
-            if (sendingTime < lastUpdate) return false;
-
-           // int sectionCount = message.ReadByte();
-
-            for (int i = 0; i<sections.Count(); i++)
-            {
-                //byte sectionIndex = message.ReadByte();
-                float damage = message.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
-
-                //if (sectionIndex < 0 || sectionIndex >= sections.Length) continue;
-
-                SetDamage(i, damage);
-            }
-
-            lastUpdate = sendingTime;
-
-            return true;
-        }
-    
+        
     }
 }

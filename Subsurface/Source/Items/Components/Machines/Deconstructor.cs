@@ -125,30 +125,6 @@ namespace Barotrauma.Items.Components
             container.Inventory.Locked = IsActive;
             
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-
-            var containers = item.GetComponents<ItemContainer>();
-            containers[0].Inventory.FillNetworkData(type, message, null);
-            containers[1].Inventory.FillNetworkData(type, message, null);
-
-            message.Write(IsActive);
-
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            if (sendingTime < lastNetworkUpdate) return;
-
-            var containers = item.GetComponents<ItemContainer>();
-            containers[0].Inventory.ReadNetworkData(type, message, sendingTime);
-            containers[1].Inventory.ReadNetworkData(type, message, sendingTime);
-
-            SetActive(message.ReadBoolean());
-
-            lastNetworkUpdate = sendingTime;
-        }
+        
     }
 }

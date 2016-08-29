@@ -329,59 +329,6 @@ namespace Barotrauma.Items.Components
                 base.ReceiveSignal(stepsTaken, signal, connection, sender, power);
             }
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-            message.Write(targetVelocity.X);
-            message.Write(targetVelocity.Y);
-
-            message.Write(autoPilot);
-            if (autoPilot)
-            {
-                message.Write(posToMaintain != null);
-                if (posToMaintain != null)
-                {
-                    message.Write(((Vector2)posToMaintain).X);
-                    message.Write(((Vector2)posToMaintain).Y);
-                }
-            }
-
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            Vector2 newTargetVelocity   = Vector2.Zero;
-            bool newAutoPilot           = false;
-
-            Vector2? newPosToMaintain = null;
-
-            try
-            {
-                newTargetVelocity = new Vector2(message.ReadFloat(), message.ReadFloat());
-                newAutoPilot = message.ReadBoolean();
-                if (newAutoPilot)
-                {
-                    bool maintainPos = message.ReadBoolean();
-                    if (maintainPos)
-                    {
-                        newPosToMaintain = new Vector2(
-                            message.ReadFloat(), 
-                            message.ReadFloat());
-                    }
-                }
-            }
-
-            catch
-            {
-                return;
-            }
-
-            TargetVelocity = newTargetVelocity;
-            AutoPilot = newAutoPilot;
-
-            maintainPosTickBox.Selected = newPosToMaintain != null;
-            posToMaintain = newPosToMaintain;
-        }
+        
     }
 }

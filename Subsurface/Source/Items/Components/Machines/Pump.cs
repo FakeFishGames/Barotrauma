@@ -194,50 +194,6 @@ namespace Barotrauma.Items.Components
 
             if (!IsActive) currPowerConsumption = 0.0f;
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-            message.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
-            message.Write(IsActive);
-            message.WritePadBits();
-
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            float newFlow = 0.0f;
-            bool newActive;
-
-            if (sendingTime < lastUpdate) return;
-
-            try
-            {
-                newFlow = message.ReadRangedInteger(-10,10)*10.0f;
-                newActive = message.ReadBoolean();
-            }
-
-            catch (Exception e)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("invalid network message", e);
-#endif
-                return;
-            }
-
-            FlowPercentage = newFlow;
-            IsActive = newActive;
-
-            lastUpdate = sendingTime;
-
-            if (GameMain.Server == null) return;
-
-            var sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
-            if (sender != null)
-            {
-                Networking.GameServer.Log("Pump settings adjusted by " + sender.name, Color.Orange);
-                Networking.GameServer.Log("Active: " + (IsActive ? "yes" : "no ") + "  Pumping speed: " + (int)flowPercentage + " %", Color.Orange);
-            }
-        }
+        
     }
 }

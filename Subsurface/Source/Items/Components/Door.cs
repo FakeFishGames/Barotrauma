@@ -476,21 +476,6 @@ namespace Barotrauma.Items.Components
                 item.NewComponentEvent(this, false, true);
             }
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-            message.Write(isOpen);
-
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            if (sendingTime < lastReceivedMessage) return;
-
-            lastReceivedMessage = sendingTime;
-
-            SetState(message.ReadBoolean(), true);
-        }
+        
     }
 }

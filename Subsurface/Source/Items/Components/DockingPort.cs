@@ -651,65 +651,6 @@ namespace Barotrauma.Items.Components
                     break;
             }
         }
-
-        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
-        {
-            message.Write(docked);
-
-            if (docked)
-            {
-                message.Write(dockingTarget.item.ID);
-                message.Write((ushort)hullIds[0]);
-                message.Write((ushort)hullIds[1]);
-
-                message.Write((ushort)gapId);
-            }
-
-            return true;
-        }
-
-        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
-        {
-            bool isDocked = message.ReadBoolean();
-
-            if (isDocked)
-            {
-                ushort dockingTargetID = message.ReadUInt16();
-                Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
-                if (targetEntity == null || !(targetEntity is Item))
-                {
-                    DebugConsole.ThrowError("Invalid docking port network event (can't dock to "+targetEntity.ToString()+")");
-                    return;
-                }
-
-                dockingTarget = (targetEntity as Item).GetComponent<DockingPort>();
-
-                if (dockingTarget == null)
-                {
-                    DebugConsole.ThrowError("Invalid docking port network event ("+targetEntity+" doesn't have a docking port component)");
-                    return;
-                }
-
-                hullIds[0] = message.ReadUInt16();
-                hullIds[1] = message.ReadUInt16();
-
-                gapId = message.ReadUInt16();
-                if (hulls != null)
-                {
-                    if (hulls[0] != null) hulls[0].ID = (ushort)hullIds[0];
-                    if (hulls[1] != null) hulls[1].ID = (ushort)hullIds[1];
-                }
-
-
-                if (gap != null) gap.ID = (ushort)gapId;
-
-                Dock(dockingTarget);
-
-            }
-            else
-            {
-                Undock();
-            }
-        }
+        
     }
 }
