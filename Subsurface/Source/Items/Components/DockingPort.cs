@@ -670,6 +670,8 @@ namespace Barotrauma.Items.Components
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
         {
+            if (GameMain.Server != null) return;
+
             bool isDocked = message.ReadBoolean();
 
             if (isDocked)
