@@ -401,10 +401,10 @@ namespace Barotrauma
                 s.isHighLighted = false;
                 
                 if (s.damage < 0.01f) continue;
-                
-               /* GUI.DrawRectangle(spriteBatch,
-                   new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
-                    Color.Black * (s.damage / prefab.MaxHealth), true);*/ 
+
+                 GUI.DrawRectangle(spriteBatch,
+                    new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
+                     Color.Black * (s.damage / prefab.MaxHealth), true); 
             }
             /*
             if(_convexHulls == null) return;

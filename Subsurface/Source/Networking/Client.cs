@@ -126,7 +126,7 @@ namespace Barotrauma.Networking
 
         public bool HasPermission(ClientPermissions permission)
         {
-            return Permissions.HasFlag(permission);
+            return false; //Permissions.HasFlag(permission);
         }
 
         public T GetVote<T>(VoteType voteType)
