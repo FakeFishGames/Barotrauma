@@ -880,23 +880,22 @@ namespace Barotrauma
         {
             if (item.ParentInventory != null)
             {
-                if (!CanAccessInventory(item.ParentInventory))
-                {
-                    return false;
-                }
-                return true;
+                return CanAccessInventory(item.ParentInventory);
             }
 
-            float maxDist = item.PickDistance;
-            if (maxDist<=0.01f)
+            float maxDist = item.PickDistance * 1.2f;
+            if (maxDist <= 0.01f)
             {
                 maxDist = 150.0f;
             }
-            if (Vector2.Distance(SimPosition, item.SimPosition) > maxDist * 0.01f && item.ConfigFile.ToLower().IndexOf("ladder.xml")<0)
+
+            if (Vector2.Distance(WorldPosition, item.WorldPosition) < maxDist ||
+                item.IsInsideTrigger(WorldPosition))
             {
-                return false;
+                return true;
             }
-            return true;
+
+            return item.GetComponent<Items.Components.Ladder>() != null;
         }
 
         private Item FindClosestItem(Vector2 mouseSimPos, out float distance)
