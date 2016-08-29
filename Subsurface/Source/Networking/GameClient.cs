@@ -6,6 +6,7 @@ using Barotrauma.Networking.ReliableMessages;
 using FarseerPhysics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Barotrauma.Items.Components;
 using System.ComponentModel;
 
@@ -172,7 +173,7 @@ namespace Barotrauma.Networking
                 reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
             }
 
-            CoroutineManager.StartCoroutine(WaitForStartingInfo(password));
+            CoroutineManager.StartCoroutine(WaitForStartingInfo(Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)))));
             
             // Start the timer
             //update.Start();
@@ -336,9 +337,12 @@ namespace Barotrauma.Networking
 
                                 var outmsg = client.CreateMessage();
 
-                                NetEncryption algo = new NetXtea(client, password);
+                                string saltedPw = password;
+                                saltedPw = saltedPw + Convert.ToString(nonce);
+                                saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
+                                NetEncryption algo = new NetXtea(client, saltedPw);
                                 outmsg.Write((byte)PacketTypes.Login);
-                                outmsg.Write(nonce);
+                                outmsg.Write(saltedPw);
                                 outmsg.Write(myID);
                                 outmsg.Write(GameMain.Version.ToString());
                                 outmsg.Write(GameMain.SelectedPackage.Name);
