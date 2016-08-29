@@ -173,7 +173,12 @@ namespace Barotrauma.Networking
                 reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
             }
 
-            CoroutineManager.StartCoroutine(WaitForStartingInfo(Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)))));
+            String sendPw = "";
+            if (password.Length>0)
+            {
+                sendPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            }
+            CoroutineManager.StartCoroutine(WaitForStartingInfo(sendPw));
             
             // Start the timer
             //update.Start();
