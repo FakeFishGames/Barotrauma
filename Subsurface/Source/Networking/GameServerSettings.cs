@@ -649,7 +649,7 @@ namespace Barotrauma.Networking
 
         public void ManagePlayersFrame(GUIFrame infoFrame)
         {
-            GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 280, 300), Color.White * 0.7f, GUI.Style, infoFrame);
+            GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.Style, infoFrame);
             cList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             //crewList.OnSelected = SelectCrewCharacter;
 
@@ -668,11 +668,11 @@ namespace Barotrauma.Networking
                     Alignment.Left, Alignment.Left,
                     null, frame);
 
-                var banButton = new GUIButton(new Rectangle(220, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                var banButton = new GUIButton(new Rectangle(-120, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
                 banButton.UserData = c.name;
                 banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
 
-                var kickButton = new GUIButton(new Rectangle(110, 0, 100, 20), "Kick", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
                 kickButton.UserData = c.name;
                 kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
 
