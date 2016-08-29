@@ -81,6 +81,12 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            if (ConnectedClients.Count>=config.MaximumConnections)
+            {
+                inc.SenderConnection.Disconnect("Server full");
+                return;
+            }
+
             DebugConsole.NewMessage("New player has joined the server", Color.White);
 
             byte userID;
