@@ -322,7 +322,9 @@ namespace Barotrauma.Networking
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
         }
-        
+
+        private CoroutineHandle startGameCoroutine;
+
         /// <summary>
         /// Check for new incoming messages from server
         /// </summary>
@@ -330,7 +332,9 @@ namespace Barotrauma.Networking
         {
             // Create new incoming message holder
             NetIncomingMessage inc;
-            
+
+            if (startGameCoroutine != null && CoroutineManager.IsCoroutineRunning(startGameCoroutine)) return;
+
             while ((inc = client.ReadMessage()) != null)
             {
                 //TODO: read message data

@@ -486,6 +486,30 @@ namespace Barotrauma.Networking
                     client.inGame = false;
                 }
             }
+
+            CoroutineManager.StartCoroutine(EndCinematic());
+        }
+
+        public IEnumerable<object> EndCinematic()
+        {
+            float endPreviewLength = 10.0f;
+
+            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+
+            float secondsLeft = endPreviewLength;
+
+            do
+            {
+                secondsLeft -= CoroutineManager.UnscaledDeltaTime;
+
+                yield return CoroutineStatus.Running;
+            } while (secondsLeft > 0.0f);
+
+            Submarine.Unload();
+
+            GameMain.NetLobbyScreen.Select();
+
+            yield return CoroutineStatus.Success;
         }
         
         private void UpdateCrewFrame()
