@@ -56,55 +56,49 @@ namespace Barotrauma
         {
             Coroutines.RemoveAll(c => c == handle);
         }
+        private static bool IsDone(CoroutineHandle handle)
+        {
+            try
+            {
+                if (handle.Coroutine.Current != null)
+                {
+                    WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
+                    if (wfs != null)
+                    {
+                        if (!wfs.CheckFinished(UnscaledDeltaTime)) return false;
+                    }
+                    else
+                    {
+                        switch ((CoroutineStatus)handle.Coroutine.Current)
+                        {
+                            case CoroutineStatus.Success:
+                                return true;
 
+                            case CoroutineStatus.Failure:
+                                DebugConsole.ThrowError("Coroutine ''" + handle.Name + "'' has failed");
+                                return true;
+                        }
+                    }
+                }
+
+                handle.Coroutine.MoveNext();
+                return false;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Coroutine " + handle.Name + " threw an exception: " + e.Message);
+                return true;
+            }
+        }
         // Updating just means stepping through all the coroutines
         public static void Update(float unscaledDeltaTime, float deltaTime)
         {
             UnscaledDeltaTime = unscaledDeltaTime;
             DeltaTime = deltaTime;
 
-            for (int i = Coroutines.Count-1; i>=0; i--)
-            {
-                CoroutineHandle handle = Coroutines[i];
-
-                try
-                {
-                    if (handle.Coroutine.Current != null)
-                    {
-                        WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
-                        if (wfs != null)
-                        {
-                            if (!wfs.CheckFinished(unscaledDeltaTime)) continue;
-                        }
-                        else
-                        {
-                            switch ((CoroutineStatus)handle.Coroutine.Current)
-                            {
-                                case CoroutineStatus.Success:
-                                    Coroutines.RemoveAt(i);
-                                    continue;
-                                case CoroutineStatus.Failure:
-                                    DebugConsole.ThrowError("Coroutine ''" + handle.Name + "'' has failed");
-                                    continue;
-                            }
-                        }
-                    }
-
-                    handle.Coroutine.MoveNext();
-                }
-
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Coroutine " + handle.Name + " threw an exception: " + e.Message);
-
-//#if DEBUG
-//                    throw e;
-//#endif
-
-                    Coroutines.Remove(handle);
-                }
-
-            }
+            foreach (var x in Coroutines.ToList())
+                if(IsDone(x))
+                    Coroutines.Remove(x);
         }
     }
   
