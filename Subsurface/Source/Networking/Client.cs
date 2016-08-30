@@ -42,9 +42,7 @@ namespace Barotrauma.Networking
 
         public List<JobPrefab> jobPreferences;
         public JobPrefab assignedJob;
-
-        public FileStreamSender FileStreamSender;
-
+        
         public float deleteDisconnectedTimer;
 
         public ClientPermissions Permissions;
@@ -168,17 +166,6 @@ namespace Barotrauma.Networking
                 client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
             }
         }
-
-        public void CancelTransfer()
-        {
-            if (FileStreamSender == null) return;
-
-            FileStreamSender.CancelTransfer();
-            FileStreamSender.Dispose();
-
-            FileStreamSender = null;
-        }
-
-
+        
     }
 }

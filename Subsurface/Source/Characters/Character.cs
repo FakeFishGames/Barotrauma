@@ -591,7 +591,7 @@ namespace Barotrauma
                         if (item == null) continue;
 
                         item.Pick(this, true, true, true);
-                        inventory.TryPutItem(item, i, false, false);
+                        inventory.TryPutItem(item, i, false);
                     }
                 }
             }
@@ -795,7 +795,7 @@ namespace Barotrauma
             {
                 if (Vector2.Distance(selectedCharacter.WorldPosition, WorldPosition) > 300.0f || !selectedCharacter.CanBeSelected)
                 {
-                    DeselectCharacter(controlled == this);
+                    DeselectCharacter();
                 }
             }
 
@@ -944,16 +944,14 @@ namespace Barotrauma
             return closestCharacter;
         }
 
-        private void SelectCharacter(Character character, bool createNetworkEvent = true)
+        private void SelectCharacter(Character character)
         {
             if (character == null) return;
 
             selectedCharacter = character;
-
-           if (createNetworkEvent) new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, selectedCharacter.ID);
         }
 
-        private void DeselectCharacter(bool createNetworkEvent = true)
+        private void DeselectCharacter()
         {
             if (selectedCharacter == null) return;
             
@@ -963,8 +961,6 @@ namespace Barotrauma
             }
 
             selectedCharacter = null;
-
-            if (createNetworkEvent) new NetworkEvent(NetworkEventType.SelectCharacter, ID, true, (ushort)0);
         }
 
         /// <summary>
@@ -1063,13 +1059,7 @@ namespace Barotrauma
                     closestItem.IsHighlighted = true;
                     if (!LockHands && closestItem.Pick(this))
                     {
-                        new NetworkEvent(NetworkEventType.PickItem, ID, true,
-                            new int[] 
-                        { 
-                            closestItem.ID, 
-                            IsKeyHit(InputType.Select) ? 1 : 0, 
-                            IsKeyHit(InputType.Use) ? 1 : 0 
-                        });
+                        
                     }
                 }
 
@@ -1077,7 +1067,7 @@ namespace Barotrauma
                 {
                     if (selectedCharacter != null)
                     {
-                        DeselectCharacter(controlled == this);
+                        DeselectCharacter();
                     }
                     else if (closestCharacter != null && closestCharacter.IsHumanoid && closestCharacter.CanBeSelected)
                     {
@@ -1087,7 +1077,7 @@ namespace Barotrauma
             }
             else
             {
-                if (selectedCharacter != null) DeselectCharacter(controlled==this);
+                if (selectedCharacter != null) DeselectCharacter();
                 selectedConstruction = null;
                 closestItem = null;
                 closestCharacter = null;
@@ -1486,13 +1476,11 @@ namespace Barotrauma
                     GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                     GameMain.LightManager.LosEnabled = false;
                     controlled = null;
-
-                    new NetworkEvent(NetworkEventType.KillCharacter, ID, true, causeOfDeath);
                 }
                 //if it's an ai Character, only let the server kill it
                 else if (GameMain.Server != null && this is AICharacter)
                 {
-                    new NetworkEvent(NetworkEventType.KillCharacter, ID, false, causeOfDeath);
+                    
                 }
                 //don't kill the Character unless received a message about the Character dying
                 else if (!isNetworkMessage)

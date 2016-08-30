@@ -572,7 +572,6 @@ namespace Barotrauma
 
             if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage)>5.0f)
             {
-                new NetworkEvent(NetworkEventType.ImportantEntityUpdate, ID, false);
                 //sections[sectionIndex].lastSentDamage = damage;
             }
             

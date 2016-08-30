@@ -9,45 +9,6 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
 {
-    enum PacketTypes : byte
-    {
-        Unknown,
-
-        Login, LoggedIn,
-
-        PlayerJoined, PlayerLeft,
-
-        KickPlayer,
-
-        Permissions,
-
-        RequestNetLobbyUpdate,
-
-        StartGame, EndGame, CanStartGame,
-
-        NewItem, RemoveItem,
-
-        NewCharacter,
-
-        CharacterInfo,
-
-        Chatmessage, UpdateNetLobby,
-
-        NetworkEvent,
-
-        Traitor,
-
-        Vote, VoteStatus,
-
-        ResendRequest, ReliableMessage, LatestMessageID,
-
-        RequestFile, FileStream,
-       
-        SpectateRequest,
-
-        Respawn
-    }
-
     enum VoteType
     {
         Unknown,
@@ -150,65 +111,6 @@ namespace Barotrauma.Networking
             chatMsgBox.OnTextChanged = TypingChatMessage;
 
             Voting = new Voting();
-        }
-
-        protected NetOutgoingMessage ComposeNetworkEventMessage(NetworkEventDeliveryMethod deliveryMethod, NetConnection excludedConnection = null)
-        {
-            if (netPeer == null) return null;
-
-            var events = NetworkEvent.Events.FindAll(e => e.DeliveryMethod == deliveryMethod);
-            if (events.Count == 0) return null;
-
-            List<byte[]> msgBytes = new List<byte[]>();
-
-            foreach (NetworkEvent networkEvent in events)
-            {
-                if (excludedConnection != null && networkEvent.SenderConnection == excludedConnection) continue;
-
-                NetBuffer tempMessage = new NetBuffer();// server.CreateMessage();
-                if (!networkEvent.FillData(tempMessage)) continue;
-                tempMessage.WritePadBits();
-
-                tempMessage.Position = 0;
-                msgBytes.Add(tempMessage.ReadBytes(tempMessage.LengthBytes));
-
-#if DEBUG
-                string msgType = networkEvent.Type.ToString();
-                if (networkEvent.Type == NetworkEventType.EntityUpdate)
-                {
-                    msgType += " (" + Entity.FindEntityByID(networkEvent.ID) + ")";
-                }
-
-                long sentBytes = 0;
-                if (!messageCount.TryGetValue(msgType, out sentBytes))
-                {
-                    messageCount.Add(msgType, tempMessage.LengthBytes);
-                }
-                else
-                {
-                    messageCount[msgType] += tempMessage.LengthBytes;
-                }
-#endif
-            }
-
-            if (msgBytes.Count == 0) return null;
-
-            NetOutgoingMessage message = netPeer.CreateMessage();
-            message.Write((byte)PacketTypes.NetworkEvent);
-
-            message.Write((float)NetTime.Now);
-
-            message.Write((byte)msgBytes.Count);
-            foreach (byte[] msgData in msgBytes)
-            {
-                if (msgData.Length > 255) DebugConsole.ThrowError("Too large networkevent (" + msgData.Length + " bytes)");
-
-                message.Write((byte)msgData.Length);
-                message.Write(msgData);
-            }
-
-
-            return message;
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)

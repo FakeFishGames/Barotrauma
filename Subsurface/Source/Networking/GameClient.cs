@@ -16,10 +16,7 @@ namespace Barotrauma.Networking
         private NetClient client;
 
         private GUIMessageBox reconnectBox;
-
-        private FileStreamReceiver fileStreamReceiver;
-        private Queue<Pair<string, FileTransferMessageType>> requestFileQueue;
-
+        
         private GUIButton endRoundButton;
         private GUITickBox endVoteTickBox;
 
@@ -45,12 +42,7 @@ namespace Barotrauma.Networking
                 return otherClients;
             }
         }
-
-        public string ActiveFileTransferName
-        {
-            get { return (fileStreamReceiver == null || fileStreamReceiver.Status == FileTransferStatus.Finished) ? "" : fileStreamReceiver.FileName; }
-        }
-
+        
         public GameClient(string newName)
         {
             endVoteTickBox = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, 20, 20, 20), "End round", Alignment.TopLeft, inGameHUD);
@@ -76,9 +68,7 @@ namespace Barotrauma.Networking
             Hull.EditWater = false;
 
             name = newName;
-
-            requestFileQueue = new Queue<Pair<string, FileTransferMessageType>>();
-
+            
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name);
             characterInfo.Job = null;
 
@@ -125,8 +115,7 @@ namespace Barotrauma.Networking
             netPeer = client;
             client.Start();
 
-            NetOutgoingMessage outmsg = client.CreateMessage();            
-            outmsg.Write((byte)PacketTypes.Login);
+            NetOutgoingMessage outmsg = client.CreateMessage();
 
 
             System.Net.IPEndPoint IPEndPoint = null;
@@ -326,16 +315,14 @@ namespace Barotrauma.Networking
                 }
                 else if (gameStarted)
                 {
-                    new NetworkEvent(NetworkEventType.EntityUpdate, myCharacter.ID, true);
+                    
                 }
             }
             
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
         }
-
-        private CoroutineHandle startGameCoroutine;
-
+        
         /// <summary>
         /// Check for new incoming messages from server
         /// </summary>
@@ -343,14 +330,6 @@ namespace Barotrauma.Networking
         {
             // Create new incoming message holder
             NetIncomingMessage inc;
-
-            if (startGameCoroutine != null && CoroutineManager.IsCoroutineRunning(startGameCoroutine)) return;
-
-            if (fileStreamReceiver == null && requestFileQueue.Count > 0)
-            {
-                var newRequest = requestFileQueue.Dequeue();
-                RequestFile(newRequest.First, newRequest.Second);
-            }
             
             while ((inc = client.ReadMessage()) != null)
             {
@@ -586,96 +565,7 @@ namespace Barotrauma.Networking
 
             return true;
         }
-
-        public void RequestFile(string file, FileTransferMessageType fileType)
-        {
-            if (fileStreamReceiver!=null)
-            {
-                var request = new Pair<string, FileTransferMessageType>()
-                {
-                    First = file,
-                    Second = fileType
-                };
-
-                requestFileQueue.Enqueue(request);
-                return;
-            }
-
-            NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.RequestFile);
-            msg.Write((byte)fileType);
-
-            msg.Write(file);
-
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-
-            fileStreamReceiver = new FileStreamReceiver(client, Path.Combine(Submarine.SavePath, "Downloaded"), fileType, OnFileReceived);
-        }
-
-        private void OnFileReceived(FileStreamReceiver receiver)
-        {
-            if (receiver.Status == FileTransferStatus.Error)
-            {
-                new GUIMessageBox("Error while receiving file from server", receiver.ErrorMessage, 400, 350);
-                receiver.DeleteFile();
-
-            }
-            else if (receiver.Status == FileTransferStatus.Finished)
-            {
-                new GUIMessageBox("Download finished", "File ''" + receiver.FileName + "'' was downloaded succesfully.");
-
-                switch (receiver.FileType)
-                {
-                    case FileTransferMessageType.Submarine:
-                            Submarine.SavedSubmarines.RemoveAll(s => s.Name + ".sub" == receiver.FileName);
-
-                        for (int i = 0; i<2; i++)
-                        {
-
-                            var textBlock = (i == 0) ?
-                                GameMain.NetLobbyScreen.ShuttleList.ListBox.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName) :
-                                GameMain.NetLobbyScreen.SubList.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName);
-                            if (textBlock == null) continue;                            
-
-                            (textBlock as GUITextBlock).TextColor = Color.White;
-
-                            var newSub = new Submarine(receiver.FilePath);
-                            Submarine.SavedSubmarines.Add(newSub);
-                            textBlock.UserData = newSub;
-                        }
-
-                        break;
-                }
-            }
-
-            fileStreamReceiver = null;
-        }
-
-        private void CancelFileTransfer()
-        {
-            fileStreamReceiver.DeleteFile();
-            fileStreamReceiver.Dispose();
-            fileStreamReceiver = null;
-
-            NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.RequestFile);
-            msg.Write((byte)FileTransferMessageType.Cancel);
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        public override void KickPlayer(string kickedName, bool ban)
-        {
-            if (!permissions.HasFlag(ClientPermissions.Kick) && !ban) return;
-            if (!permissions.HasFlag(ClientPermissions.Ban) && ban) return;
-
-            NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.KickPlayer);
-            msg.Write(ban);
-            msg.Write(kickedName);
-
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);            
-        }
-
+        
         public bool VoteForKick(GUIButton button, object userdata)
         {
             var votedClient = otherClients.Find(c => c.Character == userdata);
@@ -695,7 +585,7 @@ namespace Barotrauma.Networking
         public void Vote(VoteType voteType, object userData)
         {
             NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.Vote);
+            
             msg.Write((byte)voteType);
 
             switch (voteType)
@@ -723,7 +613,7 @@ namespace Barotrauma.Networking
         public bool SpectateClicked(GUIButton button, object userData)
         {
             NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.SpectateRequest);
+            
             
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
@@ -754,7 +644,6 @@ namespace Barotrauma.Networking
             if (characterInfo == null) return;
 
             NetOutgoingMessage msg = client.CreateMessage();
-            msg.Write((byte)PacketTypes.CharacterInfo);
 
             msg.Write(characterInfo.Name);
             msg.Write(characterInfo.Gender == Gender.Male);

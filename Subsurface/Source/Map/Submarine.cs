@@ -474,7 +474,6 @@ namespace Barotrauma
 
             if (networkUpdateTimer < 0.0f)
             {
-                new Networking.NetworkEvent(ID, false);
                 networkUpdateTimer = 1.0f;
             }
             

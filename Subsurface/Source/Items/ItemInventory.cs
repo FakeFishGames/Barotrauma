@@ -44,9 +44,9 @@ namespace Barotrauma
             return (item!=null && Items[i]==null && container.CanBeContained(item));
         }
 
-        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool createNetworkEvent)
+        public override bool TryPutItem(Item item, int i, bool allowSwapping)
         {
-            bool wasPut = base.TryPutItem(item, i, allowSwapping, createNetworkEvent);
+            bool wasPut = base.TryPutItem(item, i, allowSwapping);
 
             if (wasPut)
             {

@@ -85,7 +85,7 @@ namespace Barotrauma
                             if (character.Inventory.Items[i] == null) continue;
 
                             //try to move the existing item to LimbSlot.Any and continue if successful
-                            if (character.Inventory.TryPutItem(character.Inventory.Items[i], new List<InvSlotType>() { InvSlotType.Any }, false)) continue;
+                            if (character.Inventory.TryPutItem(character.Inventory.Items[i], new List<InvSlotType>() { InvSlotType.Any })) continue;
 
                             //if everything else fails, simply drop the existing item
                             character.Inventory.Items[i].Drop();
@@ -97,7 +97,7 @@ namespace Barotrauma
 
                 if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, InvSlotType.Any))
                 {
-                    character.Inventory.TryPutItem(targetItem, targetSlot, true, false);
+                    character.Inventory.TryPutItem(targetItem, targetSlot, false);
                 }
             }
             else
