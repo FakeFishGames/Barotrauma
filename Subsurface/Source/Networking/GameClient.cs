@@ -822,9 +822,7 @@ namespace Barotrauma.Networking
                 {
                     GameMain.GameSession.CrewManager.characters.Add(character);
                 }
-
-                Item.Spawner.ReadNetworkData(inc);
-
+                
                 if (ownerId == myID)
                 {
                     myCharacter = character;
