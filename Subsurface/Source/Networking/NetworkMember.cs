@@ -309,6 +309,7 @@ namespace Barotrauma.Networking
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
                 Alignment.Left, null, null, true);
             msg.Font = GUI.SmallFont;
+            msg.UserData = message.SenderName;
 
             msg.Padding = new Vector4(20.0f, 0, 0, 0);
 
