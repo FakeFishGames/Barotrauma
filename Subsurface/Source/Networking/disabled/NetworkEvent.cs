@@ -237,11 +237,11 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            if (resend)
+            /*if (resend)
             {
                 var resendEvent = new NetworkEvent(eventType, id, false, data);
                 resendEvent.SenderConnection = message.SenderConnection;
-            }
+            }*/
 
             return true;
         }

@@ -156,7 +156,6 @@
     <Compile Include="Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
-    <Compile Include="Source\Networking\ReliableSender.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Particles\ParticleEmitter.cs" />
@@ -241,7 +240,6 @@
     <Compile Include="Source\Map\Levels\VoronoiElements.cs" />
     <Compile Include="Source\Utils\MathUtils.cs" />
     <Compile Include="Source\Physics\PhysicsBody.cs" />
-    <Compile Include="Source\Networking\NetworkEvent.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Particles\Particle.cs" />
     <Compile Include="Source\Particles\ParticleManager.cs" />

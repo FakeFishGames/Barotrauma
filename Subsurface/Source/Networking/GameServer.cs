@@ -353,7 +353,7 @@ namespace Barotrauma.Networking
             {
                 if (c.FileStreamSender != null) UpdateFileTransfer(c, deltaTime);                
 
-                c.ReliableChannel.Update(deltaTime);
+                //c.ReliableChannel.Update(deltaTime);
 
                 //slowly reset spam timers
                 c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
@@ -1509,12 +1509,7 @@ namespace Barotrauma.Networking
 
             foreach (Client c in recipients)
             {
-                ReliableMessage msg = c.ReliableChannel.CreateMessage();
-                msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-
-                message.WriteNetworkMessage(msg.InnerMessage);
-
-                c.ReliableChannel.SendMessage(msg, c.Connection);
+                
             }
             
         }
@@ -1577,12 +1572,7 @@ namespace Barotrauma.Networking
 
         public void SendChatMessage(ChatMessage chatMessage, Client recipient)
         {
-            ReliableMessage msg = recipient.ReliableChannel.CreateMessage();
-            msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
-
-            chatMessage.WriteNetworkMessage(msg.InnerMessage);
-
-            recipient.ReliableChannel.SendMessage(msg, recipient.Connection);
+            
         }
 
         public void SendChatMessage(ChatMessage chatMessage, List<Client> recipients)
@@ -1668,7 +1658,6 @@ namespace Barotrauma.Networking
                 msg.Write((byte)c.Info.HeadSpriteId);                            
                 msg.Write(c.Info.Job == null ? "" : c.Info.Job.Name);
             
-                Item.Spawner.FillNetworkData(msg, c.SpawnItems);
             }
         }
 
