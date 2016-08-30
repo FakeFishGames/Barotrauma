@@ -78,7 +78,7 @@
     width="24" height="32" resizevertical="true"/>
 
   <topwindow sprite="Content/Map/testroom.png" sourcerect="625,327,128,80" depth ="0.05"
-    width = "128" height ="80" body="true" health="100"/>
+    width = "128" height ="49" body="true" health="100"/>
 
   <verticalwindow sprite="Content/Map/testroom.png" sourcerect="399,560,128,224" depth ="0.05"
     width = "128" height ="224" body="true" health="100"/>
