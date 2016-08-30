@@ -1443,6 +1443,7 @@ namespace Barotrauma.Networking
         {
             Client sender = connectedClients.Find(x => x.Connection == inc.SenderConnection);
             ChatMessage message = ChatMessage.ReadNetworkMessage(inc);
+            if (message == null) return;
 
             List<Client> recipients = new List<Client>();
 
@@ -1494,7 +1495,7 @@ namespace Barotrauma.Networking
             if (similarity > 5.0f)
             {
                 sender.ChatSpamCount++;
-
+                
                 if (sender.ChatSpamCount > 3)
                 {
                     //kick for spamming too much
