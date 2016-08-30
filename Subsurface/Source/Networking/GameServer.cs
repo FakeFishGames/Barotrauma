@@ -1522,7 +1522,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                GameServer.Log(message.Text, message.Color);
+                GameServer.Log(message.TextWithSender, message.Color);
             }
             sender.ChatSpamSpeed += 5.0f;
 

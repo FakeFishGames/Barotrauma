@@ -363,8 +363,47 @@ namespace Barotrauma
                 case "controlcharacter":
                 case "control":
                     if (commands.Length < 2) break;
-                    string name = string.Join(" ", commands.Skip(1)).ToLowerInvariant();
-                    Character.Controlled = Character.CharacterList.Find(c => !c.IsNetworkPlayer && c.Name.ToLowerInvariant() == name);
+
+                    int characterIndex;
+                    string characterName;
+                    if (int.TryParse(commands.Last(), out characterIndex))
+                    {
+                        characterName = string.Join(" ", commands.Skip(1).Take(commands.Length-2)).ToLowerInvariant();
+                    }
+                    else
+                    {
+                        characterName = string.Join(" ", commands.Skip(1)).ToLowerInvariant();
+                        characterIndex = -1;
+                    }
+
+                    var matchingCharacters = Character.CharacterList.FindAll(c => !c.IsNetworkPlayer && c.Name.ToLowerInvariant() == characterName);
+
+                    if (!matchingCharacters.Any())
+                    {
+                        ThrowError("Matching characters not found");
+                        return;
+                    }
+
+                    if (characterIndex==-1)
+                    {
+                        Character.Controlled = matchingCharacters.First();
+                        if (matchingCharacters.Count > 1)
+                        {
+                            NewMessage(
+                                "Found multiple matching characters. "+
+                                "Use \"control [charactername] [0-"+(matchingCharacters.Count-1)+"]\" to choose which character to control.", 
+                                Color.LightGray);
+                        }
+                    }
+                    else if (characterIndex<0 || characterIndex>= matchingCharacters.Count)
+                    {
+                        ThrowError("Character index out of range. Select an index between 0 and " + (matchingCharacters.Count - 1));
+                    }
+                    else
+                    {
+                        Character.Controlled = matchingCharacters[characterIndex];
+                    }
+                    
                     break;
                 case "godmode":
                     if (Submarine.MainSub == null) return;
