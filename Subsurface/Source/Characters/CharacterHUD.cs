@@ -107,9 +107,7 @@ namespace Barotrauma
                             {
                                 limb.pullJoint.Enabled = false;
                             }
-
-                            new NetworkEvent(NetworkEventType.SelectCharacter, Character.Controlled.ID, true, Character.Controlled.SelectedCharacter.ID);
-
+                            
                             return true;
                         };
                     }

@@ -93,21 +93,21 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null)
         {
             int slot = FindAllowedSlot(item);
             if (slot < 0) return false;
 
-            PutItem(item, slot, createNetworkEvent);
+            PutItem(item, slot);
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool createNetworkEvent)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping)
         {
             if (Owner == null) return false;
             if (CanBePut(item,i))
             {
-                PutItem(item, i, createNetworkEvent);
+                PutItem(item, i);
                 return true;
             }
             else
@@ -116,7 +116,7 @@ namespace Barotrauma
             }
         }
 
-        protected void PutItem(Item item, int i, bool createNetworkEvent, bool removeItem = true)
+        protected void PutItem(Item item, int i, bool removeItem = true)
         {
             if (Owner == null) return;
 
@@ -132,8 +132,6 @@ namespace Barotrauma
             {
                 item.body.Enabled = false;
             }
-
-            if (createNetworkEvent) new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true, true);            
         }
 
         public Item FindItem(string itemName)
@@ -216,7 +214,7 @@ namespace Barotrauma
                 {
                     if (Owner!=null)
                     {
-                        new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true);
+                        
                     }
 
                     DropItem(draggingItem);

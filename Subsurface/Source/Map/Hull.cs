@@ -343,13 +343,9 @@ namespace Barotrauma
 
         }
 
-        public void AddFireSource(FireSource fireSource, bool createNetworkEvent = true)
+        public void AddFireSource(FireSource fireSource)
         {
             fireSources.Add(fireSource);
-            if (createNetworkEvent)
-            {
-                new Networking.NetworkEvent(Networking.NetworkEventType.ImportantEntityUpdate, this.ID, false);
-            }
         }
 
         public override void Update(Camera cam, float deltaTime)
@@ -446,7 +442,7 @@ namespace Barotrauma
             if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
-                new Networking.NetworkEvent(ID, false);                
+          
             }
             
             if (!update)
@@ -545,7 +541,6 @@ namespace Barotrauma
         public void RemoveFire(FireSource fire)
         {
             fireSources.Remove(fire);
-            new Networking.NetworkEvent(Networking.NetworkEventType.ImportantEntityUpdate, this.ID, false);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)

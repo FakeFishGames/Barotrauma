@@ -101,7 +101,6 @@
     <Compile Include="Source\Characters\Jobs\Skill.cs" />
     <Compile Include="Source\Characters\Jobs\SkillPrefab.cs" />
     <Compile Include="Source\ContentPackage.cs" />
-    <Compile Include="Source\CoroutineManager.cs" />
     <Compile Include="Source\Events\Missions\CargoMission.cs" />
     <Compile Include="Source\Events\Missions\Mission.cs" />
     <Compile Include="Source\Events\Missions\MonsterMission.cs" />
@@ -150,8 +149,6 @@
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
     <Compile Include="Source\Networking\Client.cs" />
-    <Compile Include="Source\Networking\FileStreamReceiver.cs" />
-    <Compile Include="Source\Networking\FileStreamSender.cs" />
     <Compile Include="Source\Networking\GameServerLogin.cs" />
     <Compile Include="Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />

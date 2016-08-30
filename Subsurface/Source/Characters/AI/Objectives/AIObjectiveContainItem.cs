@@ -60,7 +60,7 @@ namespace Barotrauma
                 if (existingItem != null) existingItem.Drop(character);
                 
                 character.Inventory.RemoveItem(itemToContain);
-                container.Inventory.TryPutItem(itemToContain, null, false);
+                container.Inventory.TryPutItem(itemToContain, null);
             }
             else
             {

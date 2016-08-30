@@ -214,8 +214,6 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
-
-            doc.Root.SetAttributeValue("MaxFileTransferDuration", FileStreamSender.MaxTransferDuration.TotalSeconds);
             
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
@@ -250,8 +248,6 @@ namespace Barotrauma.Networking
             Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
             
-            FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));
-
             showLogButton.Visible = SaveServerLogs;
         }
 

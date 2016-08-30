@@ -100,7 +100,6 @@ namespace Barotrauma
             ushort itemID = Items[slotIndex].ID;
             
             Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-            new NetworkEvent(NetworkEventType.ApplyStatusEffect, character.ID, true, itemID);
 
             return true;
         }
@@ -142,7 +141,7 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public override bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null)
         {
             if (allowedSlots == null || ! allowedSlots.Any()) return false;
 
@@ -153,7 +152,7 @@ namespace Barotrauma
                 {
                     if (Items[i] != null || limbSlots[i] != InvSlotType.Any) continue;
 
-                    PutItem(item, i, createNetworkEvent);
+                    PutItem(item, i);
                     item.Unequip(character);
                     return true;
                 }
@@ -179,7 +178,7 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(limbSlots[i]) && Items[i] == null)
                     {
-                        PutItem(item, i, createNetworkEvent, !placed);
+                        PutItem(item, i, !placed);
                         item.Equip(character);
                         placed = true;
                     }
@@ -195,7 +194,7 @@ namespace Barotrauma
             return placed;
         }
 
-        public override bool TryPutItem(Item item, int index, bool allowSwapping, bool createNetworkEvent)
+        public override bool TryPutItem(Item item, int index, bool allowSwapping)
         {
             //there's already an item in the slot
             if (Items[index] != null)
@@ -208,9 +207,9 @@ namespace Barotrauma
                     System.Diagnostics.Debug.Assert(Items[index] != null);
                  
                     Inventory otherInventory = Items[index].ParentInventory;
-                    if (otherInventory != null && otherInventory.Owner!=null && createNetworkEvent)
+                    if (otherInventory != null && otherInventory.Owner!=null)
                     {
-                        new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, otherInventory.Owner.ID, true, true);
+                        
                     }
 
                     combined = true;
@@ -225,10 +224,10 @@ namespace Barotrauma
                     Items[currentIndex] = null;
                     Items[index] = null;
                     //if the item in the slot can be moved to the slot of the moved item
-                    if (TryPutItem(existingItem, currentIndex, false, false) &&
-                        TryPutItem(item, index, false, false))
+                    if (TryPutItem(existingItem, currentIndex, false) &&
+                        TryPutItem(item, index, false))
                     {
-                        new Networking.NetworkEvent(Networking.NetworkEventType.InventoryUpdate, Owner.ID, true, true);
+                        
                     }
                     else
                     {
@@ -250,7 +249,7 @@ namespace Barotrauma
                 if (!item.AllowedSlots.Contains(InvSlotType.Any)) return false;
                 if (Items[index] != null) return Items[index] == item;
 
-                PutItem(item, index, createNetworkEvent, true);
+                PutItem(item, index, true);
                 return true;
             }
 
@@ -276,7 +275,7 @@ namespace Barotrauma
 
             if (!slotsFree) return false;
             
-            return TryPutItem(item, new List<InvSlotType>() {placeToSlots}, createNetworkEvent);
+            return TryPutItem(item, new List<InvSlotType>() {placeToSlots});
         }
          
         public void DrawOwn(SpriteBatch spriteBatch, Vector2 offset)
@@ -492,8 +491,7 @@ namespace Barotrauma
                 else
                 {                    
                     DropItem(draggingItem);
-
-                    new NetworkEvent(NetworkEventType.DropItem, draggingItem.ID, true);
+                    
                     //draggingItem = null;
                 }                    
             }

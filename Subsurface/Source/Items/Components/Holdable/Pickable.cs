@@ -63,17 +63,7 @@ namespace Barotrauma.Items.Components
             if (PickingTime>0.0f)
             {
                 CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
-
-                //create a networkevent here, because the item doesn't count as picked yet and the character won't create one
-                new NetworkEvent(NetworkEventType.PickItem, picker.ID, true,
-                    new int[] 
-                        { 
-                            item.ID, 
-                            picker.IsKeyHit(InputType.Select) ? 1 : 0, 
-                            picker.IsKeyHit(InputType.Use) ? 1 : 0 
-                        });
                 
-
                 return false;
             }
             else
@@ -86,7 +76,7 @@ namespace Barotrauma.Items.Components
 
         private bool OnPicked(Character picker)
         {
-            if (picker.Inventory.TryPutItem(item, allowedSlots, picker == Character.Controlled))
+            if (picker.Inventory.TryPutItem(item, allowedSlots))
             {
                 if (!picker.HasSelectedItem(item) && item.body != null) item.body.Enabled = false;
                 this.picker = picker;

@@ -165,8 +165,6 @@ namespace Barotrauma
                 condition = MathHelper.Clamp(value, 0.0f, 100.0f); 
                 if (condition == 0.0f && prev>0.0f)
                 {
-                    new NetworkEvent(this.ID, false);
-
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                     foreach (FixRequirement req in FixRequirements)
                     {
@@ -719,7 +717,7 @@ namespace Barotrauma
                 Vector2 moveAmount = body.SimPosition - body.LastSentPosition;
                 if (parentInventory == null && moveAmount != Vector2.Zero && moveAmount.Length() > NetConfig.ItemPosUpdateDistance)
                 {
-                    new NetworkEvent(NetworkEventType.PhysicsBodyPosition, ID, false);
+                    
                 }
 
                 Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
@@ -784,7 +782,6 @@ namespace Barotrauma
             if (ImpactTolerance > 0.0f && impact > ImpactTolerance)
             {
                 ApplyStatusEffects(ActionType.OnImpact, 1.0f);
-                new NetworkEvent(NetworkEventType.ApplyStatusEffect, this.ID, false, ActionType.OnImpact);
             }
 
             var containedItems = ContainedItems;
@@ -1384,7 +1381,7 @@ namespace Barotrauma
             return isCombined;
         }
 
-        public void Drop(Character dropper = null, bool createNetworkEvent = true)
+        public void Drop(Character dropper = null)
         {
             //if (dropper == Character.Controlled)
             //    new NetworkEvent(NetworkEventType.DropItem, ID, true);
@@ -1450,9 +1447,7 @@ namespace Barotrauma
             if (objectProperty.TrySetValue(text))
             {
                 textBox.Text = text;
-
-                new NetworkEvent(NetworkEventType.UpdateProperty, ID, true, objectProperty.Name);
-
+                
                 return true;
             }
             else
@@ -1620,9 +1615,6 @@ namespace Barotrauma
         public void NewComponentEvent(ItemComponent ic, bool isClient, bool isImportant)
         {
             int index = components.IndexOf(ic);
-
-            new NetworkEvent(isImportant ? 
-                NetworkEventType.ImportantComponentUpdate : NetworkEventType.ComponentUpdate, ID, isClient, index);
         }
         
         public override void Remove()

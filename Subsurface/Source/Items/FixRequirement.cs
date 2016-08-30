@@ -141,9 +141,7 @@ namespace Barotrauma
 
             Item item = frame.UserData as Item;
             if (item == null) return true;
-
-            new NetworkEvent(NetworkEventType.ItemFixed, item.ID, true, (byte)item.FixRequirements.IndexOf(requirement) );
-
+            
             return true;
         }
 

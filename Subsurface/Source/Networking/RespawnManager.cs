@@ -161,7 +161,6 @@ namespace Barotrauma.Networking
                 if (!CountdownStarted)
                 {
                     CountdownStarted = true;
-                    server.SendRespawnManagerMsg();
                 }
             }
             else
@@ -209,7 +208,6 @@ namespace Barotrauma.Networking
                 state = State.Returning;
 
                 CountdownStarted = false;
-                server.SendRespawnManagerMsg();
                 shuttleReturnTimer = maxTransportTime;
                 shuttleTransportTimer = maxTransportTime;
             }
@@ -275,8 +273,6 @@ namespace Barotrauma.Networking
                     state = State.Waiting;
                     respawnTimer = respawnInterval;
                     CountdownStarted = false;
-
-                    server.SendRespawnManagerMsg();
                 }
             }
         }
@@ -459,103 +455,8 @@ namespace Barotrauma.Networking
                 character.GiveJobItems(mainSubSpawnPoints[i]);
                 GameMain.GameSession.CrewManager.characters.Add(character);
             }
-
-            server.SendRespawnManagerMsg(spawnedCharacters, spawnedItems);
+            
         }
-
-        public void WriteNetworkEvent(NetOutgoingMessage msg, List<Character> spawnedCharacters, List<Item> spawnedItems)
-        {
-            var server = networkMember as GameServer;
-
-            msg.WriteRangedInteger(0, Enum.GetNames(typeof(State)).Length, (int)state);
-
-            switch (state)
-            {
-                case State.Transporting:
-                    msg.Write(maxTransportTime);
-                    
-                    if (spawnedCharacters == null)
-                    {
-                        msg.Write((byte)0);
-                    }
-                    else
-                    {
-                        msg.Write((byte)spawnedCharacters.Count);
-                        foreach (Character character in spawnedCharacters)
-                        {
-                            if (character == server.Character)
-                            {
-                                msg.Write((byte)0);
-                            }
-                            else
-                            {
-                                var ownerClient = server.ConnectedClients.Find(cl => cl.Character == character);
-                                msg.Write((byte)ownerClient.ID);
-                            }
-
-                            server.WriteCharacterData(msg, character.Name, character);
-                        }
-                    }
-
-                    if (spawnedItems != null) GameMain.Server.SendItemSpawnMessage(spawnedItems);                
-                    break;
-                case State.Waiting:
-                    msg.Write(CountdownStarted);
-                    msg.Write(respawnTimer);
-                    break;
-                case State.Returning:
-                    //CoroutineManager.StopCoroutines("forcepos");
-                    //CoroutineManager.StartCoroutine(
-                    //    ForceShuttleToPos(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + 1000.0f), 100.0f), "forcepos");
-                    break;
-            }
-        }
-
-        public void ReadNetworkEvent(NetIncomingMessage inc)
-        {
-            var newState = (State)inc.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
-
-            switch (newState)
-            {
-                case State.Transporting:
-                    maxTransportTime = inc.ReadSingle();
-
-                    CountdownStarted = false;
-
-                    var client = networkMember as GameClient;
-                    int clientCount = inc.ReadByte();
-
-                    //respawning characters -> reset shuttle
-                    if (clientCount > 0) ResetShuttle();
-                    
-                    for (int i = 0; i < clientCount; i++)
-                    {
-                        byte clientId = inc.ReadByte();
-
-                        var character = client.ReadCharacterData(inc);
-                    }
-
-                    if (state != newState)
-                    {
-                        CoroutineManager.StopCoroutines("forcepos");
-                        CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
-                    }
-
-                    break;
-                case State.Waiting:
-                    CountdownStarted = inc.ReadBoolean();
-
-                    ResetShuttle();
-
-                    respawnTimer = inc.ReadSingle();
-                    break;
-                case State.Returning:
-
-                    CountdownStarted = false;
-                    break;
-            }
-
-            state = newState;
-        }
+        
     }
 }

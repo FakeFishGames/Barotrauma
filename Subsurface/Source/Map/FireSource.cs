@@ -61,10 +61,10 @@ namespace Barotrauma
             get { return hull; }
         }
 
-        public FireSource(Vector2 worldPosition, Hull spawningHull = null, bool networkEvent=false)
+        public FireSource(Vector2 worldPosition, Hull spawningHull = null)
         {
             hull = Hull.FindHull(worldPosition, spawningHull);
-            if (hull == null || (!networkEvent && GameMain.Client!=null)) return;
+            if (hull == null || (GameMain.Client!=null)) return;
 
             if (fireSoundBasic==null)
             {
@@ -72,7 +72,7 @@ namespace Barotrauma
                 fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg");
             }
 
-            hull.AddFireSource(this, !networkEvent);
+            hull.AddFireSource(this);
 
             Submarine = hull.Submarine;
 
@@ -338,9 +338,9 @@ namespace Barotrauma
             if (size.X < 1.0f) Remove();
         }
 
-        public void Remove(bool isNetworkEvent = false)
+        public void Remove()
         {
-            if (!isNetworkEvent && GameMain.Client != null) return;
+            if (GameMain.Client != null) return;
 
             lightSource.Remove();
 

@@ -112,11 +112,11 @@ namespace Barotrauma
                 List<InvSlotType> allowedSlots = new List<InvSlotType>(item.AllowedSlots);
                 allowedSlots.Remove(InvSlotType.Any);
 
-                character.Inventory.TryPutItem(item, allowedSlots, false);
+                character.Inventory.TryPutItem(item, allowedSlots);
             }
             else
             {
-                character.Inventory.TryPutItem(item, item.AllowedSlots, false);
+                character.Inventory.TryPutItem(item, item.AllowedSlots);
             }
 
             if (item.Prefab.Name == "ID Card" && spawnPoint != null)

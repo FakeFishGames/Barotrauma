@@ -47,7 +47,7 @@ namespace Barotrauma
             {
                 if (!character.SelectedItems.Contains(weapon))
                 {
-                    character.Inventory.TryPutItem(weapon, 3, true, false);
+                    character.Inventory.TryPutItem(weapon, 3, false);
                     weapon.Equip(character);
                 }
                 character.CursorPosition = enemy.Position;

@@ -74,7 +74,7 @@ namespace Barotrauma
                     AddToSpawnedList(item);
 
                     var inventory = (Inventory)itemInfo.Second;
-                    inventory.TryPutItem(item, null, false);
+                    inventory.TryPutItem(item, null);
 
                     items.Add(item);
                     //inventories.Add(inventory);
