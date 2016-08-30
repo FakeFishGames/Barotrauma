@@ -98,10 +98,10 @@ namespace Barotrauma.Networking
         {
             float prevSize = listBox.BarSize;
 
-            var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
+            var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
             textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, Math.Max(13, textBlock.Rect.Height));
 
-            listBox.AddChild(textBlock);
+            //listBox.AddChild(textBlock);
 
             textBlock.TextColor = line.Color;
             textBlock.CanBeFocused = false;
