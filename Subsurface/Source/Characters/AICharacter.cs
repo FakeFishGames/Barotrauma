@@ -49,7 +49,7 @@ namespace Barotrauma
 
             if (isDead || health <= 0.0f) return;
 
-            if (Controlled == this) return;
+            if (Controlled == this || !aiController.Enabled) return;
 
             if (soundTimer > 0)
             {

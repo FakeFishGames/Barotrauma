@@ -112,6 +112,8 @@ namespace Barotrauma
         //which AIstate each sound is for
         private AIController.AiState[] soundStates;
 
+        private float attackCoolDown;
+
         public Entity ViewTarget
         {
             get;
@@ -248,6 +250,7 @@ namespace Barotrauma
         public bool NeedsAir
         {
             get { return needsAir; }
+            set { needsAir = value; }
         }
         
         public float Oxygen
@@ -298,6 +301,38 @@ namespace Barotrauma
             }
         }
 
+        public HuskInfection huskInfection;
+        public float HuskInfectionState
+        {
+            get 
+            { 
+                return huskInfection == null ? 0.0f : huskInfection.IncubationTimer; 
+            }
+            set
+            {
+                if (ConfigPath != humanConfigFile) return;
+                
+                if (value <= 0.0f)
+                {
+                    if (huskInfection != null && huskInfection.State == HuskInfection.InfectionState.Active) return; 
+                    huskInfection = null;
+                }
+                else
+                {
+                    if (huskInfection == null) huskInfection = new HuskInfection(this);
+                    huskInfection.IncubationTimer = MathHelper.Clamp(value, 0.0f, 1.0f);
+                }
+            }
+        }
+
+        public bool CanSpeak
+        {
+            get
+            {
+                return !IsUnconscious && Stun <= 0.0f && (huskInfection == null || huskInfection.CanSpeak);
+            }
+        }
+
         public bool DoesBleed
         {
             get;
@@ -309,7 +344,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
 
         public float PressureTimer
         {
@@ -474,13 +508,16 @@ namespace Barotrauma
 
             Properties = ObjectProperty.GetProperties(this);
 
-            if (file == humanConfigFile)
+            Info = characterInfo;
+            if (file == humanConfigFile && characterInfo == null)
             {
-                Info = characterInfo == null ? new CharacterInfo(file) : characterInfo;
+                Info = new CharacterInfo(file);
             }
 
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
+
+            
             
             SpeciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
 
@@ -696,6 +733,49 @@ namespace Barotrauma
                 }
             }
 
+            if (attackCoolDown >0.0f)
+            {
+                attackCoolDown -= deltaTime;
+            }
+            else if (IsKeyDown(InputType.Attack))
+            {
+                var attackLimb = AnimController.Limbs.FirstOrDefault(l => l.attack != null);
+
+                if (attackLimb != null)
+                {
+                    Vector2 attackPos =
+                        attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
+
+                    var body = Submarine.PickBody(
+                        attackLimb.SimPosition,
+                        attackPos,
+                        AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                        Physics.CollisionCharacter | Physics.CollisionWall);
+
+                    IDamageable attackTarget = null;
+                    if (body != null)
+                    {
+                        if (body.UserData is IDamageable)
+                        {
+                            attackTarget = (IDamageable)body.UserData;
+                        }
+                        else if (body.UserData is Limb)
+                        {
+                            attackTarget = ((Limb)body.UserData).character;                            
+                        }
+                        attackPos = Submarine.LastPickedPosition;
+                    }
+
+                    attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget);
+
+                    if (attackLimb.AttackTimer > attackLimb.attack.Duration)
+                    {
+                        attackLimb.AttackTimer = 0.0f;
+                        attackCoolDown = 1.0f;
+                    }
+                }
+            }
+
             for (int i = 0; i < selectedItems.Length; i++ )
             {
                 if (selectedItems[i] == null) continue;
@@ -784,6 +864,14 @@ namespace Barotrauma
                 return owner.isDead || owner.IsUnconscious || owner.Stun > 0.0f || owner.LockHands;
             }
 
+            if (inventory.Owner is Item)
+            {
+                var owner = (Item)inventory.Owner;
+                if (!CanAccessItem(owner))
+                {
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -791,10 +879,22 @@ namespace Barotrauma
         {
             if (item.ParentInventory != null)
             {
-                if (!CanAccessInventory(item.ParentInventory)) return false;
+                return CanAccessInventory(item.ParentInventory);
             }
 
-            return true;
+            float maxDist = item.PickDistance * 1.2f;
+            if (maxDist <= 0.01f)
+            {
+                maxDist = 150.0f;
+            }
+
+            if (Vector2.Distance(WorldPosition, item.WorldPosition) < maxDist ||
+                item.IsInsideTrigger(WorldPosition))
+            {
+                return true;
+            }
+
+            return item.GetComponent<Items.Components.Ladder>() != null;
         }
 
         private Item FindClosestItem(Vector2 mouseSimPos, out float distance)
@@ -859,7 +959,7 @@ namespace Barotrauma
             
             foreach (Limb limb in selectedCharacter.AnimController.Limbs)
             {
-                limb.pullJoint.Enabled = false;
+                if (limb.pullJoint != null) limb.pullJoint.Enabled = false;
             }
 
             selectedCharacter = null;
@@ -922,7 +1022,6 @@ namespace Barotrauma
                     }
                 }
             }
-
 
             if (!LockHands)
             {
@@ -1014,9 +1113,9 @@ namespace Barotrauma
             //    new Character(NewCharacterQueue.Dequeue(), Vector2.Zero);
             //}
 
-            foreach (Character c in CharacterList)
+            for (int i = 0; i<CharacterList.Count; i++)
             {
-                c.Update(cam, deltaTime);
+                CharacterList[i].Update(cam, deltaTime);
             }
         }
 
@@ -1039,6 +1138,8 @@ namespace Barotrauma
                 }
             }
 
+            if (huskInfection != null) huskInfection.Update(deltaTime, this);
+            
             if (isDead) return;
 
             if (networkUpdateSent)
@@ -1084,7 +1185,7 @@ namespace Barotrauma
                 Lights.LightManager.ViewTarget = this;
                 CharacterHUD.Update(deltaTime, this);
             }
-            
+
             if (IsUnconscious)
             {
                 UpdateUnconscious(deltaTime);
@@ -1096,7 +1197,12 @@ namespace Barotrauma
                 ControlLocalPlayer(deltaTime, cam);
             }
 
-            if (controlled == this || !(this is AICharacter)) Control(deltaTime, cam);
+            if (controlled == this || 
+                !(this is AICharacter) || 
+                !((AICharacter)this).AIController.Enabled)
+            {
+                Control(deltaTime, cam);
+            }
 
             if (selectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
             {
@@ -1323,9 +1429,17 @@ namespace Barotrauma
                 if (GameMain.NetworkMember != null && controlled != this) return; 
             }
 
-            Vector2 centerOfMass = AnimController.GetCenterOfMass();
 
             health = minHealth;
+
+            BreakJoints();
+
+            Kill(CauseOfDeath.Pressure, isNetworkMessage);
+        }
+
+        public void BreakJoints()
+        {
+            Vector2 centerOfMass = AnimController.GetCenterOfMass();
 
             foreach (Limb limb in AnimController.Limbs)
             {
@@ -1334,28 +1448,27 @@ namespace Barotrauma
                 Vector2 diff = centerOfMass - limb.SimPosition;
                 if (diff == Vector2.Zero) continue;
                 limb.body.ApplyLinearImpulse(diff * 10.0f);
-               // limb.Damage = 100.0f;
+                // limb.Damage = 100.0f;
             }
 
             SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body);
-                        
+
             for (int i = 0; i < 10; i++)
             {
                 Particle p = GameMain.ParticleManager.CreateParticle("waterblood",
                     ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(5.0f),
                     Rand.Vector(10.0f));
-                if (p!=null) p.Size *= 2.0f;
+                if (p != null) p.Size *= 2.0f;
 
                 GameMain.ParticleManager.CreateParticle("bubbles",
                     ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(5.0f),
-                    new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f,50f)));
+                    new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f, 50f)));
             }
 
             foreach (var joint in AnimController.limbJoints)
             {
                 joint.LimitEnabled = false;
             }
-            Kill(CauseOfDeath.Pressure, isNetworkMessage);
         }
         
         public void Kill(CauseOfDeath causeOfDeath, bool isNetworkMessage = false)

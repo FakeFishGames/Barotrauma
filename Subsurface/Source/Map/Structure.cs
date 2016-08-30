@@ -104,6 +104,19 @@ namespace Barotrauma
         {
             get { return prefab.MaxHealth; }
         }
+
+        public override Rectangle Rect
+        {
+            get
+            {
+                return base.Rect;
+            }
+            set
+            {
+                base.Rect = value;
+                if (prefab.HasBody) CreateSections();
+            }
+        }
                 
         public override void Move(Vector2 amount)
         {
@@ -130,15 +143,6 @@ namespace Barotrauma
             {
                 convexHulls.ForEach(x => x.Move(amount));
             }
-            //if (gaps != null)
-            //{
-            //    foreach (Gap g in gaps)
-            //    {
-            //        g.Move(amount);
-            //        //g.position.X += amount.X;
-            //        //g.position.Y -= amount.Y;
-            //    }
-            //}
         }
 
         public Structure(Rectangle rectangle, StructurePrefab sp, Submarine submarine)
@@ -173,37 +177,8 @@ namespace Barotrauma
                 bodies.Add(newBody);
 
                 WallList.Add(this);
-                        
-                int xsections = 1;
-                int ysections = 1;
-                int width, height;
-                if (isHorizontal)
-                {
-                    xsections = (int)Math.Ceiling((float)rect.Width / wallSectionSize);
-                    sections = new WallSection[xsections];
-                    width = (int)wallSectionSize;
-                    height = rect.Height;
-                }
-                else
-                {
-                    ysections = (int)Math.Ceiling((float)rect.Height / wallSectionSize);
-                    sections = new WallSection[ysections];
-                    width = rect.Width;
-                    height = (int)wallSectionSize;
-                }
-                
-                for (int x = 0; x < xsections; x++ )
-                {
-                    for (int y = 0; y < ysections; y++)
-                    {
-                        Rectangle sectionRect = new Rectangle(rect.X + x * width, rect.Y - y * height, width, height);
-                        sectionRect.Width -= (int)Math.Max((sectionRect.X + sectionRect.Width) - (rect.X + rect.Width), 0.0f);
-                        sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height)-(sectionRect.Y - sectionRect.Height), 0.0f);
 
-                        sections[x+y] = new WallSection(sectionRect);
-                    }
-                }
-
+                CreateSections();
             }
             else
             {
@@ -243,6 +218,39 @@ namespace Barotrauma
             }
 
             InsertToList();
+        }
+
+        private void CreateSections()
+        {
+            int xsections = 1, ysections = 1;
+            int width, height;
+
+            if (isHorizontal)
+            {
+                xsections = (int)Math.Ceiling((float)rect.Width / wallSectionSize);
+                sections = new WallSection[xsections];
+                width = (int)wallSectionSize;
+                height = rect.Height;
+            }
+            else
+            {
+                ysections = (int)Math.Ceiling((float)rect.Height / wallSectionSize);
+                sections = new WallSection[ysections];
+                width = rect.Width;
+                height = (int)wallSectionSize;
+            }
+
+            for (int x = 0; x < xsections; x++)
+            {
+                for (int y = 0; y < ysections; y++)
+                {
+                    Rectangle sectionRect = new Rectangle(rect.X + x * width, rect.Y - y * height, width, height);
+                    sectionRect.Width -= (int)Math.Max((sectionRect.X + sectionRect.Width) - (rect.X + rect.Width), 0.0f);
+                    sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+
+                    sections[x + y] = new WallSection(sectionRect);
+                }
+            }
         }
 
         private void GenerateConvexHull()
@@ -374,11 +382,14 @@ namespace Barotrauma
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
-            prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color);
-
+            if(sections.Length == 1)
+                prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color,Point.Zero);
 
             foreach (WallSection s in sections)
             {
+                Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
+                if (sections.Length != 1 && s.damage < prefab.MaxHealth)
+                   prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
 
                 if (s.isHighLighted)
                 {
@@ -390,10 +401,10 @@ namespace Barotrauma
                 s.isHighLighted = false;
                 
                 if (s.damage < 0.01f) continue;
-                
-                GUI.DrawRectangle(spriteBatch,
+
+                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
-                    Color.Black * (s.damage / prefab.MaxHealth), true); 
+                     Color.Black * (s.damage / prefab.MaxHealth), true); 
             }
             /*
             if(_convexHulls == null) return;
@@ -592,8 +603,8 @@ namespace Barotrauma
                 }
             }
 
-            if (sections[sectionIndex].gap != null)                    
-                sections[sectionIndex].gap.Open = (float)Math.Pow(((damage / prefab.MaxHealth)-0.5)*2.0, 2.0);
+            if (sections[sectionIndex].gap != null)
+                sections[sectionIndex].gap.Open = (damage/prefab.MaxHealth - 0.5f)*2;
 
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.MaxHealth);

@@ -30,8 +30,8 @@ namespace Barotrauma
 
         protected float strongestImpact;
 
-        float headPosition, headAngle;
-        float torsoPosition, torsoAngle;
+        public float headPosition, headAngle;
+        public float torsoPosition, torsoAngle;
 
         protected double onFloorTimer;
 
@@ -231,8 +231,7 @@ namespace Barotrauma
                         byte ID = Convert.ToByte(subElement.Attribute("id").Value);
 
                         Limb limb = new Limb(character, subElement, scale);
-
-
+                        
                         limb.body.FarseerBody.OnCollision += OnLimbCollision;
                         
                         Limbs[ID] = limb;
@@ -240,38 +239,7 @@ namespace Barotrauma
                         if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
                         break;
                     case "joint":
-                        Byte limb1ID = Convert.ToByte(subElement.Attribute("limb1").Value);
-                        Byte limb2ID = Convert.ToByte(subElement.Attribute("limb2").Value);
-
-                        Vector2 limb1Pos = ToolBox.GetAttributeVector2(subElement, "limb1anchor", Vector2.Zero) * scale;
-                        limb1Pos = ConvertUnits.ToSimUnits(limb1Pos);
-
-                        Vector2 limb2Pos = ToolBox.GetAttributeVector2(subElement, "limb2anchor", Vector2.Zero) * scale;
-                        limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
-
-                        RevoluteJoint joint = new RevoluteJoint(Limbs[limb1ID].body.FarseerBody, Limbs[limb2ID].body.FarseerBody, limb1Pos, limb2Pos);
-
-                        joint.CollideConnected = false;
-
-                        if (subElement.Attribute("lowerlimit")!=null)
-                        {
-                            joint.LimitEnabled = true;
-                            joint.LowerLimit = float.Parse(subElement.Attribute("lowerlimit").Value) * ((float)Math.PI / 180.0f);
-                            joint.UpperLimit = float.Parse(subElement.Attribute("upperlimit").Value) * ((float)Math.PI / 180.0f);
-                        }
-
-                        joint.MotorEnabled = true;
-                        joint.MaxMotorTorque = 0.25f;
-
-                        GameMain.World.AddJoint(joint);
-
-                        for (int i = 0; i < limbJoints.Length; i++ )
-                        {
-                            if (limbJoints[i] != null) continue;
-                            
-                            limbJoints[i] = joint;
-                            break;                            
-                        }
+                        AddJoint(subElement, scale);
 
                         break;
                 }
@@ -307,6 +275,58 @@ namespace Barotrauma
             }
 
             FindLowestLimb();
+        }
+
+        public void AddJoint(XElement subElement, float scale = 1.0f)
+        {
+            byte limb1ID = Convert.ToByte(subElement.Attribute("limb1").Value);
+            byte limb2ID = Convert.ToByte(subElement.Attribute("limb2").Value);
+
+            Vector2 limb1Pos = ToolBox.GetAttributeVector2(subElement, "limb1anchor", Vector2.Zero) * scale;
+            limb1Pos = ConvertUnits.ToSimUnits(limb1Pos);
+
+            Vector2 limb2Pos = ToolBox.GetAttributeVector2(subElement, "limb2anchor", Vector2.Zero) * scale;
+            limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
+
+            RevoluteJoint joint = new RevoluteJoint(Limbs[limb1ID].body.FarseerBody, Limbs[limb2ID].body.FarseerBody, limb1Pos, limb2Pos);
+
+            joint.CollideConnected = false;
+
+            if (subElement.Attribute("lowerlimit") != null)
+            {
+                joint.LimitEnabled = true;
+                joint.LowerLimit = float.Parse(subElement.Attribute("lowerlimit").Value) * ((float)Math.PI / 180.0f);
+                joint.UpperLimit = float.Parse(subElement.Attribute("upperlimit").Value) * ((float)Math.PI / 180.0f);
+            }
+
+            joint.MotorEnabled = true;
+            joint.MaxMotorTorque = 0.25f;
+
+            GameMain.World.AddJoint(joint);
+
+            for (int i = 0; i < limbJoints.Length; i++)
+            {
+                if (limbJoints[i] != null) continue;
+
+                limbJoints[i] = joint;
+                return;
+            }
+
+            Array.Resize(ref limbJoints, limbJoints.Length + 1);
+            limbJoints[limbJoints.Length - 1] = joint;
+
+        }
+
+        public void AddLimb(Limb limb)
+        {
+            limb.body.FarseerBody.OnCollision += OnLimbCollision;
+            
+            Array.Resize(ref Limbs, Limbs.Length + 1);
+
+            Limbs[Limbs.Length-1] = limb;
+
+            Mass += limb.Mass;
+            if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
         }
           
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)

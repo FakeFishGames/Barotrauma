@@ -93,6 +93,7 @@
     <Compile Include="Source\Characters\CharacterInfo.cs" />
     <Compile Include="Source\Characters\AI\ISteerable.cs" />
     <Compile Include="Source\Characters\DelayedEffect.cs" />
+    <Compile Include="Source\Characters\HuskInfection.cs" />
     <Compile Include="Source\Characters\Jobs\Job.cs" />
     <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Source\Characters\AI\SteeringManager.cs" />
@@ -155,6 +156,7 @@
     <Compile Include="Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
+    <Compile Include="Source\Networking\ReliableSender.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Particles\ParticleEmitter.cs" />
@@ -390,6 +392,14 @@
     <Content Include="Content\Characters\Human\head8[black].png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Characters\Human\humanhusk.xml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Human\huskappendage.xml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Characters\Human\torso[black].png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -481,6 +491,7 @@
     </Content>
     <Content Include="Content\InfoTexts.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Items\Artifacts\alientools.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

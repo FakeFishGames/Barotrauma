@@ -264,6 +264,7 @@ namespace Barotrauma.Networking
         
         public void AddChatMessage(ChatMessage message)
         {
+
             if (message.Type == ChatMessageType.Radio && 
                 Character.Controlled != null &&
                 message.Sender != null && message.Sender != myCharacter)
@@ -277,6 +278,8 @@ namespace Barotrauma.Networking
                 radioComponent.Transmit(message.TextWithSender);
                 return;
             }
+
+            GameServer.Log(message.TextWithSender, message.Color);
 
             string displayedText = message.Text;
 
@@ -293,8 +296,6 @@ namespace Barotrauma.Networking
 
             GameMain.NetLobbyScreen.NewChatMessage(message);
 
-            GameServer.Log(message.Text, message.Color);
-
             while (chatBox.CountChildren > 20)
             {
                 chatBox.RemoveChild(chatBox.children[1]);
@@ -304,11 +305,12 @@ namespace Barotrauma.Networking
             {
                 displayedText = message.SenderName + ": " + displayedText;
             }
-
+            
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), displayedText,
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
                 Alignment.Left, null, null, true);
             msg.Font = GUI.SmallFont;
+            msg.UserData = message.SenderName;
 
             msg.Padding = new Vector4(20.0f, 0, 0, 0);
 
@@ -340,15 +342,12 @@ namespace Barotrauma.Networking
         {
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                chatMsgBox.Visible = Character.Controlled == null || 
-                    (!Character.Controlled.IsUnconscious && Character.Controlled.Stun <= 0.0f);
+                chatMsgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
 
                 inGameHUD.Update(deltaTime);
 
                 GameMain.GameSession.CrewManager.Update(deltaTime);
-
-                //if (crewFrameOpen) crewFrame.Update(deltaTime);
-
+                
                 if (Character.Controlled == null || Character.Controlled.IsDead)
                 {
                     GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;

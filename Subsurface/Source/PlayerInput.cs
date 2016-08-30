@@ -10,6 +10,7 @@ namespace Barotrauma
         Use,
         Aim,
         Up, Down, Left, Right,
+        Attack,
         Run, Crouch,
         Chat, CrewOrders
     }

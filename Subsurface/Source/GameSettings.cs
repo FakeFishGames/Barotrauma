@@ -203,6 +203,16 @@ namespace Barotrauma
                 }
             }
 
+            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+            {                
+                if (keyMapping[(int)inputType]==null)
+                {
+                    DebugConsole.ThrowError("Key binding for the input type ''" + inputType + " not set!");
+                    keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
+                } 
+            }
+
+
             UnsavedSettings = false;
         }
 
@@ -383,6 +393,7 @@ namespace Barotrauma
             {
                 new GUITextBlock(new Rectangle(x, y, 100, 20), inputNames[i]+": ", GUI.Style, settingsFrame);
                 var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 15), GUI.Style, settingsFrame);
+
                 keyBox.Text = keyMapping[i].ToString();
                 keyBox.UserData = i;
                 keyBox.OnSelected += KeyBoxSelected;

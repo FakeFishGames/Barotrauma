@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using FarseerPhysics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Barotrauma.Items.Components;
 using System.ComponentModel;
 
@@ -165,7 +166,12 @@ namespace Barotrauma.Networking
                 reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
             }
 
-            CoroutineManager.StartCoroutine(WaitForStartingInfo(password));
+            String sendPw = "";
+            if (password.Length>0)
+            {
+                sendPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            }
+            CoroutineManager.StartCoroutine(WaitForStartingInfo(sendPw));
             
             // Start the timer
             //update.Start();
@@ -408,43 +414,7 @@ namespace Barotrauma.Networking
             byte characterCount = inc.ReadByte();
             for (int i = 0; i < characterCount; i++)
             {
-                bool isAiCharacter = inc.ReadBoolean();
-                ushort id = inc.ReadUInt16();
-
-                if (isAiCharacter)
-                {
-                    string configPath = inc.ReadString();
-
-                    Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
-
-                    var existingEntity = Entity.FindEntityByID(id);
-                    if (existingEntity is AICharacter && existingEntity.ID == id)
-                    {
-                        continue;
-                    }
-
-                    var character = Character.Create(configPath, position, null, true);
-                    if (character != null) character.ID = id;
-                }
-                else
-                {
-                    bool hasOwner = inc.ReadBoolean();
-                    int ownerId = -1;
-                    if (hasOwner)
-                    {
-                        ownerId = inc.ReadByte();
-                    }
-
-                    Character newCharacter = ReadCharacterData(inc, ownerId == myID);
-
-                    if (ownerId != myID)
-                    {
-                        var characterOwner = otherClients.Find(c => c.ID == ownerId);
-                        if (characterOwner != null) characterOwner.Character = newCharacter;
-                    }
-
-                    crew.Add(newCharacter);
-                }
+                ReadCharacterData(inc);
             }
             
             gameStarted = true;
@@ -509,7 +479,7 @@ namespace Barotrauma.Networking
 
         public bool HasPermission(ClientPermissions permission)
         {
-            return permissions.HasFlag(permission);
+            return false;// permissions.HasFlag(permission);
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
@@ -547,15 +517,23 @@ namespace Barotrauma.Networking
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
             spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
 
-            spriteBatch.DrawString(GUI.Font, "Ping: " + (int)(client.ServerConnection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x + 10, y + 25), Color.White);
+            if (client.ServerConnection != null)
+            {
+                spriteBatch.DrawString(GUI.Font, "Ping: " + (int)(client.ServerConnection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x + 10, y + 25), Color.White);
 
-            y += 15;
+                y += 15;
 
-            spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + client.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
-            spriteBatch.DrawString(GUI.SmallFont, "Received packets: " + client.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
+                spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + client.Statistics.ReceivedBytes, new Vector2(x + 10, y + 45), Color.White);
+                spriteBatch.DrawString(GUI.SmallFont, "Received packets: " + client.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
 
-            spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + client.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
-            spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + client.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
+                spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + client.Statistics.SentBytes, new Vector2(x + 10, y + 75), Color.White);
+                spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + client.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
+            }
+            else
+            {
+                spriteBatch.DrawString(GUI.Font, "Disconnected", new Vector2(x + 10, y + 25), Color.White);
+            }
+
 
         }
 
@@ -607,25 +585,6 @@ namespace Barotrauma.Networking
             }
 
             return true;
-        }
-
-        public void ReadCharacterSpawnMessage(NetIncomingMessage message)
-        {
-            string configPath = message.ReadString();
-
-            if (configPath != Character.HumanConfigFile)
-            {
-                ushort id = message.ReadUInt16();
-
-                Vector2 position = new Vector2(message.ReadFloat(), message.ReadFloat());
-            
-                var character = Character.Create(configPath, position, null, true);
-                if (character != null) character.ID = id;
-            }
-            else
-            {
-                ReadCharacterData(message, false, true);
-            }
         }
 
         public void RequestFile(string file, FileTransferMessageType fileType)
@@ -812,35 +771,77 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public Character ReadCharacterData(NetIncomingMessage inc, bool isMyCharacter, bool hasAi = false)
+        public Character ReadCharacterData(NetIncomingMessage inc)
         {
-            string newName      = inc.ReadString();
-            ushort ID           = inc.ReadUInt16();
-            bool isFemale       = inc.ReadBoolean();
+            bool noInfo         = inc.ReadBoolean();
+            ushort id           = inc.ReadUInt16();
+            string configPath   = inc.ReadString();
 
-            int headSpriteID    = inc.ReadByte();
-            
             Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
+                
+            bool enabled        = inc.ReadBoolean();
 
-            string jobName = inc.ReadString();
-            JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+            Character character = null;
 
-            CharacterInfo ch = new CharacterInfo(Character.HumanConfigFile, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
-            ch.HeadSpriteId = headSpriteID;
-
-            Character character = Character.Create(ch, position, !isMyCharacter, hasAi);
-            GameMain.GameSession.CrewManager.characters.Add(character);            
-
-            character.ID = ID;
-            
-            if (isMyCharacter)
+            if (noInfo)
             {
-                myCharacter = character;
-                Character.Controlled = character;
-                GameMain.LightManager.LosEnabled = true;
+                var existingEntity = Entity.FindEntityByID(id);
+                if (existingEntity is AICharacter && existingEntity.ID == id)
+                {
+                    return (Character)existingEntity;
+                }
 
-                if (endVoteTickBox != null) endVoteTickBox.Visible = Voting.AllowEndVoting;
+                character = Character.Create(configPath, position, null, true);
+                character.ID = id;
             }
+            else
+            {
+                bool hasOwner = inc.ReadBoolean();
+                int ownerId = -1;
+                if (hasOwner)
+                {
+                    ownerId = inc.ReadByte();
+                }
+
+                string newName      = inc.ReadString();
+
+                bool hasAi          = inc.ReadBoolean();
+                bool isFemale       = inc.ReadBoolean();
+                int headSpriteID    = inc.ReadByte();
+                string jobName      = inc.ReadString();
+
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+
+                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
+                ch.HeadSpriteId = headSpriteID;
+
+                character = Character.Create(configPath, position, ch, ownerId != myID, hasAi);
+                character.ID = id;
+
+                if (configPath == Character.HumanConfigFile)
+                {
+                    GameMain.GameSession.CrewManager.characters.Add(character);
+                }
+
+                Item.Spawner.ReadNetworkData(inc);
+
+                if (ownerId == myID)
+                {
+                    myCharacter = character;
+                    Character.Controlled = character;
+                    GameMain.LightManager.LosEnabled = true;
+
+                    if (endVoteTickBox != null) endVoteTickBox.Visible = Voting.AllowEndVoting;
+                }
+                else
+                {
+                    var characterOwner = otherClients.Find(c => c.ID == ownerId);
+                    if (characterOwner != null) characterOwner.Character = character;
+
+                }
+            }
+
+            character.Enabled = enabled;
 
             return character;
         }
