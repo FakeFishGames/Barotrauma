@@ -646,5 +646,38 @@ namespace Barotrauma.Networking
 
             return false;
         }
+
+        public void ManagePlayersFrame(GUIFrame infoFrame)
+        {
+            GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.Style, infoFrame);
+            cList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            //crewList.OnSelected = SelectCrewCharacter;
+
+            foreach (Client c in ConnectedClients)
+            {
+                GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, cList);
+                frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                frame.Color = (c.inGame && c.Character!=null && !c.Character.IsDead) ? Color.Gold * 0.2f : Color.Transparent;
+                frame.HoverColor = Color.LightGray * 0.5f;
+                frame.SelectedColor = Color.Gold * 0.5f;
+
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(40, 0, 0, 25),
+                    c.name + " (" + c.Connection.RemoteEndPoint.Address.ToString() + ")",
+                    Color.Transparent, Color.White,
+                    Alignment.Left, Alignment.Left,
+                    null, frame);
+
+                var banButton = new GUIButton(new Rectangle(-120, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                banButton.UserData = c.name;
+                banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+
+                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                kickButton.UserData = c.name;
+                kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
+
+                textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+            }
+        }
     }
 }

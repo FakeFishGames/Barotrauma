@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using RestSharp;
@@ -54,7 +55,11 @@ namespace Barotrauma.Networking
             name = name.Replace(";", "");
 
             this.name = name;
-            this.password = password;
+            this.password = "";
+            if (password.Length>0)
+            {
+                this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+            }
             
             config = new NetPeerConfiguration("barotrauma");
 
@@ -103,6 +108,10 @@ namespace Barotrauma.Networking
                 }
                 return true;
             };
+
+            GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, GUI.Style, inGameHUD);
+            settingsButton.OnClicked = ToggleSettingsFrame;
+            settingsButton.UserData = "settingsButton";
 
             banList = new BanList();
 
@@ -342,7 +351,13 @@ namespace Barotrauma.Networking
 
             foreach (Client c in connectedClients)
             {
-                if (c.FileStreamSender != null) UpdateFileTransfer(c, deltaTime);
+                if (c.FileStreamSender != null) UpdateFileTransfer(c, deltaTime);                
+
+                c.ReliableChannel.Update(deltaTime);
+
+                //slowly reset spam timers
+                c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
+                c.ChatSpamSpeed = Math.Max(0.0f, c.ChatSpamSpeed - deltaTime);
             }
 
             NetIncomingMessage inc = null; 
@@ -974,35 +989,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)characters.Count);
             foreach (Character c in characters)
             {
-                msg.Write(c is AICharacter);
-                msg.Write(c.ID);
-
-                if (c is AICharacter)
-                {
-                    msg.Write(c.ConfigPath);
-
-                    msg.Write(c.Position.X);
-                    msg.Write(c.Position.Y);
-                }
-                else
-                {
-                    Client client = connectedClients.Find(cl => cl.Character == c);
-                    if (client != null)
-                    {
-                        msg.Write(true);
-                        msg.Write(client.ID);
-                    }
-                    else if (myCharacter == c)
-                    {
-                        msg.Write(true);
-                        msg.Write((byte)0);                        
-                    }
-                    else
-                    {
-                        msg.Write(false);
-                    }
-                    WriteCharacterData(msg, c.Name, c);
-                }
+                WriteCharacterData(msg, c.Name, c);
             }
 
             return msg;
@@ -1435,12 +1422,15 @@ namespace Barotrauma.Networking
 
         private void ReadChatMessage(NetIncomingMessage inc)
         {
+            Client sender = connectedClients.Find(x => x.Connection == inc.SenderConnection);
             ChatMessage message = ChatMessage.ReadNetworkMessage(inc);
+            if (message == null) return;
 
             List<Client> recipients = new List<Client>();
 
             foreach (Client c in connectedClients)
             {
+                if (!sender.inGame && c.inGame) continue; //people in lobby can't talk to people ingame
                 switch (message.Type)
                 {
                     case ChatMessageType.Dead:
@@ -1462,7 +1452,71 @@ namespace Barotrauma.Networking
                 recipients.Add(c);
             }
 
-            AddChatMessage(message); 
+            //SPAM FILTER
+            if (sender.ChatSpamTimer > 0.0f)
+            {
+                //player has already been spamming, stop again
+                ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                sender.ChatSpamTimer = 10.0f;
+                SendChatMessage(denyMsg, sender);
+
+                return;
+            }
+           
+            float similarity = 0;
+            similarity += sender.ChatSpamSpeed * 0.05f; //the faster messages are being sent, the faster the filter will block
+            for (int i = 0; i < sender.ChatMessages.Count; i++)
+            {
+                float closeFactor = 1.0f / (20.0f - i);
+
+                int levenshteinDist = ToolBox.LevenshteinDistance(message.Text, sender.ChatMessages[i]);
+                similarity += Math.Max((message.Text.Length - levenshteinDist) / message.Text.Length * closeFactor, 0.0f);
+            }
+            
+            if (similarity > 5.0f)
+            {
+                sender.ChatSpamCount++;
+                
+                if (sender.ChatSpamCount > 3)
+                {
+                    //kick for spamming too much
+                    KickClient(sender, false);
+                }
+                else
+                {
+                    ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                    sender.ChatSpamTimer = 10.0f;
+                    SendChatMessage(denyMsg, sender);
+                }
+                return;
+            }
+
+            sender.ChatMessages.Add(message.Text);
+            if (sender.ChatMessages.Count > 20)
+            {
+                sender.ChatMessages.RemoveAt(0);
+            }
+
+            if (sender.inGame || (Screen.Selected == GameMain.NetLobbyScreen))
+            {
+                AddChatMessage(message);
+            }
+            else
+            {
+                GameServer.Log(message.TextWithSender, message.Color);
+            }
+            sender.ChatSpamSpeed += 5.0f;
+
+            foreach (Client c in recipients)
+            {
+                ReliableMessage msg = c.ReliableChannel.CreateMessage();
+                msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
+
+                message.WriteNetworkMessage(msg.InnerMessage);
+
+                c.ReliableChannel.SendMessage(msg, c.Connection);
+            }
+            
         }
 
         public override void SendChatMessage(string message, ChatMessageType? type = null)
@@ -1521,6 +1575,16 @@ namespace Barotrauma.Networking
             SendChatMessage(chatMessage, recipients);
         }
 
+        public void SendChatMessage(ChatMessage chatMessage, Client recipient)
+        {
+            ReliableMessage msg = recipient.ReliableChannel.CreateMessage();
+            msg.InnerMessage.Write((byte)PacketTypes.Chatmessage);
+
+            chatMessage.WriteNetworkMessage(msg.InnerMessage);
+
+            recipient.ReliableChannel.SendMessage(msg, recipient.Connection);
+        }
+
         public void SendChatMessage(ChatMessage chatMessage, List<Client> recipients)
         {
             
@@ -1528,6 +1592,9 @@ namespace Barotrauma.Networking
 
         private void ReadCharacterData(NetIncomingMessage message)
         {
+            Client sender = connectedClients.Find(c => c.Connection == message.SenderConnection);
+            if (sender == null) return;
+
             string name = "";
             Gender gender = Gender.Male;
             int headSpriteId = 0;
@@ -1545,6 +1612,11 @@ namespace Barotrauma.Networking
                 headSpriteId = 0;
             }
 
+            if (sender.characterInfo != null)
+            {
+                //clients can't change their character's name once it's been set
+                name = sender.characterInfo.Name;
+            }
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
             int count = message.ReadByte();
@@ -1555,51 +1627,60 @@ namespace Barotrauma.Networking
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 
-            foreach (Client c in connectedClients)
-            {
-                if (c.Connection != message.SenderConnection) continue;
-
-                c.characterInfo = new CharacterInfo(Character.HumanConfigFile, name, gender);
-                c.characterInfo.HeadSpriteId = headSpriteId;
-                c.jobPreferences = jobPreferences;
-                break;
-            }
+            sender.characterInfo = new CharacterInfo(Character.HumanConfigFile, name, gender);
+            sender.characterInfo.HeadSpriteId = headSpriteId;
+            sender.jobPreferences = jobPreferences;
         }
 
-        public void WriteCharacterData(NetOutgoingMessage message, string name, Character character)
+        public void WriteCharacterData(NetOutgoingMessage msg, string name, Character c)
         {
-            message.Write(name);
-            message.Write(character.ID);
-            message.Write(character.Info.Gender == Gender.Female);
+            msg.Write(c.Info == null);
+            msg.Write(c.ID);
+            msg.Write(c.ConfigPath);
 
-            message.Write((byte)character.Info.HeadSpriteId);
+            msg.Write(c.WorldPosition.X);
+            msg.Write(c.WorldPosition.Y);
 
-            message.Write(character.WorldPosition.X);
-            message.Write(character.WorldPosition.Y);
+            msg.Write(c.Enabled);
+
+            if (c.Info != null)
+            {
+                Client client = connectedClients.Find(cl => cl.Character == c);
+                if (client != null)
+                {
+                    msg.Write(true);
+                    msg.Write(client.ID);
+                }
+                else if (myCharacter == c)
+                {
+                    msg.Write(true);
+                    msg.Write((byte)0);
+                }
+                else
+                {
+                    msg.Write(false);
+                }
+
+                msg.Write(name);
+
+                msg.Write(c is AICharacter);
+                msg.Write(c.Info.Gender == Gender.Female);
+                msg.Write((byte)c.Info.HeadSpriteId);                            
+                msg.Write(c.Info.Job == null ? "" : c.Info.Job.Name);
             
-            message.Write(character.Info.Job.Name);
-            
+                Item.Spawner.FillNetworkData(msg, c.SpawnItems);
+            }
         }
 
         public void SendCharacterSpawnMessage(Character character, List<NetConnection> recipients = null)
         {
+            if (recipients != null && !recipients.Any()) return;
+
             NetOutgoingMessage message = server.CreateMessage();
             message.Write((byte)PacketTypes.NewCharacter);
 
-            message.Write(character.ConfigPath);
-
-            if (character.ConfigPath == Character.HumanConfigFile)
-            {
-                WriteCharacterData(message, character.Name, character);
-            }
-            else
-            {
-                message.Write(character.ID);
-
-                message.Write(character.Position.X);
-                message.Write(character.Position.Y);
-            }
-            
+            WriteCharacterData(message, character.Name, character);
+                        
             SendMessage(message, NetDeliveryMethod.ReliableUnordered, recipients);
         }
 

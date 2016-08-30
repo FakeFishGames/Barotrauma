@@ -29,6 +29,11 @@ namespace Barotrauma.Networking
         public string version;
         public bool inGame;
 
+        public List<string> ChatMessages = new List<string>();
+        public float ChatSpamSpeed;
+        public float ChatSpamTimer;
+        public int ChatSpamCount;
+
         private List<Client> kickVoters;
 
         public bool ReadyToStart;
@@ -84,8 +89,21 @@ namespace Barotrauma.Networking
             {
                 name = name.Substring(0, 20);
             }
+            string rName = "";
+            for (int i=0;i<name.Length;i++)
+            {
+                if (name[i] < 32 || name[i] > 126)
+                {
+                    //TODO: allow safe unicode characters, this is just to prevent players from taking names that look similar but aren't the same
+                    rName += '?';
+                }
+                else
+                {
+                    rName += name[i];
+                }
+            }
 
-            return name;
+            return rName;
         }
 
         public void SetPermissions(ClientPermissions permissions)
@@ -105,7 +123,7 @@ namespace Barotrauma.Networking
 
         public bool HasPermission(ClientPermissions permission)
         {
-            return Permissions.HasFlag(permission);
+            return false; //Permissions.HasFlag(permission);
         }
 
         public T GetVote<T>(VoteType voteType)

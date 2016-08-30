@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<huskappendage>
+  <!-- spike/tentacle thingy -->
+  <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" impacttolerance="5.0" pullpos="0.0,25.0">
+    <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.5" origin="0.5,0.5"/>
+    <attack range="70" duration="0.1" bleedingdamage="0.5" damage="10" stun="0.5" torque="-50" damagetype="slash" targetforce="10">
+      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01"/>
+      <StatusEffect type="OnUse" target="This" Health="10.0" disabledeltatime="true"/>
+    </attack>
+  </limb>
+
+  <joint limb1="1" limb1anchor="25,10" limb2="13" limb2anchor="25,0" lowerlimit="-40" upperlimit="0"/>
+</huskappendage>

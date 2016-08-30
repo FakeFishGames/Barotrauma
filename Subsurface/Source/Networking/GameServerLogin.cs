@@ -61,11 +61,14 @@ namespace Barotrauma.Networking
             {
                 unauthenticatedClients.Remove(unauthenticatedClient);
 
-                NetEncryption algo = new NetXtea(server, password);
+                string saltedPw = password;
+                saltedPw = saltedPw + Convert.ToString(unauthenticatedClient.Nonce);
+                saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
+                NetEncryption algo = new NetXtea(server, saltedPw);
                 inc.Decrypt(algo);
 
-                int nonce = inc.ReadInt32();
-                if (nonce != unauthenticatedClient.Nonce)
+                string rdPw = inc.ReadString();
+                if (rdPw != saltedPw)
                 {
                     inc.SenderConnection.Disconnect("Wrong password!");
                     return;
@@ -74,6 +77,13 @@ namespace Barotrauma.Networking
             else
             {
                 inc.SenderConnection.Disconnect("Authentication failed");
+                return;
+            }
+
+            if (ConnectedClients.Count>=config.MaximumConnections)
+            {
+                inc.SenderConnection.Disconnect("Server full");
+                return;
             }
 
             DebugConsole.NewMessage("New player has joined the server", Color.White);

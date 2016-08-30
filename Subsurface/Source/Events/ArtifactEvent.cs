@@ -31,7 +31,8 @@ namespace Barotrauma
         
         protected override void Start()
         {
-            Vector2 position = Level.Loaded.GetRandomItemPos(Level.PositionType.Cave, 30.0f);
+            Vector2 position = Level.Loaded.GetRandomItemPos(
+                Level.PositionType.Cave | Level.PositionType.MainPath | Level.PositionType.Ruin, 500.0f, 30.0f);
 
             item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;

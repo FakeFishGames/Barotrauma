@@ -131,7 +131,10 @@
       <fabricableitem name="Morbusine" requireditems="Sulphuric Acid, Auxiliorizine" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
-      
+
+      <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Corrigodone" requiredtime="30">
+        <RequiredSkill name="Medical" level="60"/>
+      </fabricableitem>      
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">

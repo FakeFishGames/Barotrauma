@@ -8,7 +8,7 @@
     radarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
-        spawntype="ruin"
+    spawntype="ruin"
     itemname="Skyholder Artifact">
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
@@ -44,7 +44,7 @@
     reward="800"
     radarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
-    monsterfile="Content/Characters/TigerThresher/tigerthresher.xml">
+    monsterfile="Content/Characters/Tigerthresher/tigerthresher.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
   </MonsterMission>
 
@@ -113,9 +113,10 @@
     description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 200 credits."
     commonness="10"
     reward="200"
-    successmessage="The chemicals have been successfully delivered.">
+    successmessage="The chemicals have been successfully delivered."
+    requireddeliveryamount="20">
     <Items>
-      <Item name="Chemical Crate"  requireddeliveryamount="20">
+      <Item name="Chemical Crate">
         <Item name="Auxiliorizine" amount="5"/>
         <Item name="Sulphuric Acid" amount="5"/>
       </Item>
@@ -123,6 +124,19 @@
         <Item name="Morbusine" amount="5"/>
         <Item name="Flash Powder" amount="3"/>
         <Item name="Chloral Hydrate" amount="2"/>
+      </Item>
+    </Items>
+  </CargoMission>
+
+  <CargoMission
+    name="Biohazard"
+    description="Local reseachers are offering 500 credits for delivering a container of husk parasite eggs to [location2]."
+    commonness="10"
+    reward="500"
+    successmessage="The husk eggs have been successfully delivered.">
+    <Items>
+      <Item name="Chemical Crate">
+        <Item name="Velonaceps Calyx Eggs" amount="10"/>
       </Item>
     </Items>
   </CargoMission>
@@ -148,8 +162,9 @@
    description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
    commonness="2"
    reward="100"
-   successmessage="The clown gear has been successfully delivered.">
-    <Items requireddeliveryamount="35">
+   successmessage="The clown gear has been successfully delivered."
+   requireddeliveryamount="35">
+    <Items >
       <Item name="Metal Crate">
         <Item name="Clown Mask" amount="10"/>
         <Item name="Clown Costume" amount="10"/>        

@@ -1,18 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Barotrauma.Networking;
 using System;
-using Barotrauma.Items.Components;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
+using System.ComponentModel;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -648,7 +648,7 @@ namespace Barotrauma
 
         public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
-            float damageAmount = attack.GetDamage(deltaTime);
+            float damageAmount = attack.GetStructureDamage(deltaTime);
             Condition -= damageAmount;
 
             return new AttackResult(damageAmount, 0.0f, false);
