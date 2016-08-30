@@ -101,6 +101,7 @@
     <Compile Include="Source\Characters\Jobs\Skill.cs" />
     <Compile Include="Source\Characters\Jobs\SkillPrefab.cs" />
     <Compile Include="Source\ContentPackage.cs" />
+    <Compile Include="Source\CoroutineManager.cs" />
     <Compile Include="Source\Events\Missions\CargoMission.cs" />
     <Compile Include="Source\Events\Missions\Mission.cs" />
     <Compile Include="Source\Events\Missions\MonsterMission.cs" />
