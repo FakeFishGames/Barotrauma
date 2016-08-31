@@ -340,126 +340,7 @@ namespace Barotrauma.Networking
                 //TODO: read message data
             }
         }
-
-        private IEnumerable<object> StartGame(NetIncomingMessage inc)
-        {
-            if (Character != null) Character.Remove();
-
-            endVoteTickBox.Selected = false;
-
-            int seed = inc.ReadInt32();
-            string levelSeed = inc.ReadString();
-
-            int missionTypeIndex = inc.ReadByte();
-
-            string subName = inc.ReadString();
-            string subHash = inc.ReadString();
-            
-            string shuttleName = inc.ReadString();
-            string shuttleHash = inc.ReadString();
-
-            string modeName = inc.ReadString();
-
-            bool respawnAllowed = inc.ReadBoolean();
-
-            GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
-
-            if (gameMode == null)
-            {
-                DebugConsole.ThrowError("Game mode ''" + modeName + "'' not found!");
-                yield return CoroutineStatus.Success;
-            }
-
-            if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList))
-            {
-                yield return CoroutineStatus.Success;
-            }
-
-            if (!GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox))
-            {
-                yield return CoroutineStatus.Success;
-            }
-
-            Rand.SetSyncedSeed(seed);
-            //int gameModeIndex = inc.ReadInt32();
-
-            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
-            GameMain.GameSession.StartShift(levelSeed);
-
-            if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
-
-
-            //myCharacter = ReadCharacterData(inc);
-            //Character.Controlled = myCharacter;                       
-
-            List<Character> crew = new List<Character>();
-
-            byte characterCount = inc.ReadByte();
-            for (int i = 0; i < characterCount; i++)
-            {
-                ReadCharacterData(inc);
-            }
-            
-            gameStarted = true;
-
-            endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
-
-            GameMain.GameScreen.Select();
-
-            AddChatMessage("Press TAB to chat. Use ''r;'' to talk through the radio.", ChatMessageType.Server);
-
-            //GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
-
-            yield return CoroutineStatus.Success;
-        }
         
-
-        public IEnumerable<object> EndGame(string endMessage)
-        {
-            if (!gameStarted) yield return CoroutineStatus.Success;
-
-            if (GameMain.GameSession != null) GameMain.GameSession.gameMode.End(endMessage);
-
-            //var messageBox = new GUIMessageBox("The round has ended", endMessage, 400, 300);
-
-            gameStarted = false;
-
-            Character.Controlled = null;
-            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-            GameMain.LightManager.LosEnabled = false;
-
-            respawnManager = null;
-
-            float endPreviewLength = 10.0f;
-
-            if (Screen.Selected == GameMain.GameScreen)
-            {
-                var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-
-                float secondsLeft = endPreviewLength;
-
-                do
-                {
-                    secondsLeft -= CoroutineManager.UnscaledDeltaTime;
-
-                    yield return CoroutineStatus.Running;
-                } while (secondsLeft > 0.0f);
-            }
-
-            Submarine.Unload();
-
-            GameMain.NetLobbyScreen.Select();
-
-            myCharacter = null;
-            foreach (Client c in otherClients)
-            {
-                c.Character = null;
-            }
-
-            yield return CoroutineStatus.Success;
-
-        }
-
         public bool HasPermission(ClientPermissions permission)
         {
             return false;// permissions.HasFlag(permission);
@@ -556,41 +437,13 @@ namespace Barotrauma.Networking
 
             if (votedClient == null) return false;
 
-            Vote(VoteType.Kick, votedClient);
+            //Vote(VoteType.Kick, votedClient);
 
             button.Enabled = false;
 
             return true;
         }
-
-        public void Vote(VoteType voteType, object userData)
-        {
-            NetOutgoingMessage msg = client.CreateMessage();
-            
-            msg.Write((byte)voteType);
-
-            switch (voteType)
-            {
-                case VoteType.Sub:
-                    msg.Write(((Submarine)userData).Name);
-                    break;
-                case VoteType.Mode:
-                    msg.Write(((GameModePreset)userData).Name);
-                    break;
-                case VoteType.EndRound:
-                    msg.Write((bool)userData);
-                    break;
-                case VoteType.Kick:
-                    Client votedClient = userData as Client;
-                    if (votedClient == null) return;
-
-                    msg.Write(votedClient.ID);
-                    break;
-            }
-
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-        }
-
+        
         public bool SpectateClicked(GUIButton button, object userData)
         {
             NetOutgoingMessage msg = client.CreateMessage();
@@ -613,129 +466,11 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            Vote(VoteType.EndRound, tickBox.Selected);
+            //Vote(VoteType.EndRound, tickBox.Selected);
 
             return false;
         }
-
-
-
-        public void SendCharacterData()
-        {
-            if (characterInfo == null) return;
-
-            NetOutgoingMessage msg = client.CreateMessage();
-
-            msg.Write(characterInfo.Name);
-            msg.Write(characterInfo.Gender == Gender.Male);
-            msg.Write((byte)characterInfo.HeadSpriteId);
-
-            var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
-            int count = Math.Min(jobPreferences.Count, 3);
-            msg.Write((byte)count);
-            for (int i = 0; i < count; i++ )
-            {
-                msg.Write(jobPreferences[i].Name);
-            }
-
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        public Character ReadCharacterData(NetIncomingMessage inc)
-        {
-            bool noInfo         = inc.ReadBoolean();
-            ushort id           = inc.ReadUInt16();
-            string configPath   = inc.ReadString();
-
-            Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
-                
-            bool enabled        = inc.ReadBoolean();
-
-            Character character = null;
-
-            if (noInfo)
-            {
-                var existingEntity = Entity.FindEntityByID(id);
-                if (existingEntity is AICharacter && existingEntity.ID == id)
-                {
-                    return (Character)existingEntity;
-                }
-
-                character = Character.Create(configPath, position, null, true);
-                character.ID = id;
-            }
-            else
-            {
-                bool hasOwner = inc.ReadBoolean();
-                int ownerId = -1;
-                if (hasOwner)
-                {
-                    ownerId = inc.ReadByte();
-                }
-
-                string newName      = inc.ReadString();
-
-                bool hasAi          = inc.ReadBoolean();
-                bool isFemale       = inc.ReadBoolean();
-                int headSpriteID    = inc.ReadByte();
-                string jobName      = inc.ReadString();
-
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
-
-                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
-                ch.HeadSpriteId = headSpriteID;
-
-                character = Character.Create(configPath, position, ch, ownerId != myID, hasAi);
-                character.ID = id;
-
-                if (configPath == Character.HumanConfigFile)
-                {
-                    GameMain.GameSession.CrewManager.characters.Add(character);
-                }
-                
-                if (ownerId == myID)
-                {
-                    myCharacter = character;
-                    Character.Controlled = character;
-                    GameMain.LightManager.LosEnabled = true;
-
-                    if (endVoteTickBox != null) endVoteTickBox.Visible = Voting.AllowEndVoting;
-                }
-                else
-                {
-                    var characterOwner = otherClients.Find(c => c.ID == ownerId);
-                    if (characterOwner != null) characterOwner.Character = character;
-
-                }
-            }
-
-            character.Enabled = enabled;
-
-            return character;
-        }
-
-        public override void SendChatMessage(string message, ChatMessageType? type = null)
-        {
-            if (client.ServerConnection == null) return;
-
-            type = ChatMessageType.Default;
-                        
-            if (Screen.Selected == GameMain.GameScreen && (myCharacter == null || myCharacter.IsDead)) 
-            {
-                type = ChatMessageType.Dead;
-            }
-            else
-            {
-                string command = ChatMessage.GetChatMessageCommand(message, out message).ToLowerInvariant();
-                
-                if (command=="r" || command=="radio" && CanUseRadio(Character.Controlled)) type = ChatMessageType.Radio;              
-            }
-            
-            var chatMessage = ChatMessage.Create(
-                gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, (ChatMessageType)type, gameStarted ? myCharacter : null);
-        }
-
+        
         /// <summary>
         /// sends some random data to the server (can be a networkevent or just something completely random)
         /// use for debugging purposes
