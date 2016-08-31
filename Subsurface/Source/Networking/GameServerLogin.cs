@@ -57,6 +57,7 @@ namespace Barotrauma.Networking
             }
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
             NetOutgoingMessage nonceMsg = server.CreateMessage();
+            nonceMsg.Write((byte)ServerPacketHeader.AUTH_RESPONSE);
             if (string.IsNullOrEmpty(password))
             {
                 nonceMsg.Write(false); //false = no password
