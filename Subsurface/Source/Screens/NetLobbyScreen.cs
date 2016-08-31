@@ -718,7 +718,7 @@ namespace Barotrauma
                 return false;
             }
 
-            GameMain.Client.Vote(voteType, userData);
+            //GameMain.Client.Vote(voteType, userData);
 
             return true;
         }
@@ -1014,7 +1014,6 @@ namespace Barotrauma
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
 
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
-            if (GameMain.Client != null) GameMain.Client.SendCharacterData();
 
             UpdatePreviewPlayer(GameMain.NetworkMember.CharacterInfo);
 
@@ -1025,7 +1024,6 @@ namespace Barotrauma
         {
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
-            if (GameMain.Client != null) GameMain.Client.SendCharacterData();
                 
             UpdatePreviewPlayer(GameMain.NetworkMember.CharacterInfo);
             return true;
@@ -1137,8 +1135,7 @@ namespace Barotrauma
 
                 (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
             }
-
-            if (GameMain.Client!=null) GameMain.Client.SendCharacterData();
+            
         }
 
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
@@ -1201,128 +1198,6 @@ namespace Barotrauma
 
             return true;
         }
-                
-        public void WriteData(NetOutgoingMessage msg)
-        {
-            Submarine selectedSub = subList.SelectedData as Submarine;
-
-            if (selectedSub==null)
-            {
-                msg.Write("");
-                msg.Write("");
-            }
-            else
-            {
-                msg.Write(Path.GetFileName(selectedSub.Name));
-                msg.Write(selectedSub.MD5Hash.Hash);
-            }
-
-            if (SelectedShuttle == null)
-            {
-                msg.Write("");
-                msg.Write("");
-            }
-            else
-            {
-                msg.Write(Path.GetFileName(SelectedShuttle.Name));
-                msg.Write(SelectedShuttle.MD5Hash.Hash);
-            }
-
-            msg.Write(ServerName);
-            msg.Write(serverMessage.Text);
-
-            msg.WriteRangedInteger(0, 2, (int)GameMain.Server.TraitorsEnabled);
-
-            msg.WriteRangedInteger(0, Mission.MissionTypes.Count-1, MissionTypeIndex);
-
-            msg.Write((byte)modeList.SelectedIndex);
-            msg.Write(LevelSeed);
-
-            msg.Write(GameMain.Server != null && GameMain.Server.AutoRestart);
-            msg.Write(GameMain.Server == null ? 0.0f : GameMain.Server.AutoRestartTimer);
-
-            msg.Write((byte)(playerList.CountChildren));
-            for (int i = 0; i < playerList.CountChildren; i++)
-            {
-                string clientName = playerList.children[i].UserData as string;
-                msg.Write(clientName==null ? "" : clientName);
-            }
-        }
-
-        public void ReadData(NetIncomingMessage msg)
-        {
-            string subName = "", subHash = "";
-            string shuttleName = "", shuttleHash = "";
-            
-            int modeIndex = 0;
-            //float durationScroll = 0.0f;
-            string newSeed = "";
-
-            bool autoRestart = false;
-
-            float restartTimer = 0.0f;
-
-            YesNoMaybe traitorsEnabled;
-
-            try
-            {
-                subName         = msg.ReadString();
-                subHash         = msg.ReadString();
-
-                shuttleName     = msg.ReadString();
-                shuttleHash     = msg.ReadString();
-
-                ServerName      = msg.ReadString();
-                serverMessage.Text   = msg.ReadString();
-
-                traitorsEnabled = (YesNoMaybe)msg.ReadRangedInteger(0, 2);
-
-                SetMissionType(msg.ReadRangedInteger(0, Mission.MissionTypes.Count - 1));
-
-                modeIndex       = msg.ReadByte();
-
-                newSeed         = msg.ReadString();
-
-                autoRestart     = msg.ReadBoolean();
-                restartTimer    = msg.ReadFloat();
-
-                int playerCount = msg.ReadByte();
-
-                playerList.ClearChildren();
-                for (int i = 0; i < playerCount; i++)
-                {
-                    AddPlayer(msg.ReadString());
-                }
-            }
-
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to read lobby update message ("+e.Message+")");
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(subName) && !GameMain.NetworkMember.Voting.AllowSubVoting) TrySelectSub(subName, subHash, subList);
-
-            if (!string.IsNullOrWhiteSpace(shuttleName)) TrySelectSub(shuttleName, shuttleHash, shuttleList.ListBox);
-
-            if (!GameMain.NetworkMember.Voting.AllowModeVoting)
-            {
-                //SelectMode(modeList.children[modeIndex], modeList.children[modeIndex].UserData);
-                modeList.Select(modeIndex, true);
-
-                GameModePreset modePreset = modeList.children[modeIndex].UserData as GameModePreset;
-                missionTypeBlock.Visible = modePreset.Name == "Mission";
-            }
-
-            SetTraitorsEnabled(traitorsEnabled);
-
-            autoRestartBox.Selected = autoRestart;
-            autoRestartTimer = restartTimer;
-
-            //durationBar.BarScroll = durationScroll;
-
-            LevelSeed = newSeed;
-        }
-
+        
     }
 }
