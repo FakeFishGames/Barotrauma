@@ -17,20 +17,20 @@ namespace Barotrauma
             spawnQueue = new Queue<Pair<ItemPrefab, object>>();
         }
 
-        //public void QueueItem(ItemPrefab itemPrefab, Vector2 position, bool isNetworkMessage = false)
-        //{
-        //    if (!isNetworkMessage && GameMain.Client!=null)
-        //    {
-        //        //clients aren't allowed to spawn new items unless the server says so
-        //        return;
-        //    }
+        public void QueueItem(ItemPrefab itemPrefab, Vector2 worldPosition, bool isNetworkMessage = false)
+        {
+            if (!isNetworkMessage && GameMain.Client != null)
+            {
+                //clients aren't allowed to spawn new items unless the server says so
+                return;
+            }
 
-        //    var itemInfo = new Pair<ItemPrefab, object>();
-        //    itemInfo.First = itemPrefab;
-        //    itemInfo.Second = position;
+            var itemInfo = new Pair<ItemPrefab, object>();
+            itemInfo.First = itemPrefab;
+            itemInfo.Second = worldPosition;
 
-        //    spawnQueue.Enqueue(itemInfo);
-        //}
+            spawnQueue.Enqueue(itemInfo);
+        }
 
         public void QueueItem(ItemPrefab itemPrefab, Inventory inventory, bool isNetworkMessage = false)
         {
@@ -58,26 +58,22 @@ namespace Barotrauma
             {
                 var itemInfo = spawnQueue.Dequeue();
 
-                //if (itemInfo.Second is Vector2)
-                //{
-                //    //todo: take multiple subs into account
-                //    Vector2 position = (Vector2)itemInfo.Second - Submarine.MainSub.HiddenSubPosition;
+                if (itemInfo.Second is Vector2)
+                {
+                    var item = new Item(itemInfo.First, (Vector2)itemInfo.Second, null);
+                    AddToSpawnedList(item);
 
-                //    items.Add(new Item(itemInfo.First, position, null));
-                //    inventories.Add(null);
-
-                //}
-                //else 
-                if (itemInfo.Second is Inventory)
+                    items.Add(item);
+                }
+                else if (itemInfo.Second is Inventory)
                 {
                     var item = new Item(itemInfo.First, Vector2.Zero, null);
                     AddToSpawnedList(item);
 
                     var inventory = (Inventory)itemInfo.Second;
-                    inventory.TryPutItem(item, null, false);
+                    inventory.TryPutItem(item, item.AllowedSlots, false);
 
                     items.Add(item);
-                    //inventories.Add(inventory);
                 }
             }
 
@@ -131,8 +127,6 @@ namespace Barotrauma
                 Vector2 pos = Vector2.Zero;
                 ushort inventoryId = message.ReadUInt16();
 
-                Submarine sub = null;
-                
                 int inventorySlotIndex = -1;
                 
                 if (inventoryId > 0)
