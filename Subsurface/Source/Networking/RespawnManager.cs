@@ -288,7 +288,7 @@ namespace Barotrauma.Networking
 
             shuttleSteering.TargetVelocity = Vector2.Zero;
 
-            server.SendChatMessage(ChatMessage.Create("", "Transportation shuttle dispatched", ChatMessageType.Server, null), server.ConnectedClients);
+            //server.SendChatMessage(ChatMessage.Create("", "Transportation shuttle dispatched", ChatMessageType.Server, null), server.ConnectedClients);
 
             RespawnCharacters();
 

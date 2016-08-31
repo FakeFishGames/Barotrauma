@@ -397,7 +397,7 @@ namespace Barotrauma.Networking
             byte characterCount = inc.ReadByte();
             for (int i = 0; i < characterCount; i++)
             {
-                ReadCharacterData(inc);
+                
             }
             
             gameStarted = true;
@@ -556,41 +556,13 @@ namespace Barotrauma.Networking
 
             if (votedClient == null) return false;
 
-            Vote(VoteType.Kick, votedClient);
+            //Vote(VoteType.Kick, votedClient);
 
             button.Enabled = false;
 
             return true;
         }
-
-        public void Vote(VoteType voteType, object userData)
-        {
-            NetOutgoingMessage msg = client.CreateMessage();
-            
-            msg.Write((byte)voteType);
-
-            switch (voteType)
-            {
-                case VoteType.Sub:
-                    msg.Write(((Submarine)userData).Name);
-                    break;
-                case VoteType.Mode:
-                    msg.Write(((GameModePreset)userData).Name);
-                    break;
-                case VoteType.EndRound:
-                    msg.Write((bool)userData);
-                    break;
-                case VoteType.Kick:
-                    Client votedClient = userData as Client;
-                    if (votedClient == null) return;
-
-                    msg.Write(votedClient.ID);
-                    break;
-            }
-
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-        }
-
+        
         public bool SpectateClicked(GUIButton button, object userData)
         {
             NetOutgoingMessage msg = client.CreateMessage();
@@ -613,129 +585,11 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            Vote(VoteType.EndRound, tickBox.Selected);
+            //Vote(VoteType.EndRound, tickBox.Selected);
 
             return false;
         }
-
-
-
-        public void SendCharacterData()
-        {
-            if (characterInfo == null) return;
-
-            NetOutgoingMessage msg = client.CreateMessage();
-
-            msg.Write(characterInfo.Name);
-            msg.Write(characterInfo.Gender == Gender.Male);
-            msg.Write((byte)characterInfo.HeadSpriteId);
-
-            var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
-            int count = Math.Min(jobPreferences.Count, 3);
-            msg.Write((byte)count);
-            for (int i = 0; i < count; i++ )
-            {
-                msg.Write(jobPreferences[i].Name);
-            }
-
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        public Character ReadCharacterData(NetIncomingMessage inc)
-        {
-            bool noInfo         = inc.ReadBoolean();
-            ushort id           = inc.ReadUInt16();
-            string configPath   = inc.ReadString();
-
-            Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
-                
-            bool enabled        = inc.ReadBoolean();
-
-            Character character = null;
-
-            if (noInfo)
-            {
-                var existingEntity = Entity.FindEntityByID(id);
-                if (existingEntity is AICharacter && existingEntity.ID == id)
-                {
-                    return (Character)existingEntity;
-                }
-
-                character = Character.Create(configPath, position, null, true);
-                character.ID = id;
-            }
-            else
-            {
-                bool hasOwner = inc.ReadBoolean();
-                int ownerId = -1;
-                if (hasOwner)
-                {
-                    ownerId = inc.ReadByte();
-                }
-
-                string newName      = inc.ReadString();
-
-                bool hasAi          = inc.ReadBoolean();
-                bool isFemale       = inc.ReadBoolean();
-                int headSpriteID    = inc.ReadByte();
-                string jobName      = inc.ReadString();
-
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
-
-                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
-                ch.HeadSpriteId = headSpriteID;
-
-                character = Character.Create(configPath, position, ch, ownerId != myID, hasAi);
-                character.ID = id;
-
-                if (configPath == Character.HumanConfigFile)
-                {
-                    GameMain.GameSession.CrewManager.characters.Add(character);
-                }
-                
-                if (ownerId == myID)
-                {
-                    myCharacter = character;
-                    Character.Controlled = character;
-                    GameMain.LightManager.LosEnabled = true;
-
-                    if (endVoteTickBox != null) endVoteTickBox.Visible = Voting.AllowEndVoting;
-                }
-                else
-                {
-                    var characterOwner = otherClients.Find(c => c.ID == ownerId);
-                    if (characterOwner != null) characterOwner.Character = character;
-
-                }
-            }
-
-            character.Enabled = enabled;
-
-            return character;
-        }
-
-        public override void SendChatMessage(string message, ChatMessageType? type = null)
-        {
-            if (client.ServerConnection == null) return;
-
-            type = ChatMessageType.Default;
-                        
-            if (Screen.Selected == GameMain.GameScreen && (myCharacter == null || myCharacter.IsDead)) 
-            {
-                type = ChatMessageType.Dead;
-            }
-            else
-            {
-                string command = ChatMessage.GetChatMessageCommand(message, out message).ToLowerInvariant();
-                
-                if (command=="r" || command=="radio" && CanUseRadio(Character.Controlled)) type = ChatMessageType.Radio;              
-            }
-            
-            var chatMessage = ChatMessage.Create(
-                gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, (ChatMessageType)type, gameStarted ? myCharacter : null);
-        }
-
+        
         /// <summary>
         /// sends some random data to the server (can be a networkevent or just something completely random)
         /// use for debugging purposes
