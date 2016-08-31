@@ -181,6 +181,7 @@ namespace Barotrauma
                     NewMessage(" ", Color.Cyan);                    
 
                     NewMessage("spawn [creaturename] [near/inside/outside]: spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine)", Color.Cyan);
+                    NewMessage("spawnitem [itemname] [cursor/inventory]: spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted", Color.Cyan);
 
                     NewMessage(" ", Color.Cyan);
 
@@ -200,7 +201,7 @@ namespace Barotrauma
                     NewMessage("revive: bring the controlled character back from the dead", Color.Cyan);
 
                     NewMessage(" ", Color.Cyan);
-
+                    
                     NewMessage("fixwalls: fixes all the walls", Color.Cyan);
                     NewMessage("fixitems: fixes every item/device in the sub", Color.Cyan);
                     NewMessage("oxygen: replenishes the oxygen in every room to 100%", Color.Cyan);
@@ -219,6 +220,7 @@ namespace Barotrauma
                     UpdaterUtil.SaveFileList("filelist.xml");
                     break;
                 case "spawn":
+                case "spawncharacter":
                     if (commands.Length == 1) return;
 
                     Character spawnedCharacter = null;
@@ -231,7 +233,7 @@ namespace Barotrauma
                         switch (commands[2].ToLowerInvariant())
                         {
                             case "inside":
-                                spawnPoint = WayPoint.GetRandom(SpawnType.Human);
+                                spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
                                 break;
                             case "outside":
                                 spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
@@ -292,6 +294,54 @@ namespace Barotrauma
                     {
                         spawnedCharacter.SpawnedMidRound = true;
                         GameMain.Server.SendCharacterSpawnMessage(spawnedCharacter);
+                    }
+
+                    break;
+                case "spawnitem":
+                    if (commands.Length < 2) return;
+                    
+                    Vector2? spawnPos = null;
+                    Inventory spawnInventory = null;
+
+                    int extraParams = 0;
+                    switch (commands.Last())
+                    {
+                        case "cursor":
+                            extraParams = 1;
+                            spawnPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                            break;
+                        case "inventory":
+                            extraParams = 1;
+                            spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
+                            break;
+                        default:
+                            extraParams = 0;
+                            break;
+                    }
+
+                    string itemName = string.Join(" ", commands.Skip(1).Take(commands.Length - extraParams - 1)).ToLowerInvariant();
+
+                    var itemPrefab = MapEntityPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == itemName) as ItemPrefab;
+                    if (itemPrefab == null)
+                    {
+                        ThrowError("Item \""+itemName+"\" not found!");
+                        return;
+                    }
+
+                    if (spawnPos == null && spawnInventory == null)
+                    {
+                        var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                        spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
+                    }
+
+                    if (spawnPos != null)
+                    {
+                        Item.Spawner.QueueItem(itemPrefab, (Vector2)spawnPos, false);
+
+                    }
+                    else if (spawnInventory != null)
+                    {
+                        Item.Spawner.QueueItem(itemPrefab, (Inventory)spawnInventory, false);
                     }
 
                     break;

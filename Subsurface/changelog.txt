@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.1.2
+---------------------------------------------------------------------------------------------------------
+
+- hacked clients can't join a full server or change the name of their character anymore
+- option to choose which character to control using the "control" command when there are multiple 
+characters/creatures with the same name
+- a console command for spawning items
+- the server logs show who sent each chat message
+
+---------------------------------------------------------------------------------------------------------
 v0.5.1.1
 ---------------------------------------------------------------------------------------------------------
 
