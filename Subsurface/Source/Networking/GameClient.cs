@@ -114,10 +114,7 @@ namespace Barotrauma.Networking
             client = new NetClient(config);
             netPeer = client;
             client.Start();
-
-            NetOutgoingMessage outmsg = client.CreateMessage();
-
-
+            
             System.Net.IPEndPoint IPEndPoint = null;
             try
             {
@@ -133,8 +130,7 @@ namespace Barotrauma.Networking
             // Connect client, to ip previously requested from user 
             try
             {
-                client.Connect(IPEndPoint, outmsg);
-
+                
             }
             catch (Exception e)
             {
@@ -446,11 +442,6 @@ namespace Barotrauma.Networking
         
         public bool SpectateClicked(GUIButton button, object userData)
         {
-            NetOutgoingMessage msg = client.CreateMessage();
-            
-            
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
-
             if (button != null) button.Enabled = false;
 
             return false;

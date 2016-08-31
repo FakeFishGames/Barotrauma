@@ -28,6 +28,8 @@ namespace Barotrauma.Networking
         private NetServer server;
         private NetPeerConfiguration config;
 
+        private int MaxPlayers;
+
         private DateTime sparseUpdateTimer;        
         private DateTime refreshMasterTimer;
 
@@ -80,6 +82,7 @@ namespace Barotrauma.Networking
             }
 
             config.MaximumConnections = maxPlayers;
+            MaxPlayers = maxPlayers;
 
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | 
                 NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
@@ -446,6 +449,16 @@ namespace Barotrauma.Networking
             sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
         }
 
+        private byte GetNewClientID()
+        {
+            byte userID = 1;
+            while (connectedClients.Any(c => c.ID == userID))
+            {
+                userID++;
+            }
+            return userID;
+        }
+        
         public bool StartGameClicked(GUIButton button, object obj)
         {
             Submarine selectedSub = null;
