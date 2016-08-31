@@ -369,6 +369,10 @@ namespace Barotrauma.Networking
                     switch (inc.MessageType)
                     {
                         case NetIncomingMessageType.Data:
+                            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+                            {
+                                inc.SenderConnection.Disconnect("You have been banned from the server");
+                            }
                             ClientPacketHeader header = (ClientPacketHeader)inc.ReadByte();
                             switch (header)
                             {
