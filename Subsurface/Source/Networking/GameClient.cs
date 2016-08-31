@@ -469,29 +469,6 @@ namespace Barotrauma.Networking
         {
             base.Draw(spriteBatch);
             
-            if (fileStreamReceiver != null && 
-                (fileStreamReceiver.Status == FileTransferStatus.Receiving || fileStreamReceiver.Status == FileTransferStatus.NotStarted))
-            {
-                Vector2 pos = new Vector2(GameMain.GraphicsWidth / 2 - 130, GameMain.NetLobbyScreen.InfoFrame.Rect.Y / 2 - 15);
-                
-                GUI.DrawString(spriteBatch, 
-                    pos, 
-                    "Downloading " + fileStreamReceiver.FileName, 
-                    Color.White, null, 0, GUI.SmallFont);
-
-
-                GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 12), new Vector2(200, 15), fileStreamReceiver.Progress, Color.Green);
-
-                GUI.DrawString(spriteBatch, pos + new Vector2(5,12),
-                    MathUtils.GetBytesReadable((long)fileStreamReceiver.Received) + " / " + MathUtils.GetBytesReadable((long)fileStreamReceiver.FileSize), 
-                    Color.White, null, 0, GUI.SmallFont);
-
-                if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 210, (int)pos.Y+12, 65, 15), "Cancel", new Color(0.47f, 0.13f, 0.15f, 0.08f)))
-                {
-                    CancelFileTransfer();
-                }
-            }
-
             if (!GameMain.DebugDraw) return;
 
             int width = 200, height = 300;

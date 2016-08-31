@@ -235,8 +235,8 @@ namespace Barotrauma
                         Items[index] = null;
 
                         //swapping the items failed -> move them back to where they were
-                        TryPutItem(item, currentIndex, false, false);
-                        TryPutItem(existingItem, index, false, false);
+                        TryPutItem(item, currentIndex, false);
+                        TryPutItem(existingItem, index, false);
                     }
                     
                 }
@@ -287,7 +287,7 @@ namespace Barotrauma
             {
                 if (doubleClickedItem.ParentInventory != this)
                 {
-                    TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                    TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots);
                 }
                 else
                 {
@@ -296,24 +296,24 @@ namespace Barotrauma
                         var selectedContainer = character.SelectedConstruction.GetComponent<ItemContainer>();
                         if (selectedContainer != null && selectedContainer.Inventory != null)
                         {
-                            selectedContainer.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                            selectedContainer.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots);
                         }
                     }
                     else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                     {
-                        character.SelectedCharacter.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                        character.SelectedCharacter.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots);
                     }
                     else //doubleclicked and no other inventory is selected
                     {
                         //not equipped -> attempt to equip
                         if (IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                         {
-                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);                            
+                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any));                            
                         }
                         //equipped -> attempt to unequip
                         else if (doubleClickedItem.AllowedSlots.Contains(InvSlotType.Any))
                         {
-                            TryPutItem(doubleClickedItem, new List<InvSlotType>() { InvSlotType.Any }, true);
+                            TryPutItem(doubleClickedItem, new List<InvSlotType>() { InvSlotType.Any });
                         }
                     }
                 }
