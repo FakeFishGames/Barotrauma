@@ -366,7 +366,45 @@ namespace Barotrauma.Networking
             {
                 try
                 {
-                    
+                    switch (inc.MessageType)
+                    {
+                        case NetIncomingMessageType.Data:
+                            ClientPacketHeader header = (ClientPacketHeader)inc.ReadByte();
+                            switch (header)
+                            {
+                                case ClientPacketHeader.REQUEST_AUTH:
+                                    ClientAuthRequest(inc.SenderConnection);
+                                    break;
+                                case ClientPacketHeader.REQUEST_INIT:
+                                    ClientInitialize(inc);
+                                    break;
+                                case ClientPacketHeader.UPDATE_LOBBY:
+                                    //TODO
+                                    break;
+                                case ClientPacketHeader.UPDATE_INGAME_ALIVE:
+                                    //TODO
+                                    break;
+                                case ClientPacketHeader.UPDATE_INGAME_SPECTATING:
+                                    //TODO
+                                    break;
+                            }
+                            break;
+                        case NetIncomingMessageType.ConnectionApproval:
+                            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+                            {
+                                inc.SenderConnection.Deny("You have been banned from the server");
+                            }
+                            else if (ConnectedClients.Count >= MaxPlayers)
+                            {
+                                inc.SenderConnection.Deny("Server full");
+                            }
+                            else
+                            {
+                                inc.SenderConnection.Approve();
+                            }
+                            break;
+                    }
+                            
                 }
                 catch (Exception e)
                 {
