@@ -112,49 +112,5 @@ namespace Barotrauma.Networking
 
             return sb.ToString();
         }
-        
-        public void WriteNetworkMessage(NetOutgoingMessage msg)
-        {
-            msg.WriteRangedInteger(0, Enum.GetValues(typeof(ChatMessageType)).Length, (byte)Type);
-            if (GameMain.Server != null)
-            {
-                msg.Write(Sender == null ? (ushort)0 : Sender.ID);
-                msg.Write(SenderName);
-            }
-
-            msg.Write(Text);  
-        }
-
-        public static ChatMessage ReadNetworkMessage(NetBuffer msg)
-        {
-            ChatMessageType type = (ChatMessageType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ChatMessageType)).Length);
-            string senderName="";
-            Character character = null;
-            if (GameMain.Server == null)
-            {
-                ushort senderId = msg.ReadUInt16();
-                character = Entity.FindEntityByID(senderId) as Character;
-                senderName = msg.ReadString();
-            }
-            else
-            {
-                NetIncomingMessage inc = msg as NetIncomingMessage;
-                if (inc == null) return null;
-                Client sender = GameMain.Server.ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
-                if (sender == null) return null;
-                character = sender.Character;
-                if (character != null)
-                {
-                    senderName = character.Name;
-                }
-                else
-                {
-                    senderName = sender.name;
-                }
-            }
-            string text = msg.ReadString();
-
-            return new ChatMessage(senderName, text, type, character);
-        }
     }
 }

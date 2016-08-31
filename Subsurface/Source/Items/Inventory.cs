@@ -122,7 +122,7 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                item.Drop(null, false);
+                item.Drop(null);
                 if (item.ParentInventory != null) item.ParentInventory.RemoveItem(item);
             }
 
@@ -156,7 +156,7 @@ namespace Barotrauma
 
         protected virtual void DropItem(Item item)
         {
-            item.Drop(null, false);
+            item.Drop(null);
             return;
         }
         //public void DropItem(int i)
@@ -276,7 +276,7 @@ namespace Barotrauma
                     }
 
                     //selectedSlot = slotIndex;
-                    TryPutItem(draggingItem, slotIndex, true, true);
+                    TryPutItem(draggingItem, slotIndex, true);
                     draggingItem = null;
                 }
 

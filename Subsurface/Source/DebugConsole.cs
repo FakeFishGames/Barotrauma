@@ -291,7 +291,6 @@ namespace Barotrauma
                     if (spawnedCharacter != null && GameMain.Server != null)
                     {
                         spawnedCharacter.SpawnedMidRound = true;
-                        GameMain.Server.SendCharacterSpawnMessage(spawnedCharacter);
                     }
 
                     break;
@@ -321,7 +320,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Server.KickClient(client, true);   
+                        //GameMain.Server.KickClient(client, true);   
                     }                    
                     break;
                 case "startclient":

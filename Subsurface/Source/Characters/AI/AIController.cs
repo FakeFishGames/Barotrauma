@@ -66,9 +66,6 @@ namespace Barotrauma
         public virtual void Update(float deltaTime) { }
 
         //protected Structure lastStructurePicked;
-
-        public virtual void FillNetworkData(NetBuffer message) { }
-        public virtual void ReadNetworkData(NetIncomingMessage message) { }
         
     }
 }

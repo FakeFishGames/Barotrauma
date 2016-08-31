@@ -80,8 +80,7 @@ namespace Barotrauma
                     //inventories.Add(inventory);
                 }
             }
-
-            if (GameMain.Server != null) GameMain.Server.SendItemSpawnMessage(items);
+            
         }
 
         public void AddToSpawnedList(Item item)
@@ -133,8 +132,7 @@ namespace Barotrauma
 
                 items.Add(item);
             }
-
-            if (GameMain.Server != null) GameMain.Server.SendItemRemoveMessage(items);
+            
         }
         
         public void Clear()

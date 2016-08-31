@@ -445,7 +445,48 @@ namespace Barotrauma.Networking
 
             sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
         }
-        
+
+        public bool StartGameClicked(GUIButton button, object obj)
+        {
+            Submarine selectedSub = null;
+            Submarine selectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle;
+
+            if (Voting.AllowSubVoting)
+            {
+                selectedSub = Voting.HighestVoted<Submarine>(VoteType.Sub, connectedClients);
+                if (selectedSub == null) selectedSub = GameMain.NetLobbyScreen.SelectedSub;
+            }
+            else
+            {
+                selectedSub = GameMain.NetLobbyScreen.SelectedSub;
+            }
+
+            if (selectedSub == null)
+            {
+                GameMain.NetLobbyScreen.SubList.Flash();
+                return false;
+            }
+
+            if (selectedShuttle == null)
+            {
+                GameMain.NetLobbyScreen.ShuttleList.Flash();
+                return false;
+            }
+
+            GameModePreset selectedMode = Voting.HighestVoted<GameModePreset>(VoteType.Mode, connectedClients);
+            if (selectedMode == null) selectedMode = GameMain.NetLobbyScreen.SelectedMode;
+
+            if (selectedMode == null)
+            {
+                GameMain.NetLobbyScreen.ModeList.Flash();
+                return false;
+            }
+
+            //CoroutineManager.StartCoroutine(WaitForPlayersReady(selectedSub, selectedShuttle, selectedMode), "WaitForPlayersReady");
+
+            return true;
+        }
+
         public void EndGame()
         {
             if (!gameStarted) return;
@@ -622,23 +663,8 @@ namespace Barotrauma.Networking
             if (server.Connections.Count == 0) return;
 
             var clientsToKick = connectedClients.FindAll(c => c.KickVoteCount > connectedClients.Count * KickVoteRequiredRatio);
-            clientsToKick.ForEach(c => KickClient(c));
-
-            try
-            {
-                NetOutgoingMessage msg = server.CreateMessage();
-                msg.Write((byte)PacketTypes.VoteStatus);
-                Voting.WriteData(msg, connectedClients);
-
-                server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0); 
-            }
-            catch (Exception e)
-            {
-#if DEBUG   
-                DebugConsole.ThrowError("Failed to update vote status", e);
-#endif
-            }
-
+            //clientsToKick.ForEach(c => KickClient(c));
+            
         }
 
         public bool UpdateNetLobby(object obj)
@@ -649,24 +675,13 @@ namespace Barotrauma.Networking
         public bool UpdateNetLobby(GUIComponent component, object obj)
         {
             if (server.Connections.Count == 0) return true;
-
-            NetOutgoingMessage msg = server.CreateMessage();
-            msg.Write((byte)PacketTypes.UpdateNetLobby);
-            GameMain.NetLobbyScreen.WriteData(msg);
-
-            server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableUnordered, 0);            
-
+            
             return true;
         }
 
         public void UpdateClientPermissions(Client client)
         {
-            var msg = server.CreateMessage();
-            msg.Write((byte)PacketTypes.Permissions);
-            msg.Write((int)client.Permissions);
-
-            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
-
+            
             clientPermissions.RemoveAll(cp => cp.IP == client.Connection.RemoteEndPoint.Address.ToString());
 
             if (client.Permissions != ClientPermissions.None)
@@ -701,100 +716,6 @@ namespace Barotrauma.Networking
             }
 
             return true;
-        }
-
-        private void ReadChatMessage(NetIncomingMessage inc)
-        {
-            Client sender = connectedClients.Find(x => x.Connection == inc.SenderConnection);
-            ChatMessage message = ChatMessage.ReadNetworkMessage(inc);
-            if (message == null) return;
-
-            List<Client> recipients = new List<Client>();
-
-            foreach (Client c in connectedClients)
-            {
-                if (!sender.inGame && c.inGame) continue; //people in lobby can't talk to people ingame
-                switch (message.Type)
-                {
-                    case ChatMessageType.Dead:
-                        if (c.Character != null && !c.Character.IsDead) continue;
-                        break;
-                    case ChatMessageType.Default:
-                        if (message.Sender != null && c.Character != null && message.Sender != c.Character)
-                        {
-                            if (Vector2.Distance(message.Sender.WorldPosition, c.Character.WorldPosition) > ChatMessage.SpeakRange) continue;
-                        }
-                        break;
-                    case ChatMessageType.Radio:
-                        if (message.Sender == null) return;
-                        var radio = message.Sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
-                        if (radio == null) message.Type = ChatMessageType.Default;
-                        break;
-                }
-
-                recipients.Add(c);
-            }
-
-            //SPAM FILTER
-            if (sender.ChatSpamTimer > 0.0f)
-            {
-                //player has already been spamming, stop again
-                ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
-                sender.ChatSpamTimer = 10.0f;
-                SendChatMessage(denyMsg, sender);
-
-                return;
-            }
-           
-            float similarity = 0;
-            similarity += sender.ChatSpamSpeed * 0.05f; //the faster messages are being sent, the faster the filter will block
-            for (int i = 0; i < sender.ChatMessages.Count; i++)
-            {
-                float closeFactor = 1.0f / (20.0f - i);
-
-                int levenshteinDist = ToolBox.LevenshteinDistance(message.Text, sender.ChatMessages[i]);
-                similarity += Math.Max((message.Text.Length - levenshteinDist) / message.Text.Length * closeFactor, 0.0f);
-            }
-            
-            if (similarity > 5.0f)
-            {
-                sender.ChatSpamCount++;
-                
-                if (sender.ChatSpamCount > 3)
-                {
-                    //kick for spamming too much
-                    KickClient(sender, false);
-                }
-                else
-                {
-                    ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
-                    sender.ChatSpamTimer = 10.0f;
-                    SendChatMessage(denyMsg, sender);
-                }
-                return;
-            }
-
-            sender.ChatMessages.Add(message.Text);
-            if (sender.ChatMessages.Count > 20)
-            {
-                sender.ChatMessages.RemoveAt(0);
-            }
-
-            if (sender.inGame || (Screen.Selected == GameMain.NetLobbyScreen))
-            {
-                AddChatMessage(message);
-            }
-            else
-            {
-                GameServer.Log(message.TextWithSender, message.Color);
-            }
-            sender.ChatSpamSpeed += 5.0f;
-
-            foreach (Client c in recipients)
-            {
-                
-            }
-            
         }
 
         public override void SendChatMessage(string message, ChatMessageType? type = null)
@@ -943,40 +864,7 @@ namespace Barotrauma.Networking
             
             }
         }
-
-        public void SendCharacterSpawnMessage(Character character, List<NetConnection> recipients = null)
-        {
-            if (recipients != null && !recipients.Any()) return;
-
-            NetOutgoingMessage message = server.CreateMessage();
-            message.Write((byte)PacketTypes.NewCharacter);
-
-            WriteCharacterData(message, character.Name, character);
-                        
-            SendMessage(message, NetDeliveryMethod.ReliableUnordered, recipients);
-        }
-
-        public void SendItemSpawnMessage(List<Item> items, List<NetConnection> recipients = null)
-        {
-            if (items == null || !items.Any()) return;
-
-            NetOutgoingMessage message = server.CreateMessage();
-            message.Write((byte)PacketTypes.NewItem);
         
-
-            SendMessage(message, NetDeliveryMethod.ReliableOrdered, recipients);
-        }
-
-        public void SendItemRemoveMessage(List<Item> items, List<NetConnection> recipients = null)
-        {
-            if (items == null || !items.Any()) return;
-
-            NetOutgoingMessage message = server.CreateMessage();
-            message.Write((byte)PacketTypes.RemoveItem);
-            
-            SendMessage(message, NetDeliveryMethod.ReliableOrdered, recipients);
-        }
-
         public void AssignJobs(List<Client> unassigned)
         {
             unassigned = new List<Client>(unassigned);
@@ -1088,35 +976,7 @@ namespace Barotrauma.Networking
         /// </summary>
         public void SendRandomData()
         {
-            NetOutgoingMessage msg = server.CreateMessage();
-            switch (Rand.Int(5))
-            {
-                case 0:
-                    msg.Write((byte)PacketTypes.NetworkEvent);
-                    msg.Write((byte)Rand.Int(Enum.GetNames(typeof(NetworkEventType)).Length));
-                    msg.Write((ushort)Rand.Int(MapEntity.mapEntityList.Count));
-                    break;
-                case 1:
-                    msg.Write((byte)PacketTypes.NetworkEvent);
-                    msg.Write((byte)NetworkEventType.ComponentUpdate);
-                    msg.Write((int)Item.ItemList[Rand.Int(Item.ItemList.Count)].ID);
-                    msg.Write(Rand.Int(8));
-                    break;
-                case 2:
-                    msg.Write((byte)Enum.GetNames(typeof(PacketTypes)).Length);
-                    break;
-                case 3:
-                    msg.Write((byte)PacketTypes.UpdateNetLobby);
-                    break;
-            }
-
-            int bitCount = Rand.Int(100);
-            for (int i = 0; i < bitCount; i++)
-            {
-                msg.Write(Rand.Int(2) == 0);
-            }
-            SendMessage(msg, (Rand.Int(2) == 0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable);
-
+            //NO DON'T DO THIS WHY
         }
 
         public override void Disconnect()
@@ -1137,12 +997,7 @@ namespace Barotrauma.Networking
                 Log("Shutting down server...", Color.Cyan);
                 log.Save();
             }
-
-            foreach (Client client in connectedClients)
-            {
-                if (client.FileStreamSender != null) client.FileStreamSender.Dispose();
-            }
-
+            
             server.Shutdown("The server has been shut down");
         }
     }
