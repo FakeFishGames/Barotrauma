@@ -107,9 +107,9 @@ namespace Barotrauma
 
                     if (GameMain.Server != null)
                     {
-                        /*GameMain.Server.SendChatMessage(
+                        GameMain.Server.SendChatMessage(
                             ChatMessage.Create("", sender.name + " has voted to kick " + kicked.name, ChatMessageType.Server, null),
-                            GameMain.Server.ConnectedClients);*/
+                            GameMain.Server.ConnectedClients);
                     }
 
                     break;
