@@ -32,11 +32,11 @@ namespace Barotrauma.Networking
     {
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
 
-        private void ClientPasswordRequest(NetConnection conn)
+        private void ClientAuthRequest(NetConnection conn)
         {
             //client wants to know if server requires password
 
-            if (ConnectedClients.Count > MaxPlayers)
+            if (ConnectedClients.Count >= MaxPlayers)
             {
                 //server is full, can't allow new connection
                 conn.Disconnect("Server full");
