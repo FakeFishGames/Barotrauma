@@ -107,9 +107,9 @@ namespace Barotrauma
 
                     if (GameMain.Server != null)
                     {
-                        GameMain.Server.SendChatMessage(
+                        /*GameMain.Server.SendChatMessage(
                             ChatMessage.Create("", sender.name + " has voted to kick " + kicked.name, ChatMessageType.Server, null),
-                            GameMain.Server.ConnectedClients);
+                            GameMain.Server.ConnectedClients);*/
                     }
 
                     break;
@@ -210,87 +210,5 @@ namespace Barotrauma
             UpdateVoteTexts(connectedClients, VoteType.Sub);
         }
         
-        public void WriteData(NetOutgoingMessage msg, List<Client> voters)
-        {
-            msg.Write(allowSubVoting);
-
-            if (allowSubVoting)
-            {
-                List<Pair<object, int>> voteList = GetVoteList(VoteType.Sub, voters);
-                msg.Write((byte)voteList.Count);
-                foreach (Pair<object, int> vote in voteList)
-                {
-                    if (vote.Second < 1 || vote.First==null) continue;
-                    msg.Write((byte)vote.Second);
-                    msg.Write(((Submarine)vote.First).Name);
-                }
-            }
-
-
-            msg.Write(AllowModeVoting);
-            if (allowModeVoting)
-            {
-                List<Pair<object, int>> voteList = GetVoteList(VoteType.Mode, voters);
-                msg.Write((byte)voteList.Count);
-                foreach (Pair<object, int> vote in voteList)
-                {
-                    if (vote.Second < 1 || vote.First == null) continue;
-                    msg.Write((byte)vote.Second);
-                    msg.Write(((GameModePreset)vote.First).Name);
-                }
-            }
-
-            msg.Write(AllowEndVoting);
-            if (AllowEndVoting)
-            {
-                msg.Write((byte)voters.Count(v => v.GetVote<bool>(VoteType.EndRound)));
-                msg.Write((byte)voters.Count);
-            }      
-     
-            msg.Write(AllowVoteKick);
-        }
-
-        public void ReadData(NetIncomingMessage msg)
-        {
-            AllowSubVoting = msg.ReadBoolean();
-            if (allowSubVoting)
-            {
-                foreach (Submarine sub in Submarine.SavedSubmarines)
-                {
-                    SetVoteText(GameMain.NetLobbyScreen.SubList, sub, 0);
-                }
-
-                int votableCount = msg.ReadByte();
-                for (int i = 0; i < votableCount; i++)
-                {
-                    int votes = msg.ReadByte();
-                    string subName = msg.ReadString();
-                    Submarine sub = Submarine.SavedSubmarines.Find(sm => sm.Name == subName);
-                    SetVoteText(GameMain.NetLobbyScreen.SubList, sub, votes);
-                }
-            }
-
-            AllowModeVoting = msg.ReadBoolean();
-            if (allowModeVoting)
-            {
-                int votableCount = msg.ReadByte();
-                for (int i = 0; i < votableCount; i++)
-                {
-                    int votes = msg.ReadByte();
-                    string modeName = msg.ReadString();
-                    GameModePreset mode = GameModePreset.list.Find(m => m.Name == modeName);
-                    SetVoteText(GameMain.NetLobbyScreen.ModeList, mode, votes);
-                }
-            }
-
-            AllowEndVoting = msg.ReadBoolean();
-            if (AllowEndVoting)
-            {
-                GameMain.NetworkMember.EndVoteCount = msg.ReadByte();
-                GameMain.NetworkMember.EndVoteMax = msg.ReadByte();
-            }
-
-            AllowVoteKick = msg.ReadBoolean();
-        }
     }
 }
