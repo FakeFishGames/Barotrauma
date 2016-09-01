@@ -23,7 +23,7 @@ namespace Barotrauma
 
         public int GapIndex;
 
-        public float lastSentDamage;
+        //public float lastSentDamage;
 
         public bool isHighLighted;
         public ConvexHull hull;
@@ -41,7 +41,7 @@ namespace Barotrauma
         }
     }
 
-    class Structure : MapEntity, IDamageable
+    class Structure : MapEntity, IDamageable, IServerSerializable
     {
         public static int wallSectionSize = 100;
         public static List<Structure> WallList = new List<Structure>();
@@ -58,7 +58,11 @@ namespace Barotrauma
 
         bool isHorizontal;
 
-        public float lastUpdate;
+        private ushort netStateID;
+        public ushort NetStateID
+        {
+            get { return netStateID; }
+        }
         
         public override Sprite Sprite
         {
@@ -570,10 +574,10 @@ namespace Barotrauma
 
             if (!MathUtils.IsValid(damage)) return;
 
-            if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage)>5.0f)
-            {
-                //sections[sectionIndex].lastSentDamage = damage;
-            }
+            //if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage) > 5.0f)
+            //{
+            //    sections[sectionIndex].lastSentDamage = damage;
+            //}
             
             if (damage < prefab.MaxHealth*0.5f)
             {
@@ -685,6 +689,25 @@ namespace Barotrauma
             return newBody;
         }
 
+        public void ServerWrite(NetOutgoingMessage msg) 
+        {
+            for (int i = 0; i < sections.Length; i++)
+            {
+                msg.WriteRangedSingle(sections[i].damage / Health, 0.0f, 1.0f, 8);
+
+                //sections[i].lastSentDamage = sections[i].damage;
+            }
+        }
+
+        public void ClientRead(NetIncomingMessage msg) 
+        {
+            for (int i = 0; i < sections.Count(); i++)
+            {
+                float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
+
+                SetDamage(i, damage);
+            }
+        }
         
         public override XElement Save(XElement parentElement)
         {

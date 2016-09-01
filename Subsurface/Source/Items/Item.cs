@@ -26,7 +26,7 @@ namespace Barotrauma
         OnImpact
     }
 
-    class Item : MapEntity, IDamageable, IPropertyObject
+    class Item : MapEntity, IDamageable, IPropertyObject, IServerSerializable
     {
         public static List<Item> ItemList = new List<Item>();
         private ItemPrefab prefab;
@@ -54,6 +54,12 @@ namespace Barotrauma
 
         //a dictionary containing lists of the status effects in all the components of the item
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
+
+        private ushort netStateID;
+        public ushort NetStateID
+        {
+            get { return netStateID; }
+        }
 
         public readonly Dictionary<string, ObjectProperty> properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
@@ -1383,12 +1389,6 @@ namespace Barotrauma
 
         public void Drop(Character dropper = null)
         {
-            //if (dropper == Character.Controlled)
-            //    new NetworkEvent(NetworkEventType.DropItem, ID, true);
-
-
-            //if (dropper != null) GameServer.Log(dropper.Name + " dropped " + Name, Color.Orange);
-            
             foreach (ItemComponent ic in components) ic.Drop(dropper);
 
             if (Container != null) Container.RemoveContained(this);
@@ -1514,6 +1514,9 @@ namespace Barotrauma
 
             return element;
         }
+        
+        public void ServerWrite(NetOutgoingMessage msg) { }
+        public void ClientRead(NetIncomingMessage msg) { }        
 
         public static void Load(XElement element, Submarine submarine)
         {          
