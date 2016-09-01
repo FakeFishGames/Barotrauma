@@ -336,8 +336,23 @@ namespace Barotrauma.Networking
 
                     while (GUIMessageBox.MessageBoxes.Contains(msgBox))
                     {
-                        while (client.ReadMessage() != null) {
+                        while (client.ReadMessage() != null)
+                        {
+                            switch (inc.MessageType)
+                            {
+                                case NetIncomingMessageType.StatusChanged:
+                                    NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
+                                    if (connectionStatus == NetConnectionStatus.Disconnected)
+                                    {
+                                        string denyMessage = inc.ReadString();
 
+                                        new GUIMessageBox("Couldn't connect to server", denyMessage);
+
+                                        msgBox.Close(null, null);
+                                        connectCancelled = true;
+                                    }
+                                    break;
+                            }
                         }
 
                         if (DateTime.Now > reqAuthTime)
