@@ -35,6 +35,9 @@ namespace Barotrauma.Networking
         private int nonce;
         private string saltedPw;
 
+        private UInt32 lastRecvChatMsgID = 0; //last message the server received from this client
+        private List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
+
         public byte ID
         {
             get { return myID; }
@@ -475,6 +478,11 @@ namespace Barotrauma.Networking
                 }
             }
             
+            if (!gameStarted)
+            {
+                SendLobbyUpdate();
+            }
+
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
         }
@@ -493,8 +501,69 @@ namespace Barotrauma.Networking
 
             while ((inc = client.ReadMessage()) != null)
             {
-                //TODO: read message data
+                switch (inc.MessageType)
+                {
+                    case NetIncomingMessageType.Data:
+                        ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
+                        switch (header)
+                        {
+                            case ServerPacketHeader.UPDATE_LOBBY:
+                                ReadLobbyUpdate(inc);
+                                break;
+                        }
+                        break;
+                }
             }
+        }
+
+        private void ReadLobbyUpdate(NetIncomingMessage inc)
+        {
+            lastRecvChatMsgID = inc.ReadUInt32();
+
+            ServerNetObject objHeader;
+            while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
+            {
+                switch (objHeader)
+                {
+                    case ServerNetObject.CHAT_MESSAGE:
+                        //TODO: READ CHAT MESSAGES FROM SERVER
+                        break;
+                }
+            }
+        }
+
+        private void SendLobbyUpdate()
+        {
+            NetOutgoingMessage outmsg = client.CreateMessage();
+            outmsg.Write((byte)ClientPacketHeader.UPDATE_LOBBY);
+
+            ChatMessage removeMsg;
+            while ((removeMsg=chatMsgQueue.Find(cMsg => cMsg.ID <= lastRecvChatMsgID)) != null)
+            {
+                chatMsgQueue.Remove(removeMsg);
+            }
+
+            foreach (ChatMessage cMsg in chatMsgQueue)
+            {
+                outmsg.Write((byte)ClientNetObject.CHAT_MESSAGE);
+                outmsg.Write(cMsg.ID);
+                outmsg.Write(cMsg.Text);
+            }
+            outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
+            client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
+        }
+
+        public override void SendChatMessage(string message, ChatMessageType? type = null)
+        {
+            if (client.ServerConnection == null) return;
+
+            type = ChatMessageType.Default;
+
+            ChatMessage chatMessage = ChatMessage.Create(
+                gameStarted && myCharacter != null ? myCharacter.Name : name,
+                message, (ChatMessageType)type, gameStarted ? myCharacter : null);
+
+            chatMsgQueue.Add(chatMessage);
         }
         
         public bool HasPermission(ClientPermissions permission)

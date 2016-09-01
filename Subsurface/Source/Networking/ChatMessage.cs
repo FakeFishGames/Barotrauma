@@ -39,6 +39,9 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        public static UInt32 LastID = 0;
+        public UInt32 ID = 0;
+
         private ChatMessage(string senderName, string text, ChatMessageType type, Character sender)
         {
             Text = text;
@@ -49,6 +52,9 @@ namespace Barotrauma.Networking
             SenderName = senderName;
 
             TextWithSender = string.IsNullOrWhiteSpace(senderName) ? text : senderName + ": " + text;
+
+            LastID++;
+            ID = LastID;
         }        
 
         public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender)

@@ -72,7 +72,7 @@ namespace Barotrauma.Networking
             server.SendMessage(nonceMsg, conn, NetDeliveryMethod.Unreliable);
         }
 
-        private void ClientInitialize(NetIncomingMessage inc)
+        private void ClientInitRequest(NetIncomingMessage inc)
         {
             if (ConnectedClients.Find(c => c.Connection == inc.SenderConnection) != null)
             {
@@ -190,13 +190,7 @@ namespace Barotrauma.Networking
             newClient.Connection = unauthClient.Connection;
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
-
-            //TEMPORARY TEST CODE; MUST REMOVE
-            NetOutgoingMessage testMsg = server.CreateMessage();
-            testMsg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
-            server.SendMessage(testMsg, newClient.Connection, NetDeliveryMethod.Unreliable);
-            //END TEMPORARY TEST CODE
-
+            ConnectedClients.Add(newClient);
             return;
         }
     }
