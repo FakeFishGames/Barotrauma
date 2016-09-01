@@ -288,7 +288,7 @@ namespace Barotrauma
                 return false;
             }
 
-            CoroutineManager.StartCoroutine(ConnectToServer(ip, serverList.Selected != null && (serverList.Selected.GetChild("password") as GUITickBox).Selected));
+            CoroutineManager.StartCoroutine(ConnectToServer(ip));
 
 
             return true;
@@ -296,47 +296,15 @@ namespace Barotrauma
 
         public void JoinServer(string ip, bool hasPassword, string msg = "Password required")
         {
-            CoroutineManager.StartCoroutine(ConnectToServer(ip, hasPassword, msg));
+            CoroutineManager.StartCoroutine(ConnectToServer(ip));
         }
 
-        private IEnumerable<object> ConnectToServer(string ip, bool hasPassword, string msg = "Password required")
+        private IEnumerable<object> ConnectToServer(string ip)
         {
-            string selectedPassword = "";
-
-            if (hasPassword)
-            {
-                var msgBox = new GUIMessageBox(msg, "", new string[] { "OK", "Cancel" });
-                var passwordBox = new GUITextBox(new Rectangle(0,40,150,25), Alignment.TopLeft, GUI.Style, msgBox.children[0]);
-                passwordBox.UserData = "password";
-                
-                var okButton = msgBox.Buttons[0];
-                var cancelButton = msgBox.Buttons[1];
-
-                while (GUIMessageBox.MessageBoxes.Contains(msgBox))
-                {
-                    okButton.Enabled = !string.IsNullOrWhiteSpace(passwordBox.Text);
-
-                    if (okButton.Selected)
-                    {
-                        msgBox.Close(null,null);
-                        break;
-                    }
-                    else if (cancelButton.Selected)
-                    {
-                        msgBox.Close(null, null);
-                        yield return CoroutineStatus.Success;
-                    }
-
-                    yield return CoroutineStatus.Running;
-                }
-
-                selectedPassword = passwordBox.Text;
-            }
-
             try
             {
                 GameMain.NetworkMember = new GameClient(clientNameBox.Text);
-                GameMain.Client.ConnectToServer(ip, selectedPassword);             
+                GameMain.Client.ConnectToServer(ip);             
             }
 
             catch (Exception e)
