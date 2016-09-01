@@ -15,11 +15,17 @@ using System.Xml.Linq;
 namespace Barotrauma
 {
    
-    class Character : Entity, IDamageable, IPropertyObject
+    class Character : Entity, IDamageable, IPropertyObject, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
         
         public static bool DisableControls;
+
+        private ushort netStateID;
+        public ushort NetStateID
+        {
+            get { return netStateID; }
+        }
 
         //the Character that the player is currently controlling
         private static Character controlled;
@@ -1566,6 +1572,26 @@ namespace Barotrauma
 
             if (AnimController!=null) AnimController.Remove();
         }
+
+        public virtual void ClientWrite(NetOutgoingMessage msg) 
+        { 
+            //TODO: write inputs
+        }
+        public virtual void ServerRead(NetIncomingMessage msg) 
+        { 
+            //TODO: read inputs
+        }
+
+        public virtual void ServerWrite(NetOutgoingMessage msg) 
+        {
+            //TODO: write position, health, etc
+        }
+
+        public virtual void ClientRead(NetIncomingMessage msg) 
+        { 
+            //TODO: read positions health, etc
+        }
+
 
     }
 }

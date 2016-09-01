@@ -43,7 +43,7 @@ namespace Barotrauma.Items.Components
     /// <summary>
     /// The base class for components holding the different functionalities of the item
     /// </summary>
-    class ItemComponent : IPropertyObject
+    class ItemComponent : IPropertyObject, IClientSerializable, IServerSerializable
     {
         protected Item item;
 
@@ -73,6 +73,12 @@ namespace Barotrauma.Items.Components
         public ItemComponent Parent;
 
         private string msg;
+
+        protected ushort netStateID;
+        public ushort NetStateID
+        {
+            get { return netStateID; }
+        }
 
         [HasDefaultValue(0.0f, false)]
         public float PickingTime
@@ -577,22 +583,6 @@ namespace Barotrauma.Items.Components
             return (average+100.0f)/2.0f;        
         }
 
-        //public bool CheckFailure(Character Character)
-        //{
-        //    foreach (Skill skill in requiredSkills)
-        //    {
-        //        int characterLevel = Character.GetSkillLevel(skill.Name);
-        //        if (characterLevel > skill.Level) continue;
-
-        //        item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, Character);
-        //        //Item.ApplyStatusEffects();
-        //        return true;
-                
-        //    }
-
-        //    return false;
-        //}
-
         public bool HasRequiredContainedItems(bool addMessage)
         {
             List<RelatedItem> requiredContained = requiredItems.FindAll(ri=> ri.Type == RelatedItem.RelationType.Contained);
@@ -668,6 +658,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public virtual void ClientWrite(NetOutgoingMessage msg) { }
+        public virtual void ServerRead(NetIncomingMessage msg) { }
+
+        public virtual void ServerWrite(NetOutgoingMessage msg) { }
+        public virtual void ClientRead(NetIncomingMessage msg) { }
+        
         public virtual XElement Save(XElement parentElement)
         {
             XElement componentElement = new XElement(name);
@@ -680,26 +676,6 @@ namespace Barotrauma.Items.Components
             }
 
             ObjectProperty.SaveProperties(this, componentElement);
-
-            //var saveProperties = ObjectProperty.GetProperties<Saveable>(this);
-            //foreach (var property in saveProperties)
-            //{
-            //    object value = property.GetValue();
-            //    if (value == null) continue;
-
-            //    bool dontSave = false;
-            //    foreach (var ini in property.Attributes.OfType<Initable>())
-            //    {
-            //        if (ini.defaultValue != value) continue;
-                    
-            //        dontSave = true;
-            //        break;                    
-            //    }
-
-            //    if (dontSave) continue;
-
-            //    componentElement.Add(new XAttribute(property.Name.ToLower(), value));
-            //}
 
             parentElement.Add(componentElement);
             return componentElement;

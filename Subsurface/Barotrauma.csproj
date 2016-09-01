@@ -151,6 +151,7 @@
     <Compile Include="Source\Networking\ChatMessage.cs" />
     <Compile Include="Source\Networking\Client.cs" />
     <Compile Include="Source\Networking\GameServerLogin.cs" />
+    <Compile Include="Source\Networking\INetSerializable.cs" />
     <Compile Include="Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
