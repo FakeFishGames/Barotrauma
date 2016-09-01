@@ -423,14 +423,10 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                if ((ClientPacketHeader)inc.ReadByte() == ClientPacketHeader.REQUEST_AUTH)
+                                if ((ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte() == ClientPacketHeader.REQUEST_AUTH)
                                 {
                                     inc.SenderConnection.Approve();
                                     ClientAuthRequest(inc.SenderConnection);
-                                }
-                                else
-                                {
-                                    inc.SenderConnection.Deny("GAY");
                                 }
                             }
                             break;
