@@ -35,22 +35,23 @@ namespace Barotrauma.Networking
         private void ClientAuthRequest(NetConnection conn)
         {
             //client wants to know if server requires password
-
-            if (ConnectedClients.Count >= MaxPlayers)
-            {
-                //server is full, can't allow new connection
-                conn.Disconnect("Server full");
-            }
-
             if (ConnectedClients.Find(c => c.Connection == conn) != null)
             {
                 //this client has already been authenticated
                 return;
             }
+            
             UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == conn);
             if (unauthClient == null)
             {
                 //new client, generate nonce and add to unauth queue
+                if (ConnectedClients.Count >= MaxPlayers)
+                {
+                    //server is full, can't allow new connection
+                    conn.Disconnect("Server full");
+                    return;
+                }
+
                 int nonce = CryptoRandom.Instance.Next();
                 unauthClient = new UnauthenticatedClient(conn, nonce);
                 unauthenticatedClients.Add(unauthClient);
