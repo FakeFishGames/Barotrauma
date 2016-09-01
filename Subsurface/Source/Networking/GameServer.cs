@@ -371,7 +371,7 @@ namespace Barotrauma.Networking
                         case NetIncomingMessageType.Data:
                             if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
                             {
-                                inc.SenderConnection.Disconnect("You have been banned from the server");
+                                KickClient(inc.SenderConnection,true);
                             }
                             else
                             {
@@ -396,6 +396,22 @@ namespace Barotrauma.Networking
                                 }
                             }
                             break;
+                        case NetIncomingMessageType.StatusChanged:
+                            switch (inc.SenderConnection.Status)
+                            {
+                                case NetConnectionStatus.Disconnected:
+                                    var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
+                                    /*if (connectedClient != null && !disconnectedClients.Contains(connectedClient))
+                                    {
+                                        connectedClient.deleteDisconnectedTimer = NetConfig.DeleteDisconnectedTime;
+                                        disconnectedClients.Add(connectedClient);
+                                    }
+                                    */
+                                    DisconnectClient(inc.SenderConnection,
+                                        connectedClient != null ? connectedClient.name + " has disconnected" : "");
+                                    break;
+                            }
+                            break;
                         case NetIncomingMessageType.ConnectionApproval:
                             if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
                             {
@@ -407,7 +423,15 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                inc.SenderConnection.Approve();
+                                if ((ClientPacketHeader)inc.ReadByte() == ClientPacketHeader.REQUEST_AUTH)
+                                {
+                                    inc.SenderConnection.Approve();
+                                    ClientAuthRequest(inc.SenderConnection);
+                                }
+                                else
+                                {
+                                    inc.SenderConnection.Deny("GAY");
+                                }
                             }
                             break;
                     }
@@ -610,7 +634,92 @@ namespace Barotrauma.Networking
 
             yield return CoroutineStatus.Success;
         }
-        
+
+        public override void KickPlayer(string playerName, bool ban)
+        {
+            playerName = playerName.ToLowerInvariant();
+
+            Client client = connectedClients.Find(c =>
+                c.name.ToLowerInvariant() == playerName ||
+                (c.Character != null && c.Character.Name.ToLowerInvariant() == playerName));
+
+            KickClient(client, ban);
+        }
+
+        public void KickClient(NetConnection conn, bool ban = false)
+        {
+            Client client = connectedClients.Find(c => c.Connection == conn);
+            if (client == null)
+            {
+                conn.Disconnect(ban ? "You have been banned from the server" : "You have been kicked from the server");
+                if (ban)
+                {
+                    if (!banList.IsBanned(conn.RemoteEndPoint.Address.ToString()))
+                    {
+                        banList.BanPlayer("Unnamed", conn.RemoteEndPoint.Address.ToString());
+                    }
+                }
+            }
+            else
+            {
+                KickClient(client, ban);
+            }
+        }
+
+        public void KickClient(Client client, bool ban = false)
+        {
+            if (client == null) return;
+
+            if (ban)
+            {
+                DisconnectClient(client, client.name + " has been banned from the server", "You have been banned from the server");
+                banList.BanPlayer(client.name, client.Connection.RemoteEndPoint.Address.ToString());
+            }
+            else
+            {
+                DisconnectClient(client, client.name + " has been kicked from the server", "You have been kicked from the server");
+            }
+        }
+
+        private void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
+        {
+            Client client = connectedClients.Find(x => x.Connection == senderConnection);
+            if (client == null) return;
+
+            DisconnectClient(client, msg, targetmsg);
+        }
+
+        private void DisconnectClient(Client client, string msg = "", string targetmsg = "")
+        {
+            if (client == null) return;
+
+            if (gameStarted && client.Character != null)
+            {
+                client.Character.ClearInputs();
+                client.Character.Kill(CauseOfDeath.Disconnected, true);
+            }
+
+            client.Character = null;
+            client.inGame = false;
+
+            if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
+            if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
+
+            Log(msg, ChatMessage.MessageColor[(int)ChatMessageType.Server]);
+
+            client.Connection.Disconnect(targetmsg);
+
+            GameMain.NetLobbyScreen.RemovePlayer(client.name);
+            
+            connectedClients.Remove(client);
+
+            AddChatMessage(msg, ChatMessageType.Server);
+
+            UpdateCrewFrame();
+
+            refreshMasterTimer = DateTime.Now;
+        }
+
         private void UpdateCrewFrame()
         {
             List<Character> crew = new List<Character>();

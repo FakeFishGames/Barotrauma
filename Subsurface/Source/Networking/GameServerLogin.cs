@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
             else
             {
                 nonceMsg.Write(true); //true = password
-                nonceMsg.Write(unauthClient.Nonce); //here's nonce, encrypt with this
+                nonceMsg.Write((Int32)unauthClient.Nonce); //here's nonce, encrypt with this
             }
             server.SendMessage(nonceMsg, conn, NetDeliveryMethod.Unreliable);
         }
