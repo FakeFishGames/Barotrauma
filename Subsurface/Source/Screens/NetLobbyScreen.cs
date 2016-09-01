@@ -989,7 +989,7 @@ namespace Barotrauma
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, message.Color, 
                 Alignment.Left, GUI.Style, null, true);
             msg.Font = GUI.SmallFont;
-            msg.UserData = message.SenderName;
+            msg.UserData = message;
             msg.CanBeFocused = false;
 
             msg.Padding = new Vector4(20, 0, 0, 0);

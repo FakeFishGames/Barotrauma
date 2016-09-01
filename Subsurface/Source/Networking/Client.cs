@@ -29,6 +29,9 @@ namespace Barotrauma.Networking
         public string version;
         public bool inGame;
 
+        public UInt32 lastSentChatMsgID = 0; //last msg this client said
+        public UInt32 lastRecvChatMsgID = 0; //last msg this client knows about
+
         public List<string> ChatMessages = new List<string>();
         public float ChatSpamSpeed;
         public float ChatSpamTimer;

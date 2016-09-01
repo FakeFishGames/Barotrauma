@@ -354,7 +354,21 @@ namespace Barotrauma.Networking
 
             foreach (Client c in connectedClients)
             {
-                //c.ReliableChannel.Update(deltaTime);
+                if (gameStarted)
+                {
+                    if (c.inGame)
+                    {
+                        ClientWriteIngame(c);
+                    }
+                    else
+                    {
+
+                    }
+                }
+                else
+                {
+                    ClientWriteLobby(c);
+                }
 
                 //slowly reset spam timers
                 c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
@@ -382,15 +396,12 @@ namespace Barotrauma.Networking
                                         ClientAuthRequest(inc.SenderConnection);
                                         break;
                                     case ClientPacketHeader.REQUEST_INIT:
-                                        ClientInitialize(inc);
+                                        ClientInitRequest(inc);
                                         break;
                                     case ClientPacketHeader.UPDATE_LOBBY:
-                                        //TODO
+                                        ClientReadLobby(inc);
                                         break;
-                                    case ClientPacketHeader.UPDATE_INGAME_ALIVE:
-                                        //TODO
-                                        break;
-                                    case ClientPacketHeader.UPDATE_INGAME_SPECTATING:
+                                    case ClientPacketHeader.UPDATE_INGAME:
                                         //TODO
                                         break;
                                 }
@@ -523,7 +534,66 @@ namespace Barotrauma.Networking
             }
             return userID;
         }
-        
+
+        private void ClientReadLobby(NetIncomingMessage inc)
+        {
+            Client c = ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
+            if (c == null)
+            {
+                inc.SenderConnection.Disconnect("You're not a connected client.");
+                return;
+            }
+
+            ClientNetObject objHeader;
+            while ((objHeader=(ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
+            {
+                switch (objHeader)
+                {
+                    case ClientNetObject.CHAT_MESSAGE:
+                        UInt32 ID = inc.ReadUInt32();
+                        string msg = inc.ReadString();
+                        if (c.lastSentChatMsgID<ID)
+                        {
+                            //this chat message is new to the server
+                            AddChatMessage(msg, ChatMessageType.Default, c.name);
+                            c.lastSentChatMsgID = ID;
+                        }
+                        break;
+                }
+            }
+
+        }
+
+        private void ClientReadIngame(NetIncomingMessage inc)
+        {
+            Client c = ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
+            if (c == null)
+            {
+                inc.SenderConnection.Disconnect("You're not a connected client.");
+                return;
+            }
+        }
+
+        private void ClientWriteIngame(Client c)
+        {
+            if (c.Character != null && !c.Character.IsDead)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
+
+        private void ClientWriteLobby(Client c)
+        {
+            NetOutgoingMessage outmsg = server.CreateMessage();
+            outmsg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
+            outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which messages weren't received by the server
+            server.SendMessage(outmsg,c.Connection,NetDeliveryMethod.Unreliable);
+        }
+
         public bool StartGameClicked(GUIButton button, object obj)
         {
             Submarine selectedSub = null;
