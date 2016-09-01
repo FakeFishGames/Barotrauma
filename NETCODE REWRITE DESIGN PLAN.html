@@ -17,6 +17,7 @@ body {
 <li>Hacking is really easy</li>
 <li>Lag is really hard to hide</li>
 <li>It'll eventually be unusable because of new stuff being added</li>
+<li>Client and server shares code, requiring security checks on the server's side which are too easy to miss</li>
 </ul>
 <h2>Goals of rewrite</h2>
 <ul>
@@ -24,10 +25,11 @@ body {
 <li>Authoritative server; less hacking</li>
 <li>More secure code</li>
 <li>Maybe better interpolation; make lag less noticeable</li>
+<li>Make client and server code as isolated from each other as possible</li>
 </ul>
 <h2>How new netcode will work</h2>
 <h3>Authentication</h3>
-Login encryption will be essentially the same as it is now. Hash of hashed password + nonce.
+Login encryption consists of sending a hash of hashed password with the nonce appended.
 <br>
 <br>Authentication will be split into two steps:
 <ul>

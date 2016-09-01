@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
             Connection = connection;
             Nonce = nonce;
 
-            AuthTimer = 5.0f;
+            AuthTimer = 10.0f;
 
             failedAttempts = 0;
         }
@@ -56,6 +56,7 @@ namespace Barotrauma.Networking
                 unauthClient = new UnauthenticatedClient(conn, nonce);
                 unauthenticatedClients.Add(unauthClient);
             }
+            unauthClient.AuthTimer = 10.0f;
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
             NetOutgoingMessage nonceMsg = server.CreateMessage();
             nonceMsg.Write((byte)ServerPacketHeader.AUTH_RESPONSE);
@@ -94,8 +95,6 @@ namespace Barotrauma.Networking
                 string saltedPw = password;
                 saltedPw = saltedPw + Convert.ToString(unauthClient.Nonce);
                 saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-                NetEncryption algo = new NetXtea(server, saltedPw);
-                inc.Decrypt(algo);
                 string clPw = inc.ReadString();
                 if (clPw != saltedPw)
                 {
@@ -115,6 +114,7 @@ namespace Barotrauma.Networking
                         reject.Write((byte)ServerPacketHeader.AUTH_FAILURE);
                         reject.Write("Wrong password!");
                         server.SendMessage(reject, unauthClient.Connection, NetDeliveryMethod.Unreliable);
+                        unauthClient.AuthTimer = 10.0f;
                         return;
                     }
                 }
@@ -190,6 +190,13 @@ namespace Barotrauma.Networking
             newClient.Connection = unauthClient.Connection;
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
+
+            //TEMPORARY TEST CODE; MUST REMOVE
+            NetOutgoingMessage testMsg = server.CreateMessage();
+            testMsg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
+            server.SendMessage(testMsg, newClient.Connection, NetDeliveryMethod.Unreliable);
+            //END TEMPORARY TEST CODE
+
             return;
         }
     }

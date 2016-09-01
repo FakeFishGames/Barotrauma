@@ -34,7 +34,6 @@ namespace Barotrauma.Networking
         private bool requiresPw;
         private int nonce;
         private string saltedPw;
-        NetEncryption algo;
 
         public byte ID
         {
@@ -151,14 +150,6 @@ namespace Barotrauma.Networking
             
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
-            if (reconnectBox==null)
-            {
-                reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[] { "Cancel" });
-
-                reconnectBox.Buttons[0].OnClicked += CancelConnect;
-                reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
-            }
-            
             CoroutineManager.StartCoroutine(WaitForStartingInfo());
             
             // Start the timer
@@ -204,11 +195,19 @@ namespace Barotrauma.Networking
             bool CanStart = false;
             
             DateTime timeOut = DateTime.Now + new TimeSpan(0,0,20);
-            DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 3);
+            DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
 
             // Loop until we are approved
             while (!CanStart && !connectCancelled)
             {
+                if (reconnectBox == null)
+                {
+                    reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[] { "Cancel" });
+
+                    reconnectBox.Buttons[0].OnClicked += CancelConnect;
+                    reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
+                }
+
                 int seconds = DateTime.Now.Second;
 
                 string connectingText = "Connecting to " + serverIP;
@@ -249,11 +248,10 @@ namespace Barotrauma.Networking
                             outmsg.Write(GameMain.SelectedPackage.Name);
                             outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
                             outmsg.Write(name);
-                            outmsg.Encrypt(algo);
                             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
                         }
                     }
-                    reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 3);
+                    reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
                 }
 
                 yield return CoroutineStatus.Running;
@@ -275,15 +273,19 @@ namespace Barotrauma.Networking
                             switch (header)
                             {
                                 case ServerPacketHeader.AUTH_RESPONSE:
-                                    if (inc.ReadBoolean())
+                                    if (needAuth)
                                     {
-                                        //requires password
-                                        nonce = inc.ReadInt32();
-                                        requiresPw = true;
-                                    }
-                                    else
-                                    {
-                                        requiresPw = false;
+                                        if (inc.ReadBoolean())
+                                        {
+                                            //requires password
+                                            nonce = inc.ReadInt32();
+                                            requiresPw = true;
+                                        }
+                                        else
+                                        {
+                                            requiresPw = false;
+                                        }
+                                        needAuth = false; //got auth!
                                     }
                                     break;
                                 case ServerPacketHeader.AUTH_FAILURE:
@@ -291,10 +293,15 @@ namespace Barotrauma.Networking
                                     pwMsg = inc.ReadString();
                                     requiresPw = true;
                                     break;
+                                case ServerPacketHeader.UPDATE_LOBBY:
+                                    //server accepted client
+                                    CanStart = true;
+                                    break;
                             }
                             break;
                         case NetIncomingMessageType.StatusChanged:
-                            if (client.ConnectionStatus == NetConnectionStatus.Disconnected)
+                            NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
+                            if (connectionStatus == NetConnectionStatus.Disconnected)
                             {
                                 string denyMessage = inc.ReadString();
                                 
@@ -312,8 +319,14 @@ namespace Barotrauma.Networking
                     break;
                 }
 
-                if (requiresPw && needAuth)
+                if (requiresPw && !CanStart && !connectCancelled)
                 {
+                    if (reconnectBox != null)
+                    {
+                        reconnectBox.Close(null, null);
+                        reconnectBox = null;
+                    }
+
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { "OK", "Cancel" });
                     var passwordBox = new GUITextBox(new Rectangle(0, 40, 150, 25), Alignment.TopLeft, GUI.Style, msgBox.children[0]);
                     passwordBox.UserData = "password";
@@ -323,7 +336,19 @@ namespace Barotrauma.Networking
 
                     while (GUIMessageBox.MessageBoxes.Contains(msgBox))
                     {
-                        while (client.ReadMessage() != null) {} //clear incoming message queue until client sends password request
+                        while (client.ReadMessage() != null) {
+
+                        }
+
+                        if (DateTime.Now > reqAuthTime)
+                        {
+                            //request auth again to prevent timeout
+                            NetOutgoingMessage reqAuthMsg = client.CreateMessage();
+                            reqAuthMsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+                            client.SendMessage(reqAuthMsg, NetDeliveryMethod.Unreliable);
+                            reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 3);
+                        }
+
                         okButton.Enabled = !string.IsNullOrWhiteSpace(passwordBox.Text);
 
                         if (okButton.Selected)
@@ -331,11 +356,9 @@ namespace Barotrauma.Networking
                             saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(passwordBox.Text)));
                             saltedPw = saltedPw + Convert.ToString(nonce);
                             saltedPw = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-                            algo = new NetXtea(client, saltedPw);
 
                             timeOut = DateTime.Now + new TimeSpan(0, 0, 20);
-                            reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0);
-                            needAuth = false;
+                            reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
 
                             msgBox.Close(null, null);
                             break;
@@ -352,7 +375,7 @@ namespace Barotrauma.Networking
                     }
                 }
             }
-            
+
             if (reconnectBox != null)
             {
                 reconnectBox.Close(null, null);
