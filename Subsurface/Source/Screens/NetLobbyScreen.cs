@@ -21,6 +21,13 @@ namespace Barotrauma
         private GUIListBox playerList;
 
         private GUIListBox subList, modeList, chatBox;
+        public GUIListBox ChatBox
+        {
+            get
+            {
+                return chatBox;
+            }
+        }
 
         private GUIButton[] traitorProbabilityButtons;
         private GUITextBlock traitorProbabilityText;

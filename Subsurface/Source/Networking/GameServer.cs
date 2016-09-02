@@ -544,13 +544,19 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            UInt32 ID = inc.ReadUInt32();
+            if (ID > c.lastRecvChatMsgID)
+            {
+                c.lastRecvChatMsgID = ID;
+            }
+
             ClientNetObject objHeader;
             while ((objHeader=(ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
             {
                 switch (objHeader)
                 {
                     case ClientNetObject.CHAT_MESSAGE:
-                        UInt32 ID = inc.ReadUInt32();
+                        ID = inc.ReadUInt32();
                         string msg = inc.ReadString();
                         if (c.lastSentChatMsgID<ID)
                         {
@@ -591,6 +597,25 @@ namespace Barotrauma.Networking
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which messages weren't received by the server
+            foreach (GUIComponent gc in GameMain.NetLobbyScreen.ChatBox.children)
+            {
+                if (gc is GUITextBlock)
+                {
+                    if (gc.UserData is ChatMessage)
+                    {
+                        ChatMessage cMsg = (ChatMessage)gc.UserData;
+                        if (cMsg.ID > c.lastRecvChatMsgID)
+                        {
+                            outmsg.Write((byte)ServerNetObject.CHAT_MESSAGE);
+                            outmsg.Write(cMsg.ID);
+                            outmsg.Write((byte)cMsg.Type);
+                            outmsg.Write(cMsg.SenderName);
+                            outmsg.Write(cMsg.Text);
+                        }
+                    }
+                }
+            }
+            outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             server.SendMessage(outmsg,c.Connection,NetDeliveryMethod.Unreliable);
         }
 
