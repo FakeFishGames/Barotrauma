@@ -476,6 +476,18 @@ namespace Barotrauma.Items.Components
                 item.NewComponentEvent(this, false, true);
             }
         }
+
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            msg.Write(isOpen);
+            msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);        
+        }
+
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            SetState(msg.ReadBoolean(), true);
+            Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+        }
         
     }
 }

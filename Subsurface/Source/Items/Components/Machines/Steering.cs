@@ -291,8 +291,6 @@ namespace Barotrauma.Items.Components
             {
                 TargetVelocity = targetSpeed/5.0f;
             }
-
-
         }
 
         private bool ToggleMaintainPosition(GUITickBox tickBox)
@@ -329,6 +327,90 @@ namespace Barotrauma.Items.Components
                 base.ReceiveSignal(stepsTaken, signal, connection, sender, power);
             }
         }
-        
+
+        public override void ClientWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            msg.Write(autoPilot);
+
+            if (!autoPilot)
+            {
+                //no need to write steering info if autopilot is controlling
+                msg.Write(targetVelocity.X);
+                msg.Write(targetVelocity.Y);
+            }
+            else
+            {
+                msg.Write(posToMaintain != null);
+            }
+        }
+
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            AutoPilot = msg.ReadBoolean();
+
+            if (!AutoPilot)
+            {
+                targetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+            }
+            else
+            {
+                bool maintainPos = msg.ReadBoolean();
+                if (posToMaintain == null && maintainPos)
+                {
+                    posToMaintain = item.Submarine.WorldPosition;
+                    maintainPosTickBox.Selected = true;
+                }
+                else
+                {
+                    posToMaintain = null;
+                    maintainPosTickBox.Selected = false;
+                }
+            }
+        }
+
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            msg.Write(autoPilot);
+
+            if (!autoPilot)
+            {
+                //no need to write steering info if autopilot is controlling
+                msg.Write(targetVelocity.X);
+                msg.Write(targetVelocity.Y);
+            }
+            else
+            {
+                msg.Write(posToMaintain != null);
+                if (posToMaintain != null)
+                {
+                    msg.Write(((Vector2)posToMaintain).X);
+                    msg.Write(((Vector2)posToMaintain).Y);
+                }
+            }
+        }
+
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            AutoPilot = msg.ReadBoolean();
+
+            if (!AutoPilot)
+            {
+                targetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+            }
+            else
+            {
+                bool maintainPos = msg.ReadBoolean();
+                if (maintainPos)
+                {
+                    posToMaintain = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                    maintainPosTickBox.Selected = true;
+                }
+                else
+                {
+                    posToMaintain = null;
+                    maintainPosTickBox.Selected = false;
+                }
+            }
+        }
     }
 }

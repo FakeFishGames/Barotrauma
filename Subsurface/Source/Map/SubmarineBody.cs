@@ -37,8 +37,6 @@ namespace Barotrauma
 
         private Vector2? targetPosition;
 
-        //private float mass = 10000.0f;
-
         public Rectangle Borders
         {
             get;
