@@ -199,7 +199,7 @@ namespace Barotrauma.Networking
             bool CanStart = false;
             
             DateTime timeOut = DateTime.Now + new TimeSpan(0,0,20);
-            DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
+            DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
 
             // Loop until we are approved
             while (!CanStart && !connectCancelled)
@@ -288,6 +288,7 @@ namespace Barotrauma.Networking
                                         else
                                         {
                                             requiresPw = false;
+                                            reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
                                         }
                                         needAuth = false; //got auth!
                                     }

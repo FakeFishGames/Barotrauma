@@ -354,22 +354,6 @@ namespace Barotrauma.Networking
 
             foreach (Client c in connectedClients)
             {
-                if (gameStarted)
-                {
-                    if (c.inGame)
-                    {
-                        ClientWriteIngame(c);
-                    }
-                    else
-                    {
-
-                    }
-                }
-                else
-                {
-                    ClientWriteLobby(c);
-                }
-
                 //slowly reset spam timers
                 c.ChatSpamTimer = Math.Max(0.0f, c.ChatSpamTimer - deltaTime);
                 c.ChatSpamSpeed = Math.Max(0.0f, c.ChatSpamSpeed - deltaTime);
@@ -457,7 +441,7 @@ namespace Barotrauma.Networking
             // if 30ms has passed
             if (updateTimer < DateTime.Now)
             {
-                if (gameStarted)
+                /*if (gameStarted)
                 {
 
                     float ignoreDistance = FarseerPhysics.ConvertUnits.ToDisplayUnits(NetConfig.CharacterIgnoreDistance);
@@ -478,14 +462,32 @@ namespace Barotrauma.Networking
 
                         //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;                        
                     }
-                }
+                }*/
 
                 if (server.ConnectionsCount > 0)
                 {
                     if (sparseUpdateTimer < DateTime.Now) SparseUpdate();
-                    
-                }
 
+                    foreach (Client c in ConnectedClients)
+                    {
+                        if (gameStarted)
+                        {
+                            if (c.inGame)
+                            {
+                                ClientWriteIngame(c);
+                            }
+                            else
+                            {
+                                ClientWriteLobby(c);
+                            }
+                        }
+                        else
+                        {
+                            ClientWriteLobby(c);
+                        }
+                    }
+                }
+                
                 updateTimer = DateTime.Now + updateInterval;
             }
 

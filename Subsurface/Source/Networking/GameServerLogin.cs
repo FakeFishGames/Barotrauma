@@ -187,6 +187,7 @@ namespace Barotrauma.Networking
 
             //new client
             Client newClient = new Client(clName, GetNewClientID());
+            newClient.lastRecvChatMsgID = ChatMessage.LastID;
             newClient.Connection = unauthClient.Connection;
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
