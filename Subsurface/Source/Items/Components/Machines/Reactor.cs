@@ -535,6 +535,46 @@ namespace Barotrauma.Items.Components
                     break;
             }
         }
+
+        public override void ClientWrite(NetOutgoingMessage msg)
+        {
+            msg.Write(autoTemp);
+            msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 8);
+
+            msg.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
+        }
+
+        public override void ServerRead(NetIncomingMessage msg)
+        {
+            autoTemp = msg.ReadBoolean();
+            ShutDownTemp = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
+
+            CoolingRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            FissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+        }
+
+        public override void ServerWrite(NetOutgoingMessage msg)
+        {
+            msg.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
+
+            msg.Write(autoTemp);
+            msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 8);
+
+            msg.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
+        }
+
+        public override void ClientRead(NetIncomingMessage msg)
+        {
+            Temperature = msg.ReadRangedSingle(0.0f, 10000.0f, 16);
+
+            autoTemp = msg.ReadBoolean();
+            ShutDownTemp = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
+
+            CoolingRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            FissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+        }
         
     }
 }

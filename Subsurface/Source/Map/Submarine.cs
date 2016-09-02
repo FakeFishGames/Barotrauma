@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using Lidgren.Network;
@@ -28,7 +29,7 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
-    class Submarine : Entity
+    class Submarine : Entity, IServerSerializable
     {
 
         public static string SavePath = "Submarines";
@@ -119,6 +120,15 @@ namespace Barotrauma
                 hash = new Md5Hash(doc);
 
                 return hash;
+            }
+        }
+
+        private ushort netStateID;
+        public ushort NetStateID
+        {
+            get
+            {
+                return netStateID;
             }
         }
 
@@ -950,6 +960,21 @@ namespace Barotrauma
             if (MainSub == this) MainSub = null;
 
             DockedTo.Clear();
+        }
+
+        public void ServerWrite(NetOutgoingMessage msg)
+        {
+            msg.Write(subBody.Position.X);
+            msg.Write(subBody.Position.Y);
+
+            msg.Write(Velocity.X);
+            msg.Write(Velocity.Y);
+        }
+
+        public void ClientRead(NetIncomingMessage msg)
+        {
+            subBody.TargetPosition  = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+            subBody.Velocity        = new Vector2(msg.ReadSingle(), msg.ReadSingle());
         }
     }
 

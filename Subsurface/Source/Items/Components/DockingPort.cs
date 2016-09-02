@@ -651,6 +651,63 @@ namespace Barotrauma.Items.Components
                     break;
             }
         }
+
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            msg.Write(docked);
+
+            if (docked)
+            {
+                msg.Write(dockingTarget.item.ID);
+
+                msg.Write((ushort)hullIds[0]);
+                msg.Write((ushort)hullIds[1]);
+                msg.Write((ushort)gapId);
+            }
+        }
+
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            bool isDocked = msg.ReadBoolean();
+
+            if (isDocked)
+            {
+                ushort dockingTargetID  = msg.ReadUInt16();
+
+                hullIds[0]  = msg.ReadUInt16();
+                hullIds[1]  = msg.ReadUInt16();
+                gapId       = msg.ReadUInt16();
+                
+                Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
+                if (targetEntity == null || !(targetEntity is Item))
+                {
+                    DebugConsole.ThrowError("Invalid docking port network event (can't dock to " + targetEntity.ToString() + ")");
+                    return;
+                }
+
+                dockingTarget = (targetEntity as Item).GetComponent<DockingPort>();
+                if (dockingTarget == null)
+                {
+                    DebugConsole.ThrowError("Invalid docking port network event (" + targetEntity + " doesn't have a docking port component)");
+                    return;
+                }
+
+                if (hulls != null)
+                {
+                    if (hulls[0] != null) hulls[0].ID = (ushort)hullIds[0];
+                    if (hulls[1] != null) hulls[1].ID = (ushort)hullIds[1];
+                }
+
+                if (gap != null) gap.ID = (ushort)gapId;
+
+                Dock(dockingTarget);
+
+            }
+            else
+            {
+                Undock();
+            }
+        }
         
     }
 }
