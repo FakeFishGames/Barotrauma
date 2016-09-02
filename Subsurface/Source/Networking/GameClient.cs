@@ -36,6 +36,7 @@ namespace Barotrauma.Networking
         private string saltedPw;
 
         private UInt32 lastRecvChatMsgID = 0; //last message the server received from this client
+        private UInt32 lastSentChatMsgID = 0; //last message the server has sent to this client
         private List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
 
         public byte ID
@@ -526,7 +527,15 @@ namespace Barotrauma.Networking
                 switch (objHeader)
                 {
                     case ServerNetObject.CHAT_MESSAGE:
-                        //TODO: READ CHAT MESSAGES FROM SERVER
+                        UInt32 ID = inc.ReadUInt32();
+                        ChatMessageType type = (ChatMessageType)inc.ReadByte();
+                        string senderName = inc.ReadString();
+                        string msg = inc.ReadString();
+                        if (ID > lastSentChatMsgID)
+                        {
+                            AddChatMessage(msg, type, senderName);
+                            lastSentChatMsgID = ID;
+                        }
                         break;
                 }
             }
@@ -537,6 +546,7 @@ namespace Barotrauma.Networking
             NetOutgoingMessage outmsg = client.CreateMessage();
             outmsg.Write((byte)ClientPacketHeader.UPDATE_LOBBY);
 
+            outmsg.Write(lastSentChatMsgID);
             ChatMessage removeMsg;
             while ((removeMsg=chatMsgQueue.Find(cMsg => cMsg.ID <= lastRecvChatMsgID)) != null)
             {
