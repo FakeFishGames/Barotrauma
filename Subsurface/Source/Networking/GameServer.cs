@@ -81,7 +81,7 @@ namespace Barotrauma.Networking
                 config.EnableUPnP = true;
             }
 
-            config.MaximumConnections = maxPlayers;
+            config.MaximumConnections = maxPlayers*2; //double the lidgren connections for unauthenticated players
             MaxPlayers = maxPlayers;
 
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | 
@@ -546,19 +546,26 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            UInt32 ID = inc.ReadUInt32();
-            if (ID > c.lastRecvChatMsgID)
-            {
-                c.lastRecvChatMsgID = ID;
-            }
-
             ClientNetObject objHeader;
             while ((objHeader=(ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
             {
                 switch (objHeader)
                 {
+                    case ClientNetObject.SYNC_IDS:
+                        //TODO: might want to use a clever class for this
+                        UInt32 lastLobbyUpdID = inc.ReadUInt32();
+                        if (lastLobbyUpdID > c.lastRecvLobbyUpdate)
+                        {
+                            c.lastRecvLobbyUpdate = lastLobbyUpdID;
+                        }
+                        UInt32 lastChatID = inc.ReadUInt32();
+                        if (lastChatID > c.lastRecvChatMsgID)
+                        {
+                            c.lastRecvChatMsgID = lastChatID;
+                        }
+                        break;
                     case ClientNetObject.CHAT_MESSAGE:
-                        ID = inc.ReadUInt32();
+                        UInt32 ID = inc.ReadUInt32();
                         string msg = inc.ReadString();
                         if (c.lastSentChatMsgID<ID)
                         {
@@ -598,7 +605,39 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
-            outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which messages weren't received by the server
+
+            outmsg.Write((byte)ServerNetObject.SYNC_IDS);
+            
+            if (c.lastRecvLobbyUpdate<GameMain.NetLobbyScreen.LastUpdateID)
+            {
+                outmsg.Write(true);
+                outmsg.WritePadBits();
+                outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
+                outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
+                outmsg.Write(GameMain.NetLobbyScreen.ServerMessage);
+                if (c.lastRecvLobbyUpdate < 1)
+                {
+                    var subList = GameMain.NetLobbyScreen.GetSubList();
+                    outmsg.Write((UInt16)subList.Count);
+                    for (int i = 0; i < subList.Count; i++)
+                    {
+                        outmsg.Write(subList[i].Name);
+                        outmsg.Write(subList[i].MD5Hash.ToString());
+                    }
+                }
+                else
+                {
+                    outmsg.Write((UInt16)0);
+                }
+            }
+            else
+            {
+                outmsg.Write(false);
+                outmsg.WritePadBits();
+            }
+
+            outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
+
             foreach (GUIComponent gc in GameMain.NetLobbyScreen.ChatBox.children)
             {
                 if (gc is GUITextBlock)

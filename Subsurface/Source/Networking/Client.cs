@@ -28,7 +28,9 @@ namespace Barotrauma.Networking
         public NetConnection Connection { get; set; }
         public string version;
         public bool inGame;
+        public UInt32 lastRecvLobbyUpdate = 0;
 
+        public bool hasLobbyData = false;
         public UInt32 lastSentChatMsgID = 0; //last msg this client said
         public UInt32 lastRecvChatMsgID = 0; //last msg this client knows about
 
@@ -50,6 +52,12 @@ namespace Barotrauma.Networking
 
         public ClientPermissions Permissions;
         
+        public void InitClientSync()
+        {
+            lastSentChatMsgID = 0;
+            lastRecvChatMsgID = ChatMessage.LastID;
+        }
+
         public int KickVoteCount
         {
             get { return kickVoters.Count; }
