@@ -54,11 +54,21 @@ namespace Barotrauma
 
         const float NetworkUpdateInterval = 1.0f;
         private float networkUpdateTimer;
-        private bool valueChanged;
+        private UInt32 lastUpdateID;
+        public UInt32 LastUpdateID
+        {
+            get { if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++; return lastUpdateID; }
+            set { if (GameMain.Server != null) return; lastUpdateID = value; }
+        }
 
         private Sprite backgroundSprite;
 
         private GUITextBox serverMessage;
+        public string ServerMessage
+        {
+            get { return serverMessage.Text; }
+            set { if (GameMain.Server != null) return; serverMessage.Text = value; }
+        }
 
         public GUIListBox SubList
         {
@@ -560,9 +570,9 @@ namespace Barotrauma
             if (GameMain.Server == null) return false;
             
             GameMain.Server.AutoRestart = tickBox.Selected;
-            
-            valueChanged = true;
-                       
+
+            lastUpdateID++;
+
             return true;
         }
 
@@ -573,7 +583,7 @@ namespace Barotrauma
             missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[missionTypeIndex];
             missionTypeBlock.UserData = missionTypeIndex;
 
-            valueChanged = true;
+            lastUpdateID++;
         }
 
         public bool ToggleMissionType(GUIButton button, object userData)
@@ -586,7 +596,7 @@ namespace Barotrauma
 
             SetMissionType(missionTypeIndex);
 
-            valueChanged = true;
+            lastUpdateID++;
 
             return true;
         }
@@ -602,8 +612,8 @@ namespace Barotrauma
             if (index > 2) index = 0;
 
             SetTraitorsEnabled((YesNoMaybe)index);
-            
-            valueChanged = true;
+
+            lastUpdateID++;
 
             return true;
         }
@@ -628,7 +638,7 @@ namespace Barotrauma
 
         private bool SelectSub(GUIComponent component, object obj)
         {
-            valueChanged = true;
+            lastUpdateID++;
 
             var hash = obj is Submarine ? ((Submarine)obj).MD5Hash.Hash : "";
             
@@ -654,7 +664,7 @@ namespace Barotrauma
 
             subList.ClearChildren();
 
-            if (submarines.Count == 0)
+            if (submarines.Count == 0 && GameMain.Server != null)
             {
                 DebugConsole.ThrowError("No submarines found!");
             }
@@ -734,7 +744,7 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return false;
             ServerName = text;
-            valueChanged = true;
+            lastUpdateID++;
 
             return true;
         }
@@ -742,7 +752,7 @@ namespace Barotrauma
         public bool UpdateServerMessage(GUITextBox textBox, string text)
         {
             if (GameMain.Server == null) return false;
-            valueChanged = true;
+            lastUpdateID++;
 
             return true;
         }
@@ -940,18 +950,6 @@ namespace Barotrauma
             {
                 autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
             }
-            
-            if (valueChanged && GameMain.Server != null)
-            {
-                networkUpdateTimer -= (float)deltaTime;
-                if (networkUpdateTimer <= 0.0f)
-                {
-                    GameMain.Server.UpdateNetLobby(null);
-
-                    valueChanged = false;
-                    networkUpdateTimer = NetworkUpdateInterval;
-                }
-            }
                         
             //durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
@@ -1050,7 +1048,7 @@ namespace Barotrauma
 
             if (modePreset == null) return false;
 
-            valueChanged = true;
+            lastUpdateID++;
 
             return true;
         }
@@ -1065,8 +1063,8 @@ namespace Barotrauma
 
             //textBox.Text = LevelSeed;
             //textBox.Selected = false;
-            
-            valueChanged = true;
+
+            lastUpdateID++;
 
             return true;
         }

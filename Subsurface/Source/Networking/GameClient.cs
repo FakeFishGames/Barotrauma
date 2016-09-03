@@ -300,6 +300,7 @@ namespace Barotrauma.Networking
                                     break;
                                 case ServerPacketHeader.UPDATE_LOBBY:
                                     //server accepted client
+                                    ReadLobbyUpdate(inc);
                                     CanStart = true;
                                     break;
                             }
@@ -520,13 +521,45 @@ namespace Barotrauma.Networking
 
         private void ReadLobbyUpdate(NetIncomingMessage inc)
         {
-            lastRecvChatMsgID = inc.ReadUInt32();
-
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
                 switch (objHeader)
                 {
+                    case ServerNetObject.SYNC_IDS:
+                        bool lobbyUpdated = inc.ReadBoolean();
+                        inc.ReadPadBits();
+                        if (lobbyUpdated)
+                        {
+                            GameMain.NetLobbyScreen.LastUpdateID = inc.ReadUInt32();
+                            GameMain.NetLobbyScreen.ServerName = inc.ReadString();
+                            GameMain.NetLobbyScreen.ServerMessage = inc.ReadString();
+
+                            UInt16 subListCount = inc.ReadUInt16();
+                            if (subListCount > 0)
+                            {
+                                List<Submarine> submarines = new List<Submarine>();
+                                for (int i = 0; i < subListCount; i++)
+                                {
+                                    string subName = inc.ReadString();
+                                    string subHash = inc.ReadString();
+
+                                    var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
+                                    if (matchingSub != null)
+                                    {
+                                        submarines.Add(matchingSub);
+                                    }
+                                    else
+                                    {
+                                        submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
+                                    }
+                                }
+                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
+                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);
+                            }
+                        }
+                        lastRecvChatMsgID = inc.ReadUInt32();
+                        break;
                     case ServerNetObject.CHAT_MESSAGE:
                         UInt32 ID = inc.ReadUInt32();
                         ChatMessageType type = (ChatMessageType)inc.ReadByte();
@@ -547,6 +580,8 @@ namespace Barotrauma.Networking
             NetOutgoingMessage outmsg = client.CreateMessage();
             outmsg.Write((byte)ClientPacketHeader.UPDATE_LOBBY);
 
+            outmsg.Write((byte)ClientNetObject.SYNC_IDS);
+            outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(lastSentChatMsgID);
             ChatMessage removeMsg;
             while ((removeMsg=chatMsgQueue.Find(cMsg => cMsg.ID <= lastRecvChatMsgID)) != null)

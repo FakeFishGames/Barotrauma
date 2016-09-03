@@ -19,6 +19,7 @@ namespace Barotrauma.Networking
     enum ClientNetObject
     {
         END_OF_MESSAGE, //self-explanatory
+        SYNC_IDS, //ids of the last changes the client knows about
         CHAT_MESSAGE, //also self-explanatory
         VOTE, //you get the idea
         CHARACTER_INPUT,
@@ -35,6 +36,7 @@ namespace Barotrauma.Networking
     enum ServerNetObject
     {
         END_OF_MESSAGE,
+        SYNC_IDS,
         CHAT_MESSAGE,
         VOTE,
         CHARACTER_POSITION,

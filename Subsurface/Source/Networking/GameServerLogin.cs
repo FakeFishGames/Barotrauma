@@ -27,7 +27,7 @@ namespace Barotrauma.Networking
             failedAttempts = 0;
         }
     }
-
+    
     partial class GameServer : NetworkMember, IPropertyObject
     {
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
@@ -101,9 +101,10 @@ namespace Barotrauma.Networking
                     unauthClient.failedAttempts++;
                     if (unauthClient.failedAttempts > 3)
                     {
-                        //disconnect after too many failed attempts
-                        unauthClient.Connection.Disconnect("Too many failed login attempts.");
+                        //disconnect and ban after too many failed attempts
+                        unauthClient.Connection.Disconnect("Too many failed login attempts. You have been automatically banned from the server.");
                         unauthenticatedClients.Remove(unauthClient);
+                        banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString());
                         unauthClient = null;
                         return;
                     }
@@ -112,7 +113,7 @@ namespace Barotrauma.Networking
                         //not disconnecting the player here, because they'll still use the same connection and nonce if they try logging in again
                         NetOutgoingMessage reject = server.CreateMessage();
                         reject.Write((byte)ServerPacketHeader.AUTH_FAILURE);
-                        reject.Write("Wrong password!");
+                        reject.Write("Wrong password! You have "+Convert.ToString(4-unauthClient.failedAttempts)+" more attempts before you're banned from the server.");
                         server.SendMessage(reject, unauthClient.Connection, NetDeliveryMethod.Unreliable);
                         unauthClient.AuthTimer = 10.0f;
                         return;
@@ -171,6 +172,7 @@ namespace Barotrauma.Networking
                     //both name and IP address match, replace this player's connection
                     nameTaken.Connection.Disconnect("Your session was taken by a new connection on the same IP address.");
                     nameTaken.Connection = unauthClient.Connection;
+                    nameTaken.InitClientSync(); //reinitialize sync ids because this is a new connection
                     unauthenticatedClients.Remove(unauthClient);
                     unauthClient = null;
                     return;
@@ -187,7 +189,7 @@ namespace Barotrauma.Networking
 
             //new client
             Client newClient = new Client(clName, GetNewClientID());
-            newClient.lastRecvChatMsgID = ChatMessage.LastID;
+            newClient.InitClientSync();
             newClient.Connection = unauthClient.Connection;
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
