@@ -685,15 +685,15 @@ namespace Barotrauma.Networking
 
                 var banButton = new GUIButton(new Rectangle(-110, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
                 banButton.UserData = c.name;
-                banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+                banButton.OnClicked = GameMain.NetLobbyScreen.BanPlayer;
 
                 var rangebanButton = new GUIButton(new Rectangle(-220, 0, 100, 20), "Ban range", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
                 rangebanButton.UserData = c.name;
-                rangebanButton.OnClicked += GameMain.NetLobbyScreen.BanPlayerRange;
+                rangebanButton.OnClicked = GameMain.NetLobbyScreen.BanPlayerRange;
 
                 var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
                 kickButton.UserData = c.name;
-                kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
+                kickButton.OnClicked = GameMain.NetLobbyScreen.KickPlayer;
 
                 textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
             }

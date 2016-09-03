@@ -21,6 +21,8 @@ namespace Barotrauma.Networking
 
     class WhiteList
     {
+        const string SavePath = "Data/whitelist.txt";
+
         private List<WhiteListedPlayer> whitelistedPlayers;
         public List<WhiteListedPlayer> WhiteListedPlayers
         {
@@ -44,8 +46,77 @@ namespace Barotrauma.Networking
         {
             enabled = false;
             whitelistedPlayers = new List<WhiteListedPlayer>();
+
+            if (File.Exists(SavePath))
+            {
+                string[] lines;
+                try
+                {
+                    lines = File.ReadAllLines(SavePath);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to open whitelist in " + SavePath, e);
+                    return;
+                }
+
+                foreach (string line in lines)
+                {
+                    if (line[0] == '#')
+                    {
+                        string lineval = line.Substring(1, line.Length - 1);
+                        if (lineval.ToLower()=="true" || Convert.ToInt32(lineval)!=0)
+                        {
+                            enabled = true;
+                        }
+                        else
+                        {
+                            enabled = false;
+                        }
+                    }
+                    else
+                    {
+                        string[] separatedLine = line.Split(',');
+                        if (separatedLine.Length < 2) continue;
+
+                        string name = String.Join(",", separatedLine.Take(separatedLine.Length - 1));
+                        string ip = separatedLine.Last();
+
+                        whitelistedPlayers.Add(new WhiteListedPlayer(name, ip));
+                    }
+                }
+            }
         }
-        
+
+        public void Save()
+        {
+            GameServer.Log("Saving whitelist", null);
+
+            List<string> lines = new List<string>();
+
+            if (enabled)
+            {
+                lines.Add("#true");
+            }
+            else
+            {
+                lines.Add("#false");
+            }
+            foreach (WhiteListedPlayer wlp in whitelistedPlayers)
+            {
+                lines.Add(wlp.Name + "," + wlp.IP);
+            }
+
+            try
+            {
+                File.WriteAllLines(SavePath, lines);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving the whitelist to " + SavePath + " failed", e);
+            }
+        }
+
         public bool IsWhiteListed(string name, string ip)
         {
             if (!enabled) return true;
@@ -71,6 +142,18 @@ namespace Barotrauma.Networking
             enabledTick.OnSelected = (GUITickBox box) =>
             {
                 enabled = !enabled;
+                if (enabled)
+                {
+                    foreach (Client c in GameMain.Server.ConnectedClients)
+                    {
+                        if (!IsWhiteListed(c.name,c.Connection.RemoteEndPoint.Address.ToString()))
+                        {
+                            whitelistedPlayers.Add(new WhiteListedPlayer(c.name, c.Connection.RemoteEndPoint.Address.ToString()));
+                            CloseFrame(); CreateWhiteListFrame();
+                        }
+                    }
+                }
+                Save();
                 return true;
             };
 
@@ -116,6 +199,7 @@ namespace Barotrauma.Networking
             GameServer.Log("Removing " + wlp.Name + " from whitelist", null);
 
             whitelistedPlayers.Remove(wlp);
+            Save();
             CloseFrame(); CreateWhiteListFrame();
 
             return true;
@@ -125,6 +209,7 @@ namespace Barotrauma.Networking
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text) || whitelistedPlayers.Find(x => x.Name.ToLower() == nameBox.Text.ToLower()) != null) return false;
             whitelistedPlayers.Add(new WhiteListedPlayer(nameBox.Text,ipBox.Text));
+            Save();
             CloseFrame(); CreateWhiteListFrame();
             return true;
         }
