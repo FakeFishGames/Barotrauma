@@ -45,7 +45,7 @@ namespace Barotrauma.Networking
                 inc.SenderConnection.Deny("Connection error - already joined");
                 return;
             }
-                        
+
             int nonce = CryptoRandom.Instance.Next();
             var msg = server.CreateMessage();
             msg.Write(nonce);
@@ -57,6 +57,7 @@ namespace Barotrauma.Networking
 
         private void CheckAuthentication(NetIncomingMessage inc)
         {
+            string whitelistPw = "";
             var unauthenticatedClient = unauthenticatedClients.Find(uc => uc.Connection == inc.SenderConnection);
             if (unauthenticatedClient != null)
             {
@@ -69,10 +70,26 @@ namespace Barotrauma.Networking
                 inc.Decrypt(algo);
 
                 string rdPw = inc.ReadString();
-                if (rdPw != saltedPw)
+                if (!whitelist.enabled)
                 {
-                    inc.SenderConnection.Disconnect("Wrong password!");
-                    return;
+                    if (rdPw != saltedPw)
+                    {
+                        inc.SenderConnection.Disconnect("Wrong password!");
+                        return;
+                    }
+                }
+                else
+                {
+                    WhiteListedPlayer wlp = whitelist.WhiteListedPlayers.Find(x => x.GetHashedPassword(unauthenticatedClient.Nonce) == saltedPw);
+                    if (wlp==null)
+                    {
+                        inc.SenderConnection.Disconnect("Wrong password or name!");
+                        return;
+                    }
+                    else
+                    {
+                        whitelistPw = wlp.Password;
+                    }
                 }
             }
             else
