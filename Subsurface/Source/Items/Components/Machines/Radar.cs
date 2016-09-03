@@ -403,9 +403,29 @@ namespace Barotrauma.Items.Components
         {
             if (pingCircle!=null) pingCircle.Remove();
             if (screenOverlay != null) screenOverlay.Remove();
-
         }
-        
+
+        public override void ClientWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            msg.Write(IsActive);
+        }
+
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            IsActive = msg.ReadBoolean();
+            isActiveTickBox.Selected = IsActive;
+        }
+
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            msg.Write(IsActive);
+        }
+
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            IsActive = msg.ReadBoolean();
+            isActiveTickBox.Selected = IsActive;
+        }        
     }
 
     class RadarBlip
