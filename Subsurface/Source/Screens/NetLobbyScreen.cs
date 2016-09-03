@@ -414,7 +414,11 @@ namespace Barotrauma
                 GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, GUI.Style, infoFrame);
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
                 settingsButton.UserData = "settingsButton";
-                
+
+                GUIButton whitelistButton = new GUIButton(new Rectangle(-200, 0, 80, 30), "Whitelist", Alignment.BottomRight, GUI.Style, infoFrame);
+                whitelistButton.OnClicked = GameMain.Server.ToggleWhiteListFrame;
+                whitelistButton.UserData = "whitelistButton";
+
                 if (subList.Selected == null) subList.Select(Math.Max(0, prevSelectedSub));
                 if (shuttleList.Selected == null)
                 {
@@ -788,7 +792,7 @@ namespace Barotrauma
 
             playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.3f);
 
-            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 150), null, Alignment.Center, GUI.Style, playerFrame);
+            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 250), null, Alignment.Center, GUI.Style, playerFrame);
             playerFrameInner.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0,0,200,20), component.UserData.ToString(), 
@@ -849,7 +853,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
             {
-                var kickButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+                var kickButton = new GUIButton(new Rectangle(0, -50, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, playerFrameInner);
                 kickButton.UserData = obj;
                 kickButton.OnClicked += KickPlayer;
                 kickButton.OnClicked += ClosePlayerFrame;
@@ -861,6 +865,11 @@ namespace Barotrauma
                 banButton.UserData = obj;
                 banButton.OnClicked += BanPlayer;
                 banButton.OnClicked += ClosePlayerFrame;
+
+                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+                rangebanButton.UserData = obj;
+                rangebanButton.OnClicked += BanPlayerRange;
+                rangebanButton.OnClicked += ClosePlayerFrame;
             }
 
             var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, playerFrameInner);
@@ -903,7 +912,23 @@ namespace Barotrauma
             else if (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.Ban))
             {
                 GameMain.Client.KickPlayer(userData.ToString(), true);
-            }         
+            }
+
+            return false;
+        }
+
+        public bool BanPlayerRange(GUIButton button, object userData)
+        {
+            if (userData == null) return false;
+
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.KickPlayer(userData.ToString(), true, true);
+            }
+            else if (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.Ban))
+            {
+                GameMain.Client.KickPlayer(userData.ToString(), true, true);
+            }
 
             return false;
         }

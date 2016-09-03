@@ -34,25 +34,39 @@ namespace Barotrauma
     {
         const int GridSize = 1000;
 
-        private List<BackgroundSpritePrefab> prefabs;
-        //private List<BackgroundSprite> sprites;
+        private List<BackgroundSpritePrefab> prefabs = new List<BackgroundSpritePrefab>();
+
 
         private List<BackgroundSprite>[,] sprites;
 
         public BackgroundSpriteManager(string configPath)
         {
-            //sprites = new List<BackgroundSprite>[2,2]();
-            prefabs = new List<BackgroundSpritePrefab>();
-
-            XDocument doc = ToolBox.TryLoadXml(configPath);
-            if (doc == null || doc.Root == null) return;
-
-            foreach (XElement element in doc.Root.Elements())
+            LoadConfig(configPath);
+        }
+        public BackgroundSpriteManager(List<string> files)
+        {
+            foreach (var file in files)
             {
-                prefabs.Add(new BackgroundSpritePrefab(element));
+                LoadConfig(file);
             }
         }
+        private void LoadConfig(string configPath)
+        {
+            try
+            {
+                XDocument doc = ToolBox.TryLoadXml(configPath);
+                if (doc == null || doc.Root == null) return;
 
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    prefabs.Add(new BackgroundSpritePrefab(element));
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError(String.Format("Failed to load BackgroundSprites from {0}", configPath), e);
+            }
+        }
         public void PlaceSprites(Level level, int amount)
         {
             sprites = new List<BackgroundSprite>[
