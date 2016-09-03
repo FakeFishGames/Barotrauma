@@ -774,7 +774,7 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        public override void KickPlayer(string playerName, bool ban)
+        public override void KickPlayer(string playerName, bool ban, bool range=false)
         {
             playerName = playerName.ToLowerInvariant();
 
@@ -782,10 +782,10 @@ namespace Barotrauma.Networking
                 c.name.ToLowerInvariant() == playerName ||
                 (c.Character != null && c.Character.Name.ToLowerInvariant() == playerName));
 
-            KickClient(client, ban);
+            KickClient(client, ban, range);
         }
 
-        public void KickClient(NetConnection conn, bool ban = false)
+        public void KickClient(NetConnection conn, bool ban = false, bool range = false)
         {
             Client client = connectedClients.Find(c => c.Connection == conn);
             if (client == null)
@@ -801,18 +801,20 @@ namespace Barotrauma.Networking
             }
             else
             {
-                KickClient(client, ban);
+                KickClient(client, ban, range);
             }
         }
 
-        public void KickClient(Client client, bool ban = false)
+        public void KickClient(Client client, bool ban = false, bool range = false)
         {
             if (client == null) return;
 
             if (ban)
             {
                 DisconnectClient(client, client.name + " has been banned from the server", "You have been banned from the server");
-                banList.BanPlayer(client.name, client.Connection.RemoteEndPoint.Address.ToString());
+                string ip = client.Connection.RemoteEndPoint.Address.ToString();
+                if (range) { ip = banList.ToRange(ip); }
+                banList.BanPlayer(client.name, ip);
             }
             else
             {

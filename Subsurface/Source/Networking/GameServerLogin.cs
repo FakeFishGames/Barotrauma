@@ -157,8 +157,7 @@ namespace Barotrauma.Networking
                 unauthClient = null;
                 return;
             }
-
-#endif
+            
             if (!whitelist.IsWhiteListed(name, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
                 inc.SenderConnection.Disconnect("You're not in this server's whitelist.");
