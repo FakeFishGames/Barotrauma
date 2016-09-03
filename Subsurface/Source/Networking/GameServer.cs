@@ -116,6 +116,12 @@ namespace Barotrauma.Networking
             settingsButton.OnClicked = ToggleSettingsFrame;
             settingsButton.UserData = "settingsButton";
 
+            whitelist = new WhiteList();
+
+            GUIButton whitelistButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170 - 170, 20, 150, 20), "Whitelist", Alignment.TopLeft, GUI.Style, inGameHUD);
+            whitelistButton.OnClicked = ToggleWhiteListFrame;
+            whitelistButton.UserData = "whitelistButton";
+
             banList = new BanList();
 
             LoadSettings();
@@ -284,6 +290,7 @@ namespace Barotrauma.Networking
         {
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
+            if (whitelist.WhiteListFrame != null) whitelist.WhiteListFrame.Update(deltaTime);
 
             if (!started) return;
 
@@ -895,6 +902,10 @@ namespace Barotrauma.Networking
                 log.LogFrame.Update(0.016f);
                 log.LogFrame.Draw(spriteBatch);
             }
+            else if (whitelist.WhiteListFrame != null)
+            {
+                whitelist.WhiteListFrame.Draw(spriteBatch);
+            }
 
             if (!ShowNetStats) return;
 
@@ -1008,6 +1019,10 @@ namespace Barotrauma.Networking
                 var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, GUI.Style, characterFrame);
                 banButton.UserData = character.Name;
                 banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+
+                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomRight, GUI.Style, characterFrame);
+                rangebanButton.UserData = character.Name;
+                rangebanButton.OnClicked += GameMain.NetLobbyScreen.BanPlayerRange;
 
                 var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
                 kickButton.UserData = character.Name;

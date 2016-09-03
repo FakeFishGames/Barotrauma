@@ -157,6 +157,14 @@ namespace Barotrauma.Networking
                 unauthClient = null;
                 return;
             }
+
+#endif
+            if (!whitelist.IsWhiteListed(name, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
+            {
+                inc.SenderConnection.Disconnect("You're not in this server's whitelist.");
+                DebugConsole.NewMessage(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", Color.Red);
+                return;
+            }
             if (!Client.IsValidName(name))
             {
                 unauthClient.Connection.Disconnect("Your name contains illegal symbols.");
