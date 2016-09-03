@@ -207,7 +207,8 @@ namespace Barotrauma.Networking
 
         private bool AddToWhiteList(GUIButton button, object obj)
         {
-            if (string.IsNullOrWhiteSpace(nameBox.Text) || whitelistedPlayers.Find(x => x.Name.ToLower() == nameBox.Text.ToLower()) != null) return false;
+            if (string.IsNullOrWhiteSpace(nameBox.Text)) return false;
+            if (whitelistedPlayers.Find(x => x.Name.ToLower() == nameBox.Text.ToLower() && x.IP == ipBox.Text) != null) return false;
             whitelistedPlayers.Add(new WhiteListedPlayer(nameBox.Text,ipBox.Text));
             Save();
             CloseFrame(); CreateWhiteListFrame();
