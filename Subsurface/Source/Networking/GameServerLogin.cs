@@ -102,9 +102,9 @@ namespace Barotrauma.Networking
                     if (unauthClient.failedAttempts > 3)
                     {
                         //disconnect and ban after too many failed attempts
+                        banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString());
                         unauthClient.Connection.Disconnect("Too many failed login attempts. You have been automatically banned from the server.");
                         unauthenticatedClients.Remove(unauthClient);
-                        banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString());
                         unauthClient = null;
                         return;
                     }
