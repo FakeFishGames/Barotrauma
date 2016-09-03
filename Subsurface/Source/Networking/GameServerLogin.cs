@@ -149,7 +149,7 @@ namespace Barotrauma.Networking
             if (!whitelist.IsWhiteListed(name, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
                 inc.SenderConnection.Disconnect("You're not in this server's whitelist.");
-                DebugConsole.NewMessage(name + " couldn't join the server (not in whitelist)", Color.Red);
+                DebugConsole.NewMessage(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", Color.Red);
                 return;
             }
 
