@@ -12,6 +12,20 @@ namespace Barotrauma.Networking
         public string Name;
         public string IP;
 
+        public bool CompareTo(string ipCompare)
+        {
+            int rangeBanIndex = IP.IndexOf(".x");
+            if (rangeBanIndex<=-1)
+            {
+                return ipCompare == IP;
+            }
+            else
+            {
+                if (ipCompare.Length < rangeBanIndex) return false;
+                return ipCompare.Substring(0, rangeBanIndex) == IP.Substring(0, rangeBanIndex);
+            }
+        }
+
         public BannedPlayer(string name, string ip)
         {
             this.Name = name;
@@ -74,7 +88,7 @@ namespace Barotrauma.Networking
 
         public bool IsBanned(string IP)
         {
-            return bannedPlayers.Any(bp => bp.IP == IP);
+            return bannedPlayers.Any(bp => bp.CompareTo(IP));
         }
 
         public GUIComponent CreateBanFrame(GUIComponent parent)
@@ -94,6 +108,12 @@ namespace Barotrauma.Networking
                 var removeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, GUI.Style, textBlock);
                 removeButton.UserData = bannedPlayer;
                 removeButton.OnClicked = RemoveBan;
+                if (bannedPlayer.IP.IndexOf(".x") <= -1)
+                {
+                    var rangeBanButton = new GUIButton(new Rectangle(-100, 0, 100, 20), "Ban range", Alignment.Right | Alignment.CenterY, GUI.Style, textBlock);
+                    rangeBanButton.UserData = bannedPlayer;
+                    rangeBanButton.OnClicked = RangeBan;
+                }
             }
 
             return banFrame;
@@ -108,6 +128,46 @@ namespace Barotrauma.Networking
             GameServer.Log("Removing ban from " + banned.Name, null);
 
             bannedPlayers.Remove(banned);
+
+            Save();
+
+            if (banFrame != null)
+            {
+                banFrame.Parent.RemoveChild(banFrame);
+                CreateBanFrame(banFrame.Parent);
+            }
+
+            return true;
+        }
+
+        public string ToRange(string ip)
+        {
+            for (int i = ip.Length - 1; i > 0; i--)
+            {
+                if (ip[i] == '.')
+                {
+                    ip = ip.Substring(0, i) + ".x";
+                    break;
+                }
+            }
+            return ip;
+        }
+
+        private bool RangeBan(GUIButton button, object obj)
+        {
+            BannedPlayer banned = obj as BannedPlayer;
+            if (banned == null) return false;
+
+            banned.IP = ToRange(banned.IP);
+
+            BannedPlayer bp;
+            while ((bp = bannedPlayers.Find(x => banned.CompareTo(x.IP)))!=null)
+            {
+                //remove all specific bans that are now covered by the rangeban
+                bannedPlayers.Remove(bp);
+            }
+
+            bannedPlayers.Add(banned);
 
             Save();
 

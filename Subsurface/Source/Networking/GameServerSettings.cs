@@ -55,6 +55,7 @@ namespace Barotrauma.Networking
         
         private bool registeredToMaster;
 
+        private WhiteList whitelist;
         private BanList banList;
 
         private string password;
@@ -257,7 +258,7 @@ namespace Barotrauma.Networking
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);            
+            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
 
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 430), null, Alignment.Center, GUI.Style, settingsFrame);
             innerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
@@ -647,6 +648,20 @@ namespace Barotrauma.Networking
             return false;
         }
 
+        public bool ToggleWhiteListFrame(GUIButton button, object obj)
+        {
+            if (whitelist.WhiteListFrame == null)
+            {
+                whitelist.CreateWhiteListFrame();
+            }
+            else
+            {
+                whitelist.CloseFrame();
+            }
+
+            return false;
+        }
+
         public void ManagePlayersFrame(GUIFrame infoFrame)
         {
             GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.Style, infoFrame);
@@ -668,9 +683,13 @@ namespace Barotrauma.Networking
                     Alignment.Left, Alignment.Left,
                     null, frame);
 
-                var banButton = new GUIButton(new Rectangle(-120, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                var banButton = new GUIButton(new Rectangle(-110, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
                 banButton.UserData = c.name;
                 banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+
+                var rangebanButton = new GUIButton(new Rectangle(-220, 0, 100, 20), "Ban range", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                rangebanButton.UserData = c.name;
+                rangebanButton.OnClicked += GameMain.NetLobbyScreen.BanPlayerRange;
 
                 var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
                 kickButton.UserData = c.name;
