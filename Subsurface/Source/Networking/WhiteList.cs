@@ -10,22 +10,12 @@ namespace Barotrauma.Networking
     class WhiteListedPlayer
     {
         public string Name;
-        public string Password;
         public string IP;
 
-        public WhiteListedPlayer(string name,string password,string ip)
+        public WhiteListedPlayer(string name,string ip)
         {
             Name = name;
-            Password = password;
             IP = ip;
-        }
-
-        public string GetHashedPassword(int nonce)
-        {
-            string saltedPw = Password;
-            saltedPw = saltedPw + Convert.ToString(nonce);
-            saltedPw = Encoding.UTF8.GetString(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(saltedPw)));
-            return saltedPw;
         }
     }
 
@@ -42,7 +32,6 @@ namespace Barotrauma.Networking
 
         private GUITextBox nameBox;
         private GUITextBox ipBox;
-        private GUITextBox pwBox;
 
         public bool enabled;
 
@@ -57,12 +46,11 @@ namespace Barotrauma.Networking
             whitelistedPlayers = new List<WhiteListedPlayer>();
         }
         
-        public bool IsWhiteListed(string name, string password, string ip)
+        public bool IsWhiteListed(string name, string ip)
         {
             if (!enabled) return true;
             WhiteListedPlayer wlp = whitelistedPlayers.Find(p => p.Name == name);
             if (wlp == null) return false;
-            if (wlp.Password != password && !string.IsNullOrWhiteSpace(wlp.Password)) return false;
             if (wlp.IP != ip && !string.IsNullOrWhiteSpace(wlp.IP)) return false;
             return true;
         }
@@ -71,10 +59,10 @@ namespace Barotrauma.Networking
         {
             whitelistFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 500, 460), null, Alignment.Center, GUI.Style, whitelistFrame);
-            innerFrame.Padding = new Vector4(20.0f, 50.0f, 20.0f, 130.0f);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 500, 430), null, Alignment.Center, GUI.Style, whitelistFrame);
+            innerFrame.Padding = new Vector4(20.0f, 50.0f, 20.0f, 100.0f);
 
-            var closeButton = new GUIButton(new Rectangle(0, 115, 100, 20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
+            var closeButton = new GUIButton(new Rectangle(0, 85, 100, 20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
             closeButton.OnClicked = GameMain.Server.ToggleWhiteListFrame;
 
             new GUITextBlock(new Rectangle(0, -35, 200, 20), "Whitelist", GUI.Style, innerFrame, GUI.LargeFont);
@@ -90,15 +78,11 @@ namespace Barotrauma.Networking
             nameBox = new GUITextBox(new Rectangle(100, 30, 170, 25), Alignment.BottomLeft, GUI.Style, innerFrame);
             nameBox.Font = GUI.Font;
 
-            new GUITextBlock(new Rectangle(0, 65, 90, 25), "Password:", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, innerFrame, false, GUI.Font);
-            pwBox = new GUITextBox(new Rectangle(100, 60, 170, 25), Alignment.BottomLeft, GUI.Style, innerFrame);
-            pwBox.Font = GUI.Font;
-
-            new GUITextBlock(new Rectangle(0, 95, 90, 25), "IP Address:", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, innerFrame, false, GUI.Font);
-            ipBox = new GUITextBox(new Rectangle(100, 90, 170, 25), Alignment.BottomLeft, GUI.Style, innerFrame);
+            new GUITextBlock(new Rectangle(0, 65, 90, 25), "IP Address:", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, innerFrame, false, GUI.Font);
+            ipBox = new GUITextBox(new Rectangle(100, 60, 170, 25), Alignment.BottomLeft, GUI.Style, innerFrame);
             ipBox.Font = GUI.Font;
 
-            var addnewButton = new GUIButton(new Rectangle(300, 55, 150, 20), "Add to whitelist", Alignment.BottomLeft, GUI.Style, innerFrame);
+            var addnewButton = new GUIButton(new Rectangle(300, 45, 150, 20), "Add to whitelist", Alignment.BottomLeft, GUI.Style, innerFrame);
             addnewButton.OnClicked = AddToWhiteList;
 
             innerlistFrame = new GUIListBox(new Rectangle(0, 0, 0, 0), GUI.Style, innerFrame);
@@ -140,7 +124,7 @@ namespace Barotrauma.Networking
         private bool AddToWhiteList(GUIButton button, object obj)
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text) || whitelistedPlayers.Find(x => x.Name.ToLower() == nameBox.Text.ToLower()) != null) return false;
-            whitelistedPlayers.Add(new WhiteListedPlayer(nameBox.Text,pwBox.Text,ipBox.Text));
+            whitelistedPlayers.Add(new WhiteListedPlayer(nameBox.Text,ipBox.Text));
             CloseFrame(); CreateWhiteListFrame();
             return true;
         }

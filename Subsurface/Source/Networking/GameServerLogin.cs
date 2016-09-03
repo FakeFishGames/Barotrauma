@@ -57,7 +57,6 @@ namespace Barotrauma.Networking
 
         private void CheckAuthentication(NetIncomingMessage inc)
         {
-            string whitelistPw = "";
             var unauthenticatedClient = unauthenticatedClients.Find(uc => uc.Connection == inc.SenderConnection);
             if (unauthenticatedClient != null)
             {
@@ -70,26 +69,10 @@ namespace Barotrauma.Networking
                 inc.Decrypt(algo);
 
                 string rdPw = inc.ReadString();
-                if (!whitelist.enabled)
+                if (rdPw != saltedPw)
                 {
-                    if (rdPw != saltedPw)
-                    {
-                        inc.SenderConnection.Disconnect("Wrong password!");
-                        return;
-                    }
-                }
-                else
-                {
-                    WhiteListedPlayer wlp = whitelist.WhiteListedPlayers.Find(x => x.GetHashedPassword(unauthenticatedClient.Nonce) == saltedPw);
-                    if (wlp==null)
-                    {
-                        inc.SenderConnection.Disconnect("Wrong password or name!");
-                        return;
-                    }
-                    else
-                    {
-                        whitelistPw = wlp.Password;
-                    }
+                    inc.SenderConnection.Disconnect("Wrong password!");
+                    return;
                 }
             }
             else
@@ -163,6 +146,12 @@ namespace Barotrauma.Networking
             }
 
 #endif
+            if (!whitelist.IsWhiteListed(name, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
+            {
+                inc.SenderConnection.Disconnect("You're not in this server's whitelist.");
+                DebugConsole.NewMessage(name + " couldn't join the server (not in whitelist)", Color.Red);
+                return;
+            }
 
             //existing user re-joining
             if (userID > 0)
