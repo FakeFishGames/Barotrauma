@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
-            float chargeRate = (float)(Math.Sqrt(charge / capacity));
+            float chargeRatio = (float)(Math.Sqrt(charge / capacity));
             float gridPower = 0.0f;
             float gridLoad = 0.0f;
 
@@ -134,7 +134,7 @@ namespace Barotrauma.Items.Components
 
             //float gridRate = voltage;
 
-            if (chargeRate > 0.0f)
+            if (chargeRatio > 0.0f)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
@@ -179,7 +179,7 @@ namespace Barotrauma.Items.Components
 
                     CurrPowerOutput = MathHelper.Lerp(
                        CurrPowerOutput,
-                       Math.Min(maxOutput * chargeRate, gridLoad - (gridLoad * outputVoltage)),
+                       Math.Min(maxOutput * chargeRatio, gridLoad - (gridLoad * outputVoltage)),
                        0.05f);
                 }
                 else
@@ -245,6 +245,32 @@ namespace Barotrauma.Items.Components
 
             spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
         }
-        
+
+        public override void ClientWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            float chargeSpeed = MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f);
+            msg.WriteRangedSingle(chargeSpeed, 0.0f, 1.0f, 8);
+        }
+
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            RechargeSpeed = msg.ReadRangedSingle(0.0f, 1.0f, 8) * maxRechargeSpeed;
+        }
+
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            float chargeSpeed = MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f);
+            msg.WriteRangedSingle(chargeSpeed, 0.0f, 1.0f, 8);
+
+            float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);
+            msg.WriteRangedSingle(chargeRatio, 0.0f, 1.0f, 8);
+        }
+
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            RechargeSpeed = msg.ReadRangedSingle(0.0f, 1.0f, 8) * maxRechargeSpeed;
+
+            Charge = msg.ReadRangedSingle(0.0f, 1.0f, 8) * capacity;
+        }        
     }
 }

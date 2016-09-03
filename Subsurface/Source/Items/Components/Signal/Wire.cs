@@ -525,6 +525,30 @@ namespace Barotrauma.Items.Components
 
             base.RemoveComponentSpecific();
         }
+
+        public override void ClientWrite(Lidgren.Network.NetOutgoingMessage msg)
+        {
+            msg.Write((byte)Math.Min(Nodes.Count, 255));
+            for (int i = 0; i < Math.Min(Nodes.Count, 255); i++)
+            {
+                msg.Write(Nodes[i].X);
+                msg.Write(Nodes[i].Y);
+            }
+        }
+
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        {
+            Nodes.Clear();
+
+            int nodeCount = msg.ReadByte();
+            for (int i = 0; i < nodeCount; i++)
+            {
+                Vector2 newNode = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                if (MathUtils.IsValid(newNode)) Nodes.Add(newNode);                
+            }
+
+            Drawable = Nodes.Any();
+        }
         
     }
 }
