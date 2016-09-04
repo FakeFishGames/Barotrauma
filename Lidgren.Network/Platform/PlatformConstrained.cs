@@ -66,7 +66,7 @@ namespace Lidgren.Network
 			return new IPAddress(bytes);
 		}
 
-		private static readonly SHA1 s_sha = SHA1.Create();
+		private static readonly SHA256 s_sha = SHA256.Create();
 		public static byte[] ComputeSHAHash(byte[] bytes, int offset, int count)
 		{
 			return s_sha.ComputeHash(bytes, offset, count);
