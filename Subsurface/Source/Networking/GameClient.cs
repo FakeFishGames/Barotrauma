@@ -1025,7 +1025,7 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public override void KickPlayer(string kickedName, bool ban)
+        public override void KickPlayer(string kickedName, bool ban, bool range = false)
         {
             if (!permissions.HasFlag(ClientPermissions.Kick) && !ban) return;
             if (!permissions.HasFlag(ClientPermissions.Ban) && ban) return;

@@ -159,6 +159,7 @@
     <Compile Include="Source\Networking\ReliableSender.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
+    <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\Particles\ParticleEmitter.cs" />
     <Compile Include="Source\Networking\GameServerSettings.cs" />
     <Compile Include="Source\Screens\BlurEffect.cs" />
@@ -352,7 +353,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Charybdis\charybdis.xml">
-      <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Coelanth\coelanth.png">

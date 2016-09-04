@@ -30,7 +30,7 @@ namespace Barotrauma
         
         public LevelRenderer(Level level)
         {
-            if (shaftTexture == null) shaftTexture = TextureLoader.FromFile("Content/Map/shaft.png");
+            if (shaftTexture == null) shaftTexture = TextureLoader.FromFile("Content/Map/iceWall.png");
 
             if (background==null)
             {
@@ -50,7 +50,12 @@ namespace Barotrauma
             
             if (backgroundSpriteManager==null)
             {
-                backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
+
+                var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundSpritePrefabs);
+                if (files.Count > 0)
+                    backgroundSpriteManager = new BackgroundSpriteManager(files);
+                else
+                    backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
             }
 
             this.level = level;
@@ -173,22 +178,21 @@ namespace Barotrauma
 
             Vector2 pos = new Vector2(0.0f, -level.Size.Y);// level.EndPosition;
 
-            if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y - 512) return;
+            if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y - 1024) return;
 
-            pos.X = GameMain.GameScreen.Cam.WorldView.X -512.0f;
+            pos.X = GameMain.GameScreen.Cam.WorldView.X -1024;
 
-            int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 512.0f + 2.0f) * 512.0f);
+            int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 1024 + 4.0f) * 1024);
 
+            GUI.DrawRectangle(spriteBatch,new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)-GameMain.GameScreen.Cam.WorldView.Y, width, (int)(GameMain.GameScreen.Cam.WorldView.Y - level.Size.Y) + 30),Color.Black, true);
             spriteBatch.Draw(shaftTexture,
-                new Rectangle((int)(MathUtils.Round(pos.X, 512.0f)), (int)pos.Y, width, 512),
-                new Rectangle(0, 0, width, 256),
+                new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)pos.Y, width, 1024),
+                new Rectangle(0, 0, width, 1024),
                 level.BackgroundColor, 0.0f,
                 Vector2.Zero,
                 SpriteEffects.None, 0.0f);
 
-            GUI.DrawRectangle(spriteBatch, 
-                new Rectangle((int)(MathUtils.Round(pos.X, 512.0f)), (int)-GameMain.GameScreen.Cam.WorldView.Y, width, (int)(GameMain.GameScreen.Cam.WorldView.Y - level.Size.Y)+10), 
-                Color.Black, true );
+
 
             //background.DrawTiled(spriteBatch,
             //           (backgroundPos.Y < 0) ? new Vector2(0.0f, -backgroundPos.Y) : Vector2.Zero,
@@ -199,6 +203,7 @@ namespace Barotrauma
 
         public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
         {
+
             if (wallVertices == null) return;
             
             basicEffect.World = cam.ShaderTransform

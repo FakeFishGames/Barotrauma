@@ -114,6 +114,12 @@ namespace Barotrauma.Networking
             settingsButton.OnClicked = ToggleSettingsFrame;
             settingsButton.UserData = "settingsButton";
 
+            whitelist = new WhiteList();
+
+            GUIButton whitelistButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170 - 170, 20, 150, 20), "Whitelist", Alignment.TopLeft, GUI.Style, inGameHUD);
+            whitelistButton.OnClicked = ToggleWhiteListFrame;
+            whitelistButton.UserData = "whitelistButton";
+
             banList = new BanList();
 
             LoadSettings();
@@ -282,6 +288,7 @@ namespace Barotrauma.Networking
         {
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
+            if (whitelist.WhiteListFrame != null) whitelist.WhiteListFrame.Update(deltaTime);
 
             if (!started) return;
 
@@ -477,6 +484,11 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case NetIncomingMessageType.Data:
+                    if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+                    {
+                        inc.SenderConnection.Disconnect("You have been banned from the server");
+                        return;
+                    }
 
                     byte packetType = inc.ReadByte();
 
@@ -1172,7 +1184,7 @@ namespace Barotrauma.Networking
             //if (GameMain.GameSession!=null) GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
         }
 
-        public override void KickPlayer(string playerName, bool ban)
+        public override void KickPlayer(string playerName, bool ban, bool range = false)
         {
             playerName = playerName.ToLowerInvariant();
 
@@ -1180,17 +1192,19 @@ namespace Barotrauma.Networking
                 c.name.ToLowerInvariant() == playerName ||
                 (c.Character != null && c.Character.Name.ToLowerInvariant() == playerName));
 
-            KickClient(client, ban);
+            KickClient(client, ban, range);
         }
 
-        public void KickClient(Client client, bool ban = false)
+        public void KickClient(Client client, bool ban = false, bool range = false)
         {
             if (client == null) return;
 
             if (ban)
             {
                 DisconnectClient(client, client.name + " has been banned from the server", "You have been banned from the server");
-                banList.BanPlayer(client.name, client.Connection.RemoteEndPoint.Address.ToString());
+                string ip = client.Connection.RemoteEndPoint.Address.ToString();
+                if (range) { ip = banList.ToRange(ip); }
+                banList.BanPlayer(client.name, ip);
             }
             else
             {
@@ -1290,6 +1304,10 @@ namespace Barotrauma.Networking
             {
                 log.LogFrame.Update(0.016f);
                 log.LogFrame.Draw(spriteBatch);
+            }
+            else if (whitelist.WhiteListFrame != null)
+            {
+                whitelist.WhiteListFrame.Draw(spriteBatch);
             }
 
             if (!ShowNetStats) return;
@@ -1430,6 +1448,10 @@ namespace Barotrauma.Networking
                 var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, GUI.Style, characterFrame);
                 banButton.UserData = character.Name;
                 banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+
+                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomRight, GUI.Style, characterFrame);
+                rangebanButton.UserData = character.Name;
+                rangebanButton.OnClicked += GameMain.NetLobbyScreen.BanPlayerRange;
 
                 var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
                 kickButton.UserData = character.Name;
