@@ -65,7 +65,9 @@ namespace Barotrauma.Networking
                     if (line[0] == '#')
                     {
                         string lineval = line.Substring(1, line.Length - 1);
-                        if (lineval.ToLower()=="true" || Convert.ToInt32(lineval)!=0)
+                        int intVal = 0;
+                        Int32.TryParse(lineval, out intVal);
+                        if (lineval.ToLower() == "true" || intVal != 0)
                         {
                             enabled = true;
                         }
