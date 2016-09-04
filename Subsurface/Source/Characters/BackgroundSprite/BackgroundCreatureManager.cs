@@ -16,23 +16,37 @@ namespace Barotrauma
 
         float checkActiveTimer;
 
-        private List<BackgroundCreaturePrefab> prefabs;
-        private List<BackgroundCreature> activeSprites;
+        private List<BackgroundCreaturePrefab> prefabs = new List<BackgroundCreaturePrefab>();
+        private List<BackgroundCreature> activeSprites = new List<BackgroundCreature>();
 
         public BackgroundCreatureManager(string configPath)
         {
-            activeSprites = new List<BackgroundCreature>();
-            prefabs = new List<BackgroundCreaturePrefab>();
-
-            XDocument doc = ToolBox.TryLoadXml(configPath);
-            if (doc == null || doc.Root == null) return;
-
-            foreach (XElement element in doc.Root.Elements())
+            LoadConfig(configPath);
+        }
+        public BackgroundCreatureManager(List<string> files)
+        {
+            foreach(var file in files)
             {
-                prefabs.Add(new BackgroundCreaturePrefab(element));
+                LoadConfig(file);
             }
         }
+        private void LoadConfig(string configPath)
+        {
+            try
+            {
+                XDocument doc = ToolBox.TryLoadXml(configPath);
+                if (doc == null || doc.Root == null) return;
 
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    prefabs.Add(new BackgroundCreaturePrefab(element));
+                };
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError(String.Format("Failed to load BackgroundCreatures from {0}", configPath), e);
+            }
+        }
         public void SpawnSprites(int count, Vector2? position = null)
         {
             activeSprites.Clear();

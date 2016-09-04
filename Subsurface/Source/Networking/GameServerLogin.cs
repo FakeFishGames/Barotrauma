@@ -45,7 +45,7 @@ namespace Barotrauma.Networking
                 inc.SenderConnection.Deny("Connection error - already joined");
                 return;
             }
-                        
+
             int nonce = CryptoRandom.Instance.Next();
             var msg = server.CreateMessage();
             msg.Write(nonce);
@@ -146,6 +146,12 @@ namespace Barotrauma.Networking
             }
 
 #endif
+            if (!whitelist.IsWhiteListed(name, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
+            {
+                inc.SenderConnection.Disconnect("You're not in this server's whitelist.");
+                DebugConsole.NewMessage(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", Color.Red);
+                return;
+            }
 
             //existing user re-joining
             if (userID > 0)
