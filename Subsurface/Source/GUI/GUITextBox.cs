@@ -223,26 +223,6 @@ namespace Barotrauma
                 caretVisible = ((caretTimer * 1000.0f) % 1000) < 500;
             }
             
-            if (rect.Contains(PlayerInput.MousePosition))
-            {
-
-                state = ComponentState.Hover;                
-                if (PlayerInput.LeftButtonClicked())
-                {
-                    if (MouseOn != null && MouseOn != this && MouseOn!=textBlock && !MouseOn.IsParentOf(this)) return;
-
-                    Select();
-                    if (OnSelected != null) OnSelected(this, Keys.None);
-                }
-            }
-            else
-            {
-                state = ComponentState.None;
-
-            }
-
-            textBlock.State = state;
-
             if (keyboardDispatcher.Subscriber == this)
             {
                 Character.DisableControls = true;
@@ -267,6 +247,24 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
+
+            if (rect.Contains(PlayerInput.MousePosition) && Enabled &&
+                (MouseOn == null || MouseOn == this || IsParentOf(MouseOn) || MouseOn.IsParentOf(this)))
+            {
+
+                state = ComponentState.Hover;
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    Select();
+                    if (OnSelected != null) OnSelected(this, Keys.None);
+                }
+            }
+            else
+            {
+                state = ComponentState.None;
+            }
+
+            textBlock.State = state;
 
             DrawChildren(spriteBatch);
 

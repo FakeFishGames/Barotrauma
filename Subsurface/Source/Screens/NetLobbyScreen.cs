@@ -398,10 +398,6 @@ namespace Barotrauma
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
                 settingsButton.UserData = "settingsButton";
 
-                GUIButton whitelistButton = new GUIButton(new Rectangle(-200, 0, 80, 30), "Whitelist", Alignment.BottomRight, GUI.Style, infoFrame);
-                whitelistButton.OnClicked = GameMain.Server.ToggleWhiteListFrame;
-                whitelistButton.UserData = "whitelistButton";
-
                 if (subList.Selected == null) subList.Select(Math.Max(0, prevSelectedSub));
                 if (shuttleList.Selected == null)
                 {
