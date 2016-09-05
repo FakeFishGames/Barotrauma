@@ -557,6 +557,12 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
                                 GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);
                             }
+                            string selectSubName = inc.ReadString();
+                            string selectSubHash = inc.ReadString();
+                            GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
+                            string selectShuttleName = inc.ReadString();
+                            string selectShuttleHash = inc.ReadString();
+                            GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
                         }
                         lastRecvChatMsgID = inc.ReadUInt32();
                         break;
