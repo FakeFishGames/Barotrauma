@@ -622,9 +622,9 @@ namespace Barotrauma.Networking
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
                 outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
                 outmsg.Write(GameMain.NetLobbyScreen.ServerMessage);
+                var subList = GameMain.NetLobbyScreen.GetSubList();
                 if (c.lastRecvLobbyUpdate < 1)
                 {
-                    var subList = GameMain.NetLobbyScreen.GetSubList();
                     outmsg.Write((UInt16)subList.Count);
                     for (int i = 0; i < subList.Count; i++)
                     {
@@ -636,6 +636,10 @@ namespace Barotrauma.Networking
                 {
                     outmsg.Write((UInt16)0);
                 }
+                outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).Name);
+                outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).MD5Hash.ToString());
+                outmsg.Write((GameMain.NetLobbyScreen.ShuttleList.SelectedData as Submarine).Name);
+                outmsg.Write((GameMain.NetLobbyScreen.ShuttleList.SelectedData as Submarine).MD5Hash.ToString());
             }
             else
             {
