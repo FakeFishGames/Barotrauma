@@ -115,11 +115,6 @@ namespace Barotrauma.Networking
             settingsButton.UserData = "settingsButton";
 
             whitelist = new WhiteList();
-
-            GUIButton whitelistButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170 - 170, 20, 150, 20), "Whitelist", Alignment.TopLeft, GUI.Style, inGameHUD);
-            whitelistButton.OnClicked = ToggleWhiteListFrame;
-            whitelistButton.UserData = "whitelistButton";
-
             banList = new BanList();
 
             LoadSettings();
@@ -288,7 +283,6 @@ namespace Barotrauma.Networking
         {
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
-            if (whitelist.WhiteListFrame != null) whitelist.WhiteListFrame.Update(deltaTime);
 
             if (!started) return;
 
@@ -1304,10 +1298,6 @@ namespace Barotrauma.Networking
             {
                 log.LogFrame.Update(0.016f);
                 log.LogFrame.Draw(spriteBatch);
-            }
-            else if (whitelist.WhiteListFrame != null)
-            {
-                whitelist.WhiteListFrame.Draw(spriteBatch);
             }
 
             if (!ShowNetStats) return;
