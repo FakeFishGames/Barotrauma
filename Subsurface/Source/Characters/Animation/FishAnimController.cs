@@ -102,6 +102,8 @@ namespace Barotrauma
             else
             {
                 Limb head = GetLimb(LimbType.Head);
+                if (head == null) head = GetLimb(LimbType.Torso);
+
                 float rotation = MathUtils.WrapAngleTwoPi(head.Rotation);
                 rotation = MathHelper.ToDegrees(rotation);
 
@@ -147,11 +149,9 @@ namespace Barotrauma
             {
                 walkPos -= movement.Length();
 
-                float waveRotation = (float)Math.Sin(walkPos / waveLength) * waveAmplitude;
-                
-                float angle = MathUtils.GetShortestAngle(tail.body.Rotation, movementAngle + waveRotation);
+                float waveRotation = (float)Math.Sin(walkPos / waveLength);
 
-                tail.body.ApplyTorque(angle * tail.Mass);
+                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * waveAmplitude);
                 
                 //limbs[tailIndex].body.ApplyTorque((Math.Sign(angle) + Math.Max(Math.Min(angle * 10.0f, 10.0f), -10.0f)) * limbs[tailIndex].body.Mass);
                 //limbs[tailIndex].body.ApplyTorque(-limbs[tailIndex].body.AngularVelocity * 0.5f * limbs[tailIndex].body.Mass);
@@ -160,6 +160,8 @@ namespace Barotrauma
             Vector2 steerForce = Vector2.Zero;
 
             Limb head = GetLimb(LimbType.Head);
+            if (head == null) head = GetLimb(LimbType.Torso);
+
             if (head != null)
             {
                 float angle = (rotateTowardsMovement) ?
@@ -196,8 +198,12 @@ namespace Barotrauma
             for (int i = 0; i < Limbs.Count(); i++)
             {
                 if (steerForce != Vector2.Zero)
-                    Limbs[i].body.ApplyForce(steerForce * Limbs[i].SteerForce * Limbs[i].Mass);
+                {
+                    Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
+                    Limbs[i].body.ApplyForce(steerForce * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
 
+                }
+                    
                 if (Limbs[i].type != LimbType.Torso) continue;
 
                 float dist = (Limbs[0].SimPosition - Limbs[i].SimPosition).Length();

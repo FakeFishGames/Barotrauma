@@ -150,11 +150,13 @@
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
     <Compile Include="Source\Networking\Client.cs" />
+    <Compile Include="Source\Networking\FileStreamReceiver.cs" />
+    <Compile Include="Source\Networking\FileStreamSender.cs" />
     <Compile Include="Source\Networking\GameServerLogin.cs" />
-    <Compile Include="Source\Networking\INetSerializable.cs" />
     <Compile Include="Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
+    <Compile Include="Source\Networking\ReliableSender.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
@@ -240,6 +242,7 @@
     <Compile Include="Source\Map\Levels\VoronoiElements.cs" />
     <Compile Include="Source\Utils\MathUtils.cs" />
     <Compile Include="Source\Physics\PhysicsBody.cs" />
+    <Compile Include="Source\Networking\NetworkEvent.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Particles\Particle.cs" />
     <Compile Include="Source\Particles\ParticleManager.cs" />
@@ -344,6 +347,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\BackgroundSprites\vegetation2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Charybdis\charybdis.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Charybdis\charybdis.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Coelanth\coelanth.png">
@@ -1033,6 +1042,9 @@
     <None Include="Content\blurshader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Characters\Charybdis\charybdisattack.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Characters\Crawler\attack1.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -1277,6 +1289,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Music\Enter the Maze.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Music\Phantom From Space.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Music\Road to Hell.ogg">

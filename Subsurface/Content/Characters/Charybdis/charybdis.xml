@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Character name ="charybdis" humanoid="false" health="1000.0" bleedingdecreasespeed="0.2">
+  
+  <sound file="Content/Characters/Charybdis/charybdisattack.ogg" state="Attack" range="8000" />
+  
+  <ragdoll waveamplitude="150.0" wavelength="10000" swimspeed="4.0" scale="1.5" canentersubmarine="false">
+
+    <!-- body -->
+    <limb id = "0" radius="100" height="470" type="Torso" steerforce="1.0" pullpos="0,250">
+      <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="160,0,242,688" depth="0.015" origin="0.5,0.5"/>
+    </limb>
+    
+    <!-- lower yaw -->
+    <limb id = "1" radius="70" height="100" impacttolerance="50.0">
+      <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="416,0,192,256" depth="0.025" origin="0.65,0.5"/>
+      <attack range="300" duration="0.5" damage="5.00" bleedingdamage="50" structuredamage="500" damagetype="slash" torque="200" targetforce="-50"/>
+    </limb>
+
+    <!-- front fins -->    
+    <limb id = "2" radius="60" height="430">
+      <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="432,272,128,560" depth="0.008" origin="0.5,0.5"/>
+    </limb>
+
+    <!-- tail -->
+    <limb id = "3" radius="80" height="580" type="Tail">
+      <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="0,0,160,752" depth="0.02" origin="0.5,0.5"/>
+    </limb>
+    
+    <!-- body to lower yaw -->
+    <joint limb1="0" limb1anchor="48,128" limb2="1" limb2anchor="-30,-90" lowerlimit="-10" upperlimit="30"/>  
+    <!-- body to front fin -->
+    <joint limb1="0" limb1anchor="32,-32" limb2="2" limb2anchor="-32,260" lowerlimit="-50" upperlimit="0"/>
+    <!-- body to tail -->
+    <joint limb1="0" limb1anchor="0,-270" limb2="3" limb2anchor="0,280" lowerlimit="-20" upperlimit="20"/>    
+    
+  </ragdoll>
+
+  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="0.5" hearing="1.0"/>
+</Character>

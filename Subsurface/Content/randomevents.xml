@@ -41,6 +41,15 @@
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Charybdis/charybdis.xml"
+    spawndeep="true"
+    commonness="3"
+    difficulty="5"
+    minamount="1" maxamount="1"
+    spawntype="deep"
+    musictype="monster"/>
+  
+  <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Endworm/endworm.xml"
     spawndeep="true"
     commonness="1"

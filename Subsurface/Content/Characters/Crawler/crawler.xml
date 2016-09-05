@@ -7,7 +7,7 @@
   <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
   <ragdoll headposition="50" headangle="-70" 
-           waveamplitude="50.0" wavelength="2500" 
+           waveamplitude="5.0" wavelength="5000" 
            swimspeed="2.0" walkspeed="2.0"
            stepsize ="15.0,20.0"           
            legtorque="10"
