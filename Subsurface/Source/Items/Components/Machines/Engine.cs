@@ -133,8 +133,7 @@ namespace Barotrauma.Items.Components
                 float tempForce;
                 if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempForce))
                 {
-                    targetForce = tempForce;
-                    targetForce = MathHelper.Clamp(targetForce, -100.0f, 100.0f);
+                    targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
                 }
             }  
         }

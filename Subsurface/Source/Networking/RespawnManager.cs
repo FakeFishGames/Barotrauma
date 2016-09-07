@@ -230,7 +230,7 @@ namespace Barotrauma.Networking
             {
                 updateReturnTimer = 0.0f;
                 
-                respawnShuttle.SubBody.Body.IgnoreCollisionWith(Level.Loaded.ShaftBodies[0]);
+                respawnShuttle.SubBody.Body.IgnoreCollisionWith(Level.Loaded.ShaftBody);
 
                 shuttleSteering.AutoPilot = true;
                 shuttleSteering.MaintainPos = false;
@@ -298,7 +298,7 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
         {
-            respawnShuttle.SubBody.Body.IgnoreCollisionWith(Level.Loaded.ShaftBodies[0]);
+            respawnShuttle.SubBody.Body.IgnoreCollisionWith(Level.Loaded.ShaftBody);
 
             while (Math.Abs(position.Y - respawnShuttle.WorldPosition.Y) > 100.0f)
             {
@@ -309,7 +309,7 @@ namespace Barotrauma.Networking
                 if (respawnShuttle.SubBody == null) yield return CoroutineStatus.Success;
             }
 
-            respawnShuttle.SubBody.Body.RestoreCollisionWith(Level.Loaded.ShaftBodies[0]);
+            respawnShuttle.SubBody.Body.RestoreCollisionWith(Level.Loaded.ShaftBody);
 
             yield return CoroutineStatus.Success;
         }
@@ -374,7 +374,7 @@ namespace Barotrauma.Networking
 
             respawnShuttle.Velocity = Vector2.Zero;
 
-            respawnShuttle.SubBody.Body.RestoreCollisionWith(Level.Loaded.ShaftBodies[0]);
+            respawnShuttle.SubBody.Body.RestoreCollisionWith(Level.Loaded.ShaftBody);
 
         }
 

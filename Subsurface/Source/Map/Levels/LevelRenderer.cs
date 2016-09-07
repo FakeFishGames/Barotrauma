@@ -172,11 +172,10 @@ namespace Barotrauma
                     }
                 }
 
-                //RuinGeneration.RuinGenerator.Draw(spriteBatch);
             }
 
 
-            Vector2 pos = new Vector2(0.0f, -level.Size.Y);// level.EndPosition;
+            Vector2 pos = new Vector2(0.0f, -level.Size.Y);
 
             if (GameMain.GameScreen.Cam.WorldView.Y < -pos.Y - 1024) return;
 
@@ -184,20 +183,14 @@ namespace Barotrauma
 
             int width = (int)(Math.Ceiling(GameMain.GameScreen.Cam.WorldView.Width / 1024 + 4.0f) * 1024);
 
-            GUI.DrawRectangle(spriteBatch,new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)-GameMain.GameScreen.Cam.WorldView.Y, width, (int)(GameMain.GameScreen.Cam.WorldView.Y - level.Size.Y) + 30),Color.Black, true);
+            GUI.DrawRectangle(spriteBatch,new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)-GameMain.GameScreen.Cam.WorldView.Y, width, (int)(GameMain.GameScreen.Cam.WorldView.Y + pos.Y) - 30),Color.Black, true);
             spriteBatch.Draw(shaftTexture,
-                new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)pos.Y, width, 1024),
-                new Rectangle(0, 0, width, 1024),
+                new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)pos.Y-1000, width, 1024),
+                new Rectangle(0, 0, width, -1024),
                 level.BackgroundColor, 0.0f,
                 Vector2.Zero,
                 SpriteEffects.None, 0.0f);
 
-
-
-            //background.DrawTiled(spriteBatch,
-            //           (backgroundPos.Y < 0) ? new Vector2(0.0f, -backgroundPos.Y) : Vector2.Zero,
-            //           new Vector2(GameMain.GraphicsWidth, 1024 - backgroundPos.Y),
-            //           Vector2.Zero, level.BackgroundColor);
         }
 
 

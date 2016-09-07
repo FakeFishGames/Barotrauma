@@ -261,14 +261,14 @@ namespace Barotrauma.Networking
 
             new GUITextBlock(new Rectangle(0, -5, 0, 20), "Settings", GUI.Style, innerFrame, GUI.LargeFont);
 
-            string[] tabNames = { "Rounds", "Server", "Banlist" };
+            string[] tabNames = { "Rounds", "Server", "Banlist", "Whitelist" };
             settingsTabs = new GUIFrame[tabNames.Length];
             for (int i = 0; i < tabNames.Length; i++)
             {
                 settingsTabs[i] = new GUIFrame(new Rectangle(0, 15, 0, innerFrame.Rect.Height - 120), null, Alignment.Center, GUI.Style, innerFrame);
                 settingsTabs[i].Padding = new Vector4(40.0f, 20.0f, 40.0f, 40.0f);
 
-                var tabButton = new GUIButton(new Rectangle(105 * i, 35, 100, 20), tabNames[i], GUI.Style, innerFrame);
+                var tabButton = new GUIButton(new Rectangle(85 * i, 35, 80, 20), tabNames[i], GUI.Style, innerFrame);
                 tabButton.UserData = i;
                 tabButton.OnClicked = SelectSettingsTab;
             }
@@ -520,6 +520,12 @@ namespace Barotrauma.Networking
 
 
             banList.CreateBanFrame(settingsTabs[2]);
+
+            //--------------------------------------------------------------------------------
+            //                              whitelist
+            //--------------------------------------------------------------------------------
+
+            whitelist.CreateWhiteListFrame(settingsTabs[3]);
             
         }
 
@@ -643,21 +649,7 @@ namespace Barotrauma.Networking
 
             return false;
         }
-
-        public bool ToggleWhiteListFrame(GUIButton button, object obj)
-        {
-            if (whitelist.WhiteListFrame == null)
-            {
-                whitelist.CreateWhiteListFrame();
-            }
-            else
-            {
-                whitelist.CloseFrame();
-            }
-
-            return false;
-        }
-
+        
         public void ManagePlayersFrame(GUIFrame infoFrame)
         {
             GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.Style, infoFrame);

@@ -77,7 +77,7 @@ namespace Barotrauma
                 {
                     UpdateSineAnim(deltaTime);
                 }
-                else
+                else if (currentHull != null && CanEnterSubmarine)
                 {
                     UpdateWalkAnim(deltaTime);
                 }
@@ -119,7 +119,6 @@ namespace Barotrauma
                 }
             }
             
-            //if (stunTimer > gameTime.TotalGameTime.TotalMilliseconds) return;
             if (!flip) return;
 
             flipTimer += deltaTime;
