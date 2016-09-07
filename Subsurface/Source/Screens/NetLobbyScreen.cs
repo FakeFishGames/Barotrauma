@@ -53,7 +53,6 @@ namespace Barotrauma
         public string ServerName;
 
         const float NetworkUpdateInterval = 1.0f;
-        private float networkUpdateTimer;
         private UInt32 lastUpdateID;
         public UInt32 LastUpdateID
         {
@@ -151,7 +150,7 @@ namespace Barotrauma
             {
                 return levelSeed;
             }
-            private set
+            set
             {
                 if (levelSeed == value) return;
 
@@ -569,6 +568,12 @@ namespace Barotrauma
             return false;
         }
 
+        public void SetAutoRestart(bool enabled, float timer = 0.0f)
+        {
+            autoRestartBox.Selected = enabled;
+            autoRestartTimer = timer;
+        }
+
         private bool ToggleAutoRestart(GUITickBox tickBox)
         {
             if (GameMain.Server == null) return false;
@@ -580,7 +585,7 @@ namespace Barotrauma
             return true;
         }
 
-        private void SetMissionType(int missionTypeIndex)
+        public void SetMissionType(int missionTypeIndex)
         {
             if (missionTypeIndex < 0 || missionTypeIndex >= Mission.MissionTypes.Count) return;
 
@@ -609,6 +614,8 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return false;
 
+            lastUpdateID++;
+
             int dir = (int)userData;
 
             int index = (int)GameMain.Server.TraitorsEnabled + dir;
@@ -622,9 +629,8 @@ namespace Barotrauma
             return true;
         }
 
-        private void SetTraitorsEnabled(YesNoMaybe enabled)
+        public void SetTraitorsEnabled(YesNoMaybe enabled)
         {
-
             if (GameMain.Server != null) GameMain.Server.TraitorsEnabled = enabled;
             (traitorProbabilityText as GUITextBlock).Text = enabled.ToString();
         }
@@ -942,20 +948,6 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
             
-            //Vector2 pos = new Vector2(
-            //    Submarine.Borders.X + Submarine.Borders.Width / 2,
-            //    Submarine.Borders.Y - Submarine.Borders.Height / 2);
-
-            //camAngle += (float)deltaTime / 10.0f;
-            //Vector2 offset = (new Vector2(
-            //    (float)Math.Cos(camAngle) * (Submarine.Borders.Width / 2.0f),
-            //    (float)Math.Sin(camAngle) * (Submarine.Borders.Height / 2.0f)));
-            
-            //pos += offset * 0.8f;
-            
-            //GameMain.GameScreen.Cam.TargetPos = pos;
-            //GameMain.GameScreen.Cam.MoveCamera((float)deltaTime);
-
             if (jobInfoFrame != null)
             {
                 jobInfoFrame.Update((float)deltaTime);
@@ -966,17 +958,13 @@ namespace Barotrauma
             }
             else
             {
-
-            menu.Update((float)deltaTime);
-
+                menu.Update((float)deltaTime);
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
             {
                 autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
             }
-                        
-            //durationBar.BarScroll = Math.Max(durationBar.BarScroll, 1.0f / 60.0f);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -1057,6 +1045,13 @@ namespace Barotrauma
                 
             UpdatePreviewPlayer(GameMain.NetworkMember.CharacterInfo);
             return true;
+        }
+
+        public void SelectMode(int modeIndex)
+        {
+            modeList.Select(modeIndex, true);
+
+            missionTypeBlock.Visible = SelectedMode != null && SelectedMode.Name == "Mission";            
         }
 
         private bool SelectMode(GUIComponent component, object obj)

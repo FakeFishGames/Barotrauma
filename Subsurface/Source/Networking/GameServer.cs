@@ -640,6 +640,19 @@ namespace Barotrauma.Networking
                 outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).MD5Hash.ToString());
                 outmsg.Write((GameMain.NetLobbyScreen.ShuttleList.SelectedData as Submarine).Name);
                 outmsg.Write((GameMain.NetLobbyScreen.ShuttleList.SelectedData as Submarine).MD5Hash.ToString());
+
+                outmsg.WriteRangedInteger(0, 2, (int)TraitorsEnabled);
+
+                outmsg.WriteRangedInteger(0, Mission.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
+
+                outmsg.Write((byte)GameMain.NetLobbyScreen.ModeList.SelectedIndex);
+                outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
+
+                outmsg.Write(AutoRestart);
+                if (autoRestart)
+                {
+                    outmsg.Write(AutoRestartTimer);
+                }
             }
             else
             {
