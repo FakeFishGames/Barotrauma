@@ -563,6 +563,19 @@ namespace Barotrauma.Networking
                             string selectShuttleName = inc.ReadString();
                             string selectShuttleHash = inc.ReadString();
                             GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+
+                            GameMain.NetLobbyScreen.SetTraitorsEnabled((YesNoMaybe)inc.ReadRangedInteger(0, 2));
+
+                            GameMain.NetLobbyScreen.SetMissionType(inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1));
+
+                            GameMain.NetLobbyScreen.SelectMode(inc.ReadByte());
+
+                            GameMain.NetLobbyScreen.LevelSeed = inc.ReadString();
+
+                            bool autoRestartEnabled = inc.ReadBoolean();
+                            float autoRestartTimer = autoRestartEnabled ? inc.ReadFloat() : 0.0f; 
+
+                            GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
                         }
                         lastRecvChatMsgID = inc.ReadUInt32();
                         break;
