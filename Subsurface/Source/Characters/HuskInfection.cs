@@ -99,14 +99,6 @@ namespace Barotrauma
             }
 
             character.AddDamage(CauseOfDeath.Husk, 0.5f*deltaTime, null);
-
-            if (character.AnimController.limbJoints[0].LimitEnabled &&
-                (character.AnimController.CurrentHull == null ||
-                character.AnimController.CurrentHull.LethalPressure > 50.0f))
-            {
-                character.BreakJoints();
-                character.AnimController.limbJoints.Last().LimitEnabled = true;
-            }
         }
 
 
@@ -142,11 +134,10 @@ namespace Barotrauma
             }
 
             var torso = character.AnimController.GetLimb(LimbType.Torso);
-            torso.body.SetTransform(torso.SimPosition, 0.0f);
 
             var newLimb = new Limb(character, limbElement);
             newLimb.body.Submarine = character.Submarine;
-            newLimb.body.SetTransform(torso.SimPosition, 0.0f);
+            newLimb.body.SetTransform(torso.SimPosition, torso.Rotation);
             
             character.AnimController.AddLimb(newLimb);
             character.AnimController.AddJoint(jointElement);
