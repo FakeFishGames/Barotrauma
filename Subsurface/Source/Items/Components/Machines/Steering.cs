@@ -7,12 +7,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {
     class Steering : Powered
     {
-        private const float AutopilotRayCastInterval = 5.0f;
+        private const float AutopilotRayCastInterval = 0.5f;
 
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
@@ -178,9 +179,7 @@ namespace Barotrauma.Items.Components
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 30),
                     "Depth: " + (int)realWorldDepth + " m", Color.LightGreen, null, 0, GUI.SmallFont);
             }
-
             
-
             GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X,velRect.Center.Y), 
                 new Vector2(velRect.Center.X + currVelocity.X, velRect.Center.Y - currVelocity.Y), 
@@ -208,7 +207,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
+        
         private void UpdateAutoPilot(float deltaTime)
         {
             if (posToMaintain != null)
@@ -255,22 +254,72 @@ namespace Barotrauma.Items.Components
                 SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
             }
 
+            float avoidRadius = Math.Max(item.Submarine.Borders.Width, item.Submarine.Borders.Height) * 2.0f;
+            avoidRadius = Math.Max(avoidRadius, 2000.0f);
+
+            Vector2 avoidStrength = Vector2.Zero;
+
+            //steer away from nearby walls
+            var closeCells = Level.Loaded.GetCells(item.Submarine.WorldPosition, 4);
+            foreach (VoronoiCell cell in closeCells)
+            {
+                foreach (GraphEdge edge in cell.edges)
+                {
+                    var intersection = MathUtils.GetLineIntersection(edge.point1, edge.point2, item.Submarine.WorldPosition, cell.Center);
+                    if (intersection != null)
+                    {
+                        Vector2 diff = item.Submarine.WorldPosition - (Vector2)intersection;
+
+                        //far enough -> ignore
+                        if (diff.Length() > avoidRadius) continue;
+
+                        float dot = item.Submarine.Velocity == Vector2.Zero ? 
+                            0.0f : Vector2.Dot(Vector2.Normalize(item.Submarine.Velocity), -Vector2.Normalize(diff));
+
+                        //heading away from the wall -> ignore
+                        if (dot < 0) continue;
+
+                        Vector2 change = (Vector2.Normalize(diff) * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;
+
+                        avoidStrength += change * dot;
+                    }
+                }
+            }
+
+            targetVelocity += avoidStrength * 100.0f;
+
+            //steer away from other subs
             foreach (Submarine sub in Submarine.Loaded)
             {
                 if (sub == item.Submarine) continue;
+                if (item.Submarine.DockedTo.Contains(sub)) continue;
 
                 float thisSize = Math.Max(item.Submarine.Borders.Width, item.Submarine.Borders.Height);
                 float otherSize = Math.Max(sub.Borders.Width, sub.Borders.Height);
-
-                Vector2 diff = sub.WorldPosition - item.Submarine.WorldPosition;
+                
+                Vector2 diff = item.Submarine.WorldPosition - sub.WorldPosition;
 
                 float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
 
+                //far enough -> ignore
                 if (dist > thisSize + otherSize) continue;
 
                 diff = Vector2.Normalize(diff);
 
-                TargetVelocity = Vector2.Lerp(-diff * 100.0f, TargetVelocity, (dist / (thisSize + otherSize)) - 0.5f);
+                float dot = item.Submarine.Velocity == Vector2.Zero ?
+                    0.0f : Vector2.Dot(Vector2.Normalize(item.Submarine.Velocity), -Vector2.Normalize(diff));
+
+                //heading away -> ignore
+                if (dot < 0.0f) continue;
+
+                targetVelocity += diff * 200.0f;
+            }
+
+            //clamp velocity magnitude to 100.0f
+            float velMagnitude = targetVelocity.Length();
+            if (velMagnitude > 100.0f)
+            {
+                targetVelocity *= 100.0f / velMagnitude;
             }
 
         }
@@ -292,7 +341,7 @@ namespace Barotrauma.Items.Components
                 TargetVelocity = targetSpeed/5.0f;
             }
         }
-
+        
         private bool ToggleMaintainPosition(GUITickBox tickBox)
         {
             valueChanged = true;

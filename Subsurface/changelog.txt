@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.1.3
+---------------------------------------------------------------------------------------------------------
+
+- server whitelists
+- a new monster
+- improved autopilot
+- background sprites and creatures can be customized via Content Packages
+- Linux clients can connect to Windows servers again (and vice versa)
+- fixed the upper boundary of the level occasionally being possible to pass through
+- textboxes can't be selected through other UI elements anymore
+
+---------------------------------------------------------------------------------------------------------
 v0.5.1.2
 ---------------------------------------------------------------------------------------------------------
 
