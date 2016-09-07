@@ -1608,7 +1608,7 @@ namespace Barotrauma
 
                     message.WriteRangedSingle(health, minHealth, maxHealth, 8);
 
-                    if (AnimController.StunTimer <= 0.0f && bleeding <= 0.0f && oxygen > 99.0f)
+                    if (AnimController.StunTimer <= 0.0f && bleeding <= 0.0f && oxygen > 99.0f && huskInfection == null)
                     {
                         message.Write(true);
                     }
@@ -1856,7 +1856,7 @@ namespace Barotrauma
 
                     break;
                 case NetworkEventType.EntityUpdate:
-                    Enabled = true;
+                    if (GameMain.Client != null) Enabled = true;
 
                     Vector2 relativeCursorPos = Vector2.Zero;
 
