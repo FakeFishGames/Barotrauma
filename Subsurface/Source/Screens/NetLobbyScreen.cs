@@ -591,12 +591,12 @@ namespace Barotrauma
 
             missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[missionTypeIndex];
             missionTypeBlock.UserData = missionTypeIndex;
-
-            lastUpdateID++;
         }
 
         public bool ToggleMissionType(GUIButton button, object userData)
         {
+            if (GameMain.Server == null) return false;
+
             int missionTypeIndex = (int)missionTypeBlock.UserData;
             missionTypeIndex += (int)userData;
 
@@ -624,7 +624,6 @@ namespace Barotrauma
 
             SetTraitorsEnabled((YesNoMaybe)index);
 
-            lastUpdateID++;
 
             return true;
         }
@@ -648,6 +647,8 @@ namespace Barotrauma
 
         private bool SelectSub(GUIComponent component, object obj)
         {
+            if (GameMain.Server == null) return false;
+
             lastUpdateID++;
 
             var hash = obj is Submarine ? ((Submarine)obj).MD5Hash.Hash : "";
@@ -762,6 +763,7 @@ namespace Barotrauma
         public bool UpdateServerMessage(GUITextBox textBox, string text)
         {
             if (GameMain.Server == null) return false;
+
             lastUpdateID++;
 
             return true;
@@ -1076,14 +1078,10 @@ namespace Barotrauma
 
         private bool SelectSeed(GUITextBox textBox, string seed)
         {
-            if (!string.IsNullOrWhiteSpace(seed))
-            {
-                LevelSeed = seed;
-            }
+            if (GameMain.Server == null) return false;
+            if (string.IsNullOrWhiteSpace(seed)) return false;
 
-            //textBox.Text = LevelSeed;
-            //textBox.Selected = false;
-
+            LevelSeed = seed;
             lastUpdateID++;
 
             return true;
