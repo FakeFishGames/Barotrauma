@@ -252,12 +252,12 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(chargeSpeed, 0.0f, 1.0f, 8);
         }
 
-        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             RechargeSpeed = msg.ReadRangedSingle(0.0f, 1.0f, 8) * maxRechargeSpeed;
         }
 
-        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg, Barotrauma.Networking.Client c)
         {
             float chargeSpeed = MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f);
             msg.WriteRangedSingle(chargeSpeed, 0.0f, 1.0f, 8);

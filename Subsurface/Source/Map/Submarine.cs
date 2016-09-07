@@ -123,8 +123,8 @@ namespace Barotrauma
             }
         }
 
-        private ushort netStateID;
-        public ushort NetStateID
+        private UInt32 netStateID;
+        public UInt32 NetStateID
         {
             get
             {
@@ -962,7 +962,7 @@ namespace Barotrauma
             DockedTo.Clear();
         }
 
-        public void ServerWrite(NetOutgoingMessage msg)
+        public void ServerWrite(NetOutgoingMessage msg, Client c)
         {
             msg.Write(subBody.Position.X);
             msg.Write(subBody.Position.Y);

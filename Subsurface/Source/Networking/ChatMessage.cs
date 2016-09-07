@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
         Default, Error, Dead, Server, Radio
     }    
 
-    class ChatMessage
+    class ChatMessage : IClientSerializable, IServerSerializable
     {
         public const float SpeakRange = 2000.0f;
 
@@ -40,7 +40,11 @@ namespace Barotrauma.Networking
         }
 
         public static UInt32 LastID = 0;
-        public UInt32 ID = 0;
+        public UInt32 netStateID = 0;
+        public UInt32 NetStateID
+        {
+            get { return netStateID; }
+        }
 
         private ChatMessage(string senderName, string text, ChatMessageType type, Character sender)
         {
@@ -54,7 +58,7 @@ namespace Barotrauma.Networking
             TextWithSender = string.IsNullOrWhiteSpace(senderName) ? text : senderName + ": " + text;
 
             LastID++;
-            ID = LastID;
+            netStateID = LastID;
         }        
 
         public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender)
@@ -118,5 +122,11 @@ namespace Barotrauma.Networking
 
             return sb.ToString();
         }
+
+        public void ClientWrite(NetOutgoingMessage msg) { }
+        public void ServerRead(NetIncomingMessage msg, Client c) { }
+
+        public void ServerWrite(NetOutgoingMessage msg, Client c) { }
+        public void ClientRead(NetIncomingMessage msg) { }
     }
 }

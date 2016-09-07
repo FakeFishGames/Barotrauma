@@ -55,8 +55,8 @@ namespace Barotrauma
         //a dictionary containing lists of the status effects in all the components of the item
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
 
-        private ushort netStateID;
-        public ushort NetStateID
+        private UInt32 netStateID;
+        public UInt32 NetStateID
         {
             get { return netStateID; }
         }
@@ -1515,7 +1515,7 @@ namespace Barotrauma
             return element;
         }
         
-        public void ServerWrite(NetOutgoingMessage msg) { }
+        public void ServerWrite(NetOutgoingMessage msg, Client c) { }
         public void ClientRead(NetIncomingMessage msg) { }        
 
         public static void Load(XElement element, Submarine submarine)

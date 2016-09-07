@@ -74,8 +74,8 @@ namespace Barotrauma.Items.Components
 
         private string msg;
 
-        protected ushort netStateID;
-        public ushort NetStateID
+        protected UInt32 netStateID;
+        public UInt32 NetStateID
         {
             get { return netStateID; }
         }
@@ -659,9 +659,9 @@ namespace Barotrauma.Items.Components
         }
 
         public virtual void ClientWrite(NetOutgoingMessage msg) { }
-        public virtual void ServerRead(NetIncomingMessage msg) { }
+        public virtual void ServerRead(NetIncomingMessage msg, Client c) { }
 
-        public virtual void ServerWrite(NetOutgoingMessage msg) { }
+        public virtual void ServerWrite(NetOutgoingMessage msg, Client c) { }
         public virtual void ClientRead(NetIncomingMessage msg) { }
         
         public virtual XElement Save(XElement parentElement)

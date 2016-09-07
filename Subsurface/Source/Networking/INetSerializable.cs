@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
@@ -7,10 +8,10 @@ namespace Barotrauma.Networking
     /// </summary>
     interface IClientSerializable
     {
-        ushort NetStateID { get; }
+        UInt32 NetStateID { get; }
 
         void ClientWrite(NetOutgoingMessage msg);
-        void ServerRead(NetIncomingMessage msg);        
+        void ServerRead(NetIncomingMessage msg, Client c);        
     }
 
     /// <summary>
@@ -18,9 +19,9 @@ namespace Barotrauma.Networking
     /// </summary>
     interface IServerSerializable
     {
-        ushort NetStateID { get; }
+        UInt32 NetStateID { get; }
 
-        void ServerWrite(NetOutgoingMessage msg);
+        void ServerWrite(NetOutgoingMessage msg, Client c);
         void ClientRead(NetIncomingMessage msg);
     }
 }
