@@ -344,7 +344,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             AutoPilot = msg.ReadBoolean();
 
@@ -368,7 +368,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg, Barotrauma.Networking.Client c)
         {
             msg.Write(autoPilot);
 

@@ -536,7 +536,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             Nodes.Clear();
 

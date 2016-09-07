@@ -410,13 +410,13 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             IsActive = msg.ReadBoolean();
             isActiveTickBox.Selected = IsActive;
         }
 
-        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg, Barotrauma.Networking.Client c)
         {
             msg.Write(IsActive);
         }

@@ -590,7 +590,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(lastSentChatMsgID);
             ChatMessage removeMsg;
-            while ((removeMsg=chatMsgQueue.Find(cMsg => cMsg.ID <= lastRecvChatMsgID)) != null)
+            while ((removeMsg=chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastRecvChatMsgID)) != null)
             {
                 chatMsgQueue.Remove(removeMsg);
             }
@@ -598,7 +598,7 @@ namespace Barotrauma.Networking
             foreach (ChatMessage cMsg in chatMsgQueue)
             {
                 outmsg.Write((byte)ClientNetObject.CHAT_MESSAGE);
-                outmsg.Write(cMsg.ID);
+                outmsg.Write(cMsg.NetStateID);
                 outmsg.Write(cMsg.Text);
             }
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);

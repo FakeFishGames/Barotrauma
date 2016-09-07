@@ -21,8 +21,8 @@ namespace Barotrauma
         
         public static bool DisableControls;
 
-        private ushort netStateID;
-        public ushort NetStateID
+        private UInt32 netStateID;
+        public UInt32 NetStateID
         {
             get { return netStateID; }
         }
@@ -1577,12 +1577,12 @@ namespace Barotrauma
         { 
             //TODO: write inputs
         }
-        public virtual void ServerRead(NetIncomingMessage msg) 
+        public virtual void ServerRead(NetIncomingMessage msg, Client c) 
         { 
             //TODO: read inputs
         }
 
-        public virtual void ServerWrite(NetOutgoingMessage msg) 
+        public virtual void ServerWrite(NetOutgoingMessage msg, Client c) 
         {
             //TODO: write position, health, etc
         }

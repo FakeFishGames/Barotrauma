@@ -58,8 +58,8 @@ namespace Barotrauma
 
         bool isHorizontal;
 
-        private ushort netStateID;
-        public ushort NetStateID
+        private UInt32 netStateID;
+        public UInt32 NetStateID
         {
             get { return netStateID; }
         }
@@ -689,7 +689,7 @@ namespace Barotrauma
             return newBody;
         }
 
-        public void ServerWrite(NetOutgoingMessage msg) 
+        public void ServerWrite(NetOutgoingMessage msg, Client c) 
         {
             for (int i = 0; i < sections.Length; i++)
             {

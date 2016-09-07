@@ -477,7 +477,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg, Barotrauma.Networking.Client c)
         {
             msg.Write(isOpen);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);        

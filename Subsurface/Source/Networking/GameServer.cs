@@ -656,10 +656,10 @@ namespace Barotrauma.Networking
                     if (gc.UserData is ChatMessage)
                     {
                         ChatMessage cMsg = (ChatMessage)gc.UserData;
-                        if (cMsg.ID > c.lastRecvChatMsgID)
+                        if (cMsg.NetStateID > c.lastRecvChatMsgID)
                         {
                             outmsg.Write((byte)ServerNetObject.CHAT_MESSAGE);
-                            outmsg.Write(cMsg.ID);
+                            outmsg.Write(cMsg.NetStateID);
                             outmsg.Write((byte)cMsg.Type);
                             outmsg.Write(cMsg.SenderName);
                             outmsg.Write(cMsg.Text);

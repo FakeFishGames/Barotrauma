@@ -202,13 +202,13 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             IsActive = msg.ReadBoolean();
         }
 
-        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg)
+        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg, Barotrauma.Networking.Client c)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
