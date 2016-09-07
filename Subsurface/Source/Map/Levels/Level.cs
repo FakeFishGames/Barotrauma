@@ -113,7 +113,7 @@ namespace Barotrauma
             private set;
         }
 
-        public Body[] ShaftBodies
+        public Body ShaftBody
         {
             get;
             private set;
@@ -511,21 +511,17 @@ namespace Barotrauma
                     cells.AddRange(wrappingWalls[side, i].Cells);
                 }
             }
+            
+            ShaftBody = BodyFactory.CreateEdge(GameMain.World, 
+                ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
+                ConvertUnits.ToSimUnits(new Vector2(borders.Right, 0)));
 
+            ShaftBody.SetTransform(ConvertUnits.ToSimUnits(new Vector2(0.0f, borders.Height)), 0.0f);
+                
+            ShaftBody.BodyType = BodyType.Static;
+            ShaftBody.CollisionCategories = Physics.CollisionLevel;
 
-            ShaftBodies = new Body[2];
-            for (int i = 0; i < 2; i++)
-            {
-                ShaftBodies[i] = BodyFactory.CreateRectangle(GameMain.World, 200.0f, ConvertUnits.ToSimUnits(ShaftHeight), 5.0f);
-                ShaftBodies[i].BodyType = BodyType.Static;
-                ShaftBodies[i].CollisionCategories = Physics.CollisionLevel;
-
-                Vector2 shaftPos = (i == 0) ? startPosition : endPosition;
-                shaftPos.Y = borders.Height + 150.0f;
-
-                ShaftBodies[i].SetTransform(ConvertUnits.ToSimUnits(shaftPos), 0.0f);
-                bodies.Add(ShaftBodies[i]);
-            }
+            bodies.Add(ShaftBody);    
 
             foreach (VoronoiCell cell in cells)
             {
