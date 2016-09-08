@@ -36,6 +36,7 @@ namespace Barotrauma.Networking
         private string saltedPw;
 
         private UInt32 lastSentChatMsgID = 0; //last message this client has successfully sent
+        private UInt32 lastQueueChatMsgID = 0; //last message added to the queue
         private List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
 
         public byte ID
@@ -616,6 +617,9 @@ namespace Barotrauma.Networking
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
                 message, (ChatMessageType)type, gameStarted ? myCharacter : null);
+
+            lastQueueChatMsgID++;
+            chatMessage.netStateID = lastQueueChatMsgID;
 
             chatMsgQueue.Add(chatMessage);
         }

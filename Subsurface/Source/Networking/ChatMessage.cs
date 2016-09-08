@@ -57,8 +57,11 @@ namespace Barotrauma.Networking
 
             TextWithSender = string.IsNullOrWhiteSpace(senderName) ? text : senderName + ": " + text;
 
-            LastID++;
-            netStateID = LastID;
+            if (GameMain.Server != null)
+            {
+                LastID++;
+                netStateID = LastID;
+            }
         }        
 
         public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender)
