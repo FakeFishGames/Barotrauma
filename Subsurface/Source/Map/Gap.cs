@@ -597,6 +597,11 @@ namespace Barotrauma
             Hull hull1 = (Hull)linkedTo[0];
             Hull hull2 = (Hull)linkedTo[1];
 
+            if (isHorizontal)
+            {
+                if (Math.Max(hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1], hull2.Surface + hull2.WaveY[0]) > rect.Y) return;
+            }
+
             float totalOxygen = hull1.Oxygen + hull2.Oxygen;
             float totalVolume = (hull1.FullVolume + hull2.FullVolume);
 

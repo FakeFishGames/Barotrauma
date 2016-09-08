@@ -58,6 +58,14 @@ namespace Barotrauma
             private set;
         }
 
+        //if a matching itemprefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias
+        //(allows changing item names while keeping backwards compatibility with older sub files)
+        public string[] Aliases
+        {
+            get;
+            private set;
+        }
+
         public List<DeconstructItem> DeconstructItems
         {
             get;
@@ -235,6 +243,12 @@ namespace Barotrauma
             FireProof           = ToolBox.GetAttributeBool(element, "fireproof", false);
 
             ImpactTolerance     = ToolBox.GetAttributeFloat(element, "impacttolerance", 0.0f);
+
+            string aliases = ToolBox.GetAttributeString(element, "aliases", "");
+            if (!string.IsNullOrWhiteSpace(aliases))
+            {
+                Aliases = aliases.Split(',');
+            }
 
             MapEntityCategory category;
 

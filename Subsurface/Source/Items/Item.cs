@@ -1547,7 +1547,7 @@ namespace Barotrauma
                 ItemPrefab ip = ep as ItemPrefab;
                 if (ip == null) continue;
 
-                if (ip.Name != name) continue;
+                if (ip.Name != name && (ip.Aliases == null || !ip.Aliases.Contains(name))) continue;
 
                 if (rect.Width==0 && rect.Height==0)
                 {
