@@ -1,5 +1,6 @@
 ﻿<Item
-  name="MiniMap"
+  name="Status Monitor"
+  aliases="MiniMap"
   category="Machine"
   linkable="true"
   pickdistance="150">
@@ -12,7 +13,9 @@
 
   <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
     <requireditem name="Screwdriver" type="Equipped"/>
-    <input name="power_in"/>
+    <input name="power_in"/>    
+    <input name="water_data_in"/>
+    <input name="oxygen_data_in"/>
   </ConnectionPanel>
 
 </Item>

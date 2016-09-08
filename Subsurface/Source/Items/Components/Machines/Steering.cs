@@ -33,6 +33,8 @@ namespace Barotrauma.Items.Components
 
         private float autopilotRayCastTimer;
 
+        private Vector2 avoidStrength;
+
         private float neutralBallastLevel;
 
         public Vector2? TargetPosition;
@@ -207,7 +209,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
+
         private void UpdateAutoPilot(float deltaTime)
         {
             if (posToMaintain != null)
@@ -221,7 +223,7 @@ namespace Barotrauma.Items.Components
             steeringPath.CheckProgress(ConvertUnits.ToSimUnits(item.Submarine.WorldPosition), 10.0f);
 
             if (autopilotRayCastTimer <= 0.0f && steeringPath.NextNode != null)
-            {                
+            {
                 Vector2 diff = Vector2.Normalize(ConvertUnits.ToSimUnits(steeringPath.NextNode.Position - item.Submarine.WorldPosition));
 
                 bool nextVisible = true;
@@ -236,7 +238,7 @@ namespace Barotrauma.Items.Components
 
                         float dist = Vector2.Distance(cornerPos, steeringPath.NextNode.SimPosition);
 
-                        if (Submarine.PickBody(cornerPos, cornerPos + diff*dist, null, Physics.CollisionLevel) == null) continue;
+                        if (Submarine.PickBody(cornerPos, cornerPos + diff * dist, null, Physics.CollisionLevel) == null) continue;
 
                         nextVisible = false;
                         x = 2;
@@ -246,7 +248,7 @@ namespace Barotrauma.Items.Components
 
                 if (nextVisible) steeringPath.SkipToNextNode();
 
-                autopilotRayCastTimer = AutopilotRayCastInterval;                
+                autopilotRayCastTimer = AutopilotRayCastInterval;
             }
 
             if (steeringPath.CurrentNode != null)
@@ -257,7 +259,7 @@ namespace Barotrauma.Items.Components
             float avoidRadius = Math.Max(item.Submarine.Borders.Width, item.Submarine.Borders.Height) * 2.0f;
             avoidRadius = Math.Max(avoidRadius, 2000.0f);
 
-            Vector2 avoidStrength = Vector2.Zero;
+            Vector2 newAvoidStrength = Vector2.Zero;
 
             //steer away from nearby walls
             var closeCells = Level.Loaded.GetCells(item.Submarine.WorldPosition, 4);
@@ -273,18 +275,20 @@ namespace Barotrauma.Items.Components
                         //far enough -> ignore
                         if (diff.Length() > avoidRadius) continue;
 
-                        float dot = item.Submarine.Velocity == Vector2.Zero ? 
-                            0.0f : Vector2.Dot(Vector2.Normalize(item.Submarine.Velocity), -Vector2.Normalize(diff));
+                        float dot = item.Submarine.Velocity == Vector2.Zero ?
+                            0.0f : Vector2.Dot(item.Submarine.Velocity, -Vector2.Normalize(diff));
 
-                        //heading away from the wall -> ignore
-                        if (dot < 0) continue;
+                        //not heading towards the wall -> ignore
+                        if (dot < 0.5) continue;
 
                         Vector2 change = (Vector2.Normalize(diff) * Math.Max((avoidRadius - diff.Length()), 0.0f)) / avoidRadius;
 
-                        avoidStrength += change * dot;
+                        newAvoidStrength += change * dot;
                     }
                 }
             }
+
+            avoidStrength = Vector2.Lerp(avoidStrength, newAvoidStrength, deltaTime * 10.0f);
 
             targetVelocity += avoidStrength * 100.0f;
 
@@ -296,7 +300,7 @@ namespace Barotrauma.Items.Components
 
                 float thisSize = Math.Max(item.Submarine.Borders.Width, item.Submarine.Borders.Height);
                 float otherSize = Math.Max(sub.Borders.Width, sub.Borders.Height);
-                
+
                 Vector2 diff = item.Submarine.WorldPosition - sub.WorldPosition;
 
                 float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
