@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
         Default, Error, Dead, Server, Radio
     }    
 
-    class ChatMessage : IClientSerializable, IServerSerializable
+    class ChatMessage
     {
         public const float SpeakRange = 2000.0f;
 
@@ -123,10 +123,45 @@ namespace Barotrauma.Networking
             return sb.ToString();
         }
 
-        public void ClientWrite(NetOutgoingMessage msg) { }
-        public void ServerRead(NetIncomingMessage msg, Client c) { }
+        public void ClientWrite(NetOutgoingMessage msg)
+        {
+            msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
+            msg.Write(NetStateID);
+            msg.Write(Text);
+        }
 
-        public void ServerWrite(NetOutgoingMessage msg, Client c) { }
-        public void ClientRead(NetIncomingMessage msg) { }
+        static public void ServerRead(NetIncomingMessage msg, Client c)
+        {
+            UInt32 ID = msg.ReadUInt32();
+            string txt = msg.ReadString();
+            if (c.lastSentChatMsgID < ID)
+            {
+                //this chat message is new to the server
+                GameMain.Server.AddChatMessage(txt, ChatMessageType.Default, c.name);
+                c.lastSentChatMsgID = ID;
+            }
+        }
+
+        public void ServerWrite(NetOutgoingMessage msg, Client c)
+        {
+            msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
+            msg.Write(NetStateID);
+            msg.Write((byte)Type);
+            msg.Write(SenderName);
+            msg.Write(Text);
+        }
+
+        static public void ClientRead(NetIncomingMessage msg)
+        {
+            UInt32 ID = msg.ReadUInt32();
+            ChatMessageType type = (ChatMessageType)msg.ReadByte();
+            string senderName = msg.ReadString();
+            string txt = msg.ReadString();
+            if (ID > LastID)
+            {
+                GameMain.Client.AddChatMessage(txt, type, senderName);
+                LastID = ID;
+            }
+        }
     }
 }
