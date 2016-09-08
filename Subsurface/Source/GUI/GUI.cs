@@ -261,6 +261,16 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, int thickness, float depth = 0.0f)
+        {
+            DrawLine(sb, new Vector2(rect.X, rect.Y), new Vector2(rect.Right, rect.Y), clr, depth, thickness);
+            DrawLine(sb, new Vector2(rect.X, rect.Bottom-thickness), new Vector2(rect.Right, rect.Bottom-thickness), clr, depth, thickness);
+            
+            DrawLine(sb, new Vector2(rect.X+thickness, rect.Y+thickness), new Vector2(rect.X+thickness, rect.Bottom-thickness), clr, depth, thickness);
+
+            DrawLine(sb, new Vector2(rect.Right, rect.Y + thickness), new Vector2(rect.Right, rect.Bottom - thickness), clr, depth, thickness);
+        }
+
         public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
         {
             //outlinecolor = "0.5, 0.57, 0.6, 1.0" >
