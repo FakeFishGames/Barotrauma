@@ -35,8 +35,7 @@ namespace Barotrauma.Networking
         private int nonce;
         private string saltedPw;
 
-        private UInt32 lastRecvChatMsgID = 0; //last message the server received from this client
-        private UInt32 lastSentChatMsgID = 0; //last message the server has sent to this client
+        private UInt32 lastSentChatMsgID = 0; //last message this client has successfully sent
         private List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
 
         public byte ID
@@ -577,18 +576,10 @@ namespace Barotrauma.Networking
 
                             GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
                         }
-                        lastRecvChatMsgID = inc.ReadUInt32();
+                        lastSentChatMsgID = inc.ReadUInt32();
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
-                        UInt32 ID = inc.ReadUInt32();
-                        ChatMessageType type = (ChatMessageType)inc.ReadByte();
-                        string senderName = inc.ReadString();
-                        string msg = inc.ReadString();
-                        if (ID > lastSentChatMsgID)
-                        {
-                            AddChatMessage(msg, type, senderName);
-                            lastSentChatMsgID = ID;
-                        }
+                        ChatMessage.ClientRead(inc);
                         break;
                 }
             }
@@ -601,18 +592,16 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
-            outmsg.Write(lastSentChatMsgID);
+            outmsg.Write(ChatMessage.LastID);
             ChatMessage removeMsg;
-            while ((removeMsg=chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastRecvChatMsgID)) != null)
+            while ((removeMsg=chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastSentChatMsgID)) != null)
             {
                 chatMsgQueue.Remove(removeMsg);
             }
 
             foreach (ChatMessage cMsg in chatMsgQueue)
             {
-                outmsg.Write((byte)ClientNetObject.CHAT_MESSAGE);
-                outmsg.Write(cMsg.NetStateID);
-                outmsg.Write(cMsg.Text);
+                cMsg.ClientWrite(outmsg);
             }
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);

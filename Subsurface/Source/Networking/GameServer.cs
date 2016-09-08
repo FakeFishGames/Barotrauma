@@ -566,14 +566,7 @@ namespace Barotrauma.Networking
                         }
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
-                        UInt32 ID = inc.ReadUInt32();
-                        string msg = inc.ReadString();
-                        if (c.lastSentChatMsgID<ID)
-                        {
-                            //this chat message is new to the server
-                            AddChatMessage(msg, ChatMessageType.Default, c.name);
-                            c.lastSentChatMsgID = ID;
-                        }
+                        ChatMessage.ServerRead(inc, c);
                         break;
                 }
             }
@@ -665,11 +658,7 @@ namespace Barotrauma.Networking
                         ChatMessage cMsg = (ChatMessage)gc.UserData;
                         if (cMsg.NetStateID > c.lastRecvChatMsgID)
                         {
-                            outmsg.Write((byte)ServerNetObject.CHAT_MESSAGE);
-                            outmsg.Write(cMsg.NetStateID);
-                            outmsg.Write((byte)cMsg.Type);
-                            outmsg.Write(cMsg.SenderName);
-                            outmsg.Write(cMsg.Text);
+                            cMsg.ServerWrite(outmsg,c);
                         }
                     }
                 }
