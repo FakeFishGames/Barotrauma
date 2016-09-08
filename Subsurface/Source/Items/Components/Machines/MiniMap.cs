@@ -223,11 +223,11 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "oxygen_data_in":
-                    float oxy = Rand.Range(0.0f, 100.0f);
+                    float oxy;
 
                     if (!float.TryParse(signal, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out oxy))
                     {
-                        int asdfasdf = 1;
+                        oxy = Rand.Range(0.0f, 100.0f);
                     }
 
                     hullData.Oxygen = oxy;
