@@ -11,27 +11,32 @@ namespace Barotrauma.Networking
 {
     enum ClientPacketHeader
     {
-        REQUEST_AUTH, //ask the server if a password is needed, if so we'll get nonce for encryption
-        REQUEST_INIT, //ask the server to give you initialization
-        UPDATE_LOBBY, //update state in lobby
-        UPDATE_INGAME, //update state ingame while alive
+        REQUEST_AUTH,   //ask the server if a password is needed, if so we'll get nonce for encryption
+        REQUEST_INIT,   //ask the server to give you initialization
+        UPDATE_LOBBY,   //update state in lobby
+        UPDATE_INGAME,  //update state ingame while alive
+
+        RESPONSE_STARTGAME //tell the server whether you're ready to start
     }
     enum ClientNetObject
     {
         END_OF_MESSAGE, //self-explanatory
-        SYNC_IDS, //ids of the last changes the client knows about
-        CHAT_MESSAGE, //also self-explanatory
-        VOTE, //you get the idea
+        SYNC_IDS,       //ids of the last changes the client knows about
+        CHAT_MESSAGE,   //also self-explanatory
+        VOTE,           //you get the idea
         CHARACTER_INPUT,
         ITEM_INTERACTION
     }
 
     enum ServerPacketHeader
     {
-        AUTH_RESPONSE, //tell the player if they require a password to log in
-        AUTH_FAILURE, //the server won't authorize player yet, however connection is still alive
-        UPDATE_LOBBY, //update state in lobby (votes and chat messages)
-        UPDATE_INGAME, //update state ingame while alive (character input and chat messages)
+        AUTH_RESPONSE,      //tell the player if they require a password to log in
+        AUTH_FAILURE,       //the server won't authorize player yet, however connection is still alive
+        UPDATE_LOBBY,       //update state in lobby (votes and chat messages)
+        UPDATE_INGAME,      //update state ingame while alive (character input and chat messages)
+
+        QUERY_STARTGAME,    //ask the clients whether they're ready to start
+        STARTGAME           //start a new round
     }
     enum ServerNetObject
     {
