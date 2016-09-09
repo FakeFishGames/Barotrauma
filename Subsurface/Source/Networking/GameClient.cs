@@ -513,10 +513,85 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.UPDATE_LOBBY:
                                 ReadLobbyUpdate(inc);
                                 break;
+                            case ServerPacketHeader.QUERY_STARTGAME:
+                                string subName = inc.ReadString();
+                                string subHash = inc.ReadString();
+
+                                string shuttleName = inc.ReadString();
+                                string shuttleHash = inc.ReadString();
+                                
+                                NetOutgoingMessage readyToStartMsg = client.CreateMessage();
+                                readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
+
+                                readyToStartMsg.Write(
+                                    GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList) &&
+                                    GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox));
+
+                                client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
+                                
+                                break;
+                            case ServerPacketHeader.STARTGAME:
+                                startGameCoroutine = GameMain.ShowLoading(StartGame(inc), false);
+                                break;
                         }
                         break;
                 }
             }
+        }
+
+        private IEnumerable<object> StartGame(NetIncomingMessage inc)
+        {
+            if (Character != null) Character.Remove();
+
+            endVoteTickBox.Selected = false;
+
+            int seed                = inc.ReadInt32();
+            string levelSeed        = inc.ReadString();
+
+            int missionTypeIndex    = inc.ReadByte();
+
+            string subName          = inc.ReadString();
+            string subHash          = inc.ReadString();
+
+            string shuttleName      = inc.ReadString();
+            string shuttleHash      = inc.ReadString();
+
+            string modeName         = inc.ReadString();
+
+            bool respawnAllowed     = inc.ReadBoolean();
+
+            GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
+
+            if (gameMode == null)
+            {
+                DebugConsole.ThrowError("Game mode ''" + modeName + "'' not found!");
+                yield return CoroutineStatus.Success;
+            }
+
+            if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList))
+            {
+                yield return CoroutineStatus.Success;
+            }
+
+            if (!GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox))
+            {
+                yield return CoroutineStatus.Success;
+            }
+
+            Rand.SetSyncedSeed(seed);
+
+            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
+            GameMain.GameSession.StartShift(levelSeed);
+
+            if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
+            
+            gameStarted = true;
+
+            endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
+
+            GameMain.GameScreen.Select();
+
+            yield return CoroutineStatus.Success;
         }
 
         private void ReadLobbyUpdate(NetIncomingMessage inc)

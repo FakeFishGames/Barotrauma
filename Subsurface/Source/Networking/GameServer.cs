@@ -368,29 +368,7 @@ namespace Barotrauma.Networking
                     switch (inc.MessageType)
                     {
                         case NetIncomingMessageType.Data:
-                            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
-                            {
-                                KickClient(inc.SenderConnection,true);
-                            }
-                            else
-                            {
-                                ClientPacketHeader header = (ClientPacketHeader)inc.ReadByte();
-                                switch (header)
-                                {
-                                    case ClientPacketHeader.REQUEST_AUTH:
-                                        ClientAuthRequest(inc.SenderConnection);
-                                        break;
-                                    case ClientPacketHeader.REQUEST_INIT:
-                                        ClientInitRequest(inc);
-                                        break;
-                                    case ClientPacketHeader.UPDATE_LOBBY:
-                                        ClientReadLobby(inc);
-                                        break;
-                                    case ClientPacketHeader.UPDATE_INGAME:
-                                        //TODO
-                                        break;
-                                }
-                            }
+                            ReadDataMessage(inc);
                             break;
                         case NetIncomingMessageType.StatusChanged:
                             switch (inc.SenderConnection.Status)
@@ -426,9 +404,9 @@ namespace Barotrauma.Networking
                                 }
                             }
                             break;
-                    }
-                            
+                    }                            
                 }
+
                 catch (Exception e)
                 {
 #if DEBUG
@@ -496,6 +474,40 @@ namespace Barotrauma.Networking
 
             CoroutineManager.StartCoroutine(RefreshMaster());
             refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+        }
+
+        private void ReadDataMessage(NetIncomingMessage inc)
+        {
+            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+            {
+                KickClient(inc.SenderConnection, true);
+                return;
+            }
+            
+            ClientPacketHeader header = (ClientPacketHeader)inc.ReadByte();
+            switch (header)
+            {
+                case ClientPacketHeader.REQUEST_AUTH:
+                    ClientAuthRequest(inc.SenderConnection);
+                    break;
+                case ClientPacketHeader.REQUEST_INIT:
+                    ClientInitRequest(inc);
+                    break;
+
+                case ClientPacketHeader.RESPONSE_STARTGAME:
+                    var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
+                    if (connectedClient != null)
+                    {
+                        connectedClient.ReadyToStart = inc.ReadBoolean();
+                    }
+                    break;
+                case ClientPacketHeader.UPDATE_LOBBY:
+                    ClientReadLobby(inc);
+                    break;
+                case ClientPacketHeader.UPDATE_INGAME:
+                    //TODO
+                    break;
+            }            
         }
 
         private void SparseUpdate()
@@ -703,9 +715,115 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            //CoroutineManager.StartCoroutine(WaitForPlayersReady(selectedSub, selectedShuttle, selectedMode), "WaitForPlayersReady");
+            CoroutineManager.StartCoroutine(InitiateStartGame(selectedSub, selectedShuttle, selectedMode), "InitiateStartGame");
 
             return true;
+        }
+
+        private IEnumerable<object> InitiateStartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
+        {
+            GameMain.NetLobbyScreen.StartButton.Enabled = false;
+
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.QUERY_STARTGAME);
+
+            msg.Write(selectedSub.Name);
+            msg.Write(selectedSub.MD5Hash.Hash);
+
+            msg.Write(selectedShuttle.Name);
+            msg.Write(selectedShuttle.MD5Hash.Hash);
+            
+            connectedClients.ForEach(c => c.ReadyToStart = false);
+
+            server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
+
+            //give the clients a few seconds to request missing sub/shuttle files before starting the round
+            float waitForResponseTimer = 3.0f;
+            while (connectedClients.Any(c => !c.ReadyToStart) && waitForResponseTimer > 0.0f)
+            {
+                waitForResponseTimer -= CoroutineManager.UnscaledDeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            //todo: wait until file transfers are finished/cancelled
+
+            GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
+        {
+            Item.Spawner.Clear();
+            Item.Remover.Clear();
+
+            GameMain.NetLobbyScreen.StartButton.Enabled = false;
+
+            GUIMessageBox.CloseAll();
+
+            //AssignJobs(connectedClients);
+
+            roundStartSeed = DateTime.Now.Millisecond;
+            Rand.SetSyncedSeed(roundStartSeed);
+
+            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
+            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
+
+            GameServer.Log("Starting a new round...", Color.Cyan);
+            GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);
+            GameServer.Log("Game mode: " + selectedMode.Name, Color.Cyan);
+            GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
+
+            if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
+
+            var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
+            server.SendMessage(startMessage, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
+
+            yield return CoroutineStatus.Running;
+
+            //UpdateCrewFrame();
+
+            //TraitorManager = null;
+            //if (TraitorsEnabled == YesNoMaybe.Yes ||
+            //    (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
+            //{
+            //    TraitorManager = new TraitorManager(this);
+            //}
+
+            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+            GameMain.GameScreen.Select();
+
+            AddChatMessage("Press TAB to chat. Use ''r;'' to talk through the radio.", ChatMessageType.Server);
+            
+            GameMain.NetLobbyScreen.StartButton.Enabled = true;
+
+            gameStarted = true;
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private NetOutgoingMessage CreateStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode)
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.STARTGAME);
+
+            msg.Write(seed);
+
+            msg.Write(GameMain.NetLobbyScreen.LevelSeed);
+
+            msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
+
+            msg.Write(selectedSub.Name);
+            msg.Write(selectedSub.MD5Hash.Hash);
+
+            msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
+            msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
+
+            msg.Write(selectedMode.Name);
+
+            msg.Write(AllowRespawn);
+            
+            return msg;
         }
 
         public void EndGame()
@@ -1133,15 +1251,6 @@ namespace Barotrauma.Networking
             if (GameMain.Server == null || !GameMain.Server.SaveServerLogs) return;
 
             GameMain.Server.log.WriteLine(line, color);
-        }
-
-        /// <summary>
-        /// sends some random data to the clients
-        /// use for debugging purposes
-        /// </summary>
-        public void SendRandomData()
-        {
-            //NO DON'T DO THIS WHY
         }
 
         public override void Disconnect()
