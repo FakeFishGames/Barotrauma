@@ -1570,7 +1570,7 @@ namespace Barotrauma
 
             if (aiTarget != null) aiTarget.Remove();
 
-            if (AnimController!=null) AnimController.Remove();
+            if (AnimController != null) AnimController.Remove();
         }
 
         public virtual void ClientWrite(NetOutgoingMessage msg) 
@@ -1592,6 +1592,94 @@ namespace Barotrauma
             //TODO: read positions health, etc
         }
 
+        public void WriteSpawnData(NetOutgoingMessage msg)
+        {
+            if (GameMain.Server == null) return;
 
+            msg.Write(Info == null);
+            msg.Write(ID);
+            msg.Write(ConfigPath);
+
+            msg.Write(WorldPosition.X);
+            msg.Write(WorldPosition.Y);
+
+            msg.Write(Enabled);
+
+            //character with no characterinfo (e.g. some monster)
+            if (Info == null) return;
+            
+            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);                
+            if (ownerClient != null)
+            {
+                msg.Write(true);
+                msg.Write(ownerClient.ID);
+            }
+            else if (GameMain.Server.Character == this)
+            {
+                msg.Write(true);
+                msg.Write((byte)0);
+            }
+            else
+            {
+                msg.Write(false);
+            }
+
+            msg.Write(Info.Name);
+
+            msg.Write(this is AICharacter);
+            msg.Write(Info.Gender == Gender.Female);
+            msg.Write((byte)Info.HeadSpriteId);
+            msg.Write(Info.Job == null ? "" : Info.Job.Name);            
+        }
+
+        public static Character ReadSpawnData(NetIncomingMessage inc)
+        {
+            if (GameMain.Server != null) return null;
+
+            bool noInfo         = inc.ReadBoolean();
+            ushort id           = inc.ReadUInt16();
+            string configPath   = inc.ReadString();
+
+            Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
+
+            bool enabled        = inc.ReadBoolean();
+
+            Character character = null;
+
+            if (noInfo)
+            {
+                character = Character.Create(configPath, position, null, true);
+                character.ID = id;
+            }
+            else
+            {
+                bool hasOwner       = inc.ReadBoolean();
+                int ownerId         = hasOwner ? inc.ReadByte() : -1;
+
+                string newName      = inc.ReadString();
+
+                bool hasAi          = inc.ReadBoolean();
+                bool isFemale       = inc.ReadBoolean();
+                int headSpriteID    = inc.ReadByte();
+                string jobName      = inc.ReadString();
+
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+
+                CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
+                ch.HeadSpriteId = headSpriteID;
+
+                character = Character.Create(configPath, position, ch, true, hasAi);
+                character.ID = id;
+
+                if (configPath == Character.HumanConfigFile)
+                {
+                    GameMain.GameSession.CrewManager.characters.Add(character);
+                }
+            }
+
+            character.Enabled = enabled;
+
+            return character;
+        }
     }
 }
