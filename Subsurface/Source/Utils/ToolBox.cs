@@ -61,8 +61,8 @@ namespace Barotrauma
         }
 
         public static object GetAttributeObject(XElement element, string name)
-        {            
-            if (element.Attribute(name) == null) return null;
+        {
+            if (element == null || element.Attribute(name) == null) return null;
             return GetAttributeObject(element.Attribute(name));
         }
 
@@ -106,7 +106,7 @@ namespace Barotrauma
 
         public static string GetAttributeString(XElement element, string name, string defaultValue)
         {
-            if (element.Attribute(name) == null) return defaultValue;
+            if (element == null || element.Attribute(name) == null) return defaultValue;
             return GetAttributeString(element.Attribute(name), defaultValue);
         }
 
@@ -119,7 +119,7 @@ namespace Barotrauma
 
         public static float GetAttributeFloat(XElement element, string name, float defaultValue)
         {
-            if (element.Attribute(name) == null) return defaultValue;
+            if (element == null || element.Attribute(name) == null) return defaultValue;
 
             float val = defaultValue;
 
@@ -158,7 +158,7 @@ namespace Barotrauma
 
         public static int GetAttributeInt(XElement element, string name, int defaultValue)
         {
-            if (element.Attribute(name) == null) return defaultValue;
+            if (element == null || element.Attribute(name) == null) return defaultValue;
 
             int val = defaultValue;
 
@@ -176,10 +176,9 @@ namespace Barotrauma
         
         public static bool GetAttributeBool(XElement element, string name, bool defaultValue)
         {
-            var attribute = element.Attribute(name);
-            if (attribute == null) return defaultValue;
+            if (element == null || element.Attribute(name) == null) return defaultValue;
 
-            return GetAttributeBool(attribute, defaultValue);
+            return GetAttributeBool(element.Attribute(name), defaultValue);
         }
 
         public static bool GetAttributeBool(XAttribute attribute, bool defaultValue)
@@ -206,16 +205,25 @@ namespace Barotrauma
 
         public static Vector2 GetAttributeVector2(XElement element, string name, Vector2 defaultValue)
         {
-            if (element.Attribute(name) == null) return defaultValue;
+            if (element == null || element.Attribute(name) == null) return defaultValue;
 
             string val = element.Attribute(name).Value;
 
             return ParseToVector2(val);
         }
+
+        public static Vector3 GetAttributeVector3(XElement element, string name, Vector3 defaultValue)
+        {
+            if (element == null || element.Attribute(name) == null) return defaultValue;
+
+            string val = element.Attribute(name).Value;
+
+            return ParseToVector3(val);
+        }
         
         public static Vector4 GetAttributeVector4(XElement element, string name, Vector4 defaultValue)
         {
-            if (element.Attribute(name) == null) return defaultValue;
+            if (element == null || element.Attribute(name) == null) return defaultValue;
 
             string val = element.Attribute(name).Value;
 
@@ -257,6 +265,26 @@ namespace Barotrauma
         public static string Vector2ToString(Vector2 vector)
         {
             return vector.X.ToString("G", CultureInfo.InvariantCulture) + "," + vector.Y.ToString("G", CultureInfo.InvariantCulture);
+        }
+
+        public static Vector3 ParseToVector3(string stringVector3, bool errorMessages = true)
+        {
+            string[] components = stringVector3.Split(',');
+
+            Vector3 vector = Vector3.Zero;
+
+            if (components.Length!=3)
+            {
+                if (!errorMessages) return vector;
+                DebugConsole.ThrowError("Failed to parse the string ''"+stringVector3+"'' to Vector3");
+                return vector;
+            }
+
+            float.TryParse(components[0], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.X);            
+            float.TryParse(components[1], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.Y);
+            float.TryParse(components[2], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.Z);
+
+            return vector;
         }
 
         public static Vector4 ParseToVector4(string stringVector4, bool errorMessages = true)

@@ -189,16 +189,18 @@ namespace Barotrauma
                 {
                     Site site = (i == 0) ? ge.site1 : ge.site2;
 
-                    VoronoiCell cell = cellGrid[
-                        (int)Math.Floor((site.coord.x-borders.X) / gridCellSize),
-                        (int)Math.Floor((site.coord.y-borders.Y) / gridCellSize)].Find(c => c.site == site);
+                    int x = (int)(Math.Floor((site.coord.x-borders.X) / gridCellSize));
+                    int y = (int)(Math.Floor((site.coord.y-borders.Y) / gridCellSize));
+
+                    x = MathHelper.Clamp(x, 0, cellGrid.GetLength(0)-1);
+                    y = MathHelper.Clamp(y, 0, cellGrid.GetLength(1)-1);
+                        
+                    VoronoiCell cell = cellGrid[x,y].Find(c => c.site == site);
 
                     if (cell == null)
                     {
                         cell = new VoronoiCell(site);
-                        cellGrid[
-                            (int)Math.Floor((cell.Center.X-borders.X) / gridCellSize),
-                            (int)Math.Floor((cell.Center.Y - borders.Y) / gridCellSize)].Add(cell);
+                        cellGrid[x, y].Add(cell);
                         cells.Add(cell);
                     }
 
