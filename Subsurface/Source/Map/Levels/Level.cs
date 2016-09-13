@@ -182,29 +182,28 @@ namespace Barotrauma
             minWidth = Math.Max(minWidth, 6500.0f);
 
             startPosition = new Vector2(
-                Rand.Range(minWidth * 2, minWidth * 4, false), 
-                Rand.Range(minWidth * 2, borders.Height - minWidth * 2, false));
+                Rand.Range(minWidth * 2, minWidth * 4, false),
+                Rand.Range(borders.Height * 0.5f, borders.Height - minWidth * 2, false));
 
             endPosition = new Vector2(
-                borders.Width - Rand.Range(minWidth * 2, minWidth * 4, false), 
-                Rand.Range(minWidth * 2, borders.Height - minWidth * 2, false));
+                borders.Width - Rand.Range(minWidth * 2, minWidth * 4, false),
+                Rand.Range(borders.Height * 0.5f, borders.Height - minWidth * 2, false));
             
             List<Vector2> pathNodes = new List<Vector2>();
             Rectangle pathBorders = borders;// new Rectangle((int)minWidth, (int)minWidth, borders.Width - (int)minWidth * 2, borders.Height - (int)minWidth);   
             pathBorders.Inflate(-minWidth*2, -minWidth*2);
 
             pathNodes.Add(new Vector2(startPosition.X, borders.Height));
-            pathNodes.Add(startPosition);
 
+            Vector2 nodeInterval = generationParams.MainPathNodeIntervalRange;
 
-            for (float x = startPosition.X; 
-                x < endPosition.X; 
-                x += Rand.Range(generationParams.MainPathNodeIntervalRange.X, generationParams.MainPathNodeIntervalRange.Y, false))
+            for (float  x = startPosition.X + Rand.Range(nodeInterval.X, nodeInterval.Y, false);
+                        x < endPosition.X   - Rand.Range(nodeInterval.X, nodeInterval.Y, false);
+                        x += Rand.Range(nodeInterval.X, nodeInterval.Y, false))
             {
                 pathNodes.Add(new Vector2(x, Rand.Range(pathBorders.Y, pathBorders.Bottom, false)));
             }
 
-            pathNodes.Add(endPosition);
             pathNodes.Add(new Vector2(endPosition.X, borders.Height));
             
             List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
@@ -273,7 +272,7 @@ namespace Barotrauma
             sw2.Restart();
             
             List<VoronoiCell> mainPath = CaveGenerator.GeneratePath(pathNodes, cells, cellGrid, GridCellSize,                
-                new Rectangle(pathBorders.X, pathBorders.Y, pathBorders.Width, borders.Height), 0.3f, mirror);
+                new Rectangle(pathBorders.X, pathBorders.Y, pathBorders.Width, borders.Height), 0.5f, mirror);
 
             for (int i = 2; i < mainPath.Count; i += 3)
             {
