@@ -12,7 +12,7 @@
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,667,275,357" origin="0.5,1.0"/>
   </kelp1>
 
-  <stalk alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" randomrotation="-10,10">
+  <stalk alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" swingamount="2" randomrotation="-10,10">
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="775,0,249,849" origin="0.5,0.95"/>
   </stalk>
 
@@ -20,15 +20,32 @@
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="544,0,228,561" origin="0.5,0.95"/>
   </spike>
 
-  <branches1 minsize="0.5" maxsize="2.0" alignwithsurface="true" randomrotation="-20,20" commonness="4">
+  <leaves minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
+    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="305,722,461,301" origin="0.6,0.8"/>
+  </leaves>  
+
+  <branches1 minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,0,525,484" origin="0.5,0.9"/>
   </branches1>
 
-  <branches2 minsize="0.5" maxsize="2.0" alignwithsurface="true" randomrotation="-20,20" commonness="4">
+  <branches2 minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="255,0,246,479" origin="0.5,0.9"/>
   </branches2>
 
-  <fungus minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
+  <fungus minsize="0.5" maxsize="1.5" alignwithsurface="true" swingamount="1" commonness="3">
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,681,442,343" origin="0.5,0.9"/>
   </fungus>
+
+  <thistle alignment="Top" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" commonness="3">
+    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="449,500,252,524" origin="0.5,0.95"/>
+  </thistle>
+
+  <branch alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" commonness="10">
+    <Sprite texture="Content/BackgroundSprites/vegetation3.png" origin="0.5,0.95"/>
+  </branch>
+
+  <branch alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" commonness="10">
+    <Sprite texture="Content/BackgroundSprites/vegetation4.png" origin="0.5,0.95"/>
+  </branch>
+  
 </backgroundsprites>
