@@ -201,6 +201,8 @@ namespace Voronoi2
 
         public bool isSolid;
 
+        public bool OutsideLevel;
+
         public Vector2 Center
         {
             get { return (point1 + point2) / 2.0f; }

@@ -35,9 +35,10 @@ namespace Barotrauma
         const int GridSize = 1000;
 
         private List<BackgroundSpritePrefab> prefabs = new List<BackgroundSpritePrefab>();
-
-
+        
         private List<BackgroundSprite>[,] sprites;
+
+        private float swingTimer;
 
         public BackgroundSpriteManager(string configPath)
         {
@@ -128,7 +129,7 @@ namespace Barotrauma
             List<GraphEdge> edges = new List<GraphEdge>();
             foreach (GraphEdge edge in cell.edges)
             {
-                if (!edge.isSolid) continue;
+                if (!edge.isSolid || edge.OutsideLevel) continue;
                 
                 if (prefab.Alignment.HasFlag(Alignment.Bottom))
                 {
@@ -163,37 +164,35 @@ namespace Barotrauma
             Vector2 pos = closestEdge.Center;
 
             pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, false);
-
-            if (prefab.Alignment.HasFlag(Alignment.Top))
-            {
-                pos.Y -= Math.Abs(dir.Y) * prefab.Sprite.size.X / Math.Abs(dir.X);
-            }
-            else if (prefab.Alignment.HasFlag(Alignment.Bottom))
-            {
-                pos.Y += Math.Abs(dir.Y) * prefab.Sprite.size.X / Math.Abs(dir.X);
-            }
-
+            
             return pos;
+        }
+
+        public void Update(float deltaTime)
+        {
+            swingTimer += deltaTime;
         }
 
         public void DrawSprites(SpriteBatch spriteBatch, Camera cam)
         {
             Rectangle indices = Rectangle.Empty;
-            indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize) - 1;            
+            indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize) - 2;            
             if (indices.X >= sprites.GetLength(0)) return;
 
-            indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height) / (float)GridSize) - 1;
+            indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height) / (float)GridSize) - 2;
             if (indices.Y >= sprites.GetLength(1)) return;
 
-            indices.Width = (int)Math.Ceiling(cam.WorldView.Right / (float)GridSize) + 1;
+            indices.Width = (int)Math.Ceiling(cam.WorldView.Right / (float)GridSize) + 2;
             if (indices.Width < 0) return;
-            indices.Height = (int)Math.Ceiling(cam.WorldView.Y / (float)GridSize) + 1;
+            indices.Height = (int)Math.Ceiling(cam.WorldView.Y / (float)GridSize) + 2;
             if (indices.Height < 0) return;
 
             indices.X = Math.Max(indices.X, 0);
             indices.Y = Math.Max(indices.Y, 0);
             indices.Width = Math.Min(indices.Width, sprites.GetLength(0));
             indices.Height = Math.Min(indices.Height, sprites.GetLength(1));
+
+            float swingState = (float)Math.Sin(swingTimer * 0.1f);
 
             float z = 0.0f;
             for (int x = indices.X; x < indices.Width; x++)
@@ -202,7 +201,17 @@ namespace Barotrauma
                 {
                     foreach (BackgroundSprite sprite in sprites[x, y])
                     {
-                        sprite.Prefab.Sprite.Draw(spriteBatch, new Vector2(sprite.Position.X, -sprite.Position.Y), Color.White, sprite.Rotation, sprite.Scale, SpriteEffects.None, z);
+                        sprite.Prefab.Sprite.Draw(
+                            spriteBatch, 
+                            new Vector2(sprite.Position.X, -sprite.Position.Y), 
+                            Color.White, 
+                            sprite.Rotation + swingState*sprite.Prefab.SwingAmount, 
+                            sprite.Scale, 
+                            SpriteEffects.None, 
+                            z);
+
+                        GUI.DrawRectangle(spriteBatch, new Vector2(sprite.Position.X, -sprite.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);
+
                         z += 0.0001f;
                     }
                 }

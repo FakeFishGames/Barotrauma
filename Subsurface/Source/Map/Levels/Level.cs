@@ -319,9 +319,17 @@ namespace Barotrauma
             pathCells.AddRange(CreateBottomHoles(generationParams.BottomHoleProbability, new Rectangle(
                 (int)(borders.Width * 0.2f), 0,
                 (int)(borders.Width * 0.6f), (int)(borders.Height * 0.8f))));
+            
+            foreach (VoronoiCell cell in cells)
+            {
+                if (cell.Center.Y < borders.Height / 2) continue;
+                cell.edges.ForEach(e => e.OutsideLevel = true);
+            }
 
             foreach (VoronoiCell cell in pathCells)
             {
+                cell.edges.ForEach(e => e.OutsideLevel = false);
+
                 cell.CellType = CellType.Path;
                 cells.Remove(cell);
             }
@@ -653,7 +661,10 @@ namespace Barotrauma
                 foreach (GraphEdge edge in cell.edges)
                 {
                     VoronoiCell adjacent = edge.AdjacentCell(cell);
-                    if (adjacent!=null && !newCells.Contains(adjacent)) newCells.Add(adjacent);
+                    if (adjacent != null && !newCells.Contains(adjacent))
+                    {
+                        newCells.Add(adjacent);
+                    }
                 }
             }
 

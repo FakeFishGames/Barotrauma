@@ -16,6 +16,8 @@ namespace Barotrauma
 
         public readonly Vector2 RandomRotation;
 
+        public readonly float SwingAmount;
+
         public readonly int Commonness;
 
         public BackgroundSpritePrefab(XElement element)
@@ -34,6 +36,8 @@ namespace Barotrauma
             RandomRotation = ToolBox.GetAttributeVector2(element, "randomrotation", Vector2.Zero);
             RandomRotation.X = MathHelper.ToRadians(RandomRotation.X);
             RandomRotation.Y = MathHelper.ToRadians(RandomRotation.Y);
+
+            SwingAmount = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "swingamount", 0.0f));
 
             foreach (XElement subElement in element.Elements())
             {
