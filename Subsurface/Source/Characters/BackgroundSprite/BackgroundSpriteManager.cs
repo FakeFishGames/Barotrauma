@@ -84,7 +84,7 @@ namespace Barotrauma
 
             for (int i = 0 ; i < amount; i++)
             {
-                BackgroundSpritePrefab prefab = GetRandomPrefab();
+                BackgroundSpritePrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
                 GraphEdge selectedEdge = null;
                 Vector2? pos = FindSpritePosition(level, prefab, out selectedEdge);
 
@@ -131,14 +131,14 @@ namespace Barotrauma
             {
                 if (!edge.isSolid || edge.OutsideLevel) continue;
                 
-                if (prefab.Alignment.HasFlag(Alignment.Bottom))
+                if (prefab.Alignment.HasFlag(Alignment.Bottom) &&
+                    Math.Abs(edge.point1.X - edge.point2.X) < Math.Abs(edge.point1.Y - edge.point2.Y))
                 {
-                    if (Math.Abs(edge.point1.X - edge.point2.X) < Math.Abs(edge.point1.Y - edge.point2.Y)) continue;
                     if (edge.Center.Y < cell.Center.Y) edges.Add(edge);
                 }
-                else if (prefab.Alignment.HasFlag(Alignment.Top))
+                else if (prefab.Alignment.HasFlag(Alignment.Top) &&
+                    Math.Abs(edge.point1.X - edge.point2.X) < Math.Abs(edge.point1.Y - edge.point2.Y))
                 {
-                    if (Math.Abs(edge.point1.X - edge.point2.X) < Math.Abs(edge.point1.Y - edge.point2.Y)) continue;
                     if (edge.Center.Y > cell.Center.Y) edges.Add(edge);
                 }
                 else if (prefab.Alignment.HasFlag(Alignment.Left))
@@ -210,7 +210,10 @@ namespace Barotrauma
                             SpriteEffects.None, 
                             z);
 
-                        GUI.DrawRectangle(spriteBatch, new Vector2(sprite.Position.X, -sprite.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);
+                        if (GameMain.DebugDraw)
+                        {
+                            GUI.DrawRectangle(spriteBatch, new Vector2(sprite.Position.X, -sprite.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);
+                        }
 
                         z += 0.0001f;
                     }
@@ -218,24 +221,24 @@ namespace Barotrauma
             }
         }
 
-        private BackgroundSpritePrefab GetRandomPrefab()
+        private BackgroundSpritePrefab GetRandomPrefab(string levelType)
         {
             int totalCommonness = 0;
             foreach (BackgroundSpritePrefab prefab in prefabs)
             {
-                totalCommonness += prefab.Commonness;
+                totalCommonness += prefab.GetCommonness(levelType);
             }
 
             float randomNumber = Rand.Int(totalCommonness+1, false);
 
             foreach (BackgroundSpritePrefab prefab in prefabs)
             {
-                if (randomNumber <= prefab.Commonness)
+                if (randomNumber <= prefab.GetCommonness(levelType))
                 {
                     return prefab;
                 }
 
-                randomNumber -= prefab.Commonness;
+                randomNumber -= prefab.GetCommonness(levelType);
             }
 
             return null;

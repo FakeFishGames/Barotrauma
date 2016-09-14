@@ -119,6 +119,11 @@ namespace Barotrauma
             private set;
         }
 
+        public LevelGenerationParams GenerationParams
+        {
+            get { return generationParams; }
+        }
+
         public Color BackgroundColor
         {
             get { return backgroundColor; }
