@@ -23,6 +23,8 @@ namespace Barotrauma.Items.Components
         {
             if (item.CurrentHull == null) return;
 
+            if (item.InWater) return;
+
             item.CurrentHull.Oxygen += oxygenFlow * deltaTime;
             OxygenFlow -= deltaTime * 1000.0f;
         }
