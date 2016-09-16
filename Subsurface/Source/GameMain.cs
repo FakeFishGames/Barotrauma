@@ -104,7 +104,10 @@ namespace Barotrauma
                 
         public GameMain()
         {
-            Graphics = new GraphicsDeviceManager(this);
+            Graphics = new GraphicsDeviceManager(this)
+            {
+                SynchronizeWithVerticalRetrace = false,
+            };
 
             Window.Title = "Barotrauma";
 
@@ -143,6 +146,8 @@ namespace Barotrauma
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
+
+            Graphics.ApplyChanges();
         }
 
         /// <summary>
