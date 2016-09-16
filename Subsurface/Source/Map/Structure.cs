@@ -371,6 +371,13 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
+            Draw(spriteBatch, editing, back, null);
+        }
+
+        private static float prevCutoff;
+
+        public void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
+        {
             if (prefab.sprite == null) return;
 
             Color color = (isHighlighted) ? Color.Orange : Color.White;
@@ -382,14 +389,32 @@ namespace Barotrauma
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
-            if(sections.Length == 1)
-                prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color,Point.Zero);
+            if (sections.Length == 1)
+            {
+                prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color, Point.Zero);
+                return;
+            }
 
             foreach (WallSection s in sections)
             {
+                if (damageEffect != null)
+                {
+                    float newCutoff =  Math.Min((s.damage / prefab.MaxHealth)*0.5f - 0.2f, 0.1f);
+
+                    if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
+                    {
+                        damageEffect.Parameters["cutoff"].SetValue(newCutoff);
+
+                        damageEffect.CurrentTechnique.Passes[0].Apply();
+
+                        prevCutoff = newCutoff;
+                    }
+                }
+
                 Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
-                if (sections.Length != 1 && s.damage < prefab.MaxHealth)
-                   prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
+                if (sections.Length != 1)
+                    prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
+
 
                 if (s.isHighLighted)
                 {
@@ -399,12 +424,12 @@ namespace Barotrauma
                 }
 
                 s.isHighLighted = false;
-                
-                if (s.damage < 0.01f) continue;
 
-                 GUI.DrawRectangle(spriteBatch,
-                    new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
-                     Color.Black * (s.damage / prefab.MaxHealth), true); 
+                //if (s.damage < 0.01f) continue;
+
+                //GUI.DrawRectangle(spriteBatch,
+                //   new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
+                //    Color.Black * (s.damage / prefab.MaxHealth), true);
             }
             /*
             if(_convexHulls == null) return;

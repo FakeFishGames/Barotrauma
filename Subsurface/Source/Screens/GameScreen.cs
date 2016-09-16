@@ -18,6 +18,10 @@ namespace Barotrauma
 
         private BlurEffect lightBlur;
 
+        private Effect damageEffect;
+
+        private Texture2D damageStencil;
+
         public BackgroundCreatureManager BackgroundCreatureManager;
 
         public Camera Cam
@@ -45,6 +49,13 @@ namespace Barotrauma
 #else
             var blurEffect = content.Load<Effect>("blurshader");
 #endif
+
+            damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
+
+            damageEffect = content.Load<Effect>("damageshader");
+           // damageEffect.Parameters["cutoff"].SetValue(0.5f);
+            damageEffect.Parameters["xStencil"].SetValue(damageStencil);
+
 
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
@@ -160,7 +171,10 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            cam.UpdateTransform(true); 
+            cam.UpdateTransform(true);
+
+
+            //damageStencil = TextureLoader.FromFile("Content/Map/background.png");
             
             DrawMap(graphics, spriteBatch);
 
@@ -324,6 +338,19 @@ namespace Barotrauma
             Submarine.DrawFront(spriteBatch);
                         
             spriteBatch.End();
+            
+            spriteBatch.Begin(SpriteSortMode.Immediate,
+                BlendState.AlphaBlend, SamplerState.LinearWrap,
+                null, null, 
+                damageEffect,
+                cam.Transform);
+            damageEffect.Parameters["cutoff"].SetValue(-0.2f);
+            damageEffect.Parameters["multiplier"].SetValue(5.0f);
+
+            Submarine.DrawDamageable(spriteBatch, damageEffect);
+                        
+            spriteBatch.End();
+
 
             GameMain.LightManager.DrawLightMap(spriteBatch, cam, lightBlur.Effect);
 
