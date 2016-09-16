@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -27,11 +28,21 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            Vector2 position = level.GetRandomInterestingPosition(true, Level.PositionType.MainPath);
+            float minDist = Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
 
-            monster = Character.Create(monsterFile, position, null, GameMain.Client != null);
+            //find a random spawnpos that isn't too close to the main sub
+            int tries = 0;
+            Vector2 spawnPos = Vector2.Zero;
+            do
+            {
+                spawnPos = Level.Loaded.GetRandomInterestingPosition(true, Level.PositionType.MainPath);
+                tries++;
+            } while (tries < 50 && Vector2.Distance(spawnPos, Submarine.MainSub.WorldPosition) < minDist);
+
+
+            monster = Character.Create(monsterFile, spawnPos, null, GameMain.Client != null);
             monster.Enabled = false;
-            radarPosition = monster.Position;
+            radarPosition = spawnPos;
         }
 
         public override void Update(float deltaTime)

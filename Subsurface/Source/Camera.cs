@@ -38,11 +38,8 @@ namespace Barotrauma
             get { return zoom; }
             set 
             {
-                zoom = value; 
-                if (zoom < 0.1f) zoom = 0.1f;
-
-                //if (prevZoom == zoom) return;
-
+                zoom = Math.Max(value, GameMain.DebugDraw ? 0.01f : 0.1f);
+                
                 Vector2 center = WorldViewCenter;
                 float newWidth = resolution.X / zoom;
                 float newHeight = resolution.Y / zoom;
@@ -137,7 +134,6 @@ namespace Barotrauma
             worldView.X = (int)(interpolatedPosition.X - worldView.Width / 2.0);
             worldView.Y = (int)(interpolatedPosition.Y + worldView.Height / 2.0);
 
-
             if (Level.Loaded != null && clampPos)
             {
                 position.Y -= Math.Max(worldView.Y - Level.Loaded.Size.Y, 0.0f);
@@ -199,7 +195,7 @@ namespace Barotrauma
                  
                 moveCam = moveCam * deltaTime * 60.0f; 
 
-                Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, 0.1f, 2.0f); 
+                Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, 2.0f); 
             }
             else
             {
