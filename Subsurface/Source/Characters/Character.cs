@@ -27,6 +27,10 @@ namespace Barotrauma
             get { return netStateID; }
         }
 
+        List<char> memInput = new List<char>();
+        List<float> memMouseX = new List<float>();
+        List<float> memMouseY = new List<float>();
+
         //the Character that the player is currently controlling
         private static Character controlled;
 
