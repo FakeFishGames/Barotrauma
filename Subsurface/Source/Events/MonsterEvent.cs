@@ -47,9 +47,17 @@ namespace Barotrauma
 
         private void SpawnMonsters()
         {
-            //WayPoint randomWayPoint = WayPoint.GetRandom(SpawnType.Enemy);
+            float minDist = Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
 
-            Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType);
+            //find a random spawnpos that isn't too close to the main sub
+            int tries = 0;
+            Vector2 spawnPos = Vector2.Zero;
+            do
+            {
+                spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType);
+                tries++;
+            } while (tries < 50 && Vector2.Distance(spawnPos, Submarine.MainSub.WorldPosition) < minDist);
+
             
             int amount = Rand.Range(minAmount, maxAmount, false);
 
