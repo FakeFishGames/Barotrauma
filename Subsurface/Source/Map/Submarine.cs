@@ -149,7 +149,7 @@ namespace Barotrauma
         {
             get
             {
-                return subBody.Position;
+                return subBody ==null ? Vector2.Zero : subBody.Position;
             }
         }
 
@@ -287,10 +287,24 @@ namespace Barotrauma
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
+                if (MapEntity.mapEntityList[i] is Structure) continue;
                 if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth < 0.5f)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
             }
         }
+
+        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
+        {
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                var structure = MapEntity.mapEntityList[i] as Structure;
+                if (structure == null || structure.Sprite.Depth > 0.5f) continue;
+
+                structure.Draw(spriteBatch, editing, false, damageEffect);
+            }
+            damageEffect.Parameters["cutoff"].SetValue(0.5f);
+        }
+
 
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false)
         {
