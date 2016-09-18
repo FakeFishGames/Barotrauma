@@ -126,6 +126,7 @@ namespace Barotrauma
             
             graphicsWidth = Config.GraphicsWidth;
             graphicsHeight = Config.GraphicsHeight;
+            Graphics.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
             Graphics.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
 
@@ -310,7 +311,7 @@ namespace Barotrauma
 
                 if (titleScreenOpen)
                 {
-                    TitleScreen.Update();
+                    //TitleScreen.Update();
                 }
                 else if (hasLoaded)
                 {

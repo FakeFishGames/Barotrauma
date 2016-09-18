@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <config masterserverurl="http://www.undertowgames.com/baromaster" autocheckupdates="true" musicvolume="0.0" soundvolume="0.0" verboselogging="true">
-  <graphicsmode width="1280" height="720" fullscreen="false" />
+  <graphicsmode width="1280" height="720" fullscreen="false" vsync="false" />
   <contentpackage path="Data/ContentPackages/Vanilla 0.3.xml" />
   <keymapping Select="E" Use="0" Aim="1" Up="W" Down="S" Left="A" Right="D" Attack="R" Run="LeftShift" Crouch="LeftControl" Chat="Tab" CrewOrders="C" />
 </config>
