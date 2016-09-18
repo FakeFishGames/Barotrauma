@@ -83,11 +83,6 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Update(double deltaTime)
         {
-            if (Hull.renderer != null)
-            {
-                Hull.renderer.ScrollWater();
-            }
-
             //the accumulator code is based on this article:
             //http://gafferongames.com/game-physics/fix-your-timestep/
             Physics.accumulator += deltaTime;
@@ -173,8 +168,12 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            cam.UpdateTransform(true); 
-            
+            cam.UpdateTransform(true);
+
+            if (Hull.renderer != null)
+            {
+                Hull.renderer.ScrollWater((float)deltaTime);
+            }
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();

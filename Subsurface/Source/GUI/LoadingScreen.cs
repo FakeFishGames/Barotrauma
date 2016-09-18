@@ -101,6 +101,7 @@ namespace Barotrauma
 
             if (Hull.renderer != null)
             {
+                Hull.renderer.ScrollWater(deltaTime);
                 Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
             }
             
@@ -134,13 +135,13 @@ namespace Barotrauma
 
         }
 
-        public void Update()
+        /*public void Update()
         {
             if (Hull.renderer != null)
             {
                 Hull.renderer.ScrollWater();
             }
-        }
+        }*/
 
         bool drawn;
         public IEnumerable<object> DoLoading(IEnumerable<object> loader)
