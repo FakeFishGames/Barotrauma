@@ -490,6 +490,8 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
+            GameMain.TitleScreen.Update();
+
             foreach (GUIButton button in menuButtons)
             {
                 button.Update((float)deltaTime);

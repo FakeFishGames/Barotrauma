@@ -308,7 +308,11 @@ namespace Barotrauma
 
                 bool paused = false;
 
-                if (hasLoaded && !titleScreenOpen)
+                if (titleScreenOpen)
+                {
+                    TitleScreen.Update();
+                }
+                else if (hasLoaded)
                 {
                     SoundPlayer.Update();
 

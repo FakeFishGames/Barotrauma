@@ -134,6 +134,14 @@ namespace Barotrauma
 
         }
 
+        public void Update()
+        {
+            if (Hull.renderer != null)
+            {
+                Hull.renderer.ScrollWater();
+            }
+        }
+
         bool drawn;
         public IEnumerable<object> DoLoading(IEnumerable<object> loader)
         {
