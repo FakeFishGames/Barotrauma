@@ -336,6 +336,8 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
+            GameMain.TitleScreen.Update();
+
             menu.Update((float)deltaTime);
 
             GUI.Update((float)deltaTime);
