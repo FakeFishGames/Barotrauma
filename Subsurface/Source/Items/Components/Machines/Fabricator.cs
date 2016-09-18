@@ -339,6 +339,11 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
+            GuiFrame.Draw(spriteBatch);
+        }
+
+        public override void UpdateHUD(Character character)
+        {
             FabricableItem targetItem = itemList.SelectedData as FabricableItem;
             if (targetItem != null)
             {
@@ -346,7 +351,6 @@ namespace Barotrauma.Items.Components
             }
 
             GuiFrame.Update((float)Physics.step);
-            GuiFrame.Draw(spriteBatch);
         }
 
         private bool CanBeFabricated(FabricableItem fabricableItem, Character user)

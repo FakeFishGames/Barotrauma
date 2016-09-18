@@ -102,14 +102,17 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-
-            GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
             if (voltage < minVoltage && powerConsumption > 0.0f) return;
 
             int radius = GuiFrame.Rect.Height / 2 - 30;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
+        }
+
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update(1.0f / 60.0f);
         }
 
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
