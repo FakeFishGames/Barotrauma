@@ -156,11 +156,15 @@ namespace Barotrauma.Items.Components
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 
-            GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
             
             spriteBatch.DrawString(GUI.Font, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
      
+        }
+
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update(1.0f / 60.0f);
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)

@@ -1057,6 +1057,20 @@ namespace Barotrauma
             }
         }
 
+        public virtual void UpdateHUD(Character character)
+        {
+            if (condition <= 0.0f)
+            {
+                FixRequirement.UpdateHud(this, character);
+                return;
+            }
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.UpdateHUD(character);
+            }
+        }
+
         public List<T> GetConnectedComponents<T>(bool recursive = false)
         {
             List<T> connectedComponents = new List<T>();

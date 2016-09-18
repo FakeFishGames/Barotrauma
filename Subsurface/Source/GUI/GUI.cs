@@ -450,13 +450,11 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu.Update(0.016f);
                 pauseMenu.Draw(spriteBatch);
             }
 
             if (settingsMenuOpen)
             {
-                GameMain.Config.SettingsFrame.Update(0.016f);
                 GameMain.Config.SettingsFrame.Draw(spriteBatch);
             }
             
@@ -469,6 +467,17 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
+
+            if (pauseMenuOpen)
+            {
+                pauseMenu.Update(0.016f);
+            }
+
+            if (settingsMenuOpen)
+            {
+                GameMain.Config.SettingsFrame.Update(0.016f);
+            }
+
             if (GUIMessageBox.MessageBoxes.Count > 0)
             {
                 var messageBox = GUIMessageBox.MessageBoxes.Peek();

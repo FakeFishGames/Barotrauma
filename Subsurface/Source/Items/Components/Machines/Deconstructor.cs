@@ -82,8 +82,12 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            GuiFrame.Update((float)Physics.step);
             GuiFrame.Draw(spriteBatch);
+        }
+
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update((float)Physics.step);
         }
 
         private bool ToggleActive(GUIButton button, object obj)

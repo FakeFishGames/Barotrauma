@@ -108,6 +108,14 @@ namespace Barotrauma
 
             Character.UpdateAll(cam, (float)deltaTime);
 
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
+            {
+                if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
+                {
+                    Character.Controlled.SelectedConstruction.UpdateHUD(Character.Controlled);
+                }
+            }
+
             BackgroundCreatureManager.Update(cam, (float)deltaTime);
 
             GameMain.ParticleManager.Update((float)deltaTime);
