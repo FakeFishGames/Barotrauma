@@ -53,14 +53,11 @@ namespace Barotrauma
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
 
             damageEffect = content.Load<Effect>("damageshader");
-           // damageEffect.Parameters["cutoff"].SetValue(0.5f);
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
-
-
+            damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
+            damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
-
-
         }
 
         public override void Select()
@@ -344,8 +341,6 @@ namespace Barotrauma
                 null, null, 
                 damageEffect,
                 cam.Transform);
-            damageEffect.Parameters["cutoff"].SetValue(-0.2f);
-            damageEffect.Parameters["multiplier"].SetValue(5.0f);
 
             Submarine.DrawDamageable(spriteBatch, damageEffect);
                         

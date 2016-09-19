@@ -6,8 +6,11 @@ Texture xStencil;
 sampler StencilSampler = sampler_state { Texture = <xStencil>; };
 
 
-float cutoff;
-float multiplier;
+float aCutoff;
+float aMultiplier;
+
+float cCutoff;
+float cMultiplier;
 
 float4 main(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
@@ -15,14 +18,15 @@ float4 main(float4 position : SV_Position, float4 color : COLOR0, float2 texCoor
 
 	float4 stencilColor = tex2D(StencilSampler, texCoord);
 
-	float a = stencilColor.a - cutoff;
+	float aDiff = stencilColor.a - aCutoff;
 
-	clip(a);
+	clip(aDiff);
 
-	a = min(a * multiplier, 1.0f);
-	c = lerp(c, stencilColor, 1.0f - a);
+	float cDiff = stencilColor.a - cCutoff;
 
-	return c * a;
+	return float4(
+		lerp(stencilColor.rgb, c.rgb, clamp(cDiff * cMultiplier, 0.0f, 1.0f)),
+		min(aDiff * aMultiplier, c.a));
 }
 
 technique StencilShader
