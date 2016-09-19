@@ -43,7 +43,7 @@ namespace Barotrauma
 
     class Structure : MapEntity, IDamageable
     {
-        public static int wallSectionSize = 100;
+        public static int wallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
 
         List<ConvexHull> convexHulls;
@@ -103,6 +103,30 @@ namespace Barotrauma
         public float Health
         {
             get { return prefab.MaxHealth; }
+        }
+
+        public override bool DrawBelowWater
+        {
+            get
+            {
+                return base.DrawBelowWater || prefab.BackgroundSprite != null;
+            }
+        }
+
+        public override bool DrawOverWater
+        {
+            get
+            {
+                return !DrawDamageEffect;
+            }
+        }
+
+        public override bool DrawDamageEffect
+        {
+            get
+            {
+                return prefab.HasBody;
+            }
         }
 
         public override Rectangle Rect
@@ -371,12 +395,19 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
+            if (prefab.sprite == null) return;
+
             Draw(spriteBatch, editing, back, null);
+        }
+
+        public override void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect)
+        {
+            Draw(spriteBatch, false, false, damageEffect);
         }
 
         private static float prevCutoff;
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
+        private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
             if (prefab.sprite == null) return;
 
@@ -389,69 +420,48 @@ namespace Barotrauma
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
-            if (sections.Length == 1)
-            {
-                prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color, Point.Zero);
-                return;
-            }
 
-            foreach (WallSection s in sections)
+            if (back && damageEffect == null)
             {
-                if (damageEffect != null)
+                if (prefab.BackgroundSprite != null)
                 {
-                    float newCutoff =  Math.Min((s.damage / prefab.MaxHealth)*0.5f - 0.2f, 0.1f);
-
-                    if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
+                    prefab.BackgroundSprite.DrawTiled(
+                        spriteBatch, 
+                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), 
+                        new Vector2(rect.Width, rect.Height), 
+                        Vector2.Zero, color, Point.Zero);
+                }
+            }
+            
+            if (back == prefab.sprite.Depth > 0.5f || editing)
+            {
+                foreach (WallSection s in sections)
+                {
+                    if (damageEffect != null)
                     {
-                        damageEffect.Parameters["cutoff"].SetValue(newCutoff);
+                        float newCutoff =  Math.Min((s.damage / prefab.MaxHealth), 0.65f);
 
-                        damageEffect.CurrentTechnique.Passes[0].Apply();
+                        if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
+                        {
+                            damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
+                            damageEffect.Parameters["cCutoff"].SetValue(newCutoff*1.2f);
 
-                        prevCutoff = newCutoff;
+                            damageEffect.CurrentTechnique.Passes[0].Apply();
+
+                            prevCutoff = newCutoff;
+                        }
                     }
-                }
 
-                Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
-                if (sections.Length != 1)
+                    Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
                     prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
-
-
-                if (s.isHighLighted)
-                {
-                    GUI.DrawRectangle(spriteBatch,
-                        new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
-                        new Color((s.damage / prefab.MaxHealth), 1.0f - (s.damage / prefab.MaxHealth), 0.0f, 1.0f), true);
+                    
+                    s.isHighLighted = false;
                 }
-
-                s.isHighLighted = false;
-
-                //if (s.damage < 0.01f) continue;
-
-                //GUI.DrawRectangle(spriteBatch,
-                //   new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
-                //    Color.Black * (s.damage / prefab.MaxHealth), true);
             }
-            /*
-            if(_convexHulls == null) return;
-            var rand = new Random(32434324);
-            foreach (var hull in _convexHulls)
-            {
-                if (sections.Count(x => x.hull == hull) <= 1)
-                    continue;
-                var col = new Color((int) (255 * rand.NextDouble()), (int)(255 * rand.NextDouble()), (int)(255 * rand.NextDouble()), 255);
-                GUI.DrawRectangle(spriteBatch,new Vector2 (hull.BoundingBox.X + drawOffset.X, -(hull.BoundingBox.Y + drawOffset.Y)), new Vector2(hull.BoundingBox.Width, hull.BoundingBox.Height),col,true );
-            }*/
         }
 
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            //Structure structure = f1.Body.UserData as Structure;
-
-            //if (f2.Body.UserData as Item != null)
-            //{
-            //    if (prefab.IsPlatform || prefab.StairDirection != Direction.None) return false;
-            //}
-
             if (prefab.IsPlatform)
             {
                 Limb limb;

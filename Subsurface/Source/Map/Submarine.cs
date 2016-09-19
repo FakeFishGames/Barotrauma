@@ -287,8 +287,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
-                if (MapEntity.mapEntityList[i] is Structure) continue;
-                if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth < 0.5f)
+                if (MapEntity.mapEntityList[i].DrawOverWater)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
             }
         }
@@ -297,12 +296,11 @@ namespace Barotrauma
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
-                var structure = MapEntity.mapEntityList[i] as Structure;
-                if (structure == null || structure.Sprite.Depth > 0.5f) continue;
-
-                structure.Draw(spriteBatch, editing, false, damageEffect);
+                if (MapEntity.mapEntityList[i].DrawDamageEffect)
+                    MapEntity.mapEntityList[i].DrawDamage(spriteBatch, damageEffect);
             }
-            damageEffect.Parameters["cutoff"].SetValue(0.5f);
+            damageEffect.Parameters["aCutoff"].SetValue(0.0f);
+            damageEffect.Parameters["cCutoff"].SetValue(0.0f);
         }
 
 
@@ -310,7 +308,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
-                if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth >= 0.5f)
+                if (MapEntity.mapEntityList[i].DrawBelowWater)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
             }
         }

@@ -52,6 +52,12 @@ namespace Barotrauma
         {
             get { return size; }
         }
+
+        public Sprite BackgroundSprite
+        {
+            get;
+            private set;
+        }
         
         public static void LoadAll(List<string> filePaths)
         {            
@@ -74,22 +80,45 @@ namespace Barotrauma
             StructurePrefab sp = new StructurePrefab();
             sp.name = element.Name.ToString();
 
-            Vector4 sourceVector = ToolBox.GetAttributeVector4(element, "sourcerect", new Vector4(0,0,1,1));
+            //Vector4 sourceVector = ToolBox.GetAttributeVector4(element, "sourcerect", new Vector4(0,0,1,1));
             
-            Rectangle sourceRect = new Rectangle(
-                (int)sourceVector.X,
-                (int)sourceVector.Y,
-                (int)sourceVector.Z,
-                (int)sourceVector.W);
+            //Rectangle sourceRect = new Rectangle(
+            //    (int)sourceVector.X,
+            //    (int)sourceVector.Y,
+            //    (int)sourceVector.Z,
+            //    (int)sourceVector.W);
             
-            if (element.Attribute("sprite") != null)
-            {
-                sp.sprite = new Sprite(element.Attribute("sprite").Value, sourceRect, Vector2.Zero);
+            //if (element.Attribute("sprite") != null)
+            //{
+            //    sp.sprite = new Sprite(element.Attribute("sprite").Value, sourceRect, Vector2.Zero);
                 
-                sp.sprite.Depth = ToolBox.GetAttributeFloat(element, "depth", 0.0f);
+            //    sp.sprite.Depth = ToolBox.GetAttributeFloat(element, "depth", 0.0f);
 
-                if (ToolBox.GetAttributeBool(element, "fliphorizontal", false)) sp.sprite.effects = SpriteEffects.FlipHorizontally;
-                if (ToolBox.GetAttributeBool(element, "flipvertical", false)) sp.sprite.effects = SpriteEffects.FlipVertically;
+            //}
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString())
+                {
+                    case "sprite":
+                        sp.sprite = new Sprite(subElement);
+
+                        if (ToolBox.GetAttributeBool(subElement, "fliphorizontal", false)) 
+                            sp.sprite.effects = SpriteEffects.FlipHorizontally;
+                        if (ToolBox.GetAttributeBool(subElement, "flipvertical", false)) 
+                            sp.sprite.effects = SpriteEffects.FlipVertically;
+
+                        break;
+                    case "backgroundsprite":
+                        sp.BackgroundSprite = new Sprite(subElement);
+
+                        if (ToolBox.GetAttributeBool(subElement, "fliphorizontal", false)) 
+                            sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally;
+                        if (ToolBox.GetAttributeBool(subElement, "flipvertical", false)) 
+                            sp.BackgroundSprite.effects = SpriteEffects.FlipVertically;
+
+                        break;
+                }
             }
 
             MapEntityCategory category;
@@ -119,8 +148,7 @@ namespace Barotrauma
             sp.stairDirection = (Direction)Enum.Parse(typeof(Direction), ToolBox.GetAttributeString(element, "stairdirection", "None"), true);
 
             sp.castShadow = ToolBox.GetAttributeBool(element, "castshadow", false); 
-
-
+            
             sp.hasBody = ToolBox.GetAttributeBool(element, "body", false); 
             
             return sp;
