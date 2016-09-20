@@ -150,7 +150,12 @@ namespace Barotrauma
 
                         textPos.Y += 25;
                     }
-                }  
+                }
+                
+                foreach (HUDProgressBar progressBar in character.HUDProgressBars.Values)
+                {
+                    progressBar.Draw(spriteBatch, cam);
+                }
             }
 
             if (Screen.Selected == GameMain.EditMapScreen) return;

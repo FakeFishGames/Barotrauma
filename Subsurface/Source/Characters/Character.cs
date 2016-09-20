@@ -303,6 +303,11 @@ namespace Barotrauma
             }
         }
 
+        public Dictionary<object, HUDProgressBar> HUDProgressBars
+        {
+            get { return hudProgressBars; }
+        }
+
         public HuskInfection huskInfection;
         public float HuskInfectionState
         {
@@ -1289,10 +1294,6 @@ namespace Barotrauma
             if (!Enabled) return;
 
             AnimController.Draw(spriteBatch);
-            
-            //GUI.DrawLine(spriteBatch, ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y),
-            //    ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y) +
-            //    ConvertUnits.ToDisplayUnits(animController.targetMovement.X, animController.targetMovement.Y), Color.Green);
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam)
@@ -1304,7 +1305,6 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
-
             if (GameMain.DebugDraw)
             {
                 AnimController.DebugDraw(spriteBatch);
@@ -1312,16 +1312,8 @@ namespace Barotrauma
                 if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
 
-            if (this == controlled)
-            {
-                foreach (HUDProgressBar progressBar in hudProgressBars.Values)
-                {
-                    progressBar.Draw(spriteBatch);
-                }
-
-                return;
-            }
-
+            if (this == controlled) return;
+            
             Vector2 pos = DrawPosition;
             pos.Y = -pos.Y;
 
