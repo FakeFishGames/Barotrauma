@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
@@ -21,11 +20,10 @@ namespace Barotrauma
         public float damage;
         public Gap gap;
 
-        public int GapIndex;
+        public int GapID;
 
         public float lastSentDamage;
 
-        public bool isHighLighted;
         public ConvexHull hull;
 
         public WallSection(Rectangle rect)
@@ -454,8 +452,6 @@ namespace Barotrauma
 
                     Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
                     prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
-                    
-                    s.isHighLighted = false;
                 }
             }
         }
@@ -503,9 +499,12 @@ namespace Barotrauma
             return true;
         }
 
-        public void HighLightSection(int sectionIndex)
+        public WallSection GetSection(int sectionIndex)
         {
-            sections[sectionIndex].isHighLighted = true;
+            if (sectionIndex < 0 || sectionIndex >= sections.Length) return null;
+
+            return sections[sectionIndex];
+
         }
         
         public bool SectionBodyDisabled(int sectionIndex)
@@ -798,7 +797,7 @@ namespace Barotrauma
                         s.sections[index].damage = 
                             ToolBox.GetAttributeFloat(subElement, "damage", 0.0f);
 
-                        s.sections[index].GapIndex = ToolBox.GetAttributeInt(subElement, "gap", -1);
+                        s.sections[index].GapID = ToolBox.GetAttributeInt(subElement, "gap", -1);
 
                         break;
                 }
@@ -809,9 +808,9 @@ namespace Barotrauma
         {
             foreach (WallSection s in sections)
             {
-                if (s.GapIndex == -1) continue;
+                if (s.GapID == -1) continue;
 
-                s.gap = FindEntityByID((ushort)s.GapIndex) as Gap;
+                s.gap = FindEntityByID((ushort)s.GapID) as Gap;
                 if (s.gap != null) s.gap.ConnectedWall = this;
             }
         }
