@@ -44,17 +44,20 @@ namespace Barotrauma
             FadeTimer -= deltatime;
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            float a = Math.Min(FadeTimer,1.0f);
+            float a = Math.Min(FadeTimer, 1.0f);
 
-            GUI.DrawProgressBar(spriteBatch, 
-                new Vector2(WorldPosition.X - Size.X/2, (WorldPosition.Y + Size.Y/2)),
+            Vector2 pos = cam.WorldToScreen(
+                new Vector2(WorldPosition.X - Size.X / 2, WorldPosition.Y + Size.Y / 2));
+
+            pos.Y = -pos.Y;
+            
+            GUI.DrawProgressBar(spriteBatch,
+                pos,
                 Size, progress, 
                 Color.Lerp(emptyColor, fullColor, progress) * a,
                 Color.White * a * 0.8f);
         }
-
-
     }
 }

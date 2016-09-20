@@ -178,6 +178,7 @@ namespace Barotrauma.Items.Components
             if ((targetStructure = (targetBody.UserData as Structure)) != null)
             {
                 if (!fixableEntities.Contains(targetStructure.Name)) return;
+                if (targetStructure.IsPlatform) return;
 
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
                 if (sectionIndex < 0) return;
