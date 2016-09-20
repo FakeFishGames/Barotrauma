@@ -93,6 +93,7 @@
     <Compile Include="Source\Characters\CharacterInfo.cs" />
     <Compile Include="Source\Characters\AI\ISteerable.cs" />
     <Compile Include="Source\Characters\DelayedEffect.cs" />
+    <Compile Include="Source\Characters\HUDProgressBar.cs" />
     <Compile Include="Source\Characters\HuskInfection.cs" />
     <Compile Include="Source\Characters\Jobs\Job.cs" />
     <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />

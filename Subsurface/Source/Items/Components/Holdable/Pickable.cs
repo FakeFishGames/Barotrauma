@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Pickable : ItemComponent, IDrawableComponent
+    class Pickable : ItemComponent
     {
         protected Character picker;
 
@@ -125,6 +125,13 @@ namespace Barotrauma.Items.Components
                     yield return CoroutineStatus.Success;
                 }
 
+
+                picker.UpdateHUDProgressBar(
+                    this,
+                    item.WorldPosition,
+                    pickTimer / requiredTime,
+                    Color.Red, Color.Green);
+
                 picker.AnimController.Anim = AnimController.Animation.UsingConstruction;
 
                 picker.AnimController.TargetMovement = Vector2.Zero;
@@ -175,23 +182,7 @@ namespace Barotrauma.Items.Components
                 }
             }            
         }
-
         
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
-        {
-            if (pickTimer <= 0.0f)
-            {
-                Drawable = false;
-                return;
-            }
-
-            float progressBarWidth = 100.0f;
-
-            GUI.DrawProgressBar(spriteBatch, item.DrawPosition + new Vector2(-progressBarWidth/2.0f, 50.0f), new Vector2(progressBarWidth, 15.0f), 
-                pickTimer / PickingTime,
-                Color.Lerp(Color.Red, Color.Green, pickTimer / PickingTime));
-        }
-
         public override void Drop(Character dropper)
         {            
             if (picker == null)
