@@ -284,8 +284,7 @@ namespace Barotrauma
         {
             Sound.Dispose();
         }
-
-
+        
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -324,7 +323,10 @@ namespace Barotrauma
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
-                    if (!paused || Screen.Selected is MainMenuScreen) Screen.Selected.Update(deltaTime);
+                    if (!paused)
+                    {
+                        Screen.Selected.Update(deltaTime);
+                    }
 
                     if (NetworkMember != null)
                     {
@@ -336,7 +338,6 @@ namespace Barotrauma
                     }
 
                     GUI.Update((float)deltaTime);
-
                 }
 
                 CoroutineManager.Update((float)deltaTime, paused ? 0.0f : (float)deltaTime);

@@ -311,10 +311,13 @@ namespace Barotrauma
 
             }
 
-            for (int i = 0; i < children.Count; i++)
+            //use a fixed list since children can change their order in the main children list
+            //TODO: maybe find a more efficient way of handling changes in list order
+            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+            foreach (GUIComponent c in fixedChildren)
             {
-                if (!children[i].Visible) continue;
-                children[i].Update(deltaTime);
+                if (!c.Visible) continue;
+                c.Update(deltaTime);
             }
         }
 

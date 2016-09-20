@@ -467,7 +467,6 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-
             if (pauseMenuOpen)
             {
                 pauseMenu.Update(0.016f);
