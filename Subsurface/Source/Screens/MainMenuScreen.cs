@@ -11,9 +11,7 @@ namespace Barotrauma
     class MainMenuScreen : Screen
     {
         public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4 }
-
-        private GUIButton[] menuButtons;
-
+        
         GUIFrame buttonsTab;
 
         private GUIFrame[] menuTabs;
@@ -44,53 +42,43 @@ namespace Barotrauma
             Rectangle panelRect = new Rectangle(
                 290, y,
                 500, 360);
-
-            menuButtons = new GUIButton[8];
-
+            
             GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), "Tutorial", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             button.OnClicked = TutorialButtonClicked;
-            menuButtons[0] = button;
 
             button = new GUIButton(new Rectangle(50, y + 60, 200, 30), "New Game", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.NewGame;
             button.OnClicked = SelectTab;
-            menuButtons[1] = button;
 
             button = new GUIButton(new Rectangle(50, y + 100, 200, 30), "Load Game", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.LoadGame;
             button.OnClicked = SelectTab;
-            menuButtons[2] = button;
 
             button = new GUIButton(new Rectangle(50, y + 160, 200, 30), "Join Server", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             //button.UserData = (int)Tabs.JoinServer;
             button.OnClicked = JoinServerClicked;
-            menuButtons[3] = button;
 
             button = new GUIButton(new Rectangle(50, y + 200, 200, 30), "Host Server", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.HostServer;
             button.OnClicked = SelectTab;
-            menuButtons[4] = button;
 
             button = new GUIButton(new Rectangle(50, y + 260, 200, 30), "Submarine Editor", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             button.OnClicked = (GUIButton btn, object userdata) => { GameMain.EditMapScreen.Select(); return true; };
-            menuButtons[5] = button;
 
             button = new GUIButton(new Rectangle(50, y + 320, 200, 30), "Settings", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.Settings;
             button.OnClicked = SelectTab;
-            menuButtons[6] = button;
 
             button = new GUIButton(new Rectangle(0, 0, 150, 30), "Quit", Alignment.BottomRight, GUI.Style, buttonsTab);
             button.Color = button.Color * 0.8f;
             button.OnClicked = QuitClicked;
-            menuButtons[7] = button;
 
             panelRect.Y += 10;
 
@@ -491,14 +479,11 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             //GameMain.TitleScreen.Update();
-
-            foreach (GUIButton button in menuButtons)
-            {
-                button.Update((float)deltaTime);
-            }
-
             buttonsTab.Update((float)deltaTime);
-            if (selectedTab>0) menuTabs[selectedTab].Update((float)deltaTime);
+            if (selectedTab > 0)
+            {
+                menuTabs[selectedTab].Update((float)deltaTime);
+            }
 
             GameMain.TitleScreen.TitlePosition =
                 Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
