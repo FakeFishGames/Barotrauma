@@ -113,6 +113,14 @@ namespace Barotrauma.Particles
             }
         }
 
+        public void UpdateTransforms()
+        {
+            for (int i = 0; i < particleCount; i++)
+            {
+                particles[i].UpdateDrawPos();
+            }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool inWater, ParticleBlendState blendState)
         {
             ParticlePrefab.DrawTargetType drawTarget = inWater ? ParticlePrefab.DrawTargetType.Water : ParticlePrefab.DrawTargetType.Air;

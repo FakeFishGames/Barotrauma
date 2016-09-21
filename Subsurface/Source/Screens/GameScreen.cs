@@ -109,23 +109,24 @@ namespace Barotrauma
             }
 #endif
 
-            if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
-            //EventManager.Update(gameTime);
-
-            if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
-
-            Character.UpdateAll(cam, (float)deltaTime);
-
-            BackgroundCreatureManager.Update(cam, (float)deltaTime);
-
-            GameMain.ParticleManager.Update((float)deltaTime);
-
-            StatusEffect.UpdateAll((float)deltaTime);
-
             Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 6);
             //Physics.accumulator = Physics.step;
             while (Physics.accumulator >= Physics.step)
             {
+
+                if (GameMain.GameSession != null) GameMain.GameSession.Update((float)Physics.step);
+                //EventManager.Update(gameTime);
+
+                if (Level.Loaded != null) Level.Loaded.Update((float)Physics.step);
+
+                Character.UpdateAll(cam, (float)Physics.step);
+
+                BackgroundCreatureManager.Update(cam, (float)Physics.step);
+
+                GameMain.ParticleManager.Update((float)Physics.step);
+
+                StatusEffect.UpdateAll((float)Physics.step);
+
                 if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
                 {
                     cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
@@ -209,6 +210,8 @@ namespace Barotrauma
             {
                 sub.UpdateTransform();
             }
+
+            GameMain.ParticleManager.UpdateTransforms();
 
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 

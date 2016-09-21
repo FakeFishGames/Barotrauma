@@ -537,8 +537,22 @@ namespace Barotrauma
 
             if (sectionIndex < 0 || sectionIndex > sections.Length - 1) return;
 
-            if (GameMain.Client == null) SetDamage(sectionIndex, sections[sectionIndex].damage + damage);
+            var section = sections[sectionIndex];
 
+            int particleAmount = (int)(Math.Min(Health - section.damage, damage) * Rand.Range(0.1f, 1.0f));
+            for (int i = 0; i < particleAmount; i++)
+            {
+                Vector2 particlePos = new Vector2(
+                    Rand.Range(section.rect.X, section.rect.Right),
+                    Rand.Range(section.rect.Y - section.rect.Height, section.rect.Y));
+
+                if (Submarine != null) particlePos += Submarine.DrawPosition;
+
+                var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)));
+                if (particle == null) break;
+            }
+
+            if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage);
         }
 
         public int FindSectionIndex(Vector2 displayPos)
