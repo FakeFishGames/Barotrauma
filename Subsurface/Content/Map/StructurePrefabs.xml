@@ -109,23 +109,23 @@
   </CableHolderVertical>
 
   <topwindow width="128" height="49" body="true" health="100">
-    <sprite texture="Content/Map/testroom.png" sourcerect="208,880,128,48" depth ="0.05"/>
-    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,880,128,48" depth ="0.85"/>    
+    <sprite texture="Content/Map/testroom.png" sourcerect="208,848,128,80" depth ="0.05"/>
+    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,848,128,80" depth ="0.85"/>    
   </topwindow>
 
   <verticalwindow width="128" height ="224" body="true" health="100">
-    <sprite texture="Content/Map/testroom.png" sourcerect="368,576,128,224" depth ="0.05"/>
-    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="239,576,128,224" depth ="0.85"/>    
+    <sprite texture="Content/Map/testroom.png" sourcerect="368,544,128,224" depth ="0.05"/>
+    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="239,544,128,224" depth ="0.85"/>    
   </verticalwindow>
 
   <horizontalresizablewindow width="128" height ="64" body="true" health="100" resizehorizontal="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="207,803,128,64" depth ="0.06"/>
-    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="337,803,128,64" depth ="0.06"/>    
+    <sprite texture="Content/Map/testroom.png" sourcerect="207,771,128,64" depth ="0.06"/>
+    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="337,771,128,64" depth ="0.85"/>    
   </horizontalresizablewindow>
 
   <verticalresizablewindow width = "64" height ="128" body="true" health="100" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,80,64,128" depth ="0.06"/>
-    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth ="0.06"/>    
+    <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth ="0.85"/>    
   </verticalresizablewindow>
 
   <smallhorizontalback description="A decorative structure with no collision detection"
