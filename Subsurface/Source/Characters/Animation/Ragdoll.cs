@@ -19,6 +19,10 @@ namespace Barotrauma
         protected Hull currentHull;
 
         public Limb[] Limbs;
+        
+        private bool isFrozen = false;
+        public bool Frozen = false;
+
         private Dictionary<LimbType, Limb> limbDictionary;
         public RevoluteJoint[] limbJoints;
 
@@ -320,7 +324,7 @@ namespace Barotrauma
         public void AddLimb(Limb limb)
         {
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
-            
+
             Array.Resize(ref Limbs, Limbs.Length + 1);
 
             Limbs[Limbs.Length-1] = limb;
@@ -683,6 +687,27 @@ namespace Barotrauma
         public void Update(Camera cam, float deltaTime)
         {
             if (!character.Enabled) return;
+
+            if (Frozen)
+            {
+                if (!isFrozen)
+                {
+                    foreach (Limb l in Limbs)
+                    {
+                        l.body.PhysEnabled = false;
+                    }
+                    isFrozen = true;
+                }
+                return;
+            }
+            if (isFrozen)
+            {
+                for (int i=0;i < Limbs.Length;i++)
+                {
+                    Limbs[i].body.PhysEnabled = true;
+                }
+                isFrozen = false;
+            }
 
             UpdateNetPlayerPosition();
             

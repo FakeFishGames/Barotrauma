@@ -62,6 +62,7 @@ namespace Barotrauma
         public override void UpdateAnim(float deltaTime)
         {
             if (character.IsDead) return;
+            if (Frozen) return;
 
             Vector2 colliderPos = GetLimb(LimbType.Torso).SimPosition;
 

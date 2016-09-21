@@ -295,6 +295,7 @@ namespace Barotrauma
             double realDeltaTime = gameTime.ElapsedGameTime.TotalSeconds;
             double deltaTime = 0.016;
             updatesToMake += realDeltaTime;
+            PlayerInput.UpdateVariable();
 
             while (updatesToMake > 0.0)
             {

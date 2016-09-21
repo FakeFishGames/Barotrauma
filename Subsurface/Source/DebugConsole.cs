@@ -479,6 +479,9 @@ namespace Barotrauma
                         Character.Controlled.Revive(false);
                     }
                     break;
+                case "freeze":
+                    if (Character.Controlled != null) Character.Controlled.AnimController.Frozen = !Character.Controlled.AnimController.Frozen;
+                    break;
                 case "freecamera":
                 case "freecam":
                     Character.Controlled = null;

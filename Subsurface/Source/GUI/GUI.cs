@@ -461,8 +461,8 @@ namespace Barotrauma
             DebugConsole.Draw(spriteBatch);
             
             if (GUIComponent.MouseOn != null && !string.IsNullOrWhiteSpace(GUIComponent.MouseOn.ToolTip)) GUIComponent.MouseOn.DrawToolTip(spriteBatch);
-            
-            cursor.Draw(spriteBatch, PlayerInput.MousePosition);            
+
+            cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
         }
 
         public static void Update(float deltaTime)

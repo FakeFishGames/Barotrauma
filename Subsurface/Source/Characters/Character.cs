@@ -27,7 +27,7 @@ namespace Barotrauma
             get { return netStateID; }
         }
 
-        List<char> memInput = new List<char>();
+        List<byte> memInput = new List<byte>();
         List<float> memMouseX = new List<float>();
         List<float> memMouseY = new List<float>();
 
@@ -1142,7 +1142,14 @@ namespace Barotrauma
             
             if (isDead) return;
 
-            if (networkUpdateSent)
+            if (this != Character.Controlled)
+            {
+                if (GameMain.Server != null)
+                {
+                    
+                }
+            }
+            /*if (networkUpdateSent)
             {
                 foreach (Key key in keys)
                 {
@@ -1151,7 +1158,7 @@ namespace Barotrauma
                 }
 
                 networkUpdateSent = false;
-            }
+            }*/
 
             DisableImpactDamageTimer -= deltaTime;
             
