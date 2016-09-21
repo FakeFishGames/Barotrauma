@@ -183,9 +183,15 @@ namespace Barotrauma.Items.Components
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
                 if (sectionIndex < 0) return;
 
+                Vector2 progressBarPos = targetStructure.SectionPosition(sectionIndex);
+                if (targetStructure.Submarine != null)
+                {
+                    progressBarPos += targetStructure.Submarine.DrawPosition;
+                }
+
                 var progressBar = user.UpdateHUDProgressBar(
                     targetStructure,
-                    targetStructure.SectionPosition(sectionIndex) + targetStructure.Submarine.DrawPosition,
+                    progressBarPos,
                     1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
                     Color.Red, Color.Green);
 
@@ -206,8 +212,6 @@ namespace Barotrauma.Items.Components
                         targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
                     }
                 }
-
-
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
