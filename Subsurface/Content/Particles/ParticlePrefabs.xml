@@ -234,4 +234,68 @@
     velocitychange="0.0, 1.0">
     <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
   </flare>
+  
+  <shrapnel
+    startsizemin="0.1,0.1" startsizemax="1.0,1.0"
+    startrotationmin ="0.0" startrotationmax="360"
+    startcolor="1.0, 1.0, 1.0" startalpha="1.0"
+    colorchange="0.0, 0.0, 0.0, -0.3"
+    lifetime="10.0"
+    drawtarget="both"    
+    collideswithwalls="true"
+    collisionradius="10.0"    
+    restitution="0.2"
+    waterdrag="0.1"
+    growtime ="0.0"
+    velocitychange="0.0, -5.0">
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,0,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,0,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,0,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,0,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,0,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,0,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,0,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,0,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,32,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,32,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,32,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,32,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,32,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,32,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,32,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,32,32,32"/>
+  </shrapnel>
+  
+  <iceshards
+    startsizemin="0.1,0.1" startsizemax="1.0,1.0"
+    startrotationmin ="0.0" startrotationmax="360"
+    startcolor="1.0, 1.0, 1.0" startalpha="1.0"
+    colorchange="0.0, 0.0, 0.0, -0.3"
+    lifetime="10.0"
+    drawtarget="both"
+    collideswithwalls="true"
+    collisionradius="10.0"
+    restitution="0.2"
+    waterdrag="0.3"
+    growtime ="0.0"
+    velocitychange="0.0, -5.0">
+    
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="208,64,48,32"/>
+    
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,96,32,32"/>
+  </iceshards>  
+  
 </prefabs>
