@@ -747,7 +747,7 @@ namespace Barotrauma
                         }
                     }
                         //the limb has gone through the surface of the water
-                    if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && inWater != prevInWater)
+                    if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && limb.inWater != prevInWater)
                     {
 
                         //create a splash particle

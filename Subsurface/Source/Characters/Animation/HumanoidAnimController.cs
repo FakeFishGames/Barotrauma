@@ -21,6 +21,9 @@ namespace Barotrauma
 
         private float cprAnimState;
 
+        private float inWaterTimer;
+        private bool swimming;
+
         protected override float HeadPosition
         {
             get
@@ -44,7 +47,7 @@ namespace Barotrauma
                 return Crouching ? base.TorsoAngle+0.5f : base.TorsoAngle;
             }
         }
-
+        
         public HumanoidAnimController(Character character, XElement element)
             : base(character, element)
         {
@@ -220,11 +223,28 @@ namespace Barotrauma
                 default:
 
                     if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
-
+                    
+                    //0.5 second delay for switching between swimming and walking
+                    //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
                     if (inWater)
-                        UpdateSwimming();
+                    {
+                        inWaterTimer = Math.Max(inWaterTimer+deltaTime, 0.5f);
+                        if (inWaterTimer >= 1.0f) swimming = true;
+                    }
                     else
+                    {
+                        inWaterTimer = Math.Min(inWaterTimer - deltaTime, 0.5f);
+                        if (inWaterTimer <= 0.0f) swimming = false;
+                    }
+
+                    if (swimming)
+                    {
+                        UpdateSwimming();
+                    }
+                    else
+                    {
                         UpdateStanding();
+                    }
 
                     break;
             }
