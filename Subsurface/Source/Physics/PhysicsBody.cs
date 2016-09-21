@@ -118,10 +118,19 @@ namespace Barotrauma
             set { dir = value; }
         }
 
+        private bool isEnabled = true;
+        private bool isPhysEnabled = true;
+
         public bool Enabled
         {
+            get { return isEnabled; }
+            set { isEnabled = value; if (isEnabled) body.Enabled = isPhysEnabled; else body.Enabled = false; }
+        }
+
+        public bool PhysEnabled
+        {
             get { return body.Enabled; }
-            set { body.Enabled = value; }
+            set { isPhysEnabled = value; if (Enabled) body.Enabled = value; }
         }
 
         public Vector2 SimPosition
@@ -350,7 +359,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f)
         {
-            if (!body.Enabled) return;
+            if (!Enabled) return;
 
             UpdateDrawPosition();
 

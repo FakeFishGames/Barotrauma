@@ -136,6 +136,7 @@ namespace Barotrauma.Lights
             {
                 if (Character.Controlled.ClosestItem != null)
                 {
+                    Character.Controlled.ClosestItem.IsHighlighted = true;
                     Character.Controlled.ClosestItem.Draw(spriteBatch, false, true);
                     Character.Controlled.ClosestItem.IsHighlighted = true;
                 }

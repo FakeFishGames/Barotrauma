@@ -204,6 +204,7 @@ namespace Barotrauma
 	public static class PlayerInput
 	{
 		static MouseState mouseState, oldMouseState;
+        static MouseState latestMouseState; //the absolute latest state, do NOT use for player interaction
 		static KeyboardState keyboardState, oldKeyboardState;
 
 		static double timeSinceClick;
@@ -218,6 +219,11 @@ namespace Barotrauma
 		{
 			get { return new Vector2(mouseState.Position.X, mouseState.Position.Y); }
 		}
+
+        public static Vector2 LatestMousePosition
+        {
+            get { return new Vector2(latestMouseState.Position.X, latestMouseState.Position.Y); }
+        }
 
         //public static MouseState GetMouseState
         //{
@@ -334,7 +340,8 @@ namespace Barotrauma
 			timeSinceClick += deltaTime;
 
 			oldMouseState = mouseState;
-			mouseState = Mouse.GetState();
+            mouseState = latestMouseState;
+            UpdateVariable();
 
 			oldKeyboardState = keyboardState;
 			keyboardState = Keyboard.GetState();
@@ -346,5 +353,12 @@ namespace Barotrauma
 				timeSinceClick = 0.0;
 			}
 		}
+
+        public static void UpdateVariable()
+        {
+            //do NOT use this for actual interaction with the game, this is to be used for debugging and rendering ONLY
+
+            latestMouseState = Mouse.GetState();
+        }
 	}
 }
